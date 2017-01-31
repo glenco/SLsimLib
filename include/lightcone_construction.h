@@ -226,8 +226,7 @@ namespace LightCones{
 
   void _fastplanes_parallel_(Point_3d *begin,Point_3d *end
                  ,const COSMOLOGY &cosmo
-                 ,std::vector<Point_3d> &max_box
-                 ,std::vector<Point_3d> &min_box
+                 ,std::vector<std::vector<Point_3d> > &boxes
                  ,std::vector<Point_3d> &observers
                  ,std::vector<Quaternion> &rotationQs
                  ,std::vector<double> &dsources
@@ -237,7 +236,6 @@ namespace LightCones{
                  ,double BoxLength
                  );
 
-  
   
   /** \brief class for generating positions in proportion to mass in an NFW profiles
    */

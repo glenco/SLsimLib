@@ -1126,7 +1126,7 @@ namespace LightCones{
     }
     
     //const int blocksize = 1000000;  ????
-    const int blocksize = 100000;
+    const int blocksize = 1000000;
     std::vector<Point_3d> points(blocksize);
     
     // loop through files
@@ -1141,15 +1141,44 @@ namespace LightCones{
       double dmin = dbins[i],dmax = dbins[i+1];
       
       // find the box range for each cone
-      std::vector<Point_3d> max_box(Ncones),min_box(Ncones);
+      
+      std::vector<std::vector<Point_3d> > boxes(Ncones);
+      
       for(int icone=0;icone<Ncones;++icone){
+        
+        Point_3d max_box,min_box;
         for(int i=0;i<3;++i){
           
-          double cos1,cos2;
+         {  // dumb bax range the contains total sphere of radius dmax
+            max_box[i] = (int)( (observers[icone][i] + dmax)/BoxLength );
+            if(observers[icone][i] < dmax){
+              min_box[i] = (int)( (observers[icone][i] - dmax)/BoxLength ) - 1;
+            }else{
+              min_box[i] = 0;
+            }
+          }
+        }
+        
+          Point_3d n;
+          Utilities::Geometry::Cone cone(observers[icone],directions[icone],range/sqrt(2));
+          for(n[0] = min_box[0] ; n[0] <= max_box[0] ; ++n[0]){
+            for(n[1] = min_box[1] ; n[1] <= max_box[1] ; ++n[1]){
+              for(n[2] = min_box[2] ; n[2] <= max_box[2] ; ++n[2]){
+                
+                Point_3d p1(BoxLength*n[0],BoxLength*n[1],BoxLength*n[2]);
+                Point_3d p2(BoxLength*(n[0]+1),BoxLength*(n[1]+1),BoxLength*(n[2]+1));
+                
+                if( cone.intersect_box(p1,p2) ) boxes[icone].push_back(n);
+              }
+            }
+          }
+        
+          
+          /*double cos1,cos2;
           {
             double theta1,theta2;
             theta1 = acos(fabs(directions[icone][i])) - range/sqrt(2.);
-            theta2 = pi - acos(fabs(directions[icone][i])) - range/sqrt(2.);
+            theta2 = pi - acos(fabs(directions[icone][i])) + range/sqrt(2.);
             
             if(theta1 > 0.0){
               cos1 = cos(theta1);
@@ -1170,8 +1199,8 @@ namespace LightCones{
           double d2 = ((observers[icone][i] - cos2*dmax)/BoxLength);
           if(d2 > 0) min_box[icone][i] = 0;
           else min_box[icone][i] = (int)(d2) - 1;
-          
-        }
+         */
+        
       }
       
       //open file
@@ -1183,7 +1212,7 @@ namespace LightCones{
         throw std::runtime_error(" Cannot open file.");
       }
       points.resize(blocksize);
-      size_t Nlines = 0;
+      size_t Nlines = 0,Nblocks=0;
       while(!feof(pFile)){  // loop through blocks
         
         {  // read in a block of points
@@ -1216,7 +1245,7 @@ namespace LightCones{
             thr[ii] = std::thread(_fastplanes_parallel_
                                   ,points.data() + ii*chunk_size
                                   ,points.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
-                                  ,cosmo,std::ref(max_box),std::ref(min_box)
+                                  ,cosmo,std::ref(boxes)
                                   ,std::ref(observers),std::ref(rotationQs)
                                   ,std::ref(dsources),std::ref(maps)
                                   ,dmin,dmax,BoxLength);
@@ -1278,12 +1307,16 @@ namespace LightCones{
         */
         
         Nlines += blocksize;
-        if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
-        if(Nlines%10000000 == 0) std::cout << std::endl;
-        if(Nlines%100000000 == 0) std::cout << std::endl;
-        std::cout << std::endl;
+        std::cout << "=" << std::flush;
+        ++Nblocks;
+        //if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
+        if(Nblocks%10 == 0) std::cout << " " << std::flush;
+        if(Nblocks%50 == 0) std::cout << std::endl;
+        if(Nblocks%100 == 0) std::cout << std::endl;
+        //std::cout << std::endl;
       }
       fclose(pFile);
+      std::cout << std::endl;
     }
     
     
@@ -1310,8 +1343,7 @@ namespace LightCones{
   
   void _fastplanes_parallel_(Point_3d *begin,Point_3d *end
                  ,const COSMOLOGY &cosmo
-                 ,std::vector<Point_3d> &max_box
-                 ,std::vector<Point_3d> &min_box
+                 ,std::vector<std::vector<Point_3d> > &boxes
                  ,std::vector<Point_3d> &observers
                  ,std::vector<Quaternion> &rotationQs
                  ,std::vector<double> &dsources
@@ -1332,11 +1364,12 @@ namespace LightCones{
       // loop cones
       for(int icone=0;icone<Ncones;++icone){
         
+        for(auto dn : boxes[icone]){
         // loop through repitions of box ??? this could be done better
-        Point_3d dn;
-        for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-          for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+        //Point_3d dn;
+        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
               
               Point_3d x = *phalo - observers[icone] + dn*BoxLength;
               double r = x.length();
@@ -1358,10 +1391,11 @@ namespace LightCones{
                   }
                 }
               }
-            }}}
+            }//}}
       }
       
     }
     
   }
-}
+    
+ }

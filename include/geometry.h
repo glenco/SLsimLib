@@ -280,6 +280,30 @@ namespace Utilities {
     PosType Seporation(const SphericalPoint &p1,const SphericalPoint &p2);
     ///  Angular seporation between points
     PosType AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2);
+    
+    
+    
+    struct Cone{
+      Cone(Point_3d v    /// vector describing the direction of the cone
+           ,Point_3d p   /// the vertex of the cone
+           ,double theta /// half the openning angle of the cone
+           ):v(v),p(p){
+        v.unitize();
+        costheta = cos(theta);
+        assert(theta <= pi/2);
+      }
+      
+      /// test if the cone intersects with a line segment
+      bool intersect_line_segment(const Point_3d &p1,const Point_3d &p2);
+      /// test if the cone intersects with a rectangular surface
+      bool intersect_face(const Point_3d &p1,const Point_3d &p2,const Point_3d &p3);
+      /// test if the cone intersects with a box that is aligned with the coordinate axis
+      bool intersect_box(const Point_3d &p1,const Point_3d &p2);
+      
+      Point_3d v; /// direction
+      Point_3d p; /// vertex
+      double costheta;
+    };
 
     /// Determine if line segments a1a2 and b1b2 intersect.  Sharing an endpoint does not count as intersecting
     bool intersect(const PosType a1[],const PosType a2[]
