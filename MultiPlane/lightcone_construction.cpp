@@ -589,7 +589,7 @@ namespace LightCones{
                              ,[](SphericalPoint &p,double v){return p.r < v;});
       
       double z = cosmo.invCoorDist(D_planes[i]);
-      double Dl = D_planes[i]/(1+z);
+      //double Dl = D_planes[i]/(1+z);
       double total_mass = 0.0;
       
       // project onto planes
@@ -1052,7 +1052,7 @@ namespace LightCones{
                       ,bool addtocone
   ){
     
-    const std::string delim = " ";
+    //const std::string delim = " ";
     
     assert(cosmo.getOmega_matter() + cosmo.getOmega_lambda() == 1.0);
     // set coordinate distances for planes
@@ -1105,9 +1105,9 @@ namespace LightCones{
     // find redshift ranges for each snapshot
     // shift the redshifts to between the snapshots
     std::vector<double> abins(z_unique.size() + 1);
-    abins[0] = 1.0/(1+z_unique[0]);
-    for(int i=1;i<z_unique.size()-1;++i){
-      abins[i] = ( 1/(1+z_unique[i]) + 1/(1+z_unique[i+1]) )/2 ;
+    abins[0] = 1.0;
+    for(int i=1;i<z_unique.size();++i){
+      abins[i] = ( 1/(1+z_unique[i]) + 1/(1+z_unique[i-1]) )/2 ;
     }
     abins.back() = 1.0/( 1 + std::max(zs_max,z_unique.back() ) );
     
