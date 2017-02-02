@@ -1168,7 +1168,20 @@ namespace LightCones{
                 Point_3d p1(BoxLength*n[0],BoxLength*n[1],BoxLength*n[2]);
                 Point_3d p2(BoxLength*(n[0]+1),BoxLength*(n[1]+1),BoxLength*(n[2]+1));
                 
-                if( cone.intersect_box(p1,p2) ) boxes[icone].push_back(n);
+                if( cone.intersect_box(p1,p2) ){
+                  
+                  // require that at least one corner is outside the sphere R=dmin around observer
+                  p1 = p1 - observers[icone];
+                  p2 = p2 - observers[icone];
+                  if(p1.length() > dmin || p2.length() > dmin ||
+                     (p1 + Point_3d(BoxLength,0,0)).length() > dmin ||
+                     (p1 + Point_3d(0,BoxLength,0)).length() > dmin ||
+                     (p1 + Point_3d(0,0,BoxLength)).length() > dmin ||
+                     (p1 + Point_3d(0,BoxLength,BoxLength)).length() > dmin ||
+                     (p1 + Point_3d(BoxLength,0,BoxLength)).length() > dmin ||
+                     (p1 + Point_3d(BoxLength,BoxLength,0)).length() > dmin
+                     )  boxes[icone].push_back(n);
+                }
               }
             }
           }
