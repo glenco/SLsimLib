@@ -1165,10 +1165,11 @@ namespace LightCones{
     
     int Ncones = maps.size();
     int Nmaps = maps[0].size();
+    double hubble = cosmo.gethubble();
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
-      phalo->x /= cosmo.gethubble();
+      phalo->x /= hubble;
       
       // loop cones
       for(int icone=0;icone<Ncones;++icone){
@@ -1197,7 +1198,7 @@ namespace LightCones{
                       std::lock_guard<std::mutex> lock(moo);
                       // add mass or distribute mass to pixels
                       maps[icone][isource][image_index]
-                      += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+                      += phalo->mass*(dsources[isource] - sp.r)/sp.r/hubble;  // this is assuming flat ???
                     }
                   }
                 }

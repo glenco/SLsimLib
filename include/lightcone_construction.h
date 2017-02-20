@@ -219,27 +219,6 @@ namespace LightCones{
     std::vector<LightCone> cones;
   };
   
-  /** \brief
-   
-   The Born approximation is used.
-   
-   *
-  template<typename T>
-  void FastLightCones(
-                      const COSMOLOGY &cosmo
-                      ,const std::vector<double> &zsources    // vector of source redshifts desired
-                      ,std::vector<std::vector<PixelMap> > &maps
-                      ,double range
-                      ,double angular_resolution
-                      ,std::vector<Point_3d> &observers    /// position of observers within the simulation box
-                      ,std::vector<Point_3d> &directions   /// direction of light cones
-                      ,const std::vector<std::string> &snap_filenames
-                      ,const std::vector<float> &snap_redshifts
-                      ,double BoxLength
-                      ,double particle_mass
-                      ,bool verbose = false
-                      ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
-  );/**/
 
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
@@ -459,22 +438,27 @@ namespace LightCones{
 
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
-  
+  /** \brief
+   
+   The Born approximation is used.
+   
+   */
+
   template <typename T>
   void FastLightCones(
                       const COSMOLOGY &cosmo
-                      ,const std::vector<double> &zsources
+                      ,const std::vector<double> &zsources   /// vector of source redshifts
                       ,std::vector<std::vector<PixelMap> > &maps
                       ,double range
                       ,double angular_resolution
-                      ,std::vector<Point_3d> &observers
-                      ,std::vector<Point_3d> &directions
+                      ,std::vector<Point_3d> &observers     /// position of observers within the simulation box
+                      ,std::vector<Point_3d> &directions      /// direction of light cones
                       ,const std::vector<std::string> &snap_filenames
                       ,const std::vector<float> &snap_redshifts
                       ,double BoxLength
                       ,double particle_mass
                       ,bool verbose = false
-                      ,bool addtocone = false
+                      ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
                       ){
     
     assert(cosmo.getOmega_matter() + cosmo.getOmega_lambda() == 1.0);
@@ -548,8 +532,7 @@ namespace LightCones{
       rotationQs[i] = Quaternion::q_y_rotation(-sp.theta)*Quaternion::q_z_rotation(-sp.phi);
     }
     
-    //const int blocksize = 1000000;  ????
-    const int blocksize = 100000;
+    const int blocksize = 1000000;
     
     //std::vector<T> points(blocksize);
     
@@ -610,37 +593,7 @@ namespace LightCones{
             }
           }
         }
-        
-        
-        /*double cos1,cos2;
-
-          {
-            double theta1,theta2;
-            theta1 = acos(fabs(directions[icone][i])) - range/sqrt(2.);
-            theta2 = pi - acos(fabs(directions[icone][i])) + range/sqrt(2.);
-
-         
-            if(theta1 > 0.0){
-              cos1 = cos(theta1);
-            }else cos1 = 1.0;
-            
-            if(theta2 > pi/2){
-              cos2 = 0.0;
-            }else if(theta2 < 0.0){
-              cos2 = 1.0;
-            }else{
-              cos2 = cos(theta2);
-            }
-          }
-          
-          if(directions[icone][i] < 0.0) std::swap(cos1,cos2);
-          
-          max_box[icone][i] = (int)((observers[icone][i] + cos1*dmax)/BoxLength);
-          double d2 = ((observers[icone][i] - cos2*dmax)/BoxLength);
-          if(d2 > 0) min_box[icone][i] = 0;
-          else min_box[icone][i] = (int)(d2) - 1;
-          */
-        }
+      }
       
       
       //open file
@@ -693,7 +646,7 @@ namespace LightCones{
         
         Nlines += blocksize;
         ++Nblocks;
-        //if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
+        std::cout << "=" << std::flush ;
         if(Nblocks%10 == 0) std::cout << " " << std::flush;
         if(Nblocks%50 == 0) std::cout << std::endl;
         if(Nblocks%100 == 0) std::cout << std::endl;
