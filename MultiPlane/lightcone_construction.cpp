@@ -587,7 +587,7 @@ namespace LightCones{
                              ,[](SphericalPoint &p,double v){return p.r < v;});
       
       double z = cosmo.invCoorDist(D_planes[i]);
-      double Dl = D_planes[i]/(1+z);
+      //double Dl = D_planes[i]/(1+z);
       double total_mass = 0.0;
       
       // project onto planes
@@ -1016,7 +1016,6 @@ namespace LightCones{
     file.close();
   }
   
-  
   /** \brief class for generating positions in proportion to mass in an NFW profiles
    */
     NFWgenerator::NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons)
@@ -1102,9 +1101,9 @@ namespace LightCones{
                                        ,std::mutex &moo
                                        ){
     // loop lines / read
-    
     int Ncones = maps.size();
     int Nmaps = maps[0].size();
+
     
     for(Point_3d *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1209,6 +1208,7 @@ namespace LightCones{
   }
   
   
+
   /*void ASCII_XMR::fastplanes_parallel(
                                         LightCones::DatumXMR *begin
                                         ,LightCones::DatumXMR *end
@@ -1224,7 +1224,7 @@ namespace LightCones{
                                         ,double BoxLength
                                         ,std::mutex &moo
                                         ){
-    // loop lines / read
+   // loop lines / read
     
     int Ncones = maps.size();
     int Nmaps = maps[0].size();
@@ -1240,11 +1240,12 @@ namespace LightCones{
       // loop cones
       for(int icone=0;icone<Ncones;++icone){
         
+        for(auto dn : boxes[icone]){
         // loop through repitions of box ??? this could be done better
-        Point_3d dn;
-        for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-          for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+        //Point_3d dn;
+        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
               
               Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
               double r = x.length();
@@ -1287,7 +1288,7 @@ namespace LightCones{
                   
                 }
               }
-            }}}
+            }//}}
       }
     }
   }*/

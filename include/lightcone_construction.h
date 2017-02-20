@@ -248,73 +248,11 @@ namespace LightCones{
    templated functions for projecting mass onto planes
    *************************************************************************************************/
   
-  template<typename T>
-  void _fastplanes_parallel_(T *begin,T *end
-                             ,const COSMOLOGY &cosmo
-                             ,std::vector<Point_3d> &max_box
-                             ,std::vector<Point_3d> &min_box
-                             ,std::vector<Point_3d> &observers
-                             ,std::vector<Quaternion> &rotationQs
-                             ,std::vector<double> &dsources
-                             ,std::vector<std::vector<PixelMap> > &maps
-                             ,double dmin
-                             ,double dmax
-                             ,double BoxLength
-                             ,std::mutex &moo
-                             ){
-    // loop lines / read
-    
-    int Ncones = maps.size();
-    int Nmaps = maps[0].size();
-    
-    for(Point_3d *phalo = begin ; phalo != end ; ++phalo){
-      
-      *phalo /= cosmo.gethubble();
-      
-      // loop cones
-      for(int icone=0;icone<Ncones;++icone){
-        
-        // loop through repitions of box ??? this could be done better
-        Point_3d dn;
-        for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-          for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
-              
-              Point_3d x = *phalo - observers[icone] + dn*BoxLength;
-              double r = x.length();
-              if( r > dmin && r < dmax ){
-                // rotate to cone frame - direction[i] is the x-axis
-                x = rotationQs[icone].Rotate(x);
-                SphericalPoint sp(x);
-                
-                // find pixel
-                long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
-                
-                if(image_index != -1){
-                  for(int isource = 0 ; isource < Nmaps ; ++isource){
-                    if(dsources[isource] > sp.r  ){
-                      std::lock_guard<std::mutex> lock(moo);
-                      // add mass or distribute mass to pixels
-                      maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
-                    }
-                  }
-                }
-              }
-            }}}
-      }
-      
-    }
-    
-  }
-  //template<typename T>
-
-  
 
   /*************************************************************************************************
    templated functions for reading a block from a file
    *************************************************************************************************/
-   
-
+  
   template <typename T>
   size_t scan_block(size_t blocksize,std::vector<T> &points,FILE *pFile){
     double tmpf;
@@ -331,6 +269,10 @@ namespace LightCones{
     return i;
   }
   
+  /*************************************************************************************************
+   structures to implement templated FastLightCones<>()
+   *************************************************************************************************/
+
   struct ASCII_XV{
     std::vector<Point_3d> points;
     
@@ -627,11 +569,10 @@ namespace LightCones{
       std::vector<std::vector<Point_3d> > boxes(Ncones);
 
       for(int icone=0;icone<Ncones;++icone){
+        Point_3d max_box,min_box;
         for(int i=0;i<3;++i){
           
-          Point_3d max_box,min_box;
-
-          {  // dumb bax range the contains total sphere of radius dmax
+          {  // dumb box range the contains total sphere of radius dmax
             max_box[i] = (int)( (observers[icone][i] + dmax)/BoxLength );
             if(observers[icone][i] < dmax){
               min_box[i] = (int)( (observers[icone][i] - dmax)/BoxLength ) - 1;

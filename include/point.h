@@ -535,6 +535,7 @@ struct Point_3d{
   
   PosType x[3];
   PosType & operator[](size_t i){return x[i];}
+  PosType operator()(size_t i)const {return x[i];}
 };
 
 
