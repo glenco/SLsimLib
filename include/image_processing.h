@@ -48,7 +48,9 @@ public:
 	inline double getRangeX() const { return rangeX; }
 	inline double getRangeY() const { return rangeY; }
 	inline const double* getCenter() const{ return center; }
-	inline double getResolution() const { return resolution; }
+  inline double getResolution() const { return resolution; }
+  Point_2d getLowerLeft() const { return Point_2d(map_boundary_p1[0],map_boundary_p1[1]); }
+  Point_2d getUpperRight() const { return Point_2d(map_boundary_p2[0],map_boundary_p2[1]); }
   
   inline double getValue(std::size_t i) const { return map[i]; }
   inline double & operator[](std::size_t i) { return map[i]; };
