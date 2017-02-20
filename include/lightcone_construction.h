@@ -680,7 +680,7 @@ namespace LightCones{
             
             //std::cout << ii*chunk_size << " " << n << std::endl;
             
-            thr[ii] = std::thread(unit.fastplanes_parallel
+            thr[ii] = std::thread(&unit.fastplanes_parallel
                                   ,unit.points.data() + ii*chunk_size
                                   ,unit.points.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
                                   ,cosmo,std::ref(boxes)
