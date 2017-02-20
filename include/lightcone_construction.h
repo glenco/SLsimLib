@@ -353,8 +353,7 @@ namespace LightCones{
                          Point_3d *begin
                          ,Point_3d *end
                          ,const COSMOLOGY &cosmo
-                         ,std::vector<Point_3d> &max_box
-                         ,std::vector<Point_3d> &min_box
+                         ,std::vector<std::vector<Point_3d> > &boxes
                          ,std::vector<Point_3d> &observers
                          ,std::vector<Quaternion> &rotationQs
                          ,std::vector<double> &dsources
@@ -386,8 +385,7 @@ namespace LightCones{
                                     DatumXM *begin
                                     ,DatumXM *end
                                     ,const COSMOLOGY &cosmo
-                                    ,std::vector<Point_3d> &max_box
-                                    ,std::vector<Point_3d> &min_box
+                                    ,std::vector<std::vector<Point_3d> > &boxes
                                     ,std::vector<Point_3d> &observers
                                     ,std::vector<Quaternion> &rotationQs
                                     ,std::vector<double> &dsources
@@ -422,8 +420,7 @@ namespace LightCones{
                                     DatumXMR *begin
                                     ,DatumXMR *end
                                     ,const COSMOLOGY &cosmo
-                                    ,std::vector<Point_3d> &max_box
-                                    ,std::vector<Point_3d> &min_box
+                                    ,std::vector<std::vector<Point_3d> > &boxes
                                     ,std::vector<Point_3d> &observers
                                     ,std::vector<Quaternion> &rotationQs
                                     ,std::vector<double> &dsources
@@ -459,8 +456,7 @@ namespace LightCones{
                                     DatumXMRmRs *begin
                                     ,DatumXMRmRs *end
                                     ,const COSMOLOGY &cosmo
-                                    ,std::vector<Point_3d> &max_box
-                                    ,std::vector<Point_3d> &min_box
+                                    ,std::vector<std::vector<Point_3d> > &boxes
                                     ,std::vector<Point_3d> &observers
                                     ,std::vector<Quaternion> &rotationQs
                                     ,std::vector<double> &dsources
@@ -628,16 +624,61 @@ namespace LightCones{
       double dmin = dbins[i],dmax = dbins[i+1];
       
       // find the box range for each cone
-      std::vector<Point_3d> max_box(Ncones),min_box(Ncones);
+      std::vector<std::vector<Point_3d> > boxes(Ncones);
+
       for(int icone=0;icone<Ncones;++icone){
         for(int i=0;i<3;++i){
           
-          double cos1,cos2;
+          Point_3d max_box,min_box;
+
+          {  // dumb bax range the contains total sphere of radius dmax
+            max_box[i] = (int)( (observers[icone][i] + dmax)/BoxLength );
+            if(observers[icone][i] < dmax){
+              min_box[i] = (int)( (observers[icone][i] - dmax)/BoxLength ) - 1;
+            }else{
+              min_box[i] = 0;
+            }
+          }
+        }
+        
+        Point_3d n;
+        Utilities::Geometry::Cone cone(observers[icone],directions[icone],range/sqrt(2));
+        for(n[0] = min_box[0] ; n[0] <= max_box[0] ; ++n[0]){
+          for(n[1] = min_box[1] ; n[1] <= max_box[1] ; ++n[1]){
+            for(n[2] = min_box[2] ; n[2] <= max_box[2] ; ++n[2]){
+              
+              Point_3d p1(BoxLength*n[0],BoxLength*n[1],BoxLength*n[2]);
+              Point_3d p2(BoxLength*(n[0]+1),BoxLength*(n[1]+1),BoxLength*(n[2]+1));
+              
+              //if( cone.intersect_box(p1,p2) ) boxes[icone].push_back(n);
+              if( cone.intersect_box(p1,p2) ){
+                
+                // require that at least one corner is outside the sphere R=dmin around observer
+                p1 = p1 - observers[icone];
+                p2 = p2 - observers[icone];
+                if(p1.length() > dmin || p2.length() > dmin ||
+                   (p1 + Point_3d(BoxLength,0,0)).length() > dmin ||
+                   (p1 + Point_3d(0,BoxLength,0)).length() > dmin ||
+                   (p1 + Point_3d(0,0,BoxLength)).length() > dmin ||
+                   (p1 + Point_3d(0,BoxLength,BoxLength)).length() > dmin ||
+                   (p1 + Point_3d(BoxLength,0,BoxLength)).length() > dmin ||
+                   (p1 + Point_3d(BoxLength,BoxLength,0)).length() > dmin
+                   )  boxes[icone].push_back(n);
+              }
+
+            }
+          }
+        }
+        
+        
+        /*double cos1,cos2;
+
           {
             double theta1,theta2;
             theta1 = acos(fabs(directions[icone][i])) - range/sqrt(2.);
-            theta2 = pi - acos(fabs(directions[icone][i])) - range/sqrt(2.);
-            
+            theta2 = pi - acos(fabs(directions[icone][i])) + range/sqrt(2.);
+
+         
             if(theta1 > 0.0){
               cos1 = cos(theta1);
             }else cos1 = 1.0;
@@ -657,9 +698,9 @@ namespace LightCones{
           double d2 = ((observers[icone][i] - cos2*dmax)/BoxLength);
           if(d2 > 0) min_box[icone][i] = 0;
           else min_box[icone][i] = (int)(d2) - 1;
-          
+          */
         }
-      }
+      
       
       //open file
       if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;
@@ -670,7 +711,8 @@ namespace LightCones{
         throw std::runtime_error(" Cannot open file.");
       }
       //points.resize(blocksize);
-      size_t Nlines = 0;
+
+      size_t Nlines = 0,Nblocks=0;
       std::mutex clmoo;
       while(!feof(pFile)){  // loop through blocks
         
@@ -700,7 +742,7 @@ namespace LightCones{
             thr[ii] = std::thread(unit.fastplanes_parallel
                                   ,unit.points.data() + ii*chunk_size
                                   ,unit.points.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
-                                  ,cosmo,std::ref(max_box),std::ref(min_box)
+                                  ,cosmo,std::ref(boxes)
                                   ,std::ref(observers),std::ref(rotationQs)
                                   ,std::ref(dsources),std::ref(maps)
                                   ,dmin,dmax,BoxLength,std::ref(clmoo));
@@ -709,10 +751,16 @@ namespace LightCones{
         }
         
         Nlines += blocksize;
-        if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
-        std::cout << std::endl;
+        ++Nblocks;
+        //if(Nlines%1000000 == 0) std::cout << "=" << std::flush ;
+        if(Nblocks%10 == 0) std::cout << " " << std::flush;
+        if(Nblocks%50 == 0) std::cout << std::endl;
+        if(Nblocks%100 == 0) std::cout << std::endl;
+        //std::cout << std::endl;
+
       }
       fclose(pFile);
+      std::cout << std::endl;
     }
     
     

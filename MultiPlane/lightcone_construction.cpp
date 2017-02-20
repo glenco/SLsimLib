@@ -1091,8 +1091,7 @@ namespace LightCones{
                                        Point_3d *begin
                                        ,Point_3d *end
                                        ,const COSMOLOGY &cosmo
-                                       ,std::vector<Point_3d> &max_box
-                                       ,std::vector<Point_3d> &min_box
+                                       ,std::vector<std::vector<Point_3d> > &boxes
                                        ,std::vector<Point_3d> &observers
                                        ,std::vector<Quaternion> &rotationQs
                                        ,std::vector<double> &dsources
@@ -1115,10 +1114,11 @@ namespace LightCones{
       for(int icone=0;icone<Ncones;++icone){
         
         // loop through repitions of box ??? this could be done better
-        Point_3d dn;
-        for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-          for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+        for(auto dn : boxes[icone]){
+
+        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
               
               Point_3d x = *phalo - observers[icone] + dn*BoxLength;
               double r = x.length();
@@ -1140,7 +1140,7 @@ namespace LightCones{
                   }
                 }
               }
-            }}}
+            }//}}
       }
       
     }
@@ -1152,8 +1152,7 @@ namespace LightCones{
                                        LightCones::DatumXM *begin
                                        ,LightCones::DatumXM *end
                                        ,const COSMOLOGY &cosmo
-                                       ,std::vector<Point_3d> &max_box
-                                       ,std::vector<Point_3d> &min_box
+                                       ,std::vector<std::vector<Point_3d> > &boxes
                                        ,std::vector<Point_3d> &observers
                                        ,std::vector<Quaternion> &rotationQs
                                        ,std::vector<double> &dsources
@@ -1176,10 +1175,12 @@ namespace LightCones{
       for(int icone=0;icone<Ncones;++icone){
         
         // loop through repitions of box ??? this could be done better
-        Point_3d dn;
-        for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-          for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+        //Point_3d dn;
+        for(auto dn : boxes[icone]){
+
+        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
+            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
               
               Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
               double r = x.length();
@@ -1202,7 +1203,7 @@ namespace LightCones{
                   }
                 }
               }
-            }}}
+            }//}}
       }
     }
   }
