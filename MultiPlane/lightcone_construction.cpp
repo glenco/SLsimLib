@@ -1261,7 +1261,6 @@ namespace LightCones{
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
               
-              
               long ix = (long)(dx);
               long iy = (long)(dy);
               
@@ -1272,15 +1271,15 @@ namespace LightCones{
               
               
               if( dx < size || (1 - dx) < size ||
-                 dy < size || (1 - dy) < size ){  /// halo needs to be resolved
+                  dy < size || (1 - dy) < size ){  /// halo needs to be resolved
                 
                 // subdivide halo
                 
                 Point_3d p;
-                for(size_t ii =0 ; ii < Nsub ; ++ii){;
+                for(size_t ii = 0 ; ii < Nsub ; ++ii){;
                   pgen.draw(p);
                   SphericalPoint sp(p*phalo->r + x);
-                  subindex[ii++] = maps[icone][0].find_index(sp.theta,sp.phi);
+                  subindex[ii] = maps[icone][0].find_index(sp.theta,sp.phi);
                 }
 
                 for(int isource = 0 ; isource < Nmaps ; ++isource){
