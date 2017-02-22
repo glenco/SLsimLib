@@ -1233,7 +1233,7 @@ namespace LightCones{
     const size_t Nx = maps[0][0].getNx();
     const size_t Ny = maps[0][0].getNy();
     
-    const int Nsub = 1000;
+    const int Nsub = 500;  /// ????
     std::vector<long> subindex(Nsub);
     BsplineGEN pgen(12737); /// ????
     
@@ -1256,7 +1256,7 @@ namespace LightCones{
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
-            double size = 2*phalo->r/resolution;
+            double size = 2*phalo->r/resolution/sp.r;
             
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
@@ -1317,7 +1317,7 @@ namespace LightCones{
     X.resize(N);
     F.resize(N);
     X[0] = F[0] = 0.0;
-    dx = 2/(N-1);
+    dx = 2.0/(N-1);
     for(int i=1;i<N;++i){
       X[i] = i*dx;
       F[i] = mass_frac(X[i]);
