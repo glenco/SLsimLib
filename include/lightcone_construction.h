@@ -253,6 +253,7 @@ namespace LightCones{
    *************************************************************************************************/
 
   struct ASCII_XV{
+ 
     std::vector<Point_3d> points;
     
     size_t scan_block(size_t blocksize,FILE *pFile){
@@ -287,6 +288,7 @@ namespace LightCones{
     
   };
   struct ASCII_XM{
+ 
     std::vector<DatumXM> points;
     size_t scan_block(size_t blocksize,FILE *pFile){
       
@@ -317,9 +319,10 @@ namespace LightCones{
                                     ,std::mutex &moo
                                     );
     
-
   };
+  
   struct ASCII_XMR{
+    
     std::vector<DatumXMR> points;
 
     size_t scan_block(size_t blocksize,FILE *pFile){
@@ -352,10 +355,10 @@ namespace LightCones{
                                     ,std::mutex &moo
                                     );
     
-
-
   };
+  
   struct ASCII_XMRmRs{
+
     std::vector<DatumXMRmRs> points;
     size_t scan_block(size_t blocksize,FILE *pFile){
       
@@ -421,6 +424,25 @@ namespace LightCones{
     const int N = 1000;
   };
   
+  class BsplineGEN{
+  public:
+    BsplineGEN(long seed);
+
+    /// returns a vector of positions with length between 0 and 2
+    void draw(std::vector<Point_3d> &v);
+    void draw(Point_3d &v);
+  
+  private:
+    Utilities::RandomNumbers_NR ran;
+    std::vector<double> X;
+    std::vector<double> F;
+    const int N = 1000;
+    double dx;
+
+    double mass_frac(double q);
+  };
+
+  
   struct DkappaDz{
     DkappaDz(const COSMOLOGY &cos,double zsource):cosmo(cos),zs(zsource){
       rho = cosmo.getOmega_matter()*cosmo.rho_crit(0);
@@ -438,25 +460,30 @@ namespace LightCones{
 
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
-  /** \brief
+  /** \brief Goes directly from snapshots to lensing maps with Born approximation and linear propogations.
    
-   The Born approximation is used.
+   The template parameter allows this function to use different input data formats and
+   different ways of distributing the mass into grid cells.  The current options are 
    
+   LightCones::ASCII_XV   -- for 6 column ASCII file with position and velocity
+   LightCones::ASCII_XM   -- for 5 column ASCII file with position and mass
+   LightCones::ASCII_XMR   -- for 6 column ASCII file with position, mass and size
+
    */
 
   template <typename T>
   void FastLightCones(
                       const COSMOLOGY &cosmo
                       ,const std::vector<double> &zsources   /// vector of source redshifts
-                      ,std::vector<std::vector<PixelMap> > &maps
-                      ,double range
-                      ,double angular_resolution
-                      ,std::vector<Point_3d> &observers     /// position of observers within the simulation box
+                      ,std::vector<std::vector<PixelMap> > &maps  /// output kappa maps, do not need to be allocated initially
+                      ,double range                           /// angular range in radians of maps
+                      ,double angular_resolution              /// angular resolution in radians of maps
+                      ,std::vector<Point_3d> &observers     /// position of observers within the simulation box coordinates 0 < x < Lengths
                       ,std::vector<Point_3d> &directions      /// direction of light cones
-                      ,const std::vector<std::string> &snap_filenames
-                      ,const std::vector<float> &snap_redshifts
+                      ,const std::vector<std::string> &snap_filenames  /// names of the data files
+                      ,const std::vector<float> &snap_redshifts  /// the redshift of the data files
                       ,double BoxLength
-                      ,double particle_mass
+                      ,double mass_units
                       ,bool verbose = false
                       ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
                       ){
@@ -466,7 +493,7 @@ namespace LightCones{
     
     int Nmaps = zsources.size();    // number of source planes per cone
     int Ncones = observers.size();  // number of cones
-    
+                        
     if(directions.size() != observers.size()){
       std::cerr << "Size of direction and observers must match." << std::endl;
       throw std::invalid_argument("");
@@ -533,11 +560,10 @@ namespace LightCones{
     }
     
     const int blocksize = 1000000;
-    
-    //std::vector<T> points(blocksize);
-    
     T unit;
-    
+                        
+    //std::vector<T> points(blocksize);
+        
     // loop through files
     for(int i_file=0 ; i_file < snap_filenames.size() ; ++i_file){
       
@@ -661,7 +687,7 @@ namespace LightCones{
     size_t Npixels = maps[0][0].size();
     for(int isource=0;isource<Nmaps;++isource){
       // renormalize map
-      double norm = 4*pi*particle_mass*Grav/dsources[isource]/angular_resolution/angular_resolution;
+      double norm = 4*pi*mass_units*Grav/dsources[isource]/angular_resolution/angular_resolution;
       
       // calculate expected average kappa
       DkappaDz dkappadz(cosmo,zsources[isource]);

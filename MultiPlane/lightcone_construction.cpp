@@ -18,7 +18,7 @@
 #include "lightcone_construction.h"
 
 namespace LightCones{
-    
+  
   
   LightCone::LightCone(
                        double angular_radius    /// angular radius of lightcone in radians
@@ -1018,92 +1018,92 @@ namespace LightCones{
   
   /** \brief class for generating positions in proportion to mass in an NFW profiles
    */
-    NFWgenerator::NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons)
-    :ran(ran_in)
-    {
-      X.resize(N);
-      F.resize(N);
-      X[0] = F[0] = 0.0;
-      dx = max_cons/(N-1);
-      for(int i=1;i<N;++i){
-        X[i] = i*dx;
-        F[i] = log(1+X[i]) - X[i]/(1+X[i]) ;
-      }
+  NFWgenerator::NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons)
+  :ran(ran_in)
+  {
+    X.resize(N);
+    F.resize(N);
+    X[0] = F[0] = 0.0;
+    dx = max_cons/(N-1);
+    for(int i=1;i<N;++i){
+      X[i] = i*dx;
+      F[i] = log(1+X[i]) - X[i]/(1+X[i]) ;
     }
-    
-    /// returns a vector of points drawn from a spherical halo
-    void  NFWgenerator::drawSpherical(std::vector<Point_3d> &points  /// output points
-                       ,double cons                   /// concentration
-                       ,double Rvir                   /// maximum elliptical radius
-    ){
-      double Fmax = log(1+cons) - cons/(1+cons);
-      double rs = Rvir/cons;
-      for(auto p : points){
-        double f = Fmax*ran();
-        size_t i = Utilities::locate(F,f);
-        double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-        
-        p[0] = ran.gauss();
-        p[1] = ran.gauss();
-        p[2] = ran.gauss();
-        
-        p *= x*rs/p.length();
-      }
-    }
-    
-    ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
-    void  NFWgenerator::drawTriAxial(std::vector<Point_3d> &points  /// output points
-                      ,double cons                   /// concentration
-                      ,double Rvir                   /// maximum elliptical radius
-                      ,double f1                     /// axis ratio 1 to 3
-                      ,double f2                     /// axis ratio 2 to 3
-                      ,SphericalPoint v              /// direction of axis 3
-    ){
+  }
+  
+  /// returns a vector of points drawn from a spherical halo
+  void  NFWgenerator::drawSpherical(std::vector<Point_3d> &points  /// output points
+                                    ,double cons                   /// concentration
+                                    ,double Rvir                   /// maximum elliptical radius
+  ){
+    double Fmax = log(1+cons) - cons/(1+cons);
+    double rs = Rvir/cons;
+    for(auto &p : points){
+      double f = Fmax*ran();
+      size_t i = Utilities::locate(F,f);
+      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
       
-      double a3 = 1.0/pow(f1*f2,1.0/3.0);
-      double a1 = f1*a3,a2 = f2*a3;
-      Quaternion rot = Quaternion::q_z_rotation( v.phi )*Quaternion::q_y_rotation( v.theta );
+      p[0] = ran.gauss();
+      p[1] = ran.gauss();
+      p[2] = ran.gauss();
       
-      double Fmax = log(1+cons) - cons/(1+cons);
-      double rs = Rvir/cons;
-      for(auto p : points){
-        
-        p[0] = ran.gauss();
-        p[1] = ran.gauss();
-        p[2] = ran.gauss();
-        
-        double f = Fmax*ran();
-        size_t i = Utilities::locate(F,f);
-        double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-        
-        p *= x*rs/p.length();
-        
-        p[0] *= a1;
-        p[1] *= a2;
-        p[2] *= a3;
-        
-        p = rot.Rotate(p);
-      }
+      p *= x*rs/p.length();
     }
+  }
+  
+  ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
+  void  NFWgenerator::drawTriAxial(std::vector<Point_3d> &points  /// output points
+                                   ,double cons                   /// concentration
+                                   ,double Rvir                   /// maximum elliptical radius
+                                   ,double f1                     /// axis ratio 1 to 3
+                                   ,double f2                     /// axis ratio 2 to 3
+                                   ,SphericalPoint v              /// direction of axis 3
+  ){
+    
+    double a3 = 1.0/pow(f1*f2,1.0/3.0);
+    double a1 = f1*a3,a2 = f2*a3;
+    Quaternion rot = Quaternion::q_z_rotation( v.phi )*Quaternion::q_y_rotation( v.theta );
+    
+    double Fmax = log(1+cons) - cons/(1+cons);
+    double rs = Rvir/cons;
+    for(auto p : points){
+      
+      p[0] = ran.gauss();
+      p[1] = ran.gauss();
+      p[2] = ran.gauss();
+      
+      double f = Fmax*ran();
+      size_t i = Utilities::locate(F,f);
+      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
+      
+      p *= x*rs/p.length();
+      
+      p[0] *= a1;
+      p[1] *= a2;
+      p[2] *= a3;
+      
+      p = rot.Rotate(p);
+    }
+  }
   
   void ASCII_XV::fastplanes_parallel(
-                                       Point_3d *begin
-                                       ,Point_3d *end
-                                       ,const COSMOLOGY &cosmo
-                                       ,std::vector<std::vector<Point_3d> > &boxes
-                                       ,std::vector<Point_3d> &observers
-                                       ,std::vector<Quaternion> &rotationQs
-                                       ,std::vector<double> &dsources
-                                       ,std::vector<std::vector<PixelMap> > &maps
-                                       ,double dmin
-                                       ,double dmax
-                                       ,double BoxLength
-                                       ,std::mutex &moo
-                                       ){
+                                     Point_3d *begin
+                                     ,Point_3d *end
+                                     ,const COSMOLOGY &cosmo
+                                     ,std::vector<std::vector<Point_3d> > &boxes
+                                     ,std::vector<Point_3d> &observers
+                                     ,std::vector<Quaternion> &rotationQs
+                                     ,std::vector<double> &dsources
+                                     ,std::vector<std::vector<PixelMap> > &maps
+                                     ,double dmin
+                                     ,double dmax
+                                     ,double BoxLength
+                                     ,std::mutex &moo
+                                     ){
     // loop lines / read
     int Ncones = maps.size();
     int Nmaps = maps[0].size();
-
+    
     
     for(Point_3d *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1114,32 +1114,32 @@ namespace LightCones{
         
         // loop through repitions of box ??? this could be done better
         for(auto dn : boxes[icone]){
-
-        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          
+          //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
           //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
-              
-              Point_3d x = *phalo - observers[icone] + dn*BoxLength;
-              double r = x.length();
-              if( r > dmin && r < dmax ){
-                // rotate to cone frame - direction[i] is the x-axis
-                x = rotationQs[icone].Rotate(x);
-                SphericalPoint sp(x);
-                
-                // find pixel
-                long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
-                
-                if(image_index != -1){
-                  for(int isource = 0 ; isource < Nmaps ; ++isource){
-                    if(dsources[isource] > sp.r  ){
-                      std::lock_guard<std::mutex> lock(moo);
-                      // add mass or distribute mass to pixels
-                      maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
-                    }
-                  }
+          //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+          
+          Point_3d x = *phalo - observers[icone] + dn*BoxLength;
+          double r = x.length();
+          if( r > dmin && r < dmax ){
+            // rotate to cone frame - direction[i] is the x-axis
+            x = rotationQs[icone].Rotate(x);
+            SphericalPoint sp(x);
+            
+            // find pixel
+            long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
+            
+            if(image_index != -1){
+              for(int isource = 0 ; isource < Nmaps ; ++isource){
+                if(dsources[isource] > sp.r  ){
+                  std::lock_guard<std::mutex> lock(moo);
+                  // add mass or distribute mass to pixels
+                  maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
                 }
               }
-            }//}}
+            }
+          }
+        }//}}
       }
       
     }
@@ -1148,19 +1148,19 @@ namespace LightCones{
   
   
   void ASCII_XM::fastplanes_parallel(
-                                       LightCones::DatumXM *begin
-                                       ,LightCones::DatumXM *end
-                                       ,const COSMOLOGY &cosmo
-                                       ,std::vector<std::vector<Point_3d> > &boxes
-                                       ,std::vector<Point_3d> &observers
-                                       ,std::vector<Quaternion> &rotationQs
-                                       ,std::vector<double> &dsources
-                                       ,std::vector<std::vector<PixelMap> > &maps
-                                       ,double dmin
-                                       ,double dmax
-                                       ,double BoxLength
-                                       ,std::mutex &moo
-                                       ){
+                                     LightCones::DatumXM *begin
+                                     ,LightCones::DatumXM *end
+                                     ,const COSMOLOGY &cosmo
+                                     ,std::vector<std::vector<Point_3d> > &boxes
+                                     ,std::vector<Point_3d> &observers
+                                     ,std::vector<Quaternion> &rotationQs
+                                     ,std::vector<double> &dsources
+                                     ,std::vector<std::vector<PixelMap> > &maps
+                                     ,double dmin
+                                     ,double dmax
+                                     ,double BoxLength
+                                     ,std::mutex &moo
+                                     ){
     // loop lines / read
     
     int Ncones = maps.size();
@@ -1177,55 +1177,54 @@ namespace LightCones{
         // loop through repitions of box ??? this could be done better
         //Point_3d dn;
         for(auto dn : boxes[icone]){
-
-        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
+          
+          //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
           //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
-              
-              Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
-              double r = x.length();
-              if( r > dmin && r < dmax ){
-                // rotate to cone frame - direction[i] is the x-axis
-                x = rotationQs[icone].Rotate(x);
-                SphericalPoint sp(x);
-                
-                // find pixel
-                long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
-                
-                if(image_index != -1){
-                  for(int isource = 0 ; isource < Nmaps ; ++isource){
-                    if(dsources[isource] > sp.r  ){
-                      std::lock_guard<std::mutex> lock(moo);
-                      // add mass or distribute mass to pixels
-                      maps[icone][isource][image_index]
-                      += phalo->mass*(dsources[isource] - sp.r)/sp.r/hubble;  // this is assuming flat ???
-                    }
-                  }
+          //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+          
+          Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
+          double r = x.length();
+          if( r > dmin && r < dmax ){
+            // rotate to cone frame - direction[i] is the x-axis
+            x = rotationQs[icone].Rotate(x);
+            SphericalPoint sp(x);
+            
+            // find pixel
+            long image_index = maps[icone][0].find_index(sp.theta,sp.phi);
+            
+            if(image_index != -1){
+              for(int isource = 0 ; isource < Nmaps ; ++isource){
+                if(dsources[isource] > sp.r  ){
+                  std::lock_guard<std::mutex> lock(moo);
+                  // add mass or distribute mass to pixels
+                  maps[icone][isource][image_index]
+                  += phalo->mass*(dsources[isource] - sp.r)/sp.r/hubble;  // this is assuming flat ???
                 }
               }
-            }//}}
+            }
+          }
+        }//}}
       }
     }
   }
   
   
-
-  /*void ASCII_XMR::fastplanes_parallel(
-                                        LightCones::DatumXMR *begin
-                                        ,LightCones::DatumXMR *end
-                                        ,const COSMOLOGY &cosmo
-                                        ,std::vector<Point_3d> &max_box
-                                        ,std::vector<Point_3d> &min_box
-                                        ,std::vector<Point_3d> &observers
-                                        ,std::vector<Quaternion> &rotationQs
-                                        ,std::vector<double> &dsources
-                                        ,std::vector<std::vector<PixelMap> > &maps
-                                        ,double dmin
-                                        ,double dmax
-                                        ,double BoxLength
-                                        ,std::mutex &moo
-                                        ){
-   // loop lines / read
+  
+  void ASCII_XMR::fastplanes_parallel(
+                                      LightCones::DatumXMR *begin
+                                      ,LightCones::DatumXMR *end
+                                      ,const COSMOLOGY &cosmo
+                                      ,std::vector<std::vector<Point_3d> > &boxes
+                                      ,std::vector<Point_3d> &observers
+                                      ,std::vector<Quaternion> &rotationQs
+                                      ,std::vector<double> &dsources
+                                      ,std::vector<std::vector<PixelMap> > &maps
+                                      ,double dmin
+                                      ,double dmax
+                                      ,double BoxLength
+                                      ,std::mutex &moo
+                                      ){
+    // loop lines / read
     
     int Ncones = maps.size();
     int Nmaps = maps[0].size();
@@ -1233,6 +1232,10 @@ namespace LightCones{
     Point_2d p1 = maps[0][0].getLowerLeft();
     const size_t Nx = maps[0][0].getNx();
     const size_t Ny = maps[0][0].getNy();
+    
+    const int Nsub = 1000;
+    std::vector<long> subindex(Nsub);
+    BsplineGEN pgen(12737); /// ????
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1242,57 +1245,117 @@ namespace LightCones{
       for(int icone=0;icone<Ncones;++icone){
         
         for(auto dn : boxes[icone]){
-        // loop through repitions of box ??? this could be done better
-        //Point_3d dn;
-        //for(dn[0] = min_box[icone][0] ; dn[0] <= max_box[icone][0] ; ++dn[0]){
-          //for(dn[1] = min_box[icone][1] ; dn[1] <= max_box[icone][1] ; ++dn[1]){
-            //for(dn[2] = min_box[icone][2] ; dn[2] <= max_box[icone][2] ; ++dn[2]){
+          // loop through repitions of box ??? this could be done better
+          
+          Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
+          double r = x.length();
+          if( r > dmin && r < dmax ){
+            // rotate to cone frame - direction[i] is the x-axis
+            x = rotationQs[icone].Rotate(x);
+            SphericalPoint sp(x);
+            
+            double dx = (sp.theta - p1[0])/resolution ;
+            double dy = (sp.phi   - p1[1])/resolution ;
+            double size = 2*phalo->r/resolution;
+            
+            if(dx + size > 0 && dx - size < Nx &&
+               dy + size > 0 && dy - size < Ny){
               
-              Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
-              double r = x.length();
-              if( r > dmin && r < dmax ){
-                // rotate to cone frame - direction[i] is the x-axis
-                x = rotationQs[icone].Rotate(x);
-                SphericalPoint sp(x);
+              
+              long ix = (long)(dx);
+              long iy = (long)(dy);
+              
+              long image_index = ix + Nx*iy;
+              
+              dx -= ix;
+              dy -= iy;
+              
+              
+              if( dx < size || (1 - dx) < size ||
+                 dy < size || (1 - dy) < size ){  /// halo needs to be resolved
                 
-                double dx = (sp.theta - p1[0])/resolution ;
-                double dy = (sp.phi   - p1[1])/resolution ;
-                double size = phalo->r/resolution;
+                // subdivide halo
                 
-                if(dx + size > 0 && dx - size < Nx &&
-                   dy + size > 0 && dy - size < Ny){
-                  
-                  
-                  long ix = (long)(dx);
-                  long iy = (long)(dy);
-                  
-                  long image_index = ix + Nx*iy;
-                  
-                  dx -= ix;
-                  dy -= iy;
-                  
-                  
-                  if( dx < size || (1 - dx) < size ||
-                     dy < size || (1 - dy) < size ){  /// halo needs to be resolved
+                Point_3d p;
+                for(size_t ii =0 ; ii < Nsub ; ++ii){;
+                  pgen.draw(p);
+                  SphericalPoint sp(p*phalo->r + x);
+                  subindex[ii++] = maps[icone][0].find_index(sp.theta,sp.phi);
+                }
+
+                for(int isource = 0 ; isource < Nmaps ; ++isource){
+                  if(dsources[isource] > sp.r  ){
                     
-                  }
-                  
-                  for(int isource = 0 ; isource < Nmaps ; ++isource){
-                    if(dsources[isource] > sp.r  ){
-                      std::lock_guard<std::mutex> lock(moo);
-                      // add mass or distribute mass to pixels
-                      maps[icone][isource][image_index]
-                      += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+                    std::lock_guard<std::mutex> lock(moo);
+                    // add mass or distribute mass to pixels
+                    for(long ii : subindex){
+                      if(ii != -1) maps[icone][isource][ii]
+                      += phalo->mass*(dsources[isource] - sp.r)/sp.r/Nsub;  // this is assuming flat ???
                     }
                   }
-                  
-                  
+                }
+                
+              }else{
+              
+                for(int isource = 0 ; isource < Nmaps ; ++isource){
+                  if(dsources[isource] > sp.r  ){
+                    std::lock_guard<std::mutex> lock(moo);
+                    // add mass or distribute mass to pixels
+                    maps[icone][isource][image_index]
+                    += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+                  }
                 }
               }
-            }//}}
+              
+            }
+          }
+        }//}}
       }
     }
-  }*/
-
+  }
+  
+  BsplineGEN::BsplineGEN(long seed):ran(seed){
+    X.resize(N);
+    F.resize(N);
+    X[0] = F[0] = 0.0;
+    dx = 2/(N-1);
+    for(int i=1;i<N;++i){
+      X[i] = i*dx;
+      F[i] = mass_frac(X[i]);
+    }
+  }
+  
+  void BsplineGEN::draw(std::vector<Point_3d> &v){
+    
+    for(auto &p : v) draw(p);
+  };
+  
+  void BsplineGEN::draw(Point_3d &p){
+    
+      double f = ran();
+      size_t i = Utilities::locate(F,f);
+      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
+      
+      double theta = 2*pi*ran();
+      double z = 2*ran() - 1;
+      double t = sqrt(1-z*z);
+      p[0] = t*cos(theta);
+      p[1] = t*sin(theta);
+      p[2] = z;
+      
+      p *= x;
+  };
+  
+  
+  double BsplineGEN::mass_frac(double q){
+    
+    if(q > 2) return 1.0;
+    PosType q2=q*q,q3=q2*q;
+    
+    if(q > 1) return -0.0666667 + q3*( 8./3. - 3.*q + 6.*q2/5. - q3/6.);
+    
+    return 4*q3*(0.333333 - 0.3*q2 + 0.125*q3);
+  };
+  
 }
 
