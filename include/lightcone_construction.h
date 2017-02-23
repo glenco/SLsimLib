@@ -374,6 +374,10 @@ namespace LightCones{
         ++i;
       points.resize(i);
       
+      for(auto &h: points){
+        h.r_max /= 1.0e3;
+        h.r_min /= 1.0e3;
+      }
       return i;
     }
     
