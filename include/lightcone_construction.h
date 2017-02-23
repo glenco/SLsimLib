@@ -357,19 +357,20 @@ namespace LightCones{
     
   };
   
-  struct ASCII_XMRmRs{
+  struct ASCII_XMRRT{
 
     std::vector<DatumXMRmRs> points;
     size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
+      int tmp;
       
       points.resize(blocksize);
       while(i < blocksize &&
-            fscanf(pFile,"%lf %lf %lf %lf %lf %lf"
+            fscanf(pFile,"%lf %lf %lf %lf %lf %lf %i"
                    ,&points[i].x[0],&points[i].x[1],&points[i].x[2]
-                   ,&points[i].mass,&points[i].r_max,&points[i].r_scale) != EOF)
+                   ,&points[i].mass,&points[i].r_max,&points[i].r_scale,&tmp) != EOF)
         ++i;
       points.resize(i);
       
@@ -398,6 +399,13 @@ namespace LightCones{
   /*************************************************************************************************
    *************************************************************************************************/
 
+  void random_observers(std::vector<Point_3d> &observers
+                        ,std::vector<Point_3d> &directions
+                        ,int Ncones
+                        ,double BoxLength
+                        ,double cone_opening_radius
+                        ,Utilities::RandomNumbers_NR &ran
+                        );
   /** \brief class for generating positions in proportion to mass in an NFW profiles
    */
   class NFWgenerator{
@@ -636,9 +644,6 @@ namespace LightCones{
       std::mutex clmoo;
       while(!feof(pFile)){  // loop through blocks
         
-        //scan_block<T>(blocksize,points,pFile);
-        //scan_block<Point_3d>(blocksize,points,pFile);
-        
         long Nbatch = unit.scan_block(blocksize,pFile);
         
         if(Nbatch > 0){  // multi-thread the sorting into cones and projection onto planes
@@ -687,6 +692,7 @@ namespace LightCones{
     size_t Npixels = maps[0][0].size();
     for(int isource=0;isource<Nmaps;++isource){
       // renormalize map
+      // ??? need to put factors of hubble parameters in ?
       double norm = 4*pi*mass_units*Grav/dsources[isource]/angular_resolution/angular_resolution;
       
       // calculate expected average kappa
