@@ -1264,6 +1264,8 @@ namespace LightCones{
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
               
+              long image_index = (long)(dx) + Nx*(long)(dy);
+
               if(dx < 0 || dy < 0 ){
                 dx = 0;
               }else{
@@ -1302,8 +1304,6 @@ namespace LightCones{
                 
               }else{
               
-                long image_index = (long)(dx) + Nx*(long)(dy);
-
                 for(int isource = 0 ; isource < Nmaps ; ++isource){
                   if(dsources[isource] > sp.r  ){
                     std::lock_guard<std::mutex> lock(moo);
@@ -1375,6 +1375,8 @@ namespace LightCones{
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
               
+              long image_index = (long)(dx) + Nx*(long)(dy);
+
               if(dx < 0 || dy < 0 ){
                 dx = 0;
               }else{
@@ -1412,8 +1414,6 @@ namespace LightCones{
                 
               }else{
                 
-                long image_index = (long)(dx) + Nx*(long)(dy);
-                
                 for(int isource = 0 ; isource < Nmaps ; ++isource){
                   if(dsources[isource] > sp.r  ){
                     std::lock_guard<std::mutex> lock(moo);
@@ -1426,7 +1426,7 @@ namespace LightCones{
               
             }
           }
-        }//}}
+        }
       }
     }
   }
