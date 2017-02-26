@@ -443,7 +443,8 @@ namespace LightCones{
     /// returns a vector of positions with length between 0 and 2
     void draw(std::vector<Point_3d> &v);
     void draw(Point_3d &v);
-  
+    double drawR();
+    
   private:
     Utilities::RandomNumbers_NR ran;
     std::vector<double> X;
@@ -714,5 +715,66 @@ namespace LightCones{
     }
   }
   
+  
+  class NFW{
+  public:
+    
+    NFW2d():func(gf,1.0e-3,20,100){}
+    
+    double opertator()(double x){
+      x = (x > 1.0e-3) ? x : 1.0e-3;
+      double y;
+      func(x,y);
+      return y;
+    }
+  private:
+    
+    Utilities::LogLookUpTable<double> func;
+    
+    static double gf(double x){
+      double ans;
+      
+      if(x<1e-5) x=1e-5;
+      ans=log(x/2);
+      if(x==1.0){ ans += 1.0; return ans;}
+      if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
+      if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
+      return 0.0;
+    }
+  };
+  class TruncatedNFW{
+  public:
+    
+    TruncatedNFW():func(gf,1.0e-3,20,100){}
+    
+    double opertator()(double x){
+      x = (x > 1.0e-3) ? x : 1.0e-3;
+      double y;
+      func(x,y);
+      return y;
+    }
+  private:
+    
+    Utilities::LogLookUpTable<double> func;
+    
+    static double gf(double x,double c){
+      double ans;
+      double y = sqrt(x*x-1);
+      double z = sqrt(c*c - x*x);
+
+      double T;
+      if(x==1) T = sqrt( (c-1)/(c+1) );
+      else T = (atan(z/y) - atan(z/y/c))/y;
+      
+      double L = log(x/(sqrt(c*c + x) +c));
+      
+      if(x<1e-5) x=1e-5;
+      ans=log(x/2);
+      if(x==1.0){ ans += 1.0; return ans;}
+      if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
+      if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
+      return 0.0;
+    }
+  };
 }
 #endif /* defined(__GLAMER__lightcone_construction__) */

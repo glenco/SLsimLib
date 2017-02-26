@@ -1259,7 +1259,7 @@ namespace LightCones{
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
-            double size = 2*phalo->r/resolution/sp.r;
+            double size = phalo->r/resolution/sp.r;
             
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
@@ -1284,9 +1284,13 @@ namespace LightCones{
                 // subdivide halo
                 
                 Point_3d p;
-                for(size_t ii = 0 ; ii < Nsub ; ++ii){;
-                  pgen.draw(p);
-                  SphericalPoint sp(p*phalo->r + x);
+                for(size_t ii = 0 ; ii < Nsub ; ++ii){
+                  
+                  r = pgen.drawR()*phalo->r;
+                  p[0] = r*(2*ran() - 1);
+                  p[1] = r*sqrt(1 - p[0]*p[0])*cos(2*pi*ran());
+                  
+                  SphericalPoint sp(p + x);
                   subindex[ii] = maps[icone][0].find_index(sp.theta,sp.phi);
                 }
 
@@ -1321,35 +1325,40 @@ namespace LightCones{
     }
   }
 
-  void ASCII_XMRRT::fastplanes_parallel(
-                                      LightCones::DatumXMRmRs *begin
-                                      ,LightCones::DatumXMRmRs *end
-                                      ,const COSMOLOGY &cosmo
-                                      ,std::vector<std::vector<Point_3d> > &boxes
-                                      ,std::vector<Point_3d> &observers
-                                      ,std::vector<Quaternion> &rotationQs
-                                      ,std::vector<double> &dsources
-                                      ,std::vector<std::vector<PixelMap> > &maps
-                                      ,double dmin
-                                      ,double dmax
-                                      ,double BoxLength
-                                      ,std::mutex &moo
-                                      ){
+  void ASCII_XMRRT::fastplanes_parallel2(
+                                        LightCones::DatumXMRmRs *begin
+                                        ,LightCones::DatumXMRmRs *end
+                                        ,const COSMOLOGY &cosmo
+                                        ,std::vector<std::vector<Point_3d> > &boxes
+                                        ,std::vector<Point_3d> &observers
+                                        ,std::vector<Quaternion> &rotationQs
+                                        ,std::vector<double> &dsources
+                                        ,std::vector<std::vector<PixelMap> > &maps
+                                        ,double dmin
+                                        ,double dmax
+                                        ,double BoxLength
+                                        ,std::mutex &moo
+                                        ){
     // loop lines / read
     
     int Ncones = maps.size();
     int Nmaps = maps[0].size();
     const double resolution = maps[0][0].getResolution();
+    const double resolution2 = resolution*resolution;
     Point_2d p1 = maps[0][0].getLowerLeft();
     const size_t Nx = maps[0][0].getNx();
     const size_t Ny = maps[0][0].getNy();
+    const size_t Nxm1 = maps[0][0].getNx() - 1;
+    const size_t Nym1 = maps[0][0].getNy() - 1;
+    
+    NFW2d nfwprof;
     
     const int Nsub = 500;  /// ????
     std::vector<long> subindex(Nsub);
     Utilities::RandomNumbers_NR ran(10287); /// ???
     NFWgenerator pgen(ran,20);
     std::vector<Point_3d> ps(Nsub);
-
+    
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1370,13 +1379,27 @@ namespace LightCones{
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
-            double size = 2*phalo->r_max/resolution/sp.r;
+            double size = phalo->r_max/resolution/sp.r;
+            
+            size_t ixmin = (size_t)(MAX(dx - size,0));
+            size_t iymin = (size_t)(MAX(dy - size,0));
+            size_t ixmax = (size_t)(MIN(dx + size,Nxm1));
+            size_t iymax = (size_t)(MIN(dy + size,Nym1));
+            
+            for(size_t i = ixmin ; i <= ixmax ; ++i){
+              for(size_t j = iymin ; i <= iymax ; ++i){
+                double r = sp.r*resolution*sqrt( (i - dx)*(i - dx) + (j - dy)*(j - dy) );
+                double mass =  nfwprof(r/phalo->r_scale) * resolution2 * sp.r * sp.r;
+                
+                
+              }
+            }
             
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
               
               long image_index = (long)(dx) + Nx*(long)(dy);
-
+              
               if(dx < 0 || dy < 0 ){
                 dx = 0;
               }else{
@@ -1449,18 +1472,24 @@ namespace LightCones{
   
   void BsplineGEN::draw(Point_3d &p){
     
-      double f = ran();
-      size_t i = Utilities::locate(F,f);
-      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-      
-      double theta = 2*pi*ran();
-      double z = 2*ran() - 1;
-      double t = sqrt(1-z*z);
-      p[0] = t*cos(theta);
-      p[1] = t*sin(theta);
-      p[2] = z;
-      
-      p *= x;
+    double f = ran();
+    size_t i = Utilities::locate(F,f);
+    double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
+    
+    double theta = 2*pi*ran();
+    double z = 2*ran() - 1;
+    double t = sqrt(1-z*z);
+    p[0] = t*cos(theta);
+    p[1] = t*sin(theta);
+    p[2] = z;
+    
+    p *= x;
+  };
+  
+  double BsplineGEN::drawR(){
+    double f = ran();
+    size_t i = Utilities::locate(F,f);
+    return X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
   };
   
   
