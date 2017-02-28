@@ -1546,5 +1546,30 @@ namespace Utilities
     double xmax;
   };
   
+  /// cubic b-spline kernel in different dimensions normalized to 1
+  template <int d>
+  double Bspline(double q){
+  }
+  template <>
+  inline double Bspline<1>(double q){
+    if(q >= 2) return 0;
+    double q2 = 2-q,q1 = 1-q;
+    if(q <= 1) return 1.5*(0.25*q2*q2*q2 - q1*q1*q1);
+    return q2*q2*q2/6;
+  }
+  template <>
+  inline double Bspline<2>(double q){
+    if(q >= 2) return 0;
+    double q2 = 2-q,q1 = 1-q;
+    if(q <= 1) return (0.25*q2*q2*q2 - q1*q1*q1)*0.3183098861837907;
+    return q2*q2*q2*0.07957747154594767;
+  }
+  template <>
+  inline double Bspline<3>(double q){
+    if(q >= 2) return 0;
+    double q2 = 2-q,q1 = 1-q;
+    if(q <= 1) return (0.25*q2*q2*q2 - q1*q1*q1)/pi;
+    return q2*q2*q2*0.07957747154594767;
+  }
 }
 #endif

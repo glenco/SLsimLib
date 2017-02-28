@@ -16,6 +16,7 @@
 #include "particle_halo.h"
 #include "MOKAlens.h"
 #include "lightcone_construction.h"
+#include "utilities_slsim.h"
 
 namespace LightCones{
   
@@ -1235,6 +1236,9 @@ namespace LightCones{
     Point_2d p1 = maps[0][0].getLowerLeft();
     const size_t Nx = maps[0][0].getNx();
     const size_t Ny = maps[0][0].getNy();
+    const size_t Nxm1 = Nx-1;
+    const size_t Nym1 = Ny-1;
+    const double half_range =maps[0][0].getRangeX()/2;
     
     const int Nsub = 500;  /// ????
     std::vector<long> subindex(Nsub);
@@ -1252,18 +1256,56 @@ namespace LightCones{
           
           Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
           double r = x.length();
-          if( r > dmin && r < dmax ){
+          if( r > dmin && r < dmax){
             // rotate to cone frame - direction[i] is the x-axis
             x = rotationQs[icone].Rotate(x);
+            if(x[0] < 0 ) continue;
+            
             SphericalPoint sp(x);
+            
+            double size = 2*phalo->r/resolution/sp.r;
+           if(fabs(sp.theta) + size > half_range || fabs(sp.phi) + size > half_range) continue;
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
-            double size = 2*phalo->r/resolution/sp.r;
+             //*****************************************
+            long jjmin = (long)MAX(dy-size,0);
+            long jjmax = (long)MIN(dy+size,Nym1);
+            if(jjmin > jjmax) continue;
+            long iimin = (long)MAX(dx-size,0);
+            long iimax = (long)MIN(dx+size,Nxm1);
+            if(iimin > iimax) continue;
+            
+            double area = pi*size*size;
+            size /= 2;
+            
+            for(long jj = jjmin ; jj <= jjmax ; ++jj){
+              size_t index = iimin + Nx*jj;
+              for(long ii = iimin ; ii <= iimax ; ++ii,++index){
+                
+                double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
+                double m = Utilities::Bspline<2>(q)*phalo->mass/area;
+                
+                {
+                  //std::lock_guard<std::mutex> lock(moo);
+                  
+                  for(int isource = 0 ; isource < Nmaps ; ++isource){
+                    if(dsources[isource] > sp.r  ){
+                      // add mass or distribute mass to pixels
+                      maps[icone][isource][index]
+                      += m*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+                    }
+                  }
+                  
+                }
+                
+              }
+            }
+            
+            /*****************************************
             
             if(dx + size > 0 && dx - size < Nx &&
                dy + size > 0 && dy - size < Ny){
-              
               long image_index = (long)(dx) + Nx*(long)(dy);
 
               if(dx < 0 || dy < 0 ){
@@ -1314,9 +1356,9 @@ namespace LightCones{
                 }
               }
               
-            }
+            }*/
           }
-        }//}}
+        }
       }
     }
   }
@@ -1366,6 +1408,8 @@ namespace LightCones{
           if( r > dmin && r < dmax ){
             // rotate to cone frame - direction[i] is the x-axis
             x = rotationQs[icone].Rotate(x);
+            if(x[0] < 0 ) continue;
+
             SphericalPoint sp(x);
             
             double dx = (sp.theta - p1[0])/resolution ;
@@ -1449,18 +1493,18 @@ namespace LightCones{
   
   void BsplineGEN::draw(Point_3d &p){
     
-      double f = ran();
-      size_t i = Utilities::locate(F,f);
-      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-      
-      double theta = 2*pi*ran();
-      double z = 2*ran() - 1;
-      double t = sqrt(1-z*z);
-      p[0] = t*cos(theta);
-      p[1] = t*sin(theta);
-      p[2] = z;
-      
-      p *= x;
+    double f = ran();
+    size_t i = Utilities::locate(F,f);
+    double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
+    
+    double theta = 2*pi*ran();
+    double z = 2*ran() - 1;
+    double t = sqrt(1-z*z);
+    p[0] = t*cos(theta);
+    p[1] = t*sin(theta);
+    p[2] = z;
+    
+    p *= x;
   };
   
   
