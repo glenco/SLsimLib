@@ -283,7 +283,6 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
   };
@@ -316,7 +315,6 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
   };
@@ -352,10 +350,10 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
   };
+  
   
   struct ASCII_XMRRT{
     
@@ -393,7 +391,6 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
     
@@ -409,50 +406,7 @@ namespace LightCones{
                         ,double BoxLength
                         ,double cone_opening_radius
                         ,Utilities::RandomNumbers_NR &ran
-                        );
-  /** \brief class for generating positions in proportion to mass in an NFW profiles
-   */
-  class NFWgenerator{
-  public:
-    NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons);
-    /// returns a vector of points drawn from a spherical halo
-    void drawSpherical(std::vector<Point_3d> &points  /// output points
-                       ,double cons                   /// concentration
-                       ,double Rvir                   /// maximum elliptical radius
-    );
-    ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
-    void drawTriAxial(std::vector<Point_3d> &points  /// output points
-                      ,double cons                   /// concentration
-                      ,double Rvir                   /// maximum elliptical radius
-                      ,double f1                     /// axis ratio 1 to 3
-                      ,double f2                     /// axis ratio 2 to 3
-                      ,SphericalPoint v              /// direction of axis 3
-    );
-  private:
-    Utilities::RandomNumbers_NR &ran;
-    double dx;
-    std::vector<double> X;
-    std::vector<double> F;
-    const int N = 1000;
-  };
-  
-  class BsplineGEN{
-  public:
-    BsplineGEN(long seed);
-    
-    /// returns a vector of positions with length between 0 and 2
-    void draw(std::vector<Point_3d> &v);
-    void draw(Point_3d &v);
-    
-  private:
-    Utilities::RandomNumbers_NR ran;
-    std::vector<double> X;
-    std::vector<double> F;
-    const int N = 1000;
-    double dx;
-    
-    double mass_frac(double q);
-  };
+                        );  
   
   
   struct DkappaDz{
@@ -658,7 +612,6 @@ namespace LightCones{
       //points.resize(blocksize);
       
       size_t Nlines = 0,Nblocks=0;
-      std::mutex clmoo;
       while(!feof(pFile)){  // loop through blocks
         
         long Nbatch = unit.scan_block(blocksize,pFile);
@@ -687,7 +640,7 @@ namespace LightCones{
                                   ,cosmo,std::ref(boxes)
                                   ,std::ref(observers),std::ref(rotationQs)
                                   ,std::ref(dsources),std::ref(map_pack[ii])
-                                  ,dmin,dmax,BoxLength,std::ref(clmoo));
+                                  ,dmin,dmax,BoxLength);
           }
           for(int ii = 0; ii < nthreads ;++ii){ if(thr[ii].joinable() ) thr[ii].join();}
         }

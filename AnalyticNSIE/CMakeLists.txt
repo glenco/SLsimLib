@@ -14,4 +14,5 @@ add_sources(
 	source.cpp
 	sourceAnaGalaxy.cpp
 	elliptic.cpp
+	profiles.cpp
 )
