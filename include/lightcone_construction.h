@@ -14,7 +14,8 @@
 #include "lens_halos.h"
 #include "geometry.h"
 
-
+/**  \brief The LightCones namespace is for classes and functions related to making light cones and weak lensing maps from 3D snapshots of particles or halos.
+ */
 namespace LightCones{
   
   struct DataRockStar{
@@ -396,6 +397,30 @@ namespace LightCones{
     
   };
   
+  struct ASCII_XMRRT12:public ASCII_XMRRT{
+    size_t scan_block(size_t blocksize,FILE *pFile){
+      
+      // read in a block of points
+      size_t i=0;
+      int tmp;
+      
+      points.resize(blocksize);
+      while(i < blocksize &&
+            fscanf(pFile,"%lf %lf %lf %lf %lf %lf %i"
+                   ,&points[i].x[0],&points[i].x[1],&points[i].x[2]
+                   ,&points[i].mass,&points[i].r_max,&points[i].r_scale,&tmp) != EOF){
+              if(tmp == 1 || tmp == 2) ++i;
+            }
+      points.resize(i);
+      
+      for(auto &h: points){
+        h.r_max /= 1.0e3;
+        h.r_scale /= 1.0e3;
+      }
+      return i;
+    }
+    
+  };
   
   /*************************************************************************************************
    *************************************************************************************************/
@@ -426,14 +451,22 @@ namespace LightCones{
   
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
-  /** \brief Goes directly from snapshots to lensing maps with Born approximation and linear propogations.
+  /** \brief This function goes directly from snapshots to lensing maps with Born approximation and linear propogations.
    
+   <p>
    The template parameter allows this function to use different input data formats and
    different ways of distributing the mass into grid cells.  The current options are
    
    LightCones::ASCII_XV   -- for 6 column ASCII file with position and velocity
+   
    LightCones::ASCII_XM   -- for 5 column ASCII file with position and mass
+   
    LightCones::ASCII_XMR   -- for 6 column ASCII file with position, mass and size
+   
+   LightCones::ASCII_XMRRT  -- for 7 column ASCII file with position, mass,Rmax,Rscale and an integer denoting type, the halos are rendered as truncated NFWs
+   
+   LightCone::ASCII_XMRRT12 -- same as LightCones::ASCII_XMRRT but only takes entries with the 7th column equal to 1 or 2
+   <\p>
    
    */
   
