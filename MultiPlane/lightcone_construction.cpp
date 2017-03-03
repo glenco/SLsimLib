@@ -1190,7 +1190,7 @@ namespace LightCones{
             SphericalPoint sp(x);
             
             double size = 2*phalo->r/sp.r;
-            if(fabs(sp.theta) + size > half_range || fabs(sp.phi) + size > half_range) continue;
+            if(fabs(sp.theta) - size > half_range || fabs(sp.phi) - size > half_range) continue;
             size /= resolution;
             
             double dx = (sp.theta - p1[0])/resolution ;
