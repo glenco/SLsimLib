@@ -49,4 +49,5 @@ add_sources(
 	concave_hull.h
         bands_etc.h
 	lightcone_construction.h
+	profiles.h
 )

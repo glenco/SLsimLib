@@ -14,7 +14,8 @@
 #include "lens_halos.h"
 #include "geometry.h"
 
-
+/**  \brief The LightCones namespace is for classes and functions related to making light cones and weak lensing maps from 3D snapshots of particles or halos.
+ */
 namespace LightCones{
   
   struct DataRockStar{
@@ -42,7 +43,7 @@ namespace LightCones{
     double r;
   };
   
-
+  
   
   void ReadLightConeNFW(std::string filename,COSMOLOGY &cosmo
                         ,std::vector<LensHalo* > &lensVec
@@ -219,7 +220,7 @@ namespace LightCones{
     std::vector<LightCone> cones;
   };
   
-
+  
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
   
@@ -227,7 +228,7 @@ namespace LightCones{
    templated functions for projecting mass onto planes
    *************************************************************************************************/
   
-
+  
   /*************************************************************************************************
    templated functions for reading a block from a file
    *************************************************************************************************/
@@ -251,9 +252,9 @@ namespace LightCones{
   /*************************************************************************************************
    structures to implement templated FastLightCones<>()
    *************************************************************************************************/
-
+  
   struct ASCII_XV{
- 
+    
     std::vector<Point_3d> points;
     
     size_t scan_block(size_t blocksize,FILE *pFile){
@@ -272,23 +273,22 @@ namespace LightCones{
     }
     
     static void fastplanes_parallel(
-                         Point_3d *begin
-                         ,Point_3d *end
-                         ,const COSMOLOGY &cosmo
-                         ,std::vector<std::vector<Point_3d> > &boxes
-                         ,std::vector<Point_3d> &observers
-                         ,std::vector<Quaternion> &rotationQs
-                         ,std::vector<double> &dsources
-                         ,std::vector<std::vector<PixelMap> > &maps
-                         ,double dmin
-                         ,double dmax
-                         ,double BoxLength
-                         ,std::mutex &moo
-                         );
+                                    Point_3d *begin
+                                    ,Point_3d *end
+                                    ,const COSMOLOGY &cosmo
+                                    ,std::vector<std::vector<Point_3d> > &boxes
+                                    ,std::vector<Point_3d> &observers
+                                    ,std::vector<Quaternion> &rotationQs
+                                    ,std::vector<double> &dsources
+                                    ,std::vector<std::vector<PixelMap> > &maps
+                                    ,double dmin
+                                    ,double dmax
+                                    ,double BoxLength
+                                    );
     
   };
   struct ASCII_XM{
- 
+    
     std::vector<DatumXM> points;
     size_t scan_block(size_t blocksize,FILE *pFile){
       
@@ -316,7 +316,6 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
   };
@@ -324,7 +323,7 @@ namespace LightCones{
   struct ASCII_XMR{
     
     std::vector<DatumXMR> points;
-
+    
     size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
@@ -352,13 +351,13 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
   };
   
+  
   struct ASCII_XMRRT{
-
+    
     std::vector<DatumXMRmRs> points;
     size_t scan_block(size_t blocksize,FILE *pFile){
       
@@ -393,68 +392,46 @@ namespace LightCones{
                                     ,double dmin
                                     ,double dmax
                                     ,double BoxLength
-                                    ,std::mutex &moo
                                     );
     
-
+    
   };
-
+  
+  struct ASCII_XMRRT12:public ASCII_XMRRT{
+    size_t scan_block(size_t blocksize,FILE *pFile){
+      
+      // read in a block of points
+      size_t i=0;
+      int tmp;
+      
+      points.resize(blocksize);
+      while(i < blocksize &&
+            fscanf(pFile,"%lf %lf %lf %lf %lf %lf %i"
+                   ,&points[i].x[0],&points[i].x[1],&points[i].x[2]
+                   ,&points[i].mass,&points[i].r_max,&points[i].r_scale,&tmp) != EOF){
+              if(tmp == 1 || tmp == 2) ++i;
+            }
+      points.resize(i);
+      
+      for(auto &h: points){
+        h.r_max /= 1.0e3;
+        h.r_scale /= 1.0e3;
+      }
+      return i;
+    }
+    
+  };
   
   /*************************************************************************************************
    *************************************************************************************************/
-
+  
   void random_observers(std::vector<Point_3d> &observers
                         ,std::vector<Point_3d> &directions
                         ,int Ncones
                         ,double BoxLength
                         ,double cone_opening_radius
                         ,Utilities::RandomNumbers_NR &ran
-                        );
-  /** \brief class for generating positions in proportion to mass in an NFW profiles
-   */
-  class NFWgenerator{
-  public:
-    NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons);
-    /// returns a vector of points drawn from a spherical halo
-    void drawSpherical(std::vector<Point_3d> &points  /// output points
-                       ,double cons                   /// concentration
-                       ,double Rvir                   /// maximum elliptical radius
-    );
-    ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
-    void drawTriAxial(std::vector<Point_3d> &points  /// output points
-                      ,double cons                   /// concentration
-                      ,double Rvir                   /// maximum elliptical radius
-                      ,double f1                     /// axis ratio 1 to 3
-                      ,double f2                     /// axis ratio 2 to 3
-                      ,SphericalPoint v              /// direction of axis 3
-    );
-  private:
-    Utilities::RandomNumbers_NR &ran;
-    double dx;
-    std::vector<double> X;
-    std::vector<double> F;
-    const int N = 1000;
-  };
-  
-  class BsplineGEN{
-  public:
-    BsplineGEN(long seed);
-
-    /// returns a vector of positions with length between 0 and 2
-    void draw(std::vector<Point_3d> &v);
-    void draw(Point_3d &v);
-    double drawR();
-    
-  private:
-    Utilities::RandomNumbers_NR ran;
-    std::vector<double> X;
-    std::vector<double> F;
-    const int N = 1000;
-    double dx;
-
-    double mass_frac(double q);
-  };
-
+                        );  
   
   struct DkappaDz{
     DkappaDz(const COSMOLOGY &cos,double zsource):cosmo(cos),zs(zsource){
@@ -470,20 +447,28 @@ namespace LightCones{
     double zs;
     double rho;
   };
-
+  
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
-  /** \brief Goes directly from snapshots to lensing maps with Born approximation and linear propogations.
+  /** \brief This function goes directly from snapshots to lensing maps with Born approximation and linear propogations.
    
+   <p>
    The template parameter allows this function to use different input data formats and
-   different ways of distributing the mass into grid cells.  The current options are 
+   different ways of distributing the mass into grid cells.  The current options are
    
    LightCones::ASCII_XV   -- for 6 column ASCII file with position and velocity
+   
    LightCones::ASCII_XM   -- for 5 column ASCII file with position and mass
+   
    LightCones::ASCII_XMR   -- for 6 column ASCII file with position, mass and size
-
+   
+   LightCones::ASCII_XMRRT  -- for 7 column ASCII file with position, mass,Rmax,Rscale and an integer denoting type, the halos are rendered as truncated NFWs
+   
+   LightCone::ASCII_XMRRT12 -- same as LightCones::ASCII_XMRRT but only takes entries with the 7th column equal to 1 or 2
+   <\p>
+   
    */
-
+  
   template <typename T>
   void FastLightCones(
                       const COSMOLOGY &cosmo
@@ -499,14 +484,14 @@ namespace LightCones{
                       ,double mass_units
                       ,bool verbose = false
                       ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
-                      ){
+  ){
     
     assert(cosmo.getOmega_matter() + cosmo.getOmega_lambda() == 1.0);
     // set coordinate distances for planes
     
     int Nmaps = zsources.size();    // number of source planes per cone
     int Ncones = observers.size();  // number of cones
-                        
+    
     if(directions.size() != observers.size()){
       std::cerr << "Size of direction and observers must match." << std::endl;
       throw std::invalid_argument("");
@@ -544,6 +529,22 @@ namespace LightCones{
       }
     }
     
+    /// make a seporate set of maps for each thread
+    std::vector<std::vector<std::vector<PixelMap> > > map_pack(Utilities::GetNThreads());
+    for(auto &maps : map_pack){
+      maps.resize(Ncones);
+      for(auto &map_v : maps){  // loop through cones
+        map_v.reserve(Nmaps);
+        for(int i=0;i<Nmaps;++i){
+          map_v.emplace_back(center.x
+                             ,(size_t)(range/angular_resolution)
+                             ,(size_t)(range/angular_resolution)
+                             ,angular_resolution);
+        }
+      }
+    }
+
+    
     // find unique redshifts
     std::vector<double> z_unique(1,snap_redshifts[0]);
     for(auto z : snap_redshifts) if(z != z_unique.back() ) z_unique.push_back(z);
@@ -574,9 +575,7 @@ namespace LightCones{
     
     const int blocksize = 1000000;
     T unit;
-                        
-    //std::vector<T> points(blocksize);
-        
+    
     // loop through files
     for(int i_file=0 ; i_file < snap_filenames.size() ; ++i_file){
       
@@ -589,7 +588,6 @@ namespace LightCones{
       
       // find the box range for each cone
       std::vector<std::vector<Point_3d> > boxes(Ncones);
-
       for(int icone=0;icone<Ncones;++icone){
         Point_3d max_box,min_box;
         for(int i=0;i<3;++i){
@@ -628,7 +626,7 @@ namespace LightCones{
                    (p1 + Point_3d(BoxLength,BoxLength,0)).length() > dmin
                    )  boxes[icone].push_back(n);
               }
-
+              
             }
           }
         }
@@ -644,9 +642,8 @@ namespace LightCones{
         throw std::runtime_error(" Cannot open file.");
       }
       //points.resize(blocksize);
-
+      
       size_t Nlines = 0,Nblocks=0;
-      std::mutex clmoo;
       while(!feof(pFile)){  // loop through blocks
         
         long Nbatch = unit.scan_block(blocksize,pFile);
@@ -674,8 +671,8 @@ namespace LightCones{
                                   ,unit.points.data() + (ii+1)*chunk_size + (ii==nthreads-1)*remainder
                                   ,cosmo,std::ref(boxes)
                                   ,std::ref(observers),std::ref(rotationQs)
-                                  ,std::ref(dsources),std::ref(maps)
-                                  ,dmin,dmax,BoxLength,std::ref(clmoo));
+                                  ,std::ref(dsources),std::ref(map_pack[ii])
+                                  ,dmin,dmax,BoxLength);
           }
           for(int ii = 0; ii < nthreads ;++ii){ if(thr[ii].joinable() ) thr[ii].join();}
         }
@@ -687,18 +684,28 @@ namespace LightCones{
         if(Nblocks%50 == 0) std::cout << std::endl;
         if(Nblocks%100 == 0) std::cout << std::endl;
         //std::cout << std::endl;
-
+        
       }
       fclose(pFile);
       std::cout << std::endl;
     }
     
+    for(auto &tmaps : map_pack){
+        for(int isource=0;isource<Nmaps;++isource){
+          for(int icone=0 ; icone<Ncones ; ++icone){
+            maps[icone][isource] += tmaps[icone][isource];
+        }
+      }
+    }
+
     
     size_t Npixels = maps[0][0].size();
+    double norm = 4*pi*mass_units*Grav*cosmo.gethubble()*cosmo.gethubble()/angular_resolution/angular_resolution;
+
     for(int isource=0;isource<Nmaps;++isource){
       // renormalize map
       // ??? need to put factors of hubble parameters in ?
-      double norm = 4*pi*mass_units*Grav/dsources[isource]/angular_resolution/angular_resolution;
+      double norm2 = norm/dsources[isource];
       
       // calculate expected average kappa
       DkappaDz dkappadz(cosmo,zsources[isource]);
@@ -706,7 +713,7 @@ namespace LightCones{
       
       for(int icone=0 ; icone<Ncones ; ++icone){
         //for(auto &cone_maps: maps){
-        maps[icone][isource] *= norm;
+        maps[icone][isource] *= norm2;
         // subtract average
         //double ave = cone_maps[i].ave();
         for(size_t ii=0 ; ii<Npixels ; ++ii)
@@ -716,65 +723,5 @@ namespace LightCones{
   }
   
   
-  class NFW{
-  public:
-    
-    NFW2d():func(gf,1.0e-3,20,100){}
-    
-    double opertator()(double x){
-      x = (x > 1.0e-3) ? x : 1.0e-3;
-      double y;
-      func(x,y);
-      return y;
-    }
-  private:
-    
-    Utilities::LogLookUpTable<double> func;
-    
-    static double gf(double x){
-      double ans;
-      
-      if(x<1e-5) x=1e-5;
-      ans=log(x/2);
-      if(x==1.0){ ans += 1.0; return ans;}
-      if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
-      if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
-      return 0.0;
-    }
-  };
-  class TruncatedNFW{
-  public:
-    
-    TruncatedNFW():func(gf,1.0e-3,20,100){}
-    
-    double opertator()(double x){
-      x = (x > 1.0e-3) ? x : 1.0e-3;
-      double y;
-      func(x,y);
-      return y;
-    }
-  private:
-    
-    Utilities::LogLookUpTable<double> func;
-    
-    static double gf(double x,double c){
-      double ans;
-      double y = sqrt(x*x-1);
-      double z = sqrt(c*c - x*x);
-
-      double T;
-      if(x==1) T = sqrt( (c-1)/(c+1) );
-      else T = (atan(z/y) - atan(z/y/c))/y;
-      
-      double L = log(x/(sqrt(c*c + x) +c));
-      
-      if(x<1e-5) x=1e-5;
-      ans=log(x/2);
-      if(x==1.0){ ans += 1.0; return ans;}
-      if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
-      if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
-      return 0.0;
-    }
-  };
 }
 #endif /* defined(__GLAMER__lightcone_construction__) */

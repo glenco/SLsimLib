@@ -212,14 +212,6 @@ inline PosType MIN(PosType x,PosType y){
 inline PosType MAX(PosType x,PosType y){
   return (x > y) ? x : y;
 };
-template <class T>
-inline T MIN(T x,T y){
-  return (x < y) ? x : y;
-};
-template <class T>
-inline T MAX(T x,T y){
-  return (x > y) ? x : y;
-};
 
 template <class T>
 inline bool BETWEEN(T x,T xmin,T xmax){

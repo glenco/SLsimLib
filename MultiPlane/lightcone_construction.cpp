@@ -16,6 +16,8 @@
 #include "particle_halo.h"
 #include "MOKAlens.h"
 #include "lightcone_construction.h"
+#include "utilities_slsim.h"
+#include "profiles.h"
 
 namespace LightCones{
   
@@ -1015,80 +1017,7 @@ namespace LightCones{
     
     file.close();
   }
-  
-  /** \brief class for generating positions in proportion to mass in an NFW profiles
-   */
-  NFWgenerator::NFWgenerator(Utilities::RandomNumbers_NR &ran_in,double max_cons)
-  :ran(ran_in)
-  {
-    X.resize(N);
-    F.resize(N);
-    X[0] = F[0] = 0.0;
-    dx = max_cons/(N-1);
-    for(int i=1;i<N;++i){
-      X[i] = i*dx;
-      F[i] = log(1+X[i]) - X[i]/(1+X[i]) ;
-    }
-  }
-  
-  /// returns a vector of points drawn from a spherical halo
-  void  NFWgenerator::drawSpherical(std::vector<Point_3d> &points  /// output points
-                                    ,double cons                   /// concentration
-                                    ,double Rvir                   /// maximum elliptical radius
-  ){
-
-    double Fmax = log(1+cons) - cons/(1+cons);
-    double rs = Rvir/cons;
-    for(auto &p : points){
-      double f = Fmax*ran();
-      size_t i = MIN(Utilities::locate(F,f),N-2);
-      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-      double theta = 2*pi*ran();
-      
-      p[0] = 2*ran() - 1;
-      double tmp = sqrt(1-p[0]*p[0]);
-      p[1] = tmp*cos(theta);
-      p[2] = tmp*sin(theta);
-      
-      p *= x*rs;
-    }
-  }
-  
-  ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
-  void  NFWgenerator::drawTriAxial(std::vector<Point_3d> &points  /// output points
-                                   ,double cons                   /// concentration
-                                   ,double Rvir                   /// maximum elliptical radius
-                                   ,double f1                     /// axis ratio 1 to 3
-                                   ,double f2                     /// axis ratio 2 to 3
-                                   ,SphericalPoint v              /// direction of axis 3
-  ){
     
-    double a3 = 1.0/pow(f1*f2,1.0/3.0);
-    double a1 = f1*a3,a2 = f2*a3;
-    Quaternion rot = Quaternion::q_z_rotation( v.phi )*Quaternion::q_y_rotation( v.theta );
-    
-    double Fmax = log(1+cons) - cons/(1+cons);
-    double rs = Rvir/cons;
-    for(auto p : points){
-      
-      p[0] = ran.gauss();
-      p[1] = ran.gauss();
-      p[2] = ran.gauss();
-      
-      double f = Fmax*ran();
-      size_t i = Utilities::locate(F,f);
-      double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-      
-      p *= x*rs/p.length();
-      
-      p[0] *= a1;
-      p[1] *= a2;
-      p[2] *= a3;
-      
-      p = rot.Rotate(p);
-    }
-  }
-  
   void ASCII_XV::fastplanes_parallel(
                                      Point_3d *begin
                                      ,Point_3d *end
@@ -1101,7 +1030,6 @@ namespace LightCones{
                                      ,double dmin
                                      ,double dmax
                                      ,double BoxLength
-                                     ,std::mutex &moo
                                      ){
     // loop lines / read
     int Ncones = maps.size();
@@ -1135,7 +1063,7 @@ namespace LightCones{
             if(image_index != -1){
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
-                  std::lock_guard<std::mutex> lock(moo);
+                  //std::lock_guard<std::mutex> lock(moo);
                   // add mass or distribute mass to pixels
                   maps[icone][isource][image_index] += (dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
                 }
@@ -1162,7 +1090,6 @@ namespace LightCones{
                                      ,double dmin
                                      ,double dmax
                                      ,double BoxLength
-                                     ,std::mutex &moo
                                      ){
     // loop lines / read
     
@@ -1198,7 +1125,7 @@ namespace LightCones{
             if(image_index != -1){
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
-                  std::lock_guard<std::mutex> lock(moo);
+                  //std::lock_guard<std::mutex> lock(moo);
                   // add mass or distribute mass to pixels
                   maps[icone][isource][image_index]
                   += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
@@ -1225,7 +1152,7 @@ namespace LightCones{
                                       ,double dmin
                                       ,double dmax
                                       ,double BoxLength
-                                      ,std::mutex &moo
+                                      //,std::mutex &moo
                                       ){
     // loop lines / read
     
@@ -1235,130 +1162,13 @@ namespace LightCones{
     Point_2d p1 = maps[0][0].getLowerLeft();
     const size_t Nx = maps[0][0].getNx();
     const size_t Ny = maps[0][0].getNy();
+    const size_t Nxm1 = Nx-1;
+    const size_t Nym1 = Ny-1;
+    const double half_range =maps[0][0].getRangeX()/2;
     
-    const int Nsub = 500;  /// ????
-    std::vector<long> subindex(Nsub);
-    BsplineGEN pgen(12737); /// ????
-    
-    for(auto *phalo = begin ; phalo != end ; ++phalo){
-      
-      //phalo->x /= cosmo.gethubble();
-      
-      // loop cones
-      for(int icone=0;icone<Ncones;++icone){
-        
-        for(auto dn : boxes[icone]){
-          // loop through repitions of box ??? this could be done better
-          
-          Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
-          double r = x.length();
-          if( r > dmin && r < dmax ){
-            // rotate to cone frame - direction[i] is the x-axis
-            x = rotationQs[icone].Rotate(x);
-            SphericalPoint sp(x);
-            
-            double dx = (sp.theta - p1[0])/resolution ;
-            double dy = (sp.phi   - p1[1])/resolution ;
-            double size = phalo->r/resolution/sp.r;
-            
-            if(dx + size > 0 && dx - size < Nx &&
-               dy + size > 0 && dy - size < Ny){
-              
-              long image_index = (long)(dx) + Nx*(long)(dy);
-
-              if(dx < 0 || dy < 0 ){
-                dx = 0;
-              }else{
-                long ix = (long)(dx);
-                long iy = (long)(dy);
-              
-                //long image_index = ix + Nx*iy;
-              
-                dx -= ix;
-                dy -= iy;
-              }
-              
-              if( dx < size || (1 - dx) < size ||
-                  dy < size || (1 - dy) < size ){  /// halo needs to be resolved
-                
-                // subdivide halo
-                
-                Point_3d p;
-                for(size_t ii = 0 ; ii < Nsub ; ++ii){
-                  
-                  r = pgen.drawR()*phalo->r;
-                  p[0] = r*(2*ran() - 1);
-                  p[1] = r*sqrt(1 - p[0]*p[0])*cos(2*pi*ran());
-                  
-                  SphericalPoint sp(p + x);
-                  subindex[ii] = maps[icone][0].find_index(sp.theta,sp.phi);
-                }
-
-                for(int isource = 0 ; isource < Nmaps ; ++isource){
-                  if(dsources[isource] > sp.r  ){
-                    
-                    std::lock_guard<std::mutex> lock(moo);
-                    // add mass or distribute mass to pixels
-                    for(long ii : subindex){
-                      if(ii != -1) maps[icone][isource][ii]
-                      += phalo->mass*(dsources[isource] - sp.r)/sp.r/Nsub;  // this is assuming flat ???
-                    }
-                  }
-                }
-                
-              }else{
-              
-                for(int isource = 0 ; isource < Nmaps ; ++isource){
-                  if(dsources[isource] > sp.r  ){
-                    std::lock_guard<std::mutex> lock(moo);
-                    // add mass or distribute mass to pixels
-                    maps[icone][isource][image_index]
-                    += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
-                  }
-                }
-              }
-              
-            }
-          }
-        }//}}
-      }
-    }
-  }
-
-  void ASCII_XMRRT::fastplanes_parallel2(
-                                        LightCones::DatumXMRmRs *begin
-                                        ,LightCones::DatumXMRmRs *end
-                                        ,const COSMOLOGY &cosmo
-                                        ,std::vector<std::vector<Point_3d> > &boxes
-                                        ,std::vector<Point_3d> &observers
-                                        ,std::vector<Quaternion> &rotationQs
-                                        ,std::vector<double> &dsources
-                                        ,std::vector<std::vector<PixelMap> > &maps
-                                        ,double dmin
-                                        ,double dmax
-                                        ,double BoxLength
-                                        ,std::mutex &moo
-                                        ){
-    // loop lines / read
-    
-    int Ncones = maps.size();
-    int Nmaps = maps[0].size();
-    const double resolution = maps[0][0].getResolution();
-    const double resolution2 = resolution*resolution;
-    Point_2d p1 = maps[0][0].getLowerLeft();
-    const size_t Nx = maps[0][0].getNx();
-    const size_t Ny = maps[0][0].getNy();
-    const size_t Nxm1 = maps[0][0].getNx() - 1;
-    const size_t Nym1 = maps[0][0].getNy() - 1;
-    
-    NFW2d nfwprof;
-    
-    const int Nsub = 500;  /// ????
-    std::vector<long> subindex(Nsub);
-    Utilities::RandomNumbers_NR ran(10287); /// ???
-    NFWgenerator pgen(ran,20);
-    std::vector<Point_3d> ps(Nsub);
-    
+    //const int Nsub = 500;  /// ????
+    //std::vector<long> subindex(Nsub);
+    //BsplineGEN pgen(12737); /// ????
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1372,136 +1182,226 @@ namespace LightCones{
           
           Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
           double r = x.length();
-          if( r > dmin && r < dmax ){
+          if( r > dmin && r < dmax){
             // rotate to cone frame - direction[i] is the x-axis
             x = rotationQs[icone].Rotate(x);
+            if(x[0] < 0 ) continue;
+            
             SphericalPoint sp(x);
+            
+            double size = 2*phalo->r/sp.r;
+            if(fabs(sp.theta) + size > half_range || fabs(sp.phi) + size > half_range) continue;
+            size /= resolution;
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
-            double size = phalo->r_max/resolution/sp.r;
+            //*****************************************
+            long jjmin = (long)MAX(dy-size,0);
+            long jjmax = (long)MIN(dy+size,Nym1);
+            if(jjmin > jjmax) continue;
+            long iimin = (long)MAX(dx-size,0);
+            long iimax = (long)MIN(dx+size,Nxm1);
+            if(iimin > iimax) continue;
             
-            size_t ixmin = (size_t)(MAX(dx - size,0));
-            size_t iymin = (size_t)(MAX(dy - size,0));
-            size_t ixmax = (size_t)(MIN(dx + size,Nxm1));
-            size_t iymax = (size_t)(MIN(dy + size,Nym1));
+            double area = pi*size*size;
+            size /= 2;
             
-            for(size_t i = ixmin ; i <= ixmax ; ++i){
-              for(size_t j = iymin ; i <= iymax ; ++i){
-                double r = sp.r*resolution*sqrt( (i - dx)*(i - dx) + (j - dy)*(j - dy) );
-                double mass =  nfwprof(r/phalo->r_scale) * resolution2 * sp.r * sp.r;
+            for(long jj = jjmin ; jj <= jjmax ; ++jj){
+              size_t index = iimin + Nx*jj;
+              for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                 
+                double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
+                double m = Profiles::Bspline<2>(q)*phalo->mass/area;
                 
-              }
-            }
-            
-            if(dx + size > 0 && dx - size < Nx &&
-               dy + size > 0 && dy - size < Ny){
-              
-              long image_index = (long)(dx) + Nx*(long)(dy);
-              
-              if(dx < 0 || dy < 0 ){
-                dx = 0;
-              }else{
-                long ix = (long)(dx);
-                long iy = (long)(dy);
-                
-                //long image_index = ix + Nx*iy;
-                
-                dx -= ix;
-                dy -= iy;
-              }
-              
-              if( dx < size || (1 - dx) < size ||
-                 dy < size || (1 - dy) < size ){  /// halo needs to be resolved
-                
-                // subdivide halo
-                
-                pgen.drawSpherical(ps,phalo->r_max/phalo->r_scale, phalo->r_max);
-                for(size_t ii = 0 ; ii < Nsub ; ++ii){
-                  SphericalPoint sp(ps[ii] + x);
-                  subindex[ii] = maps[icone][0].find_index(sp.theta,sp.phi);
-                }
-                
-                for(int isource = 0 ; isource < Nmaps ; ++isource){
-                  if(dsources[isource] > sp.r  ){
-                    
-                    std::lock_guard<std::mutex> lock(moo);
-                    // add mass or distribute mass to pixels
-                    for(long ii : subindex){
-                      if(ii != -1) maps[icone][isource][ii]
-                        += phalo->mass*(dsources[isource] - sp.r)/sp.r/Nsub;  // this is assuming flat ???
+                {
+                  //std::lock_guard<std::mutex> lock(moo);
+                  
+                  for(int isource = 0 ; isource < Nmaps ; ++isource){
+                    if(dsources[isource] > sp.r  ){
+                      // add mass or distribute mass to pixels
+                      maps[icone][isource][index]
+                      += m*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
                     }
                   }
+                  
                 }
                 
-              }else{
-                
-                for(int isource = 0 ; isource < Nmaps ; ++isource){
-                  if(dsources[isource] > sp.r  ){
-                    std::lock_guard<std::mutex> lock(moo);
-                    // add mass or distribute mass to pixels
-                    maps[icone][isource][image_index]
-                    += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
-                  }
-                }
               }
-              
             }
+            
+            /*****************************************
+             
+             if(dx + size > 0 && dx - size < Nx &&
+             dy + size > 0 && dy - size < Ny){
+             long image_index = (long)(dx) + Nx*(long)(dy);
+             
+             if(dx < 0 || dy < 0 ){
+             dx = 0;
+             }else{
+             long ix = (long)(dx);
+             long iy = (long)(dy);
+             
+             //long image_index = ix + Nx*iy;
+             
+             dx -= ix;
+             dy -= iy;
+             }
+             
+             if( dx < size || (1 - dx) < size ||
+             dy < size || (1 - dy) < size ){  /// halo needs to be resolved
+             
+             // subdivide halo
+             
+             Point_3d p;
+             for(size_t ii = 0 ; ii < Nsub ; ++ii){;
+             pgen.draw(p);
+             SphericalPoint sp(p*phalo->r + x);
+             subindex[ii] = maps[icone][0].find_index(sp.theta,sp.phi);
+             }
+             
+             for(int isource = 0 ; isource < Nmaps ; ++isource){
+             if(dsources[isource] > sp.r  ){
+             
+             std::lock_guard<std::mutex> lock(moo);
+             // add mass or distribute mass to pixels
+             for(long ii : subindex){
+             if(ii != -1) maps[icone][isource][ii]
+             += phalo->mass*(dsources[isource] - sp.r)/sp.r/Nsub;  // this is assuming flat ???
+             }
+             }
+             }
+             
+             }else{
+             
+             for(int isource = 0 ; isource < Nmaps ; ++isource){
+             if(dsources[isource] > sp.r  ){
+             std::lock_guard<std::mutex> lock(moo);
+             // add mass or distribute mass to pixels
+             maps[icone][isource][image_index]
+             += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+             }
+             }
+             }
+             
+             }*/
           }
         }
       }
     }
   }
 
-  BsplineGEN::BsplineGEN(long seed):ran(seed){
-    X.resize(N);
-    F.resize(N);
-    X[0] = F[0] = 0.0;
-    dx = 2.0/(N-1);
-    for(int i=1;i<N;++i){
-      X[i] = i*dx;
-      F[i] = mass_frac(X[i]);
+  
+  void ASCII_XMRRT::fastplanes_parallel(
+                                      LightCones::DatumXMRmRs *begin
+                                      ,LightCones::DatumXMRmRs *end
+                                      ,const COSMOLOGY &cosmo
+                                      ,std::vector<std::vector<Point_3d> > &boxes
+                                      ,std::vector<Point_3d> &observers
+                                      ,std::vector<Quaternion> &rotationQs
+                                      ,std::vector<double> &dsources
+                                      ,std::vector<std::vector<PixelMap> > &maps
+                                      ,double dmin
+                                      ,double dmax
+                                      ,double BoxLength
+                                      ){
+    // loop lines / read
+    
+    int Ncones = maps.size();
+    int Nmaps = maps[0].size();
+    const double resolution = maps[0][0].getResolution();
+    Point_2d p1 = maps[0][0].getLowerLeft();
+    const size_t Nx = maps[0][0].getNx();
+    const size_t Ny = maps[0][0].getNy();
+    const size_t Nxm1 = Nx-1;
+    const size_t Nym1 = Ny-1;
+    const double half_range =maps[0][0].getRangeX()/2;
+    
+    for(auto *phalo = begin ; phalo != end ; ++phalo){
+      
+      //phalo->x /= cosmo.gethubble();
+      
+      // loop cones
+      for(int icone=0;icone<Ncones;++icone){
+        
+        for(auto dn : boxes[icone]){
+          // loop through repitions of box ??? this could be done better
+          
+          Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
+          double r = x.length();
+          if( r > dmin && r < dmax){
+            // rotate to cone frame - direction[i] is the x-axis
+            x = rotationQs[icone].Rotate(x);
+            if(x[0] < 0 ) continue;
+            
+            SphericalPoint sp(x);
+            
+            double size = phalo->r_max/sp.r;
+            
+            if(fabs(sp.theta) - size > half_range || fabs(sp.phi) - size > half_range) continue;
+  
+            size /= resolution;
+            
+            
+            double dx = (sp.theta - p1[0])/resolution ;
+            double dy = (sp.phi   - p1[1])/resolution ;
+            
+            //*****************************************
+            
+            
+            long jjmin = (long)MAX(dy-size,0);
+            long jjmax = (long)MIN(dy+size,Nym1);
+            if(jjmin > jjmax) continue;
+            long iimin = (long)MAX(dx-size,0);
+            long iimax = (long)MIN(dx+size,Nxm1);
+            if(iimin > iimax) continue;
+            
+            if(size < 2 || (jjmax==jjmin && iimax==iimin)){
+              
+              size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
+              
+              for(int isource = 0 ; isource < Nmaps ; ++isource){
+                if(dsources[isource] > sp.r  ){
+                  // add mass or distribute mass to pixels
+                  maps[icone][isource][index]
+                  += phalo->mass*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+                }
+              }
+            }else{
+              
+              // change is scale size
+              size = size*phalo->r_scale/phalo->r_max;
+              double mass_unit = phalo->mass/size/size;
+              
+              Profiles::TNFW2D profile(phalo->r_max/phalo->r_scale);
+              
+              for(long jj = jjmin ; jj <= jjmax ; ++jj){
+                size_t index = iimin + Nx*jj;
+                for(long ii = iimin ; ii <= iimax ; ++ii,++index){
+                  
+                  double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
+                  double m = profile(q)*mass_unit;
+                  //std::cout << m << " q " << q << " " << std::endl;
+                  {
+                    //std::lock_guard<std::mutex> lock(moo);
+                    
+                    for(int isource = 0 ; isource < Nmaps ; ++isource){
+                      if(dsources[isource] > sp.r  ){
+                        // add mass or distribute mass to pixels
+                        maps[icone][isource][index]
+                        += m*(dsources[isource] - sp.r)/sp.r;  // this is assuming flat ???
+                      }
+                    }
+                    
+                  }
+                  
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
-  
-  void BsplineGEN::draw(std::vector<Point_3d> &v){
-    
-    for(auto &p : v) draw(p);
-  };
-  
-  void BsplineGEN::draw(Point_3d &p){
-    
-    double f = ran();
-    size_t i = Utilities::locate(F,f);
-    double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-    
-    double theta = 2*pi*ran();
-    double z = 2*ran() - 1;
-    double t = sqrt(1-z*z);
-    p[0] = t*cos(theta);
-    p[1] = t*sin(theta);
-    p[2] = z;
-    
-    p *= x;
-  };
-  
-  double BsplineGEN::drawR(){
-    double f = ran();
-    size_t i = Utilities::locate(F,f);
-    return X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
-  };
-  
-  
-  double BsplineGEN::mass_frac(double q){
-    
-    if(q > 2) return 1.0;
-    PosType q2=q*q,q3=q2*q;
-    
-    if(q > 1) return -0.0666667 + q3*( 8./3. - 3.*q + 6.*q2/5. - q3/6.);
-    
-    return 4*q3*(0.333333 - 0.3*q2 + 0.125*q3);
-  };
 
   void random_observers(std::vector<Point_3d> &observers
                         ,std::vector<Point_3d> &directions

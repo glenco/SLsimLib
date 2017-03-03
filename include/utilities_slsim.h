@@ -1547,4 +1547,14 @@ namespace Utilities
   };
   
 }
+
+template <class T>
+inline T MIN(T x,T y){
+  return (x < y) ? x : y;
+};
+template <class T>
+inline T MAX(T x,T y){
+  return (x > y) ? x : y;
+};
+
 #endif
