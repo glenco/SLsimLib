@@ -1374,7 +1374,7 @@ namespace LightCones{
             double al = 1.0/(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1);
             double Dl = sp.r*al*al;
 
-            if(size < 2 || (jjmax==jjmin && iimax==iimin)){
+            if(size < 2){
               
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
               
