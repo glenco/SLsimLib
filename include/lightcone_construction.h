@@ -433,7 +433,6 @@ namespace LightCones{
                         ,Utilities::RandomNumbers_NR &ran
                         );  
   
-  
   struct DkappaDz{
     DkappaDz(const COSMOLOGY &cos,double zsource):cosmo(cos),zs(zsource){
       rho = cosmo.getOmega_matter()*cosmo.rho_crit(0);
@@ -722,6 +721,7 @@ namespace LightCones{
       }
     }
   }
+  
   
 }
 #endif /* defined(__GLAMER__lightcone_construction__) */

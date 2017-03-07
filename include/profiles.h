@@ -125,5 +125,33 @@ namespace Profiles {
     const int N = 1000;
   };
 
+  /// projected NFW profile, not truncated
+  class NFW2d{
+  public:
+    
+    NFW2d():func(gf,1.0e-3,20,100){}
+    
+    double operator()(double x){
+      x = (x > 1.0e-3) ? x : 1.0e-3;
+      double y;
+      func(x,y);
+      return y;
+    }
+  private:
+    
+    Utilities::LogLookUpTable<double> func;
+    
+    static double gf(double x){
+      double ans;
+      
+      if(x<1e-5) x=1e-5;
+      ans=log(x/2);
+      if(x==1.0){ ans += 1.0; return ans;}
+      if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
+      if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
+      return 0.0;
+    }
+  };
+  
 }
 #endif /* PROFILES_H_ */
