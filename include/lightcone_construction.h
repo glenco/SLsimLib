@@ -484,7 +484,7 @@ namespace LightCones{
                       ,double BoxLength
                       ,double mass_units
                       ,bool verbose = false
-                      ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if false particles are added to the existing maps
+                      ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if true particles are added to the existing maps
   ){
     
     assert(cosmo.getOmega_matter() + cosmo.getOmega_lambda() == 1.0);
