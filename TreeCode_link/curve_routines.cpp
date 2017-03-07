@@ -1854,8 +1854,11 @@ namespace Utilities{
     return number == 0 ? 0 : 1;
   }
   int incurve(PosType x[],std::vector<Point_2d> curve){
+
+    if(curve.size() == 0) return 0;
+
     int number = 0;
-    size_t i;
+    size_t i;    
     
     // The reason this does not return the winding number is because horizontal
     //  sections of the curve can be overcounted if they are colinear with x
