@@ -1205,8 +1205,7 @@ namespace LightCones{
             
             size /= 2;
             
-            double al = 1.0/(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1);
-            double Dl = sp.r*al*al;
+            double m_Dl = phalo->mass*(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1)/sp.r;
             
             if(size < 1){
               
@@ -1216,7 +1215,7 @@ namespace LightCones{
                 if(dsources[isource] > sp.r  ){
                   // add mass or distribute mass to pixels
                   maps[icone][isource][index]
-                  += phalo->mass*(dsources[isource] - sp.r)/Dl;  // this is assuming flat ???
+                  += m_Dl*(dsources[isource] - sp.r);  // this is assuming flat ???
                 }
               }
             }else{
@@ -1228,14 +1227,14 @@ namespace LightCones{
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
-                  double m = Profiles::Bspline<2>(q) * phalo->mass/area;
+                  double m = Profiles::Bspline<2>(q) * m_Dl/area;
 
                   {
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
                       if(dsources[isource] > sp.r  ){
                         // add mass or distribute mass to pixels
                         maps[icone][isource][index]
-                        += m*(dsources[isource] - sp.r)/Dl;  // this is assuming flat ???
+                        += m*(dsources[isource] - sp.r);  // this is assuming flat ???
                       }
                     }
                     
@@ -1371,8 +1370,8 @@ namespace LightCones{
             long iimax = (long)MIN(dx+size,Nxm1);
             if(iimin > iimax) continue;
             
-            double al = 1.0/(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1);
-            double Dl = sp.r*al*al;
+            // this is m / Dl with no hubble constant
+            double m_Dl = phalo->mass*(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1)/sp.r;
 
             if(size < 2){
               
@@ -1382,14 +1381,14 @@ namespace LightCones{
                 if(dsources[isource] > sp.r  ){
                   // add mass or distribute mass to pixels
                   maps[icone][isource][index]
-                  += phalo->mass*(dsources[isource] - sp.r)/Dl;  // this is assuming flat ???
+                  += m_Dl*(dsources[isource] - sp.r);  // this is assuming flat ???
                 }
               }
             }else{
               
               // change is scale size
               size = size*phalo->r_scale/phalo->r_max;
-              double mass_unit = phalo->mass/size/size/Dl;
+              double mass_unit = m_Dl/size/size;
               
               Profiles::TNFW2D profile(phalo->r_max/phalo->r_scale);
               
