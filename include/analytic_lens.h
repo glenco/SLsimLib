@@ -77,6 +77,12 @@ public:
     
     return MassE;
   }
+  /// renormalize fitted modes (e.g. to change the mass):
+  void renormalize_modes(PosType factor)
+  {
+    assert(factor > 0);
+    for(int i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= sqrt(factor);
+  }
   
 private:
 
