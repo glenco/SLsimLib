@@ -81,7 +81,7 @@ public:
   void renormalize_modes(PosType factor)
   {
     assert(factor > 0);
-    for(int i=0;i<perturb_Nmodes;i++) perturb_modes[i] *= sqrt(factor);
+    for(int i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= sqrt(factor);
   }
   
 private:
