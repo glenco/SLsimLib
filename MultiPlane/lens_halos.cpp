@@ -1698,7 +1698,6 @@ void LensHaloDummy::force_halo(PosType *alpha
   {
     PosType x = screening*sqrt(rcm2)/rscale;
     
-    // can turn off kappa and gamma calculations to save times
     {
       *kappa += kappa_h(x)*prefac;
       

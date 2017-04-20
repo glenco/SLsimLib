@@ -1161,6 +1161,7 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
+  /// This constructor puts a single point mass in the center
   LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N);
 	LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
