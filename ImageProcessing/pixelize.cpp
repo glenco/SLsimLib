@@ -201,6 +201,8 @@ PixelMap::PixelMap(
       }
     }
     resolution = fabs(my_res)*pi/180.;
+  }else{
+    resolution = my_res;
   }
   
   rangeX = resolution*Nx;
