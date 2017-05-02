@@ -284,9 +284,10 @@ void *compute_rays_parallel(void *_p)
       assert(!std::isinf(kappa));
       
       fac = 1/(1+p->plane_redshifts[j]);
-      /* multiply by fac to obtain 1/comoving_distance/physical_distance
-       * such that a multiplication with the charge (in units of physical distance)
-       * will result in a 1/comoving_distance quantity */ // 1 / comoving_distance squared ?
+      // multiply by fac to obtain 1/comoving_distance/physical_distance
+      // such that a multiplication with the charge (in units of physical distance)
+      // will result in a 1/comoving_distance quantity
+      // 1 / comoving_distance squared ?
       kappa *= fac;
       gamma[0] *= fac;
       gamma[1] *= fac;
@@ -496,7 +497,7 @@ void *compute_rays_parallel(void *_p)
 
     // TEST : showing initial quantities
     // =================================
-    std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
+    // std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     // Begining of the loop through the planes :
     // Each iteration leaves i_point[i].image on plane (j+1)
@@ -668,7 +669,7 @@ void *compute_rays_parallel(void *_p)
       
       // TEST : showing plus quantities
       // ==============================
-      std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
+      // std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
     } // End of the loop going through the planes
@@ -719,7 +720,7 @@ void *compute_rays_parallel(void *_p)
     
     // TEST : showing final quantities
     // ===============================
-    std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
+    // std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
  
      // TODO: check

@@ -32,13 +32,15 @@
  *	octopole_peturb
  *
  *  **** Substructure parameters
- *	main_sub_Ndensity      Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
+ *	main_sub_Ndensity           Number density of substructures.  They are distributed uniformly.  If zero the other substructure parameters are not needed.
  *	main_sub_beta               Logarithmic slope of the internal clump profile.  Used if main_sub_type == powerlaw
  *	main_sub_alpha              Logarithmic slope of the mass function.
  *	main_sub_Rsize               Maximum radius of most massive substructure (see Metcalf & Amara 2012)
  *	main_sub_mass_max               Maximum mass
  *	main_sub_mass_min               Minimum mass
  *	main_sub_type               Mass profile of clumps - 0 or nfw,1 or powerlaw, 2 or pointmass
+ *  main_sub_is_on              Boolean that decides if substructure is turned on or not
+ *  main_sub_dcontrast          Density contrast of the substructure
  *
  *  **** Stars parameters
  *	main_stars_N                 Total number of stars that will be used in the simulation.  If zero the other star parameters are not needed.
@@ -71,7 +73,7 @@ public:
 	/// get the velocity dispersion
 	virtual PosType get_sigma(){return sigma;};
 	/// get the NSIE radius
-	//PosType get_Rsize(){return Rsize;};
+	//PosType getRsize(){return Rsize;};
 	/// get the axis ratio
 	virtual PosType get_fratio(){return fratio;};
 	/// get the position angle
@@ -130,17 +132,6 @@ public:
 	PosType setParam(std::size_t p, PosType value);
 	
 	void printCSV(std::ostream& out, bool header = false) const;
-
-  /// set the velocity dispersion of NSIE
-	//void set_sigma(float my_sigma){sigma = my_sigma;}
-  /// set the NSIE radius
-	//void set_Rsize(float my_Rsize){Rsize = my_Rsize;}
-	/// set the axis ratio
-	//void set_fratio(float my_fratio){fratio = my_fratio;}
-	/// set the position angle
-	//void set_pa(float my_pa){pa = my_pa;}
-	/// set the core radius
-	//void set_rcore(float my_rcore){rcore = my_rcore;}
   
   /// computes phi for NSIE
   KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);

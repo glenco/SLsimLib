@@ -26,9 +26,14 @@ public:
 
   void PrintLens(bool show_substruct,bool show_stars);
 
-  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub);
+  void compute_dxSub(double ** dx_sub,int Nimages,std::vector<Point> & ImagePos,bool IsFieldOff = true,bool IsSubOn = false, bool verbose = false);
+
+  
+  void FindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,bool verbose);
+  void FindLensSimple2(int Nimages,Point *image_positions,Point *FiducialLineShift,double *y,double **dx_sub);
   bool SafeFindLensSimple(int Nimages,Point *image_positions,double *y,double **dx_sub,int SafetyNum,PosType PixelSizeRad,std::vector<std::vector<PosType>> & PrecisionBackTracedPos,std::vector<std::vector<PosType>> & alphaTab,bool verbose);
-  void FindLensSimple(ImageInfo *imageinfo ,int Nimages ,double *y,double **dx_sub);
+  void FindLensSimple(ImageInfo *imageinfo,int Nimages,double *y,double **dx_sub);
+  void FindLensSimple2(ImageInfo *imageinfo,int Nimages,Point *FiducialLineShift,double *y,double **dx_sub);
   
   // these need to be written so that they translate between modes and these quantities
   /// get the velocity dispersion
@@ -53,9 +58,26 @@ public:
   void get_perturbmodes(std::vector<PosType> & ListModes);
   /// get the ouput of ElliptisizeLens :
   double * getq() { return qpriv; };
-
+  double * getxcenter() { return x_center_priv; };
+  
   /// set the velocity dispersion
   void set_sigma(PosType my_sigma){sigma = my_sigma; };
+  
+  /// get the mass within the Einstein radius (valid for beta = 1 only !):
+  double get_massE()
+  {
+    double MassE = 0.; int k;
+    // To remove the normalisation of perturb_modes[i] in LensHaloFit::FindLensSimple :
+    double RemoveRenorm = 1./getSigma_crit() ;
+    
+    // Computing massE :
+    MassE = (perturb_modes[3]/2.)*(perturb_modes[3]/2.) ;
+    for(int i=4;i<perturb_Nmodes;i+=2){ k=i/2;
+      MassE += (k*k-1)*(k*k-1) * (perturb_modes[i]*perturb_modes[i] + perturb_modes[i+1]*perturb_modes[i+1]); }
+    MassE *= RemoveRenorm ;
+    
+    return MassE;
+  }
   
 private:
 
@@ -71,7 +93,8 @@ private:
   void setCosmology(const COSMOLOGY& cosmo);
   // output of ElliptisizeLens
   double qpriv[7];
-
+  double x_center_priv[2];
+  
   //void find_lens(int Nimages,int Nsources,int *pairing,double **xob,double *xg,double beta
   //               ,int N,int *degen,double *mod,double **v,double **dx);
 
@@ -152,7 +175,7 @@ public:
   /// get the velocity dispersion
   virtual PosType get_sigma(){return sigma;};
   /// get the NSIE radius
-  //PosType get_Rsize(){return Rsize;};
+  //PosType getRsize(){return Rsize;};
   /// get the axis ratio
   virtual PosType get_fratio(){return fratio;};
   /// get the position angle

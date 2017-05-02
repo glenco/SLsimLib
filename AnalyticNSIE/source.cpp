@@ -29,7 +29,6 @@ SourceUniform::SourceUniform(PosType *position,PosType z,PosType radius_in_radia
   zsource = z;
 }
 
-
 SourceGaussian::SourceGaussian(InputParams& params) : Source(){
   assignParams(params);
 }
