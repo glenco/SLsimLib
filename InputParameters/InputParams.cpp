@@ -399,17 +399,17 @@ bool InputParams::get(std::string label, MassFuncType& value) const
 	
 	if(!it->second.compare("0") || !it->second.compare("PS"))
 	{
-		value = PS;
+		value = PressSchechter;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("ST"))
 	{
-		value = ST;
+		value = ShethTormen;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
 	{
-		value = PL;
+		value = PowerLaw;
 		return true;
 	}
 

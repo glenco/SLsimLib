@@ -18,7 +18,7 @@ using namespace std;
  */
 
 LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose)
-: LensHalo()
+: LensHalo(params)
 {
   
   assignParams(params);
@@ -173,7 +173,6 @@ void LensHalo::assignParams_stars(InputParams& params){
 void LensHaloUniform::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
-	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
 	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
 	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());
