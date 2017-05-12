@@ -46,7 +46,8 @@ short find_peaks(
 
 	// Add all points to imageinfo
 	//MoveToTopList(grid->i_tree->pointlist);
-      PointList::iterator i_tree_pl_current(grid->i_tree->pointlist->Top());
+      PointList::iterator i_tree_pl_current;
+      i_tree_pl_current.current = (grid->i_tree->pointlist->Top());
 	do{
 		imageinfo[0].imagekist->InsertAfterCurrent(*i_tree_pl_current);
 	}while(--i_tree_pl_current);
