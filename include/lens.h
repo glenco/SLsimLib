@@ -133,13 +133,13 @@ public:
 
 
 	/// inserts a single main lens halo and adds it to the existing ones
-  void insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose);
+  void insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
 
 	/// inserts a sequence of main lens halos and adds them to the existing ones
 	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a single main halo
-  void replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose);
+  void replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);

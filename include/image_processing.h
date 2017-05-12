@@ -54,6 +54,7 @@ public:
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
+  void AddGridBrightness(Grid &grid);
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
   PosType AddSource(Source &source);
   /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged
