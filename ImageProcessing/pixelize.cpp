@@ -500,6 +500,41 @@ void PixelMap::AddImages(
   
   return;
 }
+/** \brief Add an image to the map
+ *
+ */
+void PixelMap::AddGridBrightness(Grid &grid){
+  
+  
+  
+  PointList *plist = grid.i_tree->pointlist;
+
+  if(plist->size() == 0) return;
+  
+  PointList::iterator listit= plist->Top();// = plist->begin();
+  
+  PosType sb = 1;
+  float area = 1;
+  
+  std::list <unsigned long> neighborlist;
+  std::list<unsigned long>::iterator it;
+  //for(long ii=0;ii<Nimages;++ii){
+  
+  do{
+  //for(listit = plist->begin() ; listit != plist->end() ; ++listit ){
+    sb = (*listit)->surface_brightness;
+  
+    if (sb != 0.0 && (inMapBox((*listit)->leaf)) == true){
+      PointsWithinLeaf((*listit)->leaf,neighborlist);
+      for(it = neighborlist.begin();it != neighborlist.end();it++){
+        area = LeafPixelArea(*it,(*listit)->leaf);
+        map[*it] += sb*area;
+      }
+    }
+  }while(--listit);
+
+  return;
+}
 
 void PixelMap::AddImages(
                          std::vector<ImageInfo> &imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
@@ -1178,13 +1213,17 @@ void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
 
 
 /**
- *  \brief Fills in pixels where the image plane points in the grid are located with the value given
+ *  \brief Fills in pixels where the image plane points in the grid are located with the value given.
+ 
+ This is for lensing quantities and not surface brightness.  If you want surface brightness use PixelMap::AddGridBrightness()
  */
 void PixelMap::AddGrid(const Grid &grid,PosType value){
+  if(grid.getNumberOfPoints() == 0) return;
+
   PointList* list = grid.i_tree->pointlist;
   size_t index;
   
-  PointList::iterator list_current(list->Top());
+  PointList::iterator list_current = list->Top();
   do{
     if(inMapBox((*list_current)->x)){
       index = find_index((*list_current)->x);
@@ -1199,6 +1238,8 @@ void PixelMap::AddGrid(const Grid &grid,PosType value){
  *  The grid and PixelMap do not need to be related in any way.
  *  Using this function multiple grids can be added to the same image.
  *
+ * This is for lensing quantities and not surface brightness.  If you want surface brightness use PixelMap::AddGridBrightness()
+
  *
  *  Warning: When adding a new grid it should not overlap with any of the previously added grids.
  */
@@ -1227,7 +1268,7 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
       
       lists[i].setTop((*treeit)->points);
       lists[i].setN((*treeit)->npoints);
-      list_current = lists[i].Top();
+      list_current.current = lists[i].Top();
       list_current.JumpDownList( (*treeit)->npoints -1);
       lists[i].setBottom(*list_current);
 
@@ -1253,8 +1294,10 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
   double tmp,area;
   PosType tmp2[2];
   
-  PointList::iterator pl_it(list.Top());
-  for(size_t i = 0; i< list.size(); ++i){
+  PointList::iterator pl_it = list.Top();
+  do{
+  //for(PointList::iterator pl_it = list.begin() ; pl_it != list.end() ; ++pl_it){
+  //for(size_t i = 0; i< list.size(); ++i){
     
     switch (val) {
       case ALPHA:
@@ -1310,9 +1353,8 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
         }
       }
     }
-    --pl_it;
     
-  }
+  }while(--pl_it);
 }
 
 
