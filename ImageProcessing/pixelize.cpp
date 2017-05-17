@@ -533,8 +533,6 @@ void PixelMap::AddGridBrightness(Grid &grid){
     }
   }while(--listit);
 
-  //for(size_t i=0; i< Nx*Ny ;++i) map[i] /= resolution*resolution;
-
   return;
 }
 
