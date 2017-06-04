@@ -375,3 +375,42 @@ void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
     throw std::runtime_error("file writing error");
   }
 }
+
+void LensHaloParticles::makeSIE(
+                    std::string new_filename  /// file name
+                    ,PosType redshift     /// redshift of particles
+                    ,double particle_mass /// particle mass
+                    ,double total_mass  /// total mass of SIE
+                    ,double sigma       /// velocity dispersion in km/s
+                    ,double q  /// axis ratio
+                    ,Utilities::RandomNumbers_NR &ran
+                                       ){
+  
+  size_t Npoints = total_mass/particle_mass;
+  PosType Rmax = (1+redshift)*total_mass*Grav*lightspeed*lightspeed/sigma/sigma/2;
+  Point_3d point;
+  double qq = sqrt(q);
+  
+  std::ofstream datafile;
+  datafile.open(new_filename);
+  
+  datafile << "# nparticles " << Npoints << std::endl;
+  datafile << "# mass " << particle_mass << std::endl;
+  // create particles
+  for(size_t i=0; i< Npoints ;++i){
+    point[0] = ran.gauss();
+    point[1] = ran.gauss();
+    point[2] = ran.gauss();
+    
+    point *= Rmax*ran()/point.length();
+    
+    point[0] *= qq;
+    point[1] /= qq;
+    
+    datafile << point[0] << " " << point[1] << " "
+    << point[2] << " " << std::endl;
+    
+  }
+  
+  datafile.close();
+}
