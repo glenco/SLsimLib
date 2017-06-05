@@ -53,6 +53,19 @@ public:
   
   /// center of mass in input coordinates
   Point_3d CenterOfMass(){return mcenter;}
+  /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
+   
+   This is useful for calculating the level of shot noise and finite source size.
+   */
+  static void makeSIE(
+                      std::string new_filename  /// file name to store the particles
+                      ,PosType redshift     /// redshift of particles
+                      ,double particle_mass /// particle mass
+                      ,double total_mass  /// total mass of SIE
+                      ,double sigma       /// velocity dispersion in km/s
+                      ,double q  /// axis ratio
+                      ,Utilities::RandomNumbers_NR &ran
+                      );
   
 private:
 
