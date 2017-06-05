@@ -15,12 +15,19 @@
  *
  *
  *<pre>
- * Input Parameters:
+ *
+ *  Warning:Once this lens is fully constructed it is independent of the source redshift so
+ *  if the source redshift is change through the Lens class the input kappa and gamma values will
+ *  longer be the correct ones because of the change in the critical density.
+ *
+ * Input Parameters in parameter file:
  *
  *  ****  Uniform model parameters
  *	kappa_uniform
  *  gamma_uniform_1
  *  gamma_uniform_2
+ *
+ *
  *
  *
  *  **** Stars parameters
@@ -50,6 +57,13 @@ class LensHaloUniform: public LensHalo{
 public:
 	LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose = false);
 	LensHaloUniform(InputParams& params,bool verbose =false);
+  /// Direct constructor without any stars
+  LensHaloUniform(double zlens   /// lens redshift
+                  ,double zsource /// source redshift
+                  ,double kappa  /// convergence
+                  ,Point_2d &gamma /// shear
+                  ,COSMOLOGY &cosmo  /// cosmology to translate into surface density
+                  );
 	~LensHaloUniform();
 
 	void assignParams(InputParams& params);

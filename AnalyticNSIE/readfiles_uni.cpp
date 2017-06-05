@@ -50,6 +50,25 @@ LensHaloUniform::LensHaloUniform(InputParams& params, bool verbose): LensHalo(){
   if(verbose) PrintLens(false,false);
 }
 
+LensHaloUniform::LensHaloUniform(double zlens,double zsource,double kappa,Point_2d &gamma,COSMOLOGY &cosmo): LensHalo(zlens,cosmo),kappa_uniform(kappa),zsource_reference(zsource){
+  
+  gamma_uniform[0] = gamma[0];
+  gamma_uniform[1] = gamma[1];
+  gamma_uniform[2] = 0;
+
+  stars_N = 0;
+  
+  if(std::numeric_limits<float>::has_infinity){
+    Rmax = std::numeric_limits<float>::infinity();
+  }else{
+    Rmax = std::numeric_limits<float>::max();
+  }
+  perturb_Nmodes=3;
+  perturb_modes = new PosType[3];
+  
+  setCosmology(cosmo);
+}
+
 LensHaloUniform::~LensHaloUniform(){
 
 }
