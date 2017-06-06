@@ -57,20 +57,21 @@ void ImageFinding::find_crit(
   
   // find kist of points with 1/magnification less than invmag_min
   negimage[0].imagekist->Empty();
-  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
-  Point *minpoint = *i_tree_pointlist_current;
+  PointList::iterator i_tree_pointlist_it;
+  i_tree_pointlist_it.current = (grid->i_tree->pointlist->Top());
+  Point *minpoint = *i_tree_pointlist_it;
   
   for(i=0;i<grid->i_tree->pointlist->size();++i){
-    if((*i_tree_pointlist_current)->invmag < invmag_min){
-      negimage[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
+    if((*i_tree_pointlist_it)->invmag < invmag_min){
+      negimage[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
       negimage[0].imagekist->Down();
     }else{
-      (*i_tree_pointlist_current)->in_image = NO;
+      (*i_tree_pointlist_it)->in_image = NO;
     }
     
     // record point of maximum kappa
-    if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
-    --i_tree_pointlist_current;
+    if((*i_tree_pointlist_it)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_it;
+    --i_tree_pointlist_it;
   }
   
   if(negimage[0].imagekist->Nunits() == 0){
@@ -1270,18 +1271,18 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  
  // find kist of points with 1/magnification less than invmag_min
  critcurve[0].imagekist->Empty();
- PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
- Point *minpoint = *i_tree_pointlist_current;
+ PointList::iterator i_tree_pointlist_it(grid->i_tree->pointlist->Top());
+ Point *minpoint = *i_tree_pointlist_it;
  
  for(i=0;i<grid->i_tree->pointlist->size();++i){
- if((*i_tree_pointlist_current)->invmag < invmag_min){
- critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
+ if((*i_tree_pointlist_it)->invmag < invmag_min){
+ critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
  critcurve[0].imagekist->Down();
  }
  
  // record point of maximum kappa
- if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
- --i_tree_pointlist_current;
+ if((*i_tree_pointlist_it)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_it;
+ --i_tree_pointlist_it;
  }
  bool maxpoint = false;
  
@@ -1585,16 +1586,17 @@ void ImageFinding::IF_routines::refine_crit_in_image(
   
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
-  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
+  PointList::iterator i_tree_pointlist_it;
+  i_tree_pointlist_it.current = (grid->i_tree->pointlist->Top());
   for(i=0;i<grid->i_tree->pointlist->size();++i){
-    x[0] = (*i_tree_pointlist_current)->image->x[0] - x_source[0];
-    x[1] = (*i_tree_pointlist_current)->image->x[1] - x_source[1];
+    x[0] = (*i_tree_pointlist_it)->image->x[0] - x_source[0];
+    x[1] = (*i_tree_pointlist_it)->image->x[1] - x_source[1];
     
-    if( (*i_tree_pointlist_current)->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) ){
-      negimage.imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
+    if( (*i_tree_pointlist_it)->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) ){
+      negimage.imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
       negimage.imagekist->Down();
     }
-    --i_tree_pointlist_current;
+    --i_tree_pointlist_it;
   }
   
   if(negimage.imagekist->Nunits() == 0) return;
@@ -1637,8 +1639,8 @@ void ImageFinding::IF_routines::refine_crit_in_image(
     newpoint_kist.MoveToTop();
     negimage.imagekist->MoveToBottom();
     do{
-      x[0] = (*i_tree_pointlist_current)->image->x[0] - x_source[0];
-      x[1] = (*i_tree_pointlist_current)->image->x[1] - x_source[1];
+      x[0] = (*i_tree_pointlist_it)->image->x[0] - x_source[0];
+      x[1] = (*i_tree_pointlist_it)->image->x[1] - x_source[1];
       
       if(newpoint_kist.getCurrent()->image->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) )
         negimage.imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
@@ -1692,19 +1694,19 @@ void ImageFinding::IF_routines::refine_crit_in_image(
  // find kist of points with negative magnification
  contour.imagekist->Empty();
  
- PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
- Point *minpoint = *i_tree_pointlist_current;
+ PointList::iterator i_tree_pointlist_it(grid->i_tree->pointlist->Top());
+ Point *minpoint = *i_tree_pointlist_it;
  
  for(i=0;i<grid->i_tree->pointlist->size();++i){
- if ((*i_tree_pointlist_current)->kappa>isokappa){
- std::cout << (*i_tree_pointlist_current)->kappa << std::endl;
- contour.imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
+ if ((*i_tree_pointlist_it)->kappa>isokappa){
+ std::cout << (*i_tree_pointlist_it)->kappa << std::endl;
+ contour.imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
  contour.imagekist->Down();
  }
  
  // record point of maximum kappa
- if((*i_tree_pointlist_current)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_current;
- --i_tree_pointlist_current;
+ if((*i_tree_pointlist_it)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_it;
+ --i_tree_pointlist_it;
  }
  
  findborders4(grid->i_tree,&critcurve[ii])
@@ -1784,8 +1786,9 @@ void ImageFinding::find_contour(
   
   // find kist of points with negative magnification
   critcurve[0].imagekist->Empty();
-  PointList::iterator i_tree_pointlist_current(grid->i_tree->pointlist->Top());
-  Point *minpoint = *i_tree_pointlist_current;
+  PointList::iterator i_tree_pointlist_it;
+  i_tree_pointlist_it.current = (grid->i_tree->pointlist->Top());
+  Point *minpoint = *i_tree_pointlist_it;
   
   KappaType value,maxval=0;
   
@@ -1793,15 +1796,15 @@ void ImageFinding::find_contour(
     
     switch (contour_type) {
       case KAPPA:
-        value = (*i_tree_pointlist_current)->kappa;
+        value = (*i_tree_pointlist_it)->kappa;
         maxval = minpoint->kappa;
         break;
       case INVMAG:
-        value = (*i_tree_pointlist_current)->invmag;
+        value = (*i_tree_pointlist_it)->invmag;
         maxval = minpoint->invmag;
         break;
       case DT:
-        value = (*i_tree_pointlist_current)->dt;
+        value = (*i_tree_pointlist_it)->dt;
         maxval = minpoint->dt;
         break;
       default:
@@ -1809,13 +1812,13 @@ void ImageFinding::find_contour(
     }
     
     if(value > contour_value){
-      critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_current);
+      critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
       critcurve[0].imagekist->Down();
     }
     
     // record point of maximum kappa
-    if(value > maxval) minpoint = *i_tree_pointlist_current;
-    --i_tree_pointlist_current;
+    if(value > maxval) minpoint = *i_tree_pointlist_it;
+    --i_tree_pointlist_it;
   }
   bool maxpoint = false;
   

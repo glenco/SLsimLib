@@ -18,7 +18,7 @@ using namespace std;
  */
 
 LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bool verbose)
-: LensHalo()
+: LensHalo(params)
 {
   
   assignParams(params);
@@ -48,6 +48,25 @@ LensHaloUniform::LensHaloUniform(InputParams& params, bool verbose): LensHalo(){
   perturb_modes = new PosType[3];
   
   if(verbose) PrintLens(false,false);
+}
+
+LensHaloUniform::LensHaloUniform(double zlens,double zsource,double kappa,Point_2d &gamma,COSMOLOGY &cosmo): LensHalo(zlens,cosmo),kappa_uniform(kappa),zsource_reference(zsource){
+  
+  gamma_uniform[0] = gamma[0];
+  gamma_uniform[1] = gamma[1];
+  gamma_uniform[2] = 0;
+
+  stars_N = 0;
+  
+  if(std::numeric_limits<float>::has_infinity){
+    Rmax = std::numeric_limits<float>::infinity();
+  }else{
+    Rmax = std::numeric_limits<float>::max();
+  }
+  perturb_Nmodes=3;
+  perturb_modes = new PosType[3];
+  
+  setCosmology(cosmo);
 }
 
 LensHaloUniform::~LensHaloUniform(){
@@ -173,7 +192,6 @@ void LensHalo::assignParams_stars(InputParams& params){
 void LensHaloUniform::assignParams(InputParams& params){
 
 	//if(perturb_Nmodes > 0){
-	if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 	if(!params.get("kappa_uniform",kappa_uniform)) error_message1("kappa_uniform",params.filename());
 	if(!params.get("gamma_uniform_1",gamma_uniform[0])) error_message1("gamma_uniform_1",params.filename());
 	if(!params.get("gamma_uniform_2",gamma_uniform[1])) error_message1("gamma_uniform_2",params.filename());

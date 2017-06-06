@@ -47,7 +47,9 @@ public:
 	inline std::size_t getNy() const { return Ny; }
 	inline double getRangeX() const { return rangeX; }
 	inline double getRangeY() const { return rangeY; }
+
 	inline const double* getCenter() const{ return center; }
+  void const getCenter(Point_2d &c) const{ c[0]=center[0]; c[1]=center[1];}
   inline double getResolution() const { return resolution; }
   Point_2d getLowerLeft() const { return Point_2d(map_boundary_p1[0],map_boundary_p1[1]); }
   Point_2d getUpperRight() const { return Point_2d(map_boundary_p2[0],map_boundary_p2[1]); }
@@ -70,12 +72,12 @@ public:
   friend PixelMap operator*(const PixelMap&, PosType b);
   
   std::valarray<double>& data() { return map; }
-
 	
 	void Clean();
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
+  void AddGridBrightness(Grid &grid);
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
   PosType AddSource(Source &source);
   /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged

@@ -274,37 +274,37 @@ struct PointList{
   }
   ~PointList(){EmptyList();}
   
-  class iterator{
-  private:
+  struct iterator{
+
     Point *current;
-  public:
     
-    iterator(){
-      current = NULL;
-    }
-    iterator(PointList &list){
+    iterator():current(NULL){ }
+    
+/*    iterator(PointList &list){
       current = list.top;
     }
     iterator(iterator &it){
       current = *it;
     }
+ */
     iterator(Point *p){
       current = p;
     }
     
-    Point * operator*(){return current;}
-    
-    PointList::iterator &operator=(PointList::iterator &p){
-      if(&p == this) return *this;
-      current = p.current;
-      return *this;
-    }
-    
+ /*
     PointList::iterator &operator=(Point *point){
       current = point;
       return *this;
     }
+*/
+    Point *operator*(){return current;}
     
+    /*iterator &operator=(iterator &p){
+      if(&p == this) return *this;
+      current = p.current;
+      return *this;
+    }*/
+
     bool operator++(){
       assert(current);
       if(current->prev == NULL) return false;
@@ -362,6 +362,21 @@ struct PointList{
   inline bool IsBottom(PointList::iterator &it) const{
     return *it == bottom;
   };
+  
+  /* Many changes need to be made to implement this correctly
+  PointList::iterator begin() const{
+    PointList::iterator it;
+    it.current = bottom;
+    return it;
+  }
+
+  PointList::iterator end() const{
+    PointList::iterator it;
+    it.current = top->prev;
+    return it;
+  }
+  */
+  
   
   Point *Top() const {return top;}
   Point *Bottom() const {return bottom;}

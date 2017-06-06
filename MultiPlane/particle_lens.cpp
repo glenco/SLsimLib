@@ -23,12 +23,13 @@ LensHaloParticles::LensHaloParticles(
   
   LensHalo::setZlens(redshift);
   LensHalo::setCosmology(cosmo);
-  LensHalo::set_Rsize(1.0e3);
   LensHalo::set_flag_elliptical(false);
+  
   stars_N = 0;
   stars_implanted = false;
   
-  Rsize = Rmax = 1.0e3;
+  Rmax = 1.0e3;
+  LensHalo::setRsize(Rmax);
   
   readPositionFileASCII(simulation_filename);
   
@@ -50,9 +51,8 @@ LensHaloParticles::LensHaloParticles(
   
   // convert from comoving to physical coordinates
   PosType scale_factor = 1/(1+redshift);
-  mass = 0.0;
   mcenter *= 0.0;
-  PosType max_mass = 0.0,min_mass = HUGE_VALF;
+  PosType max_mass = 0.0,min_mass = HUGE_VALF,mass=0;
   for(size_t i=0;i<Npoints;++i){
     xp[i][0] *= scale_factor;
     xp[i][1] *= scale_factor;
@@ -67,7 +67,8 @@ LensHaloParticles::LensHaloParticles(
     max_mass = (masses[multimass*i] > max_mass) ? masses[multimass*i] : max_mass;
     min_mass = (masses[multimass*i] < min_mass) ? masses[multimass*i] : min_mass;
   }
-  
+  LensHalo::setMass(mass);
+
   mcenter /= mass;
   
   std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
@@ -84,7 +85,7 @@ LensHaloParticles::LensHaloParticles(
       if(r2 > r2max) r2max = r2;
     }
     
-    Rsize = sqrt(r2max);
+    LensHalo::setRsize( sqrt(r2max) );
   }
   
   // rotate positions
@@ -107,7 +108,7 @@ xp(positions),min_size(0),Npoints(Nparticles)
   
   LensHalo::setZlens(redshift);
   LensHalo::setCosmology(cosmo);
-  LensHalo::set_Rsize(1.0e3);
+  LensHalo::set_RsizeRmax(1.0e3);
   LensHalo::set_flag_elliptical(false);
   stars_N = 0;
   stars_implanted = false;
@@ -451,4 +452,43 @@ void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
     std::cerr << "Unable to write to file " << filename << std::endl;
     throw std::runtime_error("file writing error");
   }
+}
+
+void LensHaloParticles::makeSIE(
+                                std::string new_filename  /// file name
+                                ,PosType redshift     /// redshift of particles
+                                ,double particle_mass /// particle mass
+                                ,double total_mass  /// total mass of SIE
+                                ,double sigma       /// velocity dispersion in km/s
+                                ,double q  /// axis ratio
+                                ,Utilities::RandomNumbers_NR &ran
+                                ){
+  
+  size_t Npoints = total_mass/particle_mass;
+  PosType Rmax = (1+redshift)*total_mass*Grav*lightspeed*lightspeed/sigma/sigma/2;
+  Point_3d point;
+  double qq = sqrt(q);
+  
+  std::ofstream datafile;
+  datafile.open(new_filename);
+  
+  datafile << "# nparticles " << Npoints << std::endl;
+  datafile << "# mass " << particle_mass << std::endl;
+  // create particles
+  for(size_t i=0; i< Npoints ;++i){
+    point[0] = ran.gauss();
+    point[1] = ran.gauss();
+    point[2] = ran.gauss();
+    
+    point *= Rmax*ran()/point.length();
+    
+    point[0] *= qq;
+    point[1] /= qq;
+    
+    datafile << point[0] << " " << point[1] << " "
+    << point[2] << " " << std::endl;
+    
+  }
+  
+  datafile.close();
 }

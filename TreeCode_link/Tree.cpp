@@ -230,10 +230,10 @@ void TreeStruct::construct_root(
       //pointlist=NewList();
       pointlist= new PointList;
    //EmptyList(pointlist);
-      PointList::iterator pointlist_current;
+      PointList::iterator pl_it;
   for(i=0;i<npoints;++i){
-    pointlist->InsertPointAfterCurrent(pointlist_current,&xp[i]);
-    --pointlist_current;
+    pointlist->InsertPointAfterCurrent(pl_it,&xp[i]);
+    --pl_it;
   }
 
   top = new Branch(pointlist->Top(),npoints,boundary_p1,boundary_p2
@@ -450,10 +450,12 @@ void TreeStruct::insertChildToCurrent(Branch *current,Branch *branch,int child){
     }
 
     if(branch->npoints > 0){
-      PointList::iterator pointlist_current(branch->points);
+      PointList::iterator pl_it;
+      pl_it.current = branch->points;
+      
     	for(unsigned long i=0;i<branch->npoints;++i){
-    		(*pointlist_current)->leaf = branch;
-        --pointlist_current;
+    		(*pl_it)->leaf = branch;
+        --pl_it;
     	}
     }
 
@@ -523,11 +525,14 @@ void TreeStruct::printTree(TreeStruct::iterator &current){
   int i;
 
     printBranch(*current);
-  PointList::iterator pointlist_current((*current)->points);
+  PointList::iterator pl_it;
+  pl_it.current = ((*current)->points);
+  
+  
     for(i=0;i<(*current)->npoints;++i){
-      std::cout << (*pointlist_current)->id << " " << (*pointlist_current)->x[0] <<
-      " " << (*pointlist_current)->x[1] << std::endl;
-      --pointlist_current;
+      std::cout << (*pl_it)->id << " " << (*pl_it)->x[0] <<
+      " " << (*pl_it)->x[1] << std::endl;
+      --pl_it;
     }
     if((*current)->child1 == NULL) return;
 
