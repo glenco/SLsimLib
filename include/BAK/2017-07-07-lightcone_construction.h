@@ -224,6 +224,13 @@ namespace LightCones{
                        ,bool periodic_boundaries = true
                        );
 
+    /* double common_scan_blockH5(H5std_string filename
+				, H5std_string dataset_name
+				, hsize_t n_rows
+				, hsize_t n_cols
+				, hsize_t offset_rows
+				, hsize_t *read_rows
+				); */
     
     
   private:
@@ -231,6 +238,13 @@ namespace LightCones{
     std::vector<Point_3d> xos;
     std::vector<Point_3d> vs;
     std::vector<LightCone> cones;
+    /* double common_scan_blockH5(H5std_string filename
+                                , H5std_string dataset_name
+                                , hsize_t n_rows 
+                                , hsize_t n_cols  
+                                , hsize_t offset_rows 
+                                , hsize_t *read_rows
+                                ); */
   };
   
   
@@ -270,7 +284,7 @@ namespace LightCones{
     
     std::vector<Point_3d> points;
     
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       double tmpf;
       // read in a block of points
       size_t i=0;
@@ -303,7 +317,7 @@ namespace LightCones{
   struct ASCII_XM{
     
     std::vector<DatumXM> points;
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -337,7 +351,7 @@ namespace LightCones{
     
     std::vector<DatumXMR> points;
     
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -366,6 +380,35 @@ namespace LightCones{
                                     ,double BoxLength
                                     );
 
+    //CHANGED ********************************************************* MARCOS
+    /*size_t scan_blockHDF5(size_t blocksize,H5std_string filename){
+      // read in a block of points
+      size_t i=0, j=0;
+      int k=5;
+      hsize_t nrows, ncols=7, offset=0;
+      double *data;
+      data = common_scan_blockH5(filename, "/dset", blocksize, ncols, offset, &nrows);
+      points.resize(nrows);
+      for (i = 0; i < nrows; i++) {
+	if (((size_t)data[i*ncols+k] == 1) || ((size_t)data[i*ncols+k] == 2)) {
+	  points[j].x[0]    = data[i*ncols  ];
+	  points[j].x[1]    = data[i*ncols+1];
+	  points[j].x[2]    = data[i*ncols+2];
+	  points[j].mass    = data[i*ncols+3];
+	  points[j].r_max   = data[i*ncols+4];
+	  //points[j].r_scale = data[i*ncols+5];
+	  j++;
+	}
+      }
+      points.resize(j);
+      delete data;
+
+      for(auto &h: points){
+	h.r_max /= 1.0e3;
+	h.r_scale /= 1.0e3;
+      }
+      return j;
+      }*/
     
   };
   
@@ -373,7 +416,7 @@ namespace LightCones{
   struct ASCII_XMRRT{
     
     std::vector<DatumXMRmRs> points;
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -412,7 +455,7 @@ namespace LightCones{
   };
   
   struct ASCII_XMRRT12:public ASCII_XMRRT{
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -437,8 +480,50 @@ namespace LightCones{
 
 
 
+
+
+    /*
+    double *common_scan_blockH5(H5std_string filename
+			       , H5std_string dataset_name
+			       , hsize_t n_rows
+			       , hsize_t n_cols
+			       , hsize_t offset_rows
+			       , hsize_t *read_rows
+			       ); 
+
+    */
+
+ 
+
+ 
   struct HDF5_XMRRT12:public ASCII_XMRRT{
 
+    bool getFilename (FILE *pFile, char *filename) {
+    
+      int MAXSIZE = 0xFFF;
+      char proclnk[0xFFF];
+      int fno;
+      ssize_t r;
+      if (pFile != NULL)
+      {   
+        fno = fileno(pFile);
+        sprintf(proclnk, "/proc/self/fd/%d", fno);
+        r = readlink(proclnk, filename, MAXSIZE);
+        if (r < 0)
+        {   
+            printf("failed to readlink\n");
+            return 0;
+        }   
+        filename[r] = '\0';
+        printf ("FILENAME: %s\n", filename);
+    
+        return true;
+      }   
+
+      return false;
+    } 
+
+  
   // added by Marcos Pellejero & Antonio Dorta***********
   /*Modified by Marcos and Antonio 4th July 2017*/
 
@@ -564,6 +649,8 @@ namespace LightCones{
 	*read_rows = 0;
 	return NULL;
       }
+    //return 0;
+    cout << "scan_block FINISH!!\n";
     return data_out;
   }
 
@@ -571,24 +658,12 @@ namespace LightCones{
   
     //CHANGED ********************************************************* MARCOS
       // read in a block of points
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
-      // HDF5 needs filename
-      // Offset (rows)
-      // Since it does NOT use pointer to file, we need to tell when the EOF is reached. 
-      // We could return -1 when reaching EOF, but since site_t could be unsigned, that would NOT work
-      // Instead of that, we return H5eof -> true when EOF
+    size_t scan_block(size_t blocksize, H5std_string filename){
       size_t i=0, j=0;
       int k=6;
-      *H5eof = false;
-      hsize_t nrows, ncols=7;
+      hsize_t nrows, ncols=7, offset=0;
       double *data;
-      cout << "Reading " << blocksize << " from offset " << offset_rows << "\n";
-      *H5eof = false;
-      data = common_scan_blockH5(filename, "/dset", blocksize, ncols, offset_rows, &nrows);
-      if ((data == NULL) || (nrows == 0)) {
-        *H5eof = true;
-        return 0;
-      }
+      data = common_scan_blockH5(filename, "/dset", blocksize, ncols, offset, &nrows);
       points.resize(nrows);
       for (i = 0; i < nrows; i++) {
         if (((size_t)data[i*ncols+k] == 1) || ((size_t)data[i*ncols+k] == 2)) {
@@ -611,6 +686,15 @@ namespace LightCones{
       return j;
     }
 
+    size_t scan_block(size_t blocksize,FILE *pFile) {
+      char filename[0xFFF];
+      getFilename(pFile, filename);
+      // Just in case, let convert from char* to H5std_string
+      H5std_string H5filename(filename);
+      return scan_block(blocksize, H5filename);
+    
+    }
+
        
   };
   //CHANGED ********************************************************* MARCOS
@@ -626,7 +710,16 @@ namespace LightCones{
                         ,Utilities::RandomNumbers_NR &ran
                         );  
     
+    double *common_scan_blockH5(H5std_string filename
+			       , H5std_string dataset_name
+			       , hsize_t n_rows
+			       , hsize_t n_cols
+			       , hsize_t offset_rows
+			       , hsize_t *read_rows
+			       ); 
 
+
+    bool getFilename (FILE *pFile, char *filename);
  
   
   struct DkappaDz{
@@ -840,12 +933,9 @@ namespace LightCones{
       //points.resize(blocksize);
       
       size_t Nlines = 0,Nblocks=0;
-      size_t Nbatch = 1;
-      bool H5eof = false;
-      while(!feof(pFile) && !H5eof) {  // loop through blocks
+      while(!feof(pFile)){  // loop through blocks
         
-        Nbatch = unit.scan_block(blocksize,pFile,snap_filenames[i_file],Nlines,&H5eof);
-        cout << "READ " << Nbatch << " "<< H5eof  << "!!\n";
+        long Nbatch = unit.scan_block(blocksize,pFile);
 	//long Nbatch = unit.scan_blockH5(blocksize,snap_filenames[i_file]);
         
         if(Nbatch > 0){  // multi-thread the sorting into cones and projection onto planes
@@ -886,7 +976,6 @@ namespace LightCones{
         //std::cout << std::endl;
         
       }
-      cout << "FILE READ!!\n";
       fclose(pFile);
       std::cout << std::endl;
     }
