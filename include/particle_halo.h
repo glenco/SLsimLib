@@ -67,7 +67,7 @@ public:
   Point_3d CenterOfMass(){return mcenter;}
   /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
    
-   This is useful for calculating the level of shot noise and finite source size.
+   This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
    */
   static void makeSIE(
                       std::string new_filename  /// file name to store the particles
