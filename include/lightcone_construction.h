@@ -334,7 +334,7 @@ namespace LightCones{
             fscanf(pFile,"%lf %lf %lf %lf %lf"
                    ,&points[i].x[0],&points[i].x[1],&points[i].x[2]
                    ,&points[i].mass,&points[i].r) != EOF)
-        ++i;
+        if(points[i].mass > 0) ++i;
       points.resize(i);
       
       return i;

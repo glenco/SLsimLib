@@ -675,7 +675,7 @@ public:
               ,float my_concentration
               ,float my_fratio    /// axis ratio
               ,float my_pa
-              ,int my_stars_N
+              ,int my_stars_N = 0
               ,EllipMethod my_ellip_method=Pseudo);
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();

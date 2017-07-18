@@ -173,6 +173,8 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   }else{
     set_flag_elliptical(false);
     Rmax = LensHalo::getRsize();
+    Rmax_halo = Rmax;
+    Rmax_to_Rsize_ratio = 1.0;
   }
   
 }
