@@ -143,7 +143,12 @@ LensHaloNFW::LensHaloNFW()
 }
 
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+
   LensHalo::setRsize(my_Rsize);
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens);
+
+
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N, main_ellip_method=my_ellip_method;
   stars_implanted = false;
   rscale = LensHalo::getRsize()/my_concentration;

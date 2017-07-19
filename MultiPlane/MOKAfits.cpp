@@ -220,7 +220,7 @@ void LensHaloMassMap::readMap(){
           }
         }
         if(d2 != 0 ){
-          double dll = ( d1 + d2 )*0.5; // comoving dists
+          /*double dll = ( d1 + d2 )*0.5; // comoving dists
           
           std:: vector<double> zi;
           int ni=2048;
@@ -235,8 +235,10 @@ void LensHaloMassMap::readMap(){
           
           // set the redshift of the plane half distance between
           // d1 and d2
-          
           map->zlens = Utilities::InterpolateYvec(dli,zi,dll);
+          */
+          
+          map->zlens = cosmo.invComovingDist(( d1 + d2 )*0.5);
           
         }else{
           
