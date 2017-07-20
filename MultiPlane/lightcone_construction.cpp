@@ -19,21 +19,6 @@
 #include "utilities_slsim.h"
 #include "profiles.h"
 
-
-// added by Marcos Pellejero & Antonio Dorta***********
-#ifdef OLD_HEADER_FILENAME
-#include <iostream.h>
-#else
-#include <iostream>
-#endif
-using std::cout;
-using std::endl;
-#include <string>
-#include "H5Cpp.h"
-using namespace H5;
-//******************************************************
-
-
 namespace LightCones{
   
   
@@ -1085,7 +1070,7 @@ namespace LightCones{
               }
             }
           }
-        }//}}}
+        }//}}
       }
       
     }
@@ -1148,7 +1133,7 @@ namespace LightCones{
               }
             }
           }
-        }//}}}
+        }//}}
       }
     }
   }
@@ -1461,11 +1446,6 @@ namespace LightCones{
       }while( fabs(v[0]) > costheta || fabs(v[1]) > costheta || fabs(v[2]) > costheta );
     }
   }
-
-
-
- 
-  
   
 }
 
