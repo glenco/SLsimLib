@@ -334,6 +334,8 @@ namespace Utilities{
   void LoadFitsImages(std::string dir,std::vector<std::string> filespecs,std::vector<std::string> file_non_specs                                  ,std::vector<PixelMap> & images,std::vector<std::string> & names,int maxN,double resolution = -1,bool verbose = false);
     void ReadFileNames(std::string dir,const std::string filespec,std::vector<std::string> & filenames
                        ,bool verbose = false);
+  /// check is file exists
+  bool file_exists (const std::string& name);
 }
 
 /** \brief Warning: Not tested yet. Class for doing adaptive smoothing using multiply resolution grids.

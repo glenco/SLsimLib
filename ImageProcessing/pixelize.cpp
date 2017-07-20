@@ -1709,6 +1709,12 @@ void Utilities::ReadFileNames(
   return ;
 }
 
+bool file_exists (const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
+
+
 /*// get the index for a position, returns -1 if out of map
  long PixelMap::find_index(PosType const x[],long &ix,long &iy){
  PosType fx, fy;
