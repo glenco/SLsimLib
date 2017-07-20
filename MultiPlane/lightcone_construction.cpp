@@ -1165,14 +1165,9 @@ namespace LightCones{
     const size_t Nxm1 = Nx-1;
     const size_t Nym1 = Ny-1;
     const double half_range =maps[0][0].getRangeX()/2;
-    
-    //const int Nsub = 500;  /// ????
-    //std::vector<long> subindex(Nsub);
-    //BsplineGEN pgen(12737); /// ????
+    const double hubble = cosmo.gethubble();
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
-      
-      //phalo->x /= cosmo.gethubble();
       
       // loop cones
       for(int icone=0;icone<Ncones;++icone){
@@ -1189,25 +1184,25 @@ namespace LightCones{
             
             SphericalPoint sp(x);
             
-            double size = 2*phalo->r/sp.r;
-            if(fabs(sp.theta) - size > half_range || fabs(sp.phi) - size > half_range) continue;
-            size /= resolution;
+            double ang_radius = 2*phalo->r/sp.r;
+            if(fabs(sp.theta) - ang_radius > half_range || fabs(sp.phi) - ang_radius > half_range) continue;
+            ang_radius /= resolution;
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
             //*****************************************
-            long jjmin = (long)MAX(dy-size,0);
-            long jjmax = (long)MIN(dy+size,Nym1);
+            long jjmin = (long)MAX(dy-ang_radius,0);
+            long jjmax = (long)MIN(dy+ang_radius,Nym1);
             if(jjmin > jjmax) continue;
-            long iimin = (long)MAX(dx-size,0);
-            long iimax = (long)MIN(dx+size,Nxm1);
+            long iimin = (long)MAX(dx-ang_radius,0);
+            long iimax = (long)MIN(dx+ang_radius,Nxm1);
             if(iimin > iimax) continue;
             
-            size /= 2;
+            ang_radius /= 2;
+            double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
+            double m_Dl = phalo->mass/ascale/sp.r;
             
-            double m_Dl = phalo->mass*(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1)/sp.r;
-            
-            if(size < 1){
+            if(ang_radius < 1){
               
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
               
@@ -1219,17 +1214,18 @@ namespace LightCones{
                 }
               }
             }else{
-              
-              double area = size*size;
+
+              m_Dl *= phalo->r*phalo->r*ascale*ascale;
+              //double area = ang_radius*ang_radius;
               
               for(long jj = jjmin ; jj <= jjmax ; ++jj){
                 size_t index = iimin + Nx*jj;
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
-                  double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
-                  double m = Profiles::Bspline<2>(q) * m_Dl/area;
+                  double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
+                  //double m = Profiles::Bspline<2>(q) * m_Dl/area;
+                  double m = Profiles::Bspline<2>(q)*m_Dl;
 
-                  {
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
                       if(dsources[isource] > sp.r  ){
                         // add mass or distribute mass to pixels
@@ -1237,8 +1233,6 @@ namespace LightCones{
                         += m*(dsources[isource] - sp.r);  // this is assuming flat ???
                       }
                     }
-                    
-                  }
                   
                 }
               }
@@ -1330,16 +1324,16 @@ namespace LightCones{
     const size_t Nxm1 = Nx-1;
     const size_t Nym1 = Ny-1;
     const double half_range =maps[0][0].getRangeX()/2;
+    const double hubble = cosmo.gethubble();
+
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
-      
-      //phalo->x /= cosmo.gethubble();
       
       // loop cones
       for(int icone=0;icone<Ncones;++icone){
         
         for(auto dn : boxes[icone]){
-          // loop through repitions of box ??? this could be done better
+          // loop through repetitions of box ??? this could be done better
           
           Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
           double r = x.length();
@@ -1356,7 +1350,6 @@ namespace LightCones{
             
             size /= resolution;
             
-            
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
             
@@ -1371,7 +1364,7 @@ namespace LightCones{
             if(iimin > iimax) continue;
             
             // this is m / Dl with no hubble constant
-            double m_Dl = phalo->mass*(cosmo.invCoorDist(sp.r/cosmo.gethubble()) + 1)/sp.r;
+            double m_Dl = phalo->mass*(cosmo.invCoorDist(sp.r/hubble) + 1)/sp.r;
 
             if(size < 2){
               
@@ -1386,11 +1379,13 @@ namespace LightCones{
               }
             }else{
               
-              // change is scale size
-              size = size*phalo->r_scale/phalo->r_max;
-              double mass_unit = m_Dl/size/size;
+              float con = phalo->r_max/phalo->r_scale;
               
-              Profiles::TNFW2D profile(phalo->r_max/phalo->r_scale);
+              // change to pixel scale size
+              size /= con;
+              double mass_unit = m_Dl*phalo->r_scale*phalo->r_scale;
+              
+              Profiles::TNFW2D profile(con);
               
               for(long jj = jjmin ; jj <= jjmax ; ++jj){
                 size_t index = iimin + Nx*jj;
@@ -1399,9 +1394,7 @@ namespace LightCones{
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
                   double m = profile(q)*mass_unit;
                   //std::cout << m << " q " << q << " " << std::endl;
-                  {
-                    //std::lock_guard<std::mutex> lock(moo);
-                    
+                  
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
                       if(dsources[isource] > sp.r  ){
                         // add mass or distribute mass to pixels
@@ -1409,11 +1402,11 @@ namespace LightCones{
                         += m*(dsources[isource] - sp.r);  // this is assuming flat ???
                       }
                     }
-                    
-                  }
-                  
                 }
               }
+              
+              
+              
             }
           }
         }

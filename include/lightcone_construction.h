@@ -482,6 +482,7 @@ namespace LightCones{
                       ,const std::vector<float> &snap_redshifts  /// the redshift of the data files
                       ,double BoxLength
                       ,double mass_units
+                      ,double subtract_mean = true /// subtracts expected mean kappa from map, otherwise the average density of the universe is not subtracted
                       ,bool verbose = false
                       ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if true particles are added to the existing maps
   ){
@@ -690,6 +691,7 @@ namespace LightCones{
       std::cout << std::endl;
     }
     
+    // add maps from different threads together
     for(auto &tmaps : map_pack){
         for(int isource=0;isource<Nmaps;++isource){
           for(int icone=0 ; icone<Ncones ; ++icone){
@@ -702,22 +704,34 @@ namespace LightCones{
     size_t Npixels = maps[0][0].size();
     double norm = 4*pi*mass_units*Grav*cosmo.gethubble()*cosmo.gethubble()/angular_resolution/angular_resolution;
 
+    // normalize maps
     for(int isource=0;isource<Nmaps;++isource){
       // renormalize map
       // ??? need to put factors of hubble parameters in ?
       double norm2 = norm/dsources[isource];
       
-      // calculate expected average kappa
-      DkappaDz dkappadz(cosmo,zsources[isource]);
-      double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[isource],1.0e-6);
-      
       for(int icone=0 ; icone<Ncones ; ++icone){
         //for(auto &cone_maps: maps){
         maps[icone][isource] *= norm2;
-        // subtract average
-        //double ave = cone_maps[i].ave();
-        for(size_t ii=0 ; ii<Npixels ; ++ii)
-          maps[icone][isource][ii] -= avekappa;
+      }
+    }
+    
+    // subtract average kappa
+    
+    if(subtract_mean){
+      for(int isource=0;isource<Nmaps;++isource){
+        // renormalize map
+        // ??? need to put factors of hubble parameters in ?
+        double norm2 = norm/dsources[isource];
+      
+        // calculate expected average kappa
+        DkappaDz dkappadz(cosmo,zsources[isource]);
+        double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[isource],1.0e-6);
+      
+        for(int icone=0 ; icone<Ncones ; ++icone){
+          for(size_t ii=0 ; ii<Npixels ; ++ii)
+            maps[icone][isource][ii] -= avekappa;
+        }
       }
     }
   }
