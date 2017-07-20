@@ -3,7 +3,7 @@
 //  GLAMER
 //
 //  Created by Ben Metcalf on 26/10/16.
-//  Modified by Marcos Pellejero and Antonio Dorta 2017
+//
 //
 
 #ifndef __GLAMER__lightcone_construction__
@@ -13,17 +13,6 @@
 #include "point.h"
 #include "lens_halos.h"
 #include "geometry.h"
-
-#ifdef OLD_HEADER_FILENAME
-#include <iostream.h>
-#else
-#include <iostream>
-#endif
-using std::cout;
-using std::endl;
-#include <string>
-#include "H5Cpp.h"
-using namespace H5;
 
 /**  \brief The LightCones namespace is for classes and functions related to making light cones and weak lensing maps from 3D snapshots of particles or halos.
  */
@@ -99,7 +88,6 @@ namespace LightCones{
     
     double r_theta; // angular radius of light cone (radians)
     double sin_theta_sqrt;
-
   };
   /// select the halos from the box that are within the light cone
   template <typename T>
@@ -223,7 +211,6 @@ namespace LightCones{
                        ,double BoxLength
                        ,bool periodic_boundaries = true
                        );
-
     
     
   private:
@@ -270,7 +257,7 @@ namespace LightCones{
     
     std::vector<Point_3d> points;
     
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       double tmpf;
       // read in a block of points
       size_t i=0;
@@ -303,7 +290,7 @@ namespace LightCones{
   struct ASCII_XM{
     
     std::vector<DatumXM> points;
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -337,7 +324,7 @@ namespace LightCones{
     
     std::vector<DatumXMR> points;
     
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -347,7 +334,7 @@ namespace LightCones{
             fscanf(pFile,"%lf %lf %lf %lf %lf"
                    ,&points[i].x[0],&points[i].x[1],&points[i].x[2]
                    ,&points[i].mass,&points[i].r) != EOF)
-        if(points[i].mass > 0) ++i;
+        ++i;
       points.resize(i);
       
       return i;
@@ -365,186 +352,14 @@ namespace LightCones{
                                     ,double dmax
                                     ,double BoxLength
                                     );
-
     
   };
-  
-    struct HDF5_XMR:public ASCII_XMR{
-
-  // added by Marcos Pellejero & Antonio Dorta***********
-  /*Modified by Marcos and Antonio 4th July 2017*/
-
-  double *common_scan_blockH5(H5std_string filename, H5std_string dataset_name, hsize_t n_rows, hsize_t n_cols, hsize_t offset_rows, hsize_t *read_rows)
-  {
-    const int RANK = 2;
-    double *data_out = NULL;
-    *read_rows = 0;
-    // Try block to detect exceptions raised by any of the calls inside it                                                                                      
-    try
-      {
-	/*                                                                                                                                                  
-	 * Turn off the auto-printing when failure occurs so that we can                                                                                    
-	 * handle the errors appropriately                                                                                                                  
-	 */
-	Exception::dontPrint();
-	/*                                                                                                                                                  
-	 * Open the file and the dataset.                                                                                                                   
-	 */
-	H5File file( filename, H5F_ACC_RDONLY );
-	DataSet dataset = file.openDataSet(dataset_name);
-	/*                                                                                                                                                  
-	 * Get filespace for rank and dimension                                                                                                             
-	 */
-	DataSpace filespace = dataset.getSpace();
-	/*                                                                                                                                                  
-	 * Get number of dimensions in the file dataspace                                                                                                   
-	 */
-	int rank = filespace.getSimpleExtentNdims();
-	/*                                                                                                                                                  
-	 * Get and print the dimension sizes of the file dataspace                                                                                          
-	 */
-	hsize_t dims[RANK];    // dataset dimensions                                                                                                        
-        hsize_t count_rows;
-        hsize_t offset[RANK];
-	rank = filespace.getSimpleExtentDims( dims );
-	cout << "dataset rank = " << rank << ", dimensions "
-	     << (hsize_t)(dims[0]) << " x "
-	     << (hsize_t)(dims[1]) << endl;
-	/*                                                                                                                                                  
-	 * Define the memory space to read dataset.                                                                                                         
-	 */
-	hsize_t file_rows = dims[0], file_cols = dims[1];
-	bool readALL = false;
-	
-	if (n_cols != file_cols) {
-	  cout << "ERROR!!! You specified " << n_cols << " cols, but file contains " << dims[1] << " cols.\n";
-	  return data_out;
-	}
-	
-        if (offset_rows > file_rows) {
-	  // Reading out of data                                                                                                                                  
-	  cout << "ERROR!!! File has " << file_rows << " rows and you wanted to read till row " << offset_rows + n_rows << "\n";
-	  return data_out;
-	}
-	else if ((offset_rows == 0) && (file_rows >= n_rows)) {
-	  // Read ALL data                                                                                                                                        
-	  count_rows = n_rows;
-	  readALL = (count_rows == file_rows);
-	  cout << "Reading " << count_rows << "\n";
-	}
-	else if (offset_rows + n_rows > file_rows) {
-	  // We are out of bound, limit the max rows                                                                                                              
-	  count_rows = file_rows - offset_rows;
-	  cout << "Reading LIMIT ROWS: " << count_rows << " FROM ROW " << offset_rows << "\n";
-	}
-	else {
-	  // Inside bounds                                                                                                                                        
-	  count_rows = n_rows;
-	  cout << "Reading INSIDE\n";
-	}
-	
-	/*                                                                                                                                                  
-	 * Read dataset back and display.                                                                                                                   
-	 */
-	
-	
-	// Allocate only the required memory
-	data_out = new double [count_rows*file_cols]; 
-        if (data_out == NULL) {
-          cout << "NOT ENOUGH MEMORY!!!\n";
-      	  *read_rows = 0;
-	  return NULL;
-        }
-  
-	
-	// READ DATA!!! (we are going to read count_rows x file_cols)
-	if (readALL) {
-	  DataSpace memspace(RANK, dims);
-	  dataset.read(data_out, PredType::NATIVE_DOUBLE, memspace, filespace);
-	}
-	else {
-	  hsize_t count[RANK];
-	  count[0] = count_rows;
-	  count[1] = file_cols;
-	  offset[0] = offset_rows;
-	  offset[1] = 0;
-	  DataSpace memspace(RANK, count);
-	  filespace.selectHyperslab(H5S_SELECT_SET, count, offset);
-	  dataset.read(data_out, PredType::NATIVE_DOUBLE, memspace, filespace);
-	}
-	*read_rows = count_rows;
-	
-      }  // end of try block
-    // catch failure caused by the H5File operations
-    catch( FileIException error )
-      {
-	error.printError();
-	*read_rows = 0;
-	return NULL;
-      }
-    // catch failure caused by the DataSet operations
-    catch( DataSetIException error )
-      {
-	error.printError();
-	*read_rows = 0;
-	return NULL;
-      }
-    // catch failure caused by the DataSpace operations
-    catch( DataSpaceIException error )
-      {
-	error.printError();
-	*read_rows = 0;
-	return NULL;
-      }
-    return data_out;
-  }
-
-
-  
-    //CHANGED ********************************************************* MARCOS
-      // read in a block of points
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
-      // HDF5 needs filename
-      // Offset (rows)
-      // Since it does NOT use pointer to file, we need to tell when the EOF is reached. 
-      // We could return -1 when reaching EOF, but since site_t could be unsigned, that would NOT work
-      // Instead of that, we return H5eof -> true when EOF
-      size_t i=0, j=0;
-      int k=6;
-      *H5eof = false;
-      hsize_t nrows, ncols=5;
-      double *data;
-      cout << "Reading " << blocksize << " from offset " << offset_rows << "\n";
-      *H5eof = false;
-      data = common_scan_blockH5(filename, "/dset", blocksize, ncols, offset_rows, &nrows);
-      if ((data == NULL) || (nrows == 0)) {
-        *H5eof = true;
-        return 0;
-      }
-      points.resize(nrows);
-      for (i = 0; i < nrows; i++) {         
-          points[j].x[0]    = data[i*ncols  ];
-          points[j].x[1]    = data[i*ncols+1];
-          points[j].x[2]    = data[i*ncols+2];
-          points[j].mass    = data[i*ncols+3];
-          points[j].r       = data[i*ncols+4]; 
-          j++;        
-      }
-      points.resize(j); 
-      delete data;
-      
-      return j;
-    }
-
-       
-  };
-  //CHANGED ********************************************************* MARCOS
   
   
   struct ASCII_XMRRT{
     
     std::vector<DatumXMRmRs> points;
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -583,7 +398,7 @@ namespace LightCones{
   };
   
   struct ASCII_XMRRT12:public ASCII_XMRRT{
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
+    size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -604,187 +419,8 @@ namespace LightCones{
       }
       return i;
     }
+    
   };
-
-
-
-  struct HDF5_XMRRT12:public ASCII_XMRRT{
-
-  // added by Marcos Pellejero & Antonio Dorta***********
-  /*Modified by Marcos and Antonio 4th July 2017*/
-
-  double *common_scan_blockH5(H5std_string filename, H5std_string dataset_name, hsize_t n_rows, hsize_t n_cols, hsize_t offset_rows, hsize_t *read_rows)
-  {
-    const int RANK = 2;
-    double *data_out = NULL;
-    *read_rows = 0;
-    // Try block to detect exceptions raised by any of the calls inside it                                                                                      
-    try
-      {
-	/*                                                                                                                                                  
-	 * Turn off the auto-printing when failure occurs so that we can                                                                                    
-	 * handle the errors appropriately                                                                                                                  
-	 */
-	Exception::dontPrint();
-	/*                                                                                                                                                  
-	 * Open the file and the dataset.                                                                                                                   
-	 */
-	H5File file( filename, H5F_ACC_RDONLY );
-	DataSet dataset = file.openDataSet(dataset_name);
-	/*                                                                                                                                                  
-	 * Get filespace for rank and dimension                                                                                                             
-	 */
-	DataSpace filespace = dataset.getSpace();
-	/*                                                                                                                                                  
-	 * Get number of dimensions in the file dataspace                                                                                                   
-	 */
-	int rank = filespace.getSimpleExtentNdims();
-	/*                                                                                                                                                  
-	 * Get and print the dimension sizes of the file dataspace                                                                                          
-	 */
-	hsize_t dims[RANK];    // dataset dimensions                                                                                                        
-        hsize_t count_rows;
-        hsize_t offset[RANK];
-	rank = filespace.getSimpleExtentDims( dims );
-	cout << "dataset rank = " << rank << ", dimensions "
-	     << (hsize_t)(dims[0]) << " x "
-	     << (hsize_t)(dims[1]) << endl;
-	/*                                                                                                                                                  
-	 * Define the memory space to read dataset.                                                                                                         
-	 */
-	hsize_t file_rows = dims[0], file_cols = dims[1];
-	bool readALL = false;
-	
-	if (n_cols != file_cols) {
-	  cout << "ERROR!!! You specified " << n_cols << " cols, but file contains " << dims[1] << " cols.\n";
-	  return data_out;
-	}
-	
-        if (offset_rows > file_rows) {
-	  // Reading out of data                                                                                                                                  
-	  cout << "ERROR!!! File has " << file_rows << " rows and you wanted to read till row " << offset_rows + n_rows << "\n";
-	  return data_out;
-	}
-	else if ((offset_rows == 0) && (file_rows >= n_rows)) {
-	  // Read ALL data                                                                                                                                        
-	  count_rows = n_rows;
-	  readALL = (count_rows == file_rows);
-	  cout << "Reading " << count_rows << "\n";
-	}
-	else if (offset_rows + n_rows > file_rows) {
-	  // We are out of bound, limit the max rows                                                                                                              
-	  count_rows = file_rows - offset_rows;
-	  cout << "Reading LIMIT ROWS: " << count_rows << " FROM ROW " << offset_rows << "\n";
-	}
-	else {
-	  // Inside bounds                                                                                                                                        
-	  count_rows = n_rows;
-	  cout << "Reading INSIDE\n";
-	}
-	
-	/*                                                                                                                                                  
-	 * Read dataset back and display.                                                                                                                   
-	 */
-	
-	
-	// Allocate only the required memory
-	data_out = new double [count_rows*file_cols]; 
-        if (data_out == NULL) {
-          cout << "NOT ENOUGH MEMORY!!!\n";
-      	  *read_rows = 0;
-	  return NULL;
-        }
-  
-	
-	// READ DATA!!! (we are going to read count_rows x file_cols)
-	if (readALL) {
-	  DataSpace memspace(RANK, dims);
-	  dataset.read(data_out, PredType::NATIVE_DOUBLE, memspace, filespace);
-	}
-	else {
-	  hsize_t count[RANK];
-	  count[0] = count_rows;
-	  count[1] = file_cols;
-	  offset[0] = offset_rows;
-	  offset[1] = 0;
-	  DataSpace memspace(RANK, count);
-	  filespace.selectHyperslab(H5S_SELECT_SET, count, offset);
-	  dataset.read(data_out, PredType::NATIVE_DOUBLE, memspace, filespace);
-	}
-	*read_rows = count_rows;
-	
-      }  // end of try block
-    // catch failure caused by the H5File operations
-    catch( FileIException error )
-      {
-	error.printError();
-	*read_rows = 0;
-	return NULL;
-      }
-    // catch failure caused by the DataSet operations
-    catch( DataSetIException error )
-      {
-	error.printError();
-	*read_rows = 0;
-	return NULL;
-      }
-    // catch failure caused by the DataSpace operations
-    catch( DataSpaceIException error )
-      {
-	error.printError();
-	*read_rows = 0;
-	return NULL;
-      }
-    return data_out;
-  }
-
-
-  
-    //CHANGED ********************************************************* MARCOS
-      // read in a block of points
-    size_t scan_block(size_t blocksize,FILE *pFile,H5std_string filename,hsize_t offset_rows,bool *H5eof){
-      // HDF5 needs filename
-      // Offset (rows)
-      // Since it does NOT use pointer to file, we need to tell when the EOF is reached. 
-      // We could return -1 when reaching EOF, but since site_t could be unsigned, that would NOT work
-      // Instead of that, we return H5eof -> true when EOF
-      size_t i=0, j=0;
-      int k=6;
-      *H5eof = false;
-      hsize_t nrows, ncols=7;
-      double *data;
-      cout << "Reading " << blocksize << " from offset " << offset_rows << "\n";
-      *H5eof = false;
-      data = common_scan_blockH5(filename, "/dset", blocksize, ncols, offset_rows, &nrows);
-      if ((data == NULL) || (nrows == 0)) {
-        *H5eof = true;
-        return 0;
-      }
-      points.resize(nrows);
-      for (i = 0; i < nrows; i++) {
-        if (((size_t)data[i*ncols+k] == 1) || ((size_t)data[i*ncols+k] == 2)) {
-          points[j].x[0]    = data[i*ncols  ];
-          points[j].x[1]    = data[i*ncols+1];
-          points[j].x[2]    = data[i*ncols+2];
-          points[j].mass    = data[i*ncols+3];
-          points[j].r_max   = data[i*ncols+4];
-          points[j].r_scale = data[i*ncols+5]; 
-          j++;
-        }
-      }
-      points.resize(j); 
-      delete data;
-
-      for(auto &h: points){
-	h.r_max /= 1.0e3;
-	h.r_scale /= 1.0e3;
-      }
-      return j;
-    }
-
-       
-  };
-  //CHANGED ********************************************************* MARCOS
   
   /*************************************************************************************************
    *************************************************************************************************/
@@ -796,9 +432,6 @@ namespace LightCones{
                         ,double cone_opening_radius
                         ,Utilities::RandomNumbers_NR &ran
                         );  
-    
-
- 
   
   struct DkappaDz{
     DkappaDz(const COSMOLOGY &cos,double zsource):cosmo(cos),zs(zsource){
@@ -849,7 +482,6 @@ namespace LightCones{
                       ,const std::vector<float> &snap_redshifts  /// the redshift of the data files
                       ,double BoxLength
                       ,double mass_units
-                      ,double subtract_mean = true /// subtracts expected mean kappa from map, otherwise the average density of the universe is not subtracted
                       ,bool verbose = false
                       ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if true particles are added to the existing maps
   ){
@@ -1012,13 +644,9 @@ namespace LightCones{
       //points.resize(blocksize);
       
       size_t Nlines = 0,Nblocks=0;
-      size_t Nbatch = 1;
-      bool H5eof = false;
-      while(!feof(pFile) && !H5eof) {  // loop through blocks
+      while(!feof(pFile)){  // loop through blocks
         
-        Nbatch = unit.scan_block(blocksize,pFile,snap_filenames[i_file],Nlines,&H5eof);
-        cout << "READ " << Nbatch << " "<< H5eof  << "!!\n";
-	//long Nbatch = unit.scan_blockH5(blocksize,snap_filenames[i_file]);
+        long Nbatch = unit.scan_block(blocksize,pFile);
         
         if(Nbatch > 0){  // multi-thread the sorting into cones and projection onto planes
           int nthreads = Utilities::GetNThreads();
@@ -1058,12 +686,10 @@ namespace LightCones{
         //std::cout << std::endl;
         
       }
-      cout << "FILE READ!!\n";
       fclose(pFile);
       std::cout << std::endl;
     }
     
-    // add maps from different threads together
     for(auto &tmaps : map_pack){
         for(int isource=0;isource<Nmaps;++isource){
           for(int icone=0 ; icone<Ncones ; ++icone){
@@ -1076,34 +702,22 @@ namespace LightCones{
     size_t Npixels = maps[0][0].size();
     double norm = 4*pi*mass_units*Grav*cosmo.gethubble()*cosmo.gethubble()/angular_resolution/angular_resolution;
 
-    // normalize maps
     for(int isource=0;isource<Nmaps;++isource){
       // renormalize map
       // ??? need to put factors of hubble parameters in ?
       double norm2 = norm/dsources[isource];
       
+      // calculate expected average kappa
+      DkappaDz dkappadz(cosmo,zsources[isource]);
+      double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[isource],1.0e-6);
+      
       for(int icone=0 ; icone<Ncones ; ++icone){
         //for(auto &cone_maps: maps){
         maps[icone][isource] *= norm2;
-      }
-    }
-    
-    // subtract average kappa
-    
-    if(subtract_mean){
-      for(int isource=0;isource<Nmaps;++isource){
-        // renormalize map
-        // ??? need to put factors of hubble parameters in ?
-        double norm2 = norm/dsources[isource];
-      
-        // calculate expected average kappa
-        DkappaDz dkappadz(cosmo,zsources[isource]);
-        double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[isource],1.0e-6);
-      
-        for(int icone=0 ; icone<Ncones ; ++icone){
-          for(size_t ii=0 ; ii<Npixels ; ++ii)
-            maps[icone][isource][ii] -= avekappa;
-        }
+        // subtract average
+        //double ave = cone_maps[i].ave();
+        for(size_t ii=0 ; ii<Npixels ; ++ii)
+          maps[icone][isource][ii] -= avekappa;
       }
     }
   }
