@@ -422,8 +422,9 @@ namespace LightCones{
     
   };
   
-  /*************************************************************************************************
-   *************************************************************************************************/
+  /**************************************************************************/
+  /**************************************************************************/
+  /**************************************************************************/
   
   void random_observers(std::vector<Point_3d> &observers
                         ,std::vector<Point_3d> &directions
@@ -450,6 +451,7 @@ namespace LightCones{
   
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
+  
   /** \brief This function goes directly from snapshots to lensing maps with Born approximation and linear propogations.
    
    <p>

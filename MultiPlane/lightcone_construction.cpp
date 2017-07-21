@@ -1166,6 +1166,8 @@ namespace LightCones{
     const size_t Nym1 = Ny-1;
     const double half_range =maps[0][0].getRangeX()/2;
     const double hubble = cosmo.gethubble();
+    const double pix_area = resolution*resolution;
+
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1200,22 +1202,25 @@ namespace LightCones{
             
             ang_radius /= 2;
             double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
-            double m_Dl = phalo->mass/ascale/sp.r;
+            
             
             if(ang_radius < 1){
-              
+              double m_part = phalo->mass/ascale/sp.r;
+
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
               
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
                   // add mass or distribute mass to pixels
                   maps[icone][isource][index]
-                  += m_Dl*(dsources[isource] - sp.r);  // this is assuming flat ???
+                  += m_part*(dsources[isource] - sp.r);  // this is assuming flat ???
                 }
               }
             }else{
 
-              m_Dl *= phalo->r*phalo->r*ascale*ascale;
+              double m_halo = phalo->mass*pix_area/ascale
+              /phalo->r/phalo->r;
+
               //double area = ang_radius*ang_radius;
               
               for(long jj = jjmin ; jj <= jjmax ; ++jj){
@@ -1224,7 +1229,7 @@ namespace LightCones{
                   
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
                   //double m = Profiles::Bspline<2>(q) * m_Dl/area;
-                  double m = Profiles::Bspline<2>(q)*m_Dl;
+                  double m = Profiles::Bspline<2>(q)*m_halo;
 
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
                       if(dsources[isource] > sp.r  ){
@@ -1325,6 +1330,7 @@ namespace LightCones{
     const size_t Nym1 = Ny-1;
     const double half_range =maps[0][0].getRangeX()/2;
     const double hubble = cosmo.gethubble();
+    const double pix_area = resolution*resolution;
 
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
@@ -1364,26 +1370,29 @@ namespace LightCones{
             if(iimin > iimax) continue;
             
             // this is m / Dl with no hubble constant
-            double m_Dl = phalo->mass*(cosmo.invCoorDist(sp.r/hubble) + 1)/sp.r;
+            double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
+            
 
             if(size < 2){
-              
+              double m_part = phalo->mass/ascale/sp.r;
+             
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
               
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
                   // add mass or distribute mass to pixels
                   maps[icone][isource][index]
-                  += m_Dl*(dsources[isource] - sp.r);  // this is assuming flat ???
+                  += m_part*(dsources[isource] - sp.r);  // this is assuming flat ???
                 }
               }
             }else{
-              
+              double m_halo = phalo->mass*pix_area/ascale
+              /phalo->r_scale/phalo->r_scale;
+
               float con = phalo->r_max/phalo->r_scale;
               
               // change to pixel scale size
               size /= con;
-              double mass_unit = m_Dl*phalo->r_scale*phalo->r_scale;
               
               Profiles::TNFW2D profile(con);
               
@@ -1392,7 +1401,7 @@ namespace LightCones{
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
-                  double m = profile(q)*mass_unit;
+                  double m = profile(q)*m_halo;
                   //std::cout << m << " q " << q << " " << std::endl;
                   
                     for(int isource = 0 ; isource < Nmaps ; ++isource){

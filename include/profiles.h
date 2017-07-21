@@ -41,7 +41,8 @@ namespace Profiles {
     return q2*q2*q2*0.07957747154594767;
   }
   
-  /** \breaf Two dimensional profile of a three dimensional NFW profile trincated in 3 D.
+  /** \breaf Two dimensional profile of a three dimensional NFW profile trincated 
+   in 3 D.
    
    This is the surface density in units of M rs^2.
    **/
