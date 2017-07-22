@@ -16,6 +16,7 @@
 namespace Profiles {
   
   /// cubic b-spline kernel in different dimensions normalized to 1
+  // functional forms are from https://arxiv.org/pdf/1012.1885.pdf
   template <int d>
   double Bspline(double q){
   }
@@ -30,8 +31,8 @@ namespace Profiles {
   inline double Bspline<2>(double q){
     if(q >= 2) return 0;
     double q2 = 2-q,q1 = 1-q;
-    if(q <= 1) return (0.25*q2*q2*q2 - q1*q1*q1)*0.3183098861837907;
-    return q2*q2*q2*0.07957747154594767;
+    if(q <= 1) return (0.25*q2*q2*q2 - q1*q1*q1)*0.454728358693;
+    return q2*q2*q2*0.11368208967325086;
   }
   template <>
   inline double Bspline<3>(double q){
@@ -41,10 +42,11 @@ namespace Profiles {
     return q2*q2*q2*0.07957747154594767;
   }
   
-  /** \breaf Two dimensional profile of a three dimensional NFW profile trincated 
+  /** \breaf Two dimensional profile of a three dimensional NFW profile truncated
    in 3 D.
    
-   This is the surface density in units of M rs^2.
+   This is the surface density in units of M rs^-2.
+   Based on Baltz, Marshall & Oguri, 2009
    **/
   class TNFW2D{
     
@@ -54,20 +56,25 @@ namespace Profiles {
       cp1 = c+1;
       To = sqrt((c-1)/(cp1));
       
-      M = (log(cp1) - c/(cp1) )/2/pi;
+      M = 39.41*(log(cp1) - c/(cp1) )/2/pi;
     };
     
-    double operator()(double x  /// x=r/rs
-                      ){
+    /// returns the suface density in unuts of M rs^-2
+    double operator()(
+                      double x  /// x=r/rs
+    ){
       
       if(x>c) return 0.0;
       double x1 = sqrt(fabs(x*x - 1 ));
       double a = sqrt(c2 - x*x )/ x1 ;
       double T;
-      if(x>1) T = (atan(a) - atan(a/c))/x1 ;
-        else if(x<1) T = 0.5*log( (1-a)*(1+a/c)/(1-a/c)/(1+a) )/x1 ;
-          else T = To;
-        
+      if(x>1){
+        T = (atan(a) - atan(a/c))/x1 ;
+      }else if(x<1){
+        T = 0.5*log( (1-a)*(1+a/c)/(1-a/c)/(1+a) )/x1 ;
+      }else{
+        T = To;
+      }
       return ( (sqrt(c2 - x*x )/cp1 - T)/(x*x -1) )/M;
     };
     
