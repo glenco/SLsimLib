@@ -704,7 +704,8 @@ namespace LightCones{
 
     
     size_t Npixels = maps[0][0].size();
-    double norm = 4*pi*mass_units*Grav*cosmo.gethubble()*cosmo.gethubble()/angular_resolution/angular_resolution;
+    //double norm = 4*pi*mass_units*Grav*cosmo.gethubble()*cosmo.gethubble()/angular_resolution/angular_resolution;
+    double norm = 4*pi*mass_units*Grav/angular_resolution/angular_resolution;
 
     // normalize maps
     for(int isource=0;isource<Nmaps;++isource){
@@ -722,10 +723,6 @@ namespace LightCones{
     
     if(subtract_mean){
       for(int isource=0;isource<Nmaps;++isource){
-        // renormalize map
-        // ??? need to put factors of hubble parameters in ?
-        double norm2 = norm/dsources[isource];
-      
         // calculate expected average kappa
         DkappaDz dkappadz(cosmo,zsources[isource]);
         double avekappa = Utilities::nintegrate<DkappaDz,double>(dkappadz,0,zsources[isource],1.0e-6);

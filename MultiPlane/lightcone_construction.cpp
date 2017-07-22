@@ -1204,7 +1204,7 @@ namespace LightCones{
             double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
             
             
-            if(ang_radius < 1){
+            if(ang_radius < 2){
               double m_part = phalo->mass/ascale/sp.r;
 
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
