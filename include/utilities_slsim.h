@@ -1506,11 +1506,11 @@ namespace Utilities
   class LogLookUpTable{
   public:
     LogLookUpTable(std::function<T(T)> func    /// function to sample from
-                   ,T xmin                     /// minimum x value of table
-                   ,T xmax                     /// maximum x value of table
+                   ,T my_xmin                     /// minimum x value of table
+                   ,T my_xmax                     /// maximum x value of table
                    ,size_t N                   /// number of points in table
     ){
-      Utilities::fill_linear(x,N,log(xmin),log(xmax));
+      Utilities::fill_linear(x,N,log(my_xmin),log(my_xmax));
       y.resize(N);
       for(size_t i = 0;i<N; ++i){
         y[i] = log(func( exp(x[i]) ));
