@@ -57,55 +57,18 @@ namespace Profiles {
     double operator()(
                       double x  /// x=r/rs
                      ,double c  /// concentration
-    ){
-      
-      //if(c > 9) throw std::runtime_error("concnetration out of bounds");
-      if(c > 9) std::cout << "concnetration out of bounds" << std::endl;
-      if(x > c) return 0.0;
-      double ff,gmax;
-      if(flookup(x,ff)){
-        glookup(c,gmax);;
-      }else{
-        gmax = ggfunction(c);
-        ff =ffunction(x);
-      }
-
-      if(gmax <= 0.0){
-        ff =0.0;
-        gmax = 1.0;
-      }
-
-      return ff/gmax;
-   };
+    );
     
   private:
     
     static Utilities::LogLookUpTable<double> flookup;
     static Utilities::LogLookUpTable<double> glookup;
     
-    static double ffunction(PosType x){
-      
-      if(x==0) x=1e-5;
-      if(x==1.0){ return 1.0/3.0/pi;}
-      if(x>1.0){  return 0.5*(1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1)/pi; }
-      if(x<1.0){  return 0.5*(1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1)/pi;}
-      return 0.0;
-    }
-    static double ggfunction(PosType x){
-      PosType ans;
-      
-      if(x<1e-5) x=1e-5;
-      ans=log(x/2);
-      if(x==1.0){ ans += 1.0; return ans;}
-      if(x>1.0){  ans +=  2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1); return ans;}
-      if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
-      return 0.0;
-    }
-
+    static double ffunction(PosType x);
+    static double ggfunction(PosType x);
+    
   };
 
-  Utilities::LogLookUpTable<double> NFW2D::flookup(NFW2D::ffunction,1.0e-3,9,500);
-  Utilities::LogLookUpTable<double> NFW2D::glookup(NFW2D::ggfunction,1.0e-3,9,500);
   
   
   /** \breaf Two dimensional profile of a three dimensional NFW profile truncated
