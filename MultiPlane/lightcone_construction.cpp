@@ -1332,6 +1332,7 @@ namespace LightCones{
     const double hubble = cosmo.gethubble();
     const double pix_area = resolution*resolution;
 
+    Profiles::NFW2D profile;
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1394,14 +1395,14 @@ namespace LightCones{
               // change to pixel scale size
               size /= con;
               
-              Profiles::TNFW2D profile(con);
+              //Profiles::TNFW2D profile(con);
               
               for(long jj = jjmin ; jj <= jjmax ; ++jj){
                 size_t index = iimin + Nx*jj;
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
-                  double m = profile(q)*m_halo;
+                  double m = profile(q,con)*m_halo;
                   //std::cout << m << " q " << q << " " << std::endl;
                   
                     for(int isource = 0 ; isource < Nmaps ; ++isource){

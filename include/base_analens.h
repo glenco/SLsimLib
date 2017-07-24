@@ -202,14 +202,14 @@ KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *cent
 
 
 
-// in nfw_lens.c
+/*/ in nfw_lens.c
 void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                 ,PosType *center,PosType Sigma_crit);
 KappaType kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                 ,PosType *center,PosType Sigma_crit);
 void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
                 ,PosType *center,PosType Sigma_crit);
-
+*/
 // in lens_expand.c
 
 double lens_expand(double beta,double *mod,int Nmodes,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi);
