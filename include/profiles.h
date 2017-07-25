@@ -57,7 +57,30 @@ namespace Profiles {
     double operator()(
                       double x  /// x=r/rs
                      ,double c  /// concentration
-    );
+    ){
+      
+      //if(c > 9) throw std::runtime_error("concnetration out of bounds");
+      //if(c > 9) std::cout << "concnetration out of bounds" << std::endl;
+      if(x > c) return 0.0;
+      
+      double ff,gmax;
+      if(flookup(x,ff)){
+        glookup(c,gmax);;
+      }else{
+        gmax = ggfunction(c);
+        ff =ffunction(x);
+      }
+      
+      if(gmax <= 0.0){
+        ff =0.0;
+        gmax = 1.0;
+      }
+      
+      if(std::isnan(ff/gmax)) throw std::runtime_error("singular value");
+      
+      return ff/gmax;
+    };
+
     
   private:
     
