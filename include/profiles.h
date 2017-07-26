@@ -64,9 +64,7 @@ namespace Profiles {
       if(x > c) return 0.0;
       
       double ff,gmax;
-      if(flookup(x,ff)){
-        glookup(c,gmax);;
-      }else{
+      if(!glookup(c,gmax) || !flookup(x,ff)){
         gmax = ggfunction(c);
         ff =ffunction(x);
       }
@@ -76,7 +74,7 @@ namespace Profiles {
         gmax = 1.0;
       }
       
-      if(std::isnan(ff/gmax)) throw std::runtime_error("singular value");
+      //if(std::isnan(ff/gmax)) throw std::runtime_error("singular value");
       
       return ff/gmax;
     };
@@ -89,7 +87,6 @@ namespace Profiles {
     
     static double ffunction(PosType x);
     static double ggfunction(PosType x);
-    
   };
 
   
