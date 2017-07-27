@@ -1200,11 +1200,10 @@ namespace LightCones{
             long iimax = (long)MIN(dx+ang_radius,Nxm1);
             if(iimin > iimax) continue;
             
-            ang_radius /= 2;
             double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
             
             
-            if(ang_radius < 2){
+            if(ang_radius < 1){
               double m_part = phalo->mass/ascale/sp.r;
 
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
@@ -1222,13 +1221,15 @@ namespace LightCones{
               /phalo->r/phalo->r;
 
               //double area = ang_radius*ang_radius;
+              // change to pixel scale size
+              ang_radius /= 2;
+              
               
               for(long jj = jjmin ; jj <= jjmax ; ++jj){
                 size_t index = iimin + Nx*jj;
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
-                  //double m = Profiles::Bspline<2>(q) * m_Dl/area;
                   double m = Profiles::Bspline<2>(q)*m_halo;
 
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
@@ -1351,30 +1352,28 @@ namespace LightCones{
             
             SphericalPoint sp(x);
             
-            double size = phalo->r_max/sp.r;
+            double ang_radius = phalo->r_max/sp.r;
+            //double size = phalo->r_max/sp.r;
             
-            if(fabs(sp.theta) - size > half_range || fabs(sp.phi) - size > half_range) continue;
+            if(fabs(sp.theta) - ang_radius > half_range || fabs(sp.phi) - ang_radius > half_range) continue;
             
-            size /= resolution;
+            ang_radius /= resolution;
             
             double dx = (sp.theta - p1[0])/resolution ;
             double dy = (sp.phi   - p1[1])/resolution ;
-            
             //*****************************************
-            
-            
-            long jjmin = (long)MAX(dy-size,0);
-            long jjmax = (long)MIN(dy+size,Nym1);
+            long jjmin = (long)MAX(dy-ang_radius,0);
+            long jjmax = (long)MIN(dy+ang_radius,Nym1);
             if(jjmin > jjmax) continue;
-            long iimin = (long)MAX(dx-size,0);
-            long iimax = (long)MIN(dx+size,Nxm1);
+            long iimin = (long)MAX(dx-ang_radius,0);
+            long iimax = (long)MIN(dx+ang_radius,Nxm1);
             if(iimin > iimax) continue;
             
             // this is m / Dl with no hubble constant
             double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
             
 
-            if(size < 2){
+            if(ang_radius < 1){
               double m_part = phalo->mass/ascale/sp.r;
              
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
@@ -1393,7 +1392,7 @@ namespace LightCones{
               float con = phalo->r_max/phalo->r_scale;
               
               // change to pixel scale size
-              size /= con;
+              ang_radius /= con;
               
               //Profiles::TNFW2D profile(con);
               
@@ -1401,9 +1400,8 @@ namespace LightCones{
                 size_t index = iimin + Nx*jj;
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
-                  double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/size;
+                  double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
                   double m = profile(q,con)*m_halo;
-                  //std::cout << m << " q " << q << " " << std::endl;
                   
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
                       if(dsources[isource] > sp.r  ){
