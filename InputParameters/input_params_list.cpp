@@ -60,7 +60,7 @@ namespace
 		
 		// Field halos from an input file
 		{"field_input_simulation_path", "halos.txt", "if set, the light cone is read from an input file or files in this directory"},
-    {"field_input_simulation_format", "MillenniumObs", "if set, format of halo input data: MillenniumObs, MultiDarkHalos,  this is subject to changes"},
+    {"field_input_simulation_format", "MillenniumObs", "if set, format of halo input data: MillenniumObs, MultiDarkHalos,LightConeFormat  this is subject to changes"},
     {"field_input_simulation_center_RA", "0.0","Optional: right ascension in degrees for the center of the simulation, 0 if not included"},
     {"field_input_simulation_center_DEC","0.0","Optional: declination in degrees the center of the simulation, 0 if not included"},
     {"field_input_simulation_radius","0.0","Optional: set radius (in degrees) of simulated field radians, infinite (size of input lightcone) if not included"},

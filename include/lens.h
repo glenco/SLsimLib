@@ -289,6 +289,9 @@ private: /* generation */
   /// read field halo data in from a file in Cabriel Caminha's input format 
   void readInputSimFileObservedGalaxies(bool verbose);
   
+  /// read halos from LightCone class format
+  void readLightCone(bool verbose);
+  
 	/// build the field planes and sort halos onto them
 	void createFieldPlanes(bool verbose);
 	

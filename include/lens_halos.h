@@ -201,13 +201,13 @@ private:
   /// Position of the Halo in angle
   PosType posHalo[2];
   PosType zlens;
-  float mass;
-  // This is the size of the halo beyond which it does not have the profile expected profile.
-  float Rsize = 0;
 
 
 protected:
 
+  float mass;
+  // This is the size of the halo beyond which it does not have the profile expected profile.
+  float Rsize = 0;
 
   // make LensHalo uncopyable
   void operator=(LensHalo &){};
@@ -658,11 +658,8 @@ protected:
 };
 
 /**
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
+ * \brief A class for calculating the deflection, kappa and gamma caused by NFW
  * halos.
- *
- * This class uses the true expressions for the NFW profile.  This is
- * time consuming and not usually necessary. See TreeQuadPseudoNFW for a faster alternative.
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
@@ -683,11 +680,36 @@ public:
 	LensHaloNFW(InputParams& params);
 	virtual ~LensHaloNFW();
   
-	PosType ffunction(PosType x) const;
-	PosType gfunction(PosType x) const;
+  //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
+  //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
+  
+  
+	/*/ TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
+	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+                ,PosType *center,PosType Sigma_crit);
+	KappaType kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+                     ,PosType *center,PosType Sigma_crit);
+	void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
+                ,PosType *center,PosType Sigma_crit);
+  */
+	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
+	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
+  /// set Rsize, xmax and gmax
+  void set_RsizeXmax(float my_Rsize){LensHalo::setRsize(my_Rsize); xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  /// set scale radius
+  /// set rscale, xmax and gmax
+	void set_rscaleXmax(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  
+  /// Extend radius of halo without changing the scale length or central density
+  void extendRadius(float fac);
+  
+protected:
+  
+  PosType ffunction(PosType x) const;
+  PosType gfunction(PosType x) const;
   PosType dgfunctiondx(PosType x);
-	PosType g2function(PosType x) const;
-	PosType hfunction(PosType x) const;
+  PosType g2function(PosType x) const;
+  PosType hfunction(PosType x) const;
   PosType dhfunction(PosType x) const;
   PosType ddhfunction(PosType x, bool numerical);
   PosType dddhfunction(PosType x, bool numerical);
@@ -698,29 +720,8 @@ public:
   PosType ddmoddb(int whichmod, PosType q, PosType b);
   PosType dmoddq(int whichmod, PosType q, PosType b);
   PosType ddmoddq(int whichmod, PosType q, PosType b);
-  
-  //PosType dmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);    // was used for Ansatz III w derivatives of the Fourier modes
-  //PosType ddmod(PosType x, int modnumber, PosType my_slope, PosType my_fratio);   // was used for Ansatz III w derivatives of the Fourier modes
-  
-  
-	// TODO: BEN: the below functions alphaNFW, kappaNFW and gammaNFW are obsolete and better to be deleted to avoid confusion
-	void alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-                ,PosType *center,PosType Sigma_crit);
-	KappaType kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-                     ,PosType *center,PosType Sigma_crit);
-	void gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType mass,PosType r_scale
-                ,PosType *center,PosType Sigma_crit);
-  
-	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
-	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
-  /// set Rsize, xmax and gmax
-  void set_RsizeXmax(float my_Rsize){LensHalo::setRsize(my_Rsize); xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-  /// set scale radius
-  /// set rscale, xmax and gmax
-	void set_rscaleXmax(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
-  
-protected:
-	/// table size
+
+  /// table size
 	static const long NTABLE;
 	/// maximum Rsize/rscale
 	static const PosType maxrm;
@@ -1167,6 +1168,7 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
+  /// This constructor puts a single point mass in the center
   LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N);
 	LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};

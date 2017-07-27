@@ -84,13 +84,18 @@ LensHaloMassMap::LensHaloMassMap(
                                  const PixelMap &MassMap   /// mass map in solar mass units
                                  ,double massconvertion    /// convertion factor from pixel units to solar masses
                                  ,double redshift          /// redshift of lens
-                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
+                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4, 1.0 is no padding
                                  ,bool my_zeromean         /// if true, subtracts average density
                                  ,const COSMOLOGY& lenscosmo  /// cosmology
 )
 :LensHalo()
 , flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
+  
+  if(pixel_map_zeropad <= 0.0){
+    std::cerr << "Padding in LensHaloMap should not be <= 0.  1 is no padding." << std::endl;
+    throw std::runtime_error("Invalid parameter");
+  }
   rscale = 1.0;
 
   setMap(MassMap,massconvertion,redshift);
@@ -330,14 +335,14 @@ void LensHaloMassMap::setMap(
   map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
   map->boxlrad = inputmap.getRangeX();
   map->boxlarcsec = inputmap.getRangeX()/arcsecTOradians;
-  map->boxlMpc = inputmap.getRangeX()/map->Dlens;
+  map->boxlMpc = inputmap.getRangeX()*map->Dlens;
   
   double pixelarea = inputmap.getResolution()*map->Dlens;
   pixelarea *= pixelarea;
   
-  for(size_t i=0;i<size;++i){
-    map->convergence[i] = massconvertion*inputmap(i)/pixelarea;
-  }
+  double tmp = 0.0;
+  for(size_t i=0;i<size;++i) map->convergence[i] = massconvertion*inputmap(i)/pixelarea;
+  
   
   if(zeromean){
     double avkappa = 0;

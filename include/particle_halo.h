@@ -5,10 +5,12 @@
 //  Created by bmetcalf on 16/06/15.
 //
 //
-#include "quadTree.h"
 
 #ifndef GLAMER_particle_halo_h
 #define GLAMER_particle_halo_h
+
+#include "quadTree.h"
+#include "geometry.h"
 
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
@@ -41,6 +43,16 @@ public:
                     ,PosType MinPSize = 0.0    /// Minimum smoothing size of particles
                     );
   
+  LensHaloParticles(
+                    PosType **positions    /// 3d positions in physical coordinates, only first two are used
+                    ,size_t Nparticles    /// number of particles
+                    ,std::vector<float> &my_sizes  /// smoothing sizes, will be swapped so returns empty, if size 1 the first size will be used for all the particles
+                    ,std::vector<float> &my_masses /// masses, will be swapped so returns empty, if size 1 the first mass will be used for all the particles
+                    ,PosType redshift     /// redshift of origin
+                    ,const COSMOLOGY& cosmo /// cosmology
+                    ,PosType sigma_back  /// background mass sheet
+                    );
+  
   ~LensHaloParticles();
   
   void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
@@ -67,13 +79,19 @@ public:
                       ,Utilities::RandomNumbers_NR &ran
                       );
   
+  void setSigmaBackground(PosType sigma_back){qtree->SetSigmaBackground(sigma_back); }
+  
+  static void find_smoothing(PosType **xp,size_t N,std::vector<float> &s,int Nneighbores);
+
 private:
+
+  static void find_smoothing_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
 
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
-  void calculate_smoothing(int Nsmooth);
-  void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
+  //void calculate_smoothing(int Nsmooth);
+  //void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
 
   void readPositionFileASCII(const std::string& filename);
   bool readSizesFile(const std::string& filename,int Nsmooth,PosType min_size);

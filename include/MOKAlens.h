@@ -131,12 +131,12 @@ public:
 	size_t getNx() const { return map->nx; }
 	/// return number of pixels on a y-axis side in original map
 	size_t getNy() const { return map->ny; }
-	
+
 private:
 	PixelMapType maptype;
+  MOKAmap* map;  
 	void initMap();
 	void convertmap(MOKAmap *map,PixelMapType maptype);
-	MOKAmap* map;
 	const COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
   int zerosize;

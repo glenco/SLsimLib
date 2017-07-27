@@ -37,8 +37,16 @@ LensHaloParticles::LensHaloParticles(
   if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
     sizes.resize(Npoints);
-    calculate_smoothing(Nsmooth);
+    //calculate_smoothing(Nsmooth);
+
+    std::cout << "Calculating smoothing of particles ..." << std::endl
+    << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
+
+    find_smoothing(xp,Npoints,sizes,Nsmooth);
     for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
+    
+    // save result to a file for future use
+    writeSizes(sizefile,Nsmooth);
   }
   
   // convert from comoving to physical coordinates
@@ -86,13 +94,47 @@ LensHaloParticles::LensHaloParticles(
   qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
 }
 
+LensHaloParticles::LensHaloParticles(
+                                     PosType **positions
+                                     ,size_t Nparticles
+                                     ,std::vector<float> &my_sizes
+                                     ,std::vector<float> &my_masses
+                                     ,PosType redshift
+                                     ,const COSMOLOGY& cosmo
+                                     ,PosType sigma_back
+                                     ):
+xp(positions),min_size(0),Npoints(Nparticles)
+{
+  
+  LensHalo::setZlens(redshift);
+  LensHalo::setCosmology(cosmo);
+  LensHalo::set_RsizeRmax(1.0e3);
+  LensHalo::set_flag_elliptical(false);
+  stars_N = 0;
+  stars_implanted = false;
+  
+  Rsize = Rmax = 1.0e3;
+  
+  std::swap(sizes,my_sizes);
+  std::swap(masses,my_masses);
+  
+  // convert from comoving to physical coordinates
+  mass = 0.0;
+  mcenter *= 0.0;
+  
+  multimass = (masses.size() == Npoints);
+  
+  qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,(sizes.size() == Npoints),sigma_back,20);
+}
+
 LensHaloParticles::~LensHaloParticles(){
   delete qtree;
   Utilities::free_PosTypeMatrix(xp,Npoints,3);
 }
 
-void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
-                ,bool subtract_point,PosType screening){
+void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma
+                                   ,KappaType *phi,double const *xcm
+                                   ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
   
   alpha[0] *= -1;
@@ -306,7 +348,43 @@ void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
   }
 }
 
-void LensHaloParticles::calculate_smoothing(int Nsmooth){
+void LensHaloParticles::find_smoothing(PosType **xp,size_t N,std::vector<float> &size,int Nneighbors){
+  // make 3d tree of particle postions
+  TreeSimple tree3d(xp,N,10,3,true);
+  
+  // find distance to nth neighbour for every particle
+  if(N < 1000){
+    IndexType neighbors[Nneighbors];
+    for(size_t i=0;i<N;++i){
+      tree3d.NearestNeighbors(xp[i],Nneighbors,size.data() + i,neighbors);
+    }
+  }else{
+    size_t chunksize = N/N_THREADS;
+    std::thread thr[N_THREADS];
+    
+    size_t NN;
+    for(int ii = 0; ii < N_THREADS ;++ii){
+      if(ii == N_THREADS-1){
+        NN = N - ii*chunksize;
+      }else NN = chunksize;
+      
+      thr[ii] = std::thread(LensHaloParticles::find_smoothing_,&tree3d
+                            ,&(xp[ii*chunksize]),&(size[ii*chunksize]),NN,Nneighbors);
+    }
+    for(int ii = 0; ii < N_THREADS ;++ii) thr[ii].join();
+  }
+
+}
+
+void LensHaloParticles::find_smoothing_(TreeSimple *tree3d,PosType **xp,float *sizesp,size_t N,int Nsmooth){
+  
+  IndexType neighbors[Nsmooth];
+  for(size_t i=0;i<N;++i){
+    tree3d->NearestNeighbors(xp[i],Nsmooth,sizesp + i,neighbors);
+  }
+}
+
+/*void LensHaloParticles::calculate_smoothing(int Nsmooth){
   std::cout << "Calculating smoothing of particles ..." << std::endl
   << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
@@ -346,7 +424,7 @@ void LensHaloParticles::smooth_(TreeSimple *tree3d,PosType **xp,float *sizesp,si
   for(size_t i=0;i<N;++i){
     tree3d->NearestNeighbors(xp[i],Nsmooth,sizesp + i,neighbors);
   }
-}
+}*/
 
 void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
   

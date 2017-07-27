@@ -18,8 +18,10 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <deque>
 
 #endif
+#include <mutex>
 
 namespace Utilities
 {
@@ -201,7 +203,7 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)(**it); }
-      const reference operator*() const { return (const reference)(**it); }
+      reference operator*() const { return (reference)(**it); }
       
       pointer operator->() { return (pointer)(*it); }
       const pointer operator->() const { return (const pointer)(*it); }
@@ -218,7 +220,7 @@ namespace Utilities
       iterator& operator-=(difference_type n) { it -= n; return *this; }
       
       reference operator[](difference_type n) { return (reference)*it[n]; }
-      const reference operator[](difference_type n) const { return (const reference)*it[n]; }
+      reference operator[](difference_type n) const { return (reference)*it[n]; }
       
       friend iterator operator+(const iterator& i, difference_type n) { return iterator(i.it + n); }
       friend iterator operator+(difference_type n, const iterator& i) { return iterator(i.it + n); }
@@ -557,7 +559,7 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)*it; }
-      const reference operator*() const { return (const reference)*it; }
+      const reference operator*() const { return (reference)*it; }
       
       iterator& operator++() { ++it; return *this; }
       iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
@@ -881,7 +883,7 @@ namespace Utilities
   /// delete the objects that are pointed to in a container of pointers
   template<typename Container>
   void delete_container(Container& c) { while(!c.empty()) delete c.back(), c.pop_back(); }
-    
+  
   /** \brief Class for calculating the Hilbert curve distance in two dimensions
    *
    *  The Hilbert Curve maps two dimensional positions on a grid into distance in one dimension.
@@ -922,8 +924,34 @@ namespace Utilities
     return std::max(l, std::min(u, x));
   }
   
+
+  /// class for keeping track of the range of a variable
+  template<typename T>
+  class Range{
+  public:
+    Range(T init_max,T init_min){
+      range[0] = std::max(init_min,init_max);
+      range[1] = std::min(init_min,init_max);
+    }
+    Range(T first_value){
+      range[0] = range[1] = first_value;
+    }
+    
+    void update(const T &val){
+      range[0] = range[0] < val ? range[0] : val;
+      range[1] = range[1] > val ? range[1] : val;
+    }
+    
+    T max(){return range[1];}
+    T min(){return range[0];}
+    
+  private:
+    T range[2];
+  };
+  
+  
 #ifdef ENABLE_CLANG
-  /// This is a class for generating random numbers. It is actually just a rapper for some std random classes.
+  /// This is a class for generating random numbers. It is actually just a wrapper for some std random classes.
   class RandomNumbers{
   public:
     
@@ -1035,18 +1063,18 @@ namespace Utilities
     
     // initialise original index locations
     index.resize(N);
-
+    
     for (size_t i = 0; i != index.size(); ++i) index[i] = i;
     
     // sort indexes based on comparing values in v
     std::sort(index.begin(), index.end(),
               [v](size_t i1, size_t i2) {return v[i1] < v[i2];});
   }
-
+  
   /// Find the indexes that sort a vector in descending order
   template <typename T>
   void sort_indexes_decending(const std::vector<T> &v     /// the original data that is not changed
-                    ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
+                              ,std::vector<size_t> &index /// vector of indexes that if put into v will sort it
   ) {
     
     // initialise original index locations
@@ -1057,7 +1085,7 @@ namespace Utilities
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
   }
-
+  
   
   // reorders vec according to index p
   template <typename T>
@@ -1075,13 +1103,65 @@ namespace Utilities
       vec[i] = copy[p[i]];
     }
   }
-
+  
   template <typename T>
   void apply_permutation(
+                         std::vector<T>& vec,
+                         const std::vector<std::size_t>& p)
+  {
+    apply_permutation(vec.data(),p);
+  }
+  
+  
+  /// This should reorder the vector in place according to the permutation index p
+  template <typename T>
+  void apply_permutation_in_place(
                                   std::vector<T>& vec,
                                   const std::vector<std::size_t>& p)
   {
-    apply_permutation(vec.data(),p);
+    std::vector<bool> done(vec.size());
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+      if (done[i])
+      {
+        continue;
+      }
+      done[i] = true;
+      std::size_t prev_j = i;
+      std::size_t j = p[i];
+      while (i != j)
+      {
+        std::swap(vec[prev_j], vec[j]);
+        done[j] = true;
+        prev_j = j;
+        j = p[j];
+      }
+    }
+  }
+  /// This should reorder the vector in place according to the permutation index p
+  template <typename T>
+  void apply_permutation_in_place(
+                                  std::deque<T>& vec,
+                                  const std::vector<std::size_t>& p)
+  {
+    std::vector<bool> done(vec.size());
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+      if (done[i])
+      {
+        continue;
+      }
+      done[i] = true;
+      std::size_t prev_j = i;
+      std::size_t j = p[i];
+      while (i != j)
+      {
+        std::swap(vec[prev_j], vec[j]);
+        done[j] = true;
+        prev_j = j;
+        j = p[j];
+      }
+    }
   }
   
 #ifdef ENABLE_FFTW
@@ -1098,8 +1178,8 @@ namespace Utilities
                        ,double boxly                 /// range of image in y direction
                        ,std::vector<double> &ll      /// output multiplot number of bins
                        ,std::vector<double> &Pl      /// output binned power spectrum
-                       ,double zeropaddingfactor = 4  
-  );
+                       ,int zeropaddingfactor
+                       );
 #endif
   
   
@@ -1115,7 +1195,7 @@ namespace Utilities
    The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
    **/
   std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
-
+  
   /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
   int GetNThreads();
   
@@ -1267,7 +1347,7 @@ namespace Utilities
       
       strg.clear();
       buffer.clear();
-
+      
       // ******************
       
       
@@ -1277,7 +1357,7 @@ namespace Utilities
       buffer >> myt2;
       if(verbose)  std::cout << myt2 << std::endl;
       y.push_back(myt2);
-
+      
       myline.erase(0,pos+1);
       pos= myline.find_first_not_of(space);
       myline.erase(0,pos);
@@ -1292,7 +1372,7 @@ namespace Utilities
       buffer >> myt3;
       if(verbose)  std::cout << myt3 << std::endl;
       y.push_back(myt3);
-
+      
       strg.clear();
       buffer.clear();
       myline.clear();
@@ -1300,6 +1380,181 @@ namespace Utilities
     }
     std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
   }
+  
+  
+  /** \brief This is a thread-safe container wrapper.
+   A reference to it can be passed to multiple threads without
+   worrying about them interfering.  It is mostly meant as dynamical
+   push only storage with STL data conatiners.  The functions mirror those
+   of the STL data conatiners.
+   */
+  template<typename Container>
+  class LockableContainer
+  {
+  public:
+    typedef typename Container::value_type value_type;
+    //    typedef typename Container::reference_type reference_type;
+    typedef typename Container::value_type& reference_type;
+    
+    LockableContainer(){}
+    ~LockableContainer(){}
+    
+    // make it uncopyable
+    LockableContainer(const LockableContainer&) = delete;
+    LockableContainer& operator=(const LockableContainer&) = delete;
+    
+    void push_back(value_type &t) {
+      std::lock_guard<std::mutex> lock(m);
+      container.push_back(t);
+    }
+    
+    void push_front(value_type &t) {
+      std::lock_guard<std::mutex> lock(m);
+      container.push_front(t);
+    }
+    
+    void resize(size_t N){
+      std::lock_guard<std::mutex> lock(m);
+      container.resize(N);
+    }
+    
+    void reserve(size_t N){
+      std::lock_guard<std::mutex> lock(m);
+      container.reserve(N);
+    }
+    
+    void clear(){
+      std::lock_guard<std::mutex> lock(m);
+      container.clear();
+    }
+    
+    value_type operator[](size_t i) const{
+      return container[i];
+    }
+    
+    size_t capacity() const{
+      return container.capacity();
+    }
+    size_t size() const{
+      return container.size();
+    }
+    
+    /// swap contents of conatiners
+    void swap(Container &output){
+      std::lock_guard<std::mutex> lock(m);
+      std::swap(output,container);
+    }
+    
+  private:
+    Container container;
+    std::mutex m;
+  };
+  
+  /** \brief Class that make constructing and using a linear numerical lookput table easier.
+   
+   Uses linear interpolation.  std::bind() can be useful to get a function or method into a form that
+   will be accepted by the constructor.
+   **/
+  template<class T>
+  struct LinearLookUpTable{
+  public:
+    LinearLookUpTable(std::function<T(T)> func    /// function to sample from
+                      ,T my_xmin                     /// minimum x value of table
+                      ,T my_xmax                     /// maximum x value of table
+                      ,size_t N                   /// number of points in table
+                      ):xmax(my_xmax),xmin(my_xmin)
+    {
+      Utilities::fill_linear(x,N,xmin,xmax);
+      y.resize(N);
+      for(size_t i = 0;i<N; ++i){
+        y[i] = func(x[i]);
+      }
+      dx = x[1] - x[0];
+    }
+    
+    /// get linear interpolate at my_x, returns false if out of bounds
+    bool operator()(T my_x,T &my_y){
+      
+      if(my_x < xmin || my_x >= xmax){   // out of bounds
+        if(xmax == my_x){
+          my_y = y.back();
+          return true;
+        }
+        return false;
+      }
+      
+      size_t i = (size_t)( (my_x - xmin)/dx );
+      my_y = y[i] + (y[i+1] - y[i])*(my_x - x[i])/(x[i+1] - x[i]);
+      return true;
+    }
+    
+  private:
+    std::vector<T> y;
+    std::vector<T> x;
+    double dx;
+    double xmin;
+    double xmax;
+  };
+  
+  /** \brief Class that make constructing and using a linear numerical lookput table easier.
+   Uses linear interpolation on the log values of both x and y.
+   
+   std::bind() can be useful to get a function or method into a form that
+   will be accepted by the constructor.
+   **/
+  template <class T>
+  class LogLookUpTable{
+  public:
+    LogLookUpTable(std::function<T(T)> func    /// function to sample from
+                   ,T xmin                     /// minimum x value of table
+                   ,T xmax                     /// maximum x value of table
+                   ,size_t N                   /// number of points in table
+    ){
+      Utilities::fill_linear(x,N,log(xmin),log(xmax));
+      y.resize(N);
+      for(size_t i = 0;i<N; ++i){
+        y[i] = log(func( exp(x[i]) ));
+      }
+      dx = x[1] - x[0];
+      xmin = x[0];
+      xmax = x.back();
+    }
+    
+    bool operator()(T my_x,T &my_y){
+      T lgx = log(my_x);
+      
+      if(lgx < xmin || lgx >= xmax){   // out of bounds
+        if(xmax == lgx){
+          my_y = exp( y.back() );
+          return true;
+        }
 
+        return false;
+      }
+      
+      size_t i = (size_t)( (lgx - xmin)/dx );
+      
+      my_y = exp( y[i] + (y[i+1] - y[i])*(lgx - x[i])/(x[i+1] - x[i]) );
+      return true;
+    }
+    
+  private:
+    std::vector<T> y;
+    std::vector<T> x;
+    double dx;
+    double xmin;
+    double xmax;
+  };
+  
 }
+
+template <class T>
+inline T MIN(T x,T y){
+  return (x < y) ? x : y;
+};
+template <class T>
+inline T MAX(T x,T y){
+  return (x > y) ? x : y;
+};
+
 #endif

@@ -81,6 +81,96 @@ PosType Utilities::Geometry::Seporation(const SphericalPoint &p1,const Spherical
 PosType Utilities::Geometry::AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2){
   return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
 }
+PosType Utilities::Geometry::SphericalPoint::AngleSeporation(const SphericalPoint &p2){
+  return acos(sin(theta)*sin(p2.theta) + cos(theta)*cos(p2.theta)*cos(phi-p2.phi));
+}
+
+
+bool Utilities::Geometry::Cone::intersect_line_segment(const Point_3d &p1,const Point_3d &p2){
+  
+  {  // check if either of the end points are within cone
+    Point_3d pc = p1-p;
+    if( pc*v > costheta*pc.length() && pc*v > 0) return true;
+    pc = p2-p;
+    if( pc*v > costheta*pc.length() && pc*v > 0 ) return true;
+  }
+  
+  
+  Point_3d t = p2 - p1;  // tangent to curve
+  Point_3d w = p1 - p;
+  
+  double tv = t*v,wv=w*v,tw=t*w;
+  
+  double a = tv*tv - costheta*costheta*t.length_sqr();
+  double b = 2*( wv*tv - costheta*costheta*tw );
+  double c = wv*wv - costheta*costheta*w.length_sqr();
+  
+  double tmp = b*b - 4*a*c;
+  if(tmp < 0){  // no intersection
+    return false;
+  }else{
+    
+    double s1 = (-b + sqrt(tmp))/2/a;
+    double s2 = (-b - sqrt(tmp))/2/a;
+    
+    // case where segment intersects the wall of the cone
+    if(s1 < 1 && s1 > 0){
+      if( (p1 + t*s1)*v > 0) return true;  // check that it is the forward half of the cone
+    }
+    if(s2 < 1 && s2 > 0){
+      if( (p1 + t*s2)*v > 0) return true;
+    }
+  }
+  
+  return false;  // line intersects the cone but not the segment
+};
+
+bool Utilities::Geometry::Cone::intersect_face(const Point_3d &p1,const Point_3d &p2,const Point_3d &p3){
+  
+  Point_3d p4 = p1 + p3 - p2;
+  if(intersect_line_segment(p1,p2)) return true;
+  if(intersect_line_segment(p2,p3)) return true;
+  if(intersect_line_segment(p3,p4)) return true;
+  if(intersect_line_segment(p4,p1)) return true;
+  
+  // is the whole cone in the face the center of the cone will be
+  
+  Point_3d p12 = p1 - p2,p14 = p1 - p4;
+  Point_3d norm = p12.cross(p14);  // normal vector to plane of the face
+  
+  double area = norm.length();
+  
+  // point on plane of face
+  double s = (p1*norm)/(v*norm);
+  if(s < 0) return false;
+  Point_3d center = p1 - v*s;
+  p12 = p12.cross(center);
+  p14 = p14.cross(center);
+  
+  if(p12*p14 < 0 && p12.length() < area) return true;
+  
+  return false;
+};
+bool Utilities::Geometry::Cone::intersect_box(const Point_3d &p1,const Point_3d &p2){
+  
+  Point_3d d11 = p1 + Point_3d(p2(0)-p1(0),0,0);
+  Point_3d d12 = p1 + Point_3d(0,p2(1)-p1(1),0);
+  Point_3d d13 = p1 + Point_3d(0,0,p2(2)-p1(2));
+  
+  if(intersect_face(d11,p1,d12)) return true;
+  if(intersect_face(d11,p1,d13)) return true;
+  if(intersect_face(d12,p1,d13)) return true;
+  
+  Point_3d d21 = p2 + Point_3d(p1(0)-p2(0),0,0);
+  Point_3d d22 = p2 + Point_3d(0,p1(1)-p2(1),0);
+  Point_3d d23 = p2 + Point_3d(0,0,p1(2)-p2(2));
+  
+  if(intersect_face(d21,p2,d22)) return true;
+  if(intersect_face(d21,p2,d23)) return true;
+  if(intersect_face(d22,p2,d23)) return true;
+  
+  return false;
+}
 
 bool Utilities::Geometry::intersect(const PosType a1[],const PosType a2[],const PosType b1[],const PosType b2[]){
   
@@ -181,7 +271,8 @@ int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
   return number == 0 ? 0 : 1;
 }
 
-std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint const &p){
+std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint &p){
   return os << "r: " << p.r << " theta: " << p.theta << " phi: " << p.phi;
+
 }
 

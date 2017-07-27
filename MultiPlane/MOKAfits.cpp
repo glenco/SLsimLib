@@ -599,11 +599,16 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
 }
 
 /**
- * \brief pre-process sourface mass density map computing deflection angles and shear in FFT,
+ * \brief pre-process surface mass density map computing deflection angles and shear in FFT,
  *  generalized to work with rectangular maps
  */
 
 void LensHaloMassMap::PreProcessFFTWMap(){
+  
+  
+  ShearByFFT(map->convergence,map->alpha1,map->alpha2,map->gamma1,map->gamma2,map->nx,map->ny,
+             map->boxlMpc,zerosize);
+/*
 #ifdef ENABLE_FFTW
   // initialize the quantities
   //int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
@@ -612,7 +617,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
   int Nnx=int(zerosize*map->nx);
   int Nny=int(zerosize*map->ny);
   double Nboxlx = map->boxlMpc*zerosize;
-  double Nboxly = map->boxlMpc*zerosize/map->nx*map->ny;
+  double Nboxly = map->boxlMpc*zerosize*map->ny/map->nx;
   
   std:: valarray<float> Nmap;
   try{
@@ -714,9 +719,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
       }
     }
     
-    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
     fftw_execute( pp );
-    //fftw_destroy_plan(pp);
     
     map->alpha1.resize(map->nx*map->ny);
     
@@ -748,9 +751,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
       }
     }
     
-    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
     fftw_execute( pp );
-    //fftw_destroy_plan(pp);
     
     map->alpha2.resize(map->nx*map->ny);
     
@@ -781,9 +782,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
       }
     }
     
-    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
     fftw_execute( pp );
-    //fftw_destroy_plan(pp);
     
     map->gamma1.resize(map->nx*map->ny);
     
@@ -815,9 +814,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
       }
     }
     
-    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
     fftw_execute( pp );
-    //fftw_destroy_plan(pp);
     
     map->gamma2.resize(map->nx*map->ny);
     
@@ -832,20 +829,13 @@ void LensHaloMassMap::PreProcessFFTWMap(){
     }
   }
   
-  /*
-   double *phi    = new double[Nnx*Nny];
-   fftw_plan pp;
-   pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fphi,phi,FFTW_ESTIMATE);
-   fftw_execute( pp );
-   fftw_destroy_plan(pp);
-   delete[] phi;
-   */
   
   // std:: cout << " remapping the map in the original size " << std:: endl;
   delete[] fft;
   delete[] realsp;
   delete[] fphi;
-#endif
+ 
+#endif */
 }
 
 

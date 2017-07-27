@@ -192,7 +192,7 @@ PixelMap::PixelMap(
           h0.readKey("PHYSICALSIZE",ps);
         }
         catch(CCfits::HDU::NoSuchKeyword){
-          std::cerr << "PixelMap input fits fiel must have header keywords:" << std::endl
+          std::cerr << "PixelMap input fits field must have header keywords:" << std::endl
           << " PHYSICALSIZE - size of map in degrees" <<std::endl
           << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
           exit(1);
@@ -399,7 +399,8 @@ PixelMap& PixelMap::operator-=(const PixelMap& rhs)
   // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
-  for(size_t i=0;i<map.size();++i) map[i] -= rhs.map[i];
+  size_t N=map.size();
+  for(size_t i=0;i<N;++i) map[i] -= rhs.map[i];
   return *this;
 }
 
@@ -416,14 +417,16 @@ PixelMap& PixelMap::operator*=(const PixelMap& rhs)
 {
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
-  for(size_t i=0;i<map.size();++i) map[i] *= rhs.map[i];
+  size_t N=map.size();
+  for(size_t i=0;i<N;++i) map[i] *= rhs.map[i];
   //map *= rhs.map;
   return *this;
 }
 
 PixelMap& PixelMap::operator*=(PosType b)
 {
-  for(size_t i=0;i<map.size();++i) map[i] *= b;
+  size_t N=map.size();
+  for(size_t i=0;i<N;++i) map[i] *= b;
   //map *= rhs.map;
   return *this;
 }
@@ -1081,6 +1084,58 @@ void PixelMap::drawgrid(int N,PosType value){
   }
 }
 
+void PixelMap::drawPoints(std::vector<Point *> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i]->x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i]->x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i]->x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawPoints(std::vector<Point> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i].x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i].x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawCurve(std::vector<Point *> points,PosType value){
+  for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
+}
+void PixelMap::drawCurve(std::vector<Point> points,PosType value){
+  for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+}
+void PixelMap::drawPoints(std::vector<Point_2d> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i].x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i].x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawCurve(std::vector<Point_2d> points,PosType value){
+  for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+}
+
 /**
  * \brief Draws a square
  */
@@ -1628,7 +1683,7 @@ void Utilities::ReadFileNames(
   
   if (dp == NULL)
   {
-    std::cerr << "Cannot find directory" << std::endl;
+    std::cerr << "Cannot find directory : " << dir << std::endl;
     throw std::runtime_error("error opening directory");
     return;
   }
@@ -1699,14 +1754,19 @@ long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
   //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
   
-  ix = (long)((x - map_boundary_p1[0])/resolution );
-  iy = (long)((y - map_boundary_p1[1])/resolution );
+  double dx = (x - map_boundary_p1[0])/resolution ;
+  double dy = (y - map_boundary_p1[1])/resolution ;
   
-  if( ix < 0 || ix >= Nx){
+  if( dx < 0 || dy < 0) return -1;
+  
+  ix = (long)(dx);
+  iy = (long)(dy);
+  
+  if(ix >= Nx){
     ix = iy = -1;
     return -1;
   }
-  if( iy < 0 || iy >= Ny){
+  if(iy >= Ny){
     ix = iy = -1;
     return -1;
   }
@@ -2052,6 +2112,61 @@ void PixelMap::AddSource(Source &source,int oversample){
 }
 */
 
+void PixelMap::PowerSpectrum(std::vector<PosType> &power_spectrum
+                   ,std::vector<PosType> &lvec
+                   ,int zeropaddingfactor
+                   ,bool overwrite
+                   ,bool antialias
+                   ){
+  
+  if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
+  
+  double shotnoise = 0;
+  if(antialias){
+    // find variance of map
+    double var = 0,tmp;
+    size_t count=0;
+    
+    for(size_t j=1;j<Ny-1;++j){
+      for(size_t i=1;i<Nx-1;++i){
+        size_t k = i + j*Nx;
+        tmp = map[k] - (map[k+1] + map[k-1] + map[k+Nx] + map[k-Nx])/4;
+        var += map[k]*tmp;
+        ++count;
+      }
+    }
+    assert(count == (Nx-2)*(Ny-2));
+    
+    /*for(auto a : map){
+     ave += a;
+     var += a*a;
+     }
+     var -= map.size()*ave*ave;
+     */
+    var /= (count -1);
+    
+    shotnoise = resolution*resolution*var/pi/pi/4.0;
+  }
+  
+  
+  if(overwrite){
+    Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum,zeropaddingfactor);
+    if(antialias){
+      for(auto &p : power_spectrum) p -= shotnoise;
+    }
+  }else{
+    std::vector<PosType> tmp_power(power_spectrum.size());
+    Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power,zeropaddingfactor);
+    for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii] - shotnoise;
+  }
+}
 
+void PixelMap::Shear(PixelMap &alpha1,PixelMap &alpha2,PixelMap &gamma1,PixelMap &gamma2,double zerosize){
+  if(!compare(alpha1)){ throw std::invalid_argument("map wrong size");}
+  if(!compare(alpha2)){ throw std::invalid_argument("map wrong size");}
+  if(!compare(gamma1)){ throw std::invalid_argument("map wrong size");}
+  if(!compare(gamma2)){ throw std::invalid_argument("map wrong size");}
 
+  ShearByFFT<std::valarray<PosType> >(map,alpha1.map,alpha2.map,gamma1.map,gamma1.map,Nx,Ny,rangeX);
+}
 

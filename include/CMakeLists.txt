@@ -48,4 +48,6 @@ add_sources(
 	particle_halo.h
 	concave_hull.h
         bands_etc.h
+	lightcone_construction.h
+	profiles.h
 )

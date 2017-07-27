@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "lens_halos.h"
 #include <iomanip>      // std::setprecision
+#include "lightcone_construction.h"
 
 using namespace std;
 
@@ -83,7 +84,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   //flag_switch_lensing_off = false;
   
   PosType ztmp = zsource;
-  combinePlanes(true);
+  combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
@@ -191,7 +192,7 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
   
   
   if(flag_switch_field_off == false) {
-    std::cout << "Nzbins = " << Nzbins << std::endl ;
+    //std::cout << "Nzbins = " << Nzbins << std::endl ;
     
     // Resizing the "number of Halos" binning table :
     zbins.resize(Nzbins) ;
@@ -425,6 +426,17 @@ void Lens::assignParams(InputParams& params,bool verbose)
         }
 			}
       if(!params.get("field_fov",fieldofview));
+      
+      if(!params.get("field_mass_func_type",field_mass_func_type))
+      {
+        field_mass_func_type = ShethTormen;
+      }
+      
+      if(!params.get("field_min_mass",field_min_mass))
+      {
+        field_min_mass = 1.0e10;
+      }
+
 		}
 		else
 		{
@@ -607,12 +619,29 @@ void Lens::resetFieldHalos(bool verbose)
   field_plane_redshifts = field_plane_redshifts_original;
   field_Dl = field_Dl_original;
   
-	if(sim_input_flag){
-		if(read_sim_file == false){
-      if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
-      if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
+  if(sim_input_flag){
+    if(read_sim_file == false){
+      
+      switch (field_input_sim_format) {
+        case MillenniumObs:
+          readInputSimFileMillennium(verbose);
+          break;
+        case MultiDarkHalos:
+          readInputSimFileMultiDarkHalos(verbose);
+          break;
+        case ObservedData:
+          readInputSimFileObservedGalaxies(verbose);
+          break;
+        case LightConeFormat:
+          readLightCone(verbose);
+          break;
+        default:
+          ERROR_MESSAGE();
+          throw std::runtime_error("field_input_sim_format is not set");
+          break;
+      }
     }
+
 	}
 	else{
 		createFieldHalos(verbose);
@@ -831,7 +860,7 @@ void Lens::createFieldPlanes(bool verbose)
 		else
 		{
 			z2 = cosmo.invCoorDist(0.5*(field_Dl[i] + field_Dl[i+1]));
-			k2 = Utilities::lower_bound<LensHalo>(field_halos, z2);
+			k2 = Utilities::lower_bound<LensHalo>(field_halos, z2) + 1;
 		}
 		
 		/*
@@ -855,6 +884,8 @@ void Lens::createFieldPlanes(bool verbose)
 			sb += field_halos[j]->get_mass();
 			     
       assert( field_Dl[i] > 0 );
+      assert(field_halos[j]->getZlens() >= z1);
+      assert(field_halos[j]->getZlens() <= z2);
 			// convert to proper distance on the lens plane
       //field_halos[j]->getX(tmp);
       //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
@@ -1674,7 +1705,7 @@ void Lens::createFieldHalos(bool verbose)
   // sort redshifts
   std::sort(halo_zs_vec.begin(),halo_zs_vec.end());
   
-  assert(halo_zs_vec[0] < halo_zs_vec[1]);
+  assert(halo_zs_vec[0] <= halo_zs_vec[1]);
   assert(halo_zs_vec[0] < halo_zs_vec[Nhalos-1]);
   
 	PosType *theta_pos,*theta2;
@@ -1865,6 +1896,34 @@ void Lens::createFieldHalos(bool verbose)
 	if(verbose) std::cout << "leaving Lens::createFieldHalos()" << std::endl;
 }
 
+
+/* Read information in from a lightcone file written with LightCone::WriteLightCone()
+ * Here these are made into
+ */
+void Lens::readLightCone(bool verbose){
+  
+  std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
+
+  PosType rmax;
+  LightCones::ReadLightConeNFW(field_input_sim_file,cosmo,field_halos,rmax);
+  
+  fieldofview = pi*rmax*rmax*pow(180/pi,2);
+  inv_ang_screening_scale = 0.0;
+  
+  
+  if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
+  field_mass_func_type = ShethTormen; // set mass function
+  
+  if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
+  // sort the field_halos by readshift
+
+
+  std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
+            {return (lh1->getZlens() < lh2->getZlens());});
+
+  field_buffer = 0.0;
+  read_sim_file = true;
+}
 
 /**
  * \brief Read in information from a Virgo Millennium Data Base http://gavo.mpa-garching.mpg.de/MyMillennium/
@@ -2113,24 +2172,9 @@ void Lens::readInputSimFileMillennium(bool verbose)
             break;
 				}
         
-        //field_halos[j]->setZlens(z);
-				//field_halos[j]->initFromFile(mass*field_galaxy_mass_fraction,seed,vmax,r_halfmass*cosmo.gethubble());
-        
-        // Another copy of this position must be made to avoid rescaling it twice when it is converted into
-        // distance on the lens plane in Lens::buildLensPlanes()
-        //theta2 = new PosType[2];
-        //theta2[0]=theta[0]; theta2[1]=theta[1];
-				//halo_pos_vec.push_back(theta2);
         field_halos.back()->setTheta(theta);
         field_halos.back()->setID(haloid);
         
-        /****** test **********
-        {
-          PosType tmpx[2];
-          field_halos.back()->getX(tmpx);
-          std::cout << "gal " << tmpx[0] << "  " << tmpx[1] << " " << field_halos.back()->get_mass()
-          << " " << field_halos.back()->get_Rmax() << " " << sigma << " " << fratio << " " << field_halos.back()->getID() << std::endl;
-        }*/
 				++j;
 			}
       
@@ -2148,13 +2192,6 @@ void Lens::readInputSimFileMillennium(bool verbose)
 		field_buffer = 0.0;
 	}
   
-	//halo_pos = Utilities::PosTypeMatrix(field_halos.size(), 3);
-  
-	//for(i = 0; i < field_halos.size(); ++i)
-	//{
-	//	halo_pos[i] = halo_pos_vec[i];
-	//}
-  
 	std::cout << "Overiding input file field of view to make it fit the simulation light cone." << std::endl;
 	fieldofview = pi*rmax*rmax*pow(180/pi,2);  // Resets field of view to range of input galaxies
 	std::cout << "    It is now " << fieldofview << " deg^2" << std::endl;
@@ -2164,21 +2201,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
-	//Lens::quicksort(field_halos.data(),halo_pos,field_halos.size());
-  
-  //for(size_t ii=0;ii<4;++ii){
-  //  std::cout << field_halos[ii]->getZlens() << " " << field_halos[ii+1]->getZlens() << std::endl;
-  //}
-  //std::cout << std::endl;
-
-  //std::sort(field_halos.begin(),field_halos.end(),LensHaloZcompare);
   std::sort(field_halos.begin(),field_halos.end(),[](LensHalo *lh1,LensHalo *lh2)
   {return (lh1->getZlens() < lh2->getZlens());});
-  
-  //for(size_t ii=0;ii<field_halos.size()-1;++ii){
-  //  std::cout << field_halos[ii]->getZlens() << " " << field_halos[ii+1]->getZlens() << std::endl;
-  //  assert(field_halos[ii]->getZlens() <= field_halos[ii+1]->getZlens());
-  //}
   
 	if(verbose) std::cout << "leaving Lens::readInputSimFileMillennium()" << std::endl;
   
@@ -2353,7 +2377,9 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
             if(mass > 0){
               HALOCalculator hcalc(&cosmo,mass*(1-field_galaxy_mass_fraction),z);
               
-              field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),hcalc.getRvir(),z,hcalc.getConcentration(),1.0,0.0,0));
+              LensHaloNFW *tmp_halo = new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),hcalc.getRvir(),z,hcalc.getConcentration(),1.0,0.0,0);
+              //tmp_halo->extendRadius(2.0);
+              field_halos.push_back(tmp_halo);
             }
             break;
           case pnfw_lens:
@@ -2940,9 +2966,26 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
 
 		// create or read the field halos
 		if(sim_input_flag){
-      if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
-      if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
+      
+      switch (field_input_sim_format) {
+        case MillenniumObs:
+          readInputSimFileMillennium(verbose);
+          break;
+        case MultiDarkHalos:
+          readInputSimFileMultiDarkHalos(verbose);
+          break;
+        case ObservedData:
+          readInputSimFileObservedGalaxies(verbose);
+          break;
+        case LightConeFormat:
+          readLightCone(verbose);
+          break;
+        default:
+          ERROR_MESSAGE();
+          throw std::runtime_error("field_input_sim_format is not set");
+          break;
+      }
+      
     }
     else{
       createFieldHalos(verbose);

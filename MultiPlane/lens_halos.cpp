@@ -121,8 +121,8 @@ LensHalo::~LensHalo()
 {
 }
 
-const long LensHaloNFW::NTABLE = 10000;
-const PosType LensHaloNFW::maxrm = 100.0;
+const long LensHaloNFW::NTABLE = 50000;
+const PosType LensHaloNFW::maxrm = 500.0;
 int LensHaloNFW::count = 0;
 
 PosType* LensHaloNFW::xtable = NULL;
@@ -389,6 +389,17 @@ void LensHaloNFW::initFromMassFunc(float my_mass, float my_Rsize, float my_rscal
   gmax = InterpolateFromTable(gtable,xmax);
 }
 
+void LensHaloNFW::extendRadius(float fac /// factor by which radius is increased
+                               ){
+  NFW_Utility nfw;
+  mass = nfw.NFW_M(xmax*fac,Rmax/rscale,mass);
+  Rmax *= fac;
+  xmax *=fac;
+  Rsize *= fac;
+  gmax = InterpolateFromTable(gtable,xmax);
+}
+
+
 const long LensHaloPseudoNFW::NTABLE = 10000;
 const PosType LensHaloPseudoNFW::maxrm = 100.0;
 int LensHaloPseudoNFW::count = 0;
@@ -400,6 +411,9 @@ LensHaloPseudoNFW::LensHaloPseudoNFW()
 : LensHalo()
 {
 }
+
+
+
 /// constructor
 LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      float my_mass             /// mass in solar masses
@@ -1277,6 +1291,8 @@ void LensHaloRealNSIE::force_halo(
       xt[0]=xcm[0];
       xt[1]=xcm[1];
       alphaNSIE(tmp,xt,fratio,rcore,pa);
+
+      //PosType tmpa[2]={tmp[0],tmp[1]};
       //alpha[0] = units*tmp[0];  // minus sign removed because already included in alphaNSIE
       //alpha[1] = units*tmp[1];  // Why was the "+=" removed?
       alpha[0] += units*tmp[0];//*sqrt(fratio);
@@ -1287,6 +1303,16 @@ void LensHaloRealNSIE::force_halo(
         gammaNSIE(tmp,xt,fratio,rcore,pa);
         gamma[0] += units*tmp[0];
         gamma[1] += units*tmp[1];
+
+        //double theta=atan2(xcm[1],xcm[0]);
+        //if(theta < 0.660 && theta> 0.659){
+         // std::cout << theta << " , " <<  units*tmp[0] << " , " << units*tmp[1] << " , " << units*kappaNSIE(xt,fratio,rcore,pa) << " , " << tmpa[0]*units << " , " << tmpa[0]*units  <<  std::endl;
+
+        
+        //}
+        //if (rcm2 < 1E-9){
+         //std::cout << units*kappaNSIE(xt,fratio,rcore,pa) << " " <<  units*tmp[0] << " "  <<  units*tmp[1] << " " << rcm2 <<std::endl;
+        //}
       }
     }
     

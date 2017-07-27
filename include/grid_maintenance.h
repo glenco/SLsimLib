@@ -59,7 +59,7 @@ struct Grid{
   void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   void writeFits(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar,std::string filename);
   
-  /// make a fits image of whole grid region
+  /// make a fits image of whole grid region at the initial resolution
   void writeFits(
                  double strech  /// resolution relative to the initial resolution
                  ,LensingVariable lensvar /// which quantity is to be displayed

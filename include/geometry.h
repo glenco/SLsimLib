@@ -24,12 +24,20 @@ namespace Utilities {
   /// Namespace for geometrical functions mostly having to do with spherical coordinates
   namespace Geometry{
     
-    /// represents a point in spherical coordinates theta = 0 is equator
+    /// represents a point in spherical coordinates theta = 0 is the equator
     class SphericalPoint{
       
     public:
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
+      SphericalPoint(const Point_3d &x){
+        cartisianTOspherical(x.x);
+      }
       SphericalPoint():r(0),theta(0),phi(0){};
+
+      SphericalPoint &operator=(Point_3d &x){
+        cartisianTOspherical(x.x);
+        return *this;
+      }
       
       PosType r;
       PosType theta;
@@ -41,6 +49,8 @@ namespace Utilities {
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
+      PosType AngleSeporation(const SphericalPoint &p2);
+
     };
     /** \brief Quaternion class that is especially useful for rotations.
      
@@ -88,6 +98,9 @@ namespace Utilities {
     
     class Quaternion{
     public:
+      Quaternion(){
+        v[0] = v[1] = v[2] = v[3] = 0.0;
+      }
       Quaternion(double s,double x,double y,double z){
         v[0] = s;
         v[1] = x;
@@ -178,16 +191,16 @@ namespace Utilities {
       
       
       /// rotate a Point_3d using a rotation Quaternion
-      static Point_3d Rotate(const Point_3d &p,const Quaternion &R){
+      Point_3d Rotate(const Point_3d &p){
         Quaternion q(p);
-        q.Rotate(R);
+        q.Rotate(*this);
         return q.to_point_3d();
       }
 
       /// rotate a SpericalPoint using a rotation Quaternion
-      static SphericalPoint Rotate(const SphericalPoint &p,const Quaternion &R){
+      SphericalPoint Rotate(const SphericalPoint &p){
         Quaternion q(p);
-        q.Rotate(R);
+        q.Rotate(*this);
         return q.to_SpericalPoint();
       }
       
@@ -267,6 +280,30 @@ namespace Utilities {
     PosType Seporation(const SphericalPoint &p1,const SphericalPoint &p2);
     ///  Angular seporation between points
     PosType AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2);
+    
+    
+    
+    struct Cone{
+      Cone(Point_3d v    /// vector describing the direction of the cone
+           ,Point_3d p   /// the vertex of the cone
+           ,double theta /// half the openning angle of the cone
+           ):v(v),p(p){
+        v.unitize();
+        costheta = cos(theta);
+        assert(theta <= pi/2);
+      }
+      
+      /// test if the cone intersects with a line segment
+      bool intersect_line_segment(const Point_3d &p1,const Point_3d &p2);
+      /// test if the cone intersects with a rectangular surface
+      bool intersect_face(const Point_3d &p1,const Point_3d &p2,const Point_3d &p3);
+      /// test if the cone intersects with a box that is aligned with the coordinate axis
+      bool intersect_box(const Point_3d &p1,const Point_3d &p2);
+      
+      Point_3d v; /// direction
+      Point_3d p; /// vertex
+      double costheta;
+    };
 
     /// Determine if line segments a1a2 and b1b2 intersect.  Sharing an endpoint does not count as intersecting
     bool intersect(const PosType a1[],const PosType a2[]
@@ -295,9 +332,9 @@ namespace Utilities {
      */
     int incurve(PosType x[],std::vector<double *> curve);
 
-  }  
+  }
 }
 
-std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint const &p);
+std::ostream &operator<<(std::ostream &os,Utilities::Geometry::SphericalPoint &p);
 
 #endif /* defined(__GLAMER__geometry__) */

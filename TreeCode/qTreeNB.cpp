@@ -47,7 +47,6 @@ QTreeNB::QTreeNB(PosType **xp,IndexType *particles,IndexType nparticles
 
     Nbranches = 1;
     current = top;
-
 }
 
 /// Free treeNB. Does not free the particle positions, masses or sizes
@@ -225,7 +224,7 @@ void QTreeNB::moveUp(){
       exit(1);
     }
 
-    current = current->prev;  /* can move off end */
+    current = current->prev;  // can move off end
     return;
 }
 
