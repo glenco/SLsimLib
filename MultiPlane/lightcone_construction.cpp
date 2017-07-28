@@ -1332,6 +1332,9 @@ namespace LightCones{
     const double half_range =maps[0][0].getRangeX()/2;
     const double hubble = cosmo.gethubble();
     const double pix_area = resolution*resolution;
+    
+    std::vector<double> discrete_profile( 100 );
+    
 
     Profiles::NFW2D profile;
     
@@ -1394,9 +1397,51 @@ namespace LightCones{
               // change to pixel scale size
               ang_radius /= con;
               
+              int Npixels = (jjmax-jjmin+1)*(iimax - iimin+1);
+              
+              if(Npixels > discrete_profile.size())
+                discrete_profile.resize(Npixels);
+              {
+                int k = 0;
+                double norm = 0,q;
+                for(long jj = jjmin ; jj <= jjmax ; ++jj){
+                  size_t index = iimin + Nx*jj;
+                  for(long ii = iimin ; ii <= iimax ; ++ii,++index){
+                    
+                    q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
+                    discrete_profile[k] = profile(q,con);
+                    norm += discrete_profile[k++];
+                  }
+                }
+                for(k=0;k<Npixels;++k){
+                  discrete_profile[k] /= norm;
+                }
+              }
+              
+              for(int isource = 0 ; isource < Nmaps ; ++isource){
+                if(dsources[isource] > sp.r  ){
+ 
+                  double m = m_halo*(dsources[isource] - sp.r);
+                  int k = 0;
+                  for(long jj = jjmin ; jj <= jjmax ; ++jj){
+                    size_t index = iimin + Nx*jj;
+                    for(long ii = iimin ; ii <= iimax ; ++ii,++index){
+                      
+                      maps[icone][isource][index]
+                      += m*discrete_profile[k++];
+                      
+                    }
+                  }
+
+                }
+                
+                
+              }
+
+              
               //Profiles::TNFW2D profile(con);
               
-              for(long jj = jjmin ; jj <= jjmax ; ++jj){
+ /*             for(long jj = jjmin ; jj <= jjmax ; ++jj){
                 size_t index = iimin + Nx*jj;
                 for(long ii = iimin ; ii <= iimax ; ++ii,++index){
                   
@@ -1412,7 +1457,7 @@ namespace LightCones{
                     }
                 }
               }
-              
+ */
               
               
             }
