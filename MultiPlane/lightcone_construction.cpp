@@ -1413,8 +1413,10 @@ namespace LightCones{
                     norm += discrete_profile[k++];
                   }
                 }
-                for(k=0;k<Npixels;++k){
-                  discrete_profile[k] /= norm;
+                if(norm > 0){
+                  for(k=0;k<Npixels;++k){
+                    discrete_profile[k] /= norm;
+                  }
                 }
               }
               

@@ -258,6 +258,7 @@ namespace LightCones{
     std::vector<Point_3d> points;
     
     size_t scan_block(size_t blocksize,FILE *pFile){
+
       double tmpf;
       // read in a block of points
       size_t i=0;
@@ -644,6 +645,7 @@ namespace LightCones{
         ERROR_MESSAGE();
         throw std::runtime_error(" Cannot open file.");
       }
+      
       //points.resize(blocksize);
       
       size_t Nlines = 0,Nblocks=0;
