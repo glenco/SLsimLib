@@ -1480,7 +1480,7 @@ namespace LightCones{
     std::vector<double> discrete_profile( 100 );
     
     Utilities::RandomNumbers_NR ran(10837);
-    Profiles::NFWgenerator profilegen(ran,30);
+    Profiles::NFWgenerator profilegen(ran,40);
     std::vector<Point_3d> subpoints(Nsub);
     
     
@@ -1527,10 +1527,11 @@ namespace LightCones{
             if(ang_radius < 1){
               // index of the center of the halo
               
-              if(dx < 0 || dx >= Nx) continue;
-              if(dy < 0 || dy >= Ny) continue;
+              if(dx < 0 || dx >= Nxm1) continue;
+              if(dy < 0 || dy >= Nym1) continue;
               
               size_t index = (size_t)( dx + 0.5 ) + Nx*(size_t)( dy + 0.5 );
+              assert(index < Nx*Ny);
               
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
@@ -1548,11 +1549,13 @@ namespace LightCones{
               for(Point_3d p : subpoints){
                 
                 double x = dx + p[0];
-                if( x >= 0 && x < Nx){
+                if( x >= 0 && x < Nxm1){
                   double y = dy + p[1];
-                  if( y >= 0 && y < Ny){
+                  if( y >= 0 && y < Nym1){
                     
                     size_t index = (size_t)(x + 0.5) + Nx*(size_t)(y + 0.5);
+                    assert(index < Nx*Ny);
+                    
                     for(int isource = 0 ; isource < Nmaps ; ++isource){
                       if(dsources[isource] > sp.r  ){
                         // add mass or distribute mass to pixels
@@ -1568,7 +1571,7 @@ namespace LightCones{
           }
         }
       }
-    }
+    } // loop through halos
   }
   void random_observers(std::vector<Point_3d> &observers
                         ,std::vector<Point_3d> &directions
