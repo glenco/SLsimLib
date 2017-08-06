@@ -182,7 +182,7 @@ namespace Profiles {
     const int N = 1000;
   };
 
-  /// projected NFW profile, not truncated
+  /*// projected NFW profile, not truncated
   class NFW2d{
   public:
     
@@ -208,7 +208,7 @@ namespace Profiles {
       if(x<1.0){  ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x); return ans;}
       return 0.0;
     }
-  };
+  };*/
   
 }
 #endif /* PROFILES_H_ */

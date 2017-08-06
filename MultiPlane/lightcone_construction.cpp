@@ -1167,7 +1167,7 @@ namespace LightCones{
     const double half_range =maps[0][0].getRangeX()/2;
     const double hubble = cosmo.gethubble();
     const double pix_area = resolution*resolution;
-
+    
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
       
@@ -1205,7 +1205,7 @@ namespace LightCones{
             
             if(ang_radius < 1){
               double m_part = phalo->mass/ascale/sp.r;
-
+              
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
               
               for(int isource = 0 ; isource < Nmaps ; ++isource){
@@ -1216,10 +1216,10 @@ namespace LightCones{
                 }
               }
             }else{
-
+              
               double m_halo = phalo->mass*pix_area/ascale
               /phalo->r/phalo->r;
-
+              
               //double area = ang_radius*ang_radius;
               // change to pixel scale size
               ang_radius /= 2;
@@ -1231,14 +1231,14 @@ namespace LightCones{
                   
                   double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
                   double m = Profiles::Bspline<2>(q)*m_halo;
-
-                    for(int isource = 0 ; isource < Nmaps ; ++isource){
-                      if(dsources[isource] > sp.r  ){
-                        // add mass or distribute mass to pixels
-                        maps[icone][isource][index]
-                        += m*(dsources[isource] - sp.r);  // this is assuming flat ???
-                      }
+                  
+                  for(int isource = 0 ; isource < Nmaps ; ++isource){
+                    if(dsources[isource] > sp.r  ){
+                      // add mass or distribute mass to pixels
+                      maps[icone][isource][index]
+                      += m*(dsources[isource] - sp.r);  // this is assuming flat ???
                     }
+                  }
                   
                 }
               }
@@ -1305,7 +1305,7 @@ namespace LightCones{
     }
   }
   
-  
+  /*
   void ASCII_XMRRT::fastplanes_parallel(
                                         LightCones::DatumXMRmRs *begin
                                         ,LightCones::DatumXMRmRs *end
@@ -1335,7 +1335,7 @@ namespace LightCones{
     
     std::vector<double> discrete_profile( 100 );
     
-
+    
     Profiles::NFW2D profile;
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
@@ -1375,10 +1375,10 @@ namespace LightCones{
             // this is m / Dl with no hubble constant
             double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
             
-
+            
             if(ang_radius < 1){
               double m_part = phalo->mass/ascale/sp.r;
-             
+              
               size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
               
               for(int isource = 0 ; isource < Nmaps ; ++isource){
@@ -1391,7 +1391,7 @@ namespace LightCones{
             }else{
               double m_halo = phalo->mass*pix_area/ascale
               /phalo->r_scale/phalo->r_scale;
-
+              
               float con = phalo->r_max/phalo->r_scale;
               
               // change to pixel scale size
@@ -1422,7 +1422,7 @@ namespace LightCones{
               
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
- 
+                  
                   double m = m_halo*(dsources[isource] - sp.r);
                   int k = 0;
                   for(long jj = jjmin ; jj <= jjmax ; ++jj){
@@ -1434,41 +1434,139 @@ namespace LightCones{
                       
                     }
                   }
-
+                  
                 }
                 
                 
               }
-
               
-              //Profiles::TNFW2D profile(con);
-              
- /*             for(long jj = jjmin ; jj <= jjmax ; ++jj){
-                size_t index = iimin + Nx*jj;
-                for(long ii = iimin ; ii <= iimax ; ++ii,++index){
-                  
-                  double q = sqrt( (ii - dx)*(ii - dx) + (jj - dy)*(jj - dy) )/ang_radius;
-                  double m = profile(q,con)*m_halo;
-                  
-                    for(int isource = 0 ; isource < Nmaps ; ++isource){
-                      if(dsources[isource] > sp.r  ){
-                        // add mass or distribute mass to pixels
-                        maps[icone][isource][index]
-                        += m*(dsources[isource] - sp.r);  // this is assuming flat ???
-                      }
-                    }
-                }
-              }
- */
-              
+   
               
             }
           }
         }
       }
     }
-  }
+  }*/
   
+  void ASCII_XMRRT::fastplanes_parallel(
+                                        LightCones::DatumXMRmRs *begin
+                                        ,LightCones::DatumXMRmRs *end
+                                        ,const COSMOLOGY &cosmo
+                                        ,std::vector<std::vector<Point_3d> > &boxes
+                                        ,std::vector<Point_3d> &observers
+                                        ,std::vector<Quaternion> &rotationQs
+                                        ,std::vector<double> &dsources
+                                        ,std::vector<std::vector<PixelMap> > &maps
+                                        ,double dmin
+                                        ,double dmax
+                                        ,double BoxLength
+                                        ){
+    // loop lines / read
+    
+    int Ncones = maps.size();
+    int Nmaps = maps[0].size();
+    const double resolution = maps[0][0].getResolution();
+    Point_2d p1 = maps[0][0].getLowerLeft();
+    const size_t Nx = maps[0][0].getNx();
+    const size_t Ny = maps[0][0].getNy();
+    const size_t Nxm1 = Nx-1;
+    const size_t Nym1 = Ny-1;
+    const double half_range =maps[0][0].getRangeX()/2;
+    const double hubble = cosmo.gethubble();
+    const double pix_area = resolution*resolution;
+    const int Nsub = 1000;
+    
+    std::vector<double> discrete_profile( 100 );
+    
+    Utilities::RandomNumbers_NR ran(10837);
+    Profiles::NFWgenerator profilegen(ran,22);
+    std::vector<Point_3d> subpoints(Nsub);
+    
+    
+    for(auto *phalo = begin ; phalo != end ; ++phalo){
+      
+      // loop cones
+      for(int icone=0;icone<Ncones;++icone){
+        
+        for(auto dn : boxes[icone]){
+          // loop through repetitions of box ??? this could be done better
+          
+          Point_3d x = phalo->x - observers[icone] + dn*BoxLength;
+          double r = x.length();
+          if( r > dmin && r < dmax){
+            // rotate to cone frame - direction[i] is the x-axis
+            x = rotationQs[icone].Rotate(x);
+            if(x[0] < 0 ) continue;
+            
+            SphericalPoint sp(x);
+            
+            double ang_radius = phalo->r_max/sp.r;
+            //double size = phalo->r_max/sp.r;
+            
+            if(fabs(sp.theta) - ang_radius > half_range || fabs(sp.phi) - ang_radius > half_range) continue;
+            
+            ang_radius /= resolution;
+            
+            double dx = (sp.theta - p1[0])/resolution ;
+            double dy = (sp.phi   - p1[1])/resolution ;
+            
+            //************* check if halo intersects with field *************
+            long jjmin = (long)MAX(dy-ang_radius,0);
+            long jjmax = (long)MIN(dy+ang_radius,Nym1);
+            if(jjmin > jjmax) continue;
+            long iimin = (long)MAX(dx-ang_radius,0);
+            long iimax = (long)MIN(dx+ang_radius,Nxm1);
+            
+            if(iimin > iimax) continue;
+            
+            // this is m / Dl with no hubble constant
+            double ascale = 1.0/(cosmo.invCoorDist(sp.r/hubble)+1);
+            
+            double m_part = phalo->mass/ascale/sp.r;
+            if(ang_radius < 1){
+              // index of the center of the halo
+              
+              size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
+
+              for(int isource = 0 ; isource < Nmaps ; ++isource){
+                if(dsources[isource] > sp.r  ){
+                  // add mass or distribute mass to pixels
+                  maps[icone][isource][index]
+                  += m_part*(dsources[isource] - sp.r);  // this is assuming flat ???
+                }
+              }
+            }else{
+              float con = phalo->r_max/phalo->r_scale;
+              m_part /= Nsub;
+              
+              profilegen.drawSpherical(subpoints,con,ang_radius);
+              
+              for(Point_3d p : subpoints){
+                
+                double x = dx + p[0];
+                if( x >= 0 && x < Nx){
+                  double y = dy + p[1];
+                  if( y >= 0 && y < Ny){
+                    
+                    size_t index = (size_t)(x + 0.5) + Nx*(size_t)(y + 0.5);
+                    for(int isource = 0 ; isource < Nmaps ; ++isource){
+                      if(dsources[isource] > sp.r  ){
+                        // add mass or distribute mass to pixels
+                        maps[icone][isource][index]
+                        += m_part*(dsources[isource] - sp.r);  // this is assuming flat ???
+                      }
+                    }
+                  }
+                }
+                
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   void random_observers(std::vector<Point_3d> &observers
                         ,std::vector<Point_3d> &directions
                         ,int Ncones
