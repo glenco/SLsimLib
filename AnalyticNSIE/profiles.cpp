@@ -100,6 +100,7 @@ namespace Profiles{
   ){
     
     double Fmax = log(1+cons) - cons/(1+cons);
+    assert(Fmax <= F.back());
     double rs = Rvir/cons;
     for(auto &p : points){
       double f = Fmax*ran();

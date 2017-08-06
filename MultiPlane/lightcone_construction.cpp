@@ -1480,7 +1480,7 @@ namespace LightCones{
     std::vector<double> discrete_profile( 100 );
     
     Utilities::RandomNumbers_NR ran(10837);
-    Profiles::NFWgenerator profilegen(ran,22);
+    Profiles::NFWgenerator profilegen(ran,30);
     std::vector<Point_3d> subpoints(Nsub);
     
     
@@ -1515,9 +1515,9 @@ namespace LightCones{
             long jjmin = (long)MAX(dy-ang_radius,0);
             long jjmax = (long)MIN(dy+ang_radius,Nym1);
             if(jjmin > jjmax) continue;
+            
             long iimin = (long)MAX(dx-ang_radius,0);
             long iimax = (long)MIN(dx+ang_radius,Nxm1);
-            
             if(iimin > iimax) continue;
             
             // this is m / Dl with no hubble constant
@@ -1527,8 +1527,11 @@ namespace LightCones{
             if(ang_radius < 1){
               // index of the center of the halo
               
-              size_t index = (long)( (iimin + iimax)/2 + 0.5 ) + Nx*(size_t)( (jjmin + jjmax)/2 + 0.5 );
-
+              if(dx < 0 || dx >= Nx) continue;
+              if(dy < 0 || dy >= Ny) continue;
+              
+              size_t index = (size_t)( dx + 0.5 ) + Nx*(size_t)( dy + 0.5 );
+              
               for(int isource = 0 ; isource < Nmaps ; ++isource){
                 if(dsources[isource] > sp.r  ){
                   // add mass or distribute mass to pixels
