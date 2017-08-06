@@ -100,7 +100,14 @@ namespace Profiles{
   ){
     
     double Fmax = log(1+cons) - cons/(1+cons);
-    assert(Fmax <= F.back());
+    if(Fmax > F.back()){ // if table isn't big enough expand it
+      X[0] = F[0] = 0.0;
+      double dx = cons*1.5/(N-1);
+      for(int i=1;i<N;++i){
+        X[i] = i*dx;
+        F[i] = log(1+X[i]) - X[i]/(1+X[i]) ;
+      }
+    }
     double rs = Rvir/cons;
     for(auto &p : points){
       double f = Fmax*ran();
@@ -131,6 +138,7 @@ namespace Profiles{
     Utilities::Geometry::Quaternion rot = Utilities::Geometry::Quaternion::q_z_rotation( v.phi )*Utilities::Geometry::Quaternion::q_y_rotation( v.theta );
     
     double Fmax = log(1+cons) - cons/(1+cons);
+    assert(Fmax <= F.back());
     double rs = Rvir/cons;
     for(auto p : points){
       
