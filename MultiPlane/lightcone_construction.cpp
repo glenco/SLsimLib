@@ -1217,7 +1217,7 @@ namespace LightCones{
               }
             }else{
               
-              double m_halo = phalo->mass*pix_area/ascale
+              double m_halo = phalo->mass*pix_area*sp.r/ascale
               /phalo->r/phalo->r;
               
               //double area = ang_radius*ang_radius;
@@ -1389,7 +1389,7 @@ namespace LightCones{
                 }
               }
             }else{
-              double m_halo = phalo->mass*pix_area/ascale
+              double m_halo = phalo->mass*pix_area*sp.r/ascale
               /phalo->r_scale/phalo->r_scale;
               
               float con = phalo->r_max/phalo->r_scale;
