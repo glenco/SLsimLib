@@ -94,7 +94,8 @@ namespace Profiles{
   }
   
   /// returns a vector of points drawn from a spherical halo
-  void  NFWgenerator::drawSpherical(std::vector<Point_3d> &points  /// output points
+  void  NFWgenerator::drawSpherical(Point_3d *points  /// output points
+                                    ,int Npoints
                                     ,double cons                   /// concentration
                                     ,double Rvir                   /// maximum elliptical radius
   ){
@@ -109,18 +110,19 @@ namespace Profiles{
       }
     }
     double rs = Rvir/cons;
-    for(auto &p : points){
+    for(size_t ii=0 ; ii<Npoints ; ++ii){
       double f = Fmax*ran();
       size_t i = MIN<size_t>(Utilities::locate(F,f),N-2);
       double x = X[i] + dx*(f - F[i])/(F[i+1] - F[i]);
       double theta = 2*pi*ran();
       
-      p[0] = 2*ran() - 1;
-      double tmp = sqrt(1-p[0]*p[0]);
-      p[1] = tmp*cos(theta);
-      p[2] = tmp*sin(theta);
+      double tmp = 2*ran() - 1;
+      points[ii][0] = tmp;
+      tmp = sqrt(1-tmp*tmp);
+      points[ii][1] = tmp*cos(theta);
+      points[ii][2] = tmp*sin(theta);
       
-      p *= x*rs;
+      points[ii] *= x*rs;
     }
   }
   

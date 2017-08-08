@@ -1474,14 +1474,16 @@ namespace LightCones{
     const size_t Nym1 = Ny-1;
     const double half_range =maps[0][0].getRangeX()/2;
     const double hubble = cosmo.gethubble();
-    const double pix_area = resolution*resolution;
-    const int Nsub = 1000;
-    
-    std::vector<double> discrete_profile( 100 );
+
+    const double mass_res = 1.0e10;
+    const size_t Nsub_max = 200000;
+    //const int Nsub = 1000;
+    //std::vector<double> discrete_profile( 100 );
     
     Utilities::RandomNumbers_NR ran(10837);
     Profiles::NFWgenerator profilegen(ran,40);
-    std::vector<Point_3d> subpoints(Nsub);
+    
+    std::vector<Point_3d> subpoints(Nsub_max);
     
     
     for(auto *phalo = begin ; phalo != end ; ++phalo){
@@ -1542,15 +1544,17 @@ namespace LightCones{
               }
             }else{
               float con = phalo->r_max/phalo->r_scale;
+              long Nsub = MIN(MAX((long)(phalo->mass/mass_res + 0.5),1),Nsub_max);
+              
               m_part /= Nsub;
+              profilegen.drawSpherical(subpoints.data(),Nsub,con,ang_radius);
               
-              profilegen.drawSpherical(subpoints,con,ang_radius);
-              
-              for(Point_3d p : subpoints){
+              for(size_t isub=0 ; isub < Nsub; ++isub){
+              //for(Point_3d p : subpoints){
                 
-                double x = dx + p[0];
+                double x = dx + subpoints[isub][0];
                 if( x >= 0 && x < Nxm1){
-                  double y = dy + p[1];
+                  double y = dy + subpoints[isub][1];
                   if( y >= 0 && y < Nym1){
                     
                     size_t index = (size_t)(x + 0.5) + Nx*(size_t)(y + 0.5);

@@ -165,6 +165,13 @@ namespace Profiles {
     void drawSpherical(std::vector<Point_3d> &points  /// output points
                        ,double cons                   /// concentration
                        ,double Rvir                   /// maximum elliptical radius
+    ){
+      drawSpherical(points.data(),points.size(),cons,Rvir);
+    };
+    void  drawSpherical(Point_3d *points  /// output points
+                                      ,int Npoints  /// number of points
+                                      ,double cons                   /// concentration
+                                      ,double Rvir                   /// maximum elliptical radius
     );
     ///  STILL UNDER CONSTRUCTION returns a vector of points drawn from a triaxial halo,
     void drawTriAxial(std::vector<Point_3d> &points  /// output points
