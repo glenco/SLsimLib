@@ -59,7 +59,7 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
   combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
 
-  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+  //std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
 
 Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbose)
@@ -85,7 +85,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   PosType ztmp = zsource;
   combinePlanes(true);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
-  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+  //std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
 
 /**
@@ -856,14 +856,8 @@ void Lens::createFieldPlanes(bool verbose)
 			     
       assert( field_Dl[i] > 0 );
 			// convert to proper distance on the lens plane
-      //field_halos[j]->getX(tmp);
-      //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
-      //                     ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
-      //field_halos[j]->setDist(field_Dl[i]/(1+field_plane_redshifts[i]));
       
       field_halos[j]->setZlensDist(field_plane_redshifts[i],cosmo);
-      //halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
-			//halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 		}
 		
 		//max_r=sqrt(max_r);
@@ -1707,7 +1701,7 @@ void Lens::createFieldHalos(bool verbose)
 			maxr = pi*sqrt(fieldofview/pi)/180. + field_buffer/Ds; // fov is a circle
 			rr = maxr*sqrt(ran2(seed));
       
-      if(verbose) std::cout << "          maxr = " << maxr << std::endl;
+      //if(verbose) std::cout << "          maxr = " << maxr << std::endl;
 
 			assert(rr == rr);
       
@@ -2963,6 +2957,42 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
 	
 	// combine the different planes
 	combinePlanes(verbose);
+}
+
+void Lens::GenerateFieldHalos(double min_mass
+                         ,MassFuncType mass_function
+                         ,double field_of_view
+                         ,int Nplanes
+                         ,LensHaloType halo_type
+                         ,bool verbose
+                         ){
+
+  if(field_halos.size() >0 ){
+    std::cerr << "Lens:GenerateField() cannot be used in the lens already has field halos." << std::endl;
+    throw std::runtime_error("Field halos already exist.");
+  }
+  field_min_mass = min_mass;
+  fieldofview = field_of_view;
+  field_mass_func_type = mass_function;
+
+  field_buffer = 0.0;
+
+  mass_func_PL_slope = 0;
+  flag_field_gal_on = false;
+  field_int_prof_type = halo_type;
+  field_int_prof_gal_type = nsie_gal;
+
+  NhalosbinZ.resize(Nzbins);
+  Nhaloestot_Tab.resize(NZSamples);
+  ComputeHalosDistributionVariables();
+  
+  field_Nplanes_original = field_Nplanes_current = Nplanes;
+  setupFieldPlanes();
+
+  //resetFieldHalos();
+  createFieldHalos(verbose);
+  createFieldPlanes(verbose);
+  combinePlanes(verbose);
 }
 
 /**
