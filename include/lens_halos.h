@@ -669,7 +669,7 @@ protected:
  */
 class LensHaloNFW: public LensHalo{
 public:
-  /// Shell constructor that should be avoided
+  /// Shell constructor.  Sets the halo to zero mass
 	LensHaloNFW();
   LensHaloNFW(float my_mass   /// in solar masses
               ,float my_Rsize  /// in Mpc
