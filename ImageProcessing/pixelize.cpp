@@ -1612,47 +1612,6 @@ void Utilities::LoadFitsImages(
   return ;
 }
 
-/** \brief Reads the file names in a directory that contain a specific sub string.
- 
- */
-void Utilities::ReadFileNames(
-                              std::string dir              /// path to directory containing fits files
-                              ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
-                              ,std::vector<std::string> & filenames  /// output vector of PixelMaps
-                              ,bool verbose){
-  
-  DIR *dp = opendir( dir.c_str() );
-  struct dirent *dirp;
-  struct stat filestat;
-  std::string filepath,filename;
-  
-  if (dp == NULL)
-  {
-    std::cerr << "Cannot find directory" << std::endl;
-    throw std::runtime_error("error opening directory");
-    return;
-  }
-  
-  while ((dirp = readdir( dp )) )
-  {
-    filepath = dir + "/" + dirp->d_name;
-    
-    // If the file is a directory (or is in some way invalid) we'll skip it
-    if (stat( filepath.c_str(), &filestat )) continue;
-    if (S_ISDIR( filestat.st_mode ))         continue;
-    
-    filename = dirp->d_name;
-    if(filename.find(filespec) !=  std::string::npos){
-      if(verbose) std::cout << "adding " << filepath << std::endl;
-      filenames.push_back(filename);
-    }
-  }
-  
-  closedir( dp );
-  
-  std::cout << filenames.size() << " file names." << std::endl;
-  return ;
-}
 
 /*// get the index for a position, returns -1 if out of map
  long PixelMap::find_index(PosType const x[],long &ix,long &iy){
