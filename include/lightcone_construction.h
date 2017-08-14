@@ -224,14 +224,11 @@ namespace LightCones{
   using Utilities::Geometry::Quaternion;
   using Utilities::Geometry::SphericalPoint;
   
-  /*************************************************************************************************
-   templated functions for projecting mass onto planes
-   *************************************************************************************************/
+  /********************************************************************   templated functions for projecting mass onto planes
+   *****************************************************************/
   
-  
-  /*************************************************************************************************
-   templated functions for reading a block from a file
-   *************************************************************************************************/
+  /***********************************************************************   templated functions for reading a block from a file
+   ***********************************************************************/
   
   template <typename T>
   size_t scan_block(size_t blocksize,std::vector<T> &points,FILE *pFile){
@@ -256,6 +253,15 @@ namespace LightCones{
   struct ASCII_XV{
     
     std::vector<Point_3d> points;
+    
+    void testFormat(std::string filename){
+      int ncol = Utilities::IO::CountColumns(filename);
+      if(ncol != 6){
+        std::cerr << filename << " has the wrong format for class ASCII_XV"
+        << std::endl;
+        throw std::runtime_error("bad file");
+      }
+    }
     
     size_t scan_block(size_t blocksize,FILE *pFile){
 
@@ -291,6 +297,16 @@ namespace LightCones{
   struct ASCII_XM{
     
     std::vector<DatumXM> points;
+
+    void testFormat(std::string filename){
+      int ncol = Utilities::IO::CountColumns(filename);
+      if(ncol != 4){
+        std::cerr << filename << " has the wrong format for class ASCII_XM"
+        << std::endl;
+        throw std::runtime_error("bad file");
+      }
+    }
+    
     size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
@@ -325,6 +341,15 @@ namespace LightCones{
     
     std::vector<DatumXMR> points;
     
+    void testFormat(std::string filename){
+      int ncol = Utilities::IO::CountColumns(filename);
+      if(ncol != 5){
+        std::cerr << filename << " has the wrong format for class ASCII_XMR"
+        << std::endl;
+        throw std::runtime_error("bad file");
+      }
+    }
+ 
     size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
@@ -360,6 +385,16 @@ namespace LightCones{
   struct ASCII_XMRRT{
     
     std::vector<DatumXMRmRs> points;
+    
+    void testFormat(std::string filename){
+      int ncol = Utilities::IO::CountColumns(filename);
+      if(ncol != 7){
+        std::cerr << filename << " has the wrong format for class ASCII_XMRRT"
+        << std::endl;
+        throw std::runtime_error("bad file");
+      }
+    }
+    
     size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
@@ -399,6 +434,7 @@ namespace LightCones{
   };
   
   struct ASCII_XMRRT12:public ASCII_XMRRT{
+    
     size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
@@ -636,6 +672,7 @@ namespace LightCones{
         }
       }
       
+      unit.testFormat(snap_filenames[i_file].c_str());
       
       //open file
       if(verbose) std::cout <<" Opening " << snap_filenames[i_file] << std::endl;

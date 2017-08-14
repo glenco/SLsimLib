@@ -63,7 +63,7 @@ LensHaloUniform::LensHaloUniform(double zlens,double zsource,double kappa,Point_
   }else{
     Rmax = std::numeric_limits<float>::max();
   }
-  perturb_Nmodes=3;
+  perturb_Nmodes = 3;
   perturb_modes = new PosType[3];
   
   setCosmology(cosmo);
@@ -79,7 +79,7 @@ void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 	Dl = cosmo.angDist(0,zlens); // In comoving Mpc
 	Ds = cosmo.angDist(0,zsource_reference);
 	Dls = cosmo.angDist(zlens,zsource_reference);
-  SigmaCrit = Ds/Dl/Dls/(4*pi*Grav);
+  SigmaCrit = cosmo.SigmaCrit(zlens,zsource_reference);
 	
   Sigma_uniform = kappa_uniform*SigmaCrit;
   gammaCrit_uniform[0] = gamma_uniform[0]*SigmaCrit;
