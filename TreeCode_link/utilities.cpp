@@ -647,3 +647,75 @@ unsigned long prevpower(unsigned long k){
   int GetNThreads(){return N_THREADS;}
 }
 
+void Utilities::IO::ReadFileNames(
+                   std::string dir              /// path to directory containing fits files
+                   ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
+                   ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                   ,bool verbose){
+  
+  DIR *dp = opendir( dir.c_str() );
+  struct dirent *dirp;
+  struct stat filestat;
+  std::string filepath,filename;
+  
+  if (dp == NULL)
+  {
+    std::cerr << "Cannot find directory" << std::endl;
+    throw std::runtime_error("error opening directory");
+    return;
+  }
+  
+  while ((dirp = readdir( dp )) )
+  {
+    filepath = dir + "/" + dirp->d_name;
+    
+    // If the file is a directory (or is in some way invalid) we'll skip it
+    if (stat( filepath.c_str(), &filestat )) continue;
+    if (S_ISDIR( filestat.st_mode ))         continue;
+    
+    filename = dirp->d_name;
+    if(filename.find(filespec) !=  std::string::npos){
+      if(verbose) std::cout << "adding " << filepath << std::endl;
+      filenames.push_back(filename);
+    }
+  }
+  
+  closedir( dp );
+  
+  std::cout << filenames.size() << " file names." << std::endl;
+  return ;
+}
+
+/// Count the number of columns in a ASCII data file
+int Utilities::IO::CountColumns(std::string filename,char comment_char
+                                ,char deliniator
+){
+  
+  std::ifstream file(filename);
+  // find number of particles
+  if (!file.is_open()){
+    std::cerr << "file " << filename << " cann't be opened." << std::endl;
+    throw std::runtime_error("no file");
+  }
+  
+  std::string line;
+  // read comment lines and first data line
+  do{
+    std::getline(file,line);
+    if(!file) break;  // probably EOF
+  }while(line[0] == comment_char);
+  
+  return  NumberOfEntries(line,deliniator);
+}
+
+size_t Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
+  size_t number = 0;
+  auto it = string.begin();
+  while(it != string.end()){
+    while( it != string.end() && (*it == ' ' || *it == deliniator)) ++it;
+    if(it != string.end()) ++number;
+    while(it != string.end() && *it != deliniator) ++it;
+  }
+  return number;
+}
+
