@@ -858,7 +858,6 @@ void Lens::createFieldPlanes(bool verbose)
 
 /// * INSERT SUB STRUCTURE * ///
 
-
 void Lens::insertSubstructures(PosType Rregion,           // in radians
                                PosType center[],
                                PosType NumberDensity,     // in number / unit^2
@@ -954,7 +953,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     f = ran2(seed); // dimensionless and between 0 and 1
     
-    // mass from power law mass function (inversing the integration of Eq. (9) in Metcalf, Amara 2011 with f \equiv (eta(m)/eta_*)*(sigma/sigma_*) ) :
+    // mass from power law mass function (inverting the integration of Eq. (9) in Metcalf, Amara 2011 with f \equiv (eta(m)/eta_*)*(sigma/sigma_*) ) :
     mass = Mass_max*pow( f + pow(r,alpha+1)*(1-f) , 1.0/(1+alpha) ); // in Msun, r = Mass_Min / Mass_Max is dimensionless.
     // Variable for the sum of the substructure masses :
     SumMassSub += mass ;
