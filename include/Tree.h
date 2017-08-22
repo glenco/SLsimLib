@@ -105,12 +105,12 @@ public:
     std::vector<Point *> tmp_point;
   };
   
-  iterator begin() const{
+  TreeStruct::iterator begin() const{
     iterator it(top);
     return it;
   };
   
-  iterator end() const{
+  TreeStruct::iterator end() const{
     iterator it(top->brother);
     return it;
   };

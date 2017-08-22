@@ -433,7 +433,7 @@ void LensHaloFit::FindLensSimple(
   // std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
   // For convenience :
-  PosType zl = zlens ;
+  PosType zl = LensHalo::getZlens() ;
   PosType zs = zsource_reference ;
     
   // Converting source position to physical angle :
@@ -627,7 +627,7 @@ void LensHaloFit::FindLensSimple2(
   // std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
   // For convenience :
-  PosType zl = zlens ;
+  PosType zl = getZlens() ;
   PosType zs = zsource_reference ;
   
   // Converting source position to physical angle :

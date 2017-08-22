@@ -139,14 +139,14 @@ public:
 
 
 	/// inserts a single main lens halo and adds it to the existing ones
-	void insertMainHalo(LensHalo* halo,bool addplanes,bool verbose = false);
+  void insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
 
 	/// inserts a sequence of main lens halos and adds them to the existing ones
-  void insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose);
 	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a single main halo
-	void replaceMainHalos(LensHalo* halo,bool verbose = false);
+  void replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
+
 	/// replaces existing main halos with a sequence of main halos
 	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
   void replaceMainHalos(LensHalo* halo, PosType zlens, bool verbose);
@@ -282,6 +282,7 @@ private:
 	
 	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params,bool verbose = false);
+  void defaultParams(PosType zsource,bool verbose = true);
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;

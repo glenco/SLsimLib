@@ -46,24 +46,16 @@ Lens::Lens(long* my_seed,PosType z_source, CosmoParamSet cosmoset,bool verbose)
 		printf("ERROR: Lens can only handle flat universes at present. Must change cosmology.\n");
 		exit(1);
 	}
-  
-  field_Nplanes_current = 0 ;
-  field_Nplanes_original = 0;
-	
-	read_sim_file = false;
-	
-  charge = 4*pi*Grav;
-	if(verbose) std::cout << "charge: " << charge << std::endl;
-	
-	// initially let source be the one inputed from parameter file
-	index_of_new_sourceplane = -1;
-	toggle_source_plane = false;
-  flag_switch_deflection_off = false;
-  flag_switch_lensing_off = false;
-  
-  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
-  //charge = 4*pi/cosmo.angDist(0.3);
 
+  defaultParams(z_source,verbose);
+  if(verbose) std::cout << "charge: " << charge << std::endl;
+
+  // initially let source be the one inputed from parameter file
+	//index_of_new_sourceplane = -1;
+	//toggle_source_plane = false;
+  //flag_switch_deflection_off = false;
+  //flag_switch_lensing_off = false;
+  
   PosType ztmp = zsource;
   combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
@@ -81,19 +73,15 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
     exit(1);
   }
   
-  read_sim_file = false;
-  
-  charge = 4*pi*Grav;
+  defaultParams(z_source,verbose);
   if(verbose) std::cout << "charge: " << charge << std::endl;
-  
+
   // initially let source be the one inputed from parameter file
-  index_of_new_sourceplane = -1;
-  toggle_source_plane = false;
-  flag_switch_deflection_off = false;
-  flag_switch_lensing_off = false;
+  //index_of_new_sourceplane = -1;
+  //toggle_source_plane = false;
+  //flag_switch_deflection_off = false;
+  //flag_switch_lensing_off = false;
   
-  //charge = cosmo.angDist(zsource)/cosmo.angDist(0.3)/cosmo.angDist(0.3,zsource);
-  //charge = 4*pi/cosmo.angDist(0.3);
   PosType ztmp = zsource;
   combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
@@ -102,7 +90,6 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
 
 
 /**
- * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose)
@@ -175,7 +162,6 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
 
 }
 /**
- * \ingroup Constructor
  * \brief allocates space for the halo trees and the inout lens, if there is any
  */
 Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool verbose)
@@ -535,11 +521,70 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	if(verbose) printMultiLens();
 }
 
-
 // get the redshift of a plane
 PosType Lens::getFieldPlaneZ(int n)
 {
   return field_plane_redshifts[n] ;
+}
+
+// Set default values for internal variables.  Used in constructor that don't take a InputParams.
+void Lens::defaultParams(PosType z_source,bool verbose)
+{
+  
+  charge = 4*pi*Grav;
+
+  read_sim_file = false;
+  index_of_new_sourceplane = -1;
+  toggle_source_plane = false;
+
+
+  // toggles for testing
+  flag_switch_deflection_off = false;
+  flag_switch_lensing_off = false;
+
+  
+  flag_switch_main_halo_on = true;
+  main_halo_type = null_lens;
+  main_galaxy_halo_type = null_gal;
+  
+  read_redshift_planes = false;
+  flag_switch_field_off = false;
+  
+  // perameters related to simulating field halos or reading in feild halo information
+
+  field_Nplanes_original = 0;
+  field_Nplanes_current = field_Nplanes_original;
+  field_int_prof_type = null_lens;
+  
+  flag_field_gal_on = false;
+  field_int_prof_gal_type = null_gal;
+  mass_func_PL_slope =0;
+  field_prof_internal_slope = 0;
+  field_input_sim_file = "";
+  field_mass_func_type = PressSchechter;
+  
+  sim_input_flag = false;
+  field_min_mass = 0;
+  field_buffer = 0.0;
+  fieldofview = 0.0;
+
+  field_input_sim_format = null_cat;
+  
+  // spherical coordinates of center of field
+  central_point_sphere.phi = 0.0;
+  central_point_sphere.theta = 0.0;
+  sim_angular_radius = 0.0;
+
+  // read Pixelized map parameters
+  
+  pixel_map_on = 0;
+  pixel_map_input_file = "";
+  pixel_map_zeropad = 0;
+  pixel_map_zeromean = false;
+
+  zsource = z_source;
+  
+  if(verbose) printMultiLens();
 }
 
 
@@ -666,13 +711,13 @@ void Lens::printMultiLens(){
 		std::cout << "Mass function type: "<< endl;
     
 		switch(field_mass_func_type){
-      case PS:
+      case PressSchechter:
         std::cout << "  Press-Schechter mass function " << endl;
         break;
-      case ST:
+      case ShethTormen:
         std::cout << "  Sheth-Tormen mass function " << endl;
         break;
-      case PL:
+      case PowerLaw:
         std::cout << "  Power law mass function " << endl;
         std::cout << "  slope: " << mass_func_PL_slope << endl;
         break;
@@ -821,7 +866,9 @@ void Lens::createFieldPlanes(bool verbose)
       //field_halos[j]->getX(tmp);
       //field_halos[j]->setX(tmp[0]*field_Dl[i]/(1+field_plane_redshifts[i])
       //                     ,tmp[1]*field_Dl[i]/(1+field_plane_redshifts[i]));
-      field_halos[j]->setDist(field_Dl[i]/(1+field_plane_redshifts[i]));
+      //field_halos[j]->setDist(field_Dl[i]/(1+field_plane_redshifts[i]));
+      
+      field_halos[j]->setZlensDist(field_plane_redshifts[i],cosmo);
       //halo_pos[j][0] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 			//halo_pos[j][1] *= field_Dl[i]/(1+field_plane_redshifts[i]);
 		}
@@ -947,8 +994,8 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     theta = 2*pi*ran2(seed);       // in radians
     
     // position in proper distance
-    theta_pos[0] = (rr*cos(theta) + center[0]);//*Dl; // in radians * angular Distance in PhysMpc = PhysMpc
-    theta_pos[1] = (rr*sin(theta) + center[1]);//*Dl; // same : PhysMpc
+    theta_pos[0] = (rr*cos(theta) + center[0]); // in radians * angular Distance in PhysMpc = PhysMpc
+    theta_pos[1] = (rr*sin(theta) + center[1]); // same : PhysMpc
     theta_pos[2] = 0.0;
     
     f = ran2(seed); // dimensionless and between 0 and 1
@@ -981,7 +1028,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
         substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
         break;
     }
-    substructure.halos.back()->setDist(cosmo.angDist(substructure.halos.back()->getZlens()));
+    substructure.halos.back()->setDist(cosmo);
     substructure.halos.back()->setTheta(theta_pos);
     ++haloid;
     substructure.halos.back()->setID(haloid);
@@ -1062,10 +1109,8 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
     
     // Insertion :
     if(verbose) std::cout << "Lens::insertSubstructures : inserting a new plane at redshift z = " << redshift << std::endl;
-    std::cout << "Lens::insertSubstructures : NhalosSub = " << substructure.NhalosSub << std::endl;
-
-    assert(substructure.NhalosSub == substructure.halos.size());
-    field_planes.push_back(new LensPlaneTree(substructure.halos.data(), substructure.NhalosSub, 0, 0));
+    std::cout << "Lens::insertSubstructures : NhalosSub = " << substructure.halos.size() << std::endl;
+    field_planes.push_back(new LensPlaneTree(substructure.halos.data(), substructure.halos.size(), 0, 0));
     field_plane_redshifts.push_back(redshift);
     field_Dl.push_back(Dl*(1+redshift));
     substructure.plane = field_planes[0];
@@ -1213,7 +1258,7 @@ void Lens::resetSubstructure(bool verbose){
     rmax_max = MAX(Rsize,rmax_max);
 
     substructure.halos.push_back(new LensHaloPowerLaw(mass,Rsize,redshift,1.0,1.0,0,0));
-    substructure.halos.back()->setDist(cosmo.angDist(substructure.halos.back()->getZlens()));
+    substructure.halos.back()->setDist(cosmo);
     substructure.halos.back()->setTheta(theta_pos);
 
     ++haloid;
@@ -1350,7 +1395,8 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	{
 		// add to plane at (i-1)
 		main_planes[i-1]->addHalo(halo);
-    halo->setDist(main_Dl[i-1]/(1+main_plane_redshifts[i-1]));
+    //halo->setDist(main_Dl[i-1]/(1+main_plane_redshifts[i-1]));
+    halo->setZlensDist(main_plane_redshifts[i-1],cosmo);
 	}
 	else if(i == main_Dl.size())
 	{
@@ -1358,13 +1404,15 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_planes.push_back(new LensPlaneSingular(&halo, 1));
 		main_plane_redshifts.push_back(halo_z);
 		main_Dl.push_back(halo_Dl);
-    halo->setDist(halo_Dl/(1+halo_z));
+    //halo->setDist(halo_Dl/(1+halo_z));
+    halo->setZlensDist(halo_z,cosmo);
 	}
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
 		// add to existing plane at position i
 		main_planes[i]->addHalo(halo);
-    halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+    //halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+    halo->setZlensDist(main_plane_redshifts[i],cosmo);
 	}
 	else
 	{
@@ -1372,7 +1420,8 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_planes.insert(main_planes.begin() + i, new LensPlaneSingular(&halo, 1));
 		main_plane_redshifts.insert(main_plane_redshifts.begin() + i, halo_z);
 		main_Dl.insert(main_Dl.begin() + i, halo_Dl);
-    halo->setDist(halo_Dl/(1+halo_z));
+    //halo->setDist(halo_Dl/(1+halo_z));
+    halo->setZlensDist(halo_z,cosmo);
 	}
 }
 
@@ -1397,7 +1446,8 @@ void Lens::addMainHaloToNearestPlane(LensHalo* halo)
   std::size_t i = Utilities::closest(main_Dl,halo_Dl);
 
   main_planes[i]->addHalo(halo);
-  halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+  //halo->setDist(main_Dl[i]/(1+main_plane_redshifts[i]));
+  halo->setZlensDist(main_plane_redshifts[i],cosmo);
 }
 
 
@@ -1572,10 +1622,12 @@ void Lens::createMainHalos(InputParams& params)
         main_halos.push_back(new LensHaloJaffe(params));
         break;
 		}
+    
 	}
   
 	for(std::size_t i = 0; i < main_halos.size(); ++i){
 		main_halos[i]->setCosmology(cosmo);
+    main_halos[i]->setDist(cosmo);
   }
 }
 
@@ -1602,25 +1654,11 @@ void Lens::clearMainHalos(bool verbose)
  *
  *  The angular position of the halo should be preserved, but the x coordinates may change
  */
-void Lens::insertMainHalo(LensHalo* halo,bool addplanes,bool verbose)
-{
-	halo->setCosmology(cosmo);
-  halo->setDist(cosmo.angDist(halo->getZlens()));
-	main_halos.push_back(halo);
-  
-	flag_switch_main_halo_on = true;
-	
-	if(addplanes) addMainHaloToPlane(halo);
-  else addMainHaloToNearestPlane(halo);
-  
-	combinePlanes(verbose);
-}
-
 
 void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   halo->setCosmology(cosmo);
-  halo->setDist(cosmo.angDist(halo->getZlens()));
+  halo->setDist(cosmo);
   halo->setZlens(zlens);
   main_halos.push_back(halo);
   
@@ -1647,7 +1685,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
-    halos[i]->setDist(cosmo.angDist(halos[i]->getZlens()));
+    halos[i]->setDist(cosmo);
 		main_halos.push_back(halos[i]);
 		if(addplanes) addMainHaloToPlane(halos[i]);
     else addMainHaloToNearestPlane(halos[i]);
@@ -1668,19 +1706,19 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
  * Note that this does not delete the halos that were there.  It just removes
  * them from the lens.
  */
-void Lens::replaceMainHalos(LensHalo* halo,bool verbose)
+void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
-	main_halos.clear();
-	
-	halo->setCosmology(cosmo);
-  halo->setDist(cosmo.angDist(halo->getZlens()));
-	main_halos.push_back(halo);
-	
-	flag_switch_main_halo_on = true;
-	
-	Utilities::delete_container(main_planes);
-	createMainPlanes();
-	combinePlanes(verbose);
+  main_halos.clear();
+  
+  halo->setCosmology(cosmo);
+  halo->setZlensDist(zlens,cosmo);
+  main_halos.push_back(halo);
+  
+  flag_switch_main_halo_on = true;
+  
+  Utilities::delete_container(main_planes);
+  createMainPlanes();
+  combinePlanes(verbose);
 }
 
 
@@ -1690,7 +1728,7 @@ void Lens::replaceMainHalos(LensHalo* halo, PosType zlens, bool verbose)
   
   halo->setCosmology(cosmo);
   halo->setZlens(zlens);
-  halo->setDist(cosmo.angDist(halo->getZlens()));
+  halo->setDist(cosmo);
   main_halos.push_back(halo);
   
   flag_switch_main_halo_on = true;
@@ -1715,7 +1753,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
 		halos[i]->setCosmology(cosmo);
-    halos[i]->setDist(cosmo.angDist(halos[i]->getZlens()));
+    halos[i]->setDist(cosmo);
 		main_halos.push_back(halos[i]);
 	}
 	
@@ -2312,7 +2350,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
 	std::cout << "    It is now " << fieldofview << " deg^2" << std::endl;
   
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-	field_mass_func_type = ST; // set mass function
+	field_mass_func_type = ShethTormen; // set mass function
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
@@ -2655,7 +2693,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   }
   
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-	field_mass_func_type = ST; // set mass function
+	field_mass_func_type = ShethTormen; // set mass function
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift
