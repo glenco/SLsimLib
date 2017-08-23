@@ -2201,7 +2201,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
 	PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
   
   std::vector<std::string> filenames;
-  //Utilities::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
+  //Utilities::IO::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
   filenames.push_back(" ");
   //std::vector<PosType *> halo_pos_vec;
   //std::vector<Utilities::Geometry::SphericalPoint> sph_halo_pos_vec;
@@ -2531,7 +2531,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   
   PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
   
-  //Utilities::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
+  //Utilities::IO::ReadFileNames(field_input_sim_file.c_str(),".dat",filenames);
   //filenames.push_back(" ");
   //std::vector<PosType *> halo_pos_vec;
   //std::vector<Utilities::Geometry::SphericalPoint> sph_halo_pos_vec;

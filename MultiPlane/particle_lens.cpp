@@ -114,6 +114,15 @@ void LensHaloParticles::rotate(Point_2d theta){
  */
 void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
+  int ncoll = Utilities::IO::CountColumns(filename);
+  if(!multimass && ncoll != 3 ){
+    std::cerr << filename << " should have three columns!" << std::endl;
+  }
+  if(multimass && ncoll != 4 ){
+    std::cerr << filename << " should have four columns!" << std::endl;
+  }
+ 
+  
   std::ifstream myfile(filename);
   
   // find number of particles
