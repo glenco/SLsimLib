@@ -62,6 +62,7 @@ QTreeNB::~QTreeNB(){
 
 short QTreeNB::empty(){
 
+  if(Nbranches <= 1) return 1;
 	moveTop();
 	_freeQTree(0);
 

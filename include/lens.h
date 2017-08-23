@@ -85,10 +85,10 @@ public:
 	bool set;
 
 	/// the total number of lens planes
-	int getNplanes(){return lensing_planes.size();}
+	int getNplanes() const {return lensing_planes.size();}
   
 	/// field of view in square degrees
-	PosType getfov(){return fieldofview;};
+	PosType getfov() const {return fieldofview;};
 	void setfov(PosType fov){fieldofview=fov;};
 
 	/// reset the number of planes, but keep the field halos and main lens
@@ -105,7 +105,7 @@ public:
 
   
   /// Redshift of first main lens plane
-	PosType getZlens(){
+	PosType getZlens() const{
 		if(flag_switch_main_halo_on)
 			return main_halos[0]->getZlens();
 		else{
@@ -115,7 +115,7 @@ public:
 		}
 	}
   /// Angular size distance (Mpc) to first main lens plane
-	PosType getAngDistLens(){
+	PosType getAngDistLens() const{
 		if(flag_switch_main_halo_on)
 			return cosmo.angDist( main_halos[0]->getZlens());
 		else{
@@ -124,6 +124,8 @@ public:
 			exit(1);
 		}
 	}
+  
+  Utilities::Geometry::SphericalPoint getCenter() const {return central_point_sphere;}
 
 	/// remove all main halos
 	void clearMainHalos(bool verbose=false);
@@ -198,7 +200,8 @@ public:
 
 	// methods used for use with implanted sources
 
-	short ResetSourcePlane(PosType z,bool nearest, unsigned long GalID=0, PosType *xx=NULL,bool verbose = false);
+  ///  reset the redshift of the source plane
+	short ResetSourcePlane(PosType z,bool nearest=false, unsigned long GalID=0, PosType *xx=NULL,bool verbose = false);
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
@@ -211,13 +214,13 @@ public:
 		}
 	}
 
-	PosType getZmax(){return plane_redshifts.back();}
+	PosType getZmax() const{return plane_redshifts.back();}
 
 	/// print the cosmological parameters
 	void PrintCosmology() { cosmo.PrintCosmology(); }
 	
 	/// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
-	PosType getSigmaCrit(PosType zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
+	PosType getSigmaCrit(PosType zsource) const{ return cosmo.SigmaCrit(getZlens(), zsource); }
 	
 
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
@@ -228,10 +231,22 @@ public:
   void TurnFieldOn() { flag_switch_field_off = false ; }
   
   /// get the field min mass :
-  PosType getFieldMinMass() { return field_min_mass ; }
+  PosType getFieldMinMass() const { return field_min_mass ; }
  
   // get the field_Off value :
-  bool getfieldOff() {return flag_switch_field_off ;}
+  bool getfieldOff() const {return flag_switch_field_off ;}
+  
+  /** \brief Add random halos to the light cone according to standard structure formation theory.  A new realization of the light-cone can be made with Lens::resetFieldHalos() after this function is called once.
+   
+   The cone is filled up until the redshift of the current zsource that is stored in the Lens class.  The field is a circular on the sky.  There is no clustering of the halos.
+   */
+  void GenerateFieldHalos(double min_mass /// minimum mass of halos
+                    ,MassFuncType mass_function /// type of mass function
+                    ,double field_of_view  /// in square degrees
+                    ,int Nplanes           /// number of lens planes
+                    ,LensHaloType halo_type = nfw_lens  /// type of halo
+                    ,bool verbose = false
+                );
   
 protected:
   /// field of view in square degrees
@@ -334,7 +349,9 @@ private: /* generation */
   // get the adress of field_plane_redshifts
   std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
   
+  /// Number of Field Halos
   size_t getNFieldHalos() const {return field_halos.size();}
+  /// Number of Sub Halos
   size_t getNSubHalos() const {return substructure.halos.size();}
   
 private: /* force calculation */

@@ -18,6 +18,9 @@
  */
 // TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloFit : public LensHaloBaseNSIE{
+  
+  void abstractfunction(){}; // pure virtual
+  
 public:
   //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
@@ -128,6 +131,9 @@ private:
  */
 // TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloAnaNSIE : public LensHaloBaseNSIE{
+  
+  void abstractfunction(){}; // pure virtual
+
 public:
   LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
