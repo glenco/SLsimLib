@@ -1335,7 +1335,7 @@ namespace Utilities
                    ,int &columns
                    ,int &rows
                    ,char comment_char = '#'
-                   ,size_t MaxNrows = SIZE_T_MAX
+                   ,size_t MaxNrows = std::numeric_limits<size_t>::max()
                    ,bool verbose = true){
       
       std::ifstream file(filename);
