@@ -114,7 +114,7 @@ LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosT
   
   // assignParams(params);
   
-  zlens = zlensref ;
+  LensHalo::setZlens(zlensref);
   // zsource = zsourceref ;
   zsource_reference = zsourceref ;
   
@@ -129,11 +129,11 @@ LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosT
   sigma = 0.0;
   setCosmology(cosmo);
 
-  Sigma_crit = cosmo.SigmaCrit(zlens, zsource_reference);
+  Sigma_crit = cosmo.SigmaCrit(getZlens(), zsource_reference);
   
   perturb_beta = beta;
-  Dl = cosmo.angDist(zlens);
-  Dls = cosmo.angDist(zlens,zsource_reference);
+  Dl = cosmo.angDist(getZlens());
+  Dls = cosmo.angDist(getZlens(),zsource_reference);
   Ds = cosmo.angDist(zsource_reference);
   //if(verbose) PrintLens(false,false);
 }

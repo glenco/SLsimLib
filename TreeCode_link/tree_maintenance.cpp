@@ -269,7 +269,7 @@ short TreeStruct::emptyTree(){
 
   assert(Nbranches == 1);
 
-  PointList::iterator pointlist_current(*pointlist);
+  PointList::iterator pointlist_current(pointlist->Top());
   for(i=0,j=0,count=0;i<pointlist->size();++i){
 	  if((*pointlist_current)->head){
 		  heads[j] = *pointlist_current;
@@ -365,7 +365,7 @@ void TreeStruct::_freeBranches_iter(){
 	}
 
 	// re-assign the leaf pointers in the particles to the root
-  PointList::iterator pointlist_current(*pointlist);
+  PointList::iterator pointlist_current(pointlist->Top());
 	 do{ (*pointlist_current)->leaf = top; }while(--pointlist_current);
 
     return;

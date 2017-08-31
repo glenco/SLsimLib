@@ -1472,9 +1472,10 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   
   NpointsTotal = images[0].Npoints;
   
-  PointList::iterator imagelist_current(imagelist->Bottom());
+  PointList::iterator imagelist_it;
+  imagelist_it.current = imagelist->Bottom();
   // copy image points into a list
-  for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_current,&(images[0].points[i]));
+  for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
   
   assert(imagelist->size() == images[0].Npoints);
   //std::printf("imagelist = %il\n",imagelist->Npoints);
@@ -1487,17 +1488,17 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   point = images[0].points;
   newpointarray = NewPointArray(NpointsTotal);
   
-  imagelist_current = imagelist->Top();
+  imagelist_it.current = imagelist->Top();
   m=0;
   i=0;
   do{
-    if(i < *Nimages && images[i].points == *imagelist_current){
+    if(i < *Nimages && images[i].points == *imagelist_it){
       images[i].points=&(newpointarray[m]);
       ++i;
     }
-    PointCopyData(&(newpointarray[m]),*imagelist_current);
+    PointCopyData(&(newpointarray[m]),*imagelist_it);
     ++m;
-  }while(--imagelist_current);
+  }while(--imagelist_it);
   
   assert(m == NpointsTotal);
   
@@ -1537,14 +1538,16 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
   //std::printf("imagelist = %li\n",imagelist->Npoints);
   // divide images into disconnected curves using neighbors-of-neighbors
   
-  PointList::iterator imagelist_current(*imagelist);
-  PointList::iterator orderedlist_current;
+  PointList::iterator imagelist_it;
+  imagelist_it.current = imagelist->Top();
+  
+  PointList::iterator orderedlist_it;
   
   while(imagelist->size() > 0 && i < Maximages){
-    images[i].points = imagelist->TakeOutCurrent(imagelist_current);
-    orderedlist_current = orderedlist->Bottom();
-    orderedlist->InsertPointAfterCurrent(orderedlist_current,images[i].points);
-    --orderedlist_current;
+    images[i].points = imagelist->TakeOutCurrent(imagelist_it);
+    orderedlist_it.current = orderedlist->Bottom();
+    orderedlist->InsertPointAfterCurrent(orderedlist_it,images[i].points);
+    --orderedlist_it;
     NeighborsOfNeighbors(orderedlist,imagelist);
     images[i].Npoints = orderedlist->size() - m;
     m += images[i].Npoints;
@@ -1556,11 +1559,11 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
   if(i == Maximages && imagelist->size() > 0){
     Point *point;
     do{
-      point = imagelist->TakeOutCurrent(imagelist_current);
+      point = imagelist->TakeOutCurrent(imagelist_it);
       //MoveToBottomList(orderedlist);
-      orderedlist_current = orderedlist->Bottom();
-      orderedlist->InsertPointAfterCurrent(orderedlist_current,point);
-      --orderedlist_current;
+      orderedlist_it.current = orderedlist->Bottom();
+      orderedlist->InsertPointAfterCurrent(orderedlist_it,point);
+      --orderedlist_it;
       ++(images[Maximages-1].Npoints);
     }while(imagelist->size() > 0);
   }
@@ -1854,8 +1857,11 @@ namespace Utilities{
     return number == 0 ? 0 : 1;
   }
   int incurve(PosType x[],std::vector<Point_2d> curve){
+
+    if(curve.size() == 0) return 0;
+
     int number = 0;
-    size_t i;
+    size_t i;    
     
     // The reason this does not return the winding number is because horizontal
     //  sections of the curve can be overcounted if they are colinear with x

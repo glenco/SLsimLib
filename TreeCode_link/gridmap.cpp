@@ -124,6 +124,7 @@ void GridMap::ReInitializeGrid(LensHndl lens){
   ClearSurfaceBrightnesses();
 }
 
+/// Output a PixelMap of the surface brightness with same res as the GridMap
 PixelMap GridMap::getPixelMap(int resf){
   
   if(resf <=0){
@@ -150,6 +151,7 @@ PixelMap GridMap::getPixelMap(int resf){
   return map;
 }
 
+/// surface brightness map
 void GridMap::getPixelMap(PixelMap &map){
   
   int resf = (Ngrid_init-1)/(map.getNx()-1);
@@ -158,8 +160,6 @@ void GridMap::getPixelMap(PixelMap &map){
   if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   
-  size_t N = Ngrid_init*Ngrid_init2;
-
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
   
@@ -221,7 +221,21 @@ PixelMap GridMap::writePixelMapUniform(
   
   if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/(Nx-1));
+  
+  map.Clean();
+  
+  writePixelMapUniform(map,lensvar);
+  
+  return map;
+}
 
+PixelMap GridMap::writePixelMapUniform(
+              LensingVariable lensvar  /// which quantity is to be displayed
+){
+  size_t Nx =  Ngrid_init;
+  size_t Ny = Ngrid_init2;
+  
+  PixelMap map( center.x, Nx, Ny,x_range/(Nx-1) );
   map.Clean();
   
   writePixelMapUniform(map,lensvar);
