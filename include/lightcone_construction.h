@@ -37,6 +37,13 @@ namespace LightCones{
     double r_max;
     double r_scale;
   };
+  struct DatumXMRmRsZ{
+    Point_3d x;
+    double mass;
+    double r_max;
+    double r_scale;
+    double z;
+  };
   struct DatumXMR{
     Point_3d x;
     double mass;
@@ -360,7 +367,7 @@ namespace LightCones{
   struct ASCII_XMRRT{
     
     std::vector<DatumXMRmRs> points;
-    size_t scan_block(size_t blocksize,FILE *pFile){
+    virtual size_t scan_block(size_t blocksize,FILE *pFile){
       
       // read in a block of points
       size_t i=0;
@@ -399,7 +406,7 @@ namespace LightCones{
   };
   
   struct ASCII_XMRRT12:public ASCII_XMRRT{
-    size_t scan_block(size_t blocksize,FILE *pFile){
+    size_t scan_block(size_t blocksize,FILE *pFile) override {
       
       // read in a block of points
       size_t i=0;
@@ -423,6 +430,63 @@ namespace LightCones{
     
   };
   
+  
+  // this is for testing with the MultiDark Halo lightcone format
+  struct ASCII_MDHaloCone{
+    
+    std::vector<DatumXMRmRsZ> points;
+    
+    void fastplanes_parallel(
+                        LightCones::DatumXMR *begin
+                        ,LightCones::DatumXMR *end
+                        ,const COSMOLOGY &cosmo
+                        ,std::vector<std::vector<Point_3d> > &boxes
+                        ,std::vector<Point_3d> &observers
+                        ,std::vector<Quaternion> &rotationQs
+                        ,std::vector<double> &dsources
+                        ,std::vector<std::vector<PixelMap> > &maps
+                        ,double dmin
+                        ,double dmax
+                        ,double BoxLength
+    );
+    
+    size_t scan_block(size_t blocksize,FILE *pFile){
+      
+      // read in a block of points
+      size_t i=0;
+      double v[3],theta,phi,z;
+      double phiave,thetaave;
+      
+      points.resize(blocksize);
+      auto p = points.begin();
+      Utilities::Geometry::SphericalPoint sp;
+      
+      while(i < blocksize &&
+            fscanf(pFile,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
+                   ,&phi,&theta,&z,&z,&(p->x[0]),&(p->x[1]),&(p->x[2]),v,v+1,v+2
+                   ,&points[i].mass) != EOF){
+              
+              p->mass = pow(10,points[i].mass);
+              p->z = z; // temporarily store redshift for use in fastplanes_parallel
+              
+              sp = p->x;
+              
+              phiave += sp.phi;
+              thetaave += sp.theta;
+              
+              ++i;
+              ++p;
+      }
+      
+      points.resize(i);
+      
+      // mass and postions need h factors and r_max & r_scale need to be set
+      return i;
+    }
+    
+  };
+  
+
   /**************************************************************************/
   /**************************************************************************/
   /**************************************************************************/

@@ -1577,6 +1577,31 @@ namespace LightCones{
       }
     } // loop through halos
   }
+  void ASCII_MDHaloCone::fastplanes_parallel(
+                                      LightCones::DatumXMR *begin
+                                      ,LightCones::DatumXMR *end
+                                      ,const COSMOLOGY &cosmo
+                                      ,std::vector<std::vector<Point_3d> > &boxes
+                                      ,std::vector<Point_3d> &observers
+                                      ,std::vector<Quaternion> &rotationQs
+                                      ,std::vector<double> &dsources
+                                      ,std::vector<std::vector<PixelMap> > &maps
+                                      ,double dmin
+                                      ,double dmax
+                                      ,double BoxLength
+  ){
+    
+    HALOCalculator hcalc(&cosmo,1.0e12,0.5);
+
+    for(auto &p : points){
+      hcalc.reset(p.mass,p.z);
+
+      p.r_max = hcalc.getRvir();
+      p.r_scale = p.r_max/hcalc.getConcentration();
+    }
+    
+    
+  }
   void random_observers(std::vector<Point_3d> &observers
                         ,std::vector<Point_3d> &directions
                         ,int Ncones
