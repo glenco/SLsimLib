@@ -56,6 +56,8 @@ class LensHaloBaseNSIE : public LensHalo{
 public:
 	LensHaloBaseNSIE(InputParams& params);
   LensHaloBaseNSIE();
+  
+  virtual void abstractfunction() = 0; // pure virtual
 
   virtual ~LensHaloBaseNSIE();
 

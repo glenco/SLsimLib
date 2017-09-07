@@ -75,9 +75,11 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
   
 	haloON = true;  //use internal halo parameters
 
-	tree = BuildQTreeNB(xp,Npoints,index);
+  if(Npoints > 0){
+    tree = BuildQTreeNB(xp,Npoints,index);
 
-	CalcMoments();
+    CalcMoments();
+  }
 
   phiintconst = (120*log(2.) - 631.)/840 + 19./70;
 	return;
@@ -86,6 +88,7 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 /// Particle positions and other data are not destroyed.
 TreeQuad::~TreeQuad()
 {
+  if(Nparticles == 0) return;
 	delete tree;
 	delete[] index;
   if(haloON) Utilities::free_PosTypeMatrix(xp,Nparticles,2);
@@ -494,12 +497,15 @@ void TreeQuad::rotate_coordinates(PosType **coord){
 
 void TreeQuad::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi) const{
   
+  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+  *kappa=*phi=0.0;
+  
+  if(Nparticles == 0) return;
+
   assert(tree);
   QTreeNB::iterator it(tree);
   
-  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
-  *kappa=*phi=0.0;
-    
+  
   if(periodic_buffer){
     PosType tmp_ray[2];
         
@@ -777,10 +783,12 @@ void TreeQuad::walkTree_iter(
 
 void TreeQuad::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
   
-  assert(tree);
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=*phi=0.0;
+  
+  if(Nparticles == 0) return;
+  assert(tree);
   
   //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
   

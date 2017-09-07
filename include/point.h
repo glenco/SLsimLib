@@ -135,6 +135,8 @@ struct Point_2d{
     x[1] /= s;
   }
   
+  PosType* data(){return x;}
+  
   PosType x[2];
   PosType & operator[](size_t i){return x[i];}
 };
@@ -519,6 +521,8 @@ struct Point_3d{
     x[1] /= s;
     x[2] /= s;
   }
+  
+  PosType* data(){return x;}
   
   PosType x[3];
   PosType & operator[](size_t i){return x[i];}

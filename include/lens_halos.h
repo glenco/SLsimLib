@@ -208,6 +208,9 @@ private:
 
 protected:
 
+  // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
+  // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
+  float Rmax;
 
   // make LensHalo uncopyable
   void operator=(LensHalo &){};
@@ -267,10 +270,6 @@ protected:
   /// error message printout
   void error_message1(std::string name,std::string filename);
   
-  // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
-  // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
-  float Rmax;
-  float Rmax_halo;
   
   /// The factor by which Rmax is larger than Rsize
   const float Rmax_to_Rsize_ratio = 1.2;
@@ -670,7 +669,7 @@ protected:
  */
 class LensHaloNFW: public LensHalo{
 public:
-  /// Shell constructor that should be avoided
+  /// Shell constructor.  Sets the halo to zero mass
 	LensHaloNFW();
   LensHaloNFW(float my_mass   /// in solar masses
               ,float my_Rsize  /// in Mpc

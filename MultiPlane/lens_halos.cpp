@@ -134,12 +134,25 @@ PosType* LensHaloNFW::xgtable = NULL;
 PosType*** LensHaloNFW::modtable= NULL; // was used for Ansatz IV
 
 
-
 LensHaloNFW::LensHaloNFW()
 : LensHalo(), gmax(0)
 {
+  
+  LensHalo::setRsize(1.0);
+  Rmax = LensHalo::getRsize();
+
+  LensHalo::setMass(0.0);
+  LensHalo::setZlens(0);
+  
+  fratio=1;
+  pa = stars_N = 0;
+  stars_implanted = false;
+  rscale = LensHalo::getRsize()/5;
+  xmax = LensHalo::getRsize()/rscale;
+
   make_tables();
   gmax = InterpolateFromTable(gtable, xmax);
+  set_flag_elliptical(false);
 }
 
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
