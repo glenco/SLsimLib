@@ -11,6 +11,7 @@
 #include <random>
 
 
+// Links images and source points
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
   Point *s_points;
   long i;
@@ -21,15 +22,14 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
 
   for(i=0;i<Npoints;++i){
     s_points[i].id=i_points[i].id;
-      // link images and source points
     i_points[i].image=&s_points[i];
     s_points[i].image=&i_points[i];
-    
     s_points[i].gridsize = i_points[i].gridsize;
   }
 
   return s_points;
 }
+
 
 // Calculates the area in the image by simply adding up all the cells in the imageinfo->point array
 void findarea(OldImageInfo *imageinfo){
