@@ -1578,9 +1578,9 @@ namespace LightCones{
     } // loop through halos
   }
   void ASCII_MDHaloCone::fastplanes_parallel(
-                                      LightCones::DatumXMR *begin
-                                      ,LightCones::DatumXMR *end
-                                      ,const COSMOLOGY &cosmo
+                                             LightCones::DatumXMRmRsZ *begin
+                                      ,LightCones::DatumXMRmRsZ *end
+                                      ,COSMOLOGY &cosmo
                                       ,std::vector<std::vector<Point_3d> > &boxes
                                       ,std::vector<Point_3d> &observers
                                       ,std::vector<Quaternion> &rotationQs
@@ -1595,14 +1595,14 @@ namespace LightCones{
 
     double h = cosmo.gethubble();
     
-    for(auto &p : points){
+    for(auto p = begin ; p != end ; ++p){
       
-      hcalc.reset(p.mass,p.z);
-      p.mass *= h;
-      p.x *= h;
+      hcalc.reset(p->mass,p->z);
+      p->mass *= h;
+      p->x *= h;
       
-      p.r_max = hcalc.getRvir();
-      p.r_scale = p.r_max/hcalc.getConcentration();
+      p->r_max = hcalc.getRvir();
+      p->r_scale = p->r_max/hcalc.getConcentration();
     }
     
     

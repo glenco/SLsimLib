@@ -472,10 +472,10 @@ namespace LightCones{
     
     std::vector<DatumXMRmRsZ> points;
     
-    void fastplanes_parallel(
-                        LightCones::DatumXMR *begin
-                        ,LightCones::DatumXMR *end
-                        ,const COSMOLOGY &cosmo
+    static void fastplanes_parallel(
+                        LightCones::DatumXMRmRsZ *begin
+                        ,LightCones::DatumXMRmRsZ *end
+                        ,COSMOLOGY &cosmo
                         ,std::vector<std::vector<Point_3d> > &boxes
                         ,std::vector<Point_3d> &observers
                         ,std::vector<Quaternion> &rotationQs
@@ -490,30 +490,29 @@ namespace LightCones{
       
       // read in a block of points
       size_t i=0;
-      double v[3],theta,phi,z;
-      double phiave,thetaave;
+      double v[3],theta,phi,z,zob;
       
       points.resize(blocksize);
       auto p = points.begin();
       Utilities::Geometry::SphericalPoint sp;
+      Point_3d avX;
       
       while(i < blocksize &&
             fscanf(pFile,"%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf"
-                   ,&phi,&theta,&z,&z,&(p->x[0]),&(p->x[1]),&(p->x[2]),v,v+1,v+2
-                   ,&points[i].mass) != EOF){
+                   ,&phi,&theta,&z,&zob,&(p->x[0]),&(p->x[1]),&(p->x[2])
+                   ,v,v+1,v+2,&points[i].mass) != EOF){
               
               p->mass = pow(10,points[i].mass);
               p->z = z; // temporarily store redshift for use in fastplanes_parallel
               
-              sp = p->x;
-              
-              phiave += sp.phi;
-              thetaave += sp.theta;
+              avX += p->x;
               
               ++i;
               ++p;
-      }
+            }
       
+      avX.unitize();
+      std::cout << "average direction of halos: " << avX << std::endl;
       points.resize(i);
       
       // mass and postions need h factors and r_max & r_scale need to be set
