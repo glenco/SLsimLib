@@ -582,8 +582,8 @@ namespace LightCones{
                       ,std::vector<Point_3d> &directions      /// direction of light cones
                       ,const std::vector<std::string> &snap_filenames  /// names of the data files
                       ,const std::vector<float> &snap_redshifts  /// the redshift of the data files
-                      ,double BoxLength
-                      ,double mass_units
+                      ,double BoxLength            /// size of snapshot box in comoving Mpc
+                      ,double mass_units           /// the mass units of the values in the input file
                       ,double subtract_mean = true /// subtracts expected mean kappa from map, otherwise the average density of the universe is not subtracted
                       ,bool verbose = false
                       ,bool addtocone = false  /// if false the maps will be cleared and new maps made, if true particles are added to the existing maps
