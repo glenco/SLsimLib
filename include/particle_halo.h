@@ -60,7 +60,7 @@ public:
 
   size_t getN() const { return Npoints; };
   
-  /// rotate the simulation around the origin of the simulation coordinates, (radians)
+  /// rotate the simulation around the origin of the simulation coordinates, (radians).  The first component is the first rotation about the X-axis and the second component is the the second rotation about the y-axis
   void rotate(Point_2d theta);
   
   /// center of mass in input coordinates
