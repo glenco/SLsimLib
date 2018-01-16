@@ -141,7 +141,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     }
     else {
       if(field_buffer == 0.0){
-        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
+        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit_comoving(0),1.0/3.);
         std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
       }
       // Compute the distribution variables :
@@ -213,7 +213,7 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
     }
     else {
       if(field_buffer == 0.0){
-        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
+        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit_comoving(0),1.0/3.);
         std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
       }
       // Compute the distribution variables :
@@ -945,7 +945,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType Rsize;
   PosType AveMassTh;
   
-  PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  PosType rho = density_contrast*cosmo.rho_crit_comoving(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
   // where Mpc \equiv comoving Mpc.
   
@@ -1152,7 +1152,7 @@ void Lens::resetSubstructure(bool verbose){
   
   PosType Rsize;
 
-  PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  PosType rho = substructure.rho_tidal*cosmo.rho_crit_comoving(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
   Utilities::delete_container(substructure.halos);
   
@@ -1625,7 +1625,7 @@ void Lens::ComputeHalosDistributionVariables ()
  * \brief Creates the field of halos as specified in the parameter file.
  *
  */
-void Lens::createFieldHalos(bool verbose)
+void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
 {
   std::cout << "Creating Field Halos from Mass Function" << std::endl;
   //verbose = true;
@@ -1723,16 +1723,19 @@ void Lens::createFieldHalos(bool verbose)
       
       float sigma = 0;
       if(flag_field_gal_on){
-        // from Moster et al. 2010ApJ...710..903M
         
-        field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
+        if(division_mode == Moster){
+          // from Moster et al. 2010ApJ...710..903M
         
-        if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-        sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
-				//field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rsize,rscale,field_prof_internal_slope,seed);
-        r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K
-        r_half_stel_mass = pow(10.,(0.95*log10(0.015*r200*1000.)+0.015))/1000.; // in Mpc
-      
+          field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
+        
+          if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+          sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+          //field_halos[j]->initFromMassFunc(mass*(1-field_galaxy_mass_fraction),Rsize,rscale,field_prof_internal_slope,seed);
+          r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K
+          r_half_stel_mass = pow(10.,(0.95*log10(0.015*r200*1000.)+0.015))/1000.; // in Mpc
+        }
+        
       }else{
         field_galaxy_mass_fraction = 0;
       }
@@ -1872,7 +1875,7 @@ void Lens::createFieldHalos(bool verbose)
  * is not the FOF parent.  Multiple LensHalos can have the same id because they were derived from the same simulation halo (ex. one for galaxy and one for DM halo).
  *
  */
-void Lens::readInputSimFileMillennium(bool verbose)
+void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mode)
 {
     
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
@@ -1978,6 +1981,8 @@ void Lens::readInputSimFileMillennium(bool verbose)
     
     
     if(flag_field_gal_on){
+      if(division_mode == Moster){
+
       // from Moster et al. 2010ApJ...710..903M
       field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
       
@@ -1985,6 +1990,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
       sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
       r200 = halo_calc->getR200(); // used for Kravtsov 2013 2013ApJ...764L..31K ;
       r_half_stel_mass = pow(10.,(0.95*log10(0.015*r200*1000.)+0.015))/1000.; // in Mpc
+      }
     }else{
       field_galaxy_mass_fraction = 0;
     }
@@ -2066,7 +2072,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
       
 			++j;
       
-      if(flag_field_gal_on){
+      if(flag_field_gal_on && field_galaxy_mass_fraction > 0){
         float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
         
         //std::cout << "Warning: All galaxies are spherical" << std::endl;
@@ -2186,7 +2192,7 @@ void Lens::readInputSimFileMillennium(bool verbose)
  * \brief Read in information from a MultiDark Halo Catalog
  
  */
-void Lens::readInputSimFileMultiDarkHalos(bool verbose)
+void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division division_mode)
 {
   std::cout << "Reading Field Halos from " << field_input_sim_file << std::endl;
 	PosType z,zob,xpos,ypos,zpos,vx,vy,vz,mass;
@@ -2194,7 +2200,6 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
   PosType field_galaxy_mass_fraction = 0;
 //  const PosType masslimit =2.0e12;
   const PosType masslimit = 0.0;
-  
   
   Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
   
@@ -2328,10 +2333,13 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         
         if(flag_field_gal_on){
           
-          field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
+          if(division_mode == Moster){
+            field_galaxy_mass_fraction = HALOCalculator::MosterStellarMassFraction(mass);
           
-          if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
-          sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+            if(field_galaxy_mass_fraction > 1.0) field_galaxy_mass_fraction = 1;
+            sigma = 126*pow(mass*(1-field_galaxy_mass_fraction)/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
+          }
+          
         }else{
           field_galaxy_mass_fraction = 0;
         }
@@ -2409,7 +2417,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose)
         
         ++j;
         
-        if(flag_field_gal_on){
+        if(flag_field_gal_on && field_galaxy_mass_fraction > 0){
           float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
           //std::cout << "Warning: All galaxies are spherical" << std::endl;
           float fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.

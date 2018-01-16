@@ -74,9 +74,34 @@ PixelMap::PixelMap(const PixelMap& other)
 Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY)
 {
   std::copy(other.center, other.center + 2, center);
-  
   std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
   std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+}
+
+// move constructor
+PixelMap::PixelMap(PixelMap&& other)
+:Nx(0),Ny(0),map(std::move(other.map)),resolution(0), rangeX(0), rangeY(0){
+ 
+  Nx = other.Nx;
+  Ny = other.Ny;
+  resolution = other.resolution;
+  rangeX = other.rangeX;
+  rangeY = other.rangeY;
+  std::copy(other.center, other.center + 2, center);
+  std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
+  std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+  
+  other.Nx = 0;
+  other.Ny = 0;
+  other.resolution = 0;
+  other.center[0] = 0;
+  other.center[1] = 0;
+  
+  other.map_boundary_p1[0] = 0;
+  other.map_boundary_p1[1] = 0;
+  other.map_boundary_p2[0] = 0;
+  other.map_boundary_p2[1] = 0;
+
 }
 
 /// make square PixelMap
@@ -316,9 +341,10 @@ PixelMap::~PixelMap()
 
 PixelMap& PixelMap::operator=(PixelMap other)
 {
-  PixelMap::swap(*this, other);
+  if(this != &other) PixelMap::swap(*this, other);
   return *this;
 }
+
 
 void PixelMap::swap(PixelMap &map1,PixelMap &map2)
 {
@@ -445,11 +471,14 @@ PixelMap operator*(const PixelMap& a, PosType b)
 }
 
 PosType PixelMap::ave() const{
+  return sum()/map.size();
+}
+PosType PixelMap::sum() const{
   PosType tmp=0;
   for(size_t i=0;i<map.size();++i){
     tmp += map[i];
   }
-  return tmp/map.size();
+  return tmp;
 }
 
 
@@ -1612,6 +1641,49 @@ void Utilities::LoadFitsImages(
   return ;
 }
 
+/** \brief Reads the file names in a directory that contain a specific sub string.
+ 
+ */
+void Utilities::ReadFileNames(
+                              std::string dir              /// path to directory containing fits files
+                              ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
+                              ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                              ,const std::string file_non_spec /// string of charactors in file name that file must not have. 
+                              ,bool verbose){
+  
+  DIR *dp = opendir( dir.c_str() );
+  struct dirent *dirp;
+  struct stat filestat;
+  std::string filepath,filename;
+  
+  if (dp == NULL)
+  {
+    std::cerr << "Cannot find directory" << std::endl;
+    throw std::runtime_error("error opening directory");
+    return;
+  }
+  
+  while ((dirp = readdir( dp )) )
+  {
+    filepath = dir + "/" + dirp->d_name;
+    
+    // If the file is a directory (or is in some way invalid) we'll skip it
+    if (stat( filepath.c_str(), &filestat )) continue;
+    if (S_ISDIR( filestat.st_mode ))         continue;
+    
+    filename = dirp->d_name;
+    if(filename.find(filespec) !=  std::string::npos &&
+       filename.find(file_non_spec) ==  std::string::npos ){
+      if(verbose) std::cout << "adding " << filepath << std::endl;
+      filenames.push_back(filename);
+    }
+  }
+  
+  closedir( dp );
+  
+  std::cout << filenames.size() << " file names." << std::endl;
+  return ;
+}
 
 /*// get the index for a position, returns -1 if out of map
  long PixelMap::find_index(PosType const x[],long &ix,long &iy){

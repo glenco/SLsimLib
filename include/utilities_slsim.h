@@ -1000,7 +1000,7 @@ namespace Utilities
   template <typename T, typename R>
   void shuffle(
                std::vector<T> &vec   /// The vector to be shuffled
-               ,R ran               /// a random number generator so that ran() gives a number between 0 and 1
+               ,R &ran               /// a random number generator so that ran() gives a number between 0 and 1
   ){
     T tmp;
     size_t ran_t;
@@ -1057,6 +1057,56 @@ namespace Utilities
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
   }
+  
+  /** \brief Gives a randomized sequence of numbers from 0 to N-1.
+   
+   If the sequence is exhausted then it is reshuffled and numbers will 
+   repeat in randomized order.
+   **/
+  template <typename R>
+  class ShuffledIndex{
+  public:
+    ShuffledIndex(size_t N,R &ran){
+      if(N == 0) throw std::invalid_argument("N=0");
+      
+      for(size_t i=0 ; i<N ; ++i) index[i] = i;
+      index.resize(N);
+      Utilities::shuffle(index,ran);
+      index_internal = 0;
+    }
+    
+    /// return the index number
+    size_t operator*(){return index[index_internal];}
+    /// goto the next number
+    size_t operator++(int){
+      size_t tmp = index[index_internal];
+      if(index_internal == index.size()){
+        index_internal = 0;
+      }else{
+        ++index_internal;
+      }
+      return tmp;
+    }
+    /// goto the next number
+    size_t operator++(){
+      if(index_internal == index.size()){
+        index_internal = 0;
+      }else{
+        ++index_internal;
+      }
+      return index[index_internal];
+    }
+    
+    /// get a new random order
+    void reshuffle(R &ran){
+      Utilities::shuffle(index,ran);
+      index_internal = 0;
+    }
+    
+  private:
+    std::vector<size_t> index;
+    size_t index_internal;
+  };
 
   
   // reorders vec according to index p
