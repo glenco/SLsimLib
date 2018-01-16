@@ -79,6 +79,11 @@ if(ENABLE_HEALPIX)
 	include_directories(${HEALPIX_INCLUDE_DIRS})
 endif()
 
+if(ENABLE_HDF5)
+	include_directories(${HDF5_INCLUDE_DIRS})
+	add_definitions(${HDF5_DEFINITIONS})
+endif()
+
 include_directories(
 	"${NR_SOURCE_DIR}/include"
 	"${CosmoLib_SOURCE_DIR}/include"

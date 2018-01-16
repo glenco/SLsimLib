@@ -135,6 +135,8 @@ struct Point_2d{
     x[1] /= s;
   }
   
+  PosType* data(){return x;}
+  
   PosType x[2];
   PosType & operator[](size_t i){return x[i];}
 };
@@ -198,6 +200,25 @@ private:
   //Point &operator=(const Point &p);
 };
 
+/** \brief A point that is automatically linked to its source point eliminating the
+ need for using LinkToSourcePoint().  Useful when a limited number of Points are needed and they do not need to be in continuous memory.
+*/
+struct RAY: public Point{
+  RAY(){
+    image = &source_point;
+    image->image = this;
+  }
+  ~RAY(){};
+  
+  /// postions on image plane
+  PosType *pos_image(){return x;};
+  /// postions on source plane
+  PosType *pos_source(){return image->x;}
+  
+private:
+  Point source_point;
+};
+
 std::ostream &operator<<(std::ostream &os, Point const &p);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
@@ -249,36 +270,37 @@ struct PointList{
   }
   ~PointList(){EmptyList();}
   
-  class iterator{
-  private:
+  struct iterator{
+
     Point *current;
-  public:
     
-    iterator(){
-      current = NULL;
-    }
-    iterator(PointList &list){
+    iterator():current(NULL){ }
+    
+/*    iterator(PointList &list){
       current = list.top;
     }
     iterator(iterator &it){
       current = *it;
     }
+ */
     iterator(Point *p){
       current = p;
     }
     
-    Point *operator*(){return current;}
-    PointList::iterator &operator=(PointList::iterator &p){
-      if(&p == this) return *this;
-      current = p.current;
-      return *this;
-    }
-    
+ /*
     PointList::iterator &operator=(Point *point){
       current = point;
       return *this;
     }
+*/
+    Point *operator*(){return current;}
     
+    /*iterator &operator=(iterator &p){
+      if(&p == this) return *this;
+      current = p.current;
+      return *this;
+    }*/
+
     bool operator++(){
       assert(current);
       if(current->prev == NULL) return false;
@@ -337,6 +359,21 @@ struct PointList{
     return *it == bottom;
   };
   
+  /* Many changes need to be made to implement this correctly
+  PointList::iterator begin() const{
+    PointList::iterator it;
+    it.current = bottom;
+    return it;
+  }
+
+  PointList::iterator end() const{
+    PointList::iterator it;
+    it.current = top->prev;
+    return it;
+  }
+  */
+  
+  
   Point *Top() const {return top;}
   Point *Bottom() const {return bottom;}
   
@@ -365,10 +402,8 @@ struct PointList{
 private:
   Point *top;
   Point *bottom;
-  //Point *current;
   unsigned long Npoints;
   
-private:
   // make a point uncopyable
   //PointList(const PointList &p);
   PointList &operator=(const PointList &p);
@@ -392,6 +427,11 @@ struct Point_3d{
   Point_3d(){
     x[0]=x[1]=x[2]=0.0;
   }
+  Point_3d(PosType xx,PosType yy,PosType zz){
+    x[0]=xx;
+    x[1]=yy;
+    x[2]=zz;
+  }
   ~Point_3d(){};
   
   Point_3d(const Point_3d &p){
@@ -399,6 +439,7 @@ struct Point_3d{
     x[1]=p.x[1];
     x[2]=p.x[2];
   }
+  
   Point_3d & operator=(const Point_3d &p){
     if(this == &p) return *this;
     x[0]=p.x[0];
@@ -480,6 +521,8 @@ struct Point_3d{
     x[1] /= s;
     x[2] /= s;
   }
+  
+  PosType* data(){return x;}
   
   PosType x[3];
   PosType & operator[](size_t i){return x[i];}
