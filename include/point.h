@@ -139,6 +139,7 @@ struct Point_2d{
   
   PosType x[2];
   PosType & operator[](size_t i){return x[i];}
+  PosType operator[](size_t i) const {return x[i];}
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);

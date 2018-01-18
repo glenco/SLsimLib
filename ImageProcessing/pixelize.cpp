@@ -304,9 +304,9 @@ PixelMap::PixelMap(
   
   map.resize(Nx*Ny);
   
-  int old_Nx = pmap.Nx;
-  int old_Ny = pmap.Ny;
-  int ix, iy;
+  long old_Nx = pmap.Nx;
+  long old_Ny = pmap.Ny;
+  long ix, iy;
   PosType area;
   PosType old_p1[2];
   PosType old_p2[2];
@@ -319,8 +319,8 @@ PixelMap::PixelMap(
     old_p1[0] = std::max(0,int(ix*res_ratio));
     old_p1[1] = std::max(0,int(iy*res_ratio));
     
-    old_p2[0] = std::min(old_Nx-1,int((ix+1.)*res_ratio));
-    old_p2[1] = std::min(old_Ny-1,int((iy+1.)*res_ratio));
+    old_p2[0] = fmin(old_Nx-1,int((ix+1.)*res_ratio));
+    old_p2[1] = fmin(old_Ny-1,int((iy+1.)*res_ratio));
     
     for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
     {
@@ -390,7 +390,6 @@ void PixelMap::AssignValue(std::size_t i, PosType value)
   map[i] = value;
 }
 
-/// Check whether two PixelMaps agree in their physical dimensions.
 bool PixelMap::agrees(const PixelMap& other) const
 {
   return
@@ -529,15 +528,11 @@ void PixelMap::AddImages(
   
   return;
 }
-/** \brief Add an image to the map
- *
- */
+
 void PixelMap::AddGridBrightness(Grid &grid){
   
-  
-  
   PointList *plist = grid.i_tree->pointlist;
-
+  
   if(plist->size() == 0) return;
   
   PointList::iterator listit= plist->Top();// = plist->begin();
@@ -550,9 +545,9 @@ void PixelMap::AddGridBrightness(Grid &grid){
   //for(long ii=0;ii<Nimages;++ii){
   
   do{
-  //for(listit = plist->begin() ; listit != plist->end() ; ++listit ){
+    //for(listit = plist->begin() ; listit != plist->end() ; ++listit ){
     sb = (*listit)->surface_brightness;
-  
+    
     if (sb != 0.0 && (inMapBox((*listit)->leaf)) == true){
       PointsWithinLeaf((*listit)->leaf,neighborlist);
       for(it = neighborlist.begin();it != neighborlist.end();it++){
@@ -561,7 +556,20 @@ void PixelMap::AddGridBrightness(Grid &grid){
       }
     }
   }while(--listit);
+  
+  return;
+}
 
+void PixelMap::AddGridMapBrightness(const GridMap &grid){
+  
+  try {
+    // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
+    grid.getPixelMap(*this);
+  } catch (const std::invalid_argument& ia) {
+    // dimensions and/or alignment do not match
+    PixelMap newmap = grid.getPixelMap(1);
+    copy_in(newmap);
+  }
   return;
 }
 
@@ -1708,7 +1716,7 @@ void Utilities::ReadFileNames(
  */
 
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x[],long &ix,long &iy){
+long PixelMap::find_index(PosType const x[],long &ix,long &iy) const{
   
   ix = (long)((x[0] - map_boundary_p1[0])/resolution);
   iy = (long)((x[1] - map_boundary_p1[1])/resolution);
@@ -1725,7 +1733,7 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy){
   return ix + Nx*iy;
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
+long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy) const{
   
   //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
   //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
@@ -1745,17 +1753,17 @@ long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   return ix + Nx*iy;
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x[]){
+long PixelMap::find_index(PosType const x[]) const{
   long ix,iy;
   return find_index(x,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y){
+long PixelMap::find_index(PosType const x,PosType const y) const{
   long ix,iy;
   return find_index(x,y,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
-void PixelMap::find_position(PosType x[],std::size_t const index){
+void PixelMap::find_position(PosType x[],std::size_t const index) const{
   if(Nx == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -1766,7 +1774,7 @@ void PixelMap::find_position(PosType x[],std::size_t const index){
   return;
 }
 /// get the index for a position, returns -1 if out of map
-void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const iy){
+void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const iy) const{
   if(Nx == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -2032,6 +2040,57 @@ PosType PixelMap::AddSource(Source &source,int oversample){
     }
   }
   return total;
+}
+
+void PixelMap::copy_in(
+                   const PixelMap& pmap
+)
+{
+  
+  if(agrees(pmap)){  // maps are the same dimensions and position
+    for(size_t i=0;i<map.size();++i) map[i] += pmap.map[i];
+    return;
+  }
+  double res_ratio = resolution/pmap.resolution;
+  double res_ratio2 = res_ratio*res_ratio;
+  
+  // check is maps overlap
+  if(map_boundary_p1[0] > pmap.map_boundary_p2[0] ) return;
+  if(map_boundary_p2[0] < pmap.map_boundary_p1[0] ) return;
+  if(map_boundary_p1[1] > pmap.map_boundary_p2[1] ) return;
+  if(map_boundary_p2[1] < pmap.map_boundary_p1[1] ) return;
+
+  
+  double halfpixel = res_ratio/2;
+  PosType x[2];
+  for(size_t ii=0;ii < map.size(); ++ii){
+    
+    find_position(x,ii);
+      // find range if this pixel in pmap's pixel space
+    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
+    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
+    
+    double xmin = fmax(-0.5,ix - halfpixel);
+    double xmax = fmin(pmap.getNx() - 0.5 ,ix + halfpixel);
+    if(xmin >= xmax) continue;
+
+    double ymin = fmax(-0.5,iy - halfpixel);
+    double ymax = fmin(pmap.getNx() - 0.5 ,iy + halfpixel);
+    if(ymin >= ymax) continue;
+    
+    long imin = (long)(xmin + 0.5);
+    long imax = (long)(xmax + 0.5);
+    long jmin = (long)(ymin + 0.5);
+    long jmax = (long)(ymax + 0.5);
+
+    for(size_t j = jmin ; j <= jmax ; ++j ){
+      double area = fmin(ymax,j+0.5) -  fmax(ymin,j-0.5);
+      for(size_t i = imin ; i <= imax ; ++i ){
+        area *= fmin(xmax,i+0.5) -  fmax(xmin,i-0.5);
+        map[ii] += pmap.map[i + Nx*j]*area/res_ratio2;
+      }
+    }
+  }
 }
 
 /*

@@ -52,11 +52,11 @@ struct GridMap{
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
-  PixelMap getPixelMap(int res);
+  PixelMap getPixelMap(int res) const;
   /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
   /// The map must have precisely the right size and center to match or an exception will be thrown.
   /// Constructing the map with PixelMap getPixelMap(int res) will insure that it does.
-  void getPixelMap(PixelMap &map);
+  void getPixelMap(PixelMap &map) const;
   
   /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
   PosType EisnsteinArea() const;

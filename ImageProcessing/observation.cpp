@@ -458,8 +458,9 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
     if (telescope==true && fabs(resolution-pix_size) > pix_size*1.0e-5)
     {
         std::cout << "The resolution is different from the one of the simulated instrument in Observation::getBackgroundNoise!" << std::endl;
-        throw std::runtime_error("The resolution is different from the one of the simulated instrument!");
+      throw std::runtime_error("The resolution is different from the one of the simulated instrument!");
     }
+
     double Q = pow(10,0.4*(mag_zeropoint+48.6));
     double res_in_arcsec = resolution*180.*60.*60/pi;
     double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;

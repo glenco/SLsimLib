@@ -18,6 +18,7 @@
 
 // forward declaration
 struct Grid;
+struct GridMap;
 
 /** \ingroup Image
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
@@ -56,11 +57,22 @@ public:
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
+  /// Add an image from a the surface brightnesses of a Grid to the PixelMap
   void AddGridBrightness(Grid &grid);
+  /// Add an image from a the surface brightnesses of a GridMap to the PixelMap
+  void AddGridMapBrightness(const GridMap &grid);
   void AddUniformImages(ImageInfo *imageinfo,int Nimages,double value);
   PosType AddSource(Source &source);
   /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged
   PosType AddSource(Source &source,int oversample);
+  
+  /** \brief copy a PixelMap into this one.
+   
+   The size, resolutio and center of the pixel maps are not changed and do
+   not need to match.  The input pixel map is added while conserving the area integral
+   of the map within the area of overlaping pixels.
+  **/
+  void copy_in(const PixelMap& pmap);
 
   /// Adds source to map.  This version breaks pixels up into blocks and does them in seporate threads.
   template <typename T>
@@ -117,6 +129,7 @@ public:
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
 	
+  
 	PixelMap& operator+=(const PixelMap& rhs);
 	friend PixelMap operator+(const PixelMap&, const PixelMap&);
 
@@ -131,6 +144,7 @@ public:
 	
 	std::valarray<double>& data() { return map; }
 	
+  /// Check whether two PixelMaps agree in their physical dimensions.
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
@@ -147,19 +161,19 @@ public:
                          ,PosType threshold);
   
   /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
-  long find_index(PosType const x[],long &ix,long &iy);
+  long find_index(PosType const x[],long &ix,long &iy) const;
   /// get the index for a position, returns -1 if out of map
-  long find_index(PosType const x[]);
+  long find_index(PosType const x[]) const;
   
   /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
-  long find_index(PosType const x,PosType const y,long &ix,long &iy);
+  long find_index(PosType const x,PosType const y,long &ix,long &iy) const;
   /// get the index for a position, returns -1 if out of map
-  long find_index(PosType const x,PosType const y);
+  long find_index(PosType const x,PosType const y) const;
   
   /// get the index for a position, returns -1 if out of map
-  void find_position(PosType x[],std::size_t const index);
+  void find_position(PosType x[],std::size_t const index) const;
   /// get the index for a position, returns -1 if out of map
-  void find_position(PosType x[],std::size_t const ix,std::size_t const iy);
+  void find_position(PosType x[],std::size_t const ix,std::size_t const iy) const;
   
   /// interpolate to point x[]
   PosType linear_interpolate(PosType x[]);

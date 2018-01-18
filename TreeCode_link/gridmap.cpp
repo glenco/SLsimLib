@@ -125,7 +125,7 @@ void GridMap::ReInitializeGrid(LensHndl lens){
 }
 
 /// Output a PixelMap of the surface brightness with same res as the GridMap
-PixelMap GridMap::getPixelMap(int resf){
+PixelMap GridMap::getPixelMap(int resf) const{
   
   if(resf <=0){
     ERROR_MESSAGE();
@@ -152,7 +152,7 @@ PixelMap GridMap::getPixelMap(int resf){
 }
 
 /// surface brightness map
-void GridMap::getPixelMap(PixelMap &map){
+void GridMap::getPixelMap(PixelMap &map) const{
   
   int resf = (Ngrid_init-1)/(map.getNx()-1);
   
@@ -167,7 +167,7 @@ void GridMap::getPixelMap(PixelMap &map){
     ERROR_MESSAGE();
     throw std::invalid_argument("resf must be > 0");
   }
-
+  
   map.Clean();
   
   int factor = resf*resf;
