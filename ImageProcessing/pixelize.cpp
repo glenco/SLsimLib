@@ -2051,7 +2051,7 @@ void PixelMap::copy_in(
     for(size_t i=0;i<map.size();++i) map[i] += pmap.map[i];
     return;
   }
-  double res_ratio = resolution/pmap.resolution;
+  double res_ratio = resolution / pmap.resolution;
   double res_ratio2 = res_ratio*res_ratio;
   
   // check is maps overlap
@@ -2063,12 +2063,12 @@ void PixelMap::copy_in(
   
   double halfpixel = res_ratio/2;
   PosType x[2];
-  for(size_t ii=0;ii < map.size(); ++ii){
+  for(size_t ii=0 ; ii < map.size() ; ++ii){
     
     find_position(x,ii);
       // find range if this pixel in pmap's pixel space
-    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
-    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
+    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution + 0.5;
+    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution + 0.5;
     
     double xmin = fmax(-0.5,ix - halfpixel);
     double xmax = fmin(pmap.getNx() - 0.5 ,ix + halfpixel);
@@ -2084,9 +2084,10 @@ void PixelMap::copy_in(
     long jmax = (long)(ymax + 0.5);
 
     for(size_t j = jmin ; j <= jmax ; ++j ){
-      double area = fmin(ymax,j+0.5) -  fmax(ymin,j-0.5);
+      double area1 = fmin(ymax,j+0.5) -  fmax(ymin,j-0.5);
+      if(area1 <= 0.0) continue;
       for(size_t i = imin ; i <= imax ; ++i ){
-        area *= fmin(xmax,i+0.5) -  fmax(xmin,i-0.5);
+        double area = (fmin(xmax,i+0.5) -  fmax(xmin,i-0.5)) * area1 ;
         map[ii] += pmap.map[i + Nx*j]*area/res_ratio2;
       }
     }
