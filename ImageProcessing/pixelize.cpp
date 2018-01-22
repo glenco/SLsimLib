@@ -2063,35 +2063,54 @@ void PixelMap::copy_in(
   
   double halfpixel = res_ratio/2;
   PosType x[2];
+  size_t NNx = pmap.getNx(),NNy = pmap.getNy();
+
   for(size_t ii=0 ; ii < map.size() ; ++ii){
     
     find_position(x,ii);
       // find range if this pixel in pmap's pixel space
-    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution + 0.5;
-    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution + 0.5;
+    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
+    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
     
-    double xmin = fmax(-0.5,ix - halfpixel);
-    double xmax = fmin(pmap.getNx() - 0.5 ,ix + halfpixel);
+    double xmin = fmax(0,ix - halfpixel);
+    double xmax = fmin(NNx,ix + halfpixel);
     if(xmin >= xmax) continue;
 
-    double ymin = fmax(-0.5,iy - halfpixel);
-    double ymax = fmin(pmap.getNx() - 0.5 ,iy + halfpixel);
+    double ymin = fmax(0,iy - halfpixel);
+    double ymax = fmin(NNy,iy + halfpixel);
     if(ymin >= ymax) continue;
     
-    long imin = (long)(xmin + 0.5);
-    long imax = (long)(xmax + 0.5);
-    long jmin = (long)(ymin + 0.5);
-    long jmax = (long)(ymax + 0.5);
+    long imin = (long)(xmin);
+    long imax = (long)(xmax);
+    long jmin = (long)(ymin);
+    long jmax = (long)(ymax);
 
     for(size_t j = jmin ; j <= jmax ; ++j ){
-      double area1 = fmin(ymax,j+0.5) -  fmax(ymin,j-0.5);
+      double area1 = fmin(ymax,j+1) -  fmax(ymin,j);
       if(area1 <= 0.0) continue;
       for(size_t i = imin ; i <= imax ; ++i ){
-        double area = (fmin(xmax,i+0.5) -  fmax(xmin,i-0.5)) * area1 ;
-        map[ii] += pmap.map[i + Nx*j]*area/res_ratio2;
+        double area = (fmin(xmax,i+1) -  fmax(xmin,i)) * area1 ;
+        map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
       }
     }
   }
+}
+
+void PixelMap::recenter(PosType c[2] /// new center
+){
+  double dc[2];
+  dc[0] = c[0] - center[0];
+  dc[1] = c[1] - center[1];
+  
+  map_boundary_p1[0] = map_boundary_p1[0] + dc[0];
+  map_boundary_p1[1] = map_boundary_p1[1] + dc[1];
+  map_boundary_p2[0] = map_boundary_p2[0] + dc[0];
+  map_boundary_p2[1] = map_boundary_p2[1] + dc[1];
+  
+  center[0] = c[0];
+  center[1] = c[1];
+  
+  return;
 }
 
 /*

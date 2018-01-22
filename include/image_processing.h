@@ -295,6 +295,9 @@ public:
     flipY();
   }
   
+  /// recenter the map without changing anything else
+  void recenter(PosType c[2]);
+
 private:
 	std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);
@@ -303,7 +306,7 @@ private:
 	std::size_t Ny;
 	double resolution,rangeX,rangeY,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
-
+  
 	double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1) const;
