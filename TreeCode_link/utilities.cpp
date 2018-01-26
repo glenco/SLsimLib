@@ -707,7 +707,7 @@ int Utilities::IO::CountColumns(std::string filename,char comment_char
   return  NumberOfEntries(line,deliniator);
 }
 
-size_t Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
+int Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
   size_t number = 0;
   auto it = string.begin();
   while(it != string.end()){
@@ -717,4 +717,5 @@ size_t Utilities::IO::NumberOfEntries(const std::string &string,char deliniator)
   }
   return number;
 }
+
 

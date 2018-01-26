@@ -23,6 +23,29 @@
 
 namespace Utilities
 {
+  /// convert a string to a numerical value of various types
+  template<class T>
+  T to_numeric(const std::string &str) {
+    return std::stoi(str);
+  };
+  template<>
+  inline long to_numeric<long>(const std::string &str) {
+    return std::stol(str);
+  };
+  template<>
+  inline int to_numeric<int>(const std::string &str) {
+    return std::stoi(str);
+  };
+  template<>
+  inline float to_numeric<float>(const std::string &str) {
+    return std::stof(str);
+  };
+  template<>
+  inline double to_numeric<double>(const std::string &str) {
+    return std::stod(str);
+  };
+  //********************************************************
+  
   // this is not for the user
   namespace detail
   {
@@ -1352,7 +1375,7 @@ namespace Utilities
       std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
     }
     
-    size_t NumberOfEntries(const std::string &string,char deliniator);
+    int NumberOfEntries(const std::string &string,char deliniator);
     
     /// Count the number of columns in a ASCII data file.
     int CountColumns(std::string filename  /// name of file
@@ -1373,7 +1396,7 @@ namespace Utilities
     /** \brief This function will read in all the numbers from a multi-column
      ASCII data file.
      
-     It will skip the comment lines if the are at the head of the file.  The 
+     It will skip the comment lines if they are at the head of the file.  The 
      number of columns and rows are returned.  The entry at row r and column c will be stored at data[c + column*r].
      
      This function is not particularly fast for large amounts of data.  If the 
@@ -1421,6 +1444,72 @@ namespace Utilities
       rows = data.size()/columns;
       if(verbose){
         std::cout << "Read " << rows << " rows of " << columns << " columns from file " << filename << std::endl;
+      }
+    }
+  
+    /** \brief Read numerical data from a csv file with a header
+     
+     It will skip the comment lines if they are at the head of the file.  The
+     number of columns and rows are returned.  The entries will be stored at data[column][row].
+     
+     Comments must only be before the data.  There must be a line with the
+     column lines after the comments and before the data.
+     
+     This function is not particularly fast for large amounts of data.  If the
+     number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
+     */
+
+    template <typename T>
+    int ReadCSVnumerical(std::string filename   /// file name to be read
+                ,std::vector<std::vector<T> > &data  /// output data
+                ,std::vector<std::string> &column_names /// list of column names
+                ,char comment_char = '#'  /// comment charactor for header
+                ,char deliniator = ','    /// deliniator between values
+                         ){
+    
+      std::ifstream file(filename);
+      // find number of particles
+      if (!file.is_open()){
+        std::cerr << "file " << filename << " cann't be opened." << std::endl;
+        throw std::runtime_error("no file");
+      }
+      std::string line;
+      // read comment lines and first data line
+      do{
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+      }while(line[0] == comment_char);
+    
+      // read the names
+      std::stringstream          lineStream(line);
+      std::string                cell;
+      column_names.empty();
+      while(std::getline(lineStream,cell, ','))
+      {
+        column_names.push_back(cell);
+      }
+      // This checks for a trailing comma with no data after it.
+      if (!lineStream && cell.empty())
+      {
+         column_names.push_back("");
+      }
+
+      int columns = NumberOfEntries(line,deliniator);
+      //int i = 0;
+      data.resize(columns);
+      for(auto &v : data ) v.empty();
+      while(std::getline(file,line)){
+        // read the names
+        std::stringstream          lineStream(line);
+        std::string                cell;
+        
+        int i=0;
+        while(std::getline(lineStream,cell, deliniator))
+        {
+          data[i].push_back(to_numeric<T>(cell));
+          i = (i+1)%columns;
+        }
+
       }
     }
   }
