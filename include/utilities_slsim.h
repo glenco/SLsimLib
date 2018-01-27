@@ -1460,7 +1460,7 @@ namespace Utilities
      */
 
     template <typename T>
-    int ReadCSVnumerical(std::string filename   /// file name to be read
+    int ReadCSVnumerical1(std::string filename   /// file name to be read
                 ,std::vector<std::vector<T> > &data  /// output data
                 ,std::vector<std::string> &column_names /// list of column names
                 ,char comment_char = '#'  /// comment charactor for header
@@ -1512,6 +1512,156 @@ namespace Utilities
 
       }
     }
+    
+    /** \brief Read numerical data from a csv file with a header
+     
+     Same as ReadCSVnumerical1 except the order of the data storage is
+     reversed data[row][column].
+     
+     It will skip the comment lines if they are at the head of the file.  The
+     number of columns and rows are returned.
+     
+     Comments must only be before the data.  There must be a line with the
+     column lines after the comments and before the data.
+     
+     This function is not particularly fast for large amounts of data.  If the
+     number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
+     */
+    
+    template <typename T>
+    int ReadCSVnumerical2(std::string filename   /// file name to be read
+                         ,std::vector<std::vector<T> > &data  /// output data
+                         ,std::vector<std::string> &column_names /// list of column names
+                          ,size_t Nmax = 1000000
+                          ,char comment_char = '#'  /// comment charactor for header
+                         ,char deliniator = ','    /// deliniator between values
+    ){
+      
+      
+      std::ifstream file(filename);
+      // find number of particles
+      if (!file.is_open()){
+        std::cerr << "file " << filename << " cann't be opened." << std::endl;
+        throw std::runtime_error("no file");
+      }
+      std::string line;
+      // read comment lines and first data line
+      do{
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+      }while(line[0] == comment_char);
+      
+      // read the names
+      std::stringstream          lineStream(line);
+      std::string                cell;
+      column_names.empty();
+      while(std::getline(lineStream,cell, ','))
+      {
+        column_names.push_back(cell);
+      }
+      // This checks for a trailing comma with no data after it.
+      if (!lineStream && cell.empty())
+      {
+        column_names.push_back("");
+      }
+      
+      int columns = NumberOfEntries(line,deliniator);
+      size_t ii = 0;
+    
+      for(auto &v : data ) v.empty();
+      while(std::getline(file,line) && ii < Nmax){
+        
+        data.emplace_back(columns);
+        
+        // read the names
+        std::stringstream          lineStream(line);
+        std::string                cell;
+        
+        int i=0;
+        while(std::getline(lineStream,cell, deliniator))
+        {
+          data.back()[i] = to_numeric<T>(cell);
+          i = (i+1)%columns;
+        }
+        ++ii;
+      }
+    }
+
   }
+  
+  /*** \brief A class for reading and then looking up objects from a CSV catalog.
+   
+   The constructor will read in the whole catalog and sort it into Nxbins X-bins.  Each
+   X-bin is then sorted by Y.
+   
+   The find(x,y) function will set the current value to a galaxy with a x within the
+   x-bin of x and a y close to y.  The other information in the row of the csv file for
+   this entry can then be read.
+   
+   */
+  class XYcsvLookUp{
+  public:
+    XYcsvLookUp(std::string datafile   /// input catalog file in csv format
+                ,std::string Xlabel    /// label in catalog for X variable
+                ,std::string Ylabel    /// label in catalog for Y variable
+                ,int Nxbins            /// number of X bins
+                ,size_t MaxNumber = 1000000 /// maximum number of entries read
+                ,bool verbose = false);
+    XYcsvLookUp(
+                std::string datafile   /// input catalog file in csv format
+                ,std::string Xlabel    /// label in catalog for X variable
+                ,std::string Ylabel    /// label in catalog for Y variable
+                ,std::vector<double> Xbins  /// minimum X value in each bin
+                ,size_t MaxNumber = 1000000 /// maximum number of entries read
+                ,bool verbose = false);
+    
+    /// find a galaxy with a redshift and log(halo mass) near x and logm, return a vector of its properties
+    std::vector<double> find(double x,double y);
+    
+    /// returns the current galxay's property by label
+    double operator[](std::string label);
+    
+    /// returns the ith entry for the current galaxy
+    double operator[](int i){
+      return (*current)[i];
+    }
+    /// returns the redshift of the current galaxy
+    double getX(){
+      return (*current)[Xindex];
+    }
+    /// returns the log(mass) of the current halo
+    double getY(){
+      return (*current)[Yindex];
+    }
+    /// returns a vector of the entries for the current galaxy
+    std::vector<double> record(){
+      return *current;
+    }
+    
+    /// returns labels of the columns from the data file
+    std::vector<std::string> labels(){
+      return column_names;
+    }
+    
+    double Xmin(){return xmin;}
+    double Xmax(){return xmax;}
+    double Ymin(double x);
+    double Ymax(double x);
+
+    
+  private:
+    int Xindex;
+    int Yindex;
+    double xmax;
+    double xmin;
+    std::vector<std::vector<double> >::iterator current;
+    std::vector<std::vector<std::vector<double> >::iterator> borders;
+    std::vector<std::vector<double> > data;
+    std::vector<std::string> column_names;
+    std::vector<double> Xborders;
+    size_t NinXbins;
+    std::string filename;
+  };
+
 }
 #endif

@@ -718,4 +718,179 @@ int Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
   return number;
 }
 
+Utilities::XYcsvLookUp::XYcsvLookUp(
+                                    std::string datafile   /// input catalog file in csv format
+                                    ,std::string Xlabel
+                                    ,std::string Ylabel
+                                    ,int Nxbins  /// number of X bins
+                                    ,size_t MaxNumber
+                                    ,bool verbose)
+:filename(datafile)
+{
+  Utilities::IO::ReadCSVnumerical2<double>(datafile,data,column_names,MaxNumber);
+  if(verbose){
+    for(auto name : column_names){ std::cout << name << " " ;}
+    std::cout << std::endl;
+    for(int i=0 ; i < 1 ; ++i){
+      for(auto v : data[i] ) std::cout << v << " " ;
+      std::cout << std::endl;
+    }
+    std::cout << data.size() << " rows with " << column_names.size() << " columns read." << std::endl;
+  }
+  
+  int i=0;
+  Xindex = Yindex = -1;
+  for(auto name : column_names){
+    if(name == Xlabel) Xindex = i;
+    if(name == Ylabel) Yindex = i;
+    ++i;
+  }
+  if(Xindex == -1){
+    std::cerr << filename << " needs a column named " << Xlabel << std::endl;
+    throw std::invalid_argument("No column named: " + Xlabel);
+  }
+  if(Yindex == -1){
+    std::cerr << filename << " needs a column named " << Ylabel << std::endl
+    << " They are :" << std::endl;
+    for(auto c : column_names ) std::cout << c << " ";
+    std::cout << std::endl;
+    throw std::invalid_argument("No column named: " + Ylabel);
+  }
+  
+  //************* test ********************
+  //xmin = 100;
+  //xmax = -1;
+  //for(auto d : data){
+  //  if(d[Xindex] < xmin) xmin = d[Xindex];
+  //  if(d[Xindex] > xmax) xmax = d[Xindex];
+  //}
+  //**********************************
+  
+  // sort by redshift
+  std::sort(data.begin(),data.end(), [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+  //&v1,std::vector<double> &v2){return v1[1] < v2[1];});
+  NinXbins = data.size()/Nxbins;
+  Xborders.resize(Nxbins);
+  Xborders[0]=0.0;
+  xmin =  data[0][Xindex];
+  xmax =  data.back()[Xindex];
+  if(verbose){
+    std::cout << "min X : "<< data[0][Xindex] << " max X : "
+    << data.back()[Xindex] << std::endl;
+    std::cout << "redshift bins " << std::endl;
+  }
+  for(int i=1 ; i<Nxbins ; ++i){
+    Xborders[i] = data[i*NinXbins][Xindex];
+    if(verbose) std::cout << i << " " << Xborders[i] << std::endl;
+  }
+  
+  // set up iterators to boundaries of x bins
+  borders.resize(Nxbins + 1);
+  borders[0] = data.begin();
+  borders.back() = data.end();
+  for(int i=1 ; i < Nxbins ; ++i) borders[i] = borders[i-1] + NinXbins;
+  
+  // sort by mass within x bins
+  for(int i=0 ; i < Nxbins ; ++i){
+    std::sort(borders[i],borders[i+1], [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+  }
+  
+  current = data.begin();
+}
+
+Utilities::XYcsvLookUp::XYcsvLookUp(
+                                    std::string datafile   /// input catalog file in csv format
+                                    ,std::string Xlabel
+                                    ,std::string Ylabel
+                                    ,std::vector<double> Xbins
+                                    ,size_t MaxNumber
+                                    ,bool verbose)
+:Xborders(Xbins),filename(datafile)
+{
+  
+  Utilities::IO::ReadCSVnumerical2<double>(datafile,data,column_names,MaxNumber);
+  if(verbose){
+    for(auto name : column_names){ std::cout << name << " " ;}
+    std::cout << std::endl;
+    for(int i=0 ; i < 1 ; ++i){
+      for(auto v : data[i] ) std::cout << v << " " ;
+      std::cout << std::endl;
+    }
+    std::cout << data.size() << " rows with " << column_names.size() << " columns read." << std::endl;
+  }
+  
+  int i=0;
+  Xindex = Yindex = -1;
+  for(auto name : column_names){
+    if(name == Xlabel) Xindex = i;
+    if(name == Ylabel) Yindex = i;
+    ++i;
+  }
+  if(Xindex == -1){
+    std::cerr << filename << " needs a column named " << Xlabel << std::endl;
+    throw std::invalid_argument("No column named: " + Xlabel);
+  }
+  if(Yindex == -1){
+    std::cerr << filename << " needs a column named " << Ylabel << std::endl
+    << " They are :" << std::endl;
+    for(auto c : column_names ) std::cout << c << " ";
+    std::cout << std::endl;
+    throw std::invalid_argument("No column named: " + Ylabel);
+  }
+  
+  // sort by redshift
+  std::sort(data.begin(),data.end(), [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+
+  size_t Nxbins = Xborders.size();
+  NinXbins = data.size()/Nxbins;
+  xmin =  data[0][Xindex];
+  xmax =  data.back()[Xindex];
+  if(verbose){
+    std::cout << "min X : "<< data[0][Xindex] << " max X"
+    << data.back()[Xindex] << std::endl;
+    std::cout << "redshift bins " << std::endl;
+  }
+  
+  // set up iterators to boundaries of x bins
+  borders.resize(Nxbins + 1);
+  borders[0] = data.begin();
+  borders.back() = data.end();
+  for(int i=1 ; i < Nxbins ; ++i) borders[i] = borders[i-1] + NinXbins;
+  
+  // sort by mass within x bins
+  for(int i=0 ; i < Nxbins ; ++i){
+    std::sort(borders[i],borders[i+1], [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+  }
+  
+  current = data.begin();
+}
+
+std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
+  long xbin = Utilities::locate(Xborders, x);
+  current = std::upper_bound(borders[xbin],borders[xbin+1],y
+                             , [this](double y,std::vector<double> &v1){return y < v1[Yindex];});
+  
+  return *current;
+}
+double Utilities::XYcsvLookUp::Ymin(double x){
+  long xbin = Utilities::locate(Xborders, x);
+  return (*borders[xbin])[Yindex];
+}
+double Utilities::XYcsvLookUp::Ymax(double x){
+  long xbin = Utilities::locate(Xborders, x);
+  return (*(borders[xbin+1]-1))[Yindex];
+}
+
+double Utilities::XYcsvLookUp::operator[](std::string label){
+  int i = 0;
+  for(auto name : column_names){
+    if(name == label){
+      return (*current)[i];
+    }
+    ++i;
+  }
+  for(auto c : column_names ) std::cout << c << " ";
+  std::cout << std::endl;
+  throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+}
 
