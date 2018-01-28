@@ -80,7 +80,7 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   
   Source::operator=(s);
   /// bulge half light radius
-  Reff = s.Rh;
+  Reff = s.Reff;
   Rh = s.Rh;
   PA = s.PA;
   inclination = s.inclination;
@@ -190,7 +190,7 @@ PosType SourceOverzier::getTotalFlux() const{
 }
 
 void SourceOverzier::printSource(){
-	std::cout << "bulge half light radius: " << Reff << " arcs   disk scale hight: " << Rh << " arcs" << std::endl;
+	std::cout << "bulge half light radius: " << Reff*180*60*60/pi << " arcs   disk scale hight: " << Rh*180*60*60/pi << " arcs" << std::endl;
 }
 
 void SourceOverzier::assignParams(InputParams& /* params */)
@@ -470,7 +470,7 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   Point_2d z;
   PosType sb;
 
-  if(xlength > 0){
+  if(xlength > 0 && sbDo > 0){
     z[0] = cospa*x[0] - sinpa*x[1];
     z[1] = ( sinpa*x[0] + cospa*x[1] )/cosi;
     

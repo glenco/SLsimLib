@@ -1637,7 +1637,17 @@ namespace Utilities
     std::vector<double> record(){
       return *current;
     }
-    
+    /// returns a vector of the entries for the current galaxy
+    std::vector<double> operator*(){
+      return *current;
+    }
+
+    void operator++(){
+      if(current != data.end() ) ++current;
+    }
+    void operator--(){
+      if(current != data.begin() ) --current;
+    }
     /// returns labels of the columns from the data file
     std::vector<std::string> labels(){
       return column_names;
@@ -1647,7 +1657,13 @@ namespace Utilities
     double Xmax(){return xmax;}
     double Ymin(double x);
     double Ymax(double x);
-
+    
+    void printcurrent(){
+      int i = 0;
+      for(auto label : column_names){
+        std::cout << label << " : " << (*current)[i++] << std::endl;
+      }
+    }
     
   private:
     int Xindex;
