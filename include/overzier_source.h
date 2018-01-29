@@ -26,7 +26,6 @@ public:
 	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
   
   SourceOverzier(const SourceOverzier &s);
-  
   SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
@@ -44,6 +43,7 @@ public:
   PosType getMagBulge() const { return mag_bulge; }
   PosType getMagBulge(Band band) const;
   
+  /*
 	/// set u band magnitude
 	void setUMag(PosType m) { mag_u = m; }
 	/// set g band magnitude
@@ -60,6 +60,7 @@ public:
 	void setHMag(PosType m) { mag_H = m; }
 	/// set k band magnitude
 	void setKMag(PosType m) { mag_Ks = m; }
+  */
   
   /// magnitude in specific band
   void setMag(Band band,PosType my_mag);
@@ -75,8 +76,10 @@ public:
   /// the bulge to total flux ratio
 	PosType getBtoT() const { return pow(10,(-mag_bulge + mag)/2.5); }
 	PosType getPA() const { return PA; }
-	PosType getInclination() const { return inclination; }
-  
+	PosType getInclination() const { return inclination;}
+  float getSEDtype() const {return sedtype;}
+  void setSEDtype(float s){ sedtype = s;}
+
   /// change the working band
   virtual void changeBand(Band band);
 	
@@ -89,6 +92,7 @@ public:
 
 protected:
   
+  float sedtype = -1;
   // renormalize the disk and bulge to agree with current mag and mag_bulge
   void renormalize();
 	void assignParams(InputParams& params);
@@ -112,29 +116,9 @@ protected:
   PosType mag_bulge;
 	
   // colors
-  PosType mag_u;
-  PosType mag_g;
-  PosType mag_r;
-  PosType mag_i;
-  PosType mag_z;
-  PosType mag_J;
-  PosType mag_H;
-  PosType mag_Ks;
-  PosType mag_i1;
-  PosType mag_i2;
-  
-  // bulge colors
-  PosType mag_u_bulge;
-  PosType mag_g_bulge;
-  PosType mag_r_bulge;
-  PosType mag_i_bulge;
-  PosType mag_z_bulge;
-  PosType mag_J_bulge;
-  PosType mag_H_bulge;
-  PosType mag_Ks_bulge;
-  PosType mag_i1_bulge;
-  PosType mag_i2_bulge;
-	
+  std::map<Band,double> mag_map;
+  std::map<Band,double> bulge_mag_map;
+
 	// optional position variables
 };
 
@@ -161,7 +145,7 @@ public:
   PosType getSphAxisRatio() const {return spheroid->getAxesRatio();}
   PosType getSphPA() const {return spheroid->getPA();}
   
-  void setBand(Band band);
+  void changeBand(Band band);
   static PosType *getx(SourceOverzierPlus &sourceo){return sourceo.getX();}
 
   /// Reset the position of the source in radians
@@ -175,7 +159,9 @@ public:
     source_x[1] = my_y;
     spheroid->setX(my_x,my_y);
   }
-
+  void setBulgeAxisRatio(PosType q){
+    spheroid->setAxesRatio(q);
+  }
   /// Randomly change some of the internal paramters and angles of the source
   void randomize(Utilities::RandomNumbers_NR &ran);
 private:

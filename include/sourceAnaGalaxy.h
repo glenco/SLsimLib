@@ -85,7 +85,7 @@ public:
 	/// Set redshift of current source.  Only changes the redshift while leaving position fixed.
 	void setZ(PosType my_z){	galaxies[index].setZ(my_z);}
   void resetBand(Band my_band){
-    for(size_t i=0;i<galaxies.size();++i) galaxies[i].setBand(my_band);
+    for(size_t i=0;i<galaxies.size();++i) galaxies[i].changeBand(my_band);
     band = my_band;
   }
 

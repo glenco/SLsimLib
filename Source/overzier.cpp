@@ -17,8 +17,8 @@ SourceOverzier::SourceOverzier()
 }
 
 SourceOverzier::SourceOverzier(
-		PosType my_mag              /// Total magnitude
-		,double my_mag_bulge            /// Bulge to total ratio
+		PosType my_mag          /// Total magnitude
+		,double my_mag_bulge    /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
 		,double my_Rh           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
@@ -49,31 +49,10 @@ SourceOverzier::SourceOverzier(const SourceOverzier &s)
   sbSo = s.sbSo;
   mag = s.mag;
   mag_bulge = s.mag_bulge;
+  sedtype = s.sedtype;
 
-
-  // bulge colors
-  mag_u = s.mag_u;
-  mag_g = s.mag_g;
-  mag_r = s.mag_r;
-  mag_i = s.mag_i;
-  mag_z = s.mag_z ;
-  mag_J = s.mag_J;
-  mag_H = s.mag_H;
-  mag_Ks = s.mag_Ks;
-  mag_i1 = s.mag_i1;
-  mag_i2 = s.mag_i2;
-  
-  // bulge colors
-  mag_u_bulge = s.mag_u_bulge;
-  mag_g_bulge = s.mag_g_bulge;
-  mag_r_bulge = s.mag_r_bulge;
-  mag_i_bulge = s.mag_i_bulge;
-  mag_z_bulge = s.mag_z_bulge ;
-  mag_J_bulge = s.mag_J_bulge;
-  mag_H_bulge = s.mag_H_bulge;
-  mag_Ks_bulge = s.mag_Ks_bulge;
-  mag_i1_bulge = s.mag_i1_bulge;
-  mag_i2_bulge = s.mag_i2_bulge;
+  mag_map = s.mag_map;
+  bulge_mag_map = s.bulge_mag_map;
 }
 SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   if(this == &s) return *this;
@@ -92,32 +71,11 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   sbSo = s.sbSo;
   mag = s.mag;
   mag_bulge = s.mag_bulge;
-  
-  
-  // bulge colors
-  mag_u = s.mag_u;
-  mag_g = s.mag_g;
-  mag_r = s.mag_r;
-  mag_i = s.mag_i;
-  mag_z = s.mag_z ;
-  mag_J = s.mag_J;
-  mag_H = s.mag_H;
-  mag_Ks = s.mag_Ks;
-  mag_i1 = s.mag_i1;
-  mag_i2 = s.mag_i2;
-  
-  // bulge colors
-  mag_u_bulge = s.mag_u_bulge;
-  mag_g_bulge = s.mag_g_bulge;
-  mag_r_bulge = s.mag_r_bulge;
-  mag_i_bulge = s.mag_i_bulge;
-  mag_z_bulge = s.mag_z_bulge ;
-  mag_J_bulge = s.mag_J_bulge;
-  mag_H_bulge = s.mag_H_bulge;
-  mag_Ks_bulge = s.mag_Ks_bulge;
-  mag_i1_bulge = s.mag_i1_bulge;
-  mag_i2_bulge = s.mag_i2_bulge;
-  
+  sedtype = s.sedtype;
+
+  mag_map = s.mag_map;
+  bulge_mag_map = s.bulge_mag_map;
+
   return *this;
 }
 
@@ -198,186 +156,25 @@ void SourceOverzier::assignParams(InputParams& /* params */)
 }
 
 PosType SourceOverzier::getMag(Band band) const {
-  
-  switch(band){
-    case SDSS_U:
-      return mag_u;
-    case SDSS_G:
-      return mag_g;
-    case SDSS_R:
-      return mag_r;
-    case SDSS_I:
-      return mag_i;
-    case SDSS_Z:
-      return mag_z;
-    case J:
-      return mag_J;
-    case Ks:
-      return mag_Ks;
-      
-    case EUC_VIS:
-      return mag_i;
-    case EUC_J:
-      return mag_J;
-    case EUC_H:
-      return mag_H;
-
-      
-    default:
-      throw std::invalid_argument("band not supported");
-      return 0.0;
-      break;
-  }
+  return mag_map.at(band);
 }
+
 PosType SourceOverzier::getMagBulge(Band band) const {
-  
-  switch(band){
-    case SDSS_U:
-      return mag_u_bulge;
-    case SDSS_G:
-      return mag_g_bulge;
-    case SDSS_R:
-      return mag_r_bulge;
-    case SDSS_I:
-      return mag_i_bulge;
-    case SDSS_Z:
-      return mag_z_bulge;
-    case J:
-      return mag_J_bulge;
-    case Ks:
-      return mag_Ks_bulge;
-
-    case EUC_VIS:
-      return mag_i_bulge;
-    case EUC_J:
-      return mag_J_bulge;
-    case EUC_H:
-      return mag_H_bulge;
-
-      
-    default:
-      throw std::invalid_argument("band not supported");
-      return 0.0;
-      break;
-  }
+  return bulge_mag_map.at(band);
 }
 
 void SourceOverzier::setMag(Band band,PosType my_mag){
-  switch(band){
-    case SDSS_U:
-      mag_u = my_mag;
-      break;
-    case SDSS_G:
-      mag_g = my_mag;
-      break;
-    case SDSS_R:
-      mag_r = my_mag;
-      break;
-    case SDSS_I:
-      mag_i = my_mag;
-      break;
-    case SDSS_Z:
-      mag_z = my_mag;
-      break;
-    case J:
-      mag_J = my_mag;
-      break;
-    case Ks:
-      mag_Ks = my_mag;
-      break;
-    case H:
-      mag_H = my_mag;
-      break;
-    default:
-      throw std::invalid_argument("band not supported");
-      break;
-  }
-}
+  mag_map[band] = my_mag;
+ }
 
 void SourceOverzier::setMagBulge(Band band,PosType my_mag){
-  switch(band){
-    case SDSS_U:
-      mag_u_bulge = my_mag;
-      break;
-    case SDSS_G:
-      mag_g_bulge = my_mag;
-      break;
-    case SDSS_R:
-      mag_r_bulge = my_mag;
-      break;
-    case SDSS_I:
-      mag_i_bulge = my_mag;
-      break;
-    case SDSS_Z:
-      mag_z_bulge = my_mag;
-      break;
-    case J:
-      mag_J_bulge = my_mag;
-      break;
-    case Ks:
-      mag_Ks_bulge = my_mag;
-      break;
-    case H:
-      mag_H_bulge = my_mag;
-      break;
-    default:
-      throw std::invalid_argument("band not supported");
-      break;
-  }
-}
+  bulge_mag_map[band] = my_mag;
+ }
 
  void SourceOverzier::changeBand(Band band){
-  
-  switch(band){
-    case SDSS_U:
-      mag = mag_u;
-      mag_bulge = mag_u_bulge;
-      break;
-    case SDSS_G:
-      mag = mag_g;
-      mag_bulge = mag_g_bulge;
-      break;
-    case SDSS_R:
-      mag = mag_r;
-      mag_bulge = mag_r_bulge;
-      break;
-    case SDSS_I:
-      mag = mag_i;
-      mag_bulge = mag_i_bulge;
-      break;
-    case SDSS_Z:
-      mag = mag_z;
-      mag_bulge = mag_z_bulge;
-      break;
-    case J:
-      mag = mag_J;
-      mag_bulge = mag_J_bulge;
-      break;
-    case Ks:
-      mag = mag_Ks;
-      mag_bulge = mag_Ks_bulge;
-      break;
-    case H:
-      mag = mag_H;
-      mag_bulge = mag_H_bulge;
-      break;
-      
-    case EUC_VIS:
-      mag = mag_i;
-      mag_bulge = mag_i_bulge;
-      break;
-    case EUC_J:
-      mag = mag_J;
-      mag_bulge = mag_J_bulge;
-      break;
-    case EUC_H:
-      mag = mag_H;
-      mag_bulge = mag_H_bulge;
-      break;
-    default:
-      throw std::invalid_argument("band not supported");
-      break;
-  }
+   
+   mag = mag_map[band];
+   mag_bulge = bulge_mag_map[band];
   
   renormalize();
 }
@@ -405,8 +202,9 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
   // extra cersic component
   //double index = 4 + 3*(ran()-0.5)*2;
   
-  double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
-  
+  //double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  double index = ran() + 3.5 ;
+
   double q = 1 + (0.5-1)*ran();
   
   spheroid = new SourceSersic(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta);
@@ -528,57 +326,13 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   return sb;
 }
 
-void SourceOverzierPlus::setBand(Band band){
+void SourceOverzierPlus::changeBand(Band band){
 
-  switch(band){
-    case SDSS_U:
-      mag = mag_u;
-      mag_bulge = mag_u_bulge;
-      break;
-    case SDSS_G:
-      mag = mag_g;
-      mag_bulge = mag_g_bulge;
-      break;
-    case SDSS_R:
-      mag = mag_r;
-      mag_bulge = mag_r_bulge;
-      break;
-    case SDSS_I:
-      mag = mag_i;
-      mag_bulge = mag_i_bulge;
-      break;
-    case SDSS_Z:
-      mag = mag_z;
-      mag_bulge = mag_z_bulge;
-      break;
-    case J:
-      mag = mag_J;
-      mag_bulge = mag_J_bulge;
-      break;
-    case Ks:
-      mag = mag_Ks;
-      mag_bulge = mag_Ks_bulge;
-      break;
-      
-    case EUC_VIS:
-      mag = mag_i;
-      mag_bulge = mag_i_bulge;
-      break;
-    case EUC_J:
-      mag = mag_J;
-      mag_bulge = mag_J_bulge;
-      break;
-    case EUC_H:
-      mag = mag_H;
-      mag_bulge = mag_H_bulge;
-      break;
-      
-    default:
-      throw std::invalid_argument("band not supported");
-      break;
-  }
+  SourceOverzier::changeBand(band);
   
-  SourceOverzier::renormalize();
+  //mag = mag_map.at(band);
+  //mag_bulge = bulge_mag_map.at(band);
+  //SourceOverzier::renormalize();
   if(Reff > 0.0){
     spheroid->setMag(mag_bulge);
   }
@@ -594,15 +348,24 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     
     PosType tmp = 0.1*(2*ran()-1.);
     
-    setUMag(getMag(SDSS_U) + tmp);
+    for(auto mag = mag_map.begin() ; mag != mag_map.end() ; ++mag){
+      mag->second = mag->second + tmp;
+    }
+    
+    for(auto mag = bulge_mag_map.begin() ; mag != bulge_mag_map.end() ; ++mag){
+      mag->second = mag->second + tmp;
+    }
+
+    /*
+     setUMag(getMag(SDSS_U) + tmp);
      setGMag(getMag(SDSS_G) + tmp);
      setRMag(getMag(SDSS_R) + tmp);
      setIMag(getMag(SDSS_I) + tmp);
      setZMag(getMag(SDSS_Z) + tmp);
      setJMag(getMag(J) + tmp);
      setKMag(getMag(Ks) + tmp);
-     mag += tmp;
-     
+     */
+    mag += tmp;
     
     PA = pi*ran();
     inclination = 0.9*pi/2*ran();

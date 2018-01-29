@@ -227,6 +227,7 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 		addr[19] = &i1;
 		addr[20] = &i2;
 
+    /*
 		switch (band){
 		case SDSS_U:
 			mag = SDSS_u;
@@ -260,20 +261,12 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 			mag = Ks_band;
 			mag_bulge = Ks_band_Bulge;
 			break;
-		/*case i1:
-			mag = i1;
-			mag_bulge = i1_Bulge;
-			break;
-		case i2:
-			mag = i2;
-			mag_bulge = i2_Bulge;
-			break;*/
 		default:
 			std::cout << "Requested band is not an available option." << std::endl;
 			ERROR_MESSAGE();
       throw std::invalid_argument("band not supported");
 
-		}
+		}*/
     
     color_cat << GalID << "  " << z_app << "  " << SDSS_u << "  " <<SDSS_g << "  " <<SDSS_r << "  " <<
     SDSS_i << "  " << SDSS_z << "  " << J_band << "  " << H_band << "  " << Ks_band <<
@@ -311,28 +304,41 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
       }
       
 			/***************************/
-			galaxies.push_back(
-                         SourceOverzierPlus(mag,mag_bulge,Ref,Rh
-                                            ,pa,inclination,HaloID,z_cosm,theta,ran)
-			);
+			galaxies.emplace_back(mag,mag_bulge,Ref,Rh
+                              ,pa,inclination,HaloID,z_cosm,theta,ran);
 
-			galaxies.back().setUMag(SDSS_u);
+			galaxies.back().setMag(SDSS_U,SDSS_u);
       galaxies.back().setMagBulge(SDSS_U,SDSS_u_Bulge);
-			galaxies.back().setGMag(SDSS_g);
+			galaxies.back().setMag(SDSS_G,SDSS_g);
       galaxies.back().setMagBulge(SDSS_G,SDSS_g_Bulge);
-			galaxies.back().setRMag(SDSS_r);
+			galaxies.back().setMag(SDSS_R,SDSS_r);
       galaxies.back().setMagBulge(SDSS_R,SDSS_r_Bulge);
-			galaxies.back().setIMag(SDSS_i);
+			galaxies.back().setMag(SDSS_I,SDSS_i);
       galaxies.back().setMagBulge(SDSS_I,SDSS_i_Bulge);
-			galaxies.back().setZMag(SDSS_z);
+			galaxies.back().setMag(SDSS_Z,SDSS_z);
       galaxies.back().setMagBulge(SDSS_Z,SDSS_z_Bulge);
-			galaxies.back().setJMag(J_band);
+			galaxies.back().setMag(J,J_band);
       galaxies.back().setMagBulge(J,J_band_Bulge);
-			galaxies.back().setHMag(H_band);
+			galaxies.back().setMag(H,H_band);
       galaxies.back().setMagBulge(H,H_band_Bulge);
-			galaxies.back().setKMag(Ks_band);
+			galaxies.back().setMag(Ks,Ks_band);
       galaxies.back().setMagBulge(Ks,Ks_band_Bulge);
 
+      galaxies.back().setMag(Ks,Ks_band);
+      galaxies.back().setMagBulge(Ks,Ks_band_Bulge);
+
+      galaxies.back().changeBand(band);
+      
+      // cluge  ????
+      // The Euclid bands are not actually read in
+      galaxies.back().setMag(EUC_VIS,SDSS_i);
+      galaxies.back().setMagBulge(EUC_VIS,SDSS_i_Bulge);
+      galaxies.back().setMag(EUC_H,H_band);
+      galaxies.back().setMagBulge(EUC_H,H_band_Bulge);
+      galaxies.back().setMag(EUC_J,J_band);
+      galaxies.back().setMagBulge(EUC_J,J_band_Bulge);
+
+      
 			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
 			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
 			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;

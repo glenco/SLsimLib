@@ -493,26 +493,17 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
  zsource=0;
  }
  */
-Band SourceShapelets::shape_band[10] = {F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I};
 
 void SourceShapelets::setActiveBand(Band band)
 {
-  if(band == EUC_VIS) band = SDSS_I;
-  if(band == EUC_Y) band = F110W;
-  if(band == EUC_J) band = F110W;
-  if(band == EUC_H) band = F160W;
-  for (int i = 0; i < 10; i++)
-  {
-    if (shape_band[i] == band)
-    {
-      mag = mags[i];
-      flux = fluxes[i];
-      return;
-    }
-  }
   
-  std::cout << "The band is not available! Available bands are F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I" << std::endl;
-  throw std::invalid_argument("band not supported");
+  mag = mag_map.at(band);
+  if (mag < 0.)
+      flux = std::numeric_limits<PosType>::epsilon();
+    else
+      flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  current_band = band;
+  return;
 }
 
 SourceShapelets::SourceShapelets(
@@ -593,6 +584,8 @@ SourceShapelets::SourceShapelets(
   flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
   
   NormalizeFlux();
+  
+  current_band = NoBand;
 }
 
 SourceShapelets::SourceShapelets(
@@ -625,35 +618,26 @@ SourceShapelets::SourceShapelets(
     exit(1);
   }
 
-  
   CCfits::PHDU& h0 = fp->pHDU();
   
   h0.readKey("BETA", source_r);
   source_r *= 0.03/180./60./60.*pi;
+  h0.readKey("SED_TYPE",sed_type);
+  
+  h0.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude
+  h0.readKey("MAG_V",mag_map[F606W]); // ACS F606W band magnitude
+  h0.readKey("MAG_I",mag_map[F775W]); // ACS F775W band magnitude
+  h0.readKey("MAG_Z",mag_map[F850LP]);// ACS F850LP band magnitude
+  h0.readKey("MAG_J",mag_map[F110W]); // NIC3 F110W band magnitude
+  h0.readKey("MAG_H",mag_map[F160W]);  // NIC3 F160W band magnitude
+  h0.readKey("MAG_u_KIDS",mag_map[KiDS_U]); // u band obtained from SED fitting
+  h0.readKey("MAG_g_KIDS",mag_map[KiDS_G]); // g band obtained from SED fitting
+  h0.readKey("MAG_r_KIDS",mag_map[KiDS_R]); // r band obtained from SED fitting
+  h0.readKey("MAG_i_KIDS",mag_map[KiDS_I]); // i band obtained from SED fitting
 
-  h0.readKey("MAG_B", mags[0]);
-  h0.readKey("MAG_V", mags[1]);
-  h0.readKey("MAG_I", mags[2]);
-  h0.readKey("MAG_Z", mags[3]);
-  h0.readKey("MAG_J", mags[4]);
-  h0.readKey("MAG_H", mags[5]);
-  h0.readKey("MAG_u_KIDS", mags[6]);
-  h0.readKey("MAG_g_KIDS", mags[7]);
-  h0.readKey("MAG_r_KIDS", mags[8]);
-  h0.readKey("MAG_i_KIDS", mags[9]);
-  
-  for (int i = 0; i < 10; i++)
-  {
-    if (mags[i] < 0.)
-      fluxes[i] = std::numeric_limits<PosType>::epsilon();
-    else
-      fluxes[i] = pow(10,-0.4*(mags[i]+48.6))*inv_hplanck;
-  }
-  
   // by default, the magnitude is the one in the i band,
   // whose image has been used for shapelets decomposition
-  mag = mags[2];
-  flux = fluxes[2];
+  setActiveBand(KiDS_I);
   
   h0.readKey("REDSHIFT", zsource);
   h0.readKey("ID", id);
@@ -664,6 +648,12 @@ SourceShapelets::SourceShapelets(
   std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
   exit(1);
 #endif
+  
+  // ??? kluge
+  mag_map[EUC_VIS] = mag_map.at(KiDS_I);
+  mag_map[EUC_Y] = mag_map.at(F110W);
+  mag_map[EUC_J] = mag_map.at(F110W);
+  mag_map[EUC_H] = mag_map.at(F160W);
   
   NormalizeFlux();
 }
@@ -738,7 +728,6 @@ void SourceShapelets::NormalizeFlux()
     }
   }
   coeff_flux *= sqrt(pi)*source_r;
-  
 }
 
 /// Default constructor. Reads in sources from the default catalog. No magnitude limit.
@@ -764,7 +753,7 @@ void SourceMultiShapelets::readCatalog()
     if (shap_input)
     {
       SourceShapelets s(shap_file.c_str());
-      s.setActiveBand(band);
+      //s.setActiveBand(band);
       if (s.getMag() > 0. && s.getMag() < mag_limit)
         galaxies.push_back(s);
       shap_input.close();
@@ -778,7 +767,7 @@ void SourceMultiShapelets::readCatalog()
     }
     
   }
-  
+  band = galaxies[0].getBand();
 }
 
 

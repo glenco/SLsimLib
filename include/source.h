@@ -174,9 +174,10 @@ public:
     flux = s.flux;
     mag = s.mag;
     ang = s.ang;
-    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
-    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    mag_map = s.mag_map;
     coeff_flux = s.coeff_flux;
+    current_band = s.current_band;
+    sed_type = s.sed_type;
   }
 
   SourceShapelets & operator= (const SourceShapelets &s){
@@ -190,9 +191,10 @@ public:
     flux = s.flux;
     mag = s.mag;
     ang = s.ang;
-    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
-    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    mag_map = s.mag_map;
     coeff_flux = s.coeff_flux;
+    current_band = s.current_band;
+    sed_type = s.sed_type;
 
     return *this;
   }
@@ -202,11 +204,15 @@ public:
 	inline PosType getTotalFlux() const {return flux;}
 	inline PosType getRadius() const {return source_r*10.;}
 	inline PosType getMag() const {return mag;}
-	inline PosType getMag(Band band) const {return mags[band];}
-  inline PosType getID() const {return id;}
+	inline PosType getMag(Band band) const {return mag_map.at(band);}
+  inline Band getBand() const{return current_band;}
+  inline long getID() const {return id;}
+  inline float getSEDtype() const {return sed_type;}
   void setActiveBand(Band band);
 
 private:
+  Band current_band;
+  float sed_type = -1;
 	void assignParams(InputParams& params);
   void Hermite(std::vector<PosType> &hg,int N, PosType x);
 
@@ -216,10 +222,8 @@ private:
   int id;
 	PosType flux, mag;
 	PosType ang;
-  PosType mags[10];
-  PosType fluxes[10];
+  std::map<Band,PosType> mag_map;
   PosType coeff_flux;
-  static Band shape_band[10];
 };
 
 /// A uniform surface brightness circular source.
