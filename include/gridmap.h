@@ -60,6 +60,9 @@ struct GridMap{
   
   /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
   PosType EisnsteinArea() const;
+
+  /// flux weighted magnification with current surface brightness averaged on the image plane
+  PosType magnification() const;
   
   Point_2d getCenter(){return center;}
   

@@ -413,3 +413,13 @@ PosType GridMap::EisnsteinArea() const{
   return count*x_range*x_range/Ngrid_init/Ngrid_init;
 }
 
+PosType GridMap::magnification() const{
+  double mag = 0,flux = 0;
+  size_t N = Ngrid_init*Ngrid_init2;
+  for(size_t i=0;i<N;++i){
+    mag += i_points[i].surface_brightness/i_points[i].invmag;
+    flux += i_points[i].surface_brightness;
+  }
+  return mag/flux;
+}
+
