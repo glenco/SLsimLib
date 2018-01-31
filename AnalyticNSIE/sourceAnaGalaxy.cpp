@@ -177,7 +177,7 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 			break;
 
 		for(int l=0;l<ncolumns; l++){
-			int pos = myline.find(f);
+			long pos = myline.find(f);
 			strg.assign(myline,0,pos);
 			buffer << strg;
 			if(l == 0 || l == 1 ){

@@ -88,7 +88,7 @@ public:
   */
 	inline PosType getMinSize(PosType f) {return std::min(1.678*Reff*fabs(cos(inclination))*pow(-log (f)/7.67,4),Rh*(-log (f)/1.67));}
 
-  static PosType *getx(SourceOverzier &sourceo){return sourceo.getX();}
+  static PosType *getx(SourceOverzier &sourceo){return sourceo.source_x.x;}
 
 protected:
   
@@ -146,7 +146,7 @@ public:
   PosType getSphPA() const {return spheroid->getPA();}
   
   void changeBand(Band band);
-  static PosType *getx(SourceOverzierPlus &sourceo){return sourceo.getX();}
+  static PosType* getx(SourceOverzierPlus &sourceo){return sourceo.source_x.x;}
 
   /// Reset the position of the source in radians
   virtual inline void setX(PosType *xx){

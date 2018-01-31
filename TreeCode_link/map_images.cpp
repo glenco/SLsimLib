@@ -189,7 +189,7 @@ void ImageFinding::map_images(
 		if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		//ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
-		ImageFinding::find_images_kist(lens,source->getX(),xmin,grid,Nimages,imageinfo,&Nimagepoints
+		ImageFinding::find_images_kist(lens,source->getX().x,xmin,grid,Nimages,imageinfo,&Nimagepoints
 				,0,false,0,verbose);
 		if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
 		Nsources = 1;
@@ -418,7 +418,7 @@ void ImageFinding::map_images(
 	/ *******************************************************/
 
 	//PointsWithinKist(grid->s_tree,source->getX(),source->source_r_out,imageinfo->imagekist,0);
-	grid->s_tree->PointsWithinKist_iter(source->getX(),0,source->getRadius(),imageinfo[0].imagekist);
+	grid->s_tree->PointsWithinKist_iter(source->getX().x,0,source->getRadius(),imageinfo[0].imagekist);
 
 
 	// move from source plane to image plane
@@ -617,7 +617,7 @@ void ImageFinding::map_images_fixedgrid(
 
   PosType x[2];
   
-  grid->s_tree->PointsWithinKist(source->getX(), xmax, imageinfo[0].imagekist, 0);
+  grid->s_tree->PointsWithinKist(source->getX().x, xmax, imageinfo[0].imagekist, 0);
   
   bool move;
   // Assign surface brightnesses and remove points from image without flux

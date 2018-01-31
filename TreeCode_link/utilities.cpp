@@ -872,16 +872,16 @@ std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
   
   return *current;
 }
-double Utilities::XYcsvLookUp::Ymin(double x){
+double Utilities::XYcsvLookUp::Ymin(double x) const{
   long xbin = Utilities::locate(Xborders, x);
   return (*borders[xbin])[Yindex];
 }
-double Utilities::XYcsvLookUp::Ymax(double x){
+double Utilities::XYcsvLookUp::Ymax(double x) const{
   long xbin = Utilities::locate(Xborders, x);
   return (*(borders[xbin+1]-1))[Yindex];
 }
 
-double Utilities::XYcsvLookUp::operator[](std::string label){
+double Utilities::XYcsvLookUp::operator[](std::string label) const{
   int i = 0;
   for(auto name : column_names){
     if(name == label){

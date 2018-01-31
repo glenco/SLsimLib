@@ -1619,26 +1619,26 @@ namespace Utilities
     std::vector<double> find(double x,double y);
     
     /// returns the current galxay's property by label
-    double operator[](std::string label);
+    double operator[](std::string label) const;
     
     /// returns the ith entry for the current galaxy
-    double operator[](int i){
+    double operator[](int i) const{
       return (*current)[i];
     }
     /// returns the redshift of the current galaxy
-    double getX(){
+    double getX() const {
       return (*current)[Xindex];
     }
     /// returns the log(mass) of the current halo
-    double getY(){
+    double getY() const {
       return (*current)[Yindex];
     }
     /// returns a vector of the entries for the current galaxy
-    std::vector<double> record(){
+    std::vector<double> record() const{
       return *current;
     }
     /// returns a vector of the entries for the current galaxy
-    std::vector<double> operator*(){
+    std::vector<double> operator*() const {
       return *current;
     }
 
@@ -1649,14 +1649,16 @@ namespace Utilities
       if(current != data.begin() ) --current;
     }
     /// returns labels of the columns from the data file
-    std::vector<std::string> labels(){
+    std::vector<std::string> labels() const{
       return column_names;
     }
     
-    double Xmin(){return xmin;}
-    double Xmax(){return xmax;}
-    double Ymin(double x);
-    double Ymax(double x);
+    double Xmin() const {return xmin;}
+    double Xmax() const {return xmax;}
+    /// returns minimum Y value in x-bin
+    double Ymin(double x) const;
+    /// returns maximum Y value in x-bin
+    double Ymax(double x) const;
     
     void printcurrent(){
       int i = 0;

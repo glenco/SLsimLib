@@ -93,7 +93,7 @@ public:
 
 
 	/// Return angular position of current source.
-	PosType *getX(){return galaxies[index].getX();}
+	Point_2d getX(){return galaxies[index].getX();}
 	/// Set angular position of current source.
 	void setX(PosType my_theta[2]){galaxies[index].setX(my_theta);}
 	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
@@ -202,7 +202,7 @@ public:
 	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
     /// Return angular position of current source.
-	PosType *getX(){return galaxies[index].getX();}
+	Point_2d getX(){return galaxies[index].getX();}
 	/// Set angular position of current source.
 	void setX(PosType my_theta[2]){galaxies[index].setX(my_theta);}
 	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}

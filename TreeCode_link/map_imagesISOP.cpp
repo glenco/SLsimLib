@@ -66,7 +66,7 @@ void ImageFinding::map_imagesISOP(
   if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "
     << grid->getNumberOfPoints() << std::endl;
     
-  ImageFinding::find_images_kist(lens,source->getX(),source->getRadius(),grid,Nimages
+  ImageFinding::find_images_kist(lens,source->getX().x,source->getRadius(),grid,Nimages
                                  ,imageinfo,&Nimagepoints,0.0,true,0,verbose);
   
   //assert(*Nimages == 1);

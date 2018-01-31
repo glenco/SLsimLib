@@ -37,7 +37,7 @@ Observation::Observation(Telescope tel_name)
       seeing = 0.18;
       pix_size = .1/60./60./180.*pi;
       break;
-    case Euclid_Y:
+   case Euclid_Y:
       diameter = 119.;
       transmission = 0.0961;
       exp_time = 264.;

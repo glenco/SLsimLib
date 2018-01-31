@@ -68,7 +68,7 @@ public:
   /// Reset the radius of the source in radians
 	virtual void setRadius(PosType my_radius){source_r = my_radius;}
   /// position of source in radians
-  virtual inline PosType* getX(){return source_x.x;}
+  virtual inline Point_2d getX(){return source_x;}
   /// position of source in radians
   virtual inline void getX(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
   /// position of source in radians
@@ -92,7 +92,7 @@ public:
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
 	PosType integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
 
-  static PosType *getx(Source &source){return source.getX();}
+  static PosType *getx(Source &source){return source.source_x.x;}
   
 protected:
 	virtual void assignParams(InputParams& params) = 0;

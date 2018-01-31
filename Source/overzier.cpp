@@ -231,7 +231,7 @@ Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
 {
   spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff(),p.spheroid->getPA()
                               ,p.spheroid->getSersicIndex(),p.spheroid->getAxesRatio()
-                              ,p.spheroid->getZ(),p.spheroid->getX());
+                              ,p.spheroid->getZ(),p.spheroid->getX().x);
   modes = p.modes;
 }
 
@@ -250,7 +250,7 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
   
   spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff(),p.spheroid->getPA()
                               ,p.spheroid->getSersicIndex(),p.spheroid->getAxesRatio()
-                              ,p.spheroid->getZ(),p.spheroid->getX());
+                              ,p.spheroid->getZ(),p.spheroid->getX().x);
   modes = p.modes;
   
   return *this;
@@ -409,7 +409,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   double q = 1 + (0.5-1)*ran();
   
   delete spheroid;
-  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getX());
+  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getX().x);
   
   
   for(PosType &mod : modes){
