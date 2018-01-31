@@ -149,15 +149,15 @@ public:
   static PosType* getx(SourceOverzierPlus &sourceo){return sourceo.source_x.x;}
 
   /// Reset the position of the source in radians
-  virtual inline void setX(PosType *xx){
+  virtual inline void setTheta(PosType *xx){
     source_x[0] = xx[0];
     source_x[1] = xx[1];
-    spheroid->setX(xx);
+    spheroid->setTheta(xx);
   }
-  virtual void setX(PosType my_x,PosType my_y){
+  virtual void setTheta(PosType my_x,PosType my_y){
     source_x[0] = my_x;
     source_x[1] = my_y;
-    spheroid->setX(my_x,my_y);
+    spheroid->setTheta(my_x,my_y);
   }
   void setBulgeAxisRatio(PosType q){
     spheroid->setAxesRatio(q);

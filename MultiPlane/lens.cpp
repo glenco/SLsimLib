@@ -1895,7 +1895,6 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
 		std::cout << "Can't open file " << field_input_sim_file << std::endl;
     ERROR_MESSAGE();
     throw std::runtime_error(" Cannot open file.");
-		exit(1);
 	}
   
 	// skip through header information in data file

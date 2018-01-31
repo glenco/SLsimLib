@@ -68,15 +68,15 @@ public:
   /// Reset the radius of the source in radians
 	virtual void setRadius(PosType my_radius){source_r = my_radius;}
   /// position of source in radians
-  virtual inline Point_2d getX(){return source_x;}
+  virtual inline Point_2d getTheta(){return source_x;}
   /// position of source in radians
-  virtual inline void getX(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
+  virtual inline void getTheta(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
   /// position of source in radians
-  virtual inline void getX(Point_2d &x) const {x = source_x;}
+  virtual inline void getTheta(Point_2d &x) const {x = source_x;}
   
   /// Reset the position of the source in radians
-	virtual inline void setX(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
-	virtual void setX(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
+	virtual inline void setTheta(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
+	virtual void setTheta(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
   
 	/// In the case of a single plane lens, the ratio of angular size distances
 	virtual inline PosType getDlDs(){return DlDs;}

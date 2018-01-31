@@ -48,7 +48,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
-	readDataFile(ran);
+	readDataFileMillenn(ran);
 	index = 0;
   searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
   //searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,3,true);
@@ -60,7 +60,7 @@ SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 }
 
 /// read in galaxies from a Millennium simulation file
-void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
+void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran){
 
 	//int type;
 	//long galid,haloid;
@@ -399,10 +399,10 @@ void SourceMultiAnaGalaxy::multiplier(
 	PosType x1[2],x2[2],theta[2];
 
 	for(unsigned long i=0;i<Nold;++i){
-		if(galaxies[i].getX()[0] < x1[0]) x1[0] = galaxies[i].getX()[0];
-		if(galaxies[i].getX()[0] > x2[0]) x2[0] = galaxies[i].getX()[0];
-		if(galaxies[i].getX()[1] < x1[1]) x1[1] = galaxies[i].getX()[1];
-		if(galaxies[i].getX()[1] > x2[1]) x2[1] = galaxies[i].getX()[1];
+		if(galaxies[i].getTheta()[0] < x1[0]) x1[0] = galaxies[i].getTheta()[0];
+		if(galaxies[i].getTheta()[0] > x2[0]) x2[0] = galaxies[i].getTheta()[0];
+		if(galaxies[i].getTheta()[1] < x1[1]) x1[1] = galaxies[i].getTheta()[1];
+		if(galaxies[i].getTheta()[1] > x2[1]) x2[1] = galaxies[i].getTheta()[1];
 
 		if(galaxies[i].getZ() > z && galaxies[i].getMag() < mag_cut) ++NtoAdd;
 	}

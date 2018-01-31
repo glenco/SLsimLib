@@ -78,7 +78,7 @@ public:
   template <typename T>
   PosType AddSource_parallel(T &source,int oversample){
     Point_2d s_center;
-    source.getX(s_center);
+    source.getTheta(s_center);
     
     if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
     if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;

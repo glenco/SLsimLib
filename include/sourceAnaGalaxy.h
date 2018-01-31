@@ -93,10 +93,10 @@ public:
 
 
 	/// Return angular position of current source.
-	Point_2d getX(){return galaxies[index].getX();}
+	Point_2d getTheta(){return galaxies[index].getTheta();}
 	/// Set angular position of current source.
-	void setX(PosType my_theta[2]){galaxies[index].setX(my_theta);}
-	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
+	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
+	void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
 
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
@@ -163,7 +163,7 @@ private:
   TreeSimpleVec<SourceOverzierPlus> *searchtree;
 	std::string input_gal_file;
 
-	void readDataFile(Utilities::RandomNumbers_NR &ran);
+	void readDataFileMillenn(Utilities::RandomNumbers_NR &ran);
 	void assignParams(InputParams& params);
 
   PosType rangex[2],rangey[2];
@@ -202,10 +202,10 @@ public:
 	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
 
     /// Return angular position of current source.
-	Point_2d getX(){return galaxies[index].getX();}
+	Point_2d getTheta(){return galaxies[index].getTheta();}
 	/// Set angular position of current source.
-	void setX(PosType my_theta[2]){galaxies[index].setX(my_theta);}
-	void setX(PosType my_x,PosType my_y){galaxies[index].setX(my_x, my_y);}
+	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
+	void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
 
     /// Return redshift of current source.
 	PosType getZ() const {return galaxies[index].getZ();}

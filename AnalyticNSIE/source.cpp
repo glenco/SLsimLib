@@ -189,23 +189,23 @@ void SourceBLR::printSource(){
 }
 
 PosType SourceUniform::SurfaceBrightness(PosType *y){
-  return (PosType)( (pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2)) < source_r*source_r );
+  return (PosType)( (pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2)) < source_r*source_r );
 }
 
 PosType SourceGaussian::SurfaceBrightness(PosType *y){
-  return exp( -(pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))/source_gauss_r2 );
+  return exp( -(pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))/source_gauss_r2 );
 }
 // surface brightness for models of the Broad Line Region
 PosType SourceBLRDisk::SurfaceBrightness(PosType *y){
-  PosType x[2] = {y[0]-getX()[0],y[1]-getX()[1]};
+  PosType x[2] = {y[0]-getTheta()[0],y[1]-getTheta()[1]};
   return blr_surface_brightness_disk(x,this);
 }
 
 PosType SourceBLRSph1::SurfaceBrightness(PosType *y){
-  return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
+  return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
 PosType SourceBLRSph2::SurfaceBrightness(PosType *y){
-  return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
+  return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
 
 //void in_source(PosType *y_source,ListHndl sourcelist){
@@ -519,9 +519,9 @@ SourceShapelets::SourceShapelets(
   zsource = my_z;
   mag = my_mag;
   if(my_center != NULL)
-    setX(my_center[0], my_center[1]);
+    setTheta(my_center[0], my_center[1]);
   else
-    setX(0, 0);
+    setTheta(0, 0);
   ang = my_ang;
   n1 = sqrt(my_coeff.size());
   n2 = n1;
@@ -545,9 +545,9 @@ SourceShapelets::SourceShapelets(
   zsource = my_z;
   mag = my_mag;
   if(my_center != NULL)
-    setX(my_center[0], my_center[1]);
+    setTheta(my_center[0], my_center[1]);
   else
-    setX(0, 0);
+    setTheta(0, 0);
   ang = my_ang;
   
 #ifdef ENABLE_FITS
@@ -596,9 +596,9 @@ SourceShapelets::SourceShapelets(
 :Source()
 {
   if(my_center != NULL)
-    setX(my_center[0], my_center[1]);
+    setTheta(my_center[0], my_center[1]);
   else
-    setX(0, 0);
+    setTheta(0, 0);
   ang = my_ang;
   
 #ifdef ENABLE_FITS
@@ -651,7 +651,7 @@ SourceShapelets::SourceShapelets(
   
   // ??? kluge
   mag_map[EUC_VIS] = mag_map.at(KiDS_I);
-  mag_map[EUC_Y] = mag_map.at(F110W);
+  //mag_map[EUC_Y] = mag_map.at(F110W);
   mag_map[EUC_J] = mag_map.at(F110W);
   mag_map[EUC_H] = mag_map.at(F160W);
   

@@ -1989,7 +1989,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 
 PosType PixelMap::AddSource(Source &source){
   Point_2d s_center;
-  source.getX(s_center);
+  source.getTheta(s_center);
   
   if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
@@ -2012,7 +2012,7 @@ PosType PixelMap::AddSource(Source &source){
 
 PosType PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
-  source.getX(s_center);
+  source.getTheta(s_center);
   
   if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
@@ -2116,7 +2116,7 @@ void PixelMap::recenter(PosType c[2] /// new center
 /*
 void PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
-  source.getX(s_center);
+  source.getTheta(s_center);
   
   if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return;
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;

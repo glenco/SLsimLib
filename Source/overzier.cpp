@@ -113,9 +113,9 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 	
 	// position
 	if(my_theta != NULL)
-		setX(my_theta[0], my_theta[1]);
+		setTheta(my_theta[0], my_theta[1]);
 	else
-		setX(0, 0);
+		setTheta(0, 0);
 }
 
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
@@ -124,8 +124,8 @@ PosType SourceOverzier::SurfaceBrightness(
 		){
 	// position relative to center
 	PosType x[2];
-	x[0] = y[0]-getX()[0];
-	x[1] = y[1]-getX()[1];
+	x[0] = y[0]-getTheta()[0];
+	x[1] = y[1]-getTheta()[1];
 	
 	PosType R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
 	R = sqrt(R);
@@ -231,7 +231,7 @@ Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
 {
   spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff(),p.spheroid->getPA()
                               ,p.spheroid->getSersicIndex(),p.spheroid->getAxesRatio()
-                              ,p.spheroid->getZ(),p.spheroid->getX().x);
+                              ,p.spheroid->getZ(),p.spheroid->getTheta().x);
   modes = p.modes;
 }
 
@@ -250,7 +250,7 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
   
   spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff(),p.spheroid->getPA()
                               ,p.spheroid->getSersicIndex(),p.spheroid->getAxesRatio()
-                              ,p.spheroid->getZ(),p.spheroid->getX().x);
+                              ,p.spheroid->getZ(),p.spheroid->getTheta().x);
   modes = p.modes;
   
   return *this;
@@ -260,8 +260,8 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
 PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   // position relative to center
   Point_2d x;
-  x[0] = y[0]-getX()[0];
-  x[1] = y[1]-getX()[1];
+  x[0] = y[0]-getTheta()[0];
+  x[1] = y[1]-getTheta()[1];
   
   PosType xlength = x.length();
   
@@ -409,7 +409,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   double q = 1 + (0.5-1)*ran();
   
   delete spheroid;
-  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getX().x);
+  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getTheta().x);
   
   
   for(PosType &mod : modes){

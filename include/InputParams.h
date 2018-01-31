@@ -70,7 +70,7 @@ typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 /// Photometric bands
 enum Band {NoBand,EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z
-  ,KiDS_U,KiDS_G,KiDS_R,KiDS_I
+  ,KiDS_U,KiDS_G,KiDS_R,KiDS_I,DES_R,DES_G,DES_I,DES_Z
   ,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
 std::ostream &operator<<(std::ostream &os, Band const &p);
 

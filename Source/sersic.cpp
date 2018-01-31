@@ -26,7 +26,7 @@ SourceSersic::SourceSersic(
 	setZ(my_z);
 	
 	if(my_theta)
-		setX(my_theta[0], my_theta[1]);
+		setTheta(my_theta[0], my_theta[1]);
 
 	if(q > 1)
 		throw std::invalid_argument("Error: q must be < 1!");
