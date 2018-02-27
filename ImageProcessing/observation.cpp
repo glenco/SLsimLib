@@ -470,9 +470,6 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
     if (unit==flux) rms *= pow(10,-0.4*mag_zeropoint);
     
     return rms;
-
-    
-    
 }
 
 /// Applies realistic noise (read-out + Poisson) on an image
@@ -514,6 +511,20 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 		}
 	}
 	return outmap;
+}
+
+void Observation::AddNoiseFromCorr(PixelMap &input,PixelMap &output
+                          ,PixelMap &sqrt_coor_noise
+                          ,Utilities::RandomNumbers_NR &ran
+                          ){
+  
+  size_t N = output.size();
+  for(size_t i = 0 ; i < N ; ++i)
+    output[i] = ran.gauss();
+  
+  output.convolve(sqrt_coor_noise);
+  
+  output += input;
 }
 
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope pixel counts

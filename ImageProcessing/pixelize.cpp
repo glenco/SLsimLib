@@ -217,7 +217,7 @@ PixelMap::PixelMap(
           h0.readKey("PHYSICALSIZE",ps);
         }
         catch(CCfits::HDU::NoSuchKeyword){
-          std::cerr << "PixelMap input fits fiel must have header keywords:" << std::endl
+          std::cerr << "PixelMap input fits field must have header keywords:" << std::endl
           << " PHYSICALSIZE - size of map in degrees" <<std::endl
           << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
           exit(1);
@@ -1117,7 +1117,48 @@ void PixelMap::drawgrid(int N,PosType value){
     drawline(x1,x2,value);
   }
 }
-
+void PixelMap::drawPoints(std::vector<Point *> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i]->x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i]->x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i]->x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawPoints(std::vector<Point> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i].x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i].x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawPoints(std::vector<Point_2d> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i].x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i].x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+  
+}
 /**
  * \brief Draws a square
  */

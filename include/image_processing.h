@@ -180,54 +180,17 @@ public:
   
   /// draw a grid on the image that divides the each demension into N cells
   void drawgrid(int N,PosType value);
-  void drawPoints(std::vector<Point *> points,PosType size,PosType value){
-    if(size < resolution*3){
-      size_t index;
-      for(int i=0;i<points.size();++i){
-        if(inMapBox(points[i]->x)){
-          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-          index = find_index(points[i]->x);
-          map[index] = value;
-        }
-      }
-    }else
-      for(int i=0;i<points.size();++i) drawcircle(points[i]->x,0.01*rangeX,value);
-    
-  }
-  void drawPoints(std::vector<Point> points,PosType size,PosType value){
-    if(size < resolution*3){
-      size_t index;
-      for(int i=0;i<points.size();++i){
-        if(inMapBox(points[i].x)){
-          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-          index = find_index(points[i].x);
-          map[index] = value;
-        }
-      }
-    }else
-      for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
-    
-  }
+  void drawPoints(std::vector<Point *> points,PosType size,PosType value);
+  
+  void drawPoints(std::vector<Point> points,PosType size,PosType value);
+  
   void drawCurve(std::vector<Point *> points,PosType value){
     for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
   }
   void drawCurve(std::vector<Point> points,PosType value){
     for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
   }
-  void drawPoints(std::vector<Point_2d> points,PosType size,PosType value){
-    if(size < resolution*3){
-      size_t index;
-      for(int i=0;i<points.size();++i){
-        if(inMapBox(points[i].x)){
-          //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-          index = find_index(points[i].x);
-          map[index] = value;
-        }
-      }
-    }else
-      for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
-    
-  }
+  void drawPoints(std::vector<Point_2d> points,PosType size,PosType value);
   void drawCurve(std::vector<Point_2d> points,PosType value){
     for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
   }
@@ -254,7 +217,6 @@ public:
   }
 
   void AdaptiveSmooth(PosType value){
-    
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
     map = tmp;
   }
@@ -297,6 +259,47 @@ public:
   
   /// recenter the map without changing anything else
   void recenter(PosType c[2]);
+  
+  /** \brief convolve the image with a kernel.
+   
+   It is assumed that the size of the kernel is much smaller than the image and
+   that the kernal has the same pixel size as the image.
+   **/
+  void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0){
+    std::valarray<double> output(Nx*Ny);
+    
+    if( center_x == 0 ){
+      center_x = kernel.getNx()/2;
+      center_y = kernel.getNy()/2;
+    }
+    
+    size_t Nxk = kernel.getNx();
+    size_t Nyk = kernel.getNy();
+
+    for(size_t k1 = 0 ; k1 < Nx ; ++k1){
+      long bl1 = k1 - center_x;
+      
+      for(size_t k2 = 0 ; k2 < Ny ; ++k2){
+        long bl2 = k2 - center_y;
+ 
+        long k = k1 + Nx * k2;
+        output[k] = 0;
+        
+        for(size_t j = 0 ; j < Nyk ; ++j){
+          long kk2 = bl2 + j;
+          if(kk2 < 0 || kk2 > Ny-1) continue;
+
+          for(size_t i = 0; i < Nxk ; ++i){
+            long kk1 = bl1 + i;
+            if(kk1 < 0 || kk1 > Nx-1) continue;
+          
+            output[k] += map[ kk1 + Nx * kk2 ] * kernel[i + Nxk * j];
+        }
+      }
+    }
+  }
+  std::swap(map,output);
+}
 
 private:
 	std::valarray<double> map;
@@ -368,7 +371,9 @@ public:
 	Observation(Telescope tel_name);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample = 1.);
-	float getExpTime(){return exp_time;}
+
+  
+  float getExpTime(){return exp_time;}
 	int getExpNum(){return exp_num;}
 	float getBackMag(){return back_mag;}
 	float getDiameter(){return diameter;}
@@ -386,7 +391,12 @@ public:
 	PixelMap Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
   double flux_convertion_factor();
 	PixelMap Convert_back(PixelMap &map);
-    void setExpTime(float time){exp_time = time;}
+  void setExpTime(float time){exp_time = time;}
+
+  static void AddNoiseFromCorr(PixelMap &input,PixelMap &output
+                        ,PixelMap &sqrt_coor_noise
+                        ,Utilities::RandomNumbers_NR &ran
+                        );
 
 private:
 	float diameter;  // diameter of telescope (in cm)
@@ -403,9 +413,11 @@ private:
 	bool telescope; // was the observation created from a default telescope?
 
 	PixelMap AddNoise(PixelMap &pmap,long *seed);
+  
 	PixelMap PhotonToCounts(PixelMap &pmap);
 	PixelMap ApplyPSF(PixelMap &pmap);
 
+  PixelMap noise_correlation;
 };
 
 void pixelize(double *map,long Npixels,double range,double *center
