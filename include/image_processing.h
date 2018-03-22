@@ -38,7 +38,9 @@ public:
 	PixelMap(const double* center, std::size_t Npixels, double resolution);
 	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution);
 	PixelMap(std::string fitsfilename,double resolution = -1);
-	~PixelMap();
+  ~PixelMap(){
+    map.resize(0);
+  };
 	
 	PixelMap& operator=(PixelMap other);
   
@@ -68,11 +70,16 @@ public:
   
   /** \brief copy a PixelMap into this one.
    
-   The size, resolutio and center of the pixel maps are not changed and do
+   The size, resolution and center of the pixel maps are not changed and do
    not need to match.  The input pixel map is added while conserving the area integral
    of the map within the area of overlaping pixels.
-  **/
+   **/
   void copy_in(const PixelMap& pmap);
+  /** \brief copy a PixelMap that must be the same without creating a new one..
+   
+   This avoids calling a any constructor or destructor.
+   **/
+  void duplicate(const PixelMap& pmap);
 
   /// Adds source to map.  This version breaks pixels up into blocks and does them in seporate threads.
   template <typename T>
@@ -228,7 +235,9 @@ public:
    in each group plus the end of the list so that heads[i] to heads[i+1] is a group for 0 <= i <= ngroups.
    The number of groups is returned which is also heads.size() - 1
    */
-  int count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const;
+  //int count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const;
+  int count_islands(std::vector<size_t> &pixel_index) const;
+
   /// get a list of pixels above value
   size_t threshold(std::list<size_t> &pixel_index,PosType value){
     for(size_t i=0;i<map.size();++i) if(value < map[i]) pixel_index.push_back(i);

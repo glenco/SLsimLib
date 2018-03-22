@@ -331,17 +331,19 @@ PixelMap::PixelMap(
         map[ix+Nx*iy] += area*pmap.map[old_ix+old_Nx*old_iy];
       }
     }
-		}
+  }
 }
 
-PixelMap::~PixelMap()
-{
-  map.resize(0);
-}
+//PixelMap::~PixelMap(){}
+//{
+//  map.resize(0);
+//}
 
 PixelMap& PixelMap::operator=(PixelMap other)
 {
-  if(this != &other) PixelMap::swap(*this, other);
+  if(this != &other){
+    PixelMap::swap(*this, other);
+  }
   return *this;
 }
 
@@ -679,6 +681,47 @@ bool PixelMap::pixels_are_neighbors(size_t i,size_t j) const{
   return true;
 }
 
+int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
+  
+  if(pixel_index.size() == 0) return 0;
+  if(pixel_index.size() == 1) return 1;
+  
+  size_t *end = pixel_index.data() + pixel_index.size() + 1;
+  size_t *current = pixel_index.data();
+  int Ngroups = 0;
+  size_t *group_boundary = current + 1;
+  
+  while(current != end){
+    long ic = *current%Nx;
+    long jc = *current/Nx;
+    
+    int Neighbors = 0;
+    for(size_t *test = group_boundary
+        ; test != end && Neighbors < 8
+        ; ++test,++Neighbors
+        ){
+      long it = *test%Nx;
+      long jt = *test/Nx;
+
+      if( abs(it - ic) == 1 || abs(jt - jc) == 1  ){
+        // swap test for group boundary
+        size_t tmp = *group_boundary;
+        *test = tmp;
+        *group_boundary = *test;
+        ++group_boundary;
+        --test;
+      }
+    }
+    ++current;
+    if(current == group_boundary){
+      ++group_boundary;
+      ++Ngroups;
+    }
+  }
+  return Ngroups;
+}
+
+  /*
 int PixelMap::count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const{
   
   heads.clear();
@@ -715,7 +758,8 @@ int PixelMap::count_islands(std::list<size_t> &pixel_index,std::vector<std::list
   
   return ngroups;
 }
-
+*/
+  
 void PixelMap::_count_islands_(size_t current,std::list<size_t> &reservoir
                      ,std::list<size_t>::iterator &group) const{
   
@@ -2081,6 +2125,18 @@ PosType PixelMap::AddSource(Source &source,int oversample){
     }
   }
   return total;
+}
+
+void PixelMap::duplicate(
+                       const PixelMap& pmap
+  ){
+  
+  if(!agrees(pmap)){
+    throw std::invalid_argument("Maps not the same");
+  }
+  
+  for(size_t i=0;i<map.size();++i) map[i] = pmap.map[i];
+  return;
 }
 
 void PixelMap::copy_in(
