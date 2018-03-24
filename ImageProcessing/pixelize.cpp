@@ -1074,7 +1074,7 @@ void PixelMap::drawdisk(
   PosType x1[2],x2[2];
   
   // To do the circle (easy) :
-  // ========================
+  // group=====================
   drawcircle(r_center,radius,value);
   
   // To fill the circle :
