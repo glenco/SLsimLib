@@ -101,7 +101,6 @@ PixelMap::PixelMap(PixelMap&& other)
   other.map_boundary_p1[1] = 0;
   other.map_boundary_p2[0] = 0;
   other.map_boundary_p2[1] = 0;
-
 }
 
 /// make square PixelMap
@@ -703,11 +702,11 @@ int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
       long it = *test%Nx;
       long jt = *test/Nx;
 
-      if( abs(it - ic) == 1 || abs(jt - jc) == 1  ){
+      if( abs(it - ic) <= 1 && abs(jt - jc) <= 1  ){
         // swap test for group boundary
         size_t tmp = *group_boundary;
-        *test = tmp;
         *group_boundary = *test;
+        *test = tmp;
         ++group_boundary;
         --test;
       }

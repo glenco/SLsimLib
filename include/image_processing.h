@@ -397,9 +397,9 @@ public:
   float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
-	PixelMap Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
+	void Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
   double flux_convertion_factor();
-	PixelMap Convert_back(PixelMap &map);
+	void Convert_back(PixelMap &map);
   void setExpTime(float time){exp_time = time;}
 
   static void AddNoiseFromCorr(PixelMap &input,PixelMap &output
@@ -421,12 +421,12 @@ private:
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?
 
-	PixelMap AddNoise(PixelMap &pmap,long *seed);
+	void AddNoise(PixelMap &pmap,long *seed);
   
-	PixelMap PhotonToCounts(PixelMap &pmap);
-	PixelMap ApplyPSF(PixelMap &pmap);
+	void PhotonToCounts(PixelMap &pmap);
+	void ApplyPSF(PixelMap &pmap);
 
-  PixelMap noise_correlation;
+  //PixelMap noise_correlation;
 };
 
 void pixelize(double *map,long Npixels,double range,double *center

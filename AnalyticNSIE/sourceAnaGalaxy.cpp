@@ -291,7 +291,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 			theta[1] = dec*pi/180;
       pa = (90 - pa)*pi/180;
       inclination *= pi/180;
-      if(cos(inclination)< 0.1) inclination = acos(0.1);
+      if(cos(inclination)< 0.5) inclination = acos(0.5);
       
       if(j == 0){
         rangex[0] = rangex[1] = theta[0];

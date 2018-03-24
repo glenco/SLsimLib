@@ -278,23 +278,24 @@ void Observation::setPSF(std::string psf_file, float os)
  * \param noise Decides if noise is added
  * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
-PixelMap Observation::Convert (PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
+void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
   if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
   {
     std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
   }
-  PixelMap outmap = PhotonToCounts(map);
-  if (psf == true)  outmap = ApplyPSF(outmap);
-  if (noise == true) outmap = AddNoise(outmap,seed);
+  //PixelMap outmap =
+  PhotonToCounts(map);
+  if (psf == true)  ApplyPSF(map);
+  if (noise == true) AddNoise(map,seed);
   
   if (unit == flux)
   {
     double counts_to_flux = pow(10,-0.4*mag_zeropoint);
-    outmap.Renormalize(counts_to_flux);
+    map.Renormalize(counts_to_flux);
   }
-  return outmap;
+  return;
 }
 
 /// returns factor by which code image units need to be multiplied by to get flux units
@@ -304,19 +305,19 @@ double Observation::flux_convertion_factor()
 }
 
 /// Converts an observed image to the units of the lensing simulation
-PixelMap Observation::Convert_back (PixelMap &map)
+void Observation::Convert_back (PixelMap &map)
 {
-	PixelMap outmap(map);
+	//PixelMap outmap(map);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
-	outmap.Renormalize(1./Q);
-	return outmap;
+	map.Renormalize(1./Q);
+	return;
 }
 
 
 /** * \brief Smooths the image with a PSF map.
 *
 */
-PixelMap Observation::ApplyPSF(PixelMap &pmap)
+void Observation::ApplyPSF(PixelMap &pmap)
 {
   if(pmap.getNx() != pmap.getNy()){
     std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
@@ -327,13 +328,13 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 	{
 		if (seeing > 0.)
 		{
-			PixelMap outmap(pmap);
-			outmap.smooth(seeing/2.355);
-			return outmap;
+			//PixelMap outmap(pmap);
+			pmap.smooth(seeing/2.355);
+			return;
 		}
 		else
 		{
-			return pmap;
+			return;
 		}
 	}
 	else
@@ -341,7 +342,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
     
-    PixelMap outmap(pmap);
+    //PixelMap outmap(pmap);
     
     // calculates normalisation of psf
     int N_psf = map_psf.size();
@@ -355,7 +356,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
     
     // creates plane for fft of map, sets properly input and output data, then performs fft
     fftw_plan p;
-    long Npix = outmap.getNx();
+    long Npix = pmap.getNx();
     long Npix_zeropad = Npix + side_psf;
         
     // rows and columns between first_p and last_p are copied in the zero-padded version
@@ -373,7 +374,7 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
       long ix = i/Npix_zeropad;
       long iy = i%Npix_zeropad;
       if (ix >= first_p && ix <= last_p && iy >= first_p && iy <= last_p)
-        in_zeropad[i] = outmap[(ix-side_psf/2)*Npix+(iy-side_psf/2)];
+        in_zeropad[i] = pmap[(ix-side_psf/2)*Npix+(iy-side_psf/2)];
       else
         in_zeropad[i] = 0.;
     }
@@ -436,10 +437,10 @@ PixelMap Observation::ApplyPSF(PixelMap &pmap)
       if (ix >= first_p && ix <= last_p && iy >= first_p && iy <= last_p)
       {
         int ii = (ix-side_psf/2)*Npix+(iy-side_psf/2);
-        outmap.AssignValue(ii,out2[i]/double(Npix_zeropad*Npix_zeropad));
+        pmap.AssignValue(ii,out2[i]/double(Npix_zeropad*Npix_zeropad));
       }
     }
-    return outmap;
+    return;
 #else
 		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
 		exit(1);
@@ -473,27 +474,27 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
 }
 
 /// Applies realistic noise (read-out + Poisson) on an image
-PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
+void Observation::AddNoise(PixelMap &pmap,long *seed)
 {
   if(pmap.getNx() != pmap.getNy()){
     std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
   }
   
-	PixelMap outmap(pmap);
+	//PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6));
-	double res_in_arcsec = outmap.getResolution()*180.*60.*60/pi;
+	double res_in_arcsec = pmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
 	double rms, noise;
 	double norm_map;
-	for (unsigned long i = 0; i < outmap.getNx()*outmap.getNy(); i++)
+	for (unsigned long i = 0; i < pmap.size() ; i++)
 	{
-		norm_map = outmap[i]*exp_time;
+		norm_map = pmap[i]*exp_time;
 		if (norm_map+back_mean > 500.)
 		{
 			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
 			noise = gasdev(seed)*rms;
-			outmap.AssignValue(i,double(norm_map+noise)/exp_time);
+			pmap.AssignValue(i,double(norm_map+noise)/exp_time);
 		}
 		else
 		{
@@ -507,10 +508,10 @@ PixelMap Observation::AddNoise(PixelMap &pmap,long *seed)
 			}
             rms = sqrt(exp_num*ron*ron);
  			noise = gasdev(seed)*rms;
-			outmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
+			pmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
 		}
 	}
-	return outmap;
+	return;
 }
 
 void Observation::AddNoiseFromCorr(PixelMap &input,PixelMap &output
@@ -528,11 +529,11 @@ void Observation::AddNoiseFromCorr(PixelMap &input,PixelMap &output
 }
 
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope pixel counts
-PixelMap Observation::PhotonToCounts(PixelMap &pmap)
+void Observation::PhotonToCounts(PixelMap &pmap)
 {
-	PixelMap outmap(pmap);
+	//PixelMap outmap(pmap);
 	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
-	outmap.Renormalize(Q);
-	return outmap;
+	pmap.Renormalize(Q);
+	return;
 }
 
