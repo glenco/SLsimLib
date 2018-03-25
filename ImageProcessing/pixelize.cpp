@@ -685,24 +685,25 @@ int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
   if(pixel_index.size() == 0) return 0;
   if(pixel_index.size() == 1) return 1;
   
-  size_t *end = pixel_index.data() + pixel_index.size() + 1;
+  size_t *end = pixel_index.data() + pixel_index.size();
   size_t *current = pixel_index.data();
-  int Ngroups = 0;
+  int Ngroups = 1;
   size_t *group_boundary = current + 1;
   
-  while(current != end){
+  while(group_boundary != end){
     long ic = *current%Nx;
     long jc = *current/Nx;
     
     int Neighbors = 0;
     for(size_t *test = group_boundary
-        ; test != end && Neighbors < 8
-        ; ++test,++Neighbors
+        ; test != end && Neighbors < 8 && group_boundary != end
+        ; ++test
         ){
       long it = *test%Nx;
       long jt = *test/Nx;
 
       if( abs(it - ic) <= 1 && abs(jt - jc) <= 1  ){
+        ++Neighbors;
         // swap test for group boundary
         size_t tmp = *group_boundary;
         *group_boundary = *test;
@@ -712,7 +713,7 @@ int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
       }
     }
     ++current;
-    if(current == group_boundary){
+    if(current == group_boundary && group_boundary != end ){
       ++group_boundary;
       ++Ngroups;
     }
