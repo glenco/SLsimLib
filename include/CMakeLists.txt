@@ -48,4 +48,5 @@ add_sources(
 	particle_halo.h
 	concave_hull.h
         bands_etc.h
+	gaussian.h
 )
