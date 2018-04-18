@@ -25,7 +25,6 @@
  */
 Observation::Observation(Telescope tel_name)
 {
-
   switch (tel_name) {
     case Euclid_VIS:
       diameter = 119.;
@@ -240,7 +239,9 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		}
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
-void Observation::setPSF(std::string psf_file, float os)
+void Observation::setPSF(std::string psf_file  /// name of fits file with psf
+                         , float os  /// over sampling factor
+                         )
 {
 #ifdef ENABLE_FITS
    // std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
@@ -267,8 +268,20 @@ void Observation::setPSF(std::string psf_file, float os)
     exit(1);
 #endif
     
-    oversample = os;
+  oversample = os;
+}
 
+/// Read in and set the noise correlation function.
+void Observation::setNoiseCorrelation(std::string &nc_file  /// name of fits file with noise correlation function in pixel units
+)
+{
+  PixelMap noise_corr(nc_file,pix_size);
+  size_t N = nc_map.size();
+  // take the quare root of the correlation function
+  for(size_t i = 0 ; i < N ; ++i)
+    noise_corr[i] = sqrt(noise_corr[i]);
+  *****
+  PixelMap::swap(noise_corr,nc_map);
 }
 
 /**  \brief Converts the input map to a realistic image
@@ -486,13 +499,14 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
 	double res_in_arcsec = pmap.getResolution()*180.*60.*60/pi;
 	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
 	double rms, noise;
+  double rms2 = sqrt(exp_num*ron*ron);
 	double norm_map;
 	for (unsigned long i = 0; i < pmap.size() ; i++)
 	{
 		norm_map = pmap[i]*exp_time;
 		if (norm_map+back_mean > 500.)
 		{
-			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
+			rms = sqrt(exp_num*ron*ron + norm_map + back_mean);
 			noise = gasdev(seed)*rms;
 			pmap.AssignValue(i,double(norm_map+noise)/exp_time);
 		}
@@ -506,8 +520,7 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
 				k++;
 				p *= ran2(seed);
 			}
-            rms = sqrt(exp_num*ron*ron);
- 			noise = gasdev(seed)*rms;
+ 			noise = gasdev(seed)*rms2;
 			pmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
 		}
 	}
