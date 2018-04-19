@@ -155,7 +155,7 @@ public:
 	bool agrees(const PixelMap& other) const;
 	
 	friend void swap(PixelMap&, PixelMap&);
-  void swap(PixelMap&, PixelMap&);
+  static void swap(PixelMap&, PixelMap&);
   
   /// return average pixel value
   PosType ave() const;
@@ -311,7 +311,7 @@ public:
 }
 
 private:
-	std::valarray<double> map;
+  std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);
 
 	std::size_t Nx;
@@ -397,15 +397,11 @@ public:
   float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
+  void setNoiseCorrelation(std::string nc_file);
 	void Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
   double flux_convertion_factor();
 	void Convert_back(PixelMap &map);
   void setExpTime(float time){exp_time = time;}
-
-  static void AddNoiseFromCorr(PixelMap &input,PixelMap &output
-                        ,PixelMap &sqrt_coor_noise
-                        ,Utilities::RandomNumbers_NR &ran
-                        );
 
 private:
 	float diameter;  // diameter of telescope (in cm)
@@ -417,6 +413,7 @@ private:
 	float ron;  // read-out noise in electrons/pixel
 	float seeing;  // full-width at half maximum of the gaussian smoothing
 	std::valarray<double> map_psf;  // array of the point spread function
+  PixelMap nc_map;  // noise correlation function
 	float oversample; // psf oversampling factor
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?

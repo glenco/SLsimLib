@@ -25,9 +25,15 @@
  */
 Observation::Observation(Telescope tel_name)
 {
-
+  
+ 
   switch (tel_name) {
     case Euclid_VIS:
+      // from Eric
+      // Equivalent gain is 11160 e-/ADU
+      // Saturation is 71 ADU
+      // Equivalent exposure time with 4 frames is 2260s
+      // Magnitude Zeropoint is 23.9
       diameter = 119.;
       transmission = 0.30;
       exp_time = 1800.;
@@ -240,7 +246,9 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
 		}
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
-void Observation::setPSF(std::string psf_file, float os)
+void Observation::setPSF(std::string psf_file  /// name of fits file with psf
+                         , float os  /// over sampling factor
+                         )
 {
 #ifdef ENABLE_FITS
    // std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
@@ -267,8 +275,29 @@ void Observation::setPSF(std::string psf_file, float os)
     exit(1);
 #endif
     
-    oversample = os;
+  oversample = os;
+}
 
+/// Read in and set the noise correlation function.
+void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file with noise correlation function in pixel units
+)
+{
+  std::cout << nc_file << std::endl;
+  PixelMap noise_corr(nc_file,pix_size);
+  size_t N = noise_corr.size();
+  double sum=0,corr_max=0;
+  // take the square root of the correlation function
+  for(size_t i = 0 ; i < N ; ++i){
+    corr_max = MAX(corr_max,noise_corr[i]);
+    noise_corr[i] = sqrt(noise_corr[i]);
+    sum += noise_corr[i];
+  }
+  for(size_t i = 0 ; i < N ; ++i) noise_corr[i] /= sum;
+  
+  std::cout << "zero lag noise correlation is : " << corr_max
+  << " size : " << noise_corr.size() << std::endl;
+  
+  PixelMap::swap(noise_corr,nc_map);
 }
 
 /**  \brief Converts the input map to a realistic image
@@ -342,8 +371,6 @@ void Observation::ApplyPSF(PixelMap &pmap)
 #ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
     
-    //PixelMap outmap(pmap);
-    
     // calculates normalisation of psf
     int N_psf = map_psf.size();
     int side_psf = sqrt(N_psf);
@@ -362,12 +389,9 @@ void Observation::ApplyPSF(PixelMap &pmap)
     // rows and columns between first_p and last_p are copied in the zero-padded version
     long first_p = side_psf/2;
     long last_p = first_p + (Npix-1);
-    //std::complex<double>* out=new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)];
-    //std::unique_ptr<std::complex<double> > out(new std::complex<double> [Npix_zeropad*(Npix_zeropad/2+1)]);
     std::vector<std::complex<double> > out(Npix_zeropad*(Npix_zeropad/2+1));
     
     // add zero-padding
-    //double* in_zeropad = new double[Npix_zeropad*Npix_zeropad];
     std::vector<double> in_zeropad(Npix_zeropad*Npix_zeropad);
     for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
     {
@@ -393,9 +417,7 @@ void Observation::ApplyPSF(PixelMap &pmap)
     // arrange psf data for fft, creates plane, then performs fft
     // psf data are moved into the four corners of psf_big_zeropad
     long psf_big_zeropad_Npixels = static_cast<int>((Npix+side_psf)*oversample);
-    //double* psf_big_zeropad = new double[psf_big_zeropad_Npixels*psf_big_zeropad_Npixels];
     std::vector<double> psf_big_zeropad(psf_big_zeropad_Npixels*psf_big_zeropad_Npixels);
-    //std::complex<double>* out_psf=new std::complex<double> [psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1)];
     std::vector<std::complex<double> > out_psf(psf_big_zeropad_Npixels*(psf_big_zeropad_Npixels/2+1));
     
     p_psf = fftw_plan_dft_r2c_2d(psf_big_zeropad_Npixels,psf_big_zeropad_Npixels,psf_big_zeropad.data(), reinterpret_cast<fftw_complex*>(out_psf.data()), FFTW_ESTIMATE);
@@ -481,51 +503,51 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
     throw std::runtime_error("nonsquare");
   }
   
-	//PixelMap outmap(pmap);
-	double Q = pow(10,0.4*(mag_zeropoint+48.6));
-	double res_in_arcsec = pmap.getResolution()*180.*60.*60/pi;
-	double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
-	double rms, noise;
-	double norm_map;
-	for (unsigned long i = 0; i < pmap.size() ; i++)
-	{
-		norm_map = pmap[i]*exp_time;
-		if (norm_map+back_mean > 500.)
-		{
-			rms = sqrt(exp_num*ron*ron+norm_map+back_mean);
-			noise = gasdev(seed)*rms;
-			pmap.AssignValue(i,double(norm_map+noise)/exp_time);
-		}
-		else
-		{
-			int k = 0;
-			double p = 1.;
-			double L = exp(-(norm_map+back_mean));
-			while (p > L)
-			{
-				k++;
-				p *= ran2(seed);
-			}
-            rms = sqrt(exp_num*ron*ron);
- 			noise = gasdev(seed)*rms;
-			pmap.AssignValue(i,double(k-1+noise-back_mean)/exp_time);
-		}
-	}
-	return;
-}
+  //PixelMap outmap(pmap);
+  double Q = pow(10,0.4*(mag_zeropoint+48.6));
+  double res_in_arcsec = pmap.getResolution()*180.*60.*60/pi;
+  double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+  double rms, noise;
+  double rms2 = sqrt(exp_num*ron*ron);
+  double norm_map;
+  
+  PixelMap noise_map(pmap);
+  double sum=0,sum2=0;
+  size_t N = pmap.size();
+  for (unsigned long i = 0; i < N ; i++)
+  {
+    norm_map = pmap[i]*exp_time;
+    if (norm_map+back_mean > 500.)
+    {
+      rms = sqrt(exp_num*ron*ron + norm_map + back_mean);
+      noise = gasdev(seed)*rms;
+      noise_map[i] = noise/exp_time;
+    }
+    else
+    {
+      int k = 0;
+      double p = 1.;
+      double L = exp(-(norm_map+back_mean));
+      while (p > L)
+      {
+        k++;
+        p *= ran2(seed);
+      }
+      noise = gasdev(seed)*rms2;
+      noise_map[i] = (k-1+noise-back_mean - norm_map)/exp_time;
+    }
+    sum += noise_map[i];
+    sum2 += noise_map[i]*noise_map[i];
+  }
+  
+  sum /= N;
+  std::cout << "Noise Variance is : " << (sum2 - N*sum*sum)/(N-1) << std::endl;
+  
+  if(nc_map.size() > 0) noise_map.convolve(nc_map);  /// correlate the pixels
 
-void Observation::AddNoiseFromCorr(PixelMap &input,PixelMap &output
-                          ,PixelMap &sqrt_coor_noise
-                          ,Utilities::RandomNumbers_NR &ran
-                          ){
+  pmap += noise_map;
   
-  size_t N = output.size();
-  for(size_t i = 0 ; i < N ; ++i)
-    output[i] = ran.gauss();
-  
-  output.convolve(sqrt_coor_noise);
-  
-  output += input;
+  return;
 }
 
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope pixel counts

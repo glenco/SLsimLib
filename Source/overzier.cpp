@@ -346,7 +346,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     Reff *= (1 + 0.2*(2*ran()-1.));
     Rh *= (1 + 0.2*(2*ran()-1.));
     
-    PosType tmp = 0.1*(2*ran()-1.);
+    PosType tmp = 0.01*(2*ran()-1.);
     
     for(auto mag = mag_map.begin() ; mag != mag_map.end() ; ++mag){
       mag->second = mag->second + tmp;

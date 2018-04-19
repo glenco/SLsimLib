@@ -208,7 +208,7 @@ PixelMap::PixelMap(
         if(std::abs(my_res) - std::abs(cd22) > 1e-6)
           throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
         if(cd12 || cd21)
-          throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+          throw std::runtime_error("pixels not aligned with coordinates in FITS file " + fitsfilename);
       }
       catch(CCfits::HDU::NoSuchKeyword){
         double ps;
@@ -237,6 +237,7 @@ PixelMap::PixelMap(
   map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
   
   h0.read(map);
+  //std::cout << "map size : " << map.size() << std::endl;
 #else
   std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
   exit(1);
@@ -351,7 +352,8 @@ void PixelMap::swap(PixelMap &map1,PixelMap &map2)
 {
 
   std::swap(map1.map,map2.map);
-  std::swap(map1.Nx,map2.Ny);
+  std::swap(map1.Nx,map2.Nx);
+  std::swap(map1.Ny,map2.Ny);
   std::swap(map1.resolution,map2.resolution);
   std::swap(map1.rangeX,map2.rangeX);
   std::swap(map1.rangeY,map2.rangeY);
