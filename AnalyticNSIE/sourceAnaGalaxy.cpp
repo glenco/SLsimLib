@@ -71,8 +71,9 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 	unsigned long i,j;
 
 	unsigned long GalID,HaloID;
-	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
-	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
+	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g
+  ,SDSS_r,SDSS_i,SDSS_z,J_band,H_band,Ks_band,i1,i2
+  ,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
 	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 
   std::ofstream color_cat;
@@ -108,6 +109,15 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
     throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
+  
+  std::string myline;
+  size_t count = 0;
+  while(getline(file_in,myline)){
+    if(myline[0] != '#') ++count;
+  }
+  file_in.clear();
+  file_in.seekg(0);
+  galaxies.reserve(count);
 
 	std::cout << "Reading from galaxy data file " << input_gal_file.c_str() << std::endl;
 	//file_in >> Ngalaxies;
@@ -161,7 +171,6 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 
 	unsigned long myint;
 	PosType myPosType;
-	std::string myline;
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
@@ -176,6 +185,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 		if(myline[0] == '#')
 			break;
 
+    //std::cout << "read columns" << std::endl;
 		for(int l=0;l<ncolumns; l++){
 			long pos = myline.find(f);
 			strg.assign(myline,0,pos);
@@ -216,7 +226,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 		>> c >> i2_Bulge >> c;
 */
 
-		addr[11] = &SDSS_u;
+		/*addr[11] = &SDSS_u;
 		addr[12] = &SDSS_g;
 		addr[13] = &SDSS_r;
 		addr[14] = &SDSS_i;
@@ -226,6 +236,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 		addr[18] = &Ks_band;
 		addr[19] = &i1;
 		addr[20] = &i2;
+     */
 
     /*
 		switch (band){
@@ -276,6 +287,8 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
     << std::endl;
 
 		if(mag < mag_limit){
+      //std::cout << "good mag " << std::endl;
+
 			/*
 			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
 			<< c << dlum << c << vlos << c << incl
@@ -293,19 +306,26 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
       inclination *= pi/180;
       if(cos(inclination)< 0.5) inclination = acos(0.5);
       
+      //std::cout << "did inclination" << std::endl;
+
+      
       if(j == 0){
         rangex[0] = rangex[1] = theta[0];
         rangey[0] = rangey[1] = theta[1];
       }else{
+        //std::cout << "rang" << std::endl;
+
         if(theta[0] < rangex[0]) rangex[0] = theta[0];
         if(theta[0] > rangex[1]) rangex[1] = theta[0];
         if(theta[1] < rangey[0]) rangey[0] = theta[1];
         if(theta[1] > rangey[1]) rangey[1] = theta[1];
       }
       
+      //std::cout << "adding to galaxies" << std::endl;
 			/***************************/
-			galaxies.emplace_back(mag,mag_bulge,Ref,Rh
-                              ,pa,inclination,HaloID,z_cosm,theta,ran);
+			galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Ref,Rh
+                              ,pa,inclination,HaloID,z_cosm,theta,ran));
+      //std::cout << "filling last galaxy" << std::endl;
 
 			galaxies.back().setMag(SDSS_U,SDSS_u);
       galaxies.back().setMagBulge(SDSS_U,SDSS_u_Bulge);
@@ -344,10 +364,12 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;
 
       assert(galaxies.back().getMag(band) == galaxies.back().getMag() );
+      //std::cout << " j in SourceMultiAnaGalaxy : " << j << std::endl;
 			++j;
 		}
 	}
 
+  std::cout << " closing file in SourceMultiAnaGalaxy : " << std::endl;
   color_cat.close();
 	file_in.close();
 

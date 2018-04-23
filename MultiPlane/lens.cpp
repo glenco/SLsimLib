@@ -1897,6 +1897,15 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
     throw std::runtime_error(" Cannot open file.");
 	}
   
+  std::string myline;
+  size_t count = 0;
+  while(getline(file_in,myline)){
+    if(myline[0] != '#') ++count;
+  }
+  file_in.clear();
+  file_in.seekg(0);
+  field_halos.reserve(count);
+
 	// skip through header information in data file
 	i=0;
 	while(file_in.peek() == '#'){
@@ -1930,7 +1939,6 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
   
 	unsigned long myint;
 	PosType myPosType;
-	std::string myline;
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;

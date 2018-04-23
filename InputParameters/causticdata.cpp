@@ -165,6 +165,14 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
     throw std::runtime_error(" Cannot open file.");
   }
   
+  size_t count = 0;
+  while(getline(file_in,myline)){
+    if(myline[0] != '#') ++count;
+  }
+  file_in.clear();
+  file_in.seekg(0);
+  data.reserve(count);
+  
   if(verbose) std::cout << "Reading caustic information from " << filename << std::endl;
   size_t i=0;
   while(file_in.peek() == '#'){
@@ -172,6 +180,7 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
     ++i;
   }
   if(verbose) std::cout << "   skipped "<< i << " comment lines in " << filename << std::endl;
+  
   
   size_t pos;
   CausticStructure tmp_data;

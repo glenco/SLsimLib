@@ -17,6 +17,7 @@ SourceSersic::SourceSersic(
 )
 : Source()
 {
+  //std::cout << "SourceSersic constructor" << std::endl;
 	setReff(my_Reff);
 	setMag(my_mag);
 	setPA(my_PA);
