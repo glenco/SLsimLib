@@ -19,18 +19,21 @@
 class SourceSersic : public Source
 {
 public:
-	SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
+  /// sets values to invalid values
+  SourceSersic();
+  SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
 	~SourceSersic();
 	
-  
+  void ReSet(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
+
 	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak
 	inline PosType FractionRadius (PosType f) {return Reff*pow(-log (f)/bn,index);}
 	
 	inline PosType getSersicIndex() const { return index; }
 	inline PosType getAxesRatio() const { return q; }
 	inline PosType getReff() const { return Reff*180*60*60/pi; }
-	inline PosType getMag() { return mag; }
-	inline PosType getPA() { return PA; }
+	inline PosType getMag() const { return mag; }
+	inline PosType getPA() const { return PA; }
 	
 	inline void setSersicIndex(PosType x)
 	{

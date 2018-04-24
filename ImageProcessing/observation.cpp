@@ -289,9 +289,10 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
   // take the square root of the correlation function
   for(size_t i = 0 ; i < N ; ++i){
     corr_max = MAX(corr_max,noise_corr[i]);
-    noise_corr[i] = sqrt(noise_corr[i]);
     sum += noise_corr[i];
+    noise_corr[i] = sqrt(fabs(noise_corr[i]));
   }
+  sum = sqrt(sum);
   for(size_t i = 0 ; i < N ; ++i) noise_corr[i] /= sum;
   
   std::cout << "zero lag noise correlation is : " << corr_max
@@ -527,14 +528,14 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
     {
       int k = 0;
       double p = 1.;
-      double L = exp(-(norm_map+back_mean));
+      double L = exp(-(norm_map + back_mean));
       while (p > L)
       {
         k++;
         p *= ran2(seed);
       }
       noise = gasdev(seed)*rms2;
-      noise_map[i] = (k-1+noise-back_mean - norm_map)/exp_time;
+      noise_map[i] = (k - 1 + noise - back_mean - norm_map)/exp_time;
     }
     sum += noise_map[i];
     sum2 += noise_map[i]*noise_map[i];

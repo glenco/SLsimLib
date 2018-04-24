@@ -83,10 +83,10 @@ void LensPlaneSingular::force(PosType *alpha
     KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
-    x_tmp[0] = x_tmp[1] = 0.0;
+  x_tmp[0] = x_tmp[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
-    *phi = 0.0;
+  *phi = 0.0;
   
     // Loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
@@ -113,6 +113,8 @@ void LensPlaneSingular::force(PosType *alpha
         gamma[1] += gamma_tmp[1];
         gamma[2] += gamma_tmp[2];
         *phi += phi_tmp;
+    
+    //(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 	}
 }
 

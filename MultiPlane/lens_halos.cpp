@@ -957,6 +957,8 @@ void LensHalo::force_halo_sym(
     force_stars(alpha,kappa,gamma,xcm);
   }
   
+  //(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+
   return;
 }
 // TODO: put in some comments about the units used
@@ -1096,6 +1098,8 @@ void LensHalo::force_halo_asym(
     force_stars(alpha,kappa,gamma,xcm);
   }
   
+  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+
   return;
 }
 
@@ -1344,6 +1348,8 @@ void LensHaloRealNSIE::force_halo(
     force_stars(alpha,kappa,gamma,xcm);
   }
   
+  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+
   return;
 }
 /**/
@@ -1720,6 +1726,8 @@ void LensHaloDummy::force_halo(PosType *alpha
     force_stars(alpha,kappa,gamma,xcm);
   }
   
+  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+
 }
 
 void LensHaloDummy::assignParams(InputParams& params)

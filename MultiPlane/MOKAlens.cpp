@@ -336,6 +336,7 @@ void LensHaloMassMap::setMap(
   pixelarea *= pixelarea;
   
   for(size_t i=0;i<size;++i){
+    //assert(!isnan(inputmap(i)));
     map->convergence[i] = massconvertion*inputmap(i)/pixelarea;
   }
   
@@ -659,17 +660,17 @@ void LensHaloMassMap::force_halo(double *alpha
 
   assert(map->nx == map->ny);
   
-  size_t N = map->nx * map->ny;
+  //size_t N = map->nx * map->ny;
   
   map->convergence.size();
   
-  assert(map->alpha1.size() == N);
+  /*assert(map->alpha1.size() == N);
   assert(map->alpha2.size() == N);
   assert(map->gamma1.size() == N);
   assert(map->gamma2.size() == N);
   assert(map->convergence.size() == N);
   assert(map->phi.size() == N);
-
+*/
   alpha[0] = interp.interpolate(map->alpha1);
   alpha[1] = interp.interpolate(map->alpha2);
   gamma[0] = interp.interpolate(map->gamma1);
@@ -678,6 +679,8 @@ void LensHaloMassMap::force_halo(double *alpha
   *kappa = interp.interpolate(map->convergence);
   *phi = interp.interpolate(map->phi);
   
+  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+
   return;
 }
 

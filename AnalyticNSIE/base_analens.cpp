@@ -148,6 +148,8 @@ void LensHaloBaseNSIE::force_halo(
     force_stars(alpha,kappa,gamma,xcm);
   }
   
+  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+
   return ;
 }
 

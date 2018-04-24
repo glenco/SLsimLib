@@ -130,6 +130,8 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 		++i;
 	}
 	std::cout << "   skipped "<< i << " comment lines in " << input_gal_file << std::endl;
+  getline(file_in,myline); // skip title line
+
 
 	PosType theta[2] = {0.0,0.0};
 
@@ -147,6 +149,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 	addr[8] = &pa;
 	addr[9] = &Rh;
 	addr[10] = &Ref;
+  
 	addr[11] = &SDSS_u;
 	addr[12] = &SDSS_g;
 	addr[13] = &SDSS_r;
@@ -185,16 +188,20 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 		if(myline[0] == '#')
 			break;
 
+    //std::cout << "myline " << myline << std::endl ;
+
     //std::cout << "read columns" << std::endl;
 		for(int l=0;l<ncolumns; l++){
 			long pos = myline.find(f);
 			strg.assign(myline,0,pos);
 			buffer << strg;
 			if(l == 0 || l == 1 ){
+        //std::cout << "myint " << myint ;
 				buffer >> myint;
 				*((unsigned long *)addr[l]) = myint;
 			}
 			else{
+        //std::cout << "myPosType " << myPosType ;
 				buffer >> myPosType;
 				*((PosType *)addr[l]) = myPosType;
 			}
@@ -204,81 +211,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 			buffer.str(std::string());
 		}
 
-		// read a line of data
-		/*file_in >> galid >> c >> haloid >> c >> cx >> c >> cy >> c >> cz >> c >> ra >> c >> dec >> c >> z_geo >> c >> z_app
-		>> c >> dlum >> c >> vlos >> c >> incl
-		>> c >> acs435 >> c >> acs606 >> c >> acs775 >> c >> acs850
-		>> c >> acs435_bulge >> c >> acs606_bulge >> c >> acs775_bulge >> c >> acs850_bulge
-		>> c >> type >> c >> mvir >> c >> rvir >> c >> vmax >> c >> stellarmass >> c >> bulgemass
-		>> c >> stellardiskradius >> c >> bulgesize
-		>> c >> inclination >> c >> pa >> c >> angdist >> c >> diskradius_arcsec >> c >> bulgesize_arcsec >> c;
-		*/
-		/*file_in >> GalID  >> HaloID  >> ra  >> dec  >> z_cosm  >> z_app  >> Dlum  >> inclination
-				 >> pa  >> Rh  >> Ref  >> SDSS_u  >> SDSS_g  >> SDSS_r  >> SDSS_i  >> SDSS_z
-				 >> J_band  >> H_band  >> Ks_band  >> i1  >> i2  >> SDSS_u_Bulge  >> SDSS_g_Bulge  >> SDSS_r_Bulge
-				 >> SDSS_i_Bulge  >> SDSS_z_Bulge  >> J_band_Bulge  >> H_band_Bulge  >> Ks_band_Bulge  >> i1_Bulge
-				 >> i2_Bulge ;
-
-		file_in >> GalID >> c >> HaloID >> c >> ra >> c >> dec >> c >> z_cosm >> c >> z_app >> c >> Dlum >> c >> inclination
-		>> c >> pa >> c >> Rh >> c >> Ref >> c >> SDSS_u >> c >> SDSS_g >> c >> SDSS_r >> c >> SDSS_i >> c >> SDSS_z
-		>> c >> J_band >> c >> H_band >> c >> Ks_band >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
-		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_band_Bulge >> c >> H_band_Bulge >> c >> Ks_band_Bulge >> c >> i1_Bulge
-		>> c >> i2_Bulge >> c;
-*/
-
-		/*addr[11] = &SDSS_u;
-		addr[12] = &SDSS_g;
-		addr[13] = &SDSS_r;
-		addr[14] = &SDSS_i;
-		addr[15] = &SDSS_z;
-		addr[16] = &J_band;
-		addr[17] = &H_band;
-		addr[18] = &Ks_band;
-		addr[19] = &i1;
-		addr[20] = &i2;
-     */
-
-    /*
-		switch (band){
-		case SDSS_U:
-			mag = SDSS_u;
-			mag_bulge = SDSS_u_Bulge;
-			break;
-		case SDSS_G:
-			mag = SDSS_g;
-			mag_bulge = SDSS_g_Bulge;
-			break;
-		case SDSS_R:
-			mag = SDSS_r;
-			mag_bulge = SDSS_r_Bulge;
-			break;
-		case SDSS_I:
-			mag = SDSS_i;
-			mag_bulge = SDSS_i_Bulge;
-			break;
-		case SDSS_Z:
-			mag = SDSS_z;
-			mag_bulge = SDSS_z_Bulge;
-			break;
-		case J:
-			mag = J_band;
-			mag_bulge = J_band_Bulge;
-			break;
-		case H:
-			mag = H_band;
-			mag_bulge = H_band_Bulge;
-			break;
-		case Ks:
-			mag = Ks_band;
-			mag_bulge = Ks_band_Bulge;
-			break;
-		default:
-			std::cout << "Requested band is not an available option." << std::endl;
-			ERROR_MESSAGE();
-      throw std::invalid_argument("band not supported");
-
-		}*/
-    
+  
     color_cat << GalID << "  " << z_app << "  " << SDSS_u << "  " <<SDSS_g << "  " <<SDSS_r << "  " <<
     SDSS_i << "  " << SDSS_z << "  " << J_band << "  " << H_band << "  " << Ks_band <<
     "  " << i1 << "  " << i2 << "  " << SDSS_u_Bulge << "  " << SDSS_g_Bulge << "  " <<

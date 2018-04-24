@@ -274,42 +274,8 @@ public:
    It is assumed that the size of the kernel is much smaller than the image and
    that the kernal has the same pixel size as the image.
    **/
-  void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0){
-    std::valarray<double> output(Nx*Ny);
-    
-    if( center_x == 0 ){
-      center_x = kernel.getNx()/2;
-      center_y = kernel.getNy()/2;
-    }
-    
-    size_t Nxk = kernel.getNx();
-    size_t Nyk = kernel.getNy();
-
-    for(size_t k1 = 0 ; k1 < Nx ; ++k1){
-      long bl1 = k1 - center_x;
-      
-      for(size_t k2 = 0 ; k2 < Ny ; ++k2){
-        long bl2 = k2 - center_y;
- 
-        long k = k1 + Nx * k2;
-        output[k] = 0;
-        
-        for(size_t j = 0 ; j < Nyk ; ++j){
-          long kk2 = bl2 + j;
-          if(kk2 < 0 || kk2 > Ny-1) continue;
-
-          for(size_t i = 0; i < Nxk ; ++i){
-            long kk1 = bl1 + i;
-            if(kk1 < 0 || kk1 > Nx-1) continue;
-          
-            output[k] += map[ kk1 + Nx * kk2 ] * kernel[i + Nxk * j];
-        }
-      }
-    }
-  }
-  std::swap(map,output);
-}
-
+  void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
+  
 private:
   std::valarray<double> map;
   void AddGrid_(const PointList &list,LensingVariable val);

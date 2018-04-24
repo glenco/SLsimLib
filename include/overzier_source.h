@@ -141,9 +141,9 @@ public:
   int getNarms() const {return Narms;}
   PosType getArmAmplitude() const {return Ad;}
   PosType getArmAlpha() const {return arm_alpha;}
-  PosType getSphIndex() const {return spheroid->getSersicIndex();}
-  PosType getSphAxisRatio() const {return spheroid->getAxesRatio();}
-  PosType getSphPA() const {return spheroid->getPA();}
+  PosType getSphIndex() const {return spheroid.getSersicIndex();}
+  PosType getSphAxisRatio() const {return spheroid.getAxesRatio();}
+  PosType getSphPA() const {return spheroid.getPA();}
   
   void changeBand(Band band);
   static PosType* getx(SourceOverzierPlus &sourceo){return sourceo.source_x.x;}
@@ -152,22 +152,22 @@ public:
   virtual inline void setTheta(PosType *xx){
     source_x[0] = xx[0];
     source_x[1] = xx[1];
-    spheroid->setTheta(xx);
+    spheroid.setTheta(xx);
   }
   virtual void setTheta(PosType my_x,PosType my_y){
     source_x[0] = my_x;
     source_x[1] = my_y;
-    spheroid->setTheta(my_x,my_y);
+    spheroid.setTheta(my_x,my_y);
   }
   void setBulgeAxisRatio(PosType q){
-    spheroid->setAxesRatio(q);
+    spheroid.setAxesRatio(q);
   }
   /// Randomly change some of the internal paramters and angles of the source
   void randomize(Utilities::RandomNumbers_NR &ran);
 private:
   int Narms;
   PosType Ad,mctalpha,arm_alpha;
-  SourceSersic *spheroid;
+  SourceSersic spheroid;
   std::vector<PosType> modes;
   PosType disk_phase;
   PosType cospa,sinpa,cosi;
