@@ -343,9 +343,10 @@ typedef enum {counts_x_sec, flux} unitType;
 class Observation
 {
 public:
-	Observation(Telescope tel_name);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, float seeing = 0.);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file, float oversample = 1.);
+	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron
+              ,size_t Npix_x,size_t Npix_y,float seeing = 0.);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
 
   
   float getExpTime(){return exp_time;}
@@ -369,7 +370,15 @@ public:
 	void Convert_back(PixelMap &map);
   void setExpTime(float time){exp_time = time;}
 
+  size_t getNx(){ return Npix_x;}
+  size_t getNy(){ return Npix_y;}
+
 private:
+  
+  size_t Npix_x,Npix_y;
+  std::vector<double> sqrt_noise_power;  // stores sqrt root of power noise spectrum
+  size_t side_ncorr; // pixels on a side of input noise correlation function
+
 	float diameter;  // diameter of telescope (in cm)
 	float transmission;  // total transmission of the instrument
 	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
@@ -379,7 +388,6 @@ private:
 	float ron;  // read-out noise in electrons/pixel
 	float seeing;  // full-width at half maximum of the gaussian smoothing
 	std::valarray<double> map_psf;  // array of the point spread function
-  PixelMap nc_map;  // noise correlation function
 	float oversample; // psf oversampling factor
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?
@@ -388,6 +396,7 @@ private:
   
 	void PhotonToCounts(PixelMap &pmap);
 	void ApplyPSF(PixelMap &pmap);
+  void CorrelateNoise(PixelMap &pmap);
 
   //PixelMap noise_correlation;
 };

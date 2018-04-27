@@ -358,7 +358,7 @@ void LensHaloMassMap::setMap(
   // create alpha and gamma arrays by FFT
   // valid only to force the map to be square map->nx = map->ny = npixels;
 #ifdef ENABLE_FFTW
-  std:: cout << "  preProcessing Map " << std:: endl;
+  //std:: cout << "  preProcessing Map " << std:: endl;
   PreProcessFFTWMap();
 #else
   std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;

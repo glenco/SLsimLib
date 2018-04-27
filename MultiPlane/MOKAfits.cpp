@@ -117,7 +117,7 @@ void LensHaloMassMap::readMap(){
     int nhdu = h0->axis(2);
     
     if(nhdu==1){
-      std:: cout << "  preProcessing Map MOKA fits file has only KAPPA map" << std:: endl;
+      //std:: cout << "  preProcessing Map MOKA fits file has only KAPPA map" << std:: endl;
       PreProcessFFTWMap();
     }
     else{
@@ -378,7 +378,7 @@ void LensHaloMassMap::readMap(){
     // create alpha and gamma arrays by FFT
     // valid only to force the map to be square map->nx = map->ny = npixels;
 #ifdef ENABLE_FFTW
-    std:: cout << "  preProcessing Map " << std:: endl;
+    //std:: cout << "  preProcessing Map " << std:: endl;
     // reducing the size of the maps
     // carlo test begin
     /*

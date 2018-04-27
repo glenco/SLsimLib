@@ -392,7 +392,9 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     mag += tmp;
     
     PA = pi*ran();
-    inclination = 0.9*pi/2*ran();
+    inclination = 1.0*pi/2*ran();
+    if(cos(inclination)< 0.25) inclination = acos(0.25);
+
     
     cospa = cos(PA);
     sinpa = sin(PA);
