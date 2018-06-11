@@ -2185,10 +2185,10 @@ void PixelMap::copy_in(
     long jmax = (long)(ymax);
 
     for(size_t j = jmin ; j <= jmax ; ++j ){
-      double area1 = MIN(ymax,j+1) -  MIN(ymin,j);
+      double area1 = MIN(ymax,j+1) -  MAX(ymin,j);
       if(area1 <= 0.0) continue;
       for(size_t i = imin ; i <= imax ; ++i ){
-        double area = (MIN(xmax,i+1) -  MIN(xmin,i)) * area1 ;
+        double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
         map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
       }
     }
