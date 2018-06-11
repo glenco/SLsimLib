@@ -319,8 +319,8 @@ PixelMap::PixelMap(
     old_p1[0] = std::max(0,int(ix*res_ratio));
     old_p1[1] = std::max(0,int(iy*res_ratio));
     
-    old_p2[0] = fmin(old_Nx-1,int((ix+1.)*res_ratio));
-    old_p2[1] = fmin(old_Ny-1,int((iy+1.)*res_ratio));
+    old_p2[0] = MIN(old_Nx-1,int((ix+1.)*res_ratio));
+    old_p2[1] = MIN(old_Ny-1,int((iy+1.)*res_ratio));
     
     for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
     {
@@ -2171,12 +2171,12 @@ void PixelMap::copy_in(
     double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
     double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
     
-    double xmin = fmax(0,ix - halfpixel);
-    double xmax = fmin(NNx,ix + halfpixel);
+    double xmin = MAX(0,ix - halfpixel);
+    double xmax = MIN(NNx,ix + halfpixel);
     if(xmin >= xmax) continue;
 
-    double ymin = fmax(0,iy - halfpixel);
-    double ymax = fmin(NNy,iy + halfpixel);
+    double ymin = MAX(0,iy - halfpixel);
+    double ymax = MIN(NNy,iy + halfpixel);
     if(ymin >= ymax) continue;
     
     long imin = (long)(xmin);
@@ -2185,10 +2185,10 @@ void PixelMap::copy_in(
     long jmax = (long)(ymax);
 
     for(size_t j = jmin ; j <= jmax ; ++j ){
-      double area1 = fmin(ymax,j+1) -  fmax(ymin,j);
+      double area1 = MIN(ymax,j+1) -  MIN(ymin,j);
       if(area1 <= 0.0) continue;
       for(size_t i = imin ; i <= imax ; ++i ){
-        double area = (fmin(xmax,i+1) -  fmax(xmin,i)) * area1 ;
+        double area = (MIN(xmax,i+1) -  MIN(xmin,i)) * area1 ;
         map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
       }
     }
