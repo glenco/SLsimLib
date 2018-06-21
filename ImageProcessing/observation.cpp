@@ -384,12 +384,6 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitT
   return;
 }
 
-/// returns factor by which code image units need to be multiplied by to get flux units
-double Observation::flux_convertion_factor()
-{
-  return pow(10,-0.4*mag_zeropoint);
-}
-
 /// Converts an observed image to the units of the lensing simulation
 void Observation::Convert_back (PixelMap &map)
 {
