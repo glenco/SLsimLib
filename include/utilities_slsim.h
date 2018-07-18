@@ -977,6 +977,7 @@ namespace Utilities
     PosType operator()(void);
     /// generates a Gaussian distributed number with unit variance by polar Box-Muller transform
     PosType gauss(){
+      ++calls;
       if(count){
         do{
           u = 2*ran2() - 1;
@@ -993,6 +994,7 @@ namespace Utilities
       }
     };
     
+    size_t calls = 0;  /// total number of calls
   private:
     long idum;
     PosType ran2(void);
