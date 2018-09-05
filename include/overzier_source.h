@@ -10,9 +10,9 @@
 #include "source.h"
 #include "sersic_source.h"
 
-// define pi here if not done via include
-#ifndef pi
-#define pi 3.141592653589793238462643383279502884
+// define PI here if not done via include
+#ifndef PI
+#define PI 3.141592653589793238462643383279502884
 #endif
 
 /**
@@ -69,9 +69,9 @@ public:
   void setMagBulge(Band band,PosType my_mag);
   
 	/// bulge half light radius in radians
-	PosType getReff() const { return Reff/(pi/180/60/60); }
+	PosType getReff() const { return Reff/(PI/180/60/60); }
 	/// disk scale height in radians
-	PosType getRh() const { return Rh/(pi/180/60/60); }
+	PosType getRh() const { return Rh/(PI/180/60/60); }
 	
   /// the bulge to total flux ratio
 	PosType getBtoT() const { return pow(10,(-mag_bulge + mag)/2.5); }

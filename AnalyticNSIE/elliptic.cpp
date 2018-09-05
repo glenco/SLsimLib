@@ -67,12 +67,12 @@ void Elliptic::alpha(PosType x[],PosType alpha[]){
   std::cout << "mo = " << mo << "a2 = " << a2 << "b2 = " << b2 << "x1 " << xtmp[0] << "x2 " << xtmp[1] << std::endl;
 
   Elliptic::DALPHAXDM funcX(lambda,a2,b2,xtmp,isohalo);
-  //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/pi;
-  alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/pi;
+  //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/PI;
+  alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/PI;
   
   
   Elliptic::DALPHAYDM funcY(lambda,a2,b2,xtmp,isohalo);
-  alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<Elliptic::DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-6)/pi;
+  alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<Elliptic::DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-6)/PI;
   
   //std::cout << "alpha = " << alpha[0] << " " << alpha[1] << std::endl;
 

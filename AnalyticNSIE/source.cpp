@@ -154,8 +154,8 @@ void SourceBLR::assignParams(InputParams& params){
   
   if(fail) exit(1);
   
-  source_inclination *= pi/180;
-  source_opening_angle *= pi/180;
+  source_inclination *= PI/180;
+  source_opening_angle *= PI/180;
   source_monocrome = false;
   
   printSource();
@@ -180,8 +180,8 @@ void SourceBLR::printSource(){
   cout << "z_source " << zsource << endl;
   cout << "BHmass " << source_BHmass << endl;
   cout << "gamma " << source_gamma << endl;
-  cout << "incl " << source_inclination*180/pi << endl;
-  cout << "opening angl " << source_opening_angle*180/pi << endl;
+  cout << "incl " << source_inclination*180/PI << endl;
+  cout << "opening angl " << source_opening_angle*180/PI << endl;
   cout << "r_in " << source_r_in << endl;
   cout << "r_out " << source_r_out << endl;
   cout << "nuo " << source_nuo << endl;
@@ -570,7 +570,7 @@ SourceShapelets::SourceShapelets(
   CCfits::PHDU& h0 = fp->pHDU();
   
   h0.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*pi;
+  source_r *= 0.03/180./60./60.*PI;
   h0.readKey("DIM", n1);
   h0.readKey("ID", id);
   n2 = n1;
@@ -621,7 +621,7 @@ SourceShapelets::SourceShapelets(
   CCfits::PHDU& h0 = fp->pHDU();
   
   h0.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*pi;
+  source_r *= 0.03/180./60./60.*PI;
   h0.readKey("SED_TYPE",sed_type);
   
   h0.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude
@@ -676,7 +676,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   
   for (int i = 0; i < n1; i++,coei *= 2,coej=1 )
   {
-    tmp = factrl(i)*pi;
+    tmp = factrl(i)*PI;
     for (int j = 0; j < n2; j++,coej *= 2 )
     {
       
@@ -727,7 +727,7 @@ void SourceShapelets::NormalizeFlux()
       coeff_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
     }
   }
-  coeff_flux *= sqrt(pi)*source_r;
+  coeff_flux *= sqrt(PI)*source_r;
 }
 
 /// Default constructor. Reads in sources from the default catalog. No magnitude limit.
@@ -781,7 +781,7 @@ void SourceMultiShapelets::assignParams(InputParams& params){
   if(!params.get("source_sb_limit",sb_limit))
     setSBlimit_magarcsec(30.);
   else
-    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
+    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
   
   if(!params.get("shapelets_folder",shapelets_folder)){
     std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;

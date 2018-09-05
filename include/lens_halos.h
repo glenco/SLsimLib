@@ -381,7 +381,7 @@ protected:
       PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
       
       if(xisq*xisq < 1e-20) xisq = 1.0e-10;
-      KappaType kappa=halo->kappa_h(xisq)/pi/xisq/xisq;
+      KappaType kappa=halo->kappa_h(xisq)/PI/xisq/xisq;
       //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
       return kappa*halo->mass/pow((1.-(1.-halo->fratio*halo->fratio)*u),n+0.5);
     }
@@ -402,7 +402,7 @@ protected:
       PosType km1=halo->kappa_h(xisq-h)/((xisq-h)*(xisq-h));
       PosType kp2=halo->kappa_h(xisq+2*h)/((xisq+2*h)*(xisq+2*h));
       PosType km2=halo->kappa_h(xisq-2*h)/((xisq-2*h)*(xisq-2*h));
-      PosType dkdxi=(8*kp1-8*km1-kp2+km2)/12/h/pi;
+      PosType dkdxi=(8*kp1-8*km1-kp2+km2)/12/h/PI;
       
 
 
@@ -423,7 +423,7 @@ protected:
       PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
       
       if(xisq*xisq < 1e-20) xisq = 1.0e-10;
-      PosType alpha=halo->alpha_h(xisq)/pi/xisq;
+      PosType alpha=halo->alpha_h(xisq)/PI/xisq;
       //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
       return xisq*alpha*halo->mass/pow((1.-(1.-halo->fratio*halo->fratio)*u),0.5);
     }
@@ -441,7 +441,7 @@ protected:
       PosType tmp = m*rmx;
       if(tmp*tmp < 1e-20) tmp = 1.0e-10;
       PosType xiso=tmp/halo->rscale;
-      KappaType kappa=halo->kappa_h(xiso)/pi/xiso/xiso;
+      KappaType kappa=halo->kappa_h(xiso)/PI/xiso/xiso;
       
       PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
       KappaType kappam=0,gamma[2]={0,0},phi;
@@ -472,7 +472,7 @@ protected:
       PosType tmp = m*rmx;
       if(tmp*tmp < 1e-20) tmp = 1.0e-10;
       PosType xiso=tmp/halo->rscale;
-      KappaType kappa=halo->kappa_h(xiso)/pi/xiso/xiso;
+      KappaType kappa=halo->kappa_h(xiso)/PI/xiso/xiso;
       
       PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
       KappaType kappam=0,gamma[2]={0,0},phi;
@@ -539,7 +539,7 @@ protected:
     PosType r;
     PosType a[2] = {0,0},x[2] = {0,0};
     KappaType k = 0,g[3] = {0,0,0} ,p=0;
-    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x);return 2*pi*k*r*r; }
+    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x);return 2*PI*k*r*r; }
   };
 */
   
@@ -608,7 +608,7 @@ protected:
         //std::cout << " R = " << exp(logR) << std::endl;
         
         if(exp(2*logR) == 0.0) return 0.0;
-         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
+         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*PI,1.0e-7)
          *exp(2*logR);
       }else{
         PosType alpha[2] = {0,0},x[2] = {0,0};
@@ -618,7 +618,7 @@ protected:
         x[1] = 0;
         
         halo->force_halo(alpha,&kappa,gamma,&phi,x);
-        return 2*pi*kappa*exp(2*logR);
+        return 2*PI*kappa*exp(2*logR);
       }
     }
   protected:
@@ -738,7 +738,7 @@ protected:
 	void assignParams(InputParams& params);
   
 	// Override internal structure of halos
-  /// r |alpha(r = x*rscale)| pi Sigma_crit / Mass
+  /// r |alpha(r = x*rscale)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
@@ -821,7 +821,7 @@ private:
 	PosType beta;
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
 		return -1.0*InterpolateFromTable(x)/InterpolateFromTable(xmax);
 	}
@@ -879,14 +879,14 @@ private:
 	// PosType beta;
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(
                          PosType x  /// r/rscale
                          ) const{
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
-  /// this is kappa Sigma_crit pi (r/rscale)^2 / mass
+  /// this is kappa Sigma_crit PI (r/rscale)^2 / mass
 	inline KappaType kappa_h(
                            PosType x   /// r/rscale
                            ) const {
@@ -894,12 +894,12 @@ private:
     double tmp = x/xmax;
 		return 0.5*(-beta+2)*pow(tmp,2-beta);
 	}
-  /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
+  /// this is |gamma| Sigma_crit PI (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
     return -beta*pow(x/xmax,-beta+2);
 	}
-  /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rsize
+  /// this is phi Sigma_crit PI / mass, the constants are added so that it is continous over the bourder at Rsize
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
     return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(LensHalo::getRsize()) ;
@@ -1056,7 +1056,7 @@ protected:
 	void assignParams(InputParams& params);
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
@@ -1127,7 +1127,7 @@ protected:
 	void assignParams(InputParams& params);
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const{
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}

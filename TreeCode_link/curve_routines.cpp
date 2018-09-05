@@ -1913,8 +1913,8 @@ namespace Utilities{
       
       for(ii=0;ii<Ncrit;++ii){
         for(critical[ii].imagekist->MoveToTop(),l=0;l<critical[ii].imagekist->Nunits();l++,critical[ii].imagekist->Down()){
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->image->x[0] << " ";
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->image->x[1] << std::endl;
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->image->x[0] << " ";
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->image->x[1] << std::endl;
         }
       }
       
@@ -1934,8 +1934,8 @@ namespace Utilities{
       
       for(ii=0;ii<Ncrit;++ii){
         for(critical[ii].imagekist->MoveToTop(),l=0;l<critical[ii].imagekist->Nunits();l++,critical[ii].imagekist->Down()){
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->x[0] << " ";
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->x[1] << std::endl;
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->x[0] << " ";
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->x[1] << std::endl;
         }
       }
       file_crit.close();
@@ -1953,8 +1953,8 @@ namespace Utilities{
       }
       
       for(critical[ind_caustic].imagekist->MoveToTop(),l=0;l<critical[ind_caustic].imagekist->Nunits();l++,critical[ind_caustic].imagekist->Down()){
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[0] << " ";
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[1] << std::endl;
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[0] << " ";
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[1] << std::endl;
       }
       
       file_crit.close();
@@ -1972,8 +1972,8 @@ namespace Utilities{
       }
       
       for(critical[ind_caustic].imagekist->MoveToTop(),l=0;l<critical[ind_caustic].imagekist->Nunits();l++,critical[ind_caustic].imagekist->Down()){
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->x[0] << " ";
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->x[1] << std::endl;
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->x[0] << " ";
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->x[1] << std::endl;
       }
       
       file_crit.close();
@@ -2439,7 +2439,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
               intersects = true;
               
               if(test){
-                std::cout << "smin/pi = " << smin/pi << std::endl;
+                std::cout << "smin/pi = " << smin/PI << std::endl;
                 std::cout << "intersecting line segments ii = " << ii << std::endl;
                 std::cout << hull.back()->x[0] << " " << hull.back()->x[1] << " -- "
                 << Res[imin]->x[0] << " " << Res[imin]->x[1] << std::endl;
@@ -2581,13 +2581,13 @@ void Utilities::contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsig
     if (mostdistant_contour_pnt<tmp_dist){mostdistant_contour_pnt=tmp_dist;farpoint[0]=P[jj].x[0];farpoint[1]=P[jj].x[1];}
   }
   *ellipticity=nearest_contour_pnt/mostdistant_contour_pnt;
-  *ellipse_area=nearest_contour_pnt*mostdistant_contour_pnt*pi;
+  *ellipse_area=nearest_contour_pnt*mostdistant_contour_pnt*PI;
   pa=atan2f(farpoint[1]-center.x[1],farpoint[0]-center.x[0]);
   
   C.resize(Npoints);
   
   for(size_t jj=0;jj<Npoints;++jj){
-      t=jj*2.*pi/Npoints;
+      t=jj*2.*PI/Npoints;
       C[jj].x[0]=cos(pa)*mostdistant_contour_pnt*cos(t)-sin(pa)*nearest_contour_pnt*sin(t);
       C[jj].x[1]=sin(pa)*mostdistant_contour_pnt*cos(t)+cos(pa)*nearest_contour_pnt*sin(t);
   }

@@ -160,7 +160,7 @@ LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_
   map->zlens = zlens;
   
   map->center[0] = map->center[1] = 0.0;
-  map->boxlrad = map->boxlarcsec*pi/180/3600.;
+  map->boxlrad = map->boxlarcsec*PI/180/3600.;
 
   PreProcessFFTWMap();
   
@@ -240,7 +240,7 @@ void LensHaloMassMap::initMap()
   }
   
   map->center[0] = map->center[1] = 0.0;
-  map->boxlrad = map->boxlarcsec*pi/180/3600.;
+  map->boxlrad = map->boxlarcsec*PI/180/3600.;
   
   if(maptype == moka){
     
@@ -249,14 +249,14 @@ void LensHaloMassMap::initMap()
     /// converts to the code units
     std::cout << "converting the units of the MOKA map" << std::endl;
     
-    double fac = map->DS/map->DLS/map->Dlens*map->h/(4*pi*Grav);
+    double fac = map->DS/map->DLS/map->Dlens*map->h/(4*PI*Grav);
     
     map->convergence *= fac;
     map->gamma1 *= fac;
     map->gamma2 *= fac;
     map->phi *= fac;
     
-    fac = 1/(4*pi*Grav);
+    fac = 1/(4*PI*Grav);
     
     map->alpha1 *= fac;
     map->alpha2 *= fac;

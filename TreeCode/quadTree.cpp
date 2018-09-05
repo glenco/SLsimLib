@@ -648,7 +648,7 @@ void TreeQuad::walkTree_iter(
             
 					  if(haloON){ prefac = halos[tmp_index]->get_mass(); }
             else{ prefac = masses[tmp_index]; }
-					  prefac /= rcm2*pi/screening;
+					  prefac /= rcm2*PI/screening;
             
 					  tmp = -1.0*prefac;
             
@@ -689,7 +689,7 @@ void TreeQuad::walkTree_iter(
 						  if(rcm2 < 1e-20) rcm2 = 1e-20;
 						  //rcm = sqrt(rcm2);
               
-						  //prefac = masses[MultiMass*tmp_index]/rcm2/pi;
+						  //prefac = masses[MultiMass*tmp_index]/rcm2/PI;
 						  //arg1 = rcm2/(sizes[tmp_index*MultiRadius]*sizes[tmp_index*MultiRadius]);
 						  //arg2 = sizes[tmp_index*MultiRadius];
 						  //tmp = sizes[tmp_index*MultiRadius];
@@ -713,29 +713,29 @@ void TreeQuad::walkTree_iter(
 			  allowDescent=false;
                 
         double screening = exp(-rcm2cell*inv_screening_scale2);
-        double tmp = -1.0*(*treeit)->mass/rcm2cell/pi*screening;
+        double tmp = -1.0*(*treeit)->mass/rcm2cell/PI*screening;
         
         alpha[0] += tmp*xcm[0];
         alpha[1] += tmp*xcm[1];
         
         {      //  taken out to speed up
-          tmp=-2.0*(*treeit)->mass/pi/rcm2cell/rcm2cell*screening;
+          tmp=-2.0*(*treeit)->mass/PI/rcm2cell/rcm2cell*screening;
           gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
           gamma[1] += xcm[0]*xcm[1]*tmp;
           
-          *phi += 0.5*(*treeit)->mass*log( rcm2cell )/pi*screening;
-          *phi -= 0.5*( (*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1] + 2*(*treeit)->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell)*screening;
+          *phi += 0.5*(*treeit)->mass*log( rcm2cell )/PI*screening;
+          *phi -= 0.5*( (*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1] + 2*(*treeit)->quad[2]*xcm[0]*xcm[1] )/(PI*rcm2cell*rcm2cell)*screening;
         }
         
         // quadrapole contribution
         //   the kappa and gamma are not calculated to this order
         alpha[0] -= ((*treeit)->quad[0]*xcm[0] + (*treeit)->quad[2]*xcm[1])
-        /(rcm2cell*rcm2cell)/pi*screening;
+        /(rcm2cell*rcm2cell)/PI*screening;
         alpha[1] -= ((*treeit)->quad[1]*xcm[1] + (*treeit)->quad[2]*xcm[0])
-        /(rcm2cell*rcm2cell)/pi*screening;
+        /(rcm2cell*rcm2cell)/PI*screening;
         
         tmp = 4*((*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1]
-                 + 2*(*treeit)->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi*screening;
+                 + 2*(*treeit)->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/PI*screening;
         
         alpha[0] += tmp*xcm[0];
         alpha[1] += tmp*xcm[1];
@@ -879,7 +879,7 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
           
           if(haloON ) { prefac = halos[tmp_index]->get_mass(); }
           else{ prefac = masses[tmp_index]; }
-          prefac /= rcm2*pi/screening;
+          prefac /= rcm2*PI/screening;
           
           
           alpha[0] += -1.0*prefac*xcm[0];
@@ -945,29 +945,29 @@ void TreeQuad::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alph
     { // use whole cell
       
       double screening = exp(-rcm2cell*inv_screening_scale2);
-			double tmp = -1.0*branch->mass/rcm2cell/pi*screening;
+			double tmp = -1.0*branch->mass/rcm2cell/PI*screening;
       
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];
       
 			{      //  taken out to speed up
-				tmp=-2.0*branch->mass/pi/rcm2cell/rcm2cell*screening;
+				tmp=-2.0*branch->mass/PI/rcm2cell/rcm2cell*screening;
 				gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
 				gamma[1] += xcm[0]*xcm[1]*tmp;
         
-        *phi += 0.5*tree->current->mass*log( rcm2cell )/pi*screening;
-        *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(pi*rcm2cell*rcm2cell)*screening;
+        *phi += 0.5*tree->current->mass*log( rcm2cell )/PI*screening;
+        *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(PI*rcm2cell*rcm2cell)*screening;
 			}
       
 			// quadrapole contribution
 			//   the kappa and gamma are not calculated to this order
 			alpha[0] -= (branch->quad[0]*xcm[0] + branch->quad[2]*xcm[1])
-      /(rcm2cell*rcm2cell)/pi*screening;
+      /(rcm2cell*rcm2cell)/PI*screening;
 			alpha[1] -= (branch->quad[1]*xcm[1] + branch->quad[2]*xcm[0])
-      /(rcm2cell*rcm2cell)/pi*screening;
+      /(rcm2cell*rcm2cell)/PI*screening;
       
 			tmp = 4*(branch->quad[0]*xcm[0]*xcm[0] + branch->quad[1]*xcm[1]*xcm[1]
-               + 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/pi*screening;
+               + 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/PI*screening;
       
 			alpha[0] += tmp*xcm[0];
 			alpha[1] += tmp*xcm[1];

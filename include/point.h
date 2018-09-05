@@ -16,8 +16,8 @@
 #include <standard.h>
 #include "Kist.h"
 
-#ifndef pi
-#define pi  3.141593
+#ifndef PI
+#define PI  3.141593
 #endif
 
 #ifndef error_message

@@ -286,20 +286,20 @@ protected:
       
       sigma = (8 - 12*q + 6*q2 - q3)/4;
       if(q > 1){
-        sigma *= 10/size/size/7/pi;
+        sigma *= 10/size/size/7/PI;
         M = (-1 + 20*q2*(1 - q + 3*q2/8 - q3/20) )/7;
-        *phi += Mass*(-1232. + 1200*q2 - 800.*q3 + 225.*q4 - 24*q5 + 120*log(2./q) )/840/pi;
+        *phi += Mass*(-1232. + 1200*q2 - 800.*q3 + 225.*q4 - 24*q5 + 120*log(2./q) )/840/PI;
       }else{
-        sigma = 10*( sigma - 1 + 3*q - 3*q2 + q3)/size/size/7/pi;
+        sigma = 10*( sigma - 1 + 3*q - 3*q2 + q3)/size/size/7/PI;
         M = 10*q2*(1 - 3*q/4 + 3*q3/10)/7;
         
         *phi += Mass*( phiintconst + 10*(q2/2 - 3*q4/4 + 3*q5/50)/7
-                      )/pi;
+                      )/PI;
       }
     }
                          
     PosType alpha_r,gt;  // deflection * Sig_crit / Mass
-    alpha_r = (M-1)/pi/r;
+    alpha_r = (M-1)/PI/r;
     gt = alpha_r/r - sigma;
     
     alpha[0] -= Mass*alpha_r*xcm[0]/r;
@@ -307,7 +307,7 @@ protected:
     gamma[0] -= gt*Mass*(xcm[0]*xcm[0]-xcm[1]*xcm[1])/r/r;
     gamma[1] -= gt*Mass*2*xcm[0]*xcm[1]/r/r;
     *kappa += Mass*sigma;
-    *phi -= Mass*log(r)/pi;
+    *phi -= Mass*log(r)/PI;
   }
   
   /* Exponential kernel for particle profile
@@ -326,7 +326,7 @@ protected:
                         ) const {
     
     
-     PosType prefac = Mass/rcm2/pi;
+     PosType prefac = Mass/rcm2/PI;
      PosType arg1 = rcm2/(size*size);
      
      PosType tmp = (alpha_h(arg1,size) + 1.0)*prefac;

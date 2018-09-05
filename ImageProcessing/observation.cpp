@@ -42,7 +42,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.8;
       ron = 5.;
       seeing = 0.18;
-      pix_size = .1/60./60./180.*pi;
+      pix_size = .1/60./60./180.*PI;
       break;
    case Euclid_Y:
       diameter = 119.;
@@ -52,7 +52,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.57;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*pi;
+      pix_size = .3/60./60./180.*PI;
       break;
     case Euclid_J:
       diameter = 119.;
@@ -62,7 +62,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.53;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*pi;
+      pix_size = .3/60./60./180.*PI;
       break;
     case Euclid_H:
       diameter = 119.;
@@ -72,7 +72,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.59;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*pi;
+      pix_size = .3/60./60./180.*PI;
       break;
     case KiDS_u:
       diameter = 265.;
@@ -82,7 +82,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.93;
       ron = 5.;
       seeing = 1.0;
-      pix_size = .2/60./60./180.*pi;
+      pix_size = .2/60./60./180.*PI;
       break;
     case KiDS_g:
       diameter = 265.;
@@ -92,7 +92,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.29;
       ron = 5.;
       seeing = 0.8;
-      pix_size = .2/60./60./180.*pi;
+      pix_size = .2/60./60./180.*PI;
       break;
     case KiDS_r:
       diameter = 265.;
@@ -102,7 +102,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 21.40;
       ron = 5.;
       seeing = 0.7;
-      pix_size = .2/60./60./180.*pi;
+      pix_size = .2/60./60./180.*PI;
       break;
     case KiDS_i:
       diameter = 265.;
@@ -112,7 +112,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 20.64;
       ron = 5.;
       seeing = 1.1;
-      pix_size = .2/60./60./180.*pi;
+      pix_size = .2/60./60./180.*PI;
       break;
     case HST_ACS_I:
       diameter = 250.;
@@ -122,7 +122,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.8;
       ron = 3.;
       seeing = 0.1;
-      pix_size = .05/60./60./180.*pi;
+      pix_size = .05/60./60./180.*PI;
       break;
     case CFHT_u:
       diameter = 358.;
@@ -132,7 +132,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.7;
       ron = 5.;
       seeing = 0.85;
-      pix_size = .187/60./60./180.*pi;
+      pix_size = .187/60./60./180.*PI;
       break;
     case CFHT_g:
       diameter = 358.;
@@ -142,7 +142,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.0;
       ron = 5.;
       seeing = 0.78;
-      pix_size = .187/60./60./180.*pi;
+      pix_size = .187/60./60./180.*PI;
       break;
     case CFHT_r:
       diameter = 358.;
@@ -152,7 +152,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 21.3;
       ron = 5.;
       seeing = 0.71;
-      pix_size = .187/60./60./180.*pi;
+      pix_size = .187/60./60./180.*PI;
       break;
     case CFHT_i:
       diameter = 358.;
@@ -162,7 +162,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 20.3;
       ron = 5.;
       seeing = 0.64;
-      pix_size = .187/60./60./180.*pi;
+      pix_size = .187/60./60./180.*PI;
     break;
     case CFHT_z:
       diameter = 358.;
@@ -172,7 +172,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 19.4;
       ron = 5.;
       seeing = 0.68;
-      pix_size = .187/60./60./180.*pi;
+      pix_size = .187/60./60./180.*PI;
       break;
       
     default:
@@ -180,7 +180,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       break;
 	}
 
-	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 	telescope = true;
 }
 
@@ -197,7 +197,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
 diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), seeing(seeing),Npix_x(Npix_x),Npix_y(Npix_y)
 		{
-			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 			telescope = false;
 		}
 
@@ -215,7 +215,7 @@ diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
 diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), oversample(oversample),Npix_x(Npix_x),Npix_y(Npix_y)
 		{
-	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*pi/4./hplanck) - 48.6;
+	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 
 #ifdef ENABLE_FITS
 
@@ -625,7 +625,7 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
     }
 
     double Q = pow(10,0.4*(mag_zeropoint+48.6));
-    double res_in_arcsec = resolution*180.*60.*60/pi;
+    double res_in_arcsec = resolution*180.*60.*60/PI;
     double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
     
     double rms = sqrt(exp_num*ron*ron+back_mean)/exp_time;
@@ -645,7 +645,7 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
   
   //PixelMap outmap(pmap);
   double Q = pow(10,0.4*(mag_zeropoint+48.6));
-  double res_in_arcsec = pmap.getResolution()*180.*60.*60/pi;
+  double res_in_arcsec = pmap.getResolution()*180.*60.*60/PI;
   double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
   double rms, noise;
   double rms2 = sqrt(exp_num*ron*ron);

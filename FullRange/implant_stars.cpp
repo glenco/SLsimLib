@@ -100,7 +100,7 @@ void LensHalo::implant_stars(
       KappaType phi;
       force_halo(alpha,&Sigma,gamma,&phi,xcm,false);
       star_Sigma[j] = star_fstars*Sigma;
-      star_region[j] = 1.0/sqrt(pi*star_Sigma[j]/(mean_mstar[j]*(float)NstarsPerImage));
+      star_region[j] = 1.0/sqrt(PI*star_Sigma[j]/(mean_mstar[j]*(float)NstarsPerImage));
       
       star_xdisk[j][0] = centers[j][0];
       star_xdisk[j][1] = centers[j][1];
@@ -125,7 +125,7 @@ void LensHalo::implant_stars(
 		for(i=0;i<NstarsPerImage;++i,++m){
 			//m=j*NstarsPerImage+i;
 			r = star_region[j]*sqrt(ran2(seed));
-			theta=2*pi*ran2(seed);
+			theta=2*PI*ran2(seed);
 			stars_xp[m][0] = star_xdisk[j][0] + r*cos(theta);
 			stars_xp[m][1] = star_xdisk[j][1] + r*sin(theta);
 			stars_xp[m][2] = 0.0;
@@ -318,7 +318,7 @@ float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long 
 		powerp1=-1.3;
 		tmp0=2.0*chab_param[2]*chab_param[2];
 		tmp1=chab_param[0]/(log(10.0)*log(10.0))*exp((-(log10(chab_param[1]))*(log10(chab_param[1])))/tmp0);
-		tmp2=-0.5*chab_param[0]/log(10)*sqrt(pi)*sqrt(tmp0);
+		tmp2=-0.5*chab_param[0]/log(10)*sqrt(PI)*sqrt(tmp0);
 		n1=tmp2*(erff(log10(chab_param[1])/sqrt(tmp0))-erff((log10(chab_param[1])-log10(minmass))/sqrt(tmp0)));
 		n2=tmp1/powerp1*(pow(maxmass,powerp1)-1.0);
 		n0=n1+n2;

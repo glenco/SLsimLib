@@ -811,11 +811,11 @@ void LensHaloRealNSIE::construct_ellip_tables(){
   Fofq_table.resize(N);
   q_table[0] = 0.01;
   NormFuncer funcer(q_table[0]);
-  Fofq_table[0] = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,pi/2,1.0e-6)*2/pi;
+  Fofq_table[0] = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,PI/2,1.0e-6)*2/PI;
   for(int i=1 ; i < N-1 ; ++i){
     q_table[i] = i*1.0/(N-1) + 0.;
     NormFuncer funcer(q_table[i]);
-    Fofq_table[i] = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,pi/2,1.0e-6)*2/pi;
+    Fofq_table[i] = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,PI/2,1.0e-6)*2/PI;
   }
   q_table.back() = 1.0;
   Fofq_table.back() = 1.0;
@@ -825,7 +825,7 @@ PosType LensHaloRealNSIE::rmax_calc(){
  
   if(fratio == 1.0 || rcore > 0.0)
     return sqrt( pow( LensHalo::get_mass()*Grav*lightspeed*lightspeed
-                     *sqrt(fratio)/pi/sigma/sigma + rcore,2)
+                     *sqrt(fratio)/PI/sigma/sigma + rcore,2)
                                 - rcore*rcore );
   
   // This is because there is no easy way of finding the circular Rmax for a fixed mass when rcore != 0
@@ -833,11 +833,11 @@ PosType LensHaloRealNSIE::rmax_calc(){
   
   // asymmetric case
   //NormFuncer funcer(fratio);
-  //double ellipticint = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,pi/2,1.0e-6)*2/pi;
+  //double ellipticint = Utilities::nintegrate<NormFuncer,double>(funcer,0.0,PI/2,1.0e-6)*2/PI;
   
   double ellipticint = Utilities::InterpolateYvec(q_table,Fofq_table,fratio)*sqrt(fratio);
   
-  return LensHalo::get_mass()*Grav*lightspeed*lightspeed/pi/sigma/sigma/ellipticint;
+  return LensHalo::get_mass()*Grav*lightspeed*lightspeed/PI/sigma/sigma/ellipticint;
 }
 
 /*
@@ -912,7 +912,7 @@ void LensHalo::force_halo_sym(
   /// intersecting, subtract the point particle
   if(rcm2 < Rmax*Rmax)
   {
-    PosType prefac = mass/rcm2/pi;
+    PosType prefac = mass/rcm2/PI;
     PosType x = sqrt(rcm2)/rscale;
     // PosType xmax = Rmax/rscale;
     PosType tmp = (alpha_h(x) + 1.0*subtract_point)*prefac;
@@ -927,13 +927,13 @@ void LensHalo::force_halo_sym(
     /*if (rcm2 < 1E-6){
       std::cout << kappa_h(x)*prefac << " " << 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*gamma_h(x)*prefac/rcm2 << " "  << xcm[0]*xcm[1]*gamma_h(x)*prefac/rcm2 << " " <<rcm2 << " " << alpha_h(x)*prefac*xcm[0] << " " <<  alpha_h(x)*prefac*xcm[1] <<  std::endl;
     }*/
-    *phi += phi_h(x) * mass / pi ;
+    *phi += phi_h(x) * mass / PI ;
   }
   else // the point particle is not subtracted
   {
     if (subtract_point == false)
     {
-      PosType prefac = screening*mass/rcm2/pi;
+      PosType prefac = screening*mass/rcm2/PI;
       alpha[0] += -1.0 * prefac * xcm[0];
       alpha[1] += -1.0 * prefac * xcm[1];
       
@@ -947,7 +947,7 @@ void LensHalo::force_halo_sym(
       
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
-      *phi += 0.5 * log(rcm2) * mass / pi ;
+      *phi += 0.5 * log(rcm2) * mass / PI ;
     }
   }
   
@@ -1000,15 +1000,15 @@ void LensHalo::force_halo_asym(
       alpha_ellip[1]=alpha_tmp[1]*mass_norm_factor;
       double f1 = (Rmax - r)/(Rmax - LensHalo::getRsize()),f2 = (r - LensHalo::getRsize())/(Rmax - LensHalo::getRsize());
 
-     // PosType tmp = mass/Rmax/pi/r;
-      PosType tmp = mass/rcm2/pi;
+     // PosType tmp = mass/Rmax/PI/r;
+      PosType tmp = mass/rcm2/PI;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       
       {
-        PosType tmp = -2.0*mass/rcm2/pi/rcm2;
+        PosType tmp = -2.0*mass/rcm2/PI/rcm2;
         gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
         gamma[1] += xcm[0]*xcm[1]*tmp;
         //gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;
@@ -1025,8 +1025,8 @@ void LensHalo::force_halo_asym(
       if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       
-      alpha[0] +=  alpha_tmp[0]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi*xcm[0];
-      alpha[1] +=  alpha_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi*xcm[1];
+      alpha[0] +=  alpha_tmp[0]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/PI*xcm[0];
+      alpha[1] +=  alpha_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/PI*xcm[1];
 
       if(get_switch_flag()==true){  /// case distinction used for elliptical NFWs (true) only (get_switch_flag==true)
         *kappa += kappa_tmp*mass_norm_factor*mass_norm_factor;
@@ -1035,8 +1035,8 @@ void LensHalo::force_halo_asym(
       }else{
         *kappa += kappa_tmp*mass_norm_factor;
 
-        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;//+1.0*subtract_point*mass/rcm2/pi/rcm2*0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1]);
-        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/pi/rcm2*(xcm[0]*xcm[1]);
+        gamma[0] += 0.5*gamma_tmp[0]*mass_norm_factor;//+1.0*subtract_point*mass/rcm2/PI/rcm2*0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1]);
+        gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/PI/rcm2*(xcm[0]*xcm[1]);
         
         //if(theta < 0.660 && theta> 0.659){
         //assert(mass_norm_factor==1);
@@ -1055,7 +1055,7 @@ void LensHalo::force_halo_asym(
     
     if(subtract_point){
       //std::cout << "DO WE EVEN GET HERE??" << std::endl;
-      PosType tmp =  screening*mass/pi/rcm2; // *mass_norm_factor
+      PosType tmp =  screening*mass/PI/rcm2; // *mass_norm_factor
       alpha[0] +=  tmp*xcm[0];
       alpha[1] +=  tmp*xcm[1];
       
@@ -1063,7 +1063,7 @@ void LensHalo::force_halo_asym(
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
       
-      *phi += 0.5 * log(rcm2) * mass / pi ; // *mass_norm_factor
+      *phi += 0.5 * log(rcm2) * mass / PI ; // *mass_norm_factor
     }
     
   }
@@ -1071,7 +1071,7 @@ void LensHalo::force_halo_asym(
   {
     if (subtract_point == false)
     {
-      PosType prefac = mass/rcm2/pi;
+      PosType prefac = mass/rcm2/PI;
       alpha[0] += -1.0 * prefac * xcm[0];
       alpha[1] += -1.0 * prefac * xcm[1];
       
@@ -1088,7 +1088,7 @@ void LensHalo::force_halo_asym(
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
       
-      *phi += 0.5 * log(rcm2) * mass / pi ;
+      *phi += 0.5 * log(rcm2) * mass / PI ;
     }
   }
   
@@ -1127,7 +1127,7 @@ void LensHalo::force_halo_asym(
  // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
  
  PosType alpha_out[2],alpha_in[2],rin,x_in[2];
- PosType prefac = -1.0*mass/Rmax/pi;
+ PosType prefac = -1.0*mass/Rmax/PI;
  PosType r = sqrt(rcm2);
  float units = pow(sigma/lightspeed,2)/Grav/sqrt(fratio); // mass/distance(physical)
  
@@ -1190,7 +1190,7 @@ void LensHalo::force_halo_asym(
 	{
  if (subtract_point == false)
  {
- PosType prefac = mass/rcm2/pi;
+ PosType prefac = mass/rcm2/PI;
  alpha[0] += -1.0*prefac*xcm[0];
  alpha[1] += -1.0*prefac*xcm[1];
  
@@ -1206,7 +1206,7 @@ void LensHalo::force_halo_asym(
  
  
 	if(subtract_point){
- PosType fac = mass/rcm2/pi;
+ PosType fac = mass/rcm2/PI;
  alpha[0] += fac*xcm[0];
  alpha[1] += fac*xcm[1];
  
@@ -1252,7 +1252,7 @@ void LensHaloRealNSIE::force_halo(
       // This is the case when the ray is within the NSIE's circular region of influence but outside its elliptical truncation
       
       PosType alpha_iso[2],alpha_ellip[2];
-      //PosType prefac = -1.0*mass/Rmax/pi;
+      //PosType prefac = -1.0*mass/Rmax/PI;
       PosType r = sqrt(rcm2);
       
       //double Rin = sqrt(rcm2)*LensHalo::getRsize()/ellipR;
@@ -1274,15 +1274,15 @@ void LensHaloRealNSIE::force_halo(
       //
       
       // point mass solution
-      // PosType tmp = mass/rcm2/pi;
-      PosType tmp = LensHalo::get_mass()/rcm2/pi;
+      // PosType tmp = mass/rcm2/PI;
+      PosType tmp = LensHalo::get_mass()/rcm2/PI;
       alpha_iso[0] = -1.0*tmp*xcm[0];
       alpha_iso[1] = -1.0*tmp*xcm[1];
       
       alpha[0] += alpha_iso[0]*f2 + alpha_ellip[0]*f1;
       alpha[1] += alpha_iso[1]*f2 + alpha_ellip[1]*f1;
       {
-        PosType tmp = -2.0*LensHalo::get_mass()/rcm2/pi/rcm2;
+        PosType tmp = -2.0*LensHalo::get_mass()/rcm2/PI/rcm2;
         
         gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
         gamma[1] += xcm[0]*xcm[1]*tmp;
@@ -1310,7 +1310,7 @@ void LensHaloRealNSIE::force_halo(
     
     if(subtract_point)
     {
-      PosType fac = screening*LensHalo::get_mass()/rcm2/pi;
+      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
       alpha[0] += fac*xcm[0];
       alpha[1] += fac*xcm[1];
       
@@ -1328,7 +1328,7 @@ void LensHaloRealNSIE::force_halo(
     // outside of the halo
     if (subtract_point == false)
     {
-      PosType prefac = LensHalo::get_mass()/rcm2/pi;
+      PosType prefac = LensHalo::get_mass()/rcm2/PI;
       alpha[0] += -1.0*prefac*xcm[0];
       alpha[1] += -1.0*prefac*xcm[1];
       
@@ -1699,7 +1699,7 @@ void LensHaloDummy::force_halo(PosType *alpha
 )
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-  PosType prefac = LensHalo::get_mass()/rcm2/pi;
+  PosType prefac = LensHalo::get_mass()/rcm2/PI;
   PosType tmp = subtract_point*prefac;
   alpha[0] += tmp*xcm[0];
   alpha[1] += tmp*xcm[1];
@@ -1775,19 +1775,19 @@ PosType LensHalo::MassBy2DIntegation(PosType R){
 PosType LensHalo::MassBy1DIntegation(PosType R){
   LensHalo::DMDTHETA dmdtheta(R,this);
   
-  return R*Utilities::nintegrate<LensHalo::DMDTHETA,PosType>(dmdtheta, 0, 2*pi, 1.0e-6)/2;
+  return R*Utilities::nintegrate<LensHalo::DMDTHETA,PosType>(dmdtheta, 0, 2*PI, 1.0e-6)/2;
 }
 
 /// calculates the average gamma_t for LensHalo::test()
 double LensHalo::test_average_gt(PosType R){
   struct test_gt_func f(R,this);
-  return Utilities::nintegrate<test_gt_func>(f,0.0,2.*pi,1.0e-3);
+  return Utilities::nintegrate<test_gt_func>(f,0.0,2.*PI,1.0e-3);
 }
 
-// returns <kappa> x 2pi on a ring at R
+// returns <kappa> x 2PI on a ring at R
 double LensHalo::test_average_kappa(PosType R){
   struct test_kappa_func f(R,this);
-  return Utilities::nintegrate<test_kappa_func>(f,0.0,2.*pi,1.0e-3);
+  return Utilities::nintegrate<test_kappa_func>(f,0.0,2.*PI,1.0e-3);
 }
 
 /// Three tests: 1st - Mass via 1D integration vs mass via 2D integration. 2nd: gamma_t=alpha/r - kappa(R) which can be used for spherical distributions. Deviations are expected for axis ratios <1. For the latter case we use the next test. 3rd: The average along a circular aperture of gamma_t should be equal to <kappa(<R)> minus the average along a circular aperture over kappa. Note that also  alpha/r - kappa is checked for consistency with kappa(<R)-<kappa(R)>. For axis ratios < 1 the factor between the two is expected to be of order O(10%).
@@ -1836,9 +1836,9 @@ bool LensHalo::test(){
     
     //integrate over t
     PosType average_gt, average_kappa;
-    average_gt=test_average_gt(r)/2/pi;
-    average_kappa=test_average_kappa(r)/2/pi;
-    m1 = MassBy1DIntegation(r)/pi/r/r;
+    average_gt=test_average_gt(r)/2/PI;
+    average_kappa=test_average_kappa(r)/2/PI;
+    m1 = MassBy1DIntegation(r)/PI/r/r;
     
     
     std::cout << r/Rmax << "       "  << r/Rsize << "       " << -1.0*average_gt << "         " << m1-average_kappa << "         " <<  m1 << "          " <<  average_kappa << "         "  << -1.0*(m1-average_kappa)/average_gt << std::endl;
@@ -1886,7 +1886,7 @@ PosType LensHalo::DALPHAXDM::operator()(PosType m){
   //PosType alpha[2]={0,0},tm[2] = {m*(isohalo->getRsize()),0};
   //KappaType kappam=0,gamma[2]={0,0},phi;
   
-  kappa=isohalo->kappa_h(xiso)/pi/xiso/xiso*isohalo->mass;
+  kappa=isohalo->kappa_h(xiso)/PI/xiso/xiso*isohalo->mass;
   
   //isohalo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
   //std::cout << "kappa: " << kappa << " " << kappam << " " << kappa/kappam << std::endl;
@@ -1906,7 +1906,7 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
   //PosType alpha[2]={0,0},tm[2] = {m*(isohalo->getRsize()),0};
   //KappaType kappam=0,gamma[2]={0,0},phi;
   
-  kappa=isohalo->kappa_h(xiso)/pi/xiso/xiso*isohalo->mass;
+  kappa=isohalo->kappa_h(xiso)/PI/xiso/xiso*isohalo->mass;
   //isohalo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
   //std::cout << "kappa: " << kappa << " " << kappam << " " << kappa/kappam <<   std::endl;
   assert(kappa >= 0.0);

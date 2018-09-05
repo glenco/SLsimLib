@@ -589,7 +589,7 @@ namespace Utilities{
       map.resize(N*N);
       
       for(int i=0;i<N;++i){
-        tmp = cos( 6.*i*2.*pi/(N-1) );
+        tmp = cos( 6.*i*2.*PI/(N-1) );
         for(int j=0;j<N;++j){
             map[i+N*j] = tmp;
         }

@@ -74,7 +74,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
   static long id=0;
 
   for(i=0;i<Ngrid*Ngrid;++i){
-	  theta= 2*pi*(i % Ngrid)/Ngrid;
+	  theta= 2*PI*(i % Ngrid)/Ngrid;
 	  r= rmin*exp( (i/Ngrid)*1.0/(Ngrid-1) * log(rmax/rmin) );
 	  i_points[i].id=id;
       ++id;

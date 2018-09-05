@@ -57,7 +57,7 @@ public:
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
 	/// Gets sb_limit in mag/arcsec^2
-	PosType getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/pi),2))-48.6;}
+	PosType getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/PI),2))-48.6;}
 	
 	// accessor functions that will sometimes be over ridden in class derivatives
 	/// Redshift of source
@@ -86,7 +86,7 @@ public:
 	/// Sets sb_limit in erg/cm^2/sec/rad^2/Hz
 	void setSBlimit(float limit) {sb_limit = limit;}
 	/// Sets sb_limit in mag/arcsec^2
-	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
+	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/PI,2)/hplanck;}
 
 	PosType changeFilter(std::string filter_in, std::string filter_out, std::string sed);
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
@@ -239,7 +239,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux() const {return pi*source_r*source_r;}
+	PosType getTotalFlux() const {return PI*source_r*source_r;}
 };
 
 /// A source with a Gaussian surface brightness profile
@@ -254,7 +254,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux() const {return 2*pi*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
+	PosType getTotalFlux() const {return 2*PI*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
 };
 
 /// Base class for all sources representing the Broad Line Region (BLR) of a AGN/QSO

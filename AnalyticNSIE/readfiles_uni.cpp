@@ -79,7 +79,7 @@ void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 	Dl = cosmo.angDist(0,zlens); // In comoving Mpc
 	Ds = cosmo.angDist(0,zsource_reference);
 	Dls = cosmo.angDist(zlens,zsource_reference);
-  SigmaCrit = Ds/Dl/Dls/(4*pi*Grav);
+  SigmaCrit = Ds/Dl/Dls/(4*PI*Grav);
 	
   Sigma_uniform = kappa_uniform*SigmaCrit;
   gammaCrit_uniform[0] = gamma_uniform[0]*SigmaCrit;

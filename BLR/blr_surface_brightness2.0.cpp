@@ -78,7 +78,7 @@ double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *sou
 
 	if ( fabs(source->source_nu*(1+source->getZ()) - source->source_nuo) > nu_m ) return 0.0;
 
-	eta = source->source_nuo *(1+source->getZ())/sqrt( 1. - pow( (source->source_nu*(1+source->getZ()) - source->source_nuo)/nu_m ,2) )/nu_m/pi;
+	eta = source->source_nuo *(1+source->getZ())/sqrt( 1. - pow( (source->source_nu*(1+source->getZ()) - source->source_nuo)/nu_m ,2) )/nu_m/PI;
 
 	//printf("tau = %e eta =%e r=%e xi=%e\n",tau,eta,r,pow(r/source->source_r_in,source->source_gamma));
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
@@ -143,7 +143,7 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	float v_Kep = sqrt(4.7788e-20*source->source_BHmass/r);
 	float v_shift_yprime;         // in units of the speed of light
 
-	//	if(source->source_opening_angle < 0.9999*pi/2){
+	//	if(source->source_opening_angle < 0.9999*PI/2){
 	// BEN -- I'VE REMOVED THIS CONDITION SINCE I THINK THE LAST FEW LINES (THE ALTERNATIVE) MIGHT BE REDUNDANT NOW
 
 	v_shift_yprime = v_Kep * xx_prime/r;

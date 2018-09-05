@@ -21,7 +21,7 @@ void alphaPowLaw(PosType *alpha,PosType *x,PosType R,PosType mass,PosType beta,P
 		alpha[0]=alpha[1]=0.0;
 		return ;
 	}
-	b=mass/pow(r,2)/pi/Sigma_crit;
+	b=mass/pow(r,2)/PI/Sigma_crit;
 	if(r<R) b *= pow(r/R,beta+2);
 
 	alpha[0]=b*(x[0]-center[0]);
@@ -36,7 +36,7 @@ KappaType kappaPowLaw(PosType *x,PosType R,PosType mass,PosType beta,PosType *ce
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>R) return 0.0;
 	if(r < 1.0-20) r=1.0e-20;
-	return (beta+2)*mass*pow(r/R,beta)/(2*pi*pow(R,2)*Sigma_crit);
+	return (beta+2)*mass*pow(r/R,beta)/(2*PI*pow(R,2)*Sigma_crit);
 }
 ///
 void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta
@@ -48,7 +48,7 @@ void gammaPowLaw(KappaType *gamma,PosType *x,PosType R,PosType mass,PosType beta
 		gamma[0]=gamma[1]=0.0;
 		return ;
 	}
-	gt=mass/pi/Sigma_crit/pow(r,2);
+	gt=mass/PI/Sigma_crit/pow(r,2);
 	if(r<R) gt *= -beta*pow(r/R,beta+2)/2;
 
 	gamma[0]=-gt*(pow(x[0]-center[0],2)-pow(x[1]-center[1],2))/r/r;
@@ -63,7 +63,7 @@ KappaType phiPowLaw(PosType *x,PosType R,PosType mass,PosType beta
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 
-	b=mass/pi/Sigma_crit;
+	b=mass/PI/Sigma_crit;
 	if(r<=R) return b*pow(r/R,beta+2);
 	return b*(log(r/R) + 1);
 }
