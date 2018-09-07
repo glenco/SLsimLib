@@ -426,7 +426,7 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
   catalog_caustic << "# column 14 caustic type" << std::endl;
   catalog_caustic << "# parameter file: " << paramfile << std::endl;
   
-  catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/pi << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
+  catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/PI << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
   catalog_caustic << "# " << " number of caustics found: " << data.size() << std::endl;
 
 

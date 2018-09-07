@@ -33,8 +33,8 @@
 #include <cosmo.h>
 #include <halo.h>
 
-#ifndef pi
-#define pi  M_PI
+#ifndef PI
+#define PI  M_PI
 #endif
 
 #ifndef Grav

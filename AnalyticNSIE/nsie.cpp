@@ -155,7 +155,7 @@ PosType rmaxNSIE(
 		,PosType rc      /// core radius Mpc
 		){
       
-	return sqrt( pow(mass*Grav*lightspeed*lightspeed*f/pi/sigma/sigma + rc,2) - rc*rc );
+	return sqrt( pow(mass*Grav*lightspeed*lightspeed*f/PI/sigma/sigma + rc,2) - rc*rc );
 }
 
 /** \ingroup function

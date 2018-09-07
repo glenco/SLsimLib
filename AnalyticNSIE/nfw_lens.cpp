@@ -15,7 +15,7 @@ void LensHaloNFW::alphaNFW(PosType *alpha,PosType *x,PosType Rtrunc,PosType mass
 		alpha[0]=alpha[1]=0.0;
 		return ;
 	}
-	b=mass/pow(r,2)/pi/Sigma_crit;
+	b=mass/pow(r,2)/PI/Sigma_crit;
 
 	if(r < Rtrunc){
 		PosType y;
@@ -50,7 +50,7 @@ KappaType LensHaloNFW::kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r
 	y = r/r_scale;
 	b*= ffunction(y);
 
-	return b*mass/(2*pi*pow(r_scale,2)*Sigma_crit);
+	return b*mass/(2*PI*pow(r_scale,2)*Sigma_crit);
 }
 
 /// Shear for and NFW halo. this might have a flaw in it
@@ -64,7 +64,7 @@ void LensHaloNFW::gammaNFW(KappaType *gamma,PosType *x,PosType Rtrunc,PosType ma
 		return ;
 	}
 
-	gt=mass/pi/Sigma_crit/pow(r,2);
+	gt=mass/PI/Sigma_crit/pow(r,2);
 	if(r<Rtrunc){
 		PosType y;
 

@@ -105,7 +105,7 @@ public:
   void sortInMag(Band tmp_band);
   void sortInID();
   /// returns field-of-view in deg^2 assuming region is square
-  PosType getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/pi/pi;}
+  PosType getFOV(){return (rangex[1]-rangex[0])*(rangey[1]-rangey[0])*180*180/PI/PI;}
   
   /** \brief Finds the closest source to the position theta[] on the sky in Cartesian distance.
    *   Returns the index of that source and its distance from theta[].

@@ -22,7 +22,7 @@
 #include "source.h"
 #include "gridmap.h"
 
-#if __cplusplus < 201103L
+/*#if __cplusplus < 201103L
 template<typename T>
 void swap(std::valarray<T>& x, std::valarray<T>& y)
 {
@@ -34,7 +34,8 @@ void swap(std::valarray<T>& x, std::valarray<T>& y)
   y.resize(z.size());
   y = z;
 }
-#endif
+//#endif
+*/
 
 void swap(PixelMap& x, PixelMap& y)
 {
@@ -224,7 +225,7 @@ PixelMap::PixelMap(
         my_res = ps/Nx;
       }
     }
-    resolution = fabs(my_res)*pi/180.;
+    resolution = fabs(my_res)*PI/180.;
   }else{
     resolution = my_res;
   }
@@ -885,13 +886,13 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
   phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
   phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CDELT2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
+  phout.addKey("CDELT1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
-  phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
+  phout.addKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
   phout.addKey("Nx", Nx, "");
   phout.addKey("Ny", Ny, "");
@@ -948,13 +949,13 @@ void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string
   phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
   phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CDELT2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
+  phout.addKey("CDELT1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
-  phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
+  phout.addKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
   phout.addKey("Nx", Nx, "");
   phout.addKey("Ny", Ny, "");
@@ -984,7 +985,7 @@ void PixelMap::smooth(PosType sigma){
   int Nmask,Nmask_half;
   int j_cen, k_cen;
   
-  sigma /= 3600.*180/pi;
+  sigma /= 3600.*180/PI;
   Nmask=2*(int)(3*sigma/resolution + 1);
   std::cout << Nmask << std::endl;
   if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
@@ -1096,7 +1097,7 @@ void PixelMap::drawcircle(
   PosType x1[2],x2[2];
   PosType dtheta = resolution/fabs(radius);
   
-  for(float theta = 0; theta < 2*pi; theta += dtheta){
+  for(float theta = 0; theta < 2*PI; theta += dtheta){
     x1[0] = r_center[0] + radius*cos(theta);
     x1[1] = r_center[1] + radius*sin(theta);
     x2[0] = r_center[0] + radius*cos(theta+dtheta);
@@ -1126,7 +1127,7 @@ void PixelMap::drawdisk(
   // To fill the circle :
   // ====================
   
-/*  for(float theta = 0; theta < 2*pi; theta += pi/N){
+/*  for(float theta = 0; theta < 2*PI; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
     x2[0] = r_center[0] + radius*cos(theta);
     x1[1] = x2[1] = r_center[1] + radius*sin(theta);

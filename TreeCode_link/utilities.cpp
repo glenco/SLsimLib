@@ -74,7 +74,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
   static long id=0;
 
   for(i=0;i<Ngrid*Ngrid;++i){
-	  theta= 2*pi*(i % Ngrid)/Ngrid;
+	  theta= 2*PI*(i % Ngrid)/Ngrid;
 	  r= rmin*exp( (i/Ngrid)*1.0/(Ngrid-1) * log(rmax/rmin) );
 	  i_points[i].id=id;
       ++id;
@@ -363,7 +363,7 @@ unsigned long prevpower(unsigned long k){
 #endif
   
   RandomNumbers_NR::RandomNumbers_NR(long seed):
-  IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
+  calls(0),IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
   IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
     count(true)
   {
@@ -388,11 +388,11 @@ unsigned long prevpower(unsigned long k){
       if (j < 32) iv[j] = idum;
     }
     iy=iv[0];
-    
   }
   
   /// return a uniform random number between 0 and 1
   PosType RandomNumbers_NR::operator()(void){
+    ++calls;
     return ran2();
   }
   

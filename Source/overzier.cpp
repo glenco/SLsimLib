@@ -150,7 +150,7 @@ PosType SourceOverzier::getTotalFlux() const{
 }
 
 void SourceOverzier::printSource(){
-	std::cout << "bulge half light radius: " << Reff*180*60*60/pi << " arcs   disk scale hight: " << Rh*180*60*60/pi << " arcs" << std::endl;
+	std::cout << "bulge half light radius: " << Reff*180*60*60/PI << " arcs   disk scale hight: " << Rh*180*60*60/PI << " arcs" << std::endl;
 }
 
 void SourceOverzier::assignParams(InputParams& /* params */)
@@ -199,7 +199,7 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
   Narms = (ran() > 0.2) ? 2 : 4;  // number of arms
   arm_alpha = (21 + 10*(ran()-0.5)*2)*degreesTOradians; // arm pitch angle
   mctalpha = Narms/tan(arm_alpha);
-  disk_phase = pi*ran(); // add phase of arms
+  disk_phase = PI*ran(); // add phase of arms
   Ad = minA + (maxA-minA)*ran();
   
   // extra cersic component
@@ -210,9 +210,9 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
   double q = 1 + (0.5-1)*ran();
   spheroid.setSersicIndex(index);
   
-  //spheroid = new SourceSersic(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta);
+  //spheroid = new SourceSersic(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
   
-  spheroid.ReSet(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*pi/180,index,q,my_z,theta);
+  spheroid.ReSet(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
   
   cospa = cos(PA);
   sinpa = sin(PA);
@@ -391,8 +391,8 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
      */
     mag += tmp;
     
-    PA = pi*ran();
-    inclination = 1.0*pi/2*ran();
+    PA = PI*ran();
+    inclination = 1.0*PI/2*ran();
     if(cos(inclination)< 0.25) inclination = acos(0.25);
 
     
@@ -422,7 +422,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   Narms = (ran() > 0.2) ? 2 : 4;  // number of arms
   arm_alpha = (21 + 10*(ran()-0.5)*2)*degreesTOradians; // arm pitch angle
   mctalpha = Narms/tan(arm_alpha);
-  disk_phase = pi*ran(); // add phase of arms
+  disk_phase = PI*ran(); // add phase of arms
   Ad = minA + (maxA-minA)*ran();
  
   // spheroid
@@ -435,10 +435,10 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   double q = 1 + (0.5-1)*ran();
   
   /*delete spheroid;
-  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getTheta().x);
+  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   */
   
-  spheroid.ReSet(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*pi/180,index,q,zsource,getTheta().x);
+  spheroid.ReSet(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   
   
   for(PosType &mod : modes){

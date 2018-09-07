@@ -233,10 +233,10 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 			 */
 
       // converting from Millennium conventions
-			theta[0] = -ra*pi/180;
-			theta[1] = dec*pi/180;
-      pa = (90 - pa)*pi/180;
-      inclination *= pi/180;
+			theta[0] = -ra*PI/180;
+			theta[1] = dec*PI/180;
+      pa = (90 - pa)*PI/180;
+      inclination *= PI/180;
       if(cos(inclination)< 0.5) inclination = acos(0.5);
       
       //std::cout << "did inclination" << std::endl;
@@ -333,7 +333,7 @@ void SourceMultiAnaGalaxy::assignParams(InputParams& params){
 	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
 	else
-		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
+		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
 		/*{
 		std::cout << "ERROR: Must assign source_sb_limit in parameter file " << params.filename() << std::endl;
 		exit(1);*/
@@ -371,7 +371,7 @@ void SourceMultiAnaGalaxy::multiplier(
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
 				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getMagBulge()
-                ,galaxies[i].getReff(),galaxies[i].getRh(),ran()*pi,ran()*2*pi
+                ,galaxies[i].getReff(),galaxies[i].getRh(),ran()*PI,ran()*2*PI
 					,Nold+NtoAdd,galaxies[i].getZ(),theta,ran));
 
 				++NtoAdd;

@@ -31,7 +31,7 @@ public:
 	
 	inline PosType getSersicIndex() const { return index; }
 	inline PosType getAxesRatio() const { return q; }
-	inline PosType getReff() const { return Reff*180*60*60/pi; }
+	inline PosType getReff() const { return Reff*180*60*60/PI; }
 	inline PosType getMag() const { return mag; }
 	inline PosType getPA() const { return PA; }
 	
@@ -51,8 +51,8 @@ public:
 	
 	inline void setReff(PosType x)
 	{
-		Reff = x*pi/180/60/60;
-		I_r = 1./2./pi/Reff/Reff;
+		Reff = x*PI/180/60/60;
+		I_r = 1./2./PI/Reff/Reff;
 		updateRadius();
 	}
 	

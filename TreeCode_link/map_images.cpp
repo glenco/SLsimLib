@@ -153,7 +153,7 @@ void ImageFinding::map_images(
 			rs[i] = (rs[i] == 0) ? xmin : sqrt(rs[i]);
 
 			// filling factor or holiness of source
-			if(verbose) printf("holiness of source %e\n",sourceinfo[i].imagekist->Nunits()*pow(2*xmax/(Ntmp-1)/rs[i],2)/pi);
+			if(verbose) printf("holiness of source %e\n",sourceinfo[i].imagekist->Nunits()*pow(2*xmax/(Ntmp-1)/rs[i],2)/PI);
 			if(verbose) printf("     dx = %e %e rs = %e Npoints = %li\n",(source->getTheta()[0]-sourceinfo[i].centroid[0])/xmin
 			                                               ,(source->getTheta()[1]-sourceinfo[i].centroid[1])/xmin
 			                                               ,rs[i],sourceinfo[i].imagekist->Nunits());
