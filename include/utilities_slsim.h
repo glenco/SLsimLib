@@ -190,7 +190,9 @@ namespace Utilities
     public:
       typedef ValueT value_type;
       typedef ValueT* pointer;
+      typedef const ValueT* const_pointer;
       typedef ValueT& reference;
+      typedef const ValueT& const_reference;
       typedef typename base_iterator::difference_type difference_type;
       typedef typename base_iterator::iterator_category iterator_category;
       
@@ -201,10 +203,10 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)(**it); }
-      const reference operator*() const { return (const reference)(**it); }
+      const_reference operator*() const { return (const_reference)(**it); }
       
       pointer operator->() { return (pointer)(*it); }
-      const pointer operator->() const { return (const pointer)(*it); }
+      const_pointer operator->() const { return (const_pointer)(*it); }
       
       iterator& operator++() { ++it; return *this; }
       iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
@@ -218,7 +220,7 @@ namespace Utilities
       iterator& operator-=(difference_type n) { it -= n; return *this; }
       
       reference operator[](difference_type n) { return (reference)*it[n]; }
-      const reference operator[](difference_type n) const { return (const reference)*it[n]; }
+      const_reference operator[](difference_type n) const { return (const_reference)*it[n]; }
       
       friend iterator operator+(const iterator& i, difference_type n) { return iterator(i.it + n); }
       friend iterator operator+(difference_type n, const iterator& i) { return iterator(i.it + n); }
