@@ -995,6 +995,8 @@ namespace Utilities
     };
     
     size_t calls = 0;  /// total number of calls
+    
+    long getseed(){return firstseed;}
   private:
     long idum;
     PosType ran2(void);
@@ -1018,6 +1020,7 @@ namespace Utilities
     long iv[32];
     bool count;
     PosType u,v,s;
+    long firstseed;
     
   };
   
