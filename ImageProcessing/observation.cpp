@@ -5,6 +5,7 @@
  *      Author: F. Bellagamba
  */
 
+#include <complex>
 #include "slsimlib.h"
 
 #ifdef ENABLE_FITS
@@ -425,7 +426,7 @@ void Observation::ApplyPSF(PixelMap &pmap)
 	}
 	else
 	{
-#ifdef ENABLE_FITS
+//#ifdef ENABLE_FITS
 #ifdef ENABLE_FFTW
     
     // calculates normalisation of psf
@@ -525,10 +526,10 @@ void Observation::ApplyPSF(PixelMap &pmap)
 		exit(1);
 #endif
     
-#else
-		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-		exit(1);
-#endif
+//#else
+//		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+//		exit(1);
+//#endif
 	}
 }
 
