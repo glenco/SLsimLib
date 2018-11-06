@@ -1737,7 +1737,7 @@ void Utilities::LoadFitsImages(
   return ;
 }
 
-/** \brief Reads the file names in a directory that contain a specific sub string.
+/*** \brief Reads the file names in a directory that contain a specific sub string.
  
  */
 void Utilities::ReadFileNames(

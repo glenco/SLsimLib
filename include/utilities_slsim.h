@@ -1206,6 +1206,7 @@ namespace Utilities
                          ,std::vector<T1> &x     /// vector that will contain the first column
                          ,std::vector<T2> &y     /// vector that will contain the first column
                          ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                         ,int skiplines = 0
                          ,bool verbose = false
                          
                          ){
@@ -1230,6 +1231,10 @@ namespace Utilities
       
       std::cout << "Reading caustic information from " << filename << std::endl;
       size_t i=0;
+      while(i < skiplines){
+        getline(file_in,myline);
+        ++i;
+      }
       while(file_in.peek() == '#'){
         file_in.ignore(10000,'\n');
         ++i;
@@ -1413,6 +1418,7 @@ namespace Utilities
                    ,int &columns
                    ,int &rows
                    ,char comment_char = '#'
+                   ,int skiplines = 0
                    ,size_t MaxNrows = std::numeric_limits<size_t>::max()
                    ,bool verbose = true){
       
@@ -1430,6 +1436,14 @@ namespace Utilities
       columns = 0;
       rows = 0;
       size_t first_data_line;
+      
+      // skip over first lines
+      int i=0;
+      while(i < skiplines){
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+        ++i;
+      }
       
       // read comment lines and first data line
       do{
