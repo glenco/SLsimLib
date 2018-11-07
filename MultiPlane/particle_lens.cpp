@@ -122,7 +122,6 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
     std::cerr << filename << " should have four columns!" << std::endl;
   }
  
-  
   std::ifstream myfile(filename);
   
   // find number of particles

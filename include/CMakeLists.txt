@@ -49,4 +49,5 @@ add_sources(
 	concave_hull.h
         bands_etc.h
 	gaussian.h
+	gadgetio.hpp
 )
