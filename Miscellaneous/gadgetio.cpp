@@ -5,18 +5,19 @@
 //  Created by bmetcalf on 07.11.18.
 //
 
-#include "gadgetio.hpp"
 #include <vector>
 #include <stdio.h>
 #include <iostream>
 
+#include "utilities.h"
+//#include "utilities_slsim.h"
+#include "particle_halo.h"
+#include "gadgetio.hpp"
 
 void load_snapshot_gadget2(char *fname
                            ,int nfiles
-                           ,PosType **xp
-                           ,std::vector<float> &masses
-                           ,std::vector<float> &sizes
-                           ,bool &multimass
+                           ,std::vector<ParticleData<float> > &xp
+                           ,std::vector<int> &ntypes
                            )
 {
   
@@ -25,13 +26,11 @@ void load_snapshot_gadget2(char *fname
   int i, k, dummy, ntot_withmasses;
   int n, pc, pc_new, pc_sph;
   gadget_header header1;
-  gadget_particle_data p;
   int Ngas = 0;
   int NumPart = 0;
   int id;
   
   std::vector<int> types;
-  
   
   for(i = 0, pc = 1; i < nfiles; i++, pc = pc_new)
   {
@@ -77,10 +76,11 @@ void load_snapshot_gadget2(char *fname
       try{
         //p.resize(NumPart);
         //ids.resize(NumPart);
-        xp = Utilities::PosTypeMatrix(NumPart,3);
-        masses.resize(NumPart);
-        sizes.resize(NumPart,0);
-        types.resize(NumPart);
+        //xp = Utilities::PosTypeMatrix(NumPart,3);
+        xp.resize(NumPart);
+        //masses.resize(NumPart);
+        //sizes.resize(NumPart,0);
+        //types.resize(NumPart);
       }catch (const std::bad_alloc& ba){
         std::cerr <<"ERROR: ";
         std::cerr << ba.what() << std::endl;
@@ -97,8 +97,8 @@ void load_snapshot_gadget2(char *fname
       {
         fread(pos, sizeof(float), 3, fd);
         xp[pc_new][0] = pos[0];
-        xp[pc_new][1] = pos[0];
-        xp[pc_new][2] = pos[0];
+        xp[pc_new][1] = pos[1];
+        xp[pc_new][2] = pos[2];
         pc_new++;
       }
     }
@@ -134,12 +134,12 @@ void load_snapshot_gadget2(char *fname
     {
       for(n = 0; n < header1.npart[k]; n++)
       {
-        types[pc_new] = k;
+        xp[pc_new].type = k;
         
         if(header1.mass[k] == 0)
-          fread(&masses[pc_new], sizeof(float), 1, fd);
+          fread(&xp[pc_new].mass, sizeof(float), 1, fd);
         else
-          masses[pc_new] = header1.mass[k];
+          xp[pc_new].mass = header1.mass[k];
         pc_new++;
       }
     }
@@ -188,6 +188,24 @@ void load_snapshot_gadget2(char *fname
     
     fclose(fd);
   }
+  
+  // sort by type
+  std::sort(xp.begin(),xp.end(),[](ParticleData<float> &p1,ParticleData<float> &p2){return p1.type < p2.type;});
+  
+  ntypes.resize(0);
+  if(nfiles == 1)
+  {
+    for(k = 0 ; k < 6; k++){
+      if(header1.npart[k] > 0) ntypes.push_back(header1.npart[k]);
+    }
+  }
+  else
+  {
+    for(k = 0 ; k < 6; k++){
+      if(header1.npartTotal[k] > 0) ntypes.push_back(header1.npartTotal[k]);
+    }
+  }
+
 }
 
 

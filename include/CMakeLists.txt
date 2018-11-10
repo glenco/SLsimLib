@@ -39,7 +39,7 @@ add_sources(
 	Tree.h
 	#TreeKist.h
 	tree_maintenance.h
-	TreeNB.h
+        qTreeNB.h
 	uniform_lens.h
 	utilities_slsim.h
         geometry.h
@@ -50,4 +50,6 @@ add_sources(
         bands_etc.h
 	gaussian.h
 	gadgetio.hpp
+	gadget.hh
+	gensim.hh
 )

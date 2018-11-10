@@ -11,6 +11,7 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
+#include "source.h"
 #include <mutex>
 #include <utilities_slsim.h>
 

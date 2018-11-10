@@ -21,7 +21,8 @@ BranchNB::~BranchNB(){
 	delete center;
 }
 
-TreeSimple::TreeSimple(PosType **xpt,IndexType Npoints,int bucket,int Ndimensions,bool median){
+template<typename PType>
+TreeSimple<PType>::TreeSimple(PType *xpt,IndexType Npoints,int bucket,int Ndimensions,bool median){
 	index = new IndexType[Npoints];
 	IndexType ii;
 
@@ -30,23 +31,25 @@ TreeSimple::TreeSimple(PosType **xpt,IndexType Npoints,int bucket,int Ndimension
 	median_cut = median;
 	Nparticles = Npoints;
 
-	xp = xpt;
+	xxp = xpt;
 
 	for(ii=0;ii<Npoints;++ii) index[ii] = ii;
 
-	tree = TreeSimple::BuildTreeNB(xp,Npoints,index,Ndimensions,0);
+	tree = TreeSimple::BuildTreeNB(xxp,Npoints,index,Ndimensions,0);
 
 	return;
 }
 
-TreeSimple::~TreeSimple()
+template<typename PType>
+TreeSimple<PType>::~TreeSimple()
 {
 	freeTreeNB(tree);
 	delete[] index;
 	return;
 }
 
-void TreeSimple::PointsWithinEllipse(
+template<typename PType>
+void TreeSimple<PType>::PointsWithinEllipse(
 	PosType *ray     /// center of ellipse
 	,float rmax      /// major axis
 	,float rmin     /// minor axis
@@ -67,14 +70,16 @@ void TreeSimple::PointsWithinEllipse(
 	sn = sin(posangle);
 	// go through points within the circle and reject points outside the ellipse
 	for(  std::list<unsigned long>::iterator it = neighborlist.begin();it != neighborlist.end();){
-		x = xp[*it][0]*cs - xp[*it][1]*sn;
-		y = xp[*it][0]*sn + xp[*it][1]*cs;
+		x = xxp[*it][0]*cs - xxp[*it][1]*sn;
+		y = xxp[*it][0]*sn + xxp[*it][1]*cs;
 		if( ( pow(x/rmax,2) + pow(y/rmin,2) ) > 1) it = neighborlist.erase(it);
 		else ++it;
 	}
 	return;
 }
-void TreeSimple::PointsWithinCircle(
+
+template<typename PType>
+void TreeSimple<PType>::PointsWithinCircle(
 		PosType *ray     /// center of circle
 		,float rmax      /// radius of circle
 		,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
@@ -110,7 +115,8 @@ void TreeSimple::PointsWithinCircle(
 }
 /**
  * Used in PointsWithinKist() to walk tree.*/
-void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long> &neighborlist){
+template<typename PType>
+void TreeSimple<PType>::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long> &neighborlist){
 
   int j,incell2=1;
   unsigned long i;
@@ -137,7 +143,7 @@ void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
     	  if( atLeaf() ){
     	   	  // if leaf calculate the distance to all the points in cell
     		  for(i=0;i<tree->current->nparticles;++i){
-    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(xp[tree->current->particles[i]][j]-ray[j],2);
+    			  for(j=0,radius=0.0;j<2;++j) radius+=pow(xxp[tree->current->particles[i]][j]-ray[j],2);
     			  if( radius < *rmax**rmax ){
     				  neighborlist.push_back(tree->current->particles[i]);
           			  //cout << "add point to list" << neighborlist.size() << endl;
@@ -189,7 +195,7 @@ void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 		  if( atLeaf()  ){  /* leaf case */
 
 			  for(i=0;i<tree->current->nparticles;++i){
-				  for(j=0,radius=0.0;j<2;++j) radius+=pow(xp[tree->current->particles[i]][j]-ray[j],2);
+				  for(j=0,radius=0.0;j<2;++j) radius+=pow(xxp[tree->current->particles[i]][j]-ray[j],2);
 				  if( radius < *rmax**rmax ){
 					  neighborlist.push_back(tree->current->particles[i]);
 					  //InsertAfterCurrentKist(neighborlist,tree->current->particles[i]);
@@ -228,7 +234,8 @@ void TreeSimple::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long
 /**
  *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
  *  */
-void TreeSimple::NearestNeighbors(
+template<typename PType>
+void TreeSimple<PType>::NearestNeighbors(
             PosType *ray       /// position
             ,int Nneighbors    /// number of neighbors to be found
             ,float *radius     /// distance furthest neighbor found from ray[]
@@ -277,8 +284,9 @@ void TreeSimple::NearestNeighbors(
   return;
 }
 
-void TreeSimple::_NearestNeighbors(PosType *ray,PosType *rlray,int Nneighbors,unsigned long *neighbors
-                                   ,PosType *rneighbors
+template<typename PType>
+void TreeSimple<PType>::_NearestNeighbors(PosType *ray,PosType *rlray,int Nneighbors
+                                         ,unsigned long *neighbors,PosType *rneighbors
                                    ,TreeSimple::iterator &it,int &notfound) const {
   
   int incellNB2=1;
@@ -377,8 +385,8 @@ void TreeSimple::_NearestNeighbors(PosType *ray,PosType *rlray,int Nneighbors,un
   return;
 }
 
-
-void TreeSimple::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
+template<typename PType>
+void TreeSimple<PType>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
 
   int incellNB2=1;
   IndexType i;
@@ -471,9 +479,8 @@ void TreeSimple::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *ne
   return;
 }
 
-
-
-TreeNBHndl TreeSimple::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndims
+template<typename PType>
+TreeNBHndl TreeSimple<PType>::BuildTreeNB(PType *xp,IndexType Nparticles,IndexType *particles,int Ndims
 	   ,PosType theta){
   TreeNBHndl tree;
   IndexType i;
@@ -512,7 +519,8 @@ TreeNBHndl TreeSimple::BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *
 
 
 // tree must be created and first branch must be set before start
-void TreeSimple::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
+template<typename PType>
+void TreeSimple<PType>::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles){
   IndexType i,cut,dimension;
   short j;
   BranchNB *cbranch,branch1(Ndim),branch2(Ndim);
@@ -622,7 +630,8 @@ void TreeSimple::_BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *pa
  * Returns pointer to new BranchNB struct.  Initializes children pointers to NULL,
  * and sets data field to input.  Private.
  ************************************************************************/
-BranchNB *TreeSimple::NewBranchNB(IndexType *particles,IndexType nparticles
+template<typename PType>
+BranchNB *TreeSimple<PType>::NewBranchNB(IndexType *particles,IndexType nparticles
 		  ,PosType boundary_p1[],PosType boundary_p2[]
 		  ,PosType center[],int level,unsigned long branchNBnumber){
 
@@ -658,7 +667,8 @@ BranchNB *TreeSimple::NewBranchNB(IndexType *particles,IndexType nparticles
  * FreeBranchNB
  * Frees memory pointed to by branchNB.  Private.
  ************************************************************************/
-void TreeSimple::FreeBranchNB(BranchNB *branchNB){
+template<typename PType>
+void TreeSimple<PType>::FreeBranchNB(BranchNB *branchNB){
 
     assert( branchNB != NULL);
     delete branchNB;
@@ -671,7 +681,8 @@ void TreeSimple::FreeBranchNB(BranchNB *branchNB){
  * Returns pointer to new TreeNB struct.  Initializes top, last, and
  * current pointers to NULL.  Sets NbranchNBes field to 0.  Exported.
  ************************************************************************/
-TreeNBHndl TreeSimple::NewTreeNB(IndexType *particles,IndexType nparticles
+template<typename PType>
+TreeNBHndl TreeSimple<PType>::NewTreeNB(IndexType *particles,IndexType nparticles
 		 ,PosType boundary_p1[],PosType boundary_p2[],
 		     PosType center[],short Ndimensions){
 
@@ -696,7 +707,8 @@ TreeNBHndl TreeSimple::NewTreeNB(IndexType *particles,IndexType nparticles
     return(tree);
 }
 
-void TreeSimple::freeTreeNB(TreeNBHndl tree){
+template<typename PType>
+void TreeSimple<PType>::freeTreeNB(TreeNBHndl tree){
 	/* free treeNB
 	 *  does not free the particle positions, masses or rsph
 	 */
@@ -710,7 +722,8 @@ void TreeSimple::freeTreeNB(TreeNBHndl tree){
 	return;
 }
 
-short TreeSimple::emptyTreeNB(TreeNBHndl tree){
+template<typename PType>
+short TreeSimple<PType>::emptyTreeNB(TreeNBHndl tree){
 
 	moveTopNB(tree);
 	_freeTreeNB(tree,0);
@@ -720,7 +733,8 @@ short TreeSimple::emptyTreeNB(TreeNBHndl tree){
 	return 1;
 }
 
-void TreeSimple::_freeTreeNB(TreeNBHndl tree,short child){
+template<typename PType>
+void TreeSimple<PType>::_freeTreeNB(TreeNBHndl tree,short child){
 	BranchNB *branch;
 
 	assert( tree );
@@ -762,7 +776,8 @@ void TreeSimple::_freeTreeNB(TreeNBHndl tree,short child){
  * isEmptyNB
  * Returns "true" if the TreeNB is empty and "false" otherwise.  Exported.
  ************************************************************************/
-bool TreeSimple::isEmptyNB(TreeNBHndl tree){
+template<typename PType>
+bool TreeSimple<PType>::isEmptyNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->Nbranches == 0);
@@ -774,7 +789,8 @@ bool TreeSimple::isEmptyNB(TreeNBHndl tree){
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-bool TreeSimple::atTopNB(TreeNBHndl tree){
+template<typename PType>
+bool TreeSimple<PType>::atTopNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
@@ -791,7 +807,8 @@ bool TreeSimple::atTopNB(TreeNBHndl tree){
  * Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-bool TreeSimple::noChildNB(TreeNBHndl tree){
+template<typename PType>
+bool TreeSimple<PType>::noChildNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     if( isEmptyNB(tree) ){
@@ -808,7 +825,8 @@ bool TreeSimple::noChildNB(TreeNBHndl tree){
  * offEndNB
  * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-bool TreeSimple::offEndNB(TreeNBHndl tree){
+template<typename PType>
+bool TreeSimple<PType>::offEndNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->current == NULL);
@@ -819,7 +837,8 @@ bool TreeSimple::offEndNB(TreeNBHndl tree){
  * Returns the particuls of current.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void TreeSimple::getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles){
+template<typename PType>
+void TreeSimple<PType>::getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *nparticles){
 
     assert(tree != NULL);
     if( offEndNB(tree) ){
@@ -838,7 +857,8 @@ void TreeSimple::getCurrentNB(TreeNBHndl tree,IndexType *particles,IndexType *np
  * getNbranchesNB
  * Returns the NbranchNBes of tree.  Exported.
  ************************************************************************/
-unsigned long TreeSimple::getNbranchesNB(TreeNBHndl tree){
+template<typename PType>
+unsigned long TreeSimple<PType>::getNbranchesNB(TreeNBHndl tree){
 
     assert(tree != NULL);
     return(tree->Nbranches);
@@ -851,7 +871,8 @@ unsigned long TreeSimple::getNbranchesNB(TreeNBHndl tree){
  * Moves current to the front of tree.  Exported.
  * Pre: !isEmptyNB(tree)
  ************************************************************************/
-void TreeSimple::moveTopNB(TreeNBHndl tree){
+template<typename PType>
+void TreeSimple<PType>::moveTopNB(TreeNBHndl tree){
 	//std::cout << tree << std::endl;
 	//std::cout << tree->current << std::endl;
 	//std::cout << tree->top << std::endl;
@@ -875,7 +896,8 @@ void TreeSimple::moveTopNB(TreeNBHndl tree){
  * off end.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void TreeSimple::moveUpNB(TreeNBHndl tree){
+template<typename PType>
+void TreeSimple<PType>::moveUpNB(TreeNBHndl tree){
     
     assert(tree != NULL);
     if( offEndNB(tree) ){
@@ -897,7 +919,8 @@ void TreeSimple::moveUpNB(TreeNBHndl tree){
  * end.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void TreeSimple::moveToChildNB(TreeNBHndl tree,int child){
+template<typename PType>
+void TreeSimple<PType>::moveToChildNB(TreeNBHndl tree,int child){
 
     assert(tree != NULL);
     if( offEndNB(tree) ){
@@ -928,7 +951,8 @@ void TreeSimple::moveToChildNB(TreeNBHndl tree,int child){
  * data field of the new BranchNB to input.  Exported.
  * Pre: !offEndNB(tree)
  ************************************************************************/
-void TreeSimple::insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
+template<typename PType>
+void TreeSimple<PType>::insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,IndexType nparticles
 			  ,PosType boundary_p1[],PosType boundary_p2[]
 			  ,PosType center[],int child){
     
@@ -972,8 +996,8 @@ void TreeSimple::insertChildToCurrentNB(TreeNBHndl tree, IndexType *particles,In
 }
 
   /* same as above but takes a branchNB structure */
-
-void TreeSimple::attachChildToCurrentNB(TreeNBHndl tree,BranchNB &data,int child){
+template<typename PType>
+void TreeSimple<PType>::attachChildToCurrentNB(TreeNBHndl tree,BranchNB &data,int child){
 
   insertChildToCurrentNB(tree,data.particles,data.nparticles
 		  ,data.boundary_p1,data.boundary_p2,data.center,child);
@@ -981,7 +1005,8 @@ void TreeSimple::attachChildToCurrentNB(TreeNBHndl tree,BranchNB &data,int child
 }
 
 // step for walking tree by iteration instead of recursion
-bool TreeSimple::TreeNBWalkStep(TreeNBHndl tree,bool allowDescent){
+template<typename PType>
+bool TreeSimple<PType>::TreeNBWalkStep(TreeNBHndl tree,bool allowDescent){
 	if(allowDescent && tree->current->child1 != NULL){
 		moveToChildNB(tree,1);
 		return true;

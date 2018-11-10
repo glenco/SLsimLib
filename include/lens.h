@@ -1,8 +1,6 @@
 /*
  * multiplane.h
  *
- *  Created on: Jan 12, 2012
- *      Author: mpetkova
  */
 
 #ifndef MULTIPLANE_H_

@@ -5,10 +5,44 @@
 //  Created by bmetcalf on 16/06/15.
 //
 //
-#include "quadTree.h"
 
 #ifndef GLAMER_particle_halo_h
 #define GLAMER_particle_halo_h
+
+#include "geometry.h"
+#include "quadTree.h"
+#include "simpleTree.h"
+
+/// Atomic data class for simulation particles with individual sizes and masses
+template<typename T = float>
+struct ParticleData{
+  T &operator[](int i){return x[i];}
+  T *operator*(){return x;}
+  T x[3];
+  float Mass;
+  float Size;
+  int type;
+  
+  float size(){return Size;}
+  float mass(){return Mass;}
+};
+
+/// Atomic data class for simulation particles of the same size and mass
+struct ParticleDataSimple{
+  float &operator[](int i){return x[i];}
+  float *operator*(){return x;}
+  float x[3];
+  
+  static float Mass;
+  static float Size;
+
+  float size(){return ParticleDataSimple::Size;}
+  float mass(){return ParticleDataSimple::Mass;}
+};
+float ParticleDataSimple::Size = 0;
+float ParticleDataSimple::Mass = 0;
+
+enum SimFileFormats {ascii,gadget2};
 
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
@@ -26,20 +60,23 @@
  
     More input formats will be added in the future.
 */
+
+template<typename PType>
 class LensHaloParticles : public LensHalo
 {
 public:
-  LensHaloParticles(
-                    const std::string& simulation_filename  /// name of file containing particles
-                    ,PosType redshift     /// redshift of particles
-                    ,int Nsmooth          /// number of neighbours for the smoothing
-                    ,const COSMOLOGY& lenscosmo /// cosmology
-                    ,Point_2d theta_rotate      /// rotation of simulation, x-axis ratation angle and then y-axis rotation angle
-                    ,bool recenter = false     /// re-center the coordinates to the center of mass
-                    ,bool multimass = false     /** allows the particles to have different masses
-                                                 , the masses for each particles must be provided as a 4th column in the particle data file */
-                    ,PosType MinPSize = 0.0    /// Minimum smoothing size of particles
-                    );
+  
+  
+  LensHaloParticles(const std::string& simulation_filename /// name of data files
+                    ,SimFileFormats format   /// format of data file
+                    ,PosType redshift        /// redshift of origin
+                    ,int Nsmooth             /// number of neighbours for adaptive smoothing
+                    ,const COSMOLOGY& cosmo  /// cosmology
+                    ,Point_2d theta_rotate   /// rotation of particles around the origin
+                    ,bool recenter           /// center on center of mass
+                    ,bool my_multimass       /// set to true is particles have different sizes
+                    ,PosType MinPSize        /// minimum particle size
+  );
   
   ~LensHaloParticles();
   
@@ -53,6 +90,7 @@ public:
   
   /// center of mass in input coordinates
   Point_3d CenterOfMass(){return mcenter;}
+  
   /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
    
    This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
@@ -67,23 +105,37 @@ public:
                       ,Utilities::RandomNumbers_NR &ran
                       );
   
+  static void calculate_smoothing(int Nsmooth
+                                  ,std::vector<PType> &xxp
+                                  );
+  
+  static void readPositionFileASCII(const std::string &filename
+                                    ,bool multimass
+                                    ,std::vector<PType> &xxp
+                                    );
+
+  static void writeSizes(const std::string &filename
+                         ,int Nsmooth
+                         ,const std::vector<PType> &xxp
+                         );
+
 private:
 
+  
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
-  void calculate_smoothing(int Nsmooth);
-  void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
-
-  void readPositionFileASCII(const std::string& filename);
+  static void smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth);
+  
   bool readSizesFile(const std::string& filename,int Nsmooth,PosType min_size);
-  void writeSizes(const std::string& filename,int Nsmooth);
   
   void assignParams(InputParams& params);
 
-  PosType **xp;
-  std::vector<float> masses;
-  std::vector<float> sizes;
+  std::vector<PType> xxp;
+  //PosType **xp;
+  //std::vector<float> masses;
+  //std::vector<float> sizes;
+  
   PosType min_size;
   bool multimass;
   
@@ -94,7 +146,7 @@ private:
   std::string simfile;
   std::string sizefile;
   
-  TreeQuad * qtree;
+  TreeQuadParticles<PType> * qtree;
 };
 
 

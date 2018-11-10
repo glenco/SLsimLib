@@ -67,7 +67,7 @@ public:
 	~LensHaloUniform();
 
 	void assignParams(InputParams& params);
-	void PrintLens(bool show_substruct,bool show_stars) const;
+	void PrintLens(bool show_substruct,bool show_stars);
   /// Average surface density in Msun/Mpc^2
 	float getSigma_uniform() const {return Sigma_uniform;}
   /// Shear times the critical surface density

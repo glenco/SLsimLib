@@ -183,7 +183,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
    *  Don't use init.
    *  After it is used once, later calls can use TwoDInterpolator(PosType *map) for the same point 
-   *  in the same coordinate system to save time in calculating the idndexes.
+   *  in the same coordinate system to save time in calculating the indexes.
    */
   PosType TwoDInterpolator(
                           PosType *x

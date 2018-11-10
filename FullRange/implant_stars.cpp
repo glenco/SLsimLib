@@ -8,6 +8,9 @@
 #include "slsimlib.h"
 
 using namespace std;
+
+
+
 /** \ingroup ChangeLens
  * \brief  Implant or randomize stars into the lens around the images.
  *
@@ -35,9 +38,9 @@ void LensHalo::implant_stars(
 	if(star_fstars > 1.0){ std::printf("fstars > 1.0\n"); exit(0); }
 	if(!(stars_implanted) ){
     
-		star_masses = new float[stars_N];
+		//star_masses = new float[stars_N];
 		stars = new unsigned long[stars_N];
-		stars_xp = Utilities::PosTypeMatrix(stars_N,3);
+    stars_xp.resize(stars_N);
 		star_theta_force = 1.0e-1;
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
@@ -66,7 +69,15 @@ void LensHalo::implant_stars(
   
 	//params.get("main_sub_mass_max",sub_Mmax)
 	NstarsPerImage = stars_N/star_Nregions;
-	star_masses=stellar_mass_function(type, stars_N, seed, main_stars_min_mass, main_stars_max_mass, bend_mstar,lo_mass_slope,hi_mass_slope);
+  stars_xp.resize(stars_N);
+  {
+    std::vector<float> star_masses=stellar_mass_function(type, stars_N, seed, main_stars_min_mass, main_stars_max_mass, bend_mstar,lo_mass_slope,hi_mass_slope);
+  
+    for(int i=0; i<stars_N; ++i){
+      stars_xp[i].Mass = star_masses[i];
+    }
+  }
+  
 	if (type==One){
 		for(j=0;j<Nregions;++j){
 			mean_mstar[j]=1.0;
@@ -81,7 +92,7 @@ void LensHalo::implant_stars(
 		for(j=0,m=0;j<Nregions;++j){
 			mean_mstar[j] = 0.0;
 			for(i=0;i<NstarsPerImage;++i,++m){
-				mean_mstar[j]+=star_masses[m];
+				mean_mstar[j]+=stars_xp[m].Mass;
 			}
 			mean_mstar[j]/=NstarsPerImage;
 			//cout << "mean_mstar: " << j << " " << mean_mstar[j] << endl;
@@ -168,7 +179,7 @@ void LensHalo::implant_stars(
 	//		,false,false,5,2,false,star_theta_force);
   
   if(stars_implanted) delete star_tree;
-	star_tree = new TreeQuad(stars_xp,star_masses,&dummy,stars_N
+	star_tree = new TreeQuadParticles<StarData>(stars_xp.data(),stars_N
                            ,false,false,0,4,star_theta_force);
   
 	// visit every branch to find center of mass and cutoff scale */
@@ -194,9 +205,7 @@ void LensHalo::remove_stars(){
 	if(stars_implanted){
     
     delete star_tree;
-		delete star_masses;
 		delete stars;
-		delete stars_xp;
 		delete star_region;
 		delete star_Sigma;
     Utilities::free_PosTypeMatrix(star_xdisk,star_Nregions,2);
@@ -257,14 +266,15 @@ void LensHalo::substract_stars_disks(PosType const *ray,PosType *alpha
  * 2 - broken power law, requires lower mass end slope (powerlo), high mass slope (powerhi), bending point (bendmass)
  * 3 - further IMF models may follow
  */
-float* LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
+std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed
 		,PosType minmass, PosType maxmass, PosType bendmass, PosType powerlo, PosType powerhi){
 
 	//if(!(stars_implanted)) return;
 	unsigned long i;
 	PosType powerp1,powerp2,powerp3,powerlp1,bendmass1,bendmass2,shiftmax,shiftmin,n0,n1,n2,n3,rndnr,tmp0,tmp1,tmp2;
-	float *stellar_masses = new float[Nstars];
 
+  std::vector<float> stellar_masses(Nstars);
+  
 	if(type==One){
 		for(i = 0; i < Nstars; i++){
 				stellar_masses[i]=1.0;

@@ -9,6 +9,7 @@
 #define PLANES_H_
 
 #include "quadTree.h"
+#include "lens_halos.h"
 
 /// Base class representing a plane in redshift onto which lenses are placed.
 class LensPlane{
@@ -48,7 +49,7 @@ public:
 private:
 	std::vector<LensHalo*> halos;
 	
-	TreeQuad* halo_tree;
+	TreeQuadHalos * halo_tree;
 };
 
 /** \brief A LensPlane with a list of LensHalo's in it.  

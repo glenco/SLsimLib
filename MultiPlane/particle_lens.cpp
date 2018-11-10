@@ -9,16 +9,18 @@
 using namespace CCfits;
 #endif
 
-LensHaloParticles::LensHaloParticles(
-            const std::string& simulation_filename
-            ,PosType redshift     /// redshift of origin
-            ,int Nsmooth         /// number of neighbours for adaptive smoothing
-            ,const COSMOLOGY& cosmo /// cosmology
-            ,Point_2d theta_rotate /// rotation of particles around the origin
-            ,bool recenter
-            ,bool my_multimass   /// Set to true is particles have different sizes
-            ,PosType MinPSize    
-        ):min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
+template<typename PType>
+LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filename
+                                     ,SimFileFormats format
+                                     ,PosType redshift
+                                     ,int Nsmooth
+                                     ,const COSMOLOGY& cosmo
+                                     ,Point_2d theta_rotate
+                                     ,bool recenter
+                                     ,bool my_multimass
+                                     ,PosType MinPSize
+        )
+:min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
   LensHalo::setZlens(redshift);
@@ -31,14 +33,25 @@ LensHaloParticles::LensHaloParticles(
   Rmax = 1.0e3;
   LensHalo::setRsize(Rmax);
   
-  readPositionFileASCII(simulation_filename);
+  switch (format) {
+    case ascii:
+      readPositionFileASCII(simulation_filename,multimass,xxp);
+      break;
+    default:
+      std::cerr << "LensHaloParticles does not accept ." << std::endl;
+      throw std::invalid_argument("bad format");
+  }
   
   sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
   if(!readSizesFile(sizefile,Nsmooth,min_size)){
     // calculate sizes
-    sizes.resize(Npoints);
-    calculate_smoothing(Nsmooth);
-    for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
+    //sizes.resize(Npoints);
+    calculate_smoothing(Nsmooth,xxp);
+
+    // save result to a file for future use
+    writeSizes(sizefile,Nsmooth,xxp);
+    //for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
+    for(size_t i=0; i<Npoints ; ++i) if(xxp[i].size() < min_size) xxp[i].Size = min_size;
   }
   
   // convert from comoving to physical coordinates
@@ -46,18 +59,18 @@ LensHaloParticles::LensHaloParticles(
   mcenter *= 0.0;
   PosType max_mass = 0.0,min_mass = HUGE_VALF,mass=0;
   for(size_t i=0;i<Npoints;++i){
-    xp[i][0] *= scale_factor;
-    xp[i][1] *= scale_factor;
-    xp[i][2] *= scale_factor;
+    xxp[i][0] *= scale_factor;
+    xxp[i][1] *= scale_factor;
+    xxp[i][2] *= scale_factor;
     
-    mcenter[0] += xp[i][0]*masses[multimass*i];
-    mcenter[1] += xp[i][1]*masses[multimass*i];
-    mcenter[2] += xp[i][2]*masses[multimass*i];
-    
-    mass += masses[multimass*i];
+    mcenter[0] += xxp[i][0]*xxp[multimass*i].mass();
+    mcenter[1] += xxp[i][1]*xxp[multimass*i].mass();
+    mcenter[2] += xxp[i][2]*xxp[multimass*i].mass();
 
-    max_mass = (masses[multimass*i] > max_mass) ? masses[multimass*i] : max_mass;
-    min_mass = (masses[multimass*i] < min_mass) ? masses[multimass*i] : min_mass;
+    mass += xxp[multimass*i].mass();
+
+    max_mass = (xxp[multimass*i].mass() > max_mass) ? xxp[multimass*i].mass() : max_mass;
+    min_mass = (xxp[multimass*i].mass() < min_mass) ? xxp[multimass*i].mass() : min_mass;
   }
   LensHalo::setMass(mass);
 
@@ -69,11 +82,11 @@ LensHaloParticles::LensHaloParticles(
   if(recenter){
     PosType r2,r2max=0;
     for(size_t i=0;i<Npoints;++i){
-      xp[i][0] -= mcenter[0];
-      xp[i][1] -= mcenter[1];
-      xp[i][2] -= mcenter[2];
+      xxp[i][0] -= mcenter[0];
+      xxp[i][1] -= mcenter[1];
+      xxp[i][2] -= mcenter[2];
       
-      r2 = xp[i][0]*xp[i][0] + xp[i][1]*xp[i][1] + xp[i][2]*xp[i][2];
+      r2 = xxp[i][0]*xxp[i][0] + xxp[i][1]*xxp[i][1] + xxp[i][2]*xxp[i][2];
       if(r2 > r2max) r2max = r2;
     }
     
@@ -83,15 +96,17 @@ LensHaloParticles::LensHaloParticles(
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
-  qtree = new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
+  qtree = new TreeQuadParticles<ParticleData<float> >(xxp.data(),xxp.size(),-1,-1,0,20);
 }
 
-LensHaloParticles::~LensHaloParticles(){
+template<typename PType>
+LensHaloParticles<PType>::~LensHaloParticles(){
   delete qtree;
-  Utilities::free_PosTypeMatrix(xp,Npoints,3);
 }
 
-void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
+template<typename PType>
+void LensHaloParticles<PType>::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
+                ,double const *xcm
                 ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
   
@@ -99,10 +114,11 @@ void LensHaloParticles::force_halo(double *alpha,KappaType *kappa,KappaType *gam
   alpha[1] *= -1;
 }
 
-void LensHaloParticles::rotate(Point_2d theta){
+template<typename PType>
+void LensHaloParticles<PType>::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
   delete qtree;
-  qtree =new TreeQuad(xp,masses.data(),sizes.data(),Npoints,multimass,true,0,20);
+  qtree =new TreeQuadParticles<ParticleData<float> >(xxp.data(),Npoints,multimass,true,0,20);
 }
 
 /** \brief Reads number of particle and particle positons into Npoint and xp from a ASCII file.
@@ -112,7 +128,11 @@ void LensHaloParticles::rotate(Point_2d theta){
  *
  * Coordinates of particles are in physical Mpc units.
  */
-void LensHaloParticles::readPositionFileASCII(const std::string &filename){
+template<typename PType>
+void LensHaloParticles<PType>::readPositionFileASCII(const std::string &filename
+                                                     ,bool multimass
+                                                     ,std::vector<PType> &xxp
+                                                     ){
   
   int ncoll = Utilities::IO::CountColumns(filename);
   if(!multimass && ncoll != 3 ){
@@ -123,6 +143,8 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   }
  
   std::ifstream myfile(filename);
+  
+  size_t Npoints = 0;
   
   // find number of particles
   
@@ -159,9 +181,10 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
       throw std::runtime_error("file reading error");
     }
     
-    xp = Utilities::PosTypeMatrix(Npoints,3);
-    if(multimass) masses.resize(Npoints);
-    else masses.push_back(tmp_mass);
+    xxp.resize(Npoints);
+    //xp = Utilities::PosTypeMatrix(Npoints,3);
+    //if(multimass) masses.resize(Npoints);
+    //else masses.push_back(tmp_mass);
     
     size_t row = 0;
     
@@ -171,10 +194,10 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
         if(str[0] == '#') continue; //for comments
         std::stringstream ss(str);
       
-        ss >> xp[row][0];
-        if(!(ss >> xp[row][1])) std::cerr << "3 columns are expected in line " << row
+        ss >> xxp[row][0];
+        if(!(ss >> xxp[row][1])) std::cerr << "3 columns are expected in line " << row
           << " of " << filename << std::endl;
-        if(!(ss >> xp[row][2])) std::cerr << "3 columns are expected in line " << row
+        if(!(ss >> xxp[row][2])) std::cerr << "3 columns are expected in line " << row
           << " of " << filename << std::endl;
       
         row++;
@@ -184,12 +207,12 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
         if(str[0] == '#') continue; //for comments
         std::stringstream ss(str);
         
-        ss >> xp[row][0];
-        if(!(ss >> xp[row][1])) std::cerr << "4 columns are expected in line " << row
+        ss >> xxp[row][0];
+        if(!(ss >> xxp[row][1])) std::cerr << "4 columns are expected in line " << row
           << " of " << filename << std::endl;
-        if(!(ss >> xp[row][2])) std::cerr << "4 columns are expected in line " << row
+        if(!(ss >> xxp[row][2])) std::cerr << "4 columns are expected in line " << row
           << " of " << filename << std::endl;
-        if(!(ss >> masses[row])) std::cerr << "4 columns are expected in line " << row
+        if(!(ss >> xxp[row].Mass)) std::cerr << "4 columns are expected in line " << row
           << " of " << filename << std::endl;
         
         row++;
@@ -210,7 +233,8 @@ void LensHaloParticles::readPositionFileASCII(const std::string &filename){
   
 }
 
-bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth
+template<typename PType>
+bool LensHaloParticles<PType>::readSizesFile(const std::string &filename,int Nsmooth
                                       ,PosType min_size){
   
   std::ifstream myfile(filename);
@@ -253,8 +277,6 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth
       throw std::runtime_error("file reading error");
     }
     
-    sizes.resize(Npoints);
-    
     size_t row = 0;
     
     std::cout << "reading in particle sizes from " << filename << "..." << std::endl;
@@ -264,10 +286,10 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth
       if(str[0] == '#') continue; //for comments
       std::stringstream ss(str);
       
-      ss >> sizes[row];
-      if(min_size > sizes[row] ) sizes[row] = min_size;
-      min = min < sizes[row] ? min :  sizes[row];
-      max = max > sizes[row] ? max :  sizes[row];
+      ss >> xxp[row].Size;
+      if(min_size > xxp[row].size() ) xxp[row].Size = min_size;
+      min = min < xxp[row].size() ? min : xxp[row].size();
+      max = max > xxp[row].size() ? max : xxp[row].size();
       row++;
     }
     
@@ -286,7 +308,8 @@ bool LensHaloParticles::readSizesFile(const std::string &filename,int Nsmooth
   return true;
 }
 
-void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
+template<typename PType>
+void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y){
   
   if(theta_x == 0.0 && theta_y == 0.0) return;
     
@@ -306,26 +329,31 @@ void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
   for(size_t i=0;i<Npoints;++i){
     for(j=0;j<3;++j) tmp[j]=0.0;
     for(j=0;j<3;++j){
-      tmp[0]+=coord[0][j]*xp[i][j];
-      tmp[1]+=coord[1][j]*xp[i][j];
-      tmp[2]+=coord[2][j]*xp[i][j];
+      tmp[0]+=coord[0][j]*xxp[i][j];
+      tmp[1]+=coord[1][j]*xxp[i][j];
+      tmp[2]+=coord[2][j]*xxp[i][j];
     }
-    for(j=0;j<3;++j) xp[i][j]=tmp[j];
+    for(j=0;j<3;++j) xxp[i][j]=tmp[j];
   }
 }
 
-void LensHaloParticles::calculate_smoothing(int Nsmooth){
+template<typename PType>
+void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,std::vector<PType> &xxp
+                                            ){
+  
   std::cout << "Calculating smoothing of particles ..." << std::endl
   << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
+  size_t Npoints = xxp.size();
+  
   // make 3d tree of particle postions
-  TreeSimple tree3d(xp,Npoints,10,3,true);
+  TreeSimple<PType> tree3d(xxp,Npoints,10,3,true);
   
   // find distance to nth neighbour for every particle
   if(Npoints < 1000){
     IndexType neighbors[Nsmooth];
     for(size_t i=0;i<Npoints;++i){
-      tree3d.NearestNeighbors(xp[i],Nsmooth,sizes.data() + i,neighbors);
+      tree3d.NearestNeighbors(&(xxp[i][0]),Nsmooth,&(xxp[i].Size),neighbors);
     }
   }else{
     size_t chunksize = Npoints/N_THREADS;
@@ -337,26 +365,30 @@ void LensHaloParticles::calculate_smoothing(int Nsmooth){
         N = Npoints - ii*chunksize;
       }else N = chunksize;
       
-      thr[ii] = std::thread(&LensHaloParticles::smooth_,this,&tree3d
-                            ,&(xp[ii*chunksize]),&(sizes[ii*chunksize]),N,Nsmooth);
+      //thr[ii] = std::thread(&LensHaloParticles::smooth_,this,&tree3d
+      //                      ,&(xp[ii*chunksize]),&(sizes[ii*chunksize]),N,Nsmooth);
+      thr[ii] = std::thread(LensHaloParticles::smooth_,&tree3d
+                            ,&(xxp[ii*chunksize]),N,Nsmooth);
     }
     for(int ii = 0; ii < N_THREADS ;++ii) thr[ii].join();
   }
   std::cout << "done" << std::endl;
-
-  // save result to a file for future use
-  writeSizes(sizefile,Nsmooth);
 }
 
-void LensHaloParticles::smooth_(TreeSimple *tree3d,PosType **xp,float *sizesp,size_t N,int Nsmooth){
+template<typename PType>
+void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth){
 
   IndexType neighbors[Nsmooth];
   for(size_t i=0;i<N;++i){
-    tree3d->NearestNeighbors(xp[i],Nsmooth,sizesp + i,neighbors);
+    //tree3d->NearestNeighbors(&xp[i][0],Nsmooth,sizesp + i,neighbors);
+    tree3d->NearestNeighbors(&xp[i][0],Nsmooth,&(xp[i].Size),neighbors);
   }
 }
 
-void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
+template<typename PType>
+void LensHaloParticles<PType>::writeSizes(const std::string &filename,int Nsmooth
+                                          ,const std::vector<PType> &xxp
+){
   
   std::ofstream myfile(filename);
   
@@ -366,10 +398,11 @@ void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
     
     std::cout << "Writing particle size information to file " << filename << " ...." << std::endl;
     
-    myfile << "# nparticles " << Npoints << std::endl;
+    myfile << "# nparticles " << xxp.size() << std::endl;
     myfile << "# nsmooth " << Nsmooth << std::endl;
+    size_t Npoints = xxp.size();
     for(size_t i=0;i<Npoints;++i){
-      myfile << sizes[i] << std::endl;
+      myfile << xxp[i].Size << std::endl;
       if(!myfile){
         std::cerr << "Unable to write to file " << filename << std::endl;
         throw std::runtime_error("file writing error");
@@ -384,7 +417,8 @@ void LensHaloParticles::writeSizes(const std::string &filename,int Nsmooth){
   }
 }
 
-void LensHaloParticles::makeSIE(
+template<typename PType>
+void LensHaloParticles<PType>::makeSIE(
                                 std::string new_filename  /// file name
                                 ,PosType redshift     /// redshift of particles
                                 ,double particle_mass /// particle mass

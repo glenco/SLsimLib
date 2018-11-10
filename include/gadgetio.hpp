@@ -47,4 +47,9 @@ void load_snapshot_gadget2(char *fname               /// base name of snapshot
                           ,int &Ngas                /// number of gas particles
                           );
 
+void load_snapshot_gadget2(char *fname
+                           ,int nfiles
+                           ,std::vector<ParticleData<float> > &xp
+                           ,std::vector<int> &ntypes
+                           );
 #endif /* gadgetio_hpp */

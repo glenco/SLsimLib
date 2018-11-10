@@ -1,3 +1,4 @@
 add_sources(
-	gadgetio.cpp
+	gadget.cp
+	gensim.cp  
 )

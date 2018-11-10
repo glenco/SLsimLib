@@ -10,7 +10,7 @@
 
 #include "standard.h"
 #include "Tree.h"
-#include "lens_halos.h"
+//#include "lens_halos.h"
 
 /** \brief Box representing a branch in a tree.  It has four children.  Used in TreeNBStruct which is used in TreeForce.
  */
@@ -83,9 +83,10 @@ typedef int TreeNBElement;
  *
  * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private methods and a few public ones.
  */
+template<typename PType>
 class TreeSimple {
 public:
-	TreeSimple(PosType **xp,IndexType Npoints,int bucket = 5,int dimensions = 2,bool median = true);
+	TreeSimple(PType *xp,IndexType Npoints,int bucket = 5,int dimensions = 2,bool median = true);
 	virtual ~TreeSimple();
 
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
@@ -168,16 +169,16 @@ protected:
 	bool median_cut;
 	int Nbucket;
 	PosType realray[3];
-	PosType **xp;
+	PType *xxp;
 
-	TreeNBHndl BuildTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles,int Ndimensions,PosType theta);
+	TreeNBHndl BuildTreeNB(PType *xxp,IndexType Nparticles,IndexType *particles,int Ndimensions,PosType theta);
 	void _BuildTreeNB(TreeNBHndl tree,IndexType nparticles,IndexType *particles);
 
 	void _PointsWithin(PosType *ray,float *rmax,std::list<unsigned long> &neighborkist);
 	void _NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
 
   void _NearestNeighbors(PosType *ray,PosType *realray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors
-                                     ,TreeSimple::iterator &it,int &found) const ;
+                                     ,TreeSimple<PType>::iterator &it,int &found) const ;
 
 	BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
 			  ,PosType boundary_p1[],PosType boundary_p2[]
