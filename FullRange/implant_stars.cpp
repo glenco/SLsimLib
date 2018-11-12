@@ -179,7 +179,7 @@ void LensHalo::implant_stars(
 	//		,false,false,5,2,false,star_theta_force);
   
   if(stars_implanted) delete star_tree;
-	star_tree = new TreeQuadParticles<StarData>(stars_xp.data(),stars_N
+	star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
                            ,false,false,0,4,star_theta_force);
   
 	// visit every branch to find center of mass and cutoff scale */

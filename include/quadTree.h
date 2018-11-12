@@ -26,16 +26,6 @@
 
 //short const treeNBdim = 2;
 
-/// Atomic data class for stars with different masses
-struct StarData{
-  PosType &operator[](int i){return x[i];}
-  PosType *operator*(){return x;}
-  PosType x[3];
-  float Mass;
-  
-  float mass() const {return Mass;}
-  static float size() {return 0;}
-};
 
 /**
  * \brief TreeQuadParticles is a class for calculating the deflection, kappa and gamma by tree method.

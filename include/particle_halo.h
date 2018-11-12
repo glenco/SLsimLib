@@ -6,41 +6,20 @@
 //
 //
 
+things to do:
+
+protect particle data by storing it in a class that reads data and generates LensHaloParticles
+
+make multi-type halos center on a common cneter of mass
+
 #ifndef GLAMER_particle_halo_h
 #define GLAMER_particle_halo_h
 
 #include "geometry.h"
 #include "quadTree.h"
 #include "simpleTree.h"
-
-/// Atomic data class for simulation particles with individual sizes and masses
-template<typename T = float>
-struct ParticleData{
-  T &operator[](int i){return x[i];}
-  T *operator*(){return x;}
-  T x[3];
-  float Mass;
-  float Size;
-  int type;
-  
-  float size(){return Size;}
-  float mass(){return Mass;}
-};
-
-/// Atomic data class for simulation particles of the same size and mass
-struct ParticleDataSimple{
-  float &operator[](int i){return x[i];}
-  float *operator*(){return x;}
-  float x[3];
-  
-  static float Mass;
-  static float Size;
-
-  float size(){return ParticleDataSimple::Size;}
-  float mass(){return ParticleDataSimple::Mass;}
-};
-float ParticleDataSimple::Size = 0;
-float ParticleDataSimple::Mass = 0;
+#include "particle_types.h"
+#include "gadget.hh"
 
 enum SimFileFormats {ascii,gadget2};
 
@@ -77,6 +56,14 @@ public:
                     ,bool my_multimass       /// set to true is particles have different sizes
                     ,PosType MinPSize        /// minimum particle size
   );
+ 
+  LensHaloParticles(PType  *pdata
+                    ,float redshift        /// redshift of origin
+                    ,const COSMOLOGY& cosmo  /// cosmology
+                    ,Point_2d theta_rotate   /// rotation of particles around the origin
+                    ,bool recenter           /// center on center of mass
+                    ,float MinPSize        /// minimum particle size
+  );
   
   ~LensHaloParticles();
   
@@ -106,32 +93,38 @@ public:
                       );
   
   static void calculate_smoothing(int Nsmooth
-                                  ,std::vector<PType> &xxp
-                                  );
+                                  ,PType *pp
+                                  ,size_t Npoints);
   
   static void readPositionFileASCII(const std::string &filename
                                     ,bool multimass
-                                    ,std::vector<PType> &xxp
+                                    ,PType *pp
                                     );
-
+  
+  
+  
   static void writeSizes(const std::string &filename
                          ,int Nsmooth
-                         ,const std::vector<PType> &xxp
+                         ,const PType *pp
+                         ,size_t Npoints
                          );
+
+  static bool readSizesFile(const std::string &filename
+                            ,PType * pp
+                            ,size_t Npoints
+                            ,int Nsmooth
+                            ,PosType min_size);
 
 private:
 
-  
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
   static void smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth);
   
-  bool readSizesFile(const std::string& filename,int Nsmooth,PosType min_size);
-  
   void assignParams(InputParams& params);
 
-  std::vector<PType> xxp;
+  PType *pp;
   //PosType **xp;
   //std::vector<float> masses;
   //std::vector<float> sizes;
@@ -147,6 +140,62 @@ private:
   std::string sizefile;
   
   TreeQuadParticles<PType> * qtree;
+};
+
+void makeHalosFromGadget(const std::string &filename
+                                ,std::vector<ParticleType<float> > &data
+                                ,std::vector<LensHaloParticles<ParticleType<float> > > &halos
+                                ,int Nsmooth
+                                ,float redshift
+                                ,Point_2d theta_rotate   /// rotation of particles around the origin
+                                ,const COSMOLOGY &cosmo
+                                ){
+  
+  
+  GadgetFile<ParticleType<float> > gadget_file(filename,data);
+  
+  for(int n=0 ; n < gadget_file.numfiles ; ++n){
+    gadget_file.openFile();
+    gadget_file.readBlock("POS");
+    gadget_file.readBlock("MASS");
+    gadget_file.closeFile();
+  }
+  
+  // sort by type
+  std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+  
+  ParticleType<float> *pp;
+  
+  size_t skip = 0;
+  std::string sizefile;
+  for(int i = 0 ; i < 6 ; ++i){  //loop through type
+    if(gadget_file.npart[i] > 0){
+      
+      pp = data.data() + skip;  // pointer to first particle of type
+      size_t N = gadget_file.npart[i];
+      
+      sizefile = filename + "_T" + std::to_string(i) + "S"
+      + std::to_string(Nsmooth) + "sizes";
+      
+      if(!LensHaloParticles<ParticleType<float> >::readSizesFile(sizefile,pp,gadget_file.npart[i],Nsmooth,0)){
+        // calculate sizes
+        //sizes.resize(Npoints);
+        LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+        
+        // save result to a file for future use
+        LensHaloParticles<ParticleType<float> >::writeSizes(sizefile,Nsmooth,pp,N);
+      }
+      
+      halos.emplace_back(pp
+                         ,redshift
+                         ,cosmo  /// cosmology
+                         ,theta_rotate   /// rotation of particles around the origin
+                         ,false
+                         ,0);
+      
+    }
+    skip += gadget_file.npart[i];
+  }
 };
 
 

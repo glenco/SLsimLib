@@ -2,7 +2,6 @@
  * lens_halos.h
  *
  *  Created on: 06.05.2013
- *      Author: mpetkova
  */
 
 #ifndef LENS_HALOS_H_
@@ -13,6 +12,7 @@
 //#include "source.h"
 //#include "point.h"
 #include "quadTree.h"
+#include "particle_types.h"
 
 /**
  * \brief A base class for all types of lensing halos.
@@ -245,8 +245,8 @@ protected:
   };
   
   IndexType *stars;
-  std::vector<StarData> stars_xp;
-  TreeQuadParticles<StarData> *star_tree;
+  std::vector<StarType> stars_xp;
+  TreeQuadParticles<StarType> *star_tree;
   int stars_N;
   PosType star_massscale;
   /// star masses relative to star_massscles

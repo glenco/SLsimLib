@@ -1,4 +1,4 @@
 add_sources(
-	gadget.cp
+	gadget.cpp
 	gensim.cp  
 )
