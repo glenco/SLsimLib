@@ -8,6 +8,8 @@
 #ifndef particle_types_h
 #define particle_types_h
 
+enum SimFileFormat {glamb,csv,gadget2,ascii};
+
 // Atomic data class for simulation particles with individual sizes and masses
 template<typename T = float>
 struct ParticleType{
@@ -15,6 +17,23 @@ struct ParticleType{
   T *operator*(){return x;}
   T x[3];
   
+  float Mass;
+  float Size;
+  int type;
+  
+  float size(){return Size;}
+  float mass(){return Mass;}
+};
+
+// Atomic data class for simulation particles with individual sizes, masses and velocities
+template<typename T = float>
+struct ParticleTypeV{
+  T &operator[](int i){return x[i];}
+  T *operator*(){return x;}
+  T x[3];
+
+  T v[3];
+
   float Mass;
   float Size;
   int type;
@@ -35,8 +54,8 @@ struct ParticleTypeSimple{
   float size(){return ParticleTypeSimple::Size;}
   float mass(){return ParticleTypeSimple::Mass;}
 };
-float ParticleTypeSimple::Size = 0;
-float ParticleTypeSimple::Mass = 0;
+//float ParticleTypeSimple::Size = 0;
+//float ParticleTypeSimple::Mass = 0;
 
 /// Atomic data class for stars with different masses
 struct StarType{
