@@ -6,6 +6,8 @@
 #include "particle_halo.h"
 #include "simpleTree.h"
 #include "utilities_slsim.h"
+#include "gadget.hh"
+
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
@@ -163,6 +165,8 @@ bool MakeParticleLenses::readCSV(){
   std::string line = "";
   size_t ntot = 0;
   //while (getline(file, line) && ntot < 1000) ntot++; // ????
+  while (getline(file, line) && line[0] == '#');
+  ++ntot;
   while (getline(file, line)) ntot++;
 
   std::cout << "counted " << ntot << " entries in CSV file "
@@ -172,11 +176,15 @@ bool MakeParticleLenses::readCSV(){
   
   std::string delimiter = ",";
   
+  //*** be able to read different types of csv files
+  
   ntot = 0;
-  file.seekg(0);
+  file.clear();
+  file.seekg(0);  // return to begining
+  //while (getline(file, line) && line[0] == '#');
+
   // Iterate through each line and split the content using delimeter
-  while (getline(file, line))
-  {
+  while (getline(file, line)){
     std::vector<std::string> vec;
     Utilities::splitstring(line,vec,delimiter);
     
@@ -187,6 +195,7 @@ bool MakeParticleLenses::readCSV(){
     data[ntot].type = 0;
     ++ntot;
   }
+     
   // Close the File
   file.close();
   
@@ -199,18 +208,20 @@ bool MakeParticleLenses::readCSV(){
   return true;
 };
 
-bool readGadget2(){
+bool MakeParticleLenses::readGadget2(){
   
-  /*GadgetFile<ParticleType<float> > gadget_file(filename,data);
-   z_original = gadget.redshift;
+  GadgetFile<ParticleType<float> > gadget_file(filename,data);
+   z_original = gadget_file.redshift;
    
    for(int n=0 ; n < gadget_file.numfiles ; ++n){
-   gadget_file.openFile();
-   gadget_file.readBlock("POS");
-   gadget_file.readBlock("MASS");
-   gadget_file.closeFile();
+     gadget_file.openFile();
+     gadget_file.readBlock("POS");
+     gadget_file.readBlock("MASS");
+     gadget_file.closeFile();
    }
-   
+  
+  // ????? **** convert to physical Mpc/h and Msun/h
+  // ???? *** can we store sizes in gadget blocks
    // sort by type
    std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
    
@@ -219,7 +230,7 @@ bool readGadget2(){
    for(int i = 0 ; i < 6 ; ++i){  //loop through types
    
    nparticles.push_back(gadget_file.npart[i]);
-   masses.push_back(gadget_file.tabmass[i]);
+   masses.push_back(gadget_file.masstab[i]);
    
    if(gadget_file.npart[i] > 0){
    pp = data.data() + skip;  // pointer to first particle of type
@@ -228,7 +239,7 @@ bool readGadget2(){
    LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
    }
    skip += gadget_file.npart[i];
-   }*/
+   }
   
   return true;
 };

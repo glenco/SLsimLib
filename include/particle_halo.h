@@ -16,8 +16,6 @@
 #include "utilities_slsim.h"
 #include "lens_halos.h"
 
-//#include "gadget.hh"
-
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
  
@@ -546,9 +544,11 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
   std::cout << "Calculating smoothing of particles ..." << std::endl
   << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
+  time_t to,t;
+  time(&to);
+  
   // make 3d tree of particle postions
   TreeSimple<PType> tree3d(pp,Npoints,10,3,true);
-  
   // find distance to nth neighbour for every particle
   if(Npoints < 1000){
     IndexType neighbors[Nsmooth];
@@ -574,7 +574,8 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
     }
     for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
   }
-  std::cout << "done" << std::endl;
+  time(&t);
+  std::cout << "done in " << difftime(t,to) << " secs" << std::endl;
 }
 
 template<typename PType>
