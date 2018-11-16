@@ -49,6 +49,6 @@ add_sources(
 	concave_hull.h
         bands_etc.h
 	gaussian.h
-	gadget.hh
+	#gadget.hh
 	particle_types.h
 )
