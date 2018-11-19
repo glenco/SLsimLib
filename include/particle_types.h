@@ -8,7 +8,7 @@
 #ifndef particle_types_h
 #define particle_types_h
 
-enum SimFileFormat {glamb,csv,gadget2,ascii};
+enum SimFileFormat {glamb,csv3,csv4,csv5,csv6,gadget2,ascii};
 
 // Atomic data class for simulation particles with individual sizes and masses
 template<typename T = float>

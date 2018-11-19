@@ -902,4 +902,5 @@ void Utilities::splitstring(std::string &line,std::vector<std::string> &vec
     vec.push_back(line.substr(0, pos));
     line.erase(0, pos + delimiter.length());
   }
+  vec.push_back(line.substr(0, pos));
 }

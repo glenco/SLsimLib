@@ -46,8 +46,17 @@ MakeParticleLenses::MakeParticleLenses(
         case gadget2:
           readGadget2();
           break;
-        case csv:
-          readCSV();
+        case csv3:
+          readCSV(3);
+          break;
+        case csv4:
+          readCSV(4);
+          break;
+        case csv5:
+          readCSV(5);
+          break;
+        case csv6:
+          readCSV(6);
         default:
           break;
       }
@@ -159,13 +168,25 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
   }
 };
 
-bool MakeParticleLenses::readCSV(){
+bool MakeParticleLenses::readCSV(int columns_used){
+  
+  std::string delimiter = ",";
+  
   
   std::ifstream file(filename);
   std::string line = "";
   size_t ntot = 0;
   //while (getline(file, line) && ntot < 1000) ntot++; // ????
   while (getline(file, line) && line[0] == '#');
+  std::vector<std::string> vec;
+  Utilities::splitstring(line,vec,delimiter);
+  const int ncolumns = vec.size();
+  
+  if(ncolumns < columns_used){
+    std:cerr << "file " << filename <<" does not have enough columns." << std::endl;
+    throw std::invalid_argument("bad file");
+  }
+  
   ++ntot;
   while (getline(file, line)) ntot++;
 
@@ -174,28 +195,65 @@ bool MakeParticleLenses::readCSV(){
   std::cout << " attempting to read them...";
   data.resize(ntot);
   
-  std::string delimiter = ",";
-  
   //*** be able to read different types of csv files
   
   ntot = 0;
   file.clear();
   file.seekg(0);  // return to begining
-  //while (getline(file, line) && line[0] == '#');
-
+  while (getline(file, line) && line[0] == '#');
+  
   // Iterate through each line and split the content using delimeter
-  while (getline(file, line)){
-    std::vector<std::string> vec;
-    Utilities::splitstring(line,vec,delimiter);
+  if(columns_used == 3){
+    do{
+      std::vector<std::string> vec;
+      Utilities::splitstring(line,vec,delimiter);
     
-    data[ntot][0] =  stof(vec[0]);
-    data[ntot][1] =  stof(vec[1]);
-    data[ntot][2] =  stof(vec[2]);
-    data[ntot].Mass = stof(vec[3]);
-    data[ntot].type = 0;
-    ++ntot;
+      data[ntot][0] =  stof(vec[0]);
+      data[ntot][1] =  stof(vec[1]);
+      data[ntot][2] =  stof(vec[2]);
+      ++ntot;
+    }while( getline(file, line) );
+  }else if(columns_used == 4){
+    do{
+      std::vector<std::string> vec;
+      Utilities::splitstring(line,vec,delimiter);
+      
+      data[ntot][0] =  stof(vec[0]);
+      data[ntot][1] =  stof(vec[1]);
+      data[ntot][2] =  stof(vec[2]);
+      data[ntot].Mass = stof(vec[3]);
+      data[ntot].type = 0;
+      ++ntot;
+    }while( getline(file, line) );
+  }else if(columns_used == 5){
+    do{
+      std::vector<std::string> vec;
+      Utilities::splitstring(line,vec,delimiter);
+    
+      data[ntot][0] =  stof(vec[0]);
+      data[ntot][1] =  stof(vec[1]);
+      data[ntot][2] =  stof(vec[2]);
+      data[ntot].Mass = stof(vec[3]);
+      data[ntot].Size = stof(vec[4]);
+      data[ntot].type = 0;
+      ++ntot;
+    }while( getline(file, line) );
+  }else if(columns_used == 6){
+    do{
+      std::vector<std::string> vec;
+      Utilities::splitstring(line,vec,delimiter);
+      
+      data[ntot][0] =  stof(vec[0]);
+      data[ntot][1] =  stof(vec[1]);
+      data[ntot][2] =  stof(vec[2]);
+      data[ntot].Mass = stof(vec[3]);
+      data[ntot].Size = stof(vec[4]);
+      data[ntot].type = stoi(vec[5]);
+      ++ntot;
+    }while( getline(file, line) );
+
   }
-     
+
   // Close the File
   file.close();
   
@@ -229,16 +287,16 @@ bool MakeParticleLenses::readGadget2(){
    size_t skip = 0;
    for(int i = 0 ; i < 6 ; ++i){  //loop through types
    
-   nparticles.push_back(gadget_file.npart[i]);
-   masses.push_back(gadget_file.masstab[i]);
+     nparticles.push_back(gadget_file.npart[i]);
+     masses.push_back(gadget_file.masstab[i]);
    
-   if(gadget_file.npart[i] > 0){
-   pp = data.data() + skip;  // pointer to first particle of type
-   size_t N = gadget_file.npart[i];
+     if(gadget_file.npart[i] > 0){
+       pp = data.data() + skip;  // pointer to first particle of type
+       size_t N = gadget_file.npart[i];
    
-   LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
-   }
-   skip += gadget_file.npart[i];
+       LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+     }
+     skip += gadget_file.npart[i];
    }
   
   return true;

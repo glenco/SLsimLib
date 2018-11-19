@@ -305,6 +305,7 @@ namespace Utilities{
 	void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N);
   void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
   
+  // sort particles and arr according to order of arr
   void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
 	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
 		,PosType *arr,unsigned long N);

@@ -106,9 +106,12 @@ public:
 	void PointsWithinEllipse(T center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
   
 	/// Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
+  //template<typename T>
+  //void NearestNeighbors(T *ray,int Nneighbors,float *rsph,IndexType *neighbors) const;
+  
   template<typename T>
-  void NearestNeighbors(T *ray,int Nneighbors,float *rsph,IndexType *neighbors) const;
- 
+  T NNDistance(T *ray ,int Nneighbors) const;
+  
   class iterator{
   public:
     
@@ -127,7 +130,11 @@ public:
       
       return *this;
     }
-    
+
+    bool operator==(const iterator &it){
+      return (current == it.current)*(top == it.top);
+    }
+
     BranchNB *operator*(){return current;}
     
     /// walk tree below branch last assigned to iterator.  Returnes false if it has completed walking subtree.
@@ -168,6 +175,13 @@ public:
       return false;
     }
     
+    bool atleaf(){
+      return (current->child1 == NULL)*(current->child2 == NULL);
+    }
+    bool atTop(){
+      return (current == top);
+    }
+
   private:
          BranchNB *current;
          BranchNB *top;
@@ -186,6 +200,10 @@ protected:
 
 	TreeNBStruct<PType>* BuildTreeNB(PType *xxp,IndexType Nparticles,IndexType *particles,int Ndimensions,PosType theta);
 	void _BuildTreeNB(TreeNBStruct<PType>* tree,IndexType nparticles,IndexType *particles);
+  
+  template <typename T>
+  void _findleaf(T *ray,TreeSimple::iterator &it) const;
+  
 
   template<typename T>
 	void _PointsWithin(T *ray,float *rmax,std::list<unsigned long> &neighborkist);
@@ -193,9 +211,9 @@ protected:
   template<typename T>
 	void _NearestNeighbors(T *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
 
-  template<typename T>
-  void _NearestNeighbors(T *ray,PosType *realray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors
-                                     ,TreeSimple<PType>::iterator &it,int &found) const ;
+  //template<typename T>
+  //void _NearestNeighbors(T *ray,PosType *realray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors
+  //                                   ,TreeSimple<PType>::iterator &it,int &bool) const ;
 
 	BranchNB *NewBranchNB(IndexType *particles,IndexType nparticles
 			  ,PosType boundary_p1[],PosType boundary_p2[]
@@ -456,24 +474,16 @@ void TreeSimple<PType>::_PointsWithin(T *ray,float *rmax,std::list <unsigned lon
 }
 
 /**
- *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
+ *  \brief Nearest neighbor distance
+ *
+ * Finds the distance to the Nth nearest neighbors in whatever dimensions tree is defined in.
  *  */
 template<typename PType>
 template<typename T>
-void TreeSimple<PType>::NearestNeighbors(
-                                         T *ray       /// position
-                                         ,int Nneighbors    /// number of neighbors to be found
-                                         ,float *radius     /// distance furthest neighbor found from ray[]
-                                         ,IndexType *neighborsout  /// list of the indexes of the neighbors
+T TreeSimple<PType>::NNDistance(
+                                T * ray       /// position
+                                ,int Nneighbors    /// number of neighbors to be found
 ) const{
-  IndexType i;
-  //static int count=0,oldNneighbors=-1;
-  short j;
-  
-  //Ndim = tree->Ndimensions;
-  
-  PosType rneighbors[Nneighbors+Nbucket];
-  IndexType neighbors[Nneighbors+Nbucket];
   
   if(tree->top->nparticles <= Nneighbors){
     ERROR_MESSAGE();
@@ -481,54 +491,138 @@ void TreeSimple<PType>::NearestNeighbors(
     exit(1);
   }
   
-  /* initalize distance to neighbors to a large number */
-  for(i=0;i<Nbucket+Nneighbors;++i){
-    rneighbors[i] = (10*(tree->top->boundary_p2[0]-tree->top->boundary_p1[0]));
-    neighbors[i] = 0;
-  }
-  
-  PosType rlray[tree->Ndimensions];
-  for(j=0;j<tree->Ndimensions;++j) rlray[j]=ray[j];
-  
-  //moveTopNB(tree);
+  std::vector<PosType> tmp(Ndim);
   
   TreeSimple::iterator iter(tree->top);
-  if( inbox(ray,tree->current->boundary_p1,tree->current->boundary_p2) == 0 ){
-    for(j=0;j<tree->Ndimensions;++j){
-      ray[j] = (ray[j] > tree->current->boundary_p1[j]) ? ray[j] : tree->current->boundary_p1[j];
-      ray[j] = (ray[j] < tree->current->boundary_p2[j]) ? ray[j] : tree->current->boundary_p2[j];
+  
+  // if the real ray is outside of root box find the closest boundary point that is inside
+    for(int j=0;j<tree->Ndimensions;++j){
+      tmp[j] = (ray[j] > tree->current->boundary_p1[j]) ? ray[j] : tree->current->boundary_p1[j];
+      tmp[j] = (ray[j] < tree->current->boundary_p2[j]) ? ray[j] : tree->current->boundary_p2[j];
+    }
+    
+  //std::cout << tmp[0] << " " << tmp[1] << " " << tmp[2] << std::endl;
+  
+  // find leaf
+  _findleaf(tmp.data(),iter);
+
+  //PosType tmp = (10*(tree->top->boundary_p2[0]-tree->top->boundary_p1[0]));
+  
+  while((*iter)->nparticles < Nneighbors) iter.up();
+  auto pass = iter;
+  
+  std::vector<PosType> r2neighbors((*iter)->nparticles);
+  for(int i=0 ; i < (*iter)->nparticles ;++i){
+    for(int j=0;j<tree->Ndimensions;++j){
+      r2neighbors[i] += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
     }
   }
-  int notfound = 1;
   
-  _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,iter,notfound);
+  std::sort(r2neighbors.begin(),r2neighbors.end());
+  r2neighbors.resize(Nneighbors);
   
-  for(i=0;i<Nneighbors;++i) neighborsout[i] = neighbors[i];
-  *radius = rneighbors[Nneighbors-1];
+  PosType bestr = sqrt( r2neighbors.back() );
   
-  return;
+  int cutbox = 1;
+  for(int dim = 0 ; dim < Ndim ; ++dim){
+    cutbox *= ( (ray[dim] - bestr) > (*iter)->boundary_p1[dim] )
+    *( (ray[dim] + bestr) < (*iter)->boundary_p2[dim] );
+  }
+  
+  while(!cutbox && !iter.atTop()){
+    iter.up();
+    cutbox = 1;
+    for(int dim = 0 ; dim < Ndim ; ++dim){
+      cutbox *= ( (ray[dim] - bestr) > (*iter)->boundary_p1[dim] )
+      *( (ray[dim] + bestr) < (*iter)->boundary_p2[dim] );
+    }
+  }
+  
+  auto end = (*iter)->brother;
+    
+  /// walk tree from the top
+  bool decend = true;
+  do{
+    
+    if(iter == pass){
+      decend =false;
+    }else{
+      int cutbox = 1;
+      for(int dim = 0 ; dim < Ndim ; ++dim){
+        cutbox *= ( (ray[dim] + bestr) > (*iter)->boundary_p1[dim] )
+        *( (ray[dim] - bestr) < (*iter)->boundary_p2[dim] );
+      }
+
+      if(cutbox == 1){
+        decend = true;
+      
+        if(iter.atleaf()){
+        
+          for(int i=0 ; i<(*iter)->nparticles ;++i){
+            PosType r2 = 0;
+            for(int j=0;j<tree->Ndimensions;++j){
+              r2 += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+            }
+          
+            if(r2 < bestr*bestr){
+              r2neighbors.back() = r2;
+              int ii = r2neighbors.size() - 1;
+              while(r2neighbors[ii] < r2neighbors[ii-1] && ii > 0){
+                std::swap(r2neighbors[ii],r2neighbors[ii-1]);
+                --ii;
+              }
+              bestr = sqrt( r2neighbors.back() );
+            }
+          }
+          decend = false;
+        }
+      }else{
+        decend = false;
+      }
+    }
+  }while(iter.walk(decend) && !(*iter == end) );
+  
+  return bestr;
 }
 
 template<typename PType>
 template<typename T>
+void TreeSimple<PType>::_findleaf(T *ray,TreeSimple::iterator &it) const {
+  
+  if(it.atleaf() ) return;
+  
+  if( inbox(ray,(*it)->child1->boundary_p1,(*it)->child1->boundary_p2) ){
+    it.down(1);
+    _findleaf(ray,it);
+  }else{
+    it.down(2);
+    _findleaf(ray,it);
+  }
+
+  return;
+}
+
+/*
+template<typename PType>
+template<typename T>
 void TreeSimple<PType>::_NearestNeighbors(T *ray,PosType *rlray,int Nneighbors
                                           ,unsigned long *neighbors,PosType *rneighbors
-                                          ,TreeSimple::iterator &it,int &notfound) const {
+                                          ,TreeSimple::iterator &it,bool &notfound) const {
   
   int incellNB2=1;
   IndexType i;
   short j;
   
-  if(notfound){  /* not found cell yet */
+  if(notfound){  // not found cell yet
     
     if( inbox(ray,(*it)->boundary_p1,(*it)->boundary_p2) ){
       
-      /* found the box small enough */
+      // found the box small enough
       if( (*it)->nparticles <= Nneighbors+Nbucket ){
         notfound=0;
         for(j=0;j<tree->Ndimensions;++j) ray[j]=rlray[j];
         
-        /* calculate the distance to all the particles in cell */
+        // calculate the distance to all the particles in cell
         for(i=0;i<(*it)->nparticles;++i){
           for(j=0,rneighbors[i]=0.0;j<tree->Ndimensions;++j){
             rneighbors[i] += pow(tree->pp[(*it)->particles[i]][j]-ray[j],2);
@@ -541,27 +635,27 @@ void TreeSimple<PType>::_NearestNeighbors(T *ray,PosType *rlray,int Nneighbors
         Utilities::quicksort(neighbors,rneighbors,(*it)->nparticles);
         
         
-      }else{ /* keep going down the tree */
+      }else{ // keep going down the tree
         
         if(it.down(1)){
           //moveToChildNB(tree,1);
           _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
-          /*printf("moving up from level %i\n",(*it)->level);*/
+          //printf("moving up from level %i\n",(*it)->level);
           //moveUpNB(tree);
           it.up();
           incellNB2=notfound;
         }
         
         if(it.down(2)){
-          /*printf("moving to child2 from level %i\n",(*it)->level);*/
+          //printf("moving to child2 from level %i\n",(*it)->level);
           //moveToChildNB(tree,2);
           _NearestNeighbors(ray,rlray,Nneighbors,neighbors,rneighbors,it,notfound);
-          /*printf("moving up from level %i\n",(*it)->level);*/
+          //printf("moving up from level %i\n",(*it)->level);
           //moveUpNB(tree);
           it.up();
         }
         
-        /** if ray found in second child go back to first to search for neighbors **/
+        // if ray found in second child go back to first to search for neighbors
         if( (incellNB2==1) && (notfound==0) ){
           if(it.down(1)){
             //moveToChildNB(tree,1);
@@ -573,12 +667,12 @@ void TreeSimple<PType>::_NearestNeighbors(T *ray,PosType *rlray,int Nneighbors
       }
     }
   }else{ // found cell
-    /* does radius cut into the box */
+    // does radius cut into the box
     if( Utilities::cutbox(ray,(*it)->boundary_p1,(*it)->boundary_p2,rneighbors[Nneighbors-1]) ){
       
-      if( ((*it)->child1 == NULL)*((*it)->child2 == NULL)){  /* leaf case */
+      if( ((*it)->child1 == NULL)*((*it)->child2 == NULL)){  // leaf case
         
-        /* combine found neighbors with particles in box and resort */
+        // combine found neighbors with particles in box and resort
         for(i=Nneighbors;i<((*it)->nparticles+Nneighbors);++i){
           for(j=0,rneighbors[i]=0.0;j<tree->Ndimensions;++j){
             rneighbors[i]+=pow(tree->pp[(*it)->particles[i-Nneighbors]][j]-ray[j],2);
@@ -610,6 +704,7 @@ void TreeSimple<PType>::_NearestNeighbors(T *ray,PosType *rlray,int Nneighbors
   }
   return;
 }
+*/
 
 template<typename PType>
 template<typename T>

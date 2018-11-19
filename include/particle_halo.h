@@ -551,9 +551,9 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
   TreeSimple<PType> tree3d(pp,Npoints,10,3,true);
   // find distance to nth neighbour for every particle
   if(Npoints < 1000){
-    IndexType neighbors[Nsmooth];
+    //IndexType neighbors[Nsmooth];
     for(size_t i=0;i<Npoints;++i){
-      tree3d.NearestNeighbors(&(pp[i][0]),Nsmooth,&(pp[i].Size),neighbors);
+      pp[i].Size = tree3d.NNDistance(&pp[i][0],Nsmooth + 1);
     }
   }else{
     size_t chunksize = Npoints/nthreads;
@@ -579,12 +579,13 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth){
+void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *pp,size_t N,int Nsmooth){
   
-  IndexType neighbors[Nsmooth];
+  //IndexType neighbors[Nsmooth];
   for(size_t i=0;i<N;++i){
     //tree3d->NearestNeighbors(&xp[i][0],Nsmooth,sizesp + i,neighbors);
-    tree3d->NearestNeighbors(&xp[i][0],Nsmooth,&(xp[i].Size),neighbors);
+    //tree3d->NearestNeighbors(&xp[i][0],Nsmooth,&(xp[i].Size),neighbors);
+    pp[i].Size = tree3d->NNDistance(&(pp[i][0]),Nsmooth + 1);
   }
 }
 
@@ -676,12 +677,12 @@ void LensHaloParticles<PType>::makeSIE(
  smoothing scales are calculated within particle type.
  The sph density of gas particles are not used.
  
- csv - CSV ascii format without header.  The first three columns
- are the positions and the 4th is the mass.  There can be
- more columns that are ignored.  There is only one type of
- particle.  The lengths are in physical (not comoving)
- Mpc/h and the masses are in Msun/h.  The sizes are
- calculated.
+ csv3,csv4,csv5,csv6 - CSV ascii format without header.  The first three columns
+ are the positions.  Next columns are used for the other formats being and
+ interpreted as (column 4) masses are in Msun/h, (column 5) the paricle smoothing
+ size in Mpc/h and (column 6) an integer for type of particle.  There can be more
+ columns in the file than are uesed.  Different halos for different types is not yet
+ implemented in this case.  Contact the developer is this is needed.
  
  glamb - This is a binary format internal to GLAMER used to store
  the positions, masses and sizes of the particles.  If
@@ -782,7 +783,7 @@ private:
   bool readGadget2();
   
   // Reads particles from first 4 columns of csv file
-  bool readCSV();
+  bool readCSV(int columns_used);
 
 };
 
