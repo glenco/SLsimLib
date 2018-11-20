@@ -176,7 +176,6 @@ bool MakeParticleLenses::readCSV(int columns_used){
   std::ifstream file(filename);
   std::string line = "";
   size_t ntot = 0;
-  //while (getline(file, line) && ntot < 1000) ntot++; // ????
   while (getline(file, line) && line[0] == '#');
   std::vector<std::string> vec;
   Utilities::splitstring(line,vec,delimiter);

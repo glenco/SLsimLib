@@ -140,6 +140,7 @@ public:
     /// walk tree below branch last assigned to iterator.  Returnes false if it has completed walking subtree.
     bool walk(bool decend){
 
+      ++count;
       if(decend && current->child1 != NULL){
         current = current->child1;
         return true;
@@ -156,12 +157,14 @@ public:
     }
     
     bool up(){
+      ++count;
       if(current == top) return false;
       current = current->prev;
       return true;
     }
     
     bool down(int child){
+      ++count;
       if(child == 1){
         if(current->child1 == NULL) return false;
         current = current->child1;
@@ -175,6 +178,10 @@ public:
       return false;
     }
     
+    void moveTop(){
+      current = top;
+    }
+    
     bool atleaf(){
       return (current->child1 == NULL)*(current->child2 == NULL);
     }
@@ -182,7 +189,9 @@ public:
       return (current == top);
     }
 
+    size_t getcout(){return count;}
   private:
+    size_t count = 0; // ???
          BranchNB *current;
          BranchNB *top;
   };
@@ -492,13 +501,12 @@ T TreeSimple<PType>::NNDistance(
   }
   
   std::vector<PosType> tmp(Ndim);
-  
   TreeSimple::iterator iter(tree->top);
   
   // if the real ray is outside of root box find the closest boundary point that is inside
     for(int j=0;j<tree->Ndimensions;++j){
       tmp[j] = (ray[j] > tree->current->boundary_p1[j]) ? ray[j] : tree->current->boundary_p1[j];
-      tmp[j] = (ray[j] < tree->current->boundary_p2[j]) ? ray[j] : tree->current->boundary_p2[j];
+      tmp[j] = (ray[j] < tree->current->boundary_p2[j]) ? tmp[j] : tree->current->boundary_p2[j];
     }
     
   //std::cout << tmp[0] << " " << tmp[1] << " " << tmp[2] << std::endl;
@@ -508,7 +516,8 @@ T TreeSimple<PType>::NNDistance(
 
   //PosType tmp = (10*(tree->top->boundary_p2[0]-tree->top->boundary_p1[0]));
   
-  while((*iter)->nparticles < Nneighbors) iter.up();
+  int levelup = 0; // ??
+  while((*iter)->nparticles < Nneighbors){ iter.up(); ++levelup;}
   auto pass = iter;
   
   std::vector<PosType> r2neighbors((*iter)->nparticles);
@@ -529,15 +538,18 @@ T TreeSimple<PType>::NNDistance(
     *( (ray[dim] + bestr) < (*iter)->boundary_p2[dim] );
   }
   
+  levelup = 0; // ???
   while(!cutbox && !iter.atTop()){
     iter.up();
+    ++levelup; // ???
     cutbox = 1;
     for(int dim = 0 ; dim < Ndim ; ++dim){
       cutbox *= ( (ray[dim] - bestr) > (*iter)->boundary_p1[dim] )
       *( (ray[dim] + bestr) < (*iter)->boundary_p2[dim] );
     }
-  }
+   }
   
+  //iter.moveTop();
   auto end = (*iter)->brother;
     
   /// walk tree from the top
@@ -565,8 +577,8 @@ T TreeSimple<PType>::NNDistance(
             }
           
             if(r2 < bestr*bestr){
-              r2neighbors.back() = r2;
               int ii = r2neighbors.size() - 1;
+              r2neighbors[ii] = r2;
               while(r2neighbors[ii] < r2neighbors[ii-1] && ii > 0){
                 std::swap(r2neighbors[ii],r2neighbors[ii-1]);
                 --ii;
@@ -582,6 +594,7 @@ T TreeSimple<PType>::NNDistance(
     }
   }while(iter.walk(decend) && !(*iter == end) );
   
+  //std::cout << " count " << iter.getcout() << " branches :" << tree->Nbranches << std::endl;
   return bestr;
 }
 

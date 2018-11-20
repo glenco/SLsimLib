@@ -548,7 +548,7 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
   time(&to);
   
   // make 3d tree of particle postions
-  TreeSimple<PType> tree3d(pp,Npoints,10,3,true);
+  TreeSimple<PType> tree3d(pp,Npoints,2*Nsmooth,3,true);
   // find distance to nth neighbour for every particle
   if(Npoints < 1000){
     //IndexType neighbors[Nsmooth];
