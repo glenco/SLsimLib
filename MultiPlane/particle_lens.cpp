@@ -313,6 +313,14 @@ void LensHaloParticles::rotate_particles(PosType theta_x,PosType theta_y){
     }
     for(j=0;j<3;++j) xp[i][j]=tmp[j];
   }
+  
+  for(j=0;j<3;++j) tmp[j]=0.0;
+  for(j=0;j<3;++j){
+    tmp[0]+=coord[0][j]*mcenter[j];
+    tmp[1]+=coord[1][j]*mcenter[j];
+    tmp[2]+=coord[2][j]*mcenter[j];
+  }
+  for(j=0;j<3;++j) mcenter[j]=tmp[j];
 }
 
 void LensHaloParticles::calculate_smoothing(int Nsmooth){

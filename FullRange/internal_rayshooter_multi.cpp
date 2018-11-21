@@ -394,7 +394,7 @@ void *compute_rays_parallel(void *_p)
     // ---------------------------------------------------------------------------------------------
     
     
-    // Conversion of dt from Mpc (physical Mpc) to Years (also possible into days) -----------------
+    // Conversion of dt from Mpc (physical Mpc) to Years -----------------
     
     p->i_points[i].dt *= MpcToSeconds * SecondToYears ;
     
