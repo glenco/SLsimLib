@@ -182,7 +182,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   const int ncolumns = vec.size();
   
   if(ncolumns < columns_used){
-    std:cerr << "file " << filename <<" does not have enough columns." << std::endl;
+    std::cerr << "file " << filename <<" does not have enough columns." << std::endl;
     throw std::invalid_argument("bad file");
   }
   

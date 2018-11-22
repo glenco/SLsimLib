@@ -522,7 +522,7 @@ T TreeSimple<PType>::NNDistance(
   
   std::vector<PosType> r2neighbors((*iter)->nparticles);
   for(int i=0 ; i < (*iter)->nparticles ;++i){
-    for(int j=0;j<tree->Ndimensions;++j){
+    for(int j=0;j<Ndim;++j){
       r2neighbors[i] += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
     }
   }
@@ -531,27 +531,27 @@ T TreeSimple<PType>::NNDistance(
   r2neighbors.resize(Nneighbors);
   
   PosType bestr = sqrt( r2neighbors.back() );
-  
+  /*
   int cutbox = 1;
   for(int dim = 0 ; dim < Ndim ; ++dim){
     cutbox *= ( (ray[dim] - bestr) > (*iter)->boundary_p1[dim] )
     *( (ray[dim] + bestr) < (*iter)->boundary_p2[dim] );
   }
   
-  levelup = 0; // ???
   while(!cutbox && !iter.atTop()){
     iter.up();
-    ++levelup; // ???
     cutbox = 1;
     for(int dim = 0 ; dim < Ndim ; ++dim){
       cutbox *= ( (ray[dim] - bestr) > (*iter)->boundary_p1[dim] )
       *( (ray[dim] + bestr) < (*iter)->boundary_p2[dim] );
     }
    }
+  */
   
-  //iter.moveTop();
-  auto end = (*iter)->brother;
-    
+  iter.moveTop();
+  //auto end = (*iter)->brother;
+  iter.walk(true);
+  
   /// walk tree from the top
   bool decend = true;
   do{
@@ -559,21 +559,30 @@ T TreeSimple<PType>::NNDistance(
     if(iter == pass){
       decend =false;
     }else{
-      int cutbox = 1;
-      for(int dim = 0 ; dim < Ndim ; ++dim){
-        cutbox *= ( (ray[dim] + bestr) > (*iter)->boundary_p1[dim] )
-        *( (ray[dim] - bestr) < (*iter)->boundary_p2[dim] );
-      }
+      
+      BranchNB * cbranch = *iter;
+      
+      //int cutbox = 1;
+      //for(int dim = 0 ; dim < Ndim ; ++dim){
+      //  cutbox *= ( (ray[dim] + bestr) > (*iter)->boundary_p1[dim] )
+      //  *( (ray[dim] - bestr) < (*iter)->boundary_p2[dim] );
+      //}
 
-      if(cutbox == 1){
+      short dim = (cbranch->level-1) % Ndim;  // this box was cut in this dimension
+      
+      bool cutbox = ( (ray[dim] + bestr) > cbranch->boundary_p1[dim] )
+      *( (ray[dim] - bestr) < cbranch->boundary_p2[dim] );
+      
+      
+      if(cutbox){
         decend = true;
       
         if(iter.atleaf()){
         
-          for(int i=0 ; i<(*iter)->nparticles ;++i){
+          for(int i=0 ; i< cbranch->nparticles ;++i){
             PosType r2 = 0;
-            for(int j=0;j<tree->Ndimensions;++j){
-              r2 += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+            for(int j=0;j<Ndim;++j){
+              r2 += pow(tree->pp[cbranch->particles[i]][j]-ray[j],2);
             }
           
             if(r2 < bestr*bestr){
@@ -586,14 +595,14 @@ T TreeSimple<PType>::NNDistance(
               bestr = sqrt( r2neighbors.back() );
             }
           }
-          decend = false;
         }
       }else{
         decend = false;
       }
     }
-  }while(iter.walk(decend) && !(*iter == end) );
-  
+//  }while(iter.walk(decend) && !(*iter == end) );
+  }while(iter.walk(decend));
+
   //std::cout << " count " << iter.getcout() << " branches :" << tree->Nbranches << std::endl;
   return bestr;
 }
