@@ -71,6 +71,8 @@ struct ImageInfo{
   KappaType aveTimeDelay();
   /// Computes the inverse magnification averaged over the image
   KappaType aveInvMag();
+  /// finds the ray in the image that is closest to the point y on the source plane
+  RAY closestRay(const Point_2d &y);
   /// Print information about the image
   void PrintImageInfo();
   void copy(const ImageInfo & image,bool copykists = true);
