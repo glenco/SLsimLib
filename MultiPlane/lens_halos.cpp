@@ -928,6 +928,7 @@ void LensHalo::force_halo_sym(
       std::cout << kappa_h(x)*prefac << " " << 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*gamma_h(x)*prefac/rcm2 << " "  << xcm[0]*xcm[1]*gamma_h(x)*prefac/rcm2 << " " <<rcm2 << " " << alpha_h(x)*prefac*xcm[0] << " " <<  alpha_h(x)*prefac*xcm[1] <<  std::endl;
     }*/
     *phi += phi_h(x) * mass / PI ;
+    if(subtract_point) *phi -= 0.5 * log(rcm2) * mass / PI;
   }
   else // the point particle is not subtracted
   {
@@ -1015,8 +1016,6 @@ void LensHalo::force_halo_asym(
         //gamma[1] += 0.5*gamma_tmp[1]*mass_norm_factor;
         
         *phi += phi_tmp;
-  
-
       }
       
     }else{
@@ -1063,7 +1062,7 @@ void LensHalo::force_halo_asym(
       gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
       gamma[1] += xcm[0]*xcm[1]*tmp;
       
-      *phi += 0.5 * log(rcm2) * mass / PI ; // *mass_norm_factor
+      *phi -= 0.5 * log(rcm2) * mass / PI ; // *mass_norm_factor
     }
     
   }

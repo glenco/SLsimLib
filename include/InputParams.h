@@ -31,9 +31,9 @@
 /// Type of mass function
 enum MassFuncType
 {
-	PressSchechter,
-	ShethTormen,
-	PowerLaw
+	PressSchechter,  /// Press & Schechter mass function
+	ShethTormen,  /// Sheth & Tormen mass function
+	PowerLaw      /// Power law mass function
 };
 
 /// Type of halo profile
@@ -63,9 +63,9 @@ enum GalaxyLensHaloType
 {
 	null_gal,
 	nsie_gal,
-  pl_gal,
-  hern_gal,
-  jaffe_gal
+  pl_gal,    /// power law profile
+  hern_gal,  /// Hernquist profile
+  jaffe_gal  /// Jaffe profile
 };
 
 /// names of clump and sb models
