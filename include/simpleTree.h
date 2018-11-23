@@ -8,6 +8,8 @@
 #ifndef SIMP_TREE_H_
 #define SIMP_TREE_H_
 
+#include  <queue>
+
 #include "standard.h"
 #include "Tree.h"
 //#include "lens_halos.h"
@@ -32,10 +34,10 @@ struct BranchNB{
   /// the number of particles that aren't in children
   IndexType big_particle;
   /// Size of largest particle in branch
-  PosType maxrsph;
+  //PosType maxrsph;
   /// center of mass
   PosType *center;
-  PosType mass;
+  //PosType mass;
   /// level in tree
   int level;
   unsigned long number;
@@ -53,13 +55,13 @@ struct BranchNB{
 
   /* projected quantities */
   /// quadropole moment of branch
-  PosType quad[3];
+  //PosType quad[3];
   /// largest dimension of box
-  PosType rmax;
+  //PosType rmax;
   /// the critical distance below which a branch is opened in the
-  PosType rcrit_angle;
+  //PosType rcrit_angle;
                 /* force calculation */
-  PosType rcrit_part;
+  //PosType rcrit_part;
   //PosType cm[2]; /* projected center of mass */
 };
 
@@ -520,17 +522,37 @@ T TreeSimple<PType>::NNDistance(
   while((*iter)->nparticles < Nneighbors){ iter.up(); ++levelup;}
   auto pass = iter;
   
-  std::vector<PosType> r2neighbors((*iter)->nparticles);
-  for(int i=0 ; i < (*iter)->nparticles ;++i){
+  //std::vector<PosType> r2neighbors((*iter)->nparticles);
+  std::priority_queue<PosType> r2heap;
+  
+  int i;
+  for(i=0 ; i < Nneighbors ;++i){
+    PosType r2 = 0;
     for(int j=0;j<Ndim;++j){
-      r2neighbors[i] += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+      //r2neighbors[i] += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+      r2 += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+    }
+    r2heap.push(r2);
+  }
+
+  for(; i < (*iter)->nparticles ;++i){
+    PosType r2 = 0;
+    for(int j=0;j<Ndim;++j){
+      //r2neighbors[i] += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+      r2 += pow(tree->pp[(*iter)->particles[i]][j]-ray[j],2);
+    }
+    if(r2 < r2heap.top()){
+      r2heap.push(r2);
+      r2heap.pop();
     }
   }
+
+  //std::sort(r2neighbors.begin(),r2neighbors.end());
+  //r2neighbors.resize(Nneighbors);
   
-  std::sort(r2neighbors.begin(),r2neighbors.end());
-  r2neighbors.resize(Nneighbors);
+  //PosType bestr = sqrt( r2neighbors.back() );
   
-  PosType bestr = sqrt( r2neighbors.back() );
+  PosType bestr = sqrt( r2heap.top() );
   /*
   int cutbox = 1;
   for(int dim = 0 ; dim < Ndim ; ++dim){
@@ -570,11 +592,8 @@ T TreeSimple<PType>::NNDistance(
 
       short dim = (cbranch->level-1) % Ndim;  // this box was cut in this dimension
       
-      bool cutbox = ( (ray[dim] + bestr) > cbranch->boundary_p1[dim] )
-      *( (ray[dim] - bestr) < cbranch->boundary_p2[dim] );
-      
-      
-      if(cutbox){
+      if(( (ray[dim] + bestr) > cbranch->boundary_p1[dim] )
+         *( (ray[dim] - bestr) < cbranch->boundary_p2[dim] ) ){
         decend = true;
       
         if(iter.atleaf()){
@@ -586,13 +605,18 @@ T TreeSimple<PType>::NNDistance(
             }
           
             if(r2 < bestr*bestr){
-              int ii = r2neighbors.size() - 1;
-              r2neighbors[ii] = r2;
-              while(r2neighbors[ii] < r2neighbors[ii-1] && ii > 0){
-                std::swap(r2neighbors[ii],r2neighbors[ii-1]);
-                --ii;
-              }
-              bestr = sqrt( r2neighbors.back() );
+              
+              r2heap.push(r2);
+              r2heap.pop();
+              bestr = sqrt( r2heap.top() );
+              
+              //int ii = r2neighbors.size() - 1;
+              //r2neighbors[ii] = r2;
+              //while(r2neighbors[ii] < r2neighbors[ii-1] && ii > 0){
+              //  std::swap(r2neighbors[ii],r2neighbors[ii-1]);
+              //  --ii;
+              //}
+              //bestr = sqrt( r2neighbors.back() );
             }
           }
         }
@@ -611,9 +635,11 @@ template<typename PType>
 template<typename T>
 void TreeSimple<PType>::_findleaf(T *ray,TreeSimple::iterator &it) const {
   
-  if(it.atleaf() ) return;
+  if( it.atleaf() ) return;
   
-  if( inbox(ray,(*it)->child1->boundary_p1,(*it)->child1->boundary_p2) ){
+  int d = (*it)->level % Ndim;
+  
+  if( (*it)->child1->boundary_p2[d] > ray[d] ){
     it.down(1);
     _findleaf(ray,it);
   }else{
@@ -875,7 +901,7 @@ void TreeSimple<PType>::_BuildTreeNB(TreeNBStruct<PType> * tree,IndexType nparti
   
   cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
   cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
-  cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
+  //cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
   
   /* leaf case */
   if(cbranch->nparticles <= Nbucket){

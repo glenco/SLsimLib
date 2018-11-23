@@ -565,10 +565,6 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
         N = Npoints - ii*chunksize;
       }else N = chunksize;
       
-      //thr[ii] = std::thread(&LensHaloParticles::smooth_,this,&tree3d
-      //                      ,&(xp[ii*chunksize]),&(sizes[ii*chunksize]),N,Nsmooth);
-      //thr[ii] = std::thread(LensHaloParticles::smooth_,&tree3d
-      //                      ,&(pp[ii*chunksize]),N,Nsmooth);
       thr[ii] = std::thread(LensHaloParticles<PType>::smooth_,&tree3d
                             ,&(pp[ii*chunksize]),N,Nsmooth);
     }
@@ -583,8 +579,6 @@ void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *pp,size_
   
   //IndexType neighbors[Nsmooth];
   for(size_t i=0;i<N;++i){
-    //tree3d->NearestNeighbors(&xp[i][0],Nsmooth,sizesp + i,neighbors);
-    //tree3d->NearestNeighbors(&xp[i][0],Nsmooth,&(xp[i].Size),neighbors);
     pp[i].Size = tree3d->NNDistance(&(pp[i][0]),Nsmooth + 1);
   }
 }
