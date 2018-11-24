@@ -660,9 +660,13 @@ void LensHaloParticles<PType>::makeSIE(
  <p>
  The particle data is stored in this structure so the LensHaloParticles should not be copied and then this object allowed to be destroyed.  The halos will be destroyed when this structure is destroyed.
  
- A separate LensHaloParticles is made for each type of particle that is present in the gadget file.  The nearest N neighbour smoothing is done in 3D on construction separately for
+ A separate LensHaloParticles is made for each type of particle that is present in the gadget file.
+ The nearest N neighbour smoothing is done in 3D on construction separately for
  each type of particle.  The smoothing sizes are automatically saved to files and used again
  if the class is constructed again with the same file and smoothing number.
+ 
+ On construction the LensHalos are not constructed.  You nead to run the `CreateHalos()` method
+ the them to be created.
  
  The data file formats are :
  
@@ -675,7 +679,7 @@ void LensHaloParticles<PType>::makeSIE(
  are the positions.  Next columns are used for the other formats being and
  interpreted as (column 4) masses are in Msun/h, (column 5) the paricle smoothing
  size in Mpc/h and (column 6) an integer for type of particle.  There can be more
- columns in the file than are uesed.  In the case of csv4, when there are more then one
+ columns in the file than are uesed.  In the case of csv6, when there are more then one
  type of halo each type will be in a differeent LensHaloParticles with differnt smoothing.
  
  glmb - This is a binary format internal to GLAMER used to store
@@ -689,6 +693,32 @@ void LensHaloParticles<PType>::makeSIE(
  in header at the top of the file. # is otherwise a
  comment character.  Only one type of particle in a single
  input file.
+ 
+ example of use:
+
+std::string filename = "DataFiles/snap_69.txt";
+MakeParticleLenses halomaker(
+                             filename
+                             ,csv6,30,false
+                             );
+
+double zs = 2,zl -0.7;
+
+long seed = 88277394;
+Lens lens(&seed,zs);
+
+halomaker.CreateHalos(cosmo,zl);
+for(auto h : halomaker.halos){
+  lens.insertMainHalo(h,zl, true);
+}
+
+Point_2d center;
+
+GridMap gridmap(&lens,2049,center.x,400*arcsecTOradians);
+
+PixelMap pmap = gridmap.writePixelMapUniform(KAPPA);
+pmap.printFITS("!" + filename + ".kappa.fits");
+ 
  <\p>
 */
 class MakeParticleLenses{
@@ -723,6 +753,13 @@ public:
   
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);
   
+  /// remove particles that are beyond radius (Mpc/h) from center
+  void radialCut(Point_2d center,double radius);
+  /// remove particles that are beyond cylindrical radius (Mpc/h) of center
+  void cylindricalCut(Point_2d center,double radius);
+
+  /// returns the center of mass of all the particles
+  Point_3d getCenterOfMass(){return cm;}
 private:
 
   std::vector<ParticleType<float> > data;

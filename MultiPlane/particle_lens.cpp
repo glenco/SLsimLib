@@ -23,7 +23,7 @@ MakeParticleLenses::MakeParticleLenses(
                     const std::string &filename  /// path / root name of gadget-2 snapshot
                    ,SimFileFormat format
                    ,int Nsmooth   /// number of nearest neighbors used for smoothing
-                   ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                   ,bool recenter /// recenter so that the LenHalos are centered on the center of mass of all the particles
                    ):filename(filename),Nsmooth(Nsmooth)
 {
   
@@ -67,25 +67,29 @@ MakeParticleLenses::MakeParticleLenses(
   }
   
   // find center of mass
+  cm[0]=cm[1]=cm[2]=0;
+  double m=0;
+  for(auto p : data){
+    cm[0] += p[0]*p.Mass;
+    cm[1] += p[1]*p.Mass;
+    cm[2] += p[2]*p.Mass;
+    m += p.Mass;
+  }
+  cm /= m;
+
+  // subtract center of mass
   if(recenter){
-    double m=0;
-    Point_3d cm(0,0,0);
-    for(auto p : data){
-      cm[0] += p[0]*p.Mass;
-      cm[1] += p[1]*p.Mass;
-      cm[2] += p[2]*p.Mass;
-      m += p.Mass;
-    }
-    cm /= m;
-    for(auto &p : data){
+     for(auto &p : data){
       p[0] -= cm[0];
       p[1] -= cm[1];
       p[2] -= cm[2];
     }
+    
+    cm[0]=cm[1]=cm[2]=0;
   }
 }
 
-MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / name of galmb file
+MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / name of glmb file
                    ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
                    ):filename(filename)
 {
@@ -94,23 +98,26 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
   nparticles.resize(6,0);
   readSizesB(filename,data,Nsmooth,nparticles,z_original);
   
-  
   // find center of mass
+  cm[0]=cm[1]=cm[2]=0;
+  double m=0;
+  for(auto p : data){
+    cm[0] += p[0]*p.Mass;
+    cm[1] += p[1]*p.Mass;
+    cm[2] += p[2]*p.Mass;
+    m += p.Mass;
+  }
+  cm /= m;
+  
+  // subtract center of mass
   if(recenter){
-    double m=0;
-    Point_3d cm(0,0,0);
-    for(auto p : data){
-      cm[0] += p[0]*p.Mass;
-      cm[1] += p[1]*p.Mass;
-      cm[2] += p[2]*p.Mass;
-      m += p.Mass;
-    }
-    cm /= m;
     for(auto &p : data){
       p[0] -= cm[0];
       p[1] -= cm[1];
       p[2] -= cm[2];
     }
+    
+    cm[0]=cm[1]=cm[2]=0;
   }
 }
 
@@ -128,6 +135,12 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
     p[2] *= length_unit;
     p.Size *= length_unit;
     p.Mass *= mass_unit;
+  }
+  
+  // remove halos if they already exist
+  while(halos.size() > 0){
+    delete halos.back();
+    halos.pop_back();
   }
   
   // create halos
@@ -306,9 +319,16 @@ bool MakeParticleLenses::readGadget2(){
      gadget_file.closeFile();
    }
   
-  // ????? **** convert to physical Mpc/h and Msun/h
-  // ???? *** can we store sizes in gadget blocks
-   // sort by type
+  double a = 1.0e-3/(1 + z_original);
+  // **** convert to physical Mpc/h and Msun/h
+  for(auto &p : data){
+    p[0] *= a;
+    p[1] *= a;
+    p[2] *= a;
+    p.Mass *= 1.0e10;
+  }
+  
+  // sort by type
    std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
    
    ParticleType<float> *pp;
@@ -330,4 +350,71 @@ bool MakeParticleLenses::readGadget2(){
   return true;
 };
 
+
+// remove particles that are beyond radius (Mpc/h) of center
+void MakeParticleLenses::radialCut(Point_2d center,double radius){
+  
+  double radius2 = radius*radius;
+  double r2;
+  auto end = data.end();
+  auto it = data.begin();
+  size_t ntot = data.size();
+  
+  while(it != end){
+    r2 = ( (*it)[0]-center[0] )*( (*it)[0]-center[0] )
+    + ( (*it)[1]-center[1] )*( (*it)[1]-center[1] )
+    +( (*it)[2]-center[2] )*( (*it)[2]-center[2] );
+    if(r2 > radius2){
+      --nparticles[(*it).type];
+      --end;
+      --ntot;
+      std::swap(*it,*end);
+    }else ++it;
+  }
+  
+  data.resize(ntot);
+  /// resort by type
+  int ntypes = 0;
+  for(size_t n : nparticles){
+    if(n > 0) ++ntypes;
+  }
+  
+  if(ntypes > 1){
+    // sort by type
+    std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+  }
+}
+
+// remove particles that are beyond cylindrical radius (Mpc/h) of center
+void MakeParticleLenses::cylindricalCut(Point_2d center,double radius){
+  
+  double radius2 = radius*radius;
+  double r2;
+  auto end = data.end();
+  auto it = data.begin();
+  size_t ntot = data.size();
+  
+  while(it != end){
+    r2 = ( (*it)[0]-center[0] )*( (*it)[0]-center[0] )
+    + ( (*it)[1]-center[1] )*( (*it)[1]-center[1] );
+    if(r2 > radius2){
+      --nparticles[(*it).type];
+      --end;
+      --ntot;
+      std::swap(*it,*end);
+    }else ++it;
+  }
+  
+  data.resize(ntot);
+  /// resort by type
+  int ntypes = 0;
+  for(size_t n : nparticles){
+    if(n > 0) ++ntypes;
+  }
+  
+  if(ntypes > 1){
+    // sort by type
+    std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+  }
+}
 
