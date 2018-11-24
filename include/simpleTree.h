@@ -905,7 +905,7 @@ void TreeSimple<PType>::_BuildTreeNB(TreeNBStruct<PType> * tree,IndexType nparti
   
   /* leaf case */
   if(cbranch->nparticles <= Nbucket){
-    cbranch->big_particle=0;
+    cbranch->big_particle = 0;
     return;
   }
   
@@ -917,7 +917,7 @@ void TreeSimple<PType>::_BuildTreeNB(TreeNBStruct<PType> * tree,IndexType nparti
     branch2.boundary_p1[j]=cbranch->boundary_p1[j];
     branch2.boundary_p2[j]=cbranch->boundary_p2[j];
   }
-  cbranch->big_particle=0;
+  cbranch->big_particle = 0;
   
   // **** makes sure force does not require nbucket at leaf
   

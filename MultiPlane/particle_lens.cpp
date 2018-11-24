@@ -29,13 +29,13 @@ MakeParticleLenses::MakeParticleLenses(
   
   
   
-  if(format == glamb ){
+  if(format == glmb ){
     nparticles.resize(6,0);
     readSizesB(filename,data,Nsmooth,nparticles,z_original);
   }else{
     
     std::string sizefile = filename + "_S"
-    + std::to_string(Nsmooth) + ".glamb";
+    + std::to_string(Nsmooth) + ".glmb";
     
     if(access( sizefile.c_str(), F_OK ) != -1){
       nparticles.resize(6,0);
@@ -200,7 +200,8 @@ bool MakeParticleLenses::readCSV(int columns_used){
   file.clear();
   file.seekg(0);  // return to begining
   while (getline(file, line) && line[0] == '#');
-  
+  nparticles = {0,0,0,0,0,0};
+
   // Iterate through each line and split the content using delimeter
   if(columns_used == 3){
     do{
@@ -210,8 +211,11 @@ bool MakeParticleLenses::readCSV(int columns_used){
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
       data[ntot][2] =  stof(vec[2]);
+      data[ntot].Mass = 1.0;
       ++ntot;
     }while( getline(file, line) );
+    nparticles = {ntot,0,0,0,0,0};
+    masses = {0,0,0,0,0,0};
   }else if(columns_used == 4){
     do{
       std::vector<std::string> vec;
@@ -224,6 +228,8 @@ bool MakeParticleLenses::readCSV(int columns_used){
       data[ntot].type = 0;
       ++ntot;
     }while( getline(file, line) );
+    nparticles = {ntot,0,0,0,0,0};
+    masses = {0,0,0,0,0,0};
   }else if(columns_used == 5){
     do{
       std::vector<std::string> vec;
@@ -237,6 +243,8 @@ bool MakeParticleLenses::readCSV(int columns_used){
       data[ntot].type = 0;
       ++ntot;
     }while( getline(file, line) );
+    nparticles = {ntot,0,0,0,0,0};
+    masses = {0,0,0,0,0,0};
   }else if(columns_used == 6){
     do{
       std::vector<std::string> vec;
@@ -249,8 +257,19 @@ bool MakeParticleLenses::readCSV(int columns_used){
       data[ntot].Size = stof(vec[4]);
       data[ntot].type = stoi(vec[5]);
       ++ntot;
+      ++nparticles[data[ntot].type];
     }while( getline(file, line) );
-
+    
+    int ntypes = 0;
+    for(size_t n : nparticles){
+      if(n > 0) ++ntypes;
+    }
+    
+    if(ntypes > 1){
+      // sort by type
+      std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+    }
+    masses = {0,0,0,0,0,0};
   }
 
   // Close the File
@@ -258,9 +277,19 @@ bool MakeParticleLenses::readCSV(int columns_used){
   
   std::cout << ntot << " particle positions read from file " << filename << std::endl;
   
-  nparticles = {ntot,0,0,0,0,0};
-  masses = {0,0,0,0,0,0};
-  LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),data.size());
+  ParticleType<float> *pp;
+  size_t skip = 0;
+  for(int i = 0 ; i < 6 ; ++i){  //loop through types
+    if(nparticles[i] > 0){
+      pp = data.data() + skip;  // pointer to first particle of type
+      size_t N = nparticles[i];
+      
+      LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+    }
+    skip += nparticles[i];
+  }
+  
+  //LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),data.size());
   
   return true;
 };

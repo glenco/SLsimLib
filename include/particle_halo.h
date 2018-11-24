@@ -234,7 +234,7 @@ LensHaloParticles<PType>::LensHaloParticles(
                                             ,Point_2d theta_rotate   /// rotation of particles around the origin
                                             ,bool recenter           /// center on center of mass
                                             ,float MinPSize        /// minimum particle size
-):min_size(MinPSize),multimass(true),Npoints(Nparticles)
+):min_size(MinPSize),multimass(true),Npoints(Nparticles),pp(pdata)
 {
   
   LensHalo::setZlens(redshift);
@@ -675,10 +675,10 @@ void LensHaloParticles<PType>::makeSIE(
  are the positions.  Next columns are used for the other formats being and
  interpreted as (column 4) masses are in Msun/h, (column 5) the paricle smoothing
  size in Mpc/h and (column 6) an integer for type of particle.  There can be more
- columns in the file than are uesed.  Different halos for different types is not yet
- implemented in this case.  Contact the developer is this is needed.
+ columns in the file than are uesed.  In the case of csv4, when there are more then one
+ type of halo each type will be in a differeent LensHaloParticles with differnt smoothing.
  
- glamb - This is a binary format internal to GLAMER used to store
+ glmb - This is a binary format internal to GLAMER used to store
  the positions, masses and sizes of the particles.  If
  GLAMER has generated one, it should be all that is
  needed to recreate the LensHaloParticles.
