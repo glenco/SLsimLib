@@ -696,28 +696,52 @@ void LensHaloParticles<PType>::makeSIE(
  
  example of use:
 
-std::string filename = "DataFiles/snap_69.txt";
-MakeParticleLenses halomaker(
-                             filename
-                             ,csv6,30,false
-                             );
+ COSMOLOGY cosmo(Planck);
+ 
+ double zs = 2,zl = 0.5;
+ double Dl = cosmo.coorDist(zl);
+ 
+ 
+ std::string filename = "DataFiles/snap_058_centered.txt";
+ 
+ MakeParticleLenses halomaker(filename,csv4,30,false);
+ 
+ Point_3d Xmax,Xmin;
 
-double zs = 2,zl -0.7;
+ halomaker.getBoundingBox(Xmin, Xmax);
+ 
+ Point_3d c_mass = halomaker.getCenterOfMass();
+ Point_2d center;
 
-long seed = 88277394;
-Lens lens(&seed,zs);
+ center[0] = c_mass[0];
+ center[1] = c_mass[1];
 
-halomaker.CreateHalos(cosmo,zl);
-for(auto h : halomaker.halos){
-  lens.insertMainHalo(h,zl, true);
-}
+ // cut out a cylinder, could also do a ball
+ halomaker.cylindricalCut(center,(Xmax[0]-Xmin[0]/2));
+ 
+ long seed = 88277394;
+ Lens lens(&seed,zs);
+ 
+ double range = (Xmax[0]-Xmin[0])*1.05*cosmo.getHubble()/Dl; // angular range of simulation
 
-Point_2d center;
+ center *= cosmo.gethubble()/Dl; // convert to angular coordinates
+ 
+ halomaker.CreateHalos(cosmo,zl);
 
-GridMap gridmap(&lens,2049,center.x,400*arcsecTOradians);
-
-PixelMap pmap = gridmap.writePixelMapUniform(KAPPA);
-pmap.printFITS("!" + filename + ".kappa.fits");
+ for(auto h : halomaker.halos){
+ lens.insertMainHalo(h,zl, true);
+ }
+ 
+ GridMap gridmap(&lens, 2049,center.x,range);
+ 
+ PixelMap pmap = gridmap.writePixelMapUniform(KAPPA);
+ pmap.printFITS("!" + filename + ".kappa.fits");
+ 
+ pmap = gridmap.writePixelMapUniform(ALPHA1);
+ pmap.printFITS("!" + filename + ".alpha1.fits");
+ 
+ pmap = gridmap.writePixelMapUniform(ALPHA2);
+ pmap.printFITS("!" + filename + ".alpha2.fits");
  
  <\p>
 */
@@ -759,12 +783,20 @@ public:
   void cylindricalCut(Point_2d center,double radius);
 
   /// returns the center of mass of all the particles
-  Point_3d getCenterOfMass(){return cm;}
+  Point_3d getCenterOfMass() const{return cm;}
+  /// return the maximum and minimum coordinates of the particles in each dimension in for the original simulation in Mpc/h
+  void getBoundingBox(Point_3d &Xmin,Point_3d &Xmax) const{
+    Xmin = bbox_ll;
+    Xmax = bbox_ur;
+  }
 private:
 
   std::vector<ParticleType<float> > data;
   const std::string filename;
   int Nsmooth;
+  
+  Point_3d bbox_ll;  // minumum coordinate values of particles
+  Point_3d bbox_ur;  // maximim coordinate values of particles
   
   double z_original;
   std::vector<size_t> nparticles;

@@ -70,9 +70,12 @@ MakeParticleLenses::MakeParticleLenses(
   cm[0]=cm[1]=cm[2]=0;
   double m=0;
   for(auto p : data){
-    cm[0] += p[0]*p.Mass;
-    cm[1] += p[1]*p.Mass;
-    cm[2] += p[2]*p.Mass;
+    for(int i=0 ; i < 3 ; ++i){
+      cm[i] += p[i]*p.Mass;
+    
+      if(bbox_ll[i] > p[i] ) bbox_ll[i] = p[i];
+      if(bbox_ur[i] < p[i] ) bbox_ur[i] = p[i];
+    }
     m += p.Mass;
   }
   cm /= m;
@@ -85,6 +88,10 @@ MakeParticleLenses::MakeParticleLenses(
       p[2] -= cm[2];
     }
     
+    for(int i=0 ; i < 3 ; ++i){
+      bbox_ll[i] -= cm[i];
+      bbox_ur[i] -= cm[i];
+    }
     cm[0]=cm[1]=cm[2]=0;
   }
 }
@@ -102,9 +109,12 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
   cm[0]=cm[1]=cm[2]=0;
   double m=0;
   for(auto p : data){
-    cm[0] += p[0]*p.Mass;
-    cm[1] += p[1]*p.Mass;
-    cm[2] += p[2]*p.Mass;
+    for(int i=0 ; i < 3 ; ++i){
+      cm[i] += p[i]*p.Mass;
+      
+      if(bbox_ll[i] > p[i] ) bbox_ll[i] = p[i];
+      if(bbox_ur[i] < p[i] ) bbox_ur[i] = p[i];
+    }
     m += p.Mass;
   }
   cm /= m;
@@ -117,6 +127,10 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
       p[2] -= cm[2];
     }
     
+    for(int i=0 ; i < 3 ; ++i){
+      bbox_ll[i] -= cm[i];
+      bbox_ur[i] -= cm[i];
+    }
     cm[0]=cm[1]=cm[2]=0;
   }
 }
