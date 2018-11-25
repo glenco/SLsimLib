@@ -722,7 +722,7 @@ void LensHaloParticles<PType>::makeSIE(
  long seed = 88277394;
  Lens lens(&seed,zs);
  
- double range = (Xmax[0]-Xmin[0])*1.05*cosmo.getHubble()/Dl; // angular range of simulation
+ double range = (Xmax[0]-Xmin[0])*1.05*cosmo.gethubble()/Dl; // angular range of simulation
 
  center *= cosmo.gethubble()/Dl; // convert to angular coordinates
  
