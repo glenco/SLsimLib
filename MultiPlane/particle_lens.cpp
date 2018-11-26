@@ -304,16 +304,18 @@ bool MakeParticleLenses::readCSV(int columns_used){
   
   std::cout << ntot << " particle positions read from file " << filename << std::endl;
   
-  ParticleType<float> *pp;
-  size_t skip = 0;
-  for(int i = 0 ; i < 6 ; ++i){  //loop through types
-    if(nparticles[i] > 0){
-      pp = data.data() + skip;  // pointer to first particle of type
-      size_t N = nparticles[i];
+  if(columns_used < 5){
+    ParticleType<float> *pp;
+    size_t skip = 0;
+    for(int i = 0 ; i < 6 ; ++i){  //loop through types
+      if(nparticles[i] > 0){
+        pp = data.data() + skip;  // pointer to first particle of type
+        size_t N = nparticles[i];
       
-      LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+        LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+      }
+      skip += nparticles[i];
     }
-    skip += nparticles[i];
   }
   
   //LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),data.size());
