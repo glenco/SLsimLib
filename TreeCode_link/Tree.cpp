@@ -950,5 +950,12 @@ void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
 }
 
 
-
+std::ostream &operator<<(std::ostream &os, ImageFinding::CriticalCurve &p) {
+  
+  // caustic_center,caustic_area,critical_center,critical_area,z_source,type
+  os << p.caustic_center << "," << p.caustic_area << "," << p.critical_center << ","
+  << p.critical_area << "," << p.z_source << ",'" << p.type;
+  
+  return os;
+}
 
