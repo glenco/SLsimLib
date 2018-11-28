@@ -949,12 +949,23 @@ void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
   }
 }
 
+void ImageFinding::printCriticalCurves(std::string filename
+                                  ,const std::vector<ImageFinding::CriticalCurve> &critcurves){
+  
+  filename = filename + ".csv";
+  std::ofstream myfile(filename);
+  myfile << "caustic_center,caustic_area,critical_center,critical_area,z_source,type"
+  << std::endl;
+  for(auto cr : critcurves){
+    myfile << cr << std::endl;
+  }
+}
 
-std::ostream &operator<<(std::ostream &os, ImageFinding::CriticalCurve &p) {
+std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p) {
   
   // caustic_center,caustic_area,critical_center,critical_area,z_source,type
   os << p.caustic_center << "," << p.caustic_area << "," << p.critical_center << ","
-  << p.critical_area << "," << p.z_source << ",'" << p.type;
+  << p.critical_area << "," << p.z_source << "," << p.type;
   
   return os;
 }

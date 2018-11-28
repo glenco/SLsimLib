@@ -382,9 +382,13 @@ namespace ImageFinding{
     void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
   }
+
+  void printCriticalCurves(std::string filename
+          ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
 }
 
-std::ostream &operator<<(std::ostream &os, ImageFinding::CriticalCurve &p);
+
+std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p);
 
 void saveImage(LensHaloMassMap *mokahalo, GridHndl grid, bool saveprofile=true);
 
