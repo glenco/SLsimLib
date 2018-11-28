@@ -201,23 +201,32 @@ private:
   //Point &operator=(const Point &p);
 };
 
-/** \brief A point that is automatically linked to its source point eliminating the
- need for using LinkToSourcePoint().  Useful when a limited number of Points are needed and they do not need to be in continuous memory.
+/** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
-struct RAY: public Point{
-  RAY(){
-    image = &source_point;
-    image->image = this;
+struct RAY{
+  RAY(Point *p){
+    x = p->x;
+    y = p->image->x;
+    kappa = p->kappa;
+    dt = p->dt;
+    
+    gamma[0] = p->gamma[0];
+    gamma[1] = p->gamma[1];
+    gamma[2] = p->gamma[2];
   }
   ~RAY(){};
   
-  /// postions on image plane
-  PosType *pos_image(){return x;};
-  /// postions on source plane
-  PosType *pos_source(){return image->x;}
+  // image position
+  Point_2d x;
+  // source position
+  Point_2d y;
   
-private:
-  Point source_point;
+  KappaType kappa,gamma[3],dt;
+  
+  KappaType invmag(){return (1-kappa)*(1-kappa) - gamma[0]*gamma[0]
+    - gamma[1]*gamma[1] + gamma[2]*gamma[2];}
+  
+  Point_2d alpha(){return x - y;}
 };
 
 std::ostream &operator<<(std::ostream &os, Point const &p);

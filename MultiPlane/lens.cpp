@@ -2826,7 +2826,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
 void Lens::combinePlanes(bool verbose)
 {
 
-  if(verbose)
+  /*if(verbose)
   {
     std::cout << std::endl << "Lens::combinePlanes before clearing." << std::endl ;
     for(int i=0;i<plane_redshifts.size();i++) std::cout << plane_redshifts[i] << " " ;
@@ -2843,7 +2843,7 @@ void Lens::combinePlanes(bool verbose)
 
     for(int i=0;i<main_plane_redshifts.size();i++) std::cout << main_plane_redshifts[i] << " " ;
     std::cout << std::endl ;
-  }
+  }*/
   
   // clear old plane configuration
   lensing_planes.clear();

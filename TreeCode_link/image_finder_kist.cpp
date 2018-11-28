@@ -1574,7 +1574,7 @@ void ImageFinding::find_images_microlens_exper(
 
 /** \ingroup ImageFindingL2
  *
- * \brief Finds images for a given source position and size
+ * \brief Finds images for a given source position and size.  Not meant for high level user.
  *
  * image points are put into imageinfo[].imagekist
  *      imageinfo[].points and imageinfo[].Npoints are not changed

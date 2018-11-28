@@ -69,7 +69,7 @@ public:
   /// rotate the simulation around the origin of the simulation coordinates, (radians)
   void rotate(Point_2d theta);
   
-  /// center of mass in input coordinates
+  /// get current center of mass in input coordinates
   Point_3d CenterOfMass(){return mcenter;}
   
   /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.

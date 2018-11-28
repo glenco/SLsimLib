@@ -444,7 +444,7 @@ protected:
       KappaType kappa=halo->kappa_h(xiso)/PI/xiso/xiso;
       
       PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
-      KappaType kappam=0,gamma[2]={0,0},phi;
+      KappaType kappam=0,gamma[2]={0,0},phi=0;
       halo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
       
       
@@ -475,7 +475,7 @@ protected:
       KappaType kappa=halo->kappa_h(xiso)/PI/xiso/xiso;
       
       PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
-      KappaType kappam=0,gamma[2]={0,0},phi;
+      KappaType kappam=0,gamma[2]={0,0},phi=0;
       halo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
       
       double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
@@ -906,7 +906,7 @@ private:
 	}
   inline KappaType phi_int(PosType x) const{
 		//return alpha_int(x);
-    return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
+    return -1.0*pow(x/xmax,-beta+2)/(2-beta);
   }
 };
 

@@ -28,13 +28,15 @@
 #include <mutex>
 #endif
 
+/// Type of mass function
 enum MassFuncType
 {
-	PressSchechter,
-	ShethTormen,
-	PowerLaw
+	PressSchechter,  /// Press & Schechter mass function
+	ShethTormen,  /// Sheth & Tormen mass function
+	PowerLaw      /// Power law mass function
 };
 
+/// Type of halo profile
 enum LensHaloType
 {
 	null_lens,
@@ -49,6 +51,8 @@ enum LensHaloType
 	hern_lens,
 	jaffe_lens
 };
+
+/// format of mass map file
 enum PixelMapType
 {
   moka,
@@ -59,13 +63,13 @@ enum GalaxyLensHaloType
 {
 	null_gal,
 	nsie_gal,
-  pl_gal,
-  hern_gal,
-  jaffe_gal
+  pl_gal,    /// power law profile
+  hern_gal,  /// Hernquist profile
+  jaffe_gal  /// Jaffe profile
 };
 
 /// names of clump and sb models
-typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
+enum ClumpInternal {nfw,powerlaw,pointmass};
 /// Initial mass function type
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 /// Photometric bands

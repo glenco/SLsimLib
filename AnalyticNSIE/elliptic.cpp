@@ -35,7 +35,7 @@ PosType Elliptic::DALPHAYDM::operator()(PosType m){
   double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
   
   PosType alpha[2]={0,0},tmp[2] = {m*(isohalo->getRsize()),0};
-  KappaType kappa=0,gamma[2]={0,0},phi;
+  KappaType kappa=0,gamma[2]={0,0},phi=0;
   
   isohalo->force_halo(alpha,&kappa,gamma,&phi,tmp); // here we need an elliptical kappa but in forcehalo the only elliptical kappas implemented are based on Ansatz I+II
   
