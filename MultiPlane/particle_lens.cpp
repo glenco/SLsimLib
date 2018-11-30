@@ -312,6 +312,8 @@ bool MakeParticleLenses::readCSV(int columns_used){
   std::cout << ntot << " particle positions read from file " << filename << std::endl;
   
   if(columns_used < 5){
+    
+    // find sizes
     ParticleType<float> *pp;
     size_t skip = 0;
     for(int i = 0 ; i < 6 ; ++i){  //loop through types

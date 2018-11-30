@@ -243,6 +243,7 @@ public:
                     ,double field_of_view  /// in square degrees
                     ,int Nplanes           /// number of lens planes
                     ,LensHaloType halo_type = nfw_lens  /// type of halo
+                    ,GalaxyLensHaloType galaxy_type = null_gal  /// type of galaxy, if null_gal no galaxy
                     ,bool verbose = false
                 );
   
