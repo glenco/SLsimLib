@@ -1627,7 +1627,7 @@ void Lens::ComputeHalosDistributionVariables ()
  */
 void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
 {
-  std::cout << "Creating Field Halos from Mass Function" << std::endl;
+  //std::cout << "Creating Field Halos from Mass Function" << std::endl;
   //verbose = true;
   
 	unsigned long i,j_max,k1,k2;
@@ -1641,7 +1641,8 @@ void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
   size_t haloid=0;
   
   if (field_min_mass < 1.0e5) {
-    std::cout << "Are you sure you want the minimum field halo mass to be " << field_min_mass << " Msun?" << std::endl;
+    std::cout << "Are you sure you want the minimum field halo mass to be "
+    << field_min_mass << " Msun?" << std::endl;
     throw;
   }
   
@@ -1652,6 +1653,7 @@ void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
   
   int Nhalos = static_cast<std::size_t>(poidev(float(aveNhalosField), seed));
 
+  std::cout << "Creating " << Nhalos << " field halos from mass function." << std::endl;
   for(int i=0;i < Nhalos;++i){
     halo_zs_vec.push_back(Utilities::InterpolateYvec(NhalosbinZ,zbins,ran2(seed)));
   }
@@ -2979,6 +2981,7 @@ void Lens::GenerateFieldHalos(double min_mass
                          ,double field_of_view
                          ,int Nplanes
                          ,LensHaloType halo_type
+                         ,GalaxyLensHaloType galaxy_type
                          ,bool verbose
                          ){
 
@@ -2993,10 +2996,16 @@ void Lens::GenerateFieldHalos(double min_mass
   field_buffer = 0.0;
 
   mass_func_PL_slope = 0;
-  flag_field_gal_on = false;
+  
   field_int_prof_type = halo_type;
-  field_int_prof_gal_type = nsie_gal;
-
+  if(galaxy_type == null_gal){
+    flag_field_gal_on = false;
+    field_int_prof_gal_type = nsie_gal;
+  }else{
+    flag_field_gal_on = true;
+    field_int_prof_gal_type = galaxy_type;
+  }
+  
   NhalosbinZ.resize(Nzbins);
   Nhaloestot_Tab.resize(NZSamples);
   ComputeHalosDistributionVariables();

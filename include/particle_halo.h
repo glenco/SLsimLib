@@ -557,7 +557,7 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
     }
   }else{
     size_t chunksize = Npoints/nthreads;
-    std::thread thr[nthreads];
+    std::vector<std::thread> thr(nthreads);
     
     size_t N;
     for(int ii = 0; ii < nthreads ;++ii){
