@@ -848,6 +848,10 @@ private:
   // Reads particles from first 4 columns of csv file
   bool readCSV(int columns_used);
 
+#ifdef ENABLE_HDF5
+  bool readHDF5();
+#endif
+
 };
 
 

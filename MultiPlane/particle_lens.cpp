@@ -8,6 +8,9 @@
 #include "utilities_slsim.h"
 #include "gadget.hh"
 
+#ifdef ENABLE_HDF5
+#include "H5Cpp.h"
+#endif
 
 #ifdef ENABLE_FITS
 #include <CCfits/CCfits>
@@ -258,6 +261,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
     nparticles = {ntot,0,0,0,0,0};
     masses = {0,0,0,0,0,0};
   }else if(columns_used == 5){
+    std::cout << "Using the particle sizes from " << filename << std::endl;
     do{
       std::vector<std::string> vec;
       Utilities::splitstring(line,vec,delimiter);
@@ -273,6 +277,9 @@ bool MakeParticleLenses::readCSV(int columns_used){
     nparticles = {ntot,0,0,0,0,0};
     masses = {0,0,0,0,0,0};
   }else if(columns_used == 6){
+    std::cout << "Using the particle sizes from " << filename << std::endl;
+    std::cout << "Using the particle type information from " << filename << std::endl;
+
     do{
       std::vector<std::string> vec;
       Utilities::splitstring(line,vec,delimiter);
@@ -323,6 +330,8 @@ bool MakeParticleLenses::readCSV(int columns_used){
   return true;
 };
 
+
+
 bool MakeParticleLenses::readGadget2(){
   
   GadgetFile<ParticleType<float> > gadget_file(filename,data);
@@ -366,7 +375,59 @@ bool MakeParticleLenses::readGadget2(){
   return true;
 };
 
+/*
+#ifdef ENABLE_HDF5
+bool MakeParticleLenses::readHDF5(){
+  
+  H5::H5File file(filename.c_str(), H5F_ACC_RDONLY );
+  
+  std::vector<std::string> sets = {"MASS","TYPE"};
+  
+  for(auto set : sets){
+  
+    H5::DataSet dataset = file.openDataSet(set.c_str());
+    H5T_class_t type_class = dataset.getTypeClass();
 
+    // Get class of datatype and print message if it's an integer.
+      if( type_class == H5T_INTEGER )
+      {
+        cout << "Data set has INTEGER type" << endl;
+        //Get the integer datatype
+        H5::IntType intype = dataset.getIntType();
+        // Get order of datatype and print message if it's a little endian.
+        H5std_string order_string;
+        H5T_order_t order = intype.getOrder( order_string );
+        cout << order_string << endl;
+      
+        // Get size of the data element stored in file and print it.
+        size_t size = intype.getSize();
+        cout << "Data size is " << size << endl;
+      }else if(type_class == H5T_FLOAT ){
+        cout << "Data set has FLOAT type" << endl;
+        //Get the integer datatype
+        H5::FloatType intype = dataset.getFloatType();
+        // Get order of datatype and print message if it's a little endian.
+        H5std_string order_string;
+        H5T_order_t order = intype.getOrder( order_string );
+        cout << order_string << endl;
+      
+        // Get size of the data element stored in file and print it.
+        size_t size = intype.getSize();
+        cout << "Data size is " << size << endl;
+      }
+  
+    // Get dataspace of the dataset.
+   
+    H5::DataSpace dataspace = dataset.getSpace();
+  
+   // Get the number of dimensions in the dataspace.
+    int rank = dataspace.getSimpleExtentNdims();
+  }
+  return true;
+};
+
+#endif
+*/
 // remove particles that are beyond radius (Mpc/h) of center
 void MakeParticleLenses::radialCut(Point_2d center,double radius){
   
