@@ -2982,8 +2982,10 @@ void Lens::GenerateFieldHalos(double min_mass
                          ,int Nplanes
                          ,LensHaloType halo_type
                          ,GalaxyLensHaloType galaxy_type
+                         ,double buffer
                          ,bool verbose
-                         ){
+                              )
+{
 
   if(field_halos.size() >0 ){
     std::cerr << "Lens:GenerateField() cannot be used in the lens already has field halos." << std::endl;
@@ -2993,7 +2995,7 @@ void Lens::GenerateFieldHalos(double min_mass
   fieldofview = field_of_view;
   field_mass_func_type = mass_function;
 
-  field_buffer = 0.0;
+  field_buffer = buffer;
 
   mass_func_PL_slope = 0;
   
