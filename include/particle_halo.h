@@ -234,7 +234,7 @@ LensHaloParticles<PType>::LensHaloParticles(
                                             ,Point_2d theta_rotate   /// rotation of particles around the origin
                                             ,bool recenter           /// center on center of mass
                                             ,float MinPSize        /// minimum particle size
-):min_size(MinPSize),multimass(true),Npoints(Nparticles),pp(pdata)
+):pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
 {
   
   LensHalo::setZlens(redshift);
@@ -313,7 +313,8 @@ template<typename PType>
 void LensHaloParticles<PType>::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
   delete qtree;
-  qtree =new TreeQuadParticles<ParticleType<float> >(pp,Npoints,multimass,true,0,20);
+  //qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,multimass,true,0,20);
+  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
 }
 
 /** \brief Reads number of particle and particle positons into Npoint and xp from a ASCII file.
@@ -527,9 +528,9 @@ void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y)
   for(size_t i=0;i<Npoints;++i){
     for(j=0;j<3;++j) tmp[j]=0.0;
     for(j=0;j<3;++j){
-      tmp[0]+=coord[0][j]*pp[i][j];
-      tmp[1]+=coord[1][j]*pp[i][j];
-      tmp[2]+=coord[2][j]*pp[i][j];
+      tmp[0] += coord[0][j]*pp[i][j];
+      tmp[1] += coord[1][j]*pp[i][j];
+      tmp[2] += coord[2][j]*pp[i][j];
     }
     for(j=0;j<3;++j) pp[i][j]=tmp[j];
   }
