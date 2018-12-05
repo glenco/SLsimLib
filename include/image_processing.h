@@ -51,8 +51,12 @@ public:
 	inline std::size_t getNy() const { return Ny; }
 	inline double getRangeX() const { return rangeX; }
 	inline double getRangeY() const { return rangeY; }
-  inline const double* getCenter() const{ return center; }
+  //inline double* getCenter() const{ return &center[0]; }
   void const getCenter(Point_2d &c) const{ c[0]=center[0]; c[1]=center[1];}
+  Point_2d getCenter() const{
+    Point_2d c(center[0],center[1]);
+    return c;
+  }
 	inline double getResolution() const { return resolution; }
 	
 	void Clean();

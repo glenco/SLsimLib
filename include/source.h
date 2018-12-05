@@ -75,9 +75,10 @@ public:
   virtual inline void getTheta(Point_2d &x) const {x = source_x;}
   
   /// Reset the position of the source in radians
-	virtual inline void setTheta(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
-	virtual void setTheta(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
-  
+	virtual void setTheta(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
+  virtual void setTheta(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
+  virtual void setTheta(const Point_2d &p){source_x = p;}
+
 	/// In the case of a single plane lens, the ratio of angular size distances
 	virtual inline PosType getDlDs(){return DlDs;}
 	//TODO: BEN I think this need only be in the BLR source models

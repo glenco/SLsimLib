@@ -783,8 +783,9 @@ public:
   /// remove particles that are beyond cylindrical radius (Mpc/h) of center
   void cylindricalCut(Point_2d center,double radius);
 
-  /// returns the center of mass of all the particles
+  /// returns the original center of mass of all the particles
   Point_3d getCenterOfMass() const{return cm;}
+  
   /// return the maximum and minimum coordinates of the particles in each dimension in for the original simulation in Mpc/h
   void getBoundingBox(Point_3d &Xmin,Point_3d &Xmax) const{
     Xmin = bbox_ll;

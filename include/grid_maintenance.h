@@ -384,7 +384,24 @@ namespace ImageFinding{
   }
 
   void printCriticalCurves(std::string filename
-          ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
+                           ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
+
+  /** \breaf Makes an image of the critical curves.  The map will encompose all curves found.  The
+   pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
+   */
+  PixelMap mapCriticalCurves(
+                             /// list of critical curves
+                             const std::vector<ImageFinding::CriticalCurve> &critcurves,
+                             /// number of pixels to each size
+                             int Nx
+                             );
+  
+  /** \breaf Makes an image of the caustic curves.  The map will encompose all curves found.  The
+   pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
+   */
+  PixelMap mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves /// list of critical curves
+                            ,int Nx /// number of pixels to each size
+                            );
 }
 
 

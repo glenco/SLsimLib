@@ -80,6 +80,8 @@ public:
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   /// set the position of the Halo in radians
   void setTheta(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  /// set the position of the Halo in radians
+  void setTheta(const Point_2d &p) { posHalo[0] = p[0] ; posHalo[1] = p[1] ; }
   /// get the position of the Halo in radians
   void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
   
