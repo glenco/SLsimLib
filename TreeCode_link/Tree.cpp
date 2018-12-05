@@ -970,3 +970,75 @@ std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p)
   return os;
 }
 
+PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+                                         ,int Nx) {
+  
+  int i_max = 0,i=0;
+  double area = critcurves[0].critical_area,rmax,rmin,rave;
+  Point_2d p1,p2,p_min,p_max;
+  p1 = p2 = p_min = p_max = critcurves[0].critical_center;
+  
+  for(auto c : critcurves){
+    if(c.critical_area > area){
+      i_max = i;
+      area = c.critical_area;
+    }
+    c.CritRange(p1,p2);
+    
+    if(p1[0] < p_min[0]) p_min[0] = p1[0];
+    if(p1[1] < p_min[1]) p_min[1] = p1[1];
+ 
+    if(p2[0] > p_max[0]) p_max[0] = p2[0];
+    if(p2[1] > p_max[1]) p_max[1] = p2[1];
+
+    ++i;
+  }
+  
+  Point_2d center = (p_max + p_min)/2;
+  double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
+  
+  PixelMap map(center.x,Nx,range/Nx);
+  
+  for(auto c : critcurves){
+    map.AddCurve(c.critical_curve, c.type + 1);
+  }
+  
+  return map;
+}
+
+PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+                                         ,int Nx) {
+  
+  int i_max = 0,i=0;
+  double area = critcurves[0].caustic_area;
+  Point_2d p1,p2,p_min,p_max;
+  p1 = p2 = p_min = p_max = critcurves[0].caustic_center;
+  
+  for(auto c : critcurves){
+    if(c.caustic_area > area){
+      i_max = i;
+      area = c.caustic_area;
+    }
+    c.CausticRange(p1,p2);
+    
+    if(p1[0] < p_min[0]) p_min[0] = p1[0];
+    if(p1[1] < p_min[1]) p_min[1] = p1[1];
+    
+    if(p2[0] > p_max[0]) p_max[0] = p2[0];
+    if(p2[1] > p_max[1]) p_max[1] = p2[1];
+    
+    ++i;
+  }
+  
+  Point_2d center = (p_max + p_min)/2;
+  double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
+  
+  PixelMap map(center.x,Nx,range/Nx);
+  
+  for(auto c : critcurves){
+    map.AddCurve(c.caustic_curve_intersecting, c.type + 1);
+  }
+  
+  return map;
+}
+

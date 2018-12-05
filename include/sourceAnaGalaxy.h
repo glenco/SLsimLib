@@ -96,7 +96,8 @@ public:
 	Point_2d getTheta(){return galaxies[index].getTheta();}
 	/// Set angular position of current source.
 	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
-	void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
+  void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
+  void setTheta(const Point_2d &p){galaxies[index].setTheta(p);}
 
 	std::size_t getNumberOfGalaxies() const {return galaxies.size();}
 
@@ -206,6 +207,7 @@ public:
 	/// Set angular position of current source.
 	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
 	void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
+  void setTheta(const Point_2d &p){galaxies[index].setTheta(p);}
 
     /// Return redshift of current source.
 	PosType getZ() const {return galaxies[index].getZ();}
