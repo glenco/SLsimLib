@@ -2061,7 +2061,8 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
 			field_halos[j]->setZlens(z);
       if(field_int_prof_type != nsie_lens){
         
-        field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction),seed,vmax,r_halfmass*cosmo.gethubble());
+        field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction)
+                                     ,seed,vmax,r_halfmass*cosmo.gethubble());
 			}
       
       

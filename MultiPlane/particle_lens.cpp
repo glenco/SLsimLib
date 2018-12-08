@@ -143,8 +143,8 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
   // put into proper units
   float h = cosmo.gethubble();
   
-  double length_unit = h;
-  double mass_unit = h;
+  double length_unit = 1.0/h;
+  double mass_unit = 1.0/h;
 
   for(auto &p : data){
     p[0] *= length_unit;
