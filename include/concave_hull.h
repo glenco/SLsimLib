@@ -364,7 +364,7 @@ void concave(std::vector<T> &init_points
     // find the convex hull
     convex_hull(init_points,hull);
     
-    if(init_points.size() == hull.size()) return;
+    if(init_points.size() == hull.size()) return hull;
     
     std::list<Edge> edges;
     std::list<T> leftovers;
@@ -378,7 +378,7 @@ void concave(std::vector<T> &init_points
       if(tmp > scale) edges.emplace_back(i,tmp);// .push_back(std::pair<size_t,double>(i,tmp));
     }
     
-    if(edges.size() == 0) return;
+    if(edges.size() == 0) return hull;
     
     if(TEST){
       PosType cent[] ={0.5,0.5};
