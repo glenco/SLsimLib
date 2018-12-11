@@ -50,7 +50,7 @@ public:
                     ,PosType MinPSize        /// minimum particle size
   );
  
-  LensHaloParticles(PType  *pdata    /// list of particles pdata[][i] should be the position in comoving Mpc
+  LensHaloParticles(PType  *pdata    /// list of particles pdata[][i] should be the position in physical Mpc
                     ,size_t Npoints        /// redshift of origin
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
@@ -227,7 +227,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
 
 template<typename PType>
 LensHaloParticles<PType>::LensHaloParticles(
-                                            PType  *pdata
+                                            PType  *pdata          /// particle data (all physical distances)
                                             ,size_t Nparticles
                                             ,float redshift        /// redshift of origin
                                             ,const COSMOLOGY& cosmo  /// cosmology
@@ -248,13 +248,13 @@ LensHaloParticles<PType>::LensHaloParticles(
   LensHalo::setRsize(Rmax);
   
   // convert from comoving to physical coordinates
-  PosType scale_factor = 1/(1+redshift);
+  //PosType scale_factor = 1/(1+redshift);
   mcenter *= 0.0;
   PosType max_mass = 0.0,min_mass = HUGE_VALF,mass=0;
   for(size_t i=0;i<Npoints;++i){
-    pp[i][0] *= scale_factor;
-    pp[i][1] *= scale_factor;
-    pp[i][2] *= scale_factor;
+    //pp[i][0] *= scale_factor;
+    //pp[i][1] *= scale_factor;
+    //pp[i][2] *= scale_factor;
     
     mcenter[0] += pp[i][0]*pp[i].mass();
     mcenter[1] += pp[i][1]*pp[i].mass();
