@@ -50,7 +50,7 @@ public:
                     ,PosType MinPSize        /// minimum particle size
   );
  
-  LensHaloParticles(PType  *pdata    /// list of particles pdata[][i] should be the position in physical Mpc
+  LensHaloParticles(PType  *pdata    /// list of particles pdata[][i] should be the position in comoving Mpc
                     ,size_t Npoints        /// redshift of origin
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
