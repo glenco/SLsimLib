@@ -92,10 +92,11 @@ struct Point_2d{
     x[1]/=value;
     return *this;
   }
-  Point_2d & operator/(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    return *this;
+  Point_2d operator/(PosType value) const{
+    Point_2d tmp;
+    tmp[0] = x[0]/value;
+    tmp[1] = x[1]/value;
+    return tmp;
   }
   Point_2d & operator*=(PosType value){
     x[0]*=value;
@@ -483,14 +484,13 @@ struct Point_3d{
     x[2]/=value;
     return *this;
   }
-  Point_3d & operator/(PosType value){
+  Point_3d operator/(PosType value) const{
     Point_3d tmp;
-    
     tmp[0] = x[0]/value;
     tmp[1] = x[1]/value;
     tmp[2] = x[2]/value;
     
-    return *this;
+    return tmp;
   }
   Point_3d & operator*=(PosType value){
     x[0] *=value;
