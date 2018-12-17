@@ -776,6 +776,10 @@ public:
     for(auto p : halos) delete p;
   }
   
+  /// recenter the particles to 3d point in physical Mpc/h units
+  /// If the halos have already been created they will be destroyed.
+  void Recenter(Point_3d x);
+
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);
   
   /// remove particles that are beyond radius (Mpc/h) from center
@@ -786,21 +790,26 @@ public:
   /// returns the original center of mass of all the particles
   Point_3d getCenterOfMass() const{return cm;}
   
+  /// returns the location of the densest particle in (Mpc/h)
+  Point_3d densest_particle() const;
+
   /// return the maximum and minimum coordinates of the particles in each dimension in for the original simulation in Mpc/h
   void getBoundingBox(Point_3d &Xmin,Point_3d &Xmax) const{
     Xmin = bbox_ll;
     Xmax = bbox_ur;
   }
-private:
+  
+  double getZoriginal(){return z_original;}
 
-  std::vector<ParticleType<float> > data;
+  std::vector<ParticleType<float> > data; // ???
+private:
   const std::string filename;
   int Nsmooth;
   
   Point_3d bbox_ll;  // minumum coordinate values of particles
   Point_3d bbox_ur;  // maximim coordinate values of particles
   
-  double z_original;
+  double z_original = -1;
   std::vector<size_t> nparticles;
   std::vector<float> masses;
   Point_3d cm;

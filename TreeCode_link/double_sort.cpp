@@ -130,16 +130,23 @@ namespace Utilities{
       } else {
         k=(l+ir) >> 1;
         std::swap(arr[k],arr[l+1]);
+        assert(k < n + 1);
+        assert(l < n);
         SwapPointsInArray(&brr[k-1],&brr[l]);
         if (arr[l] > arr[ir]) {
           std::swap(arr[l],arr[ir]);
+          assert(l < n + 1);
+          assert(ir < n + 1);
           SwapPointsInArray(&brr[l-1],&brr[ir-1]);
         }
         if (arr[l+1] > arr[ir]) {
+          assert(l < n);
+          assert(ir < n+1);
           std::swap(arr[l+1],arr[ir]);
           SwapPointsInArray(&brr[l],&brr[ir-1]);
         }
         if (arr[l] > arr[l+1]) {
+          assert(l < n);
           std::swap(arr[l],arr[l+1]);
           SwapPointsInArray(&brr[l-1],&brr[l]);
         }
@@ -153,6 +160,8 @@ namespace Utilities{
           do j--; while (arr[j] > a);
           if (j < i) break;
           std::swap(arr[i],arr[j]);
+          assert(l < n + 1);
+          assert(j < n + 1);
           SwapPointsInArray(&brr[i-1],&brr[j-1]);
         }
         arr[l+1]=arr[j];
@@ -201,6 +210,7 @@ namespace Utilities{
     
     // move pivot to end of array
     std::swap(arr[pivotindex],arr[N-1]);
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
@@ -208,6 +218,7 @@ namespace Utilities{
     for(i=0;i<N;++i){
       if(arr[i] <= pivotvalue){
         std::swap(arr[newpivotindex],arr[i]);
+        assert(newpivotindex < N);
         SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
         ++newpivotindex;
       }
@@ -235,12 +246,14 @@ namespace Utilities{
     pivotvalue=func(pointarray[pivotindex]);
     
     // move pivot to end of array
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
     // partition list and array
     for(i=0;i<N;++i){
       if(func(pointarray[i]) <= pivotvalue){
+        assert(newpivotindex < N);
         SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
         ++newpivotindex;
       }
@@ -330,6 +343,7 @@ namespace Utilities{
     for(i=0;i<N;++i){
       if(arr[i] <= pivotvalue){
         std::swap(arr[*pivotindex],arr[i]);
+        assert(*pivotindex < N);
         SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
         ++(*pivotindex);
       }
@@ -345,6 +359,7 @@ namespace Utilities{
     
     for(i=0;i<N;++i){
       if(func(pointarray[i]) <= pivotvalue){
+        assert(*pivotindex < N);
         SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
         ++(*pivotindex);
       }

@@ -71,6 +71,9 @@ MakeParticleLenses::MakeParticleLenses(
   
   // find center of mass
   cm[0]=cm[1]=cm[2]=0;
+  bbox_ll[0] = bbox_ur[0] = data[0][0];
+  bbox_ll[1] = bbox_ur[1] = data[0][1];
+  bbox_ll[2] = bbox_ur[2] = data[0][2];
   double m=0;
   for(auto p : data){
     for(int i=0 ; i < 3 ; ++i){
@@ -124,18 +127,22 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
   
   // subtract center of mass
   if(recenter){
-    for(auto &p : data){
-      p[0] -= cm[0];
-      p[1] -= cm[1];
-      p[2] -= cm[2];
-    }
-    
-    for(int i=0 ; i < 3 ; ++i){
-      bbox_ll[i] -= cm[i];
-      bbox_ur[i] -= cm[i];
-    }
-    cm[0]=cm[1]=cm[2]=0;
+    Recenter(cm);
+   }
+}
+
+void MakeParticleLenses::Recenter(Point_3d x){
+  for(auto &p : data){
+    p[0] -= x[0];
+    p[1] -= x[1];
+    p[2] -= x[2];
   }
+  
+  bbox_ll -= x;
+  bbox_ur -= x;
+  cm -= x;
+  
+  Utilities::delete_container(halos);
 }
 
 void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
@@ -339,12 +346,12 @@ bool MakeParticleLenses::readGadget2(){
   GadgetFile<ParticleType<float> > gadget_file(filename,data);
    z_original = gadget_file.redshift;
    
-   for(int n=0 ; n < gadget_file.numfiles ; ++n){
+   //for(int n=0 ; n < gadget_file.numfiles ; ++n){
      gadget_file.openFile();
      gadget_file.readBlock("POS");
      gadget_file.readBlock("MASS");
      gadget_file.closeFile();
-   }
+   //}
   
   double a = 1.0e-3/(1 + z_original);
   // **** convert to physical Mpc/h and Msun/h
@@ -462,6 +469,22 @@ void MakeParticleLenses::radialCut(Point_2d center,double radius){
     // sort by type
     std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
   }
+}
+
+Point_3d MakeParticleLenses::densest_particle() const{
+  
+  double dmax = -1,d;
+  Point_3d x;
+  for(auto p : data){
+    d = p.mass()/p.size()/p.size()/p.size();
+    if(d > dmax){
+      dmax = d;
+      x[0] = p[0];
+      x[1] = p[1];
+      x[2] = p[2];
+    }
+  }
+  return x;
 }
 
 // remove particles that are beyond cylindrical radius (Mpc/h) of center
