@@ -181,8 +181,6 @@ public:
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
   
-  
-  
 	
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
@@ -247,6 +245,12 @@ public:
                           ,double buffer = 1.0 /// buffer in Mpc for cone
                           ,bool verbose = false
                 );
+  
+  void InsertFieldHalos(
+                              std::vector<LensHalo *> &inhalos
+                              ,int Nplanes
+                              ,bool verbose
+                              );
   
 protected:
   /// field of view in square degrees

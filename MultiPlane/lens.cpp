@@ -3022,6 +3022,40 @@ void Lens::GenerateFieldHalos(double min_mass
   combinePlanes(verbose);
 }
 
+
+void Lens::InsertFieldHalos(
+                            std::vector<LensHalo *> &inhalos
+                              ,int Nplanes
+                              ,bool verbose
+                              )
+{
+  
+  sim_input_flag = false;
+  if(field_halos.size() > 0){
+    field_halos.resize(0);
+    Utilities::delete_container(field_planes);
+  }
+  
+  field_halos = inhalos;
+  field_min_mass = 0;
+  fieldofview = 0;
+
+  for(auto ph : field_halos){
+    if(field_min_mass > ph->get_mass()) field_min_mass = ph->get_mass();
+  }
+  
+  // set up the lens contents :
+  std::cout << "number of field halos :" << field_halos.size() << std::endl;
+
+  field_Nplanes_original = field_Nplanes_current = Nplanes;
+  setupFieldPlanes();
+  
+  //resetFieldHalos();
+  //createFieldHalos(verbose);
+  createFieldPlanes(verbose);
+  combinePlanes(verbose);
+}
+
 /**
  * \brief Changes the maximum redshift that the rays are shot to. Warning: Grids that have already been made with this Lens will not have this new source redshift. 
  *
