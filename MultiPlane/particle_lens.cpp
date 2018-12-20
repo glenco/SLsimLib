@@ -438,7 +438,7 @@ bool MakeParticleLenses::readHDF5(){
 #endif
 */
 // remove particles that are beyond radius (Mpc/h) of center
-void MakeParticleLenses::radialCut(Point_2d center,double radius){
+void MakeParticleLenses::radialCut(Point_3d center,double radius){
   
   double radius2 = radius*radius;
   double r2;

@@ -783,7 +783,7 @@ public:
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);
   
   /// remove particles that are beyond radius (Mpc/h) from center
-  void radialCut(Point_2d center,double radius);
+  void radialCut(Point_3d center,double radius);
   /// remove particles that are beyond cylindrical radius (Mpc/h) of center
   void cylindricalCut(Point_2d center,double radius);
 
