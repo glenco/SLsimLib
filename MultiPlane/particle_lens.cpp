@@ -27,6 +27,7 @@ MakeParticleLenses::MakeParticleLenses(
                    ,SimFileFormat format
                    ,int Nsmooth   /// number of nearest neighbors used for smoothing
                    ,bool recenter /// recenter so that the LenHalos are centered on the center of mass of all the particles
+                  ,bool ignore_type_in_smoothing
                    ):filename(filename),Nsmooth(Nsmooth)
 {
   
@@ -47,7 +48,7 @@ MakeParticleLenses::MakeParticleLenses(
       // processed file does not exist read the gadget file and find sizes
       switch (format) {
         case gadget2:
-          readGadget2();
+          readGadget2(ignore_type_in_smoothing);
           break;
         case csv3:
           readCSV(3);
@@ -332,16 +333,13 @@ bool MakeParticleLenses::readCSV(int columns_used){
       }
       skip += nparticles[i];
     }
-  }
-  
-  //LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),data.size());
-  
+   }
   return true;
 };
 
 
 
-bool MakeParticleLenses::readGadget2(){
+bool MakeParticleLenses::readGadget2(bool ignore_type){
   
   GadgetFile<ParticleType<float> > gadget_file(filename,data);
    z_original = gadget_file.redshift;
@@ -372,14 +370,20 @@ bool MakeParticleLenses::readGadget2(){
      nparticles.push_back(gadget_file.npart[i]);
      masses.push_back(gadget_file.masstab[i]);
    
-     if(gadget_file.npart[i] > 0){
-       pp = data.data() + skip;  // pointer to first particle of type
-       size_t N = gadget_file.npart[i];
+     if(!ignore_type){
+       if(gadget_file.npart[i] > 0){
+         pp = data.data() + skip;  // pointer to first particle of type
+         size_t N = gadget_file.npart[i];
    
-       LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+         LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+       }
+       skip += gadget_file.npart[i];
      }
-     skip += gadget_file.npart[i];
    }
+  
+  if(ignore_type){
+    LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),gadget_file.ntot);
+  }
   
   return true;
 };

@@ -766,9 +766,10 @@ public:
                      ,SimFileFormat format
                      ,int Nsmooth   /// number of nearest neighbors used for smoothing
                      ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                     ,bool ignore_type_in_smoothing = false /// used only when format == gadget2, nearest neighbour smoothing is done amongst particles by type if set to false
                      );
   
-  MakeParticleLenses(const std::string &filename  /// path / name of galmb file
+  MakeParticleLenses(const std::string &filename  /// path / name of glmb file
                      ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
                      );
   
@@ -854,7 +855,7 @@ private:
   }
   
   // Read particle from Gadget-2 format file
-  bool readGadget2();
+  bool readGadget2(bool ignore_type);
   
   // Reads particles from first 4 columns of csv file
   bool readCSV(int columns_used);
