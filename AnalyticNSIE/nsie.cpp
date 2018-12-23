@@ -340,7 +340,7 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     // in order to validate the elliptization of phi.
      
   }
-
+  return 0;
 }
 
 

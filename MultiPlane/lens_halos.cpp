@@ -68,7 +68,7 @@ void LensHalo::assignParams(InputParams& params,bool needRsize){
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 }
 
-void LensHalo::PrintStars(bool show_stars) const
+void LensHalo::PrintStars(bool show_stars)
 {
   std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
   if(stars_N>0){

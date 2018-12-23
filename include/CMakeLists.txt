@@ -39,7 +39,7 @@ add_sources(
 	Tree.h
 	#TreeKist.h
 	tree_maintenance.h
-	TreeNB.h
+        qTreeNB.h
 	uniform_lens.h
 	utilities_slsim.h
         geometry.h
@@ -49,4 +49,6 @@ add_sources(
 	concave_hull.h
         bands_etc.h
 	gaussian.h
+	gadget.hh
+	particle_types.h
 )

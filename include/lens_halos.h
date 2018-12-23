@@ -2,20 +2,17 @@
  * lens_halos.h
  *
  *  Created on: 06.05.2013
- *      Author: mpetkova
  */
 
 #ifndef LENS_HALOS_H_
 #define LENS_HALOS_H_
 
-#include "standard.h"
+//#include "standard.h"
 #include "InputParams.h"
-#include "source.h"
-#include "point.h"
-
-//#include "quadTree.h"
-
-class TreeQuad;
+//#include "source.h"
+//#include "point.h"
+#include "quadTree.h"
+#include "particle_types.h"
 
 /**
  * \brief A base class for all types of lensing halos.
@@ -58,8 +55,8 @@ public:
   /// get the Rsize which is the size of the halo in Mpc
   inline float getRsize() const { return Rsize; }
 	/// get the mass solar units
-	inline float get_mass() const { return mass; }
-	/// get the scale radius in Mpc
+  inline float get_mass() const { return mass; }
+  /// get the scale radius in Mpc
 	inline float get_rscale() const { return rscale; }
 	/// get the redshift
 	inline PosType getZlens() const { return zlens; }
@@ -76,10 +73,15 @@ public:
     MyPosHalo[1] = posHalo[1]*Dist;
   }
 
+  /// returns position of the Halo in physical Mpc on the lens plane
+  PosType operator[](int i) const{return posHalo[0]*Dist;}
+  
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   /// set the position of the Halo in radians
   void setTheta(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  /// set the position of the Halo in radians
+  void setTheta(const Point_2d &p) { posHalo[0] = p[0] ; posHalo[1] = p[1] ; }
   /// get the position of the Halo in radians
   void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
   
@@ -149,7 +151,7 @@ public:
   /// Fraction of surface density in stars
   PosType getFstars() const {return star_fstars;}
   /// The mass of the stars if they are all the same mass
-  PosType getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
+  PosType getStarMass() const {if(stars_implanted)return stars_xp[0].mass(); else return 0.0;}
   
   /// the method used to ellipticize a halo if fratio!=1 and halo is not NSIE
   EllipMethod getEllipMethod() const {return main_ellip_method;}
@@ -169,7 +171,7 @@ public:
 	virtual void printCSV(std::ostream&, bool header = false) const;
   
 	/// Prints star parameters; if show_stars is true, prints data for single stars
-	void PrintStars(bool show_stars) const;
+	void PrintStars(bool show_stars);
   
   PosType MassBy2DIntegation(PosType R);
   PosType MassBy1DIntegation(PosType R);
@@ -245,12 +247,12 @@ protected:
   };
   
   IndexType *stars;
-  PosType **stars_xp;
-  TreeQuad *star_tree;
+  std::vector<StarType> stars_xp;
+  TreeQuadParticles<StarType> *star_tree;
   int stars_N;
   PosType star_massscale;
   /// star masses relative to star_massscles
-  float *star_masses;
+  //float *star_masses;
   PosType star_fstars;
   PosType star_theta_force;
   int star_Nregions;
@@ -258,7 +260,7 @@ protected:
   PosType beta;
   void substract_stars_disks(PosType const *ray,PosType *alpha
                              ,KappaType *kappa,KappaType *gamma);
-  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
+  std::vector<float> stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
                                ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
   
   

@@ -478,6 +478,12 @@ struct Point_3d{
     x[2]+=p.x[2];
     return *this;
   }
+  Point_3d & operator-=(const Point_3d &p){
+    x[0]-=p.x[0];
+    x[1]-=p.x[1];
+    x[2]-=p.x[2];
+    return *this;
+  }
   Point_3d & operator/=(PosType value){
     x[0]/=value;
     x[1]/=value;

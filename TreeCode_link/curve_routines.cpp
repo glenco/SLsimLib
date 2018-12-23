@@ -989,7 +989,10 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
     
     if(delta){
       if(i==(*end)) *end=(*j)+1;
-      for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+      for(k=i;k>(*j)+1;--k){
+        assert(k < Npoints);
+        SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+      }
       ++(*j);
       i=(*j);
       step=1;
@@ -1073,7 +1076,10 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
           // add neighbor to end of curve and restart
           if(i==*end) *end=*j+1;
           // move point to position after last one
-          for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]),&(points[k-1]) );
+          for(k=i;k>(*j)+1;--k){
+            assert(k < Npoints);
+            SwapPointsInArray( &(points[k]),&(points[k-1]) );
+          }
           //SwapPointsInArray(&(points[(*j)+1]),&(points[i]) );
           ++(*j);
           return 1;

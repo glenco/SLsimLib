@@ -11,6 +11,7 @@
 #include "quadTree.h"
 #include "source.h"
 #include "InputParams.h"
+#include "lens_halos.h"
 
 /**
  * \brief An "analytic" model to represent a lens on a single plane.
@@ -98,7 +99,7 @@ public:
   PosType sub_Mmin;
   PosType sub_theta_force;
   LensHalo *subs;
-  TreeQuad *sub_tree;
+  TreeQuadHalos *sub_tree;
   IndexType *sub_substructures;
   ClumpInternal main_sub_type;
 

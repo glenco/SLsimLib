@@ -247,15 +247,15 @@ namespace Utilities {
       /// the components of the Quaternion
       double v[4];
 
-      /// returns the rotation Quaternion for a ratation around the x-axis
+      /// returns the rotation Quaternion for a rotation around the x-axis
       static Quaternion q_x_rotation(double theta){
         return Quaternion(cos(theta/2),sin(theta/2),0,0);
       }
-      /// returns the rotation Quaternion for a ratation around the y-axis
+      /// returns the rotation Quaternion for a rotation around the y-axis
       static Quaternion q_y_rotation(double theta){
         return Quaternion(cos(theta/2),0,-sin(theta/2),0);
       }
-      /// returns the rotation Quaternion for a ratation around the z-axis
+      /// returns the rotation Quaternion for a rotation around the z-axis
       static Quaternion q_z_rotation(double theta){
         return Quaternion(cos(theta/2),0,0,sin(theta/2));
       }

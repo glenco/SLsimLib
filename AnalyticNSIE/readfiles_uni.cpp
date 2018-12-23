@@ -210,7 +210,7 @@ void LensHaloUniform::assignParams(InputParams& params){
 /** \ingroup ImageFinding
  * \brief Prints the parameters of the analytic lens to stdout
  */
-void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars) const
+void LensHaloUniform::PrintLens(bool show_substruct,bool show_stars)
 {
 	// uni lens parameters only
 	cout << endl << "**Host lens model**" << endl;

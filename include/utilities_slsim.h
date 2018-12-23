@@ -226,7 +226,8 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)(**it); }
-      const_reference operator*() const { return (const_reference)(**it); }
+
+      //const reference operator*() const { return (const reference)(**it); }
       
       pointer operator->() { return (pointer)(*it); }
       const_pointer operator->() const { return (const_pointer)(*it); }
@@ -243,7 +244,8 @@ namespace Utilities
       iterator& operator-=(difference_type n) { it -= n; return *this; }
       
       reference operator[](difference_type n) { return (reference)*it[n]; }
-      const_reference operator[](difference_type n) const { return (const_reference)*it[n]; }
+
+      //const reference operator[](difference_type n) const { return (const reference)*it[n]; }
       
       friend iterator operator+(const iterator& i, difference_type n) { return iterator(i.it + n); }
       friend iterator operator+(difference_type n, const iterator& i) { return iterator(i.it + n); }
@@ -1206,7 +1208,7 @@ namespace Utilities
     void read2columnfile(
                          std::string filename    /// input file name
                          ,std::vector<T1> &x     /// vector that will contain the first column
-                         ,std::vector<T2> &y     /// vector that will contain the first column
+                         ,std::vector<T2> &y     /// vector that will contain the second column
                          ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
                          ,int skiplines = 0
                          ,bool verbose = false
@@ -1290,8 +1292,8 @@ namespace Utilities
     void read3columnfile(
                          std::string filename    /// input file name
                          ,std::vector<T1> &x     /// vector that will contain the first column
-                         ,std::vector<T2> &y     /// vector that will contain the first column
-                         ,std::vector<T3> &z     /// vector that will contain the first column
+                         ,std::vector<T2> &y     /// vector that will contain the second column
+                         ,std::vector<T3> &z     /// vector that will contain the third column
                          ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
                          ,bool verbose = false
                          
@@ -1406,7 +1408,7 @@ namespace Utilities
     
     
     /** \brief This function will read in all the numbers from a multi-column
-     ASCII data file.
+     ,space seporated ASCII data file.
      
      It will skip the comment lines if they are at the head of the file.  The 
      number of columns and rows are returned.  The entry at row r and column c will be stored at data[c + column*r].
@@ -1543,7 +1545,7 @@ namespace Utilities
      number of columns and rows are returned.
      
      Comments must only be before the data.  There must be a line with the
-     column lines after the comments and before the data.
+     column names after the comments and before the data.
      
      This function is not particularly fast for large amounts of data.  If the
      number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
@@ -1702,5 +1704,7 @@ namespace Utilities
     std::string filename;
   };
 
+  /// split string into vector of seporate strings that were seporated by
+  void splitstring(std::string &line,std::vector<std::string> &vec,const std::string &delimiter);
 }
 #endif

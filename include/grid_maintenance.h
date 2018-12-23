@@ -11,6 +11,7 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
+#include "source.h"
 #include <mutex>
 #include <utilities_slsim.h>
 
@@ -131,6 +132,7 @@ namespace ImageFinding{
       type = ND;
       caustic_intersections = -1;
     };
+    
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
       critical_curve = p.critical_curve;
@@ -174,17 +176,23 @@ namespace ImageFinding{
     
     PosType z_source;
     CritType type;
-    int caustic_intersections;  /// estimated number of intersections of the caustic, -1 if not set
+      /// estimated number of intersections of the caustic, -1 if not set
+    int caustic_intersections;
 
-    Point_2d critical_center;      /// center of critical curve
-    Point_2d caustic_center;   /// center of caustic curve
+    /// center of critical curve
+    Point_2d critical_center;
+    /// center of caustic curve
+    Point_2d caustic_center;
     
-    PosType critical_area;        /// area of critical curve (radians^2)
-    PosType caustic_area;        /// area of caustic curve (radians^2)
+    /// area of critical curve (radians^2)
+    PosType critical_area;
+    /// area of caustic curve (radians^2)
+    PosType caustic_area;
     
-    
-    PosType contour_ell;  /// axis ratio of a contour defined by the ratio of the max to min distance between center (as given by hull alg) and contour
-    PosType ellipse_area;  /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
+      /// axis ratio of a contour defined by the ratio of the max to min distance between center (as given by hull alg) and contour
+    PosType contour_ell;
+      /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
+    PosType ellipse_area;
     
     /// return true if x is inside or on the border of the caustic curve
     bool inCausticCurve(Point_2d x){
@@ -374,8 +382,30 @@ namespace ImageFinding{
     void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
   }
+
+  void printCriticalCurves(std::string filename
+                           ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
+
+  /** \breaf Makes an image of the critical curves.  The map will encompose all curves found.  The
+   pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
+   */
+  PixelMap mapCriticalCurves(
+                             /// list of critical curves
+                             const std::vector<ImageFinding::CriticalCurve> &critcurves,
+                             /// number of pixels to each size
+                             int Nx
+                             );
+  
+  /** \breaf Makes an image of the caustic curves.  The map will encompose all curves found.  The
+   pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
+   */
+  PixelMap mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves /// list of critical curves
+                            ,int Nx /// number of pixels to each size
+                            );
 }
 
+
+std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p);
 
 void saveImage(LensHaloMassMap *mokahalo, GridHndl grid, bool saveprofile=true);
 

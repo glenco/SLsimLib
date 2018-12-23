@@ -1,8 +1,6 @@
 /*
  * multiplane.h
  *
- *  Created on: Jan 12, 2012
- *      Author: mpetkova
  */
 
 #ifndef MULTIPLANE_H_
@@ -241,11 +239,13 @@ public:
    The cone is filled up until the redshift of the current zsource that is stored in the Lens class.  The field is a circular on the sky.  There is no clustering of the halos.
    */
   void GenerateFieldHalos(double min_mass /// minimum mass of halos
-                    ,MassFuncType mass_function /// type of mass function
-                    ,double field_of_view  /// in square degrees
-                    ,int Nplanes           /// number of lens planes
-                    ,LensHaloType halo_type = nfw_lens  /// type of halo
-                    ,bool verbose = false
+                          ,MassFuncType mass_function /// type of mass function
+                          ,double field_of_view  /// in square degrees
+                          ,int Nplanes           /// number of lens planes
+                          ,LensHaloType halo_type = nfw_lens  /// type of halo
+                          ,GalaxyLensHaloType galaxy_type = null_gal  /// type of galaxy, if null_gal no galaxy
+                          ,double buffer = 1.0 /// buffer in Mpc for cone
+                          ,bool verbose = false
                 );
   
 protected:

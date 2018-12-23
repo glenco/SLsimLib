@@ -403,7 +403,7 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
   return;
 }
 
-PosType GridMap::EisnsteinArea() const{
+PosType GridMap::EinsteinArea() const{
   size_t count = 0;
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){

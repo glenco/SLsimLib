@@ -5,10 +5,16 @@
 //  Created by bmetcalf on 16/06/15.
 //
 //
-#include "quadTree.h"
 
 #ifndef GLAMER_particle_halo_h
 #define GLAMER_particle_halo_h
+
+#include "geometry.h"
+#include "quadTree.h"
+#include "simpleTree.h"
+#include "particle_types.h"
+#include "utilities_slsim.h"
+#include "lens_halos.h"
 
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
@@ -19,27 +25,39 @@
    time and memory consuming when there are a large number of particles.
  
    Input format:
-     ASCCI - a table of three floats for positions in comoving Mpc (no h factor).
+     ASCII - a table of three floats for positions in comoving Mpc (no h factor).
              The lines "# nparticles ...." and "# mass ...." must be in
              header at the top of the file. # is otherwise a comment character.
              Only one type of particle in a single input file.
  
     More input formats will be added in the future.
 */
+
+template<typename PType>
 class LensHaloParticles : public LensHalo
 {
 public:
-  LensHaloParticles(
-                    const std::string& simulation_filename  /// name of file containing particles
-                    ,PosType redshift     /// redshift of particles
-                    ,int Nsmooth          /// number of neighbours for the smoothing
-                    ,const COSMOLOGY& lenscosmo /// cosmology
-                    ,Point_2d theta_rotate      /// rotation of simulation, x-axis ratation angle and then y-axis rotation angle
-                    ,bool recenter = false     /// re-center the coordinates to the center of mass
-                    ,bool multimass = false     /** allows the particles to have different masses
-                                                 , the masses for each particles must be provided as a 4th column in the particle data file */
-                    ,PosType MinPSize = 0.0    /// Minimum smoothing size of particles
-                    );
+  
+  
+  LensHaloParticles(const std::string& simulation_filename /// name of data files
+                    ,SimFileFormat format   /// format of data file
+                    ,PosType redshift        /// redshift of origin
+                    ,int Nsmooth             /// number of neighbours for adaptive smoothing
+                    ,const COSMOLOGY& cosmo  /// cosmology
+                    ,Point_2d theta_rotate   /// rotation of particles around the origin
+                    ,bool recenter           /// center on center of mass
+                    ,bool my_multimass       /// set to true is particles have different sizes
+                    ,PosType MinPSize        /// minimum particle size
+  );
+ 
+  LensHaloParticles(PType  *pdata    /// list of particles pdata[][i] should be the position in physical Mpc
+                    ,size_t Npoints        /// redshift of origin
+                    ,float redshift        /// redshift of origin
+                    ,const COSMOLOGY& cosmo  /// cosmology
+                    ,Point_2d theta_rotate   /// rotation of particles around the origin
+                    ,bool recenter           /// center on center of mass
+                    ,float MinPSize        /// minimum particle size
+  );
   
   ~LensHaloParticles();
   
@@ -68,23 +86,41 @@ public:
                       ,Utilities::RandomNumbers_NR &ran
                       );
   
+  static void calculate_smoothing(int Nsmooth
+                                  ,PType *pp
+                                  ,size_t Npoints);
+  
+  static void readPositionFileASCII(const std::string &filename
+                                    ,bool multimass
+                                    ,PType *pp
+                                    );
+  
+  static void writeSizes(const std::string &filename
+                         ,int Nsmooth
+                         ,const PType *pp
+                         ,size_t Npoints
+                         );
+
+  static bool readSizesFile(const std::string &filename
+                            ,PType * pp
+                            ,size_t Npoints
+                            ,int Nsmooth
+                            ,PosType min_size);
+
 private:
 
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
-  void calculate_smoothing(int Nsmooth);
-  void smooth_(TreeSimple *tree3d,PosType **xp,float *sizes,size_t N,int Nsmooth);
-
-  void readPositionFileASCII(const std::string& filename);
-  bool readSizesFile(const std::string& filename,int Nsmooth,PosType min_size);
-  void writeSizes(const std::string& filename,int Nsmooth);
+  static void smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth);
   
   void assignParams(InputParams& params);
 
-  PosType **xp;
-  std::vector<float> masses;
-  std::vector<float> sizes;
+  PType *pp;
+  //PosType **xp;
+  //std::vector<float> masses;
+  //std::vector<float> sizes;
+  
   PosType min_size;
   bool multimass;
   
@@ -95,7 +131,739 @@ private:
   std::string simfile;
   std::string sizefile;
   
-  TreeQuad * qtree;
+  TreeQuadParticles<PType> * qtree;
+};
+
+template<typename PType>
+LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filename
+                                            ,SimFileFormat format
+                                            ,PosType redshift
+                                            ,int Nsmooth
+                                            ,const COSMOLOGY& cosmo
+                                            ,Point_2d theta_rotate
+                                            ,bool recenter
+                                            ,bool my_multimass
+                                            ,PosType MinPSize
+                                            )
+:min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
+{
+  
+  LensHalo::setZlens(redshift);
+  LensHalo::setCosmology(cosmo);
+  LensHalo::set_flag_elliptical(false);
+  
+  stars_N = 0;
+  stars_implanted = false;
+  
+  Rmax = 1.0e3;
+  LensHalo::setRsize(Rmax);
+  
+  switch (format) {
+    case ascii:
+      readPositionFileASCII(simulation_filename,multimass,pp);
+      break;
+    default:
+      std::cerr << "LensHaloParticles does not accept ." << std::endl;
+      throw std::invalid_argument("bad format");
+  }
+  
+  sizefile = simfile + "." + std::to_string(Nsmooth) + "sizes";
+  
+  if(!readSizesFile(sizefile,pp,Npoints,Nsmooth,min_size)){
+    
+    // calculate sizes
+    calculate_smoothing(Nsmooth,pp,Npoints);
+    
+    // save result to a file for future use
+    writeSizes(sizefile,Nsmooth,pp,Npoints);
+    //for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
+    for(size_t i=0; i<Npoints ; ++i) if(pp[i].size() < min_size) pp[i].Size = min_size;
+  }
+  
+  // convert from comoving to physical coordinates
+  PosType scale_factor = 1/(1+redshift);
+  mcenter *= 0.0;
+  PosType max_mass = 0.0,min_mass = HUGE_VALF,mass=0;
+  for(size_t i=0;i<Npoints;++i){
+    pp[i][0] *= scale_factor;
+    pp[i][1] *= scale_factor;
+    pp[i][2] *= scale_factor;
+    
+    mcenter[0] += pp[i][0]*pp[multimass*i].mass();
+    mcenter[1] += pp[i][1]*pp[multimass*i].mass();
+    mcenter[2] += pp[i][2]*pp[multimass*i].mass();
+    
+    mass += pp[multimass*i].mass();
+    
+    max_mass = (pp[multimass*i].mass() > max_mass) ? pp[multimass*i].mass() : max_mass;
+    min_mass = (pp[multimass*i].mass() < min_mass) ? pp[multimass*i].mass() : min_mass;
+  }
+  LensHalo::setMass(mass);
+  
+  mcenter /= mass;
+  
+  std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  
+  
+  if(recenter){
+    PosType r2,r2max=0;
+    for(size_t i=0;i<Npoints;++i){
+      pp[i][0] -= mcenter[0];
+      pp[i][1] -= mcenter[1];
+      pp[i][2] -= mcenter[2];
+      
+      r2 = pp[i][0]*pp[i][0] + pp[i][1]*pp[i][1] + pp[i][2]*pp[i][2];
+      if(r2 > r2max) r2max = r2;
+    }
+    
+    LensHalo::setRsize( sqrt(r2max) );
+  }
+  
+  // rotate positions
+  rotate_particles(theta_rotate[0],theta_rotate[1]);
+  
+  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+}
+
+template<typename PType>
+LensHaloParticles<PType>::LensHaloParticles(
+                                            PType  *pdata          /// particle data (all physical distances)
+                                            ,size_t Nparticles
+                                            ,float redshift        /// redshift of origin
+                                            ,const COSMOLOGY& cosmo  /// cosmology
+                                            ,Point_2d theta_rotate   /// rotation of particles around the origin
+                                            ,bool recenter           /// center on center of mass
+                                            ,float MinPSize        /// minimum particle size
+):pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
+{
+  
+  LensHalo::setZlens(redshift);
+  LensHalo::setCosmology(cosmo);
+  LensHalo::set_flag_elliptical(false);
+  
+  stars_N = 0;
+  stars_implanted = false;
+  
+  Rmax = 1.0e3;
+  LensHalo::setRsize(Rmax);
+  
+  // convert from comoving to physical coordinates
+  //PosType scale_factor = 1/(1+redshift);
+  mcenter *= 0.0;
+  PosType max_mass = 0.0,min_mass = HUGE_VALF,mass=0;
+  for(size_t i=0;i<Npoints;++i){
+    //pp[i][0] *= scale_factor;
+    //pp[i][1] *= scale_factor;
+    //pp[i][2] *= scale_factor;
+    
+    mcenter[0] += pp[i][0]*pp[i].mass();
+    mcenter[1] += pp[i][1]*pp[i].mass();
+    mcenter[2] += pp[i][2]*pp[i].mass();
+    
+    mass += pp[i].mass();
+    
+    max_mass = (pp[i].mass() > max_mass) ? pp[i].mass() : max_mass;
+    min_mass = (pp[i].mass() < min_mass) ? pp[i].mass() : min_mass;
+  }
+  LensHalo::setMass(mass);
+  
+  mcenter /= mass;
+  
+  std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  
+  
+  if(recenter){
+    PosType r2,r2max=0;
+    for(size_t i=0;i<Npoints;++i){
+      pp[i][0] -= mcenter[0];
+      pp[i][1] -= mcenter[1];
+      pp[i][2] -= mcenter[2];
+      
+      r2 = pp[i][0]*pp[i][0] + pp[i][1]*pp[i][1] + pp[i][2]*pp[i][2];
+      if(r2 > r2max) r2max = r2;
+    }
+    
+    LensHalo::setRsize( sqrt(r2max) );
+  }
+  
+  // rotate positions
+  rotate_particles(theta_rotate[0],theta_rotate[1]);
+  
+  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+}
+
+
+
+template<typename PType>
+LensHaloParticles<PType>::~LensHaloParticles(){
+  delete qtree;
+}
+
+template<typename PType>
+void LensHaloParticles<PType>::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
+                                          ,double const *xcm
+                                          ,bool subtract_point,PosType screening){
+  qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
+  
+  alpha[0] *= -1;
+  alpha[1] *= -1;
+}
+
+template<typename PType>
+void LensHaloParticles<PType>::rotate(Point_2d theta){
+  rotate_particles(theta[0],theta[1]);
+  delete qtree;
+  //qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,multimass,true,0,20);
+  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+}
+
+/** \brief Reads number of particle and particle positons into Npoint and xp from a ASCII file.
+ *
+ * Data file must have the lines "# nparticles ***" and "# mass ***" in the header.  All header
+ * lines must begin with a "# "
+ *
+ * Coordinates of particles are in physical Mpc units.
+ */
+template<typename PType>
+void LensHaloParticles<PType>::readPositionFileASCII(const std::string &filename
+                                                     ,bool multimass
+                                                     ,PType *pp
+                                                     ){
+  
+  int ncoll = Utilities::IO::CountColumns(filename);
+  if(!multimass && ncoll != 3 ){
+    std::cerr << filename << " should have three columns!" << std::endl;
+  }
+  if(multimass && ncoll != 4 ){
+    std::cerr << filename << " should have four columns!" << std::endl;
+  }
+  
+  std::ifstream myfile(filename);
+  
+  size_t Npoints = 0;
+  
+  // find number of particles
+  
+  if (myfile.is_open()){
+    
+    float tmp_mass = 0.0;
+    std::string str,label;
+    int count =0;
+    while(std::getline(myfile, str)){
+      std::stringstream ss(str);
+      ss >> label;
+      if(label == "#"){
+        ss >> label;
+        if(label == "nparticles"){
+          ss >> Npoints;
+          ++count;
+        }
+        if(!multimass){
+          if(label == "mass"){
+            ss >> tmp_mass;
+            ++count;
+          }
+        }
+      }else break;
+      if(multimass && count == 1 ) break;
+      if(!multimass && count == 2 ) break;
+    }
+    
+    if(count == 0){
+      if(multimass) std::cerr << "File " << filename << " must have the header lines: " << std::endl
+        << "# nparticles   ****" << std::endl << "# mass   ****" << std::endl;
+      if(!multimass) std::cerr << "File " << filename << " must have the header lines: " << std::endl
+        << "# nparticles   ****" << std::endl;
+      throw std::runtime_error("file reading error");
+    }
+    
+    pp = new PType[Npoints];
+    //xp = Utilities::PosTypeMatrix(Npoints,3);
+    //if(multimass) masses.resize(Npoints);
+    //else masses.push_back(tmp_mass);
+    
+    size_t row = 0;
+    
+    // read in particle positions
+    if(!multimass){
+      while(std::getline(myfile, str) && row < Npoints){
+        if(str[0] == '#') continue; //for comments
+        std::stringstream ss(str);
+        
+        ss >> pp[row][0];
+        if(!(ss >> pp[row][1])) std::cerr << "3 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        if(!(ss >> pp[row][2])) std::cerr << "3 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        
+        row++;
+      }
+    }else{
+      while(std::getline(myfile, str) && row < Npoints){
+        if(str[0] == '#') continue; //for comments
+        std::stringstream ss(str);
+        
+        ss >> pp[row][0];
+        if(!(ss >> pp[row][1])) std::cerr << "4 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        if(!(ss >> pp[row][2])) std::cerr << "4 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        if(!(ss >> pp[row].Mass)) std::cerr << "4 columns are expected in line " << row
+          << " of " << filename << std::endl;
+        
+        row++;
+      }
+    }
+    
+    if(row != Npoints){
+      std::cerr << "Number of data rows in " << filename << " does not match expected number of particles."
+      << std::endl;
+      throw std::runtime_error("file reading error");
+    }
+  }else{
+    std::cerr << "Unable to open file " << filename << std::endl;
+    throw std::runtime_error("file reading error");
+  }
+  
+  std::cout << Npoints << " particle positions read from file " << filename << std::endl;
+  
+}
+
+template<typename PType>
+bool LensHaloParticles<PType>::readSizesFile(const std::string &filename
+                                             ,PType * pp
+                                             ,size_t Npoints
+                                             ,int Nsmooth
+                                             ,PosType min_size){
+  
+  std::ifstream myfile(filename);
+  
+  // find number of particles
+  
+  PosType min=HUGE_VALF,max=0.0;
+  if (myfile.is_open()){
+    
+    std::string str,label;
+    int count =0;
+    size_t Ntmp;
+    int NStmp;
+    while(std::getline(myfile, str)){
+      std::stringstream ss(str);
+      ss >> label;
+      if(label == "#"){
+        ss >> label;
+        if(label == "nparticles"){
+          ss >> Ntmp;
+          if(Ntmp != Npoints){
+            std::cerr << "Number of particles in " << filename << " does not match expected number" << std::endl;
+            throw std::runtime_error("file reading error");
+          }
+          ++count;
+        }
+        if(label == "nsmooth"){
+          ss >> NStmp;
+          if(NStmp != Nsmooth) return false;
+          ++count;
+        }
+        
+      }else break;
+      if(count == 2) break;
+    }
+    
+    if(count != 2){
+      std::cerr << "File " << filename << " must have the header lines: " << std::endl
+      << "# nparticles   ****" << std::endl;
+      throw std::runtime_error("file reading error");
+    }
+    
+    size_t row = 0;
+    
+    std::cout << "reading in particle sizes from " << filename << "..." << std::endl;
+    
+    // read in particle sizes
+    while(std::getline(myfile, str)){
+      if(str[0] == '#') continue; //for comments
+      std::stringstream ss(str);
+      
+      ss >> pp[row].Size;
+      if(min_size > pp[row].size() ) pp[row].Size = min_size;
+      min = min < pp[row].size() ? min : pp[row].size();
+      max = max > pp[row].size() ? max : pp[row].size();
+      row++;
+    }
+    
+    if(row != Npoints){
+      std::cerr << "Number of data rows in " << filename << " does not match expected number of particles."
+      << std::endl;
+      throw std::runtime_error("file reading error");
+    }
+  }else{
+    return false;
+  }
+  
+  std::cout << Npoints << " particle sizes read from file " << filename << std::endl;
+  std::cout << "   maximun particle sizes " << max << " minimum " << min << " Mpc" << std::endl;
+  
+  return true;
+}
+
+template<typename PType>
+void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y){
+  
+  if(theta_x == 0.0 && theta_y == 0.0) return;
+  
+  PosType coord[3][3];
+  PosType cx,cy,sx,sy;
+  
+  cx = cos(theta_x); sx = sin(theta_x);
+  cy = cos(theta_y); sy = sin(theta_y);
+  
+  coord[0][0] = cy;  coord[1][0] = -sy*sx; coord[2][0] = cx;
+  coord[0][1] = 0;   coord[1][1] = cx;     coord[2][1] = sx;
+  coord[0][2] = -sy; coord[1][2] = -cy*sx; coord[2][2] = cy*cx;
+  
+  PosType tmp[3];
+  int j;
+  /* rotate particle positions */
+  for(size_t i=0;i<Npoints;++i){
+    for(j=0;j<3;++j) tmp[j]=0.0;
+    for(j=0;j<3;++j){
+      tmp[0] += coord[0][j]*pp[i][j];
+      tmp[1] += coord[1][j]*pp[i][j];
+      tmp[2] += coord[2][j]*pp[i][j];
+    }
+    for(j=0;j<3;++j) pp[i][j]=tmp[j];
+  }
+}
+
+template<typename PType>
+void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
+                                                   ,size_t Npoints){
+  
+  int nthreads = Utilities::GetNThreads();
+  
+  std::cout << "Calculating smoothing of particles ..." << std::endl
+  << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
+  
+  time_t to,t;
+  time(&to);
+  
+  // make 3d tree of particle postions
+  TreeSimple<PType> tree3d(pp,Npoints,2*Nsmooth,3,true);
+  // find distance to nth neighbour for every particle
+  if(Npoints < 1000){
+    //IndexType neighbors[Nsmooth];
+    for(size_t i=0;i<Npoints;++i){
+      pp[i].Size = tree3d.NNDistance(&pp[i][0],Nsmooth + 1);
+    }
+  }else{
+    size_t chunksize = Npoints/nthreads;
+    std::vector<std::thread> thr(nthreads);
+    
+    size_t N;
+    for(int ii = 0; ii < nthreads ;++ii){
+      if(ii == nthreads - 1){
+        N = Npoints - ii*chunksize;
+      }else N = chunksize;
+      
+      thr[ii] = std::thread(LensHaloParticles<PType>::smooth_,&tree3d
+                            ,&(pp[ii*chunksize]),N,Nsmooth);
+    }
+    for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
+  }
+  time(&t);
+  std::cout << "done in " << difftime(t,to) << " secs" << std::endl;
+}
+
+template<typename PType>
+void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *pp,size_t N,int Nsmooth){
+  
+  //IndexType neighbors[Nsmooth];
+  for(size_t i=0;i<N;++i){
+    pp[i].Size = tree3d->NNDistance(&(pp[i][0]),Nsmooth + 1);
+  }
+}
+
+
+template<typename PType>
+void LensHaloParticles<PType>::writeSizes(const std::string &filename,int Nsmooth
+                                          ,const PType *pp,size_t Npoints
+                                          ){
+  
+  std::ofstream myfile(filename);
+  
+  // find number of particles
+  
+  if (myfile.is_open()){
+    
+    std::cout << "Writing particle size information to file " << filename << " ...." << std::endl;
+    
+    myfile << "# nparticles " << Npoints << std::endl;
+    myfile << "# nsmooth " << Nsmooth << std::endl;
+    for(size_t i=0;i<Npoints;++i){
+      myfile << pp[i].Size << std::endl;
+      if(!myfile){
+        std::cerr << "Unable to write to file " << filename << std::endl;
+        throw std::runtime_error("file writing error");
+      }
+    }
+    
+    std::cout << "done" << std::endl;
+    
+  }else{
+    std::cerr << "Unable to write to file " << filename << std::endl;
+    throw std::runtime_error("file writing error");
+  }
+}
+
+template<typename PType>
+void LensHaloParticles<PType>::makeSIE(
+                                       std::string new_filename  /// file name
+                                       ,PosType redshift     /// redshift of particles
+                                       ,double particle_mass /// particle mass
+                                       ,double total_mass  /// total mass of SIE
+                                       ,double sigma       /// velocity dispersion in km/s
+                                       ,double q  /// axis ratio
+                                       ,Utilities::RandomNumbers_NR &ran
+                                       ){
+  
+  size_t Npoints = total_mass/particle_mass;
+  PosType Rmax = (1+redshift)*total_mass*Grav*lightspeed*lightspeed/sigma/sigma/2;
+  Point_3d point;
+  double qq = sqrt(q);
+  
+  std::ofstream datafile;
+  datafile.open(new_filename);
+  
+  datafile << "# nparticles " << Npoints << std::endl;
+  datafile << "# mass " << particle_mass << std::endl;
+  // create particles
+  for(size_t i=0; i< Npoints ;++i){
+    point[0] = ran.gauss();
+    point[1] = ran.gauss();
+    point[2] = ran.gauss();
+    
+    point *= Rmax*ran()/point.length();
+    
+    point[0] *= qq;
+    point[1] /= qq;
+    
+    datafile << point[0] << " " << point[1] << " "
+    << point[2] << " " << std::endl;
+    
+  }
+  
+  datafile.close();
+}
+
+/** \brief A class for constructing LensHalos from particles in a data file.
+ 
+ <p>
+ The particle data is stored in this structure so the LensHaloParticles should not be copied and then this object allowed to be destroyed.  The halos will be destroyed when this structure is destroyed.
+ 
+ A separate LensHaloParticles is made for each type of particle that is present in the gadget file.
+ The nearest N neighbour smoothing is done in 3D on construction separately for
+ each type of particle.  The smoothing sizes are automatically saved to files and used again
+ if the class is constructed again with the same file and smoothing number.
+ 
+ On construction the LensHalos are not constructed.  You nead to run the `CreateHalos()` method
+ the them to be created.
+ 
+ The data file formats are :
+ 
+ gadget2 - standard Gadget-2 output.  A different LensHalo is
+ made for each type of particle.  The nearest neighbour
+ smoothing scales are calculated within particle type.
+ The sph density of gas particles are not used.
+ 
+ csv3,csv4,csv5,csv6 - CSV ascii format without header.  The first three columns
+ are the positions.  Next columns are used for the other formats being and
+ interpreted as (column 4) masses are in Msun/h, (column 5) the paricle smoothing
+ size in Mpc/h and (column 6) an integer for type of particle.  There can be more
+ columns in the file than are uesed.  In the case of csv6, when there are more then one
+ type of halo each type will be in a differeent LensHaloParticles with differnt smoothing.
+ 
+ glmb - This is a binary format internal to GLAMER used to store
+ the positions, masses and sizes of the particles.  If
+ GLAMER has generated one, it should be all that is
+ needed to recreate the LensHaloParticles.
+ 
+ ascii2 - This is the original ascii GLAMER format.
+ Three floats for positions in comoving Mpc (no h factor).
+ The lines "# nparticles ...." and "# mass ...." must be
+ in header at the top of the file. # is otherwise a
+ comment character.  Only one type of particle in a single
+ input file.
+ 
+ example of use:
+
+ COSMOLOGY cosmo(Planck);
+ 
+ double zs = 2,zl = 0.5;
+ double Dl = cosmo.coorDist(zl);
+ 
+ 
+ std::string filename = "DataFiles/snap_058_centered.txt";
+ 
+ MakeParticleLenses halomaker(filename,csv4,30,false);
+ 
+ Point_3d Xmax,Xmin;
+
+ halomaker.getBoundingBox(Xmin, Xmax);
+ 
+ Point_3d c_mass = halomaker.getCenterOfMass();
+ Point_2d center;
+
+ center[0] = c_mass[0];
+ center[1] = c_mass[1];
+
+ // cut out a cylinder, could also do a ball
+ halomaker.cylindricalCut(center,(Xmax[0]-Xmin[0]/2));
+ 
+ long seed = 88277394;
+ Lens lens(&seed,zs);
+ 
+ double range = (Xmax[0]-Xmin[0])*1.05*cosmo.gethubble()/Dl; // angular range of simulation
+
+ center *= cosmo.gethubble()/Dl; // convert to angular coordinates
+ 
+ halomaker.CreateHalos(cosmo,zl);
+
+ for(auto h : halomaker.halos){
+ lens.insertMainHalo(h,zl, true);
+ }
+ 
+ GridMap gridmap(&lens, 2049,center.x,range);
+ 
+ PixelMap pmap = gridmap.writePixelMapUniform(KAPPA);
+ pmap.printFITS("!" + filename + ".kappa.fits");
+ 
+ pmap = gridmap.writePixelMapUniform(ALPHA1);
+ pmap.printFITS("!" + filename + ".alpha1.fits");
+ 
+ pmap = gridmap.writePixelMapUniform(ALPHA2);
+ pmap.printFITS("!" + filename + ".alpha2.fits");
+ 
+ <\p>
+*/
+class MakeParticleLenses{
+  
+public:
+  
+  /// vector of LensHalos, one for each type of particle type
+  std::vector<LensHaloParticles<ParticleType<float> > *> halos;
+  
+  /// returns number of particles of each type
+  std::vector<size_t> getnp(){return nparticles;}
+  
+  /// returns mass of particles of each type, if 0 they can have different masses
+  std::vector<float> getmp(){return masses;}
+  
+  /// returns original redshift of snapshot, redshifts of the halos can be changed
+  double sim_redshift(){return z_original;}
+  
+  MakeParticleLenses(const std::string &filename  /// path / root name of gadget-2 snapshot
+                     ,SimFileFormat format
+                     ,int Nsmooth   /// number of nearest neighbors used for smoothing
+                     ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                     ,bool ignore_type_in_smoothing = false /// used only when format == gadget2, nearest neighbour smoothing is done amongst particles by type if set to false
+                     );
+  
+  MakeParticleLenses(const std::string &filename  /// path / name of glmb file
+                     ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                     );
+  
+  ~MakeParticleLenses(){
+    for(auto p : halos) delete p;
+  }
+  
+  /// recenter the particles to 3d point in physical Mpc/h units
+  /// If the halos have already been created they will be destroyed.
+  void Recenter(Point_3d x);
+
+  void CreateHalos(const COSMOLOGY &cosmo,double redshift);
+  
+  /// remove particles that are beyond radius (Mpc/h) from center
+  void radialCut(Point_3d center,double radius);
+  /// remove particles that are beyond cylindrical radius (Mpc/h) of center
+  void cylindricalCut(Point_2d center,double radius);
+
+  /// returns the original center of mass of all the particles
+  Point_3d getCenterOfMass() const{return cm;}
+  
+  /// returns the location of the densest particle in (Mpc/h)
+  Point_3d densest_particle() const;
+
+  /// return the maximum and minimum coordinates of the particles in each dimension in for the original simulation in Mpc/h
+  void getBoundingBox(Point_3d &Xmin,Point_3d &Xmax) const{
+    Xmin = bbox_ll;
+    Xmax = bbox_ur;
+  }
+  
+  double getZoriginal(){return z_original;}
+
+  std::vector<ParticleType<float> > data; // ???
+private:
+  const std::string filename;
+  int Nsmooth;
+  
+  Point_3d bbox_ll;  // minumum coordinate values of particles
+  Point_3d bbox_ur;  // maximim coordinate values of particles
+  
+  double z_original = -1;
+  std::vector<size_t> nparticles;
+  std::vector<float> masses;
+  Point_3d cm;
+
+  // write a glamB format file with all required particle data
+  static void writeSizesB(const std::string &filename
+                   ,std::vector<ParticleType<float> > &pv
+                   ,int Nsmooth,std::vector<size_t> numbytype,double redshift){
+    
+    assert(numbytype.size() == 6);
+    size_t ntot = pv.size();
+    std::ofstream myfile(filename, std::ios::out | std::ios::binary);
+    if(!myfile.write((char*)&Nsmooth,sizeof(int))){
+      std::cerr << "Unable to write to file " << filename << std::endl;
+      throw std::runtime_error("file writing error");
+    }else{
+      myfile.write((char*)&ntot,sizeof(size_t));
+      myfile.write((char*)(numbytype.data()),sizeof(size_t)*6);
+      myfile.write((char*)&redshift,sizeof(double));
+      myfile.write((char*)(pv.data()),sizeof(ParticleType<float>)*ntot);
+    }
+  }
+  
+  // read a glamB format file
+  static bool readSizesB(const std::string &filename
+                   ,std::vector<ParticleType<float> > &pv
+                  ,int &Nsmooth,std::vector<size_t> &numbytype,double &redshift){
+    
+    numbytype.resize(6);
+    size_t ntot = pv.size();
+    std::ifstream myfile(filename, std::ios::in | std::ios::binary);
+    if(!myfile.read((char*)&Nsmooth,sizeof(int))){
+      return false;
+    }else{
+      myfile.read((char*)&ntot,sizeof(size_t));
+      myfile.read((char*)(numbytype.data()),sizeof(size_t)*6);
+      myfile.read((char*)&redshift,sizeof(double));
+      pv.resize(ntot);
+      myfile.read((char*)(pv.data()),sizeof(ParticleType<float>)*ntot);
+    }
+    return true;
+  }
+  
+  // Read particle from Gadget-2 format file
+  bool readGadget2(bool ignore_type);
+  
+  // Reads particles from first 4 columns of csv file
+  bool readCSV(int columns_used);
+
+#ifdef ENABLE_HDF5
+  bool readHDF5();
+#endif
+
 };
 
 

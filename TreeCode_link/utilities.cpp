@@ -183,7 +183,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
    *  Don't use init.
    *  After it is used once, later calls can use TwoDInterpolator(PosType *map) for the same point 
-   *  in the same coordinate system to save time in calculating the idndexes.
+   *  in the same coordinate system to save time in calculating the indexes.
    */
   PosType TwoDInterpolator(
                           PosType *x
@@ -894,3 +894,13 @@ double Utilities::XYcsvLookUp::operator[](std::string label) const{
   throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
 }
 
+void Utilities::splitstring(std::string &line,std::vector<std::string> &vec
+                            ,const std::string &delimiter){
+  size_t pos = 0;
+  
+  while ((pos = line.find(delimiter)) != std::string::npos) {
+    vec.push_back(line.substr(0, pos));
+    line.erase(0, pos + delimiter.length());
+  }
+  vec.push_back(line.substr(0, pos));
+}

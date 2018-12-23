@@ -59,7 +59,7 @@ struct GridMap{
   void getPixelMap(PixelMap &map) const;
   
   /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
-  PosType EisnsteinArea() const;
+  PosType EinsteinArea() const;
 
   /// flux weighted magnification with current surface brightness averaged on the image plane
   PosType magnification() const;
