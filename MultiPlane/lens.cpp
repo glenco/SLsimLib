@@ -3025,9 +3025,9 @@ void Lens::GenerateFieldHalos(double min_mass
 
 void Lens::InsertFieldHalos(
                             std::vector<LensHalo *> &inhalos
-                              ,int Nplanes
-                              ,bool verbose
-                              )
+                            ,const std::vector<double> &plane_redshifts
+                            ,bool verbose
+                            )
 {
   
   sim_input_flag = false;
@@ -3047,11 +3047,20 @@ void Lens::InsertFieldHalos(
   // set up the lens contents :
   std::cout << "number of field halos :" << field_halos.size() << std::endl;
 
-  field_Nplanes_original = field_Nplanes_current = Nplanes;
-  setupFieldPlanes();
+  field_Nplanes_original = field_Nplanes_current = plane_redshifts.size();
+  field_plane_redshifts = plane_redshifts;
   
+  field_Dl.resize(field_plane_redshifts.size());
+  for(std::size_t i = 0; i < field_plane_redshifts.size(); ++i)
+    field_Dl[i] = cosmo.coorDist(field_plane_redshifts[i]);
+  
+  field_plane_redshifts_original = field_plane_redshifts;
+  field_Dl_original = field_Dl;
+
   //resetFieldHalos();
   //createFieldHalos(verbose);
+  sigma_back_Tab.assign(field_Nplanes_original,0);
+
   createFieldPlanes(verbose);
   combinePlanes(verbose);
 }

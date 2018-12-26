@@ -246,11 +246,20 @@ public:
                           ,bool verbose = false
                 );
   
+  /** \brief Insert a list of field halos.
+   *
+   * Unlike a main halo, these halos will be put into a tree structure within each plane
+   * potentially making the ray-shooting faster.  No background density will be subtracted
+   * so the light cone will always have more than the average density if mass is not subtracted
+   * in some other way.  The redshifts of the planes are input and the halos are placed on the clossest
+   * plane to them in angular size distance.  The redhsift and angular position of each halos must be set.
+   *
+  */
   void InsertFieldHalos(
-                              std::vector<LensHalo *> &inhalos
-                              ,int Nplanes
-                              ,bool verbose
-                              );
+                        std::vector<LensHalo *> &inhalos     /// list of pointers to LensHalos to be added
+                        ,const std::vector<double> &plane_redshifts  /// redshifts of planes
+                        ,bool verbose
+                        );
   
 protected:
   /// field of view in square degrees
