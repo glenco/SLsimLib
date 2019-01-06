@@ -1,8 +1,6 @@
 /*
  * MOKAlens.h
  *
- *  Created on: Jun 8, 2012
- *      Author: mpetkova
  */
 
 
@@ -17,6 +15,10 @@
 
 #include <stdexcept>
 
+#ifdef ENABLE_FITS
+#include <CCfits/CCfits>
+#endif
+
 /**
  * \brief The MOKA map structure, containing all quantities that define it
  *
@@ -29,16 +31,14 @@
  */
 struct MOKAmap{
 	/// values for the map
-	std::valarray<double> convergence;
-	std::valarray<double> alpha1;
-	std::valarray<double> alpha2;
-	std::valarray<double> gamma1;
-	std::valarray<double> gamma2;
-	std::valarray<double> gamma3;
-  std::valarray<double> phi;
-	std::valarray<double> Signlambdar;
-	std::valarray<double> Signlambdat;
-	std::vector<double> x;
+	std::valarray<double> surface_density;  // Msun / Mpc^2
+	std::valarray<double> alpha1_bar;
+	std::valarray<double> alpha2_bar;
+	std::valarray<double> gamma1_bar;
+	std::valarray<double> gamma2_bar;
+	//std::valarray<double> gamma3_bar;
+  std::valarray<double> phi_bar;
+	//std::vector<double> x;
   int nx,ny;
   // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
@@ -49,6 +49,25 @@ struct MOKAmap{
   double omegam,omegal,h,wq;
 	double inarcsec;
 	double center[2];
+  
+  MOKAmap(){};
+  
+#ifdef ENABLE_FITS
+
+  MOKAmap(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &cosmo){
+    read(MOKA_input_file,zeromean,cosmo);
+  }
+  
+  void read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &cosmo);
+  void write(std::string filename);
+
+#endif
+
+#ifdef ENABLE_FFTW
+  // this calculates the other lensing quantities from the density map
+  void PreProcessFFTWMap(float zerosize);
+#endif
+  
 };
 
 /**
@@ -96,16 +115,16 @@ public:
 	void checkCosmology();
 	
 	void saveImage(bool saveprofile=true);
-	void saveKappaProfile();
-	void saveGammaProfile();
-	void saveProfiles(double &RE3, double &xxc, double &yyc);
+	//void saveKappaProfile();
+	//void saveGammaProfile();
+	//void saveProfiles(double &RE3, double &xxc, double &yyc);
     
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
     
-	void saveImage(GridHndl grid,bool saveprofiles);
+	//void saveImage(GridHndl grid,bool saveprofiles);
 	
-	void estSignLambdas();
-	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
+	//void estSignLambdas();
+	//void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 	
 	void getDims();
 	void readMap();
@@ -115,40 +134,38 @@ public:
 	void writeImage(std::string fn);
   
 	/// return center in physical Mpc
-	const double* getCenter() const { return map->center; }
+	const double* getCenter() const { return map.center; }
 	/// return range of input map in rad
-	double getRangeRad() const { return map->boxlrad; }
+	double getRangeRad() const { return map.boxlrad; }
 	/// return range of input map in physical Mpc
-	double getRangeMpc() const { return map->boxlMpc; }
+	double getRangeMpc() const { return map.boxlMpc; }
 	/// /// return number of pixels on a side in original map
 	size_t getN() const
 	{
-		if(map->nx != map->ny)
+		if(map.nx != map.ny)
 			throw std::runtime_error("mass map is not square");
-		return map->nx;
+		return map.nx;
 	}
 	/// return number of pixels on a x-axis side in original map
-	size_t getNx() const { return map->nx; }
+	size_t getNx() const { return map.nx; }
 	/// return number of pixels on a y-axis side in original map
-	size_t getNy() const { return map->ny; }
+	size_t getNy() const { return map.ny; }
 	
 private:
 	PixelMapType maptype;
 	void initMap();
-	void convertmap(MOKAmap *map,PixelMapType maptype);
-	MOKAmap* map;
+	void convertmap(MOKAmap &map,PixelMapType maptype);
+	MOKAmap map;
 	const COSMOLOGY& cosmo;
-	void PreProcessFFTWMap();
   int zerosize;
   bool zeromean;
 };
-  
-
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 
 int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid);
-#endif /* MOKALENS_H_ */
+#endif
+/* MOKALENS_H_ */
 
 
 
