@@ -1,0 +1,474 @@
+/*
+ * MOKAlens.h
+ *
+ */
+
+
+#ifndef MultiLENS_H_
+#define MultiLENS_H_
+
+#include "standard.h"
+#include "profile.h"
+#include "InputParams.h"
+#include "lens_halos.h"
+#include "grid_maintenance.h"
+
+#include <stdexcept>
+
+#ifdef ENABLE_FITS
+#include <CCfits/CCfits>
+#endif
+
+/**
+ * \brief The MOKA map structure, containing all quantities that define it
+ *
+ * The MOKA map, that is read in from the fits file. Its components include the
+ * lensing properties, as well as the cosmology, the size of the field of view,
+ * the redshifts of the lens and source, the properties of the cluster, etc.
+ *
+ * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
+ * the cfits library.
+ */
+struct LensMap{
+	/// values for the map
+	std::valarray<double> surface_density;  // Msun / Mpc^2
+	std::valarray<double> alpha1_bar;
+	std::valarray<double> alpha2_bar;
+	std::valarray<double> gamma1_bar;
+	std::valarray<double> gamma2_bar;
+	//std::valarray<double> gamma3_bar;
+  std::valarray<double> phi_bar;
+	//std::vector<double> x;
+  int nx,ny;
+  // boxlMpc is Mpc/h for MOKA
+	/// lens and source properties
+  //double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
+  /// range in x direction, pixels are square
+  //double boxlarcsec,boxlrad;
+  double boxlMpc;
+  /// cosmology
+  //double omegam,omegal,h,wq;
+	//double inarcsec;
+	Point_2d center;
+  Point_2d lowerleft;
+  Point_2d upperright;
+  
+  double z;
+  
+  
+  LensMap(){};
+  
+#ifdef ENABLE_FITS
+
+  LensMap(std::string fits_input_file,float h){
+    read(fits_input_file,h);
+  }
+  
+  /// read an entire map
+  void read(std::string input_fits,float h);
+  
+  /// read only header information
+  void read_header(std::string input_fits,float h);
+
+  /// read a subsection of the fits map
+  void read_sub(std::string input_fits
+                         ,const std::vector<long> &first
+                         ,const std::vector<long> &last
+                         ,float h
+                         );
+
+  void write(std::string filename);
+
+#endif
+
+#ifdef ENABLE_FFTW
+  // this calculates the other lensing quantities from the density map
+  //void PreProcessFFTWMap(float zerosize);
+
+  //static double identity(double x){return 1;}
+  
+  template <class T>
+  void PreProcessFFTWMap(float zerosize,T Wphi_of_k);
+  //void PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k = identity);
+#endif
+  
+};
+
+/** \brief A lens halo that calculates all lensing qunatities on two grids - a low res long range grid
+ *   and a high res short range grid.  This is done to reduce the required memory required.
+ *
+ * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
+ * the cfits library.
+ */
+class LensHaloMultiMap : public LensHalo
+{
+public:
+
+  LensHaloMultiMap(
+                   std::string fitsfile  /// Original fits map of the density
+                   ,double z
+                   ,double mass_unit
+                   ,const COSMOLOGY &c
+                   );
+
+  //double Wlr(double k2){return exp(-k2*rs2);}
+    
+  ~LensHaloMultiMap(){};
+	
+  void submap(
+              const std::vector<long> &lower_left
+              ,const std::vector<long> &upper_right
+              );
+  /// in coordinates relative to the center of the original map
+  void submap(Point_2d ll,Point_2d ur);
+
+	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  
+	void writeImage(std::string fn);
+  
+  /// return center in physical Mpc
+  Point_2d getCenter_lr() const { return long_range_map.center; }
+  /// return center in physical Mpc
+  Point_2d getCenter_sr() const { return short_range_map.center; }
+
+  /// return range of long range map in physical Mpc
+  double getRangeMpc_lr() const { return long_range_map.boxlMpc; }
+  /// return range of long range map in physical Mpc
+  double getRangeMpc_sr() const { return short_range_map.boxlMpc; }
+
+  /// return number of pixels on a x-axis side in original map
+	size_t getNx_lr() const { return long_range_map.nx; }
+	/// return number of pixels on a y-axis side in original map
+	size_t getNy_lr() const { return long_range_map.ny; }
+	
+  /// return number of pixels on a x-axis side in original map
+  size_t getNx_sr() const { return short_range_map.nx; }
+  /// return number of pixels on a y-axis side in original map
+  size_t getNy_sr() const { return short_range_map.ny; }
+
+private:
+  
+  const COSMOLOGY &cosmo;
+  
+  LensMap long_range_map;
+  LensMap short_range_map;
+  
+  double mass_unit;
+  
+  size_t Noriginal[2]; // number of pixels in each dimension in original image
+  double res;          // resolution of original image and short rnage image in Mpc
+  long border_width;   // width of short range maps padding
+  std::string fitsfilename;
+
+  double rs2;
+  
+	//const COSMOLOGY& cosmo;
+  int zerosize;
+  
+  struct UNIT{
+    int operator()(float k2){return 1;}
+  };
+  struct WLR{
+    float rs2;
+    float operator()(float k2){return exp(-k2*rs2);}
+  };
+  struct WSR{
+    float rs2;
+    float operator()(float k2){return 1 - exp(-k2*rs2);}
+  };
+  
+  UNIT unit;
+  WSR wsr;
+  WLR wlr;
+};
+
+
+/**
+ * \brief pre-process surface mass density map computing deflection angles and shear in FFT,
+ *  generalized to work with rectangular maps
+ */
+
+//void LensMap::PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k){
+template <typename T>
+void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
+  
+  
+  // size of the new map in x and y directions, factor by which each size is increased
+  int Nnx=int(zerosize*nx);
+  int Nny=int(zerosize*ny);
+  double boxlx = boxlMpc*zerosize;
+  double boxly = boxlMpc*zerosize/nx*ny;
+  
+  std:: valarray<float> Nmap;
+  try{
+    Nmap.resize( Nnx*Nny );
+  }catch(std::exception &e){
+    std::cerr << "exception thrown in LensMap::PreProcessFFTWMap(): " << e.what() << std::endl;
+  }
+  // assume locate in a rectangular map and build up the new one
+  for( int j=0; j<Nny; j++ ){
+    for( int i=0; i<Nnx; i++ ){
+      Nmap[i+Nnx*j]=0;
+      if(i>=int(Nnx/2-nx/2) && i<int(Nnx/2+nx/2) && j>=int(Nny/2-ny/2) && j<int(Nny/2+ny/2)){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        if(ii>=nx || jj>=ny){
+          std::cout << " 1 error mapping " << ii << "  " << jj << std::endl;
+          exit(1);
+        }
+        if(ii<0 || jj<0){
+          std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
+          exit(1);
+        }
+        Nmap[i+Nnx*j] = surface_density[ii+nx*jj];
+      }
+    }
+  }
+  
+  //std::vector<fftw_complex> fNmap(Nny*(Nnx/2+1));
+  //std::vector<fftw_complex> fphi( Nny*(Nnx/2+1) );
+  fftw_complex *fphi   = new fftw_complex[Nny*(Nnx/2+1)];
+
+  {
+    std::vector<double> dNmap(Nnx*Nny);
+    std::vector<double> input(Nnx*Nny);
+    //std::vector<fftw_complex> output(Nny*(Nnx/2+1));
+
+    for(int k=0;k<Nnx*Nny;k++) dNmap[k] = double(Nmap[k]);
+    fftw_plan p = fftw_plan_dft_r2c_2d(Nny,Nnx,input.data(),fphi,FFTW_ESTIMATE);
+  
+    for(int i=0;i<Nnx*Nny;i++) input[i] = dNmap[i];
+    fftw_execute( p );
+    //for(int i=0; i<Nny*(Nnx/2+1);i++){
+    //  fphi[i][0] = output[i][0];
+    //  fphi[i][1] = output[i][1];
+    //}
+// ??    fftw_destroy_plan(p);
+  }
+  // fourier space
+  // std:: cout << " allocating fourier space maps " << std:: endl;
+  
+  // build modes for each pixel in the fourier space
+  for( int i=0; i<Nnx/2+1; i++ ){
+    double kx=double(i);
+    kx=kx*2.*M_PI/boxlx;
+    for( int j=0; j<Nny; j++ ){
+      double ky=(j<Nny/2)?double(j):double(j-Nny);
+      ky=ky*2.*M_PI/boxly;
+      double k2 = kx*kx+ky*ky;
+      
+      // fphi
+      //fphi[i+(Nnx/2+1)*j][0]= -2.*fNmap[i+(Nnx/2+1)*j][0]/k2;
+      //fphi[i+(Nnx/2+1)*j][1]= -2.*fNmap[i+(Nnx/2+1)*j][1]/k2;
+
+      // fphi
+      fphi[i+(Nnx/2+1)*j][0] *= -2./k2;
+      fphi[i+(Nnx/2+1)*j][1] *= -2./k2;
+
+      // apply window function
+      fphi[i+(Nnx/2+1)*j][0] *= Wphi_of_k(k2);
+      fphi[i+(Nnx/2+1)*j][1] *= Wphi_of_k(k2);
+      
+      // null for k2 = 0 no divergence
+      if(k2 == 0){
+        fphi[i+(Nnx/2+1)*j][0] = 0.;
+        fphi[i+(Nnx/2+1)*j][1] = 0.;
+      }
+    }
+  }
+  
+  //delete[] fNmap;
+  
+  fftw_complex *fft= new fftw_complex[Nny*(Nnx/2+1)];
+  //double *realsp = new double[Nnx*Nny];
+
+  
+  //std::vector<fftw_complex> fft( Nny*(Nnx/2+1) );
+  std::vector<double> realsp(Nnx*Nny);
+
+  //fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+  fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp.data(),FFTW_MEASURE);
+  
+  // alpha1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/boxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/boxly;
+        
+        fft[i+(Nnx/2+1)*j][0] = -kx*fphi[i+(Nnx/2+1)*j][1];
+        fft[i+(Nnx/2+1)*j][1] =  kx*fphi[i+(Nnx/2+1)*j][0];
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    alpha1_bar.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        alpha1_bar[ii+nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
+      }
+    }
+  }
+  
+  // alpha2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/boxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/boxly;
+        
+        // alpha
+        fft[i+(Nnx/2+1)*j][0] = -ky*fphi[i+(Nnx/2+1)*j][1];
+        fft[i+(Nnx/2+1)*j][1] =  ky*fphi[i+(Nnx/2+1)*j][0];
+        
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    alpha2_bar.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        alpha2_bar[ii+nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
+      }
+    }
+  }
+  // gamma1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/boxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/boxly;
+        
+        // gamma
+        fft[i+(Nnx/2+1)*j][0] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = 0.5*(kx*kx-ky*ky)*fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    gamma1_bar.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        gamma1_bar[ii+nx*jj] = float( realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+  // gamma2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/boxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/boxly;
+        
+        // gamma
+        fft[i+(Nnx/2+1)*j][0] = kx*ky*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = kx*ky*fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    gamma2_bar.resize(nx*ny);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        gamma2_bar[ii+nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+
+  // kappa - this is done over because of the window in Fourier space
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nnx/2+1; i++ ){
+      double kx=double(i);
+      kx=kx*2.*M_PI/boxlx;
+      for( int j=0; j<Nny; j++ ){
+        double ky=(j<Nny/2)?double(j):double(j-Nny);
+        ky=ky*2.*M_PI/boxly;
+        
+        double k2 = -(kx*kx + ky*ky)/2;
+        
+        // surface density
+        fft[i+(Nnx/2+1)*j][0] = k2*fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = k2*fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+    
+    //pp=fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp,FFTW_ESTIMATE);
+    fftw_execute( pp );
+    //fftw_destroy_plan(pp);
+    
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        surface_density[ii+nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+        
+      }
+    }
+  }
+
+  // std:: cout << " remapping the map in the original size " << std:: endl;
+  delete[] fft;
+  //delete[] realsp;
+  delete[] fphi;
+  
+  phi_bar.resize(nx*ny);  // ??? this needs to be calculated in the future
+}
+
+#endif
+/* MultiLENS_H_ */
+
+
+

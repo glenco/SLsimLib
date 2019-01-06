@@ -886,10 +886,10 @@ void PixelMap::printFITS(std::string filename, bool verbose) const
   phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
   phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   phout.addKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
   phout.addKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
@@ -949,10 +949,10 @@ void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string
   phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
   phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   phout.addKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  phout.addKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
   phout.addKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");

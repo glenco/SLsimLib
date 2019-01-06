@@ -133,6 +133,8 @@ public:
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
 	/// calculate the lensing properties -- deflection, convergence, and shear
+  // if not overriden by derived class it uses alpha_h(), gamma_h(), etc. of the
+  // derived case or for a point source in this class
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
   
 	/// force tree calculation for stars
