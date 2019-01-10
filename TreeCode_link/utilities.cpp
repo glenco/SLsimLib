@@ -767,7 +767,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   //**********************************
   
   // sort by redshift
-  std::sort(data.begin(),data.end(), [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+  std::sort(data.begin(),data.end(), [this](const std::vector<double> &v1,const std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
   //&v1,std::vector<double> &v2){return v1[1] < v2[1];});
   NinXbins = data.size()/Nxbins;
   Xborders.resize(Nxbins);
@@ -792,7 +792,8 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   
   // sort by mass within x bins
   for(int i=0 ; i < Nxbins ; ++i){
-    std::sort(borders[i],borders[i+1], [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+    std::sort(borders[i],borders[i+1], [this](const std::vector<double> &v1
+                                              ,const std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
   }
   
   current = data.begin();
@@ -839,7 +840,8 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   }
   
   // sort by redshift
-  std::sort(data.begin(),data.end(), [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+  std::sort(data.begin(),data.end(), [this](const std::vector<double> &v1
+                                            ,const std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
 
   size_t Nxbins = Xborders.size();
   NinXbins = data.size()/Nxbins;
@@ -859,7 +861,8 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   
   // sort by mass within x bins
   for(int i=0 ; i < Nxbins ; ++i){
-    std::sort(borders[i],borders[i+1], [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+    std::sort(borders[i],borders[i+1], [this](const std::vector<double> &v1
+                                              ,const std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
   }
   
   current = data.begin();
@@ -868,7 +871,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
 std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
   long xbin = Utilities::locate(Xborders, x);
   current = std::upper_bound(borders[xbin],borders[xbin+1],y
-                             , [this](double y,std::vector<double> &v1){return y < v1[Yindex];});
+                             , [this](double y,const std::vector<double> &v1){return y < v1[Yindex];});
   
   return *current;
 }

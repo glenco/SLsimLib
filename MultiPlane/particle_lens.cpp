@@ -309,7 +309,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
     
     if(ntypes > 1){
       // sort by type
-      std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+      std::sort(data.begin(),data.end(),[](const ParticleType<float> &a1,const ParticleType<float> &a2){return a1.type < a2.type;});
     }
     masses = {0,0,0,0,0,0};
   }
@@ -361,7 +361,7 @@ bool MakeParticleLenses::readGadget2(bool ignore_type){
   }
   
   // sort by type
-   std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+   std::sort(data.begin(),data.end(),[](const ParticleType<float> &a1,const ParticleType<float> &a2){return a1.type < a2.type;});
    
    ParticleType<float> *pp;
    size_t skip = 0;
@@ -471,7 +471,7 @@ void MakeParticleLenses::radialCut(Point_3d center,double radius){
   
   if(ntypes > 1){
     // sort by type
-    std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+    std::sort(data.begin(),data.end(),[](const ParticleType<float> &a1,const ParticleType<float> &a2){return a1.type < a2.type;});
   }
 }
 
@@ -520,7 +520,7 @@ void MakeParticleLenses::cylindricalCut(Point_2d center,double radius){
   
   if(ntypes > 1){
     // sort by type
-    std::sort(data.begin(),data.end(),[](ParticleType<float> &a1,ParticleType<float> &a2){return a1.type < a2.type;});
+    std::sort(data.begin(),data.end(),[](const ParticleType<float> &a1,const ParticleType<float> &a2){return a1.type < a2.type;});
   }
 }
 
