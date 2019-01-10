@@ -31,13 +31,13 @@
  */
 struct LensMap{
 	/// values for the map
-	std::valarray<double> surface_density;  // Msun / Mpc^2
-	std::valarray<double> alpha1_bar;
-	std::valarray<double> alpha2_bar;
-	std::valarray<double> gamma1_bar;
-	std::valarray<double> gamma2_bar;
+	std::valarray<float> surface_density;  // Msun / Mpc^2
+	std::valarray<float> alpha1_bar;
+	std::valarray<float> alpha2_bar;
+	std::valarray<float> gamma1_bar;
+	std::valarray<float> gamma2_bar;
 	//std::valarray<double> gamma3_bar;
-  std::valarray<double> phi_bar;
+  std::valarray<float> phi_bar;
 	//std::vector<double> x;
   int nx,ny;
   // boxlMpc is Mpc/h for MOKA

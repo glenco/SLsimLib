@@ -14,7 +14,7 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,double z
                  ,double mass_unit
                  ,const COSMOLOGY &c
-                 ):LensHalo(),cosmo(c),fitsfilename(fitsfile),mass_unit(mass_unit)
+                 ):LensHalo(),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
 {
   
   zerosize = 1;
@@ -54,7 +54,7 @@ LensHaloMultiMap::LensHaloMultiMap(
   
   long chunk = MIN(nx*ny/Noriginal[0],Noriginal[1]);  // same size as long range grid
   if( chunk == 0) chunk = MIN(100*desample,Noriginal[1]);
-     
+  
   std::vector<long> first(2);
   std::vector<long> last(2);
   
@@ -262,12 +262,12 @@ void LensHaloMultiMap::force_halo(double *alpha
   
   // interpolate from the maps
   
-  Utilities::Interpolator<valarray<double> > interp(xx
+  Utilities::Interpolator<valarray<float> > interp(xx
                                                     ,long_range_map.nx,long_range_map.boxlMpc
                                                     ,long_range_map.ny
                                                     ,long_range_map.ny*long_range_map.boxlMpc/long_range_map.nx
                                                     ,long_range_map.center.x);
-  Utilities::Interpolator<valarray<double> > short_interp(xx
+  Utilities::Interpolator<valarray<float> > short_interp(xx
                                                     ,short_range_map.nx,short_range_map.boxlMpc
                                                     ,short_range_map.ny
                                                     ,short_range_map.ny*short_range_map.boxlMpc/short_range_map.nx
@@ -297,22 +297,23 @@ void LensMap::read_header(std::string fits_input_file,float h){
   
    std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
   
-  CCfits::PHDU *h0=&ff->pHDU();
+  //CCfits::PHDU *h0=&ff->pHDU();
+  CCfits::PHDU &h0 = ff->pHDU();
+
+  h0.readAllKeys();
   
-  h0->readAllKeys();
+  assert(h0.axes() >= 2);
   
-  assert(h0->axes() >= 2);
-  
-  nx = h0->axis(0);
-  ny = h0->axis(1);
+  nx = h0.axis(0);
+  ny = h0.axis(1);
   
   try{
     /* these are always present in ea*/
     float wlow,wup,res;
-    h0->readKey ("CD1_1",res);  // resolution in degrees
-    h0->readKey ("REDSHIFT",z);
-    h0->readKey ("WLOW",wlow);
-    h0->readKey ("WUP",wup);
+    h0.readKey ("CD1_1",res);  // resolution in degrees
+    h0.readKey ("REDSHIFT",z);
+    h0.readKey ("WLOW",wlow);
+    h0.readKey ("WUP",wup);
     
     double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
     if(wlow == wup) D = wlow;
@@ -347,20 +348,20 @@ void LensMap::read(std::string fits_input_file,float h){
   std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
   std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
   
-  CCfits::PHDU *h0=&ff->pHDU();
+  CCfits::PHDU &h0 = ff->pHDU();
   
-  h0->readAllKeys();
+  h0.readAllKeys();
   
-  assert(h0->axes() >= 2);
+  assert(h0.axes() >= 2);
   
-  nx = h0->axis(0);
-  ny = h0->axis(1);
+  nx = h0.axis(0);
+  ny = h0.axis(1);
   
   size_t size = nx*ny;
   
   // principal HDU is read
-  h0->read(surface_density);
-  int nhdu = h0->axes();
+  h0.read(surface_density);
+  int nhdu = h0.axes();
 
   if(nhdu > 2){  // file contains other lensing quantities
     alpha1_bar.resize(size);
@@ -378,15 +379,15 @@ void LensMap::read(std::string fits_input_file,float h){
     h3.read(gamma1_bar);
     CCfits::ExtHDU &h4=ff->extension(4);
     h4.read(gamma2_bar);
-    std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
+    std::cout << h0 << h1 << h2 << h3  << h4 << std::endl;
   }
   try{
     /* these are always present in ea*/
     float wlow,wup,res;
-    h0->readKey ("CD1_1",res);  // recall you that MOKA Mpc/h
-    h0->readKey ("REDSHIFT",z);
-    h0->readKey ("WLOW",wlow);
-    h0->readKey ("WUP",wup);
+    h0.readKey ("CD1_1",res);  // recall you that MOKA Mpc/h
+    h0.readKey ("REDSHIFT",z);
+    h0.readKey ("WLOW",wlow);
+    h0.readKey ("WUP",wup);
     
     double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
     D /= (1+z)*h;
@@ -424,16 +425,16 @@ void LensMap::read_sub(std::string fits_input_file
   //std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
   std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
   
-  CCfits::PHDU *h0=&ff->pHDU();
+  CCfits::PHDU &h0 = ff->pHDU();
   
-  h0->readAllKeys();
+  h0.readAllKeys();
   
   /* these are always present in ea*/
   float wlow,wup,res;
-  h0->readKey ("CD1_1",res);  // resolution in
-  h0->readKey ("REDSHIFT",z);
-  h0->readKey ("WLOW",wlow);
-  h0->readKey ("WUP",wup);
+  h0.readKey ("CD1_1",res);  // resolution in
+  h0.readKey ("REDSHIFT",z);
+  h0.readKey ("WLOW",wlow);
+  h0.readKey ("WUP",wup);
   
   double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
   if(wlow == wup) D = wup;
@@ -441,14 +442,16 @@ void LensMap::read_sub(std::string fits_input_file
   res *= degreesTOradians*D;
   boxlMpc = res*nx;
   
-  assert(h0->axes() >= 2);
+  assert(h0.axes() >= 2);
   std::vector<long> stride = {1,1};
 
   // principal HDU is read
-  h0->read(surface_density,first,last,stride);
-  
-  nx = h0->axis(0);
-  ny = h0->axis(1);
+  std::cout << surface_density.size() << std::endl;
+  h0.read(surface_density,first,last,stride);
+  std::cout << surface_density.size() << std::endl;
+
+  nx = h0.axis(0);
+  ny = h0.axis(1);
   
   ff.release();
   
@@ -463,7 +466,7 @@ void LensMap::read_sub(std::string fits_input_file
   nx = last[0] - first[0] + 1;
   ny = last[1] - first[1] + 1;
   
-  boxlMpc *= nx*1./h0->axis(0);
+  boxlMpc *= nx*1./h0.axis(0);
 }
 
 

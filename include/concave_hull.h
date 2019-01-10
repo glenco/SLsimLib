@@ -256,11 +256,11 @@ void concave(std::vector<T> &init_points
   typename std::list<T>::iterator p,nextpoint;
   //auto p = leftovers.begin();
   
-  double minarea,area,co1,co2;
+  double minarea,area,co1;//,co2;
   size_t i;
   Point_2d vo,v1,v2;
   
-  int count = 0;
+  //int count = 0;
   while(edges.front().length > scale ){
     
     if(leftovers.size() == 0) break;
@@ -426,7 +426,7 @@ void concave(std::vector<T> &init_points
     typename std::list<T>::iterator p,nextpoint;
     //auto p = leftovers.begin();
     
-    double minarea,area,co1,co2;
+    double minarea,area,co1;
     size_t i;
     Point_2d vo,v1,v2;
     

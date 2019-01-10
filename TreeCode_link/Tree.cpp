@@ -974,7 +974,7 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
                                          ,int Nx) {
   
   int i_max = 0,i=0;
-  double area = critcurves[0].critical_area,rmax,rmin,rave;
+  double area = critcurves[0].critical_area;
   Point_2d p1,p2,p_min,p_max;
   p1 = p2 = p_min = p_max = critcurves[0].critical_center;
   
