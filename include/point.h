@@ -103,6 +103,13 @@ struct Point_2d{
     x[1]*=value;
     return *this;
   }
+  Point_2d operator*(PosType value) const{
+    Point_2d tmp;
+    tmp[0] = x[0]*value;
+    tmp[1] = x[1]*value;
+    return tmp;
+  }
+
   /// scalar product
   PosType operator*(const Point_2d &p){
     return x[0]*p.x[0] + x[1]*p.x[1];
@@ -504,6 +511,15 @@ struct Point_3d{
     x[2] *=value;
     return *this;
   }
+  Point_3d operator*(PosType value) const{
+    Point_3d tmp;
+    tmp[0] = x[0]*value;
+    tmp[1] = x[1]*value;
+    tmp[2] = x[2]*value;
+    
+    return tmp;
+  }
+  
   /// scalar product
   PosType operator*(const Point_3d &p){
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];

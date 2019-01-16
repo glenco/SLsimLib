@@ -51,6 +51,12 @@ struct GridMap{
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
+  /// this will make a fits map of the grid as is.
+  void writeFitsUniform(LensingVariable lensvar,std::string filename){
+    PixelMap map = writePixelMapUniform(lensvar);
+    map.printFITS(filename);
+  }
+  
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
   PixelMap getPixelMap(int res) const;
   /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.

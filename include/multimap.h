@@ -30,6 +30,9 @@
  * the cfits library.
  */
 struct LensMap{
+  
+  LensMap(){};
+  
 	/// values for the map
 	std::valarray<float> surface_density;  // Msun / Mpc^2
 	std::valarray<float> alpha1_bar;
@@ -55,9 +58,6 @@ struct LensMap{
   
   double z;
   
-  
-  LensMap(){};
-  
 #ifdef ENABLE_FITS
 
   LensMap(std::string fits_input_file,float h){
@@ -76,6 +76,15 @@ struct LensMap{
                          ,const std::vector<long> &last
                          ,float h
                          );
+  
+  
+  void read_header(std::unique_ptr<CCfits::FITS> ff,float h);
+
+  void read_sub(CCfits::FITS *ff
+                ,const std::vector<long> &first
+                ,const std::vector<long> &last
+                ,float h
+                );
 
   void write(std::string filename);
 
@@ -113,7 +122,9 @@ public:
 
   //double Wlr(double k2){return exp(-k2*rs2);}
     
-  ~LensHaloMultiMap(){};
+  ~LensHaloMultiMap(){
+    delete ff;
+  };
 	
   void submap(
               const std::vector<long> &lower_left
@@ -149,6 +160,7 @@ public:
 private:
   
   const COSMOLOGY &cosmo;
+  CCfits::FITS *ff;
   
   LensMap long_range_map;
   LensMap short_range_map;
@@ -301,8 +313,11 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
         double ky=(j<Nny/2)?double(j):double(j-Nny);
         ky=ky*2.*M_PI/boxly;
         
-        fft[i+(Nnx/2+1)*j][0] = -kx*fphi[i+(Nnx/2+1)*j][1];
-        fft[i+(Nnx/2+1)*j][1] =  kx*fphi[i+(Nnx/2+1)*j][0];
+        size_t k = i+(Nnx/2+1)*j;
+        *** check this !!!
+        fft[k][0] = -kx*fphi[k][1];
+        fft[k][1] =  ky*fphi[k][0];
+        assert(!isnan(fft[k][0]));
       }
     }
     

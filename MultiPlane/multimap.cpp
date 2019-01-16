@@ -17,6 +17,8 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ):LensHalo(),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
 {
   
+  ff = new CCfits::FITS (fitsfilename, CCfits::Read);
+  
   zerosize = 1;
   
   setZlens(z);
@@ -50,6 +52,14 @@ LensHaloMultiMap::LensHaloMultiMap(
   size_t nx = long_range_map.nx = submap.nx / desample ;
   size_t ny = long_range_map.ny = nx * submap.ny * 1./ submap.nx ;
   
+  {
+    Point_2d dmap = {submap.boxlMpc,ny*submap.boxlMpc/nx};
+    dmap /= 2;
+    long_range_map.center = {0,0};
+    long_range_map.upperright = long_range_map.center + dmap;
+    long_range_map.lowerleft = long_range_map.center - dmap;
+  }
+  
   long_range_map.surface_density.resize(nx*ny,0);
   
   long chunk = MIN(nx*ny/Noriginal[0],Noriginal[1]);  // same size as long range grid
@@ -71,7 +81,8 @@ LensHaloMultiMap::LensHaloMultiMap(
     if( j%chunk == 0 ){
       first[1] = j+1;
       last[1] = MIN(j + chunk,Noriginal[1]);
-      submap.read_sub(fitsfilename,first,last,cosmo.gethubble());
+      //submap.read_sub(fitsfilename,first,last,cosmo.gethubble());
+      submap.read_sub(ff,first,last,cosmo.gethubble());
       kj = 0;
     }else{
       kj += submap.nx;
@@ -83,6 +94,7 @@ LensHaloMultiMap::LensHaloMultiMap(
       assert(ii + kjj < long_range_map.surface_density.size() );
       assert(i + kj < submap.surface_density.size() );
       long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
+      assert(!isnan(submap.surface_density[ i + kj ]));
     }
   }
   
@@ -90,6 +102,7 @@ LensHaloMultiMap::LensHaloMultiMap(
   // convert to
   for(auto &p : long_range_map.surface_density){
     p /= area;
+    assert(!isnan(p));
   }
   
   wlr.rs2 = wsr.rs2 = rs2;
@@ -101,6 +114,10 @@ LensHaloMultiMap::LensHaloMultiMap(
 
   long_range_map.write("!" + fitsfile + "_lr.fits");
   
+  for(auto p : long_range_map.surface_density){ // ??????
+    assert(!isnan(p));
+  }
+
   // ??? don
   //bigmap.boxlMpc = long_range_map.boxlMpc;
   //bigmap.PreProcessFFTWMap(1.0,wsr);
@@ -116,8 +133,8 @@ void LensHaloMultiMap::submap(Point_2d ll,Point_2d ur){
   lower_left[0] = lround(ll[0]);
   lower_left[1] = lround(ll[1]);
 
-  lower_left[0] = lround(ur[0]);
-  lower_left[1] = lround(ur[1]);
+  upper_right[0] = lround(ur[0]);
+  upper_right[1] = lround(ur[1]);
 
   submap(lower_left,upper_right);
 }
@@ -182,7 +199,8 @@ void LensHaloMultiMap::submap(
         if(jj >= Noriginal[1] ) jj -= Noriginal[1];
 
         first_sub[1] = jj + 1;  last_sub[1] = MIN(jj + chunk + 1,Noriginal[1]);
-        partmap.read_sub(fitsfilename,first_sub,last_sub,cosmo.gethubble());
+        //partmap.read_sub(fitsfilename,first_sub,last_sub,cosmo.gethubble());
+        partmap.read_sub(ff,first_sub,last_sub,cosmo.gethubble());
         k = 0;
       }else{
         ++k;
@@ -236,14 +254,14 @@ void LensHaloMultiMap::submap(
     }
   }
 
-  short_range_map.center = short_range_map.lowerleft = short_range_map.upperright = long_range_map.lowerleft;
+  short_range_map.lowerleft = short_range_map.upperright = long_range_map.lowerleft;
   short_range_map.lowerleft[0] += lower_left[0]*res;
   short_range_map.lowerleft[1] += lower_left[1]*res;
   
   short_range_map.upperright[0] += upper_right[0]*res;
   short_range_map.upperright[1] += upper_right[1]*res;
   
-  short_range_map.center = (map.lowerleft + map.upperright)/2;
+  short_range_map.center = (short_range_map.lowerleft + short_range_map.upperright)/2;
   short_range_map.boxlMpc = nx*res;
  
   short_range_map.write("!" + fitsfilename + "_sr.fits");
@@ -273,7 +291,7 @@ void LensHaloMultiMap::force_halo(double *alpha
                                                     ,short_range_map.ny*short_range_map.boxlMpc/short_range_map.nx
                                                     ,short_range_map.center.x);
 
-  assert(long_range_map.nx == long_range_map.ny);
+  //assert(long_range_map.nx == long_range_map.ny);
   
   alpha[0] = interp.interpolate(long_range_map.alpha1_bar);
   alpha[1] = interp.interpolate(long_range_map.alpha2_bar);
@@ -283,6 +301,10 @@ void LensHaloMultiMap::force_halo(double *alpha
   *kappa = interp.interpolate(long_range_map.surface_density);
   //*phi = interp.interpolate(long_range_map.phi_bar);
  
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+  assert(kappa == kappa);
+
   alpha[0] += short_interp.interpolate(short_range_map.alpha1_bar);
   alpha[1] += short_interp.interpolate(short_range_map.alpha2_bar);
   gamma[0] += short_interp.interpolate(short_range_map.gamma1_bar);
@@ -290,6 +312,10 @@ void LensHaloMultiMap::force_halo(double *alpha
   *kappa += short_interp.interpolate(short_range_map.surface_density);
   //*phi = interp.interpolate(short_range_map.phi_bar);
   
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+  assert(kappa == kappa);
+
   return;
 }
 
@@ -423,8 +449,16 @@ void LensMap::read_sub(std::string fits_input_file
 ){
   
   //std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
-  std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
-  
+  std::unique_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
+  /*std::unique_ptr<CCfits::FITS> ff(nullptr);
+  try{
+    //std::unique_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
+    
+    ff.reset(new CCfits::FITS (fits_input_file, CCfits::Read));
+  }
+  catch(CCfits::FitsError){
+    std::cerr << " error in opening fits file " << fits_input_file << std::endl;
+  }*/
   CCfits::PHDU &h0 = ff->pHDU();
   
   h0.readAllKeys();
@@ -446,9 +480,9 @@ void LensMap::read_sub(std::string fits_input_file
   std::vector<long> stride = {1,1};
 
   // principal HDU is read
-  std::cout << surface_density.size() << std::endl;
+  //std::cout << surface_density.size() << std::endl;
   h0.read(surface_density,first,last,stride);
-  std::cout << surface_density.size() << std::endl;
+  //std::cout << surface_density.size() << std::endl;
 
   nx = h0.axis(0);
   ny = h0.axis(1);
@@ -469,6 +503,53 @@ void LensMap::read_sub(std::string fits_input_file
   boxlMpc *= nx*1./h0.axis(0);
 }
 
+
+void LensMap::read_sub(CCfits::FITS *ff
+                       ,const std::vector<long> &first
+                       ,const std::vector<long> &last
+                       ,float h
+                       ){
+  CCfits::PHDU &h0 = ff->pHDU();
+  
+  h0.readAllKeys();
+  
+  // these are always present in each
+  float wlow,wup,res;
+  h0.readKey ("CD1_1",res);  // resolution in
+  h0.readKey ("REDSHIFT",z);
+  h0.readKey ("WLOW",wlow);
+  h0.readKey ("WUP",wup);
+  
+  double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
+  if(wlow == wup) D = wup;
+  D /= (1+z)*h;
+  res *= degreesTOradians*D;
+  boxlMpc = res*nx;
+  
+  assert(h0.axes() >= 2);
+  std::vector<long> stride = {1,1};
+  
+  // principal HDU is read
+  //std::cout << surface_density.size() << std::endl;
+  h0.read(surface_density,first,last,stride);
+  //std::cout << surface_density.size() << std::endl;
+  
+  nx = h0.axis(0);
+  ny = h0.axis(1);
+  
+  lowerleft[0] = boxlMpc*(2*first[0] - nx)/2;
+  lowerleft[1] = boxlMpc*(2*first[1] - ny)/2;
+  
+  upperright[0] = boxlMpc*(2*last[0] - nx)/2;
+  upperright[1] = boxlMpc*(2*last[1] - ny)/2;
+  
+  center = (lowerleft + upperright)/2;
+  
+  nx = last[0] - first[0] + 1;
+  ny = last[1] - first[1] + 1;
+  
+  boxlMpc *= nx*1./h0.axis(0);
+}
 
 /**
  * \brief write the fits file of the maps of all the lensing quantities
