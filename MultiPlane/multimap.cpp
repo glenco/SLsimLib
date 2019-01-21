@@ -74,7 +74,7 @@ LensHaloMultiMap::LensHaloMultiMap(
   size_t kj = 0;
   for(size_t j = 0 ; j < Noriginal[1] ; ++j ){
     size_t jj = MIN(j/desample,ny-1); // ???
-    assert(jj < ny);
+    //assert(jj < ny);
     //size_t kjj = nx*(j/desample);
     size_t kjj = nx*jj;
     
@@ -86,23 +86,23 @@ LensHaloMultiMap::LensHaloMultiMap(
       kj = 0;
     }else{
       kj += submap.nx;
-      assert(kj < submap.nx*submap.ny);
+      //assert(kj < submap.nx*submap.ny);
     }
     
     for(size_t i = 0 ; i < Noriginal[0] ; ++i ){
       size_t ii = MIN(i/desample,nx-1);
-      assert(ii + kjj < long_range_map.surface_density.size() );
-      assert(i + kj < submap.surface_density.size() );
+      //assert(ii + kjj < long_range_map.surface_density.size() );
+      //assert(i + kj < submap.surface_density.size() );
       long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
-      assert(!isnan(submap.surface_density[ i + kj ]));
+      //assert(!isnan(submap.surface_density[ i + kj ]));
     }
   }
   
-  double area = res*res*cosmo.gethubble()/mass_unit; //*** units  ???
+  double area = res*res/mass_unit; //*** units  ???
   // convert to
   for(auto &p : long_range_map.surface_density){
     p /= area;
-    assert(!isnan(p));
+    //assert(!isnan(p));
   }
   
   wlr.rs2 = wsr.rs2 = rs2;
@@ -114,9 +114,9 @@ LensHaloMultiMap::LensHaloMultiMap(
 
   long_range_map.write("!" + fitsfile + "_lr.fits");
   
-  for(auto p : long_range_map.surface_density){ // ??????
-    assert(!isnan(p));
-  }
+  //for(auto p : long_range_map.surface_density){ // ??????
+  //  assert(!isnan(p));
+  //}
 
   // ??? don
   //bigmap.boxlMpc = long_range_map.boxlMpc;
@@ -212,17 +212,18 @@ void LensHaloMultiMap::submap(
         if(ii < 0) ii += Noriginal[0];
         if(ii >= Noriginal[0] ) ii -= Noriginal[0];
 
-        assert( i + kj < map.surface_density.size() );
-        assert( ii + kk < partmap.surface_density.size() );
+        //assert( i + kj < map.surface_density.size() );
+        //assert( ii + kk < partmap.surface_density.size() );
         map.surface_density[ i + kj ] = partmap.surface_density[ ii + kk ];
       }
     }
 
-    // need to do overlap region
-    map.boxlMpc = map.nx*res;
   }
-  
-  double area = res*res*cosmo.gethubble()/mass_unit; //*** units  ???
+
+  // need to do overlap region
+  map.boxlMpc = map.nx*res;
+
+  double area = res*res/mass_unit; //*** units  ???
   // convert to
   for(auto &p : map.surface_density){
     p /= area;
@@ -285,12 +286,7 @@ void LensHaloMultiMap::force_halo(double *alpha
                                                     ,long_range_map.ny
                                                     ,long_range_map.ny*long_range_map.boxlMpc/long_range_map.nx
                                                     ,long_range_map.center.x);
-  Utilities::Interpolator<valarray<float> > short_interp(xx
-                                                    ,short_range_map.nx,short_range_map.boxlMpc
-                                                    ,short_range_map.ny
-                                                    ,short_range_map.ny*short_range_map.boxlMpc/short_range_map.nx
-                                                    ,short_range_map.center.x);
-
+ 
   //assert(long_range_map.nx == long_range_map.ny);
   
   alpha[0] = interp.interpolate(long_range_map.alpha1_bar);
@@ -301,21 +297,33 @@ void LensHaloMultiMap::force_halo(double *alpha
   *kappa = interp.interpolate(long_range_map.surface_density);
   //*phi = interp.interpolate(long_range_map.phi_bar);
  
-  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-  assert(kappa == kappa);
+  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  //assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+  //assert(kappa == kappa);
 
-  alpha[0] += short_interp.interpolate(short_range_map.alpha1_bar);
-  alpha[1] += short_interp.interpolate(short_range_map.alpha2_bar);
-  gamma[0] += short_interp.interpolate(short_range_map.gamma1_bar);
-  gamma[1] += short_interp.interpolate(short_range_map.gamma2_bar);
-  *kappa += short_interp.interpolate(short_range_map.surface_density);
+  if( (xx[0] > short_range_map.lowerleft[0])*(xx[0] < short_range_map.upperright[0])
+     *(xx[1] > short_range_map.lowerleft[1])*(xx[1] < short_range_map.upperright[1])
+     ){
+
+    Utilities::Interpolator<valarray<float> > short_interp(xx
+                                                         ,short_range_map.nx,short_range_map.boxlMpc
+                                                         ,short_range_map.ny
+                                                         ,short_range_map.ny*short_range_map.boxlMpc/short_range_map.nx
+                                                         ,short_range_map.center.x);
+
+
+    alpha[0] += short_interp.interpolate(short_range_map.alpha1_bar);
+    alpha[1] += short_interp.interpolate(short_range_map.alpha2_bar);
+    gamma[0] += short_interp.interpolate(short_range_map.gamma1_bar);
+    gamma[1] += short_interp.interpolate(short_range_map.gamma2_bar);
+    *kappa += short_interp.interpolate(short_range_map.surface_density);
   //*phi = interp.interpolate(short_range_map.phi_bar);
   
-  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-  assert(kappa == kappa);
-
+    //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+    //assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+    //assert(kappa == kappa);
+  }
+  
   return;
 }
 
@@ -344,6 +352,7 @@ void LensMap::read_header(std::string fits_input_file,float h){
     double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
     if(wlow == wup) D = wlow;
     D /= (1+z)*h;
+    //D /= (1+z);
 
     res *= degreesTOradians*D;
     boxlMpc = res*nx;

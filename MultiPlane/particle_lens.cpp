@@ -192,16 +192,7 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
                                                                   ,false
                                                                   ,0)
                       );
-      /*/
-       /*LensHaloParticles<ParticleType<float> > halo(pp
-       ,nparticles[i]
-       ,z_original
-       ,cosmo
-       ,theta_rotate
-       ,false
-       ,0);
-       */
-    }
+     }
     skip += nparticles[i];
   }
 };
