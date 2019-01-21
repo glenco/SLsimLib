@@ -258,15 +258,19 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
           exit(1);
         }
         extended_map[i+Nnx*j] = surface_density[ii+nx*jj];
-      }else{
+        //float tmp = extended_map[i+Nnx*j];
+        //assert(!isnan(extended_map[i+Nnx*j]));
+        if(isinf(extended_map[i+Nnx*j])) extended_map[i+Nnx*j] = 0; /// ????
+    }else{
         extended_map[i+Nnx*j] = 0;
       }
+  
     }
   }
   
   //std::vector<fftw_complex> fNmap(Nny*(Nnx/2+1));
   //std::vector<fftw_complex> fphi( Nny*(Nnx/2+1) );
-  fftw_complex *fphi   = new fftw_complex[Nny*(Nkx)];
+  fftw_complex *fphi   = new fftw_complex[Nny*Nkx];
 
   fftw_plan p = fftw_plan_dft_r2c_2d(Nny,Nnx,extended_map.data(),fphi,FFTW_ESTIMATE);
   
@@ -281,6 +285,9 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
       
       double k2 = kxs[i]*kxs[i] + kys[j]*kys[j];
       size_t k = i+(Nkx)*j;
+      
+      //assert(k < Nny*Nkx);
+      //assert(!isnan(fphi[k][0]));
       
       // fphi
       //fphi[i+(Nkx)*j][0]= -2.*fNmap[i+(Nkx)*j][0]/k2;
@@ -320,7 +327,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
         size_t k = i+(Nkx)*j;
         fft[k][0] = -kxs[i]*fphi[k][1];
         fft[k][1] =  kxs[i]*fphi[k][0];
-        assert(!isnan(fft[k][0]));
+        //assert(!isnan(fft[k][0]));
       }
     }
     
