@@ -320,7 +320,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
         size_t k = i+(Nkx)*j;
         fft[k][0] = -kxs[i]*fphi[k][1];
         fft[k][1] =  kxs[i]*fphi[k][0];
-        assert(!isnan(fft[k][0]));
+        //assert(!isnan(fft[k][0]));
       }
     }
     
