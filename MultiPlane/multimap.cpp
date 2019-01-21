@@ -98,7 +98,7 @@ LensHaloMultiMap::LensHaloMultiMap(
     }
   }
   
-  double area = res*res/mass_unit; //*** units  ???
+  double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
   // convert to
   for(auto &p : long_range_map.surface_density){
     p /= area;
