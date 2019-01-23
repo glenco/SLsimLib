@@ -11,22 +11,22 @@ using namespace CCfits;
 
 LensHaloMultiMap::LensHaloMultiMap(
                  std::string fitsfile  /// Original fits map of the density
-                 ,double z
                  ,double mass_unit
                  ,const COSMOLOGY &c
                  ):LensHalo(),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
 {
   
-  ff = new CCfits::FITS (fitsfilename, CCfits::Read);
+  bool single_grid = false;
   
+  try{
+    ff = new CCfits::FITS (fitsfilename, CCfits::Read);
+  }catch(...){
+    std::cerr << "CCfits throw an exception: probably file " << fitsfile << " does not exist." << std::endl;
+  }
   zerosize = 1;
-  
-  setZlens(z);
-  
   rscale = 1.0;
   
   LensHalo::setTheta(0,0);
-  setZlensDist(z,cosmo);
   
   if(std::numeric_limits<float>::has_infinity)
     Rmax = std::numeric_limits<float>::infinity();
@@ -36,6 +36,9 @@ LensHaloMultiMap::LensHaloMultiMap(
   LensMap submap;
   submap.read_header(fitsfilename,cosmo.gethubble());
   
+  setZlens(submap.z);
+  setZlensDist(submap.z,cosmo);
+
   long_range_map.boxlMpc = submap.boxlMpc;
   
   //std::size_t size = bigmap.nx*bigmap.ny;
@@ -45,83 +48,82 @@ LensHaloMultiMap::LensHaloMultiMap(
   Noriginal[1] = submap.ny;
   border_width = 4.5*sqrt(rs2)/res + 1;
   
-  int desample = 2. * PI * sqrt(rs2) / res / 3. ;
+  if(single_grid){
+    std::vector<long> first = {1,1};
+    std::vector<long> last = {submap.nx,submap.ny};
+    long_range_map.read_sub(ff,first,last,cosmo.gethubble());
+  }else{
   
-  desample = sqrt(rs2) / res; // ???? test
+    int desample = 2. * PI * sqrt(rs2) / res / 3. ;
   
-  size_t nx = long_range_map.nx = submap.nx / desample ;
-  size_t ny = long_range_map.ny = nx * submap.ny * 1./ submap.nx ;
+    desample = sqrt(rs2) / res; // ???? test
   
-  {
-    Point_2d dmap = {submap.boxlMpc,ny*submap.boxlMpc/nx};
-    dmap /= 2;
-    long_range_map.center = {0,0};
-    long_range_map.upperright = long_range_map.center + dmap;
-    long_range_map.lowerleft = long_range_map.center - dmap;
-  }
+    size_t nx = long_range_map.nx = submap.nx / desample ;
+    size_t ny = long_range_map.ny = nx * submap.ny * 1./ submap.nx ;
   
-  long_range_map.surface_density.resize(nx*ny,0);
-  
-  long chunk = MIN(nx*ny/Noriginal[0],Noriginal[1]);  // same size as long range grid
-  if( chunk == 0) chunk = MIN(100*desample,Noriginal[1]);
-  
-  std::vector<long> first(2);
-  std::vector<long> last(2);
-  
-  first[0] = 1;
-  last[0] = Noriginal[0];
-  
-  size_t kj = 0;
-  for(size_t j = 0 ; j < Noriginal[1] ; ++j ){
-    size_t jj = MIN(j/desample,ny-1); // ???
-    //assert(jj < ny);
-    //size_t kjj = nx*(j/desample);
-    size_t kjj = nx*jj;
-    
-    if( j%chunk == 0 ){
-      first[1] = j+1;
-      last[1] = MIN(j + chunk,Noriginal[1]);
-      //submap.read_sub(fitsfilename,first,last,cosmo.gethubble());
-      submap.read_sub(ff,first,last,cosmo.gethubble());
-      kj = 0;
-    }else{
-      kj += submap.nx;
-      //assert(kj < submap.nx*submap.ny);
+    {
+      Point_2d dmap = {submap.boxlMpc,ny*submap.boxlMpc/nx};
+      dmap /= 2;
+      long_range_map.center = {0,0};
+      long_range_map.upperright = long_range_map.center + dmap;
+      long_range_map.lowerleft = long_range_map.center - dmap;
     }
+
+    long_range_map.surface_density.resize(nx*ny,0);
+  
+    long chunk = MIN(nx*ny/Noriginal[0],Noriginal[1]);  // same size as long range grid
+    if( chunk == 0) chunk = MIN(100*desample,Noriginal[1]);
+  
+    std::vector<long> first(2);
+    std::vector<long> last(2);
+  
+    first[0] = 1;
+    last[0] = Noriginal[0];
+  
+    size_t kj = 0;
+    for(size_t j = 0 ; j < Noriginal[1] ; ++j ){
+      size_t jj = MIN(j/desample,ny-1); // ???
+      //assert(jj < ny);
+      //size_t kjj = nx*(j/desample);
+      size_t kjj = nx*jj;
     
-    for(size_t i = 0 ; i < Noriginal[0] ; ++i ){
-      size_t ii = MIN(i/desample,nx-1);
-      //assert(ii + kjj < long_range_map.surface_density.size() );
-      //assert(i + kj < submap.surface_density.size() );
-      long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
-      //assert(!isnan(submap.surface_density[ i + kj ]));
+      if( j%chunk == 0 ){
+        first[1] = j+1;
+        last[1] = MIN(j + chunk,Noriginal[1]);
+        //submap.read_sub(fitsfilename,first,last,cosmo.gethubble());
+        submap.read_sub(ff,first,last,cosmo.gethubble());
+        kj = 0;
+      }else{
+        kj += submap.nx;
+        //assert(kj < submap.nx*submap.ny);
+      }
+    
+      for(size_t i = 0 ; i < Noriginal[0] ; ++i ){
+        size_t ii = MIN(i/desample,nx-1);
+        //assert(ii + kjj < long_range_map.surface_density.size() );
+        //assert(i + kj < submap.surface_density.size() );
+        //assert(!isinf(submap.surface_density[ i + kj ]));
+        //assert(!isinf(long_range_map.surface_density[ ii +  kjj ]));
+        long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
+        //assert(!isnan(submap.surface_density[ i + kj ]));
+      }
     }
+    wlr.rs2 = wsr.rs2 = rs2;
   }
   
   double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
   // convert to
   for(auto &p : long_range_map.surface_density){
+    assert(!isinf(p));
+    std::cout << p << " " ; // ????
     p /= area;
-    //assert(!isnan(p));
+    assert(!isinf(p));
   }
   
-  wlr.rs2 = wsr.rs2 = rs2;
-  long_range_map.PreProcessFFTWMap<WLR>(1.0,wlr);
+  if(single_grid) long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);
+  else long_range_map.PreProcessFFTWMap<WLR>(1.0,wlr);
   
-  // ????
-//  UNIT w;
-//  long_range_map.PreProcessFFTWMap<UNIT>(1.0,w);
-
   long_range_map.write("!" + fitsfile + "_lr.fits");
-  
-  //for(auto p : long_range_map.surface_density){ // ??????
-  //  assert(!isnan(p));
-  //}
-
-  // ??? don
-  //bigmap.boxlMpc = long_range_map.boxlMpc;
-  //bigmap.PreProcessFFTWMap(1.0,wsr);
-  //bigmap.write("!" + fitsfile + "_sr.fits");
 };
 
 void LensHaloMultiMap::submap(Point_2d ll,Point_2d ur){

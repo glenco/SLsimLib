@@ -115,7 +115,6 @@ public:
 
   LensHaloMultiMap(
                    std::string fitsfile  /// Original fits map of the density
-                   ,double z
                    ,double mass_unit     /// shoudl include h factors
                    ,const COSMOLOGY &c
                    );
@@ -257,10 +256,14 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
           std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
+        //assert(ii+nx*jj < surface_density.size());
+        //assert(i+Nnx*j < extended_map.size());
         extended_map[i+Nnx*j] = surface_density[ii+nx*jj];
         //float tmp = extended_map[i+Nnx*j];
         //assert(!isnan(extended_map[i+Nnx*j]));
-        if(isinf(extended_map[i+Nnx*j])) extended_map[i+Nnx*j] = 0; /// ????
+        if(isinf(extended_map[i+Nnx*j])){
+          extended_map[i+Nnx*j] = 0; /// ????
+        }
     }else{
         extended_map[i+Nnx*j] = 0;
       }
