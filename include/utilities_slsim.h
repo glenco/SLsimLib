@@ -1609,9 +1609,52 @@ namespace Utilities
         ++ii;
       }
     }
-
-  }
   
+  /** \brief write a CSV data file for some data vectors
+   
+   example:
+   <p>
+   std::vector<std::string> header = {"alpha","kappa","gamma"};
+   
+   std::vector<double> v1 = {1,2,3};
+   std::vector<double> v2 = {1.1,2.1,3.1};
+   std::vector<double> v3 = {3,4,5};
+   
+   std::vector<std::vector<double> *> data;
+   data.push_back(&v1);
+   data.push_back(&v2);
+   data.push_back(&v3);
+   printCSV(std::cout,header,data);
+   </p>
+   **/
+  
+  template<typename T>
+  void writeCSV(const std::string filename              /// output file path/name
+                ,const std::vector<std::string> header  /// column labels
+                ,std::vector<T *> &data                 /// objects must have operator []
+  ){
+    
+    std::ofstream s(filename + ".csv");
+    
+    int ncol = header.size();
+    assert(ncol == data.size() );
+    for(int i = 0 ; i < header.size()-1 ; ++i){
+      s << header[i] << ",";
+    }
+    s << header.back() << std::endl;
+    
+    size_t nrow = data[0]->size();
+    for(auto v : data) assert(nrow == v->size() );
+    
+    for(size_t j = 0 ; j < nrow ; ++j){
+      for(int i = 0 ; i < ncol-1 ; ++i){
+        s << data[i]->operator[](j) << ",";
+      }
+      s << data.back()->operator[](j) << "\n";
+    }
+  }
+  } // Utilities::IO
+
   /*** \brief A class for reading and then looking up objects from a CSV catalog.
    
    The constructor will read in the whole catalog and sort it into Nxbins X-bins.  Each
@@ -1706,5 +1749,5 @@ namespace Utilities
 
   /// split string into vector of seporate strings that were seporated by
   void splitstring(std::string &line,std::vector<std::string> &vec,const std::string &delimiter);
-}
+} // Utilities
 #endif
