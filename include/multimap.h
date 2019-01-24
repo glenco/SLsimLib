@@ -117,6 +117,7 @@ public:
                    std::string fitsfile  /// Original fits map of the density
                    ,double mass_unit     /// shoudl include h factors
                    ,const COSMOLOGY &c
+                   ,bool single_grid_mode = false
                    );
 
   //double Wlr(double k2){return exp(-k2*rs2);}
@@ -168,6 +169,7 @@ public:
 
 private:
   
+  bool single_grid;
   const COSMOLOGY &cosmo;
   CCfits::FITS *ff;
   

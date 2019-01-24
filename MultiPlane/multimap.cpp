@@ -13,10 +13,9 @@ LensHaloMultiMap::LensHaloMultiMap(
                  std::string fitsfile  /// Original fits map of the density
                  ,double mass_unit
                  ,const COSMOLOGY &c
-                 ):LensHalo(),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
+                 ,bool single_grid_mode
+                 ):LensHalo(),single_grid(single_grid_mode),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
 {
-  
-  bool single_grid = false;
   
   try{
     ff = new CCfits::FITS (fitsfilename, CCfits::Read);
@@ -42,22 +41,33 @@ LensHaloMultiMap::LensHaloMultiMap(
   long_range_map.boxlMpc = submap.boxlMpc;
   
   //std::size_t size = bigmap.nx*bigmap.ny;
+  //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   res = submap.boxlMpc/submap.nx;
   Noriginal[0] = submap.nx;
   Noriginal[1] = submap.ny;
-  border_width = 4.5*sqrt(rs2)/res + 1;
-  
+  //border_width = 4.5*sqrt(rs2)/res + 1;
+  border_width = 5*sqrt(rs2)/res + 1;  // ????
+
   if(single_grid){
     std::vector<long> first = {1,1};
     std::vector<long> last = {submap.nx,submap.ny};
     long_range_map.read_sub(ff,first,last,cosmo.gethubble());
+    
+    {
+      Point_2d dmap = {submap.boxlMpc,submap.ny*submap.boxlMpc/submap.nx};
+      dmap /= 2;
+      long_range_map.center = {0,0};
+      long_range_map.upperright = long_range_map.center + dmap;
+      long_range_map.lowerleft = long_range_map.center - dmap;
+    }
   }else{
   
     int desample = 2. * PI * sqrt(rs2) / res / 3. ;
-  
-    desample = sqrt(rs2) / res; // ???? test
-  
+    desample = sqrt(rs2) / res /2/2; // ???? test
+    desample = sqrt(rs2) / res /5; // ???? test
+
     size_t nx = long_range_map.nx = submap.nx / desample ;
     size_t ny = long_range_map.ny = nx * submap.ny * 1./ submap.nx ;
   
@@ -114,10 +124,7 @@ LensHaloMultiMap::LensHaloMultiMap(
   double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
   // convert to
   for(auto &p : long_range_map.surface_density){
-    assert(!isinf(p));
-    std::cout << p << " " ; // ????
     p /= area;
-    assert(!isinf(p));
   }
   
   if(single_grid) long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);
@@ -127,6 +134,8 @@ LensHaloMultiMap::LensHaloMultiMap(
 };
 
 void LensHaloMultiMap::submap(Point_2d ll,Point_2d ur){
+  if(single_grid) return;
+  
   std::vector<long> lower_left(2);
   std::vector<long> upper_right(2);
 
@@ -148,6 +157,8 @@ void LensHaloMultiMap::submap(
   
   // check range
   
+  if(single_grid) return;
+
   if( (upper_right[0] < 0) || (upper_right[1] < 0) || (lower_left[0] >= Noriginal[0] )
       || (lower_left[1] >= Noriginal[1])  ){
     std::cerr << "LensHaloMap : sub map is out of bounds" << std::endl;
@@ -302,6 +313,7 @@ void LensHaloMultiMap::force_halo(double *alpha
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
   //assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
   //assert(kappa == kappa);
+  if(single_grid) return;
 
   if( (xx[0] > short_range_map.lowerleft[0])*(xx[0] < short_range_map.upperright[0])
      *(xx[1] > short_range_map.lowerleft[1])*(xx[1] < short_range_map.upperright[1])
@@ -522,6 +534,9 @@ void LensMap::read_sub(CCfits::FITS *ff
                        ){
   CCfits::PHDU &h0 = ff->pHDU();
   
+  nx = h0.axis(0);
+  ny = h0.axis(1);
+
   h0.readAllKeys();
   
   // these are always present in each
@@ -544,9 +559,6 @@ void LensMap::read_sub(CCfits::FITS *ff
   //std::cout << surface_density.size() << std::endl;
   h0.read(surface_density,first,last,stride);
   //std::cout << surface_density.size() << std::endl;
-  
-  nx = h0.axis(0);
-  ny = h0.axis(1);
   
   lowerleft[0] = boxlMpc*(2*first[0] - nx)/2;
   lowerleft[1] = boxlMpc*(2*first[1] - ny)/2;
