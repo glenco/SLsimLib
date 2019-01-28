@@ -44,11 +44,14 @@ LensHaloMultiMap::LensHaloMultiMap(
   //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  rs2 = pow(submap.boxlMpc*1000,2);  //???
+  
   res = submap.boxlMpc/submap.nx;
   Noriginal[0] = submap.nx;
   Noriginal[1] = submap.ny;
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width = 5*sqrt(rs2)/res + 1;  // ????
+  border_width = 0; // ???
 
   if(single_grid){
     std::vector<long> first = {1,1};
@@ -67,6 +70,7 @@ LensHaloMultiMap::LensHaloMultiMap(
     int desample = 2. * PI * sqrt(rs2) / res / 3. ;
     desample = sqrt(rs2) / res /2/2; // ???? test
     desample = sqrt(rs2) / res /5; // ???? test
+    desample = 1; // ???? test
 
     size_t nx = long_range_map.nx = submap.nx / desample ;
     size_t ny = long_range_map.ny = nx * submap.ny * 1./ submap.nx ;
@@ -141,11 +145,11 @@ void LensHaloMultiMap::submap(Point_2d ll,Point_2d ur){
 
   ll = (ll - long_range_map.lowerleft)/res;
   ur = (ur - long_range_map.lowerleft)/res;
-  lower_left[0] = lround(ll[0]);
-  lower_left[1] = lround(ll[1]);
+  lower_left[0] = floor(ll[0]);
+  lower_left[1] = floor(ll[1]);
 
-  upper_right[0] = lround(ur[0]);
-  upper_right[1] = lround(ur[1]);
+  upper_right[0] = floor(ur[0]) - 1 ;
+  upper_right[1] = floor(ur[1]) - 1 ;
 
   submap(lower_left,upper_right);
 }
@@ -173,11 +177,11 @@ void LensHaloMultiMap::submap(
   std::vector<long> first(2);
   std::vector<long> last(2);
   
-  first[0] = lower_left[0] - border_width;
-  first[1] = lower_left[1] - border_width;
+  first[0] = lower_left[0] - border_width + 1;
+  first[1] = lower_left[1] - border_width + 1;
 
-  last[0] = upper_right[0] + border_width;
-  last[1] = upper_right[1] + border_width;
+  last[0] = upper_right[0] + border_width + 1;
+  last[1] = upper_right[1] + border_width + 1;
   
   LensMap map;
 
@@ -202,7 +206,7 @@ void LensHaloMultiMap::submap(
     const size_t chunk = nx*ny/Noriginal[0];
     
     size_t kk,k = chunk + 1;
-    long jj = first[1];
+    long jj = first[1]-1;
     for(size_t j = 0 ; j < ny ; ++j , ++jj ){
       size_t kj = nx*j;
       
@@ -220,7 +224,7 @@ void LensHaloMultiMap::submap(
       }
       
       kk = k*Noriginal[0];
-      long ii = first[0];
+      long ii = first[0]-1;
       for(size_t i = 0 ; i < nx ; ++i,++ii ){
         if(ii < 0) ii += Noriginal[0];
         if(ii >= Noriginal[0] ) ii -= Noriginal[0];
@@ -243,6 +247,7 @@ void LensHaloMultiMap::submap(
   }
   
   map.PreProcessFFTWMap(1.0,wsr);
+  //map.PreProcessFFTWMap(1.0,unit);
   
   // cut off bourders
   
@@ -255,8 +260,9 @@ void LensHaloMultiMap::submap(
   short_range_map.gamma1_bar.resize(nx*ny);
   short_range_map.gamma2_bar.resize(nx*ny);
 
-  for(long j=0 ; j < ny ; ++j){
-    long kjj = (j + border_width )*map.nx;
+  long jj = border_width;
+  for(long j=0 ; j < ny ; ++j,++jj){
+    long kjj = jj*map.nx;
     long kj = nx*j;
     long ii = border_width;
     for(long i=0 ; i < nx ; ++i,++ii){
@@ -560,11 +566,11 @@ void LensMap::read_sub(CCfits::FITS *ff
   h0.read(surface_density,first,last,stride);
   //std::cout << surface_density.size() << std::endl;
   
-  lowerleft[0] = boxlMpc*(2*first[0] - nx)/2;
-  lowerleft[1] = boxlMpc*(2*first[1] - ny)/2;
+  lowerleft[0] = res*(2*first[0] - nx)/2;
+  lowerleft[1] = res*(2*first[1] - ny)/2;
   
-  upperright[0] = boxlMpc*(2*last[0] - nx)/2;
-  upperright[1] = boxlMpc*(2*last[1] - ny)/2;
+  upperright[0] = res*(2*last[0] - nx)/2;
+  upperright[1] = res*(2*last[1] - ny)/2;
   
   center = (lowerleft + upperright)/2;
   
