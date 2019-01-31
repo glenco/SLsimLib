@@ -42,47 +42,52 @@ LensHaloMultiMap::LensHaloMultiMap(
   
   //std::size_t size = bigmap.nx*bigmap.ny;
   //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  rs2 = pow(submap.boxlMpc*1000,2);  //???
+  //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  rs2 = submap.boxlMpc*submap.boxlMpc/( 2*submap.nx )*g/f;
   
-  res = submap.boxlMpc/submap.nx;
-  Noriginal[0] = submap.nx;
-  Noriginal[1] = submap.ny;
-  //border_width = 4.5*sqrt(rs2)/res + 1;
-  border_width = 5*sqrt(rs2)/res + 1;  // ????
-  border_width = 0; // ???
+  resolution = submap.boxlMpc/submap.nx;
+   //border_width = 4.5*sqrt(rs2)/res + 1;
+  border_width = f*sqrt(rs2)/resolution + 1;
 
+  int desample = sqrt(0.5*submap.nx)/sqrt(f*g);
+
+  Noriginal[0] = submap.nx - submap.nx % desample;
+  Noriginal[1] = submap.ny - submap.ny % desample;
+  
+  size_t nx = long_range_map.nx = submap.nx / desample ;
+  size_t ny = long_range_map.ny = submap.ny / desample ;
+  
   if(single_grid){
     std::vector<long> first = {1,1};
-    std::vector<long> last = {submap.nx,submap.ny};
+    
+    std::vector<long> last = {(long)Noriginal[0],(long)Noriginal[1]};
     long_range_map.read_sub(ff,first,last,cosmo.gethubble());
     
-    {
-      Point_2d dmap = {submap.boxlMpc,submap.ny*submap.boxlMpc/submap.nx};
-      dmap /= 2;
-      long_range_map.center = {0,0};
-      long_range_map.upperright = long_range_map.center + dmap;
-      long_range_map.lowerleft = long_range_map.center - dmap;
-    }
+    //double res = submap.boxlMpc/submap.nx;
+    //Point_2d dmap = {submap.boxlMpc,submap.ny*resolution};
+    //dmap /= 2;
+    //long_range_map.center = {0,0};
+    //long_range_map.upperright = long_range_map.center + dmap;
+    //long_range_map.lowerleft = long_range_map.center - dmap;
+    //long_range_map.boxlMpc = submap.boxlMpc;
+
   }else{
-  
-    int desample = 2. * PI * sqrt(rs2) / res / 3. ;
-    desample = sqrt(rs2) / res /2/2; // ???? test
-    desample = sqrt(rs2) / res /5; // ???? test
-    desample = 1; // ???? test
 
-    size_t nx = long_range_map.nx = submap.nx / desample ;
-    size_t ny = long_range_map.ny = nx * submap.ny * 1./ submap.nx ;
-  
-    {
-      Point_2d dmap = {submap.boxlMpc,ny*submap.boxlMpc/nx};
-      dmap /= 2;
-      long_range_map.center = {0,0};
-      long_range_map.upperright = long_range_map.center + dmap;
-      long_range_map.lowerleft = long_range_map.center - dmap;
-    }
-
+    double res = desample*submap.boxlMpc/submap.nx;
+    long_range_map.boxlMpc = nx*res;
+    
+    long_range_map.lowerleft = submap.lowerleft;
+    Point_2d dmap = {nx*res,ny*res};
+    long_range_map.upperright = long_range_map.lowerleft + dmap;
+    long_range_map.center = (long_range_map.upperright + long_range_map.lowerleft)/2;
+   
+    /*
+    dmap /= 2;
+    long_range_map.center = {0,0};
+    long_range_map.upperright = long_range_map.center + dmap;
+    long_range_map.lowerleft = long_range_map.center - dmap;
+    */
+    
     long_range_map.surface_density.resize(nx*ny,0);
   
     long chunk = MIN(nx*ny/Noriginal[0],Noriginal[1]);  // same size as long range grid
@@ -95,8 +100,11 @@ LensHaloMultiMap::LensHaloMultiMap(
     last[0] = Noriginal[0];
   
     size_t kj = 0;
+    size_t jj;
     for(size_t j = 0 ; j < Noriginal[1] ; ++j ){
-      size_t jj = MIN(j/desample,ny-1); // ???
+      jj = j/desample;
+      if( jj >= ny) break;
+
       //assert(jj < ny);
       //size_t kjj = nx*(j/desample);
       size_t kjj = nx*jj;
@@ -113,7 +121,8 @@ LensHaloMultiMap::LensHaloMultiMap(
       }
     
       for(size_t i = 0 ; i < Noriginal[0] ; ++i ){
-        size_t ii = MIN(i/desample,nx-1);
+        size_t ii = i/desample;
+        if( ii >= nx) break;
         //assert(ii + kjj < long_range_map.surface_density.size() );
         //assert(i + kj < submap.surface_density.size() );
         //assert(!isinf(submap.surface_density[ i + kj ]));
@@ -122,6 +131,8 @@ LensHaloMultiMap::LensHaloMultiMap(
         //assert(!isnan(submap.surface_density[ i + kj ]));
       }
     }
+    assert(jj == ny-1);
+    
     wlr.rs2 = wsr.rs2 = rs2;
   }
   
@@ -133,8 +144,9 @@ LensHaloMultiMap::LensHaloMultiMap(
   
   if(single_grid) long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);
   else long_range_map.PreProcessFFTWMap<WLR>(1.0,wlr);
-  
-  long_range_map.write("!" + fitsfile + "_lr.fits");
+  //else long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);  // ?????
+
+  if(!single_grid) long_range_map.write("!" + fitsfile + "_lr.fits");
 };
 
 void LensHaloMultiMap::submap(Point_2d ll,Point_2d ur){
@@ -143,8 +155,8 @@ void LensHaloMultiMap::submap(Point_2d ll,Point_2d ur){
   std::vector<long> lower_left(2);
   std::vector<long> upper_right(2);
 
-  ll = (ll - long_range_map.lowerleft)/res;
-  ur = (ur - long_range_map.lowerleft)/res;
+  ll = (ll - long_range_map.lowerleft)/resolution;
+  ur = (ur - long_range_map.lowerleft)/resolution;
   lower_left[0] = floor(ll[0]);
   lower_left[1] = floor(ll[1]);
 
@@ -185,12 +197,12 @@ void LensHaloMultiMap::submap(
   
   LensMap map;
 
-  if( (first[0] > 0)*(first[1] > 0)*(last[0] < Noriginal[0])*(last[1] < Noriginal[1]) ){
+  if( (first[0] > 0)*(first[1] > 0)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
     map.read_sub(fitsfilename,first,last,cosmo.gethubble());
   }else{
     
-    size_t nx = map.nx = last[0] - first[0] + 1;
-    size_t ny = map.ny = last[1] - first[1] + 1;
+    size_t nx_big = map.nx = last[0] - first[0] + 1;
+    size_t ny_big = map.ny = last[1] - first[1] + 1;
     
     // case where subfield overlaps edge
     std::vector<long> first_sub(2);
@@ -199,16 +211,16 @@ void LensHaloMultiMap::submap(
     first_sub[0] = 1;
     last_sub[0] = Noriginal[0];
     
-    map.surface_density.resize(nx*ny);
+    map.surface_density.resize(nx_big*ny_big);
     
     LensMap partmap;
     
-    const size_t chunk = nx*ny/Noriginal[0];
+    const size_t chunk = nx_big*ny_big/Noriginal[0];
     
     size_t kk,k = chunk + 1;
     long jj = first[1]-1;
-    for(size_t j = 0 ; j < ny ; ++j , ++jj ){
-      size_t kj = nx*j;
+    for(size_t j = 0 ; j < ny_big ; ++j , ++jj ){
+      size_t kj = nx_big*j;
       
       if( k >= chunk  || jj < 0 || jj >= Noriginal[1]  ){
         
@@ -225,7 +237,7 @@ void LensHaloMultiMap::submap(
       
       kk = k*Noriginal[0];
       long ii = first[0]-1;
-      for(size_t i = 0 ; i < nx ; ++i,++ii ){
+      for(size_t i = 0 ; i < nx_big ; ++i,++ii ){
         if(ii < 0) ii += Noriginal[0];
         if(ii >= Noriginal[0] ) ii -= Noriginal[0];
 
@@ -234,13 +246,12 @@ void LensHaloMultiMap::submap(
         map.surface_density[ i + kj ] = partmap.surface_density[ ii + kk ];
       }
     }
-
+    // need to do overlap region
+    map.boxlMpc = map.nx*resolution;
   }
 
-  // need to do overlap region
-  map.boxlMpc = map.nx*res;
 
-  double area = res*res/mass_unit; //*** units  ???
+  double area = resolution*resolution/mass_unit; //*** units  ???
   // convert to
   for(auto &p : map.surface_density){
     p /= area;
@@ -275,16 +286,16 @@ void LensHaloMultiMap::submap(
   }
 
   short_range_map.lowerleft = short_range_map.upperright = long_range_map.lowerleft;
-  short_range_map.lowerleft[0] += lower_left[0]*res;
-  short_range_map.lowerleft[1] += lower_left[1]*res;
+  short_range_map.lowerleft[0] += lower_left[0]*resolution;
+  short_range_map.lowerleft[1] += lower_left[1]*resolution;
   
-  short_range_map.upperright[0] += upper_right[0]*res;
-  short_range_map.upperright[1] += upper_right[1]*res;
+  short_range_map.upperright[0] += (upper_right[0] + 1)*resolution;
+  short_range_map.upperright[1] += (upper_right[1] + 1)*resolution;
   
   short_range_map.center = (short_range_map.lowerleft + short_range_map.upperright)/2;
-  short_range_map.boxlMpc = nx*res;
+  short_range_map.boxlMpc = short_range_map.nx*resolution;
  
-  short_range_map.write("!" + fitsfilename + "_sr.fits");
+  if(!single_grid) short_range_map.write("!" + fitsfilename + "_sr.fits");
 }
 
 
@@ -299,31 +310,50 @@ void LensHaloMultiMap::force_halo(double *alpha
 {
   
   // interpolate from the maps
+
+  if(single_grid){
+    Utilities::Interpolator<valarray<float> > interp(xx
+                                                     ,long_range_map.nx,long_range_map.boxlMpc
+                                                     ,long_range_map.ny
+                                                     ,long_range_map.ny*long_range_map.boxlMpc/long_range_map.nx
+                                                     ,long_range_map.center.x);
+    
+    //assert(long_range_map.nx == long_range_map.ny);
+    
+    alpha[0] = interp.interpolate(long_range_map.alpha1_bar);
+    alpha[1] = interp.interpolate(long_range_map.alpha2_bar);
+    gamma[0] = interp.interpolate(long_range_map.gamma1_bar);
+    gamma[1] = interp.interpolate(long_range_map.gamma2_bar);
+    gamma[2] = 0.0;
+    *kappa = interp.interpolate(long_range_map.surface_density);
+    //*phi = interp.interpolate(long_range_map.phi_bar);
+
+    return;
+  }
   
-  Utilities::Interpolator<valarray<float> > interp(xx
+  if( (xx[0] >= short_range_map.lowerleft[0])*(xx[0] <= short_range_map.upperright[0])
+     *(xx[1] >= short_range_map.lowerleft[1])*(xx[1] <= short_range_map.upperright[1])
+     ){
+
+    Utilities::Interpolator<valarray<float> > interp(xx
                                                     ,long_range_map.nx,long_range_map.boxlMpc
                                                     ,long_range_map.ny
                                                     ,long_range_map.ny*long_range_map.boxlMpc/long_range_map.nx
                                                     ,long_range_map.center.x);
  
-  //assert(long_range_map.nx == long_range_map.ny);
+    //assert(long_range_map.nx == long_range_map.ny);
   
-  alpha[0] = interp.interpolate(long_range_map.alpha1_bar);
-  alpha[1] = interp.interpolate(long_range_map.alpha2_bar);
-  gamma[0] = interp.interpolate(long_range_map.gamma1_bar);
-  gamma[1] = interp.interpolate(long_range_map.gamma2_bar);
-  gamma[2] = 0.0;
-  *kappa = interp.interpolate(long_range_map.surface_density);
-  //*phi = interp.interpolate(long_range_map.phi_bar);
+    alpha[0] = interp.interpolate(long_range_map.alpha1_bar);
+    alpha[1] = interp.interpolate(long_range_map.alpha2_bar);
+    gamma[0] = interp.interpolate(long_range_map.gamma1_bar);
+    gamma[1] = interp.interpolate(long_range_map.gamma2_bar);
+    gamma[2] = 0.0;
+    *kappa = interp.interpolate(long_range_map.surface_density);
+    //*phi = interp.interpolate(long_range_map.phi_bar);
  
-  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-  //assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-  //assert(kappa == kappa);
-  if(single_grid) return;
-
-  if( (xx[0] > short_range_map.lowerleft[0])*(xx[0] < short_range_map.upperright[0])
-     *(xx[1] > short_range_map.lowerleft[1])*(xx[1] < short_range_map.upperright[1])
-     ){
+    //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+    //assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+    //assert(kappa == kappa);
 
     Utilities::Interpolator<valarray<float> > short_interp(xx
                                                          ,short_range_map.nx,short_range_map.boxlMpc
@@ -342,8 +372,14 @@ void LensHaloMultiMap::force_halo(double *alpha
     //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
     //assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
     //assert(kappa == kappa);
+  }else{
+    
+    alpha[0] = 0;
+    alpha[1] = 0;
+    gamma[0] = 0;
+    gamma[1] = 0;
+    *kappa = 0;
   }
-  
   return;
 }
 
@@ -388,14 +424,15 @@ void LensMap::read_header(std::string fits_input_file,float h){
     exit(1);
   }
 
+  double res = boxlMpc/nx;
   
   lowerleft = center;
   lowerleft[0] -= boxlMpc/2;
-  lowerleft[1] -= boxlMpc*ny/nx/2;
+  lowerleft[1] -= res*ny/2;
   
   upperright = center;
   upperright[0] += boxlMpc/2;
-  upperright[1] += boxlMpc*ny/nx/2;
+  upperright[1] += ny*res/2.;
 }
 
 void LensMap::read(std::string fits_input_file,float h){
@@ -460,20 +497,22 @@ void LensMap::read(std::string fits_input_file,float h){
     exit(1);
   }
   
-  /// ??? set center
+  double res = nx/boxlMpc;
+  center *= 0;
   
   lowerleft = center;
   lowerleft[0] -= boxlMpc/2;
-  lowerleft[1] -= boxlMpc*ny/nx/2;
-
+  lowerleft[1] -= res*ny/2;
+  
   upperright = center;
   upperright[0] += boxlMpc/2;
-  upperright[1] += boxlMpc*ny/nx/2;
+  upperright[1] += ny*res/2.;
+
 }
 
 void LensMap::read_sub(std::string fits_input_file
-                       ,const std::vector<long> &first
-                       ,const std::vector<long> &last
+                       ,const std::vector<long> &first   /// 2d vector for pixel of lower left, (1,1) offset
+                       ,const std::vector<long> &last    /// 2d vector for pixel of upper right, (1,1) offset
                        ,float h
 ){
   
@@ -513,23 +552,31 @@ void LensMap::read_sub(std::string fits_input_file
   h0.read(surface_density,first,last,stride);
   //std::cout << surface_density.size() << std::endl;
 
+  // set the full field lower left
+  lowerleft = {-boxlMpc/2,-res*ny/2};
+  
   nx = h0.axis(0);
   ny = h0.axis(1);
   
   ff.release();
   
-  lowerleft[0] = boxlMpc*(2*first[0] - nx)/2;
-  lowerleft[1] = boxlMpc*(2*first[1] - ny)/2;
+  lowerleft[0] += (first[0]-1)*res ;
+  lowerleft[1] += (first[1]-1)*res ;
 
-  upperright[0] = boxlMpc*(2*last[0] - nx)/2;
-  upperright[1] = boxlMpc*(2*last[1] - ny)/2;
+  //lowerleft[0] =   boxlMpc*(2*first[0] - nx)/2 - boxlMpc/2;
+  //lowerleft[1] = boxlMpc*(2*first[1] - ny)/2 - res*ny/2;
+
+  upperright = lowerleft;
+  
+  upperright[0] += last[0]*res;
+  upperright[1] += last[1]*res;
 
   center = (lowerleft + upperright)/2;
   
   nx = last[0] - first[0] + 1;
   ny = last[1] - first[1] + 1;
   
-  boxlMpc *= nx*1./h0.axis(0);
+  boxlMpc = res*nx;
 }
 
 
@@ -540,8 +587,8 @@ void LensMap::read_sub(CCfits::FITS *ff
                        ){
   CCfits::PHDU &h0 = ff->pHDU();
   
-  nx = h0.axis(0);
-  ny = h0.axis(1);
+  long nx_orig = h0.axis(0);
+  long ny_orig = h0.axis(1);
 
   h0.readAllKeys();
   
@@ -556,7 +603,7 @@ void LensMap::read_sub(CCfits::FITS *ff
   if(wlow == wup) D = wup;
   D /= (1+z)*h;
   res *= degreesTOradians*D;
-  boxlMpc = res*nx;
+  double boxlMpc_orig = res*nx_orig;
   
   assert(h0.axes() >= 2);
   std::vector<long> stride = {1,1};
@@ -566,18 +613,21 @@ void LensMap::read_sub(CCfits::FITS *ff
   h0.read(surface_density,first,last,stride);
   //std::cout << surface_density.size() << std::endl;
   
-  lowerleft[0] = res*(2*first[0] - nx)/2;
-  lowerleft[1] = res*(2*first[1] - ny)/2;
+  // set the full field lower left
+  lowerleft = upperright = {-boxlMpc_orig/2,-res*ny_orig/2};
   
-  upperright[0] = res*(2*last[0] - nx)/2;
-  upperright[1] = res*(2*last[1] - ny)/2;
+  lowerleft[0] += (first[0]-1)*res ;
+  lowerleft[1] += (first[1]-1)*res ;
+  
+  upperright[0] += last[0]*res;
+  upperright[1] += last[1]*res;
   
   center = (lowerleft + upperright)/2;
   
   nx = last[0] - first[0] + 1;
   ny = last[1] - first[1] + 1;
   
-  boxlMpc *= nx*1./h0.axis(0);
+  boxlMpc = res*nx;
 }
 
 /**

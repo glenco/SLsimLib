@@ -31,7 +31,7 @@
  */
 struct LensMap{
   
-  LensMap(){};
+  LensMap():nx(0),ny(0),boxlMpc(0),z(0){};
   
 	/// values for the map
 	std::valarray<float> surface_density;  // Msun / Mpc^2
@@ -126,6 +126,8 @@ public:
     delete ff;
   };
 	
+  const double f = 5,g = 6;
+  
   void submap(
               const std::vector<long> &lower_left
               ,const std::vector<long> &upper_right
@@ -162,10 +164,15 @@ public:
 	/// return number of pixels on a y-axis side in original map
 	size_t getNy_lr() const { return long_range_map.ny; }
 	
-  /// return number of pixels on a x-axis side in original map
+  /// return number of pixels on a x-axis side in short range map
   size_t getNx_sr() const { return short_range_map.nx; }
-  /// return number of pixels on a y-axis side in original map
+  /// return number of pixels on a y-axis side in short range map
   size_t getNy_sr() const { return short_range_map.ny; }
+
+  /// return number of pixels on a x-axis side in original map
+  size_t getNx() const { return Noriginal[0]; }
+  /// return number of pixels on a y-axis side in original map
+  size_t getNy() const { return Noriginal[1]; }
 
 private:
   
@@ -173,13 +180,14 @@ private:
   const COSMOLOGY &cosmo;
   CCfits::FITS *ff;
   
+public:  // ?????
   LensMap long_range_map;
   LensMap short_range_map;
-  
+private:  // ?????
   double mass_unit;
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
-  double res;          // resolution of original image and short rnage image in Mpc
+  double resolution;          // resolution of original image and short rnage image in Mpc
   long border_width;   // width of short range maps padding
   std::string fitsfilename;
 
@@ -221,7 +229,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
   int Nnx=int(zerosize*nx);
   int Nny=int(zerosize*ny);
   double boxlx = boxlMpc*zerosize;
-  double boxly = boxlMpc*zerosize/nx*ny;
+  double boxly = ny*boxlMpc*zerosize/nx;
   
   int imin = (Nnx-nx)/2;
   int imax = (Nnx+nx)/2;
@@ -290,26 +298,28 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
       
       double k2 = kxs[i]*kxs[i] + kys[j]*kys[j];
       size_t k = i+(Nkx)*j;
-      
-      //assert(k < Nny*Nkx);
-      //assert(!isnan(fphi[k][0]));
-      
-      // fphi
-      //fphi[i+(Nkx)*j][0]= -2.*fNmap[i+(Nkx)*j][0]/k2;
-      //fphi[i+(Nkx)*j][1]= -2.*fNmap[i+(Nkx)*j][1]/k2;
 
-      // fphi
-      fphi[k][0] *= -2./k2;
-      fphi[k][1] *= -2./k2;
-
-      // apply window function
-      fphi[k][0] *= Wphi_of_k(k2);
-      fphi[k][1] *= Wphi_of_k(k2);
-      
       // null for k2 = 0 no divergence
       if(k2 == 0){
         fphi[k][0] = 0.;
         fphi[k][1] = 0.;
+      }else{
+      
+        //assert(k < Nny*Nkx);
+        //assert(!isnan(fphi[k][0]));
+      
+        // fphi
+        //fphi[i+(Nkx)*j][0]= -2.*fNmap[i+(Nkx)*j][0]/k2;
+        //fphi[i+(Nkx)*j][1]= -2.*fNmap[i+(Nkx)*j][1]/k2;
+
+        // fphi
+        fphi[k][0] *= -2./k2;
+        fphi[k][1] *= -2./k2;
+
+        // apply window function
+        double w = Wphi_of_k(k2);
+        fphi[k][0] *= w;
+        fphi[k][1] *= w;
       }
     }
   }
