@@ -1201,6 +1201,7 @@ namespace Utilities
   /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
   int GetNThreads();
 
+  /// namespace for input/output utilities
   namespace IO{  ///
     /** \brief Read in data from an ASCII file with two columns
      */
@@ -1406,6 +1407,9 @@ namespace Utilities
                                   ,std::vector<std::string> & filenames  /// output vector of PixelMaps
                        ,bool verbose);
     
+    /// check if the directory does not exist
+    bool check_directory(std::string dir);
+
     
     /** \brief This function will read in all the numbers from a multi-column
      ,space seporated ASCII data file.

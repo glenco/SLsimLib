@@ -646,6 +646,15 @@ unsigned long prevpower(unsigned long k){
   int GetNThreads(){return N_THREADS;}
 }
 
+/// throws a runtime error if the directory does not exist
+bool Utilities::IO::check_directory(std::string dir){
+  struct stat sb;
+  if (stat(dir.c_str(), &sb) != 0 || !S_ISDIR(sb.st_mode)){
+    return false;
+  }
+  return true;
+}
+
 void Utilities::IO::ReadFileNames(
                    std::string dir              /// path to directory containing fits files
                    ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
