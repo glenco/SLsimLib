@@ -38,9 +38,9 @@ public:
 	unsigned long getID() { return haloID; }
 	
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
-  PosType getMag() const { return mag; }
+  PosType getMag() const { return current.mag; }
   PosType getMag(Band band) const ;
-  PosType getMagBulge() const { return mag_bulge; }
+  PosType getMagBulge() const { return current.mag_bulge; }
   PosType getMagBulge(Band band) const;
   
   /*
@@ -69,14 +69,14 @@ public:
   void setMagBulge(Band band,PosType my_mag);
   
 	/// bulge half light radius in radians
-	PosType getReff() const { return Reff/(PI/180/60/60); }
+	PosType getReff() const { return current.Reff/(PI/180/60/60); }
 	/// disk scale height in radians
-	PosType getRh() const { return Rh/(PI/180/60/60); }
+	PosType getRh() const { return current.Rh/(PI/180/60/60); }
 	
   /// the bulge to total flux ratio
-	PosType getBtoT() const { return pow(10,(-mag_bulge + mag)/2.5); }
-	PosType getPA() const { return PA; }
-	PosType getInclination() const { return inclination;}
+	PosType getBtoT() const { return pow(10,(-current.mag_bulge + current.mag)/2.5); }
+	PosType getPA() const { return current.PA; }
+	PosType getInclination() const { return current.inclination;}
   float getSEDtype() const {return sedtype;}
   void setSEDtype(float s){ sedtype = s;}
 
@@ -86,7 +86,7 @@ public:
 	/** Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
 	* TODO: Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
   */
-	inline PosType getMinSize(PosType f) {return std::min(1.678*Reff*fabs(cos(inclination))*pow(-log (f)/7.67,4),Rh*(-log (f)/1.67));}
+	inline PosType getMinSize(PosType f) {return std::min(1.678*current.Reff*fabs(cos(current.inclination))*pow(-log (f)/7.67,4),current.Rh*(-log (f)/1.67));}
 
   static PosType *getx(SourceOverzier &sourceo){return sourceo.source_x.x;}
 
@@ -94,31 +94,36 @@ protected:
   
   float sedtype = -1;
   // renormalize the disk and bulge to agree with current mag and mag_bulge
-  void renormalize();
+  void renormalize_current();
 	void assignParams(InputParams& params);
 	
 	/// haloID
 	unsigned long haloID;
 
-	/// bulge half light radius
-	PosType Reff;
-	/// disk scale height
-	PosType Rh;
+  struct Params{
+    /// bulge half light radius
+    PosType Reff=0;
+    /// disk scale height
+    PosType Rh=0;
 	
-	//PosType BtoT;
-	PosType PA;
-	PosType inclination;
+    //PosType BtoT;
+    PosType PA=0;
+    PosType inclination=0;
 	
-	PosType cxx,cyy,cxy;
-	PosType sbDo;
-	PosType sbSo;
-	PosType mag;
-  PosType mag_bulge;
+    PosType cxx=0,cyy=0,cxy=0;
+    PosType sbDo=0;
+    PosType sbSo=0;
+    PosType mag=0;
+    PosType mag_bulge=0;
+    
+    // colors
+    std::map<Band,double> mag_map;
+    std::map<Band,double> bulge_mag_map;
+  };
 	
-  // colors
-  std::map<Band,double> mag_map;
-  std::map<Band,double> bulge_mag_map;
-
+  Params current;
+  Params original;
+  
 	// optional position variables
 };
 

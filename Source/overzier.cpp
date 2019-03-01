@@ -11,8 +11,7 @@
 
 /// sets everything to zero
 SourceOverzier::SourceOverzier()
-: haloID(0), Reff(0), Rh(0),  PA(0), inclination(0),
-  cxx(0), cyy(0), cxy(0), sbDo(0), sbSo(0), mag(0), mag_bulge(0)
+: haloID(0)
 {
 }
 
@@ -38,46 +37,20 @@ SourceOverzier::~SourceOverzier()
 
 SourceOverzier::SourceOverzier(const SourceOverzier &s)
 :Source(s){
-/// bulge half light radius
-  Reff = s.Rh;
-  Rh = s.Rh;
-  PA = s.PA;
-  inclination = s.inclination;
-
-  cxx = s.cxx;
-  cyy = s.cyy;
-  cxy = s.cxy;
-  sbDo = s.sbDo;
-  sbSo = s.sbSo;
-  mag = s.mag;
-  mag_bulge = s.mag_bulge;
+  
+  original = s.original;
+  current = s.current;
+  
   sedtype = s.sedtype;
-
-  mag_map = s.mag_map;
-  bulge_mag_map = s.bulge_mag_map;
 }
 SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   if(this == &s) return *this;
   
   Source::operator=(s);
-  /// bulge half light radius
-  Reff = s.Reff;
-  Rh = s.Rh;
-  PA = s.PA;
-  inclination = s.inclination;
   
-  cxx = s.cxx;
-  cyy = s.cyy;
-  cxy = s.cxy;
-  sbDo = s.sbDo;
-  sbSo = s.sbSo;
-  mag = s.mag;
-  mag_bulge = s.mag_bulge;
+  original = s.original;
+  current = s.current;
   sedtype = s.sedtype;
-
-  mag_map = s.mag_map;
-  bulge_mag_map = s.bulge_mag_map;
-
   return *this;
 }
 
@@ -86,22 +59,22 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 
 	haloID = my_id;
 
-	Reff = my_Reff*arcsecTOradians;
-	Rh = my_Rh*arcsecTOradians;
-	mag = my_mag;
-  mag_bulge = my_mag_bulge;
-	PA = my_PA;
-	inclination = incl;
+	current.Reff = my_Reff*arcsecTOradians;
+	current.Rh = my_Rh*arcsecTOradians;
+	current.mag = my_mag;
+  current.mag_bulge = my_mag_bulge;
+	current.PA = my_PA;
+	current.inclination = incl;
 
-	if(Rh > 0.0){
-		cxx = ( pow(cos(PA),2) + pow(sin(PA)/cos(incl),2) )/Rh/Rh;
-		cyy = ( pow(sin(PA),2) + pow(cos(PA)/cos(incl),2) )/Rh/Rh;
-		cxy = ( 2*cos(PA)*sin(PA)*(1-pow(1/cos(incl),2)) )/Rh/Rh;
+	if(current.Rh > 0.0){
+		current.cxx = ( pow(cos(current.PA),2) + pow(sin(current.PA)/cos(incl),2) )/current.Rh/current.Rh;
+		current.cyy = ( pow(sin(current.PA),2) + pow(cos(current.PA)/cos(incl),2) )/current.Rh/current.Rh;
+		current.cxy = ( 2*cos(current.PA)*sin(current.PA)*(1-pow(1/cos(incl),2)) )/current.Rh/current.Rh;
 	}else{
-		cxx = cyy = cxy = 0.0;
+		current.cxx = current.cyy = current.cxy = 0.0;
 	}
 	
-  renormalize();
+  renormalize_current();
   
 	// redshift
 	setZ(my_z);
@@ -111,13 +84,15 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 	// in the pure De Vacouleur/exponential disk case
 	// 6.670 = 3.975*Re = 3.975*1.678*Rh
   float BtoT = getBtoT();
-	setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
+	setRadius(6.670*current.Rh*(1 - BtoT) + 18.936 * current.Reff * BtoT);
 	
 	// position
 	if(my_theta != NULL)
 		setTheta(my_theta[0], my_theta[1]);
 	else
 		setTheta(0, 0);
+  
+  original = current;
 }
 
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
@@ -129,13 +104,14 @@ PosType SourceOverzier::SurfaceBrightness(
 	x[0] = y[0]-getTheta()[0];
 	x[1] = y[1]-getTheta()[1];
 	
-	PosType R = cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1],sb;
+	PosType R = current.cxx*x[0]*x[0] + current.cyy*x[1]*x[1] + current.cxy*x[0]*x[1],sb;
 	R = sqrt(R);
 
 	//sb = sbDo*exp(-(R)) + sbSo*exp(-7.6693*pow(R/Reff,0.25));
-	sb = sbDo*exp(-R);
+	sb = current.sbDo*exp(-R);
       
-	if(Reff > 0.0) sb += sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125));
+	if(current.Reff > 0.0) sb += current.sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])
+                                                            /current.Reff/current.Reff,0.125));
   //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
 	sb *= pow(10,-0.4*48.6)*inv_hplanck;
 	
@@ -146,11 +122,11 @@ PosType SourceOverzier::SurfaceBrightness(
 }
 
 PosType SourceOverzier::getTotalFlux() const{
-	return pow(10,-(48.6+mag)/2.5);
+	return pow(10,-(48.6 + current.mag)/2.5);
 }
 
 void SourceOverzier::printSource(){
-	std::cout << "bulge half light radius: " << Reff*180*60*60/PI << " arcs   disk scale hight: " << Rh*180*60*60/PI << " arcs" << std::endl;
+	std::cout << "bulge half light radius: " << current.Reff*180*60*60/PI << " arcs   disk scale hight: " << current.Rh*180*60*60/PI << " arcs" << std::endl;
 }
 
 void SourceOverzier::assignParams(InputParams& /* params */)
@@ -158,35 +134,37 @@ void SourceOverzier::assignParams(InputParams& /* params */)
 }
 
 PosType SourceOverzier::getMag(Band band) const {
-  return mag_map.at(band);
+  return current.mag_map.at(band);
 }
 
 PosType SourceOverzier::getMagBulge(Band band) const {
-  return bulge_mag_map.at(band);
+  return current.bulge_mag_map.at(band);
 }
 
 void SourceOverzier::setMag(Band band,PosType my_mag){
-  mag_map[band] = my_mag;
+  current.mag_map[band] = my_mag;
  }
 
 void SourceOverzier::setMagBulge(Band band,PosType my_mag){
-  bulge_mag_map[band] = my_mag;
+  current.bulge_mag_map[band] = my_mag;
  }
 
  void SourceOverzier::changeBand(Band band){
    
-   mag = mag_map[band];
-   mag_bulge = bulge_mag_map[band];
+   current.mag = current.mag_map[band];
+   current.mag_bulge = current.bulge_mag_map[band];
   
-  renormalize();
+  renormalize_current();
 }
 
-void SourceOverzier::renormalize(){
+void SourceOverzier::renormalize_current(){
   float BtoT = getBtoT();
-  if(Rh > 0.0) sbDo = pow(10,-mag/2.5)*0.159148*(1-BtoT)/pow(Rh,2);
-  else sbDo = 0.0;
-  if(Reff > 0.0) sbSo = pow(10,-mag/2.5)*94.484376*BtoT/pow(Reff,2);
-  else sbSo = 0.0;
+  if(current.Rh > 0.0) current.sbDo = pow(10,-current.mag/2.5)*0.159148*(1-BtoT)
+    /pow(current.Rh,2);
+  else current.sbDo = 0.0;
+  if(current.Reff > 0.0) current.sbSo = pow(10,-current.mag/2.5)*94.484376*BtoT
+    /pow(current.Reff,2);
+  else current.sbSo = 0.0;
 }
 
 
@@ -214,9 +192,9 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
   
   spheroid.ReSet(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
   
-  cospa = cos(PA);
-  sinpa = sin(PA);
-  cosi  = cos(inclination);
+  cospa = cos(current.PA);
+  sinpa = sin(current.PA);
+  cosi  = cos(current.inclination);
   
   modes.resize(6);
   for(PosType &mod : modes){
@@ -290,16 +268,16 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   Point_2d z;
   PosType sb = 0;
 
-  if(xlength > 0 && sbDo > 0){
+  if(xlength > 0 && current.sbDo > 0){
     z[0] = cospa*x[0] - sinpa*x[1];
     z[1] = ( sinpa*x[0] + cospa*x[1] )/cosi;
     
     //PosType R = sqrt( cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1] );
-    PosType R = z.length()/Rh;
+    PosType R = z.length()/current.Rh;
     PosType theta = atan2(z[1],z[0]);
     
     //disk
-    sb = sbDo*exp(-R);
+    sb = current.sbDo*exp(-R);
     //spiral arms
     PosType phir = mctalpha*log(R/0.5) + disk_phase;
     //PosType phiro = 0.4*mctalpha*log(R/0.5) + disk_phase;
@@ -307,7 +285,7 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
     sb *= 1 + Ad*cos(Narms*theta + phir);
     //else disk_sb *= 1 + Ad*cos(Narms*theta + phiro);
   }else{
-    sb = sbDo;
+    sb = current.sbDo;
   }
   
   assert(sb >= 0.0);
@@ -317,7 +295,7 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   //std::cout << "disk sb " << sb << std::endl;
   
   // bulge
-  if(Reff > 0.0){
+  if(current.Reff > 0.0){
     PosType perturb = 1.0,tmp;
     if(xlength > 0){
       // bulge perturbations
@@ -357,26 +335,29 @@ void SourceOverzierPlus::changeBand(Band band){
   //mag = mag_map.at(band);
   //mag_bulge = bulge_mag_map.at(band);
   //SourceOverzier::renormalize();
-  if(Reff > 0.0){
-    spheroid.setMag(mag_bulge);
+  if(current.Reff > 0.0){
+    spheroid.setMag(current.mag_bulge);
   }
 }
 
 void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   
+  // reset to original parameters to prevent random walk
+  current = original;
+  
   float BtoT;
   { // SourceOverzier variables
     
-    Reff *= (1 + 0.2*(2*ran()-1.));
-    Rh *= (1 + 0.2*(2*ran()-1.));
+    current.Reff *= (1 + 0.2*(2*ran()-1.));
+    current.Rh *= (1 + 0.2*(2*ran()-1.));
     
     PosType tmp = 0.01*(2*ran()-1.);
     
-    for(auto mag = mag_map.begin() ; mag != mag_map.end() ; ++mag){
+    for(auto mag = current.mag_map.begin() ; mag != current.mag_map.end() ; ++mag){
       mag->second = mag->second + tmp;
     }
     
-    for(auto mag = bulge_mag_map.begin() ; mag != bulge_mag_map.end() ; ++mag){
+    for(auto mag = current.bulge_mag_map.begin() ; mag != current.bulge_mag_map.end() ; ++mag){
       mag->second = mag->second + tmp;
     }
 
@@ -389,33 +370,33 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
      setJMag(getMag(J) + tmp);
      setKMag(getMag(Ks) + tmp);
      */
-    mag += tmp;
+    current.mag += tmp;
     
-    PA = PI*ran();
-    inclination = 1.0*PI/2*ran();
-    if(cos(inclination)< 0.25) inclination = acos(0.25);
+    current.PA = PI*ran();
+    current.inclination = 1.0*PI/2*ran();
+    if(cos(current.inclination)< 0.25) current.inclination = acos(0.25);
 
     
-    cospa = cos(PA);
-    sinpa = sin(PA);
-    cosi  = cos(inclination);
+    cospa = cos(current.PA);
+    sinpa = sin(current.PA);
+    cosi  = cos(current.inclination);
 
-    if(Rh > 0.0){
-      cxx = ( cospa*cospa + pow(sinpa/cosi,2) )/Rh/Rh;
-      cyy = ( sinpa*sinpa + pow(cospa/cosi,2) )/Rh/Rh;
-      cxy = ( 2*cospa*sinpa*(1-1./cosi/cosi) )/Rh/Rh;
+    if(current.Rh > 0.0){
+      current.cxx = ( cospa*cospa + pow(sinpa/cosi,2) )/current.Rh/current.Rh;
+      current.cyy = ( sinpa*sinpa + pow(cospa/cosi,2) )/current.Rh/current.Rh;
+      current.cxy = ( 2*cospa*sinpa*(1-1./cosi/cosi) ) /current.Rh/current.Rh;
     }else{
-      cxx = cyy = cxy = 0.0;
+      current.cxx = current.cyy = current.cxy = 0.0;
     }
     
-    SourceOverzier::renormalize();
+    SourceOverzier::renormalize_current();
     
     // radius
     // weighted mean between the radii that enclose 99% of the flux
     // in the pure De Vacouleur/exponential disk case
     // 6.670 = 3.975*Re = 3.975*1.678*Rh
     BtoT = getBtoT();
-    setRadius(6.670*Rh*(1-BtoT)+18.936*Reff*BtoT);
+    setRadius(6.670*current.Rh*(1-BtoT) + 18.936*current.Reff*BtoT);
   }
   
   float minA = 0.01,maxA = 0.2; // minimum and maximum amplitude of arms
@@ -430,15 +411,16 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   // extra cersic component
   //double index = 4 + 3*(ran()-0.5)*2;
   
-  double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
   
+  double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  assert(index > 0.5 && index < 9);
   double q = 1 + (0.5-1)*ran();
   
   /*delete spheroid;
   spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   */
   
-  spheroid.ReSet(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
+  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,-current.PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   
   
   for(PosType &mod : modes){
