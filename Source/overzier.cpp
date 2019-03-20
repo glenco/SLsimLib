@@ -38,7 +38,6 @@ SourceOverzier::~SourceOverzier()
 SourceOverzier::SourceOverzier(const SourceOverzier &s)
 :Source(s){
   
-  original = s.original;
   current = s.current;
   
   sedtype = s.sedtype;
@@ -48,8 +47,7 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   
   Source::operator=(s);
   
-  original = s.original;
-  current = s.current;
+   current = s.current;
   sedtype = s.sedtype;
   return *this;
 }
@@ -91,8 +89,6 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 		setTheta(my_theta[0], my_theta[1]);
 	else
 		setTheta(0, 0);
-  
-  original = current;
 }
 
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
@@ -126,7 +122,7 @@ PosType SourceOverzier::getTotalFlux() const{
 }
 
 void SourceOverzier::printSource(){
-	std::cout << "bulge half light radius: " << current.Reff*180*60*60/PI << " arcs   disk scale hight: " << current.Rh*180*60*60/PI << " arcs" << std::endl;
+  current.print();
 }
 
 void SourceOverzier::assignParams(InputParams& /* params */)
@@ -172,6 +168,7 @@ SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosTy
 SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,theta)
 {
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
+  original = current;
 
   float minA = 0.01,maxA = 0.2; // minimum and maximum amplitude of arms
   Narms = (ran() > 0.2) ? 2 : 4;  // number of arms
@@ -427,6 +424,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     mod = 5.0e-2*ran();
   }
   
+  //SourceOverzier::printSource();
 }
 
 

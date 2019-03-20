@@ -119,11 +119,23 @@ protected:
     // colors
     std::map<Band,double> mag_map;
     std::map<Band,double> bulge_mag_map;
+    
+    void print(){
+      /// bulge half light radius
+      std::cout << "Reff :" << Reff/arcsecTOradians << "arcsec ";
+      std::cout << "Rh :" << Rh/arcsecTOradians << " arcsec ";
+      std::cout << "PA :" << PA << " ";
+      std::cout << "inclination :" << inclination << " ";
+      std::cout << "sbDo :" << sbDo << " ";
+      std::cout << "sbSo :" << sbSo << " ";
+      std::cout << "mag :" << mag << " ";
+      std::cout << "mag_bulge :" << mag_bulge << " ";
+      
+      std::cout << "BtoT :" << pow(10,(-mag_bulge + mag)/2.5) << std::endl;
+    }
   };
 	
   Params current;
-  Params original;
-  
 	// optional position variables
 };
 
@@ -180,5 +192,7 @@ private:
   std::vector<PosType> modes;
   PosType disk_phase;
   PosType cospa,sinpa,cosi;
+  
+  SourceOverzier::Params original;  // original parameters
 };
 #endif /* GALAXIES_OVERZIER_H_ */
