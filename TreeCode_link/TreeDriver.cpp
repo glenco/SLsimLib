@@ -1474,7 +1474,6 @@ KappaType ImageInfo::aveTimeDelay()
   return tmp_dt;
 }
 
-/// Computes the time delay averaged over the image
 RAY ImageInfo::closestRay(const Point_2d &y){
   
   Point *p;
@@ -1495,6 +1494,25 @@ RAY ImageInfo::closestRay(const Point_2d &y){
   
   return RAY(p);
 }
+
+RAY ImageInfo::highestSurfaceBrightnessRay(){
+  Point *p;
+  
+  double sb = -1;
+  for(Kist<Point>::iterator it = imagekist->begin()
+      ; it != imagekist->end()
+      ; ++it){
+    
+    double tsb = (*it).surface_brightness;
+    if(tsb > sb){
+      p = &(*it);
+      sb = tsb;
+    }
+  }
+  
+  return RAY(p);
+}
+
 ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){
   
   if(!(uniform_mag && rhs.uniform_mag
