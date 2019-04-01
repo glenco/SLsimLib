@@ -22,7 +22,7 @@
 class SourceOverzier : public Source
 {
 public:
-	SourceOverzier();
+	//SourceOverzier();
 	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
   
   SourceOverzier(const SourceOverzier &s);
@@ -68,10 +68,10 @@ public:
   /// magnitude in specific band
   void setMagBulge(Band band,PosType my_mag);
   
-	/// bulge half light radius in radians
-	PosType getReff() const { return current.Reff/(PI/180/60/60); }
-	/// disk scale height in radians
-	PosType getRh() const { return current.Rh/(PI/180/60/60); }
+	/// bulge half light radius in arcseconds
+	PosType getReff() const { return current.Reff/arcsecTOradians; }
+	/// disk scale height in arcseconds
+	PosType getRh() const { return current.Rh/arcsecTOradians; }
 	
   /// the bulge to total flux ratio
 	PosType getBtoT() const { return pow(10,(-current.mag_bulge + current.mag)/2.5); }
@@ -122,7 +122,7 @@ protected:
     
     void print(){
       /// bulge half light radius
-      std::cout << "Reff :" << Reff/arcsecTOradians << "arcsec ";
+      std::cout << "Reff :" << Reff/arcsecTOradians << " arcsec ";
       std::cout << "Rh :" << Rh/arcsecTOradians << " arcsec ";
       std::cout << "PA :" << PA << " ";
       std::cout << "inclination :" << inclination << " ";

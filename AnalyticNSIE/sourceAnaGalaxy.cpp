@@ -178,7 +178,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 	std::string f=",";
 	std::stringstream buffer;
 
-	PosType mag,mag_bulge;
+	//PosType mag,mag_bulge;
 
 	// read in data
 	for(i=0,j=0 ; ; ++i){
@@ -219,87 +219,69 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
     << "  " << H_band_Bulge << "  " << Ks_band_Bulge << "  " << i1_Bulge << "  " << i2_Bulge
     << std::endl;
 
-		if(mag < mag_limit){
-      //std::cout << "good mag " << std::endl;
-
-			/*
-			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
-			<< c << dlum << c << vlos << c << incl
-			<< c << acs435 << c << acs606 << c << acs775 << c << acs850
-			<< c << acs435_bulge << c << acs606_bulge << c << acs775_bulge << c << acs850_bulge
-			<< c << type << c << mvir << c << rvir << c << vmax << c << stellarmass << c << bulgemass
-			<< c << stellardiskradius << c << bulgesize
-			<< c << inclination << c << pa << c << angdist << c << diskradius_arcsec << c << bulgesize_arcsec << std::endl;
-			 */
-
-      // converting from Millennium conventions
-			theta[0] = -ra*PI/180;
-			theta[1] = dec*PI/180;
-      pa = (90 - pa)*PI/180;
-      inclination *= PI/180;
-      if(cos(inclination)< 0.5) inclination = acos(0.5);
+    // converting from Millennium conventions
+    theta[0] = -ra*PI/180;
+    theta[1] = dec*PI/180;
+    pa = (90 - pa)*PI/180;
+    inclination *= PI/180;
+    if(cos(inclination)< 0.5) inclination = acos(0.5);
       
       //std::cout << "did inclination" << std::endl;
+    if(j == 0){
+      rangex[0] = rangex[1] = theta[0];
+      rangey[0] = rangey[1] = theta[1];
+    }else{
+      //std::cout << "rang" << std::endl;
 
-      
-      if(j == 0){
-        rangex[0] = rangex[1] = theta[0];
-        rangey[0] = rangey[1] = theta[1];
-      }else{
-        //std::cout << "rang" << std::endl;
-
-        if(theta[0] < rangex[0]) rangex[0] = theta[0];
-        if(theta[0] > rangex[1]) rangex[1] = theta[0];
-        if(theta[1] < rangey[0]) rangey[0] = theta[1];
-        if(theta[1] > rangey[1]) rangey[1] = theta[1];
-      }
+      if(theta[0] < rangex[0]) rangex[0] = theta[0];
+      if(theta[0] > rangex[1]) rangex[1] = theta[0];
+      if(theta[1] < rangey[0]) rangey[0] = theta[1];
+      if(theta[1] > rangey[1]) rangey[1] = theta[1];
+    }
       
       //std::cout << "adding to galaxies" << std::endl;
 			/***************************/
-			galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Ref,Rh
-                              ,pa,inclination,HaloID,z_cosm,theta,ran));
-      //std::cout << "filling last galaxy" << std::endl;
+    
+    SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge,Ref,Rh
+                                ,pa,inclination,HaloID,z_cosm,theta,ran);
+     //std::cout << "filling last galaxy" << std::endl;
 
-			galaxies.back().setMag(SDSS_U,SDSS_u);
-      galaxies.back().setMagBulge(SDSS_U,SDSS_u_Bulge);
-			galaxies.back().setMag(SDSS_G,SDSS_g);
-      galaxies.back().setMagBulge(SDSS_G,SDSS_g_Bulge);
-			galaxies.back().setMag(SDSS_R,SDSS_r);
-      galaxies.back().setMagBulge(SDSS_R,SDSS_r_Bulge);
-			galaxies.back().setMag(SDSS_I,SDSS_i);
-      galaxies.back().setMagBulge(SDSS_I,SDSS_i_Bulge);
-			galaxies.back().setMag(SDSS_Z,SDSS_z);
-      galaxies.back().setMagBulge(SDSS_Z,SDSS_z_Bulge);
-			galaxies.back().setMag(J,J_band);
-      galaxies.back().setMagBulge(J,J_band_Bulge);
-			galaxies.back().setMag(H,H_band);
-      galaxies.back().setMagBulge(H,H_band_Bulge);
-			galaxies.back().setMag(Ks,Ks_band);
-      galaxies.back().setMagBulge(Ks,Ks_band_Bulge);
+    galaxy.setMag(SDSS_U,SDSS_u);
+    galaxy.setMagBulge(SDSS_U,SDSS_u_Bulge);
+    galaxy.setMag(SDSS_G,SDSS_g);
+    galaxy.setMagBulge(SDSS_G,SDSS_g_Bulge);
+    galaxy.setMag(SDSS_R,SDSS_r);
+    galaxy.setMagBulge(SDSS_R,SDSS_r_Bulge);
+    galaxy.setMag(SDSS_I,SDSS_i);
+    galaxy.setMagBulge(SDSS_I,SDSS_i_Bulge);
+    galaxy.setMag(SDSS_Z,SDSS_z);
+    galaxy.setMagBulge(SDSS_Z,SDSS_z_Bulge);
+    galaxy.setMag(J,J_band);
+    galaxy.setMagBulge(J,J_band_Bulge);
+    galaxy.setMag(H,H_band);
+    galaxy.setMagBulge(H,H_band_Bulge);
+    galaxy.setMag(Ks,Ks_band);
+    galaxy.setMagBulge(Ks,Ks_band_Bulge);
 
-      galaxies.back().setMag(Ks,Ks_band);
-      galaxies.back().setMagBulge(Ks,Ks_band_Bulge);
+    galaxy.setMag(Ks,Ks_band);
+    galaxy.setMagBulge(Ks,Ks_band_Bulge);
 
-      galaxies.back().changeBand(band);
-      
-      // cluge  ????
       // The Euclid bands are not actually read in
-      galaxies.back().setMag(EUC_VIS,SDSS_i);
-      galaxies.back().setMagBulge(EUC_VIS,SDSS_i_Bulge);
-      galaxies.back().setMag(EUC_H,H_band);
-      galaxies.back().setMagBulge(EUC_H,H_band_Bulge);
-      galaxies.back().setMag(EUC_J,J_band);
-      galaxies.back().setMagBulge(EUC_J,J_band_Bulge);
+    galaxy.setMag(EUC_VIS,SDSS_i);
+    galaxy.setMagBulge(EUC_VIS,SDSS_i_Bulge);
+    galaxy.setMag(EUC_H,H_band);
+    galaxy.setMagBulge(EUC_H,H_band_Bulge);
+    galaxy.setMag(EUC_J,J_band);
+    galaxy.setMagBulge(EUC_J,J_band_Bulge);
 
+    galaxy.changeBand(band);
       
-			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
-			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
-			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;
-
+    if(galaxy.getMag() < mag_limit ){
+      galaxies.push_back(galaxy);
       assert(galaxies.back().getMag(band) == galaxies.back().getMag() );
       //std::cout << " j in SourceMultiAnaGalaxy : " << j << std::endl;
-			++j;
-		}
+      ++j;
+    }
 	}
 
   std::cout << " closing file in SourceMultiAnaGalaxy : " << std::endl;

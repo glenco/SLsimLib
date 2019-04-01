@@ -27,6 +27,38 @@ SourceSersic::SourceSersic(
   assert(my_Reff > 0);
   ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
 }
+SourceSersic::SourceSersic(const SourceSersic &p){
+  Reff = p.Reff;
+  mag = p.mag;
+  PA = p.PA;
+  index = p.index;
+  bn = p.bn;
+  q = p.q;
+  flux = p.flux;
+  I_r = p.I_r;
+  I_n = p.I_n;
+  I_q = p.I_q;
+  cosPA = p.cosPA;
+  sinPA = p.sinPA;
+}
+SourceSersic& SourceSersic::operator=(const SourceSersic &p){
+  if(this == &p) return *this;
+  
+  Reff = p.Reff;
+  mag = p.mag;
+  PA = p.PA;
+  index = p.index;
+  bn = p.bn;
+  q = p.q;
+  flux = p.flux;
+  I_r = p.I_r;
+  I_n = p.I_n;
+  I_q = p.I_q;
+  cosPA = p.cosPA;
+  sinPA = p.sinPA;
+  
+  return *this;
+}
 
 /// Reset all the parameters
 void SourceSersic::ReSet(

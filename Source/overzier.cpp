@@ -10,10 +10,10 @@
 #include "slsimlib.h"
 
 /// sets everything to zero
-SourceOverzier::SourceOverzier()
-: haloID(0)
-{
-}
+//SourceOverzier::SourceOverzier()
+//: haloID(0)
+//{
+//}
 
 SourceOverzier::SourceOverzier(
 		PosType my_mag          /// Total magnitude
@@ -29,6 +29,8 @@ SourceOverzier::SourceOverzier(
 
       //std::cout << "SourceOverzier constructor" << std::endl;
   setInternals(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
+
+  assert(current.Reff != 0 || current.Rh !=0 );
 }
 
 SourceOverzier::~SourceOverzier()
@@ -39,7 +41,6 @@ SourceOverzier::SourceOverzier(const SourceOverzier &s)
 :Source(s){
   
   current = s.current;
-  
   sedtype = s.sedtype;
 }
 SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
@@ -47,7 +48,7 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   
   Source::operator=(s);
   
-   current = s.current;
+  current = s.current;
   sedtype = s.sedtype;
   return *this;
 }
@@ -57,6 +58,7 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 
 	haloID = my_id;
 
+  if(my_Reff < 0.05) my_Reff = 0.05; // ????
 	current.Reff = my_Reff*arcsecTOradians;
 	current.Rh = my_Rh*arcsecTOradians;
 	current.mag = my_mag;
@@ -198,6 +200,7 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
     mod = 2.0e-2*ran();
   }
 
+  assert(original.Rh != 0 || original.Reff != 0);
 }
 
 SourceOverzierPlus::~SourceOverzierPlus(){
@@ -220,9 +223,8 @@ Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
    */
   
   spheroid = p.spheroid;
-  
-  //*spheroid = *(p.spheroid);
   modes = p.modes;
+  original = p.original;
 }
 
 SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
@@ -238,17 +240,9 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
   sinpa=p.sinpa;
   cosi=p.cosi;
   
-  /*delete spheroid;
-  spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff()
-                              ,p.spheroid->getPA()
-                              ,p.spheroid->getSersicIndex()
-                              ,p.spheroid->getAxesRatio()
-                              ,p.spheroid->getZ()
-                              ,p.spheroid->getTheta().x);
-   */
   spheroid = p.spheroid;
-  
   modes = p.modes;
+  original = p.original;
   
   return *this;
 }

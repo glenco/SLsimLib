@@ -23,15 +23,20 @@ public:
   SourceSersic();
   SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
 	~SourceSersic();
-	
+  
+  SourceSersic(const SourceSersic &p);
+  SourceSersic & operator=(const SourceSersic &p);
+
+
   void ReSet(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
 
-	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak
+	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak in radians
 	inline PosType FractionRadius (PosType f) {return Reff*pow(-log (f)/bn,index);}
 	
 	inline PosType getSersicIndex() const { return index; }
 	inline PosType getAxesRatio() const { return q; }
-	inline PosType getReff() const { return Reff*180*60*60/PI; }
+  /// in arcseconds
+	inline PosType getReff() const { return Reff/arcsecTOradians; }
 	inline PosType getMag() const { return mag; }
 	inline PosType getPA() const { return PA; }
 	
@@ -49,9 +54,10 @@ public:
 		I_q = 1./q;
 	}
 	
-	inline void setReff(PosType x)
+	inline void setReff(PosType x // in arcseconds
+  )
 	{
-		Reff = x*PI/180/60/60;
+		Reff = x*arcsecTOradians;
 		I_r = 1./2./PI/Reff/Reff;
 		updateRadius();
 	}
@@ -83,7 +89,8 @@ private:
 	}
 	
 	void assignParams(InputParams& params);
-	PosType Reff;
+                      
+	PosType Reff;  // in radians
 	PosType mag;
 	PosType PA;
 	PosType index;
