@@ -777,7 +777,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   if(verbose){
     std::cout << "min X : "<< data[0][Xindex] << " max X : "
     << data.back()[Xindex] << std::endl;
-    std::cout << "redshift bins " << std::endl;
+    std::cout << column_names[Xindex] << " Bins " << std::endl;
   }
   for(int i=1 ; i<Nxbins ; ++i){
     Xborders[i] = data[i*NinXbins][Xindex];
@@ -873,6 +873,9 @@ std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
   current = std::upper_bound(borders[xbin],borders[xbin+1],y
                              , [this](double y,const std::vector<double> &v1){return y < v1[Yindex];});
   
+  if(current == borders[xbin+1]) current = borders[xbin+1] - 1;
+  //std::cout << "XYcsvLookUp boundaries :" << (*borders[xbin])[Yindex] << " " << (*borders[xbin+1])[Yindex] << std::endl;
+  //assert(fabs(y-(*current)[Yindex]) < 1);
   return *current;
 }
 double Utilities::XYcsvLookUp::Ymin(double x) const{

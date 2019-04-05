@@ -652,10 +652,6 @@ protected:
     PosType *x;
     LensHalo* isohalo;
   };
-
-  
-  
-  
 };
 
 /**
