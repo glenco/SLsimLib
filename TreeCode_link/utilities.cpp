@@ -718,7 +718,7 @@ int Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
   return number;
 }
 
-Utilities::XYcsvLookUp::XYcsvLookUp(
+Utilities::IO::XYcsvLookUp::XYcsvLookUp(
                                     std::string datafile   /// input catalog file in csv format
                                     ,std::string Xlabel
                                     ,std::string Ylabel
@@ -799,7 +799,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   current = data.begin();
 }
 
-Utilities::XYcsvLookUp::XYcsvLookUp(
+Utilities::IO::XYcsvLookUp::XYcsvLookUp(
                                     std::string datafile   /// input catalog file in csv format
                                     ,std::string Xlabel
                                     ,std::string Ylabel
@@ -868,7 +868,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   current = data.begin();
 }
 
-std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
+std::vector<double> Utilities::IO::XYcsvLookUp::find(double x,double y){
   long xbin = Utilities::locate(Xborders, x);
   current = std::upper_bound(borders[xbin],borders[xbin+1],y
                              , [this](double y,const std::vector<double> &v1){return y < v1[Yindex];});
@@ -878,16 +878,16 @@ std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
   //assert(fabs(y-(*current)[Yindex]) < 1);
   return *current;
 }
-double Utilities::XYcsvLookUp::Ymin(double x) const{
+double Utilities::IO::XYcsvLookUp::Ymin(double x) const{
   long xbin = Utilities::locate(Xborders, x);
   return (*borders[xbin])[Yindex];
 }
-double Utilities::XYcsvLookUp::Ymax(double x) const{
+double Utilities::IO::XYcsvLookUp::Ymax(double x) const{
   long xbin = Utilities::locate(Xborders, x);
   return (*(borders[xbin+1]-1))[Yindex];
 }
 
-double Utilities::XYcsvLookUp::operator[](std::string label) const{
+double Utilities::IO::XYcsvLookUp::operator[](std::string label) const{
   int i = 0;
   for(auto name : column_names){
     if(name == label){
@@ -900,7 +900,7 @@ double Utilities::XYcsvLookUp::operator[](std::string label) const{
   throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
 }
 
-void Utilities::splitstring(std::string &line,std::vector<std::string> &vec
+void Utilities::IO::splitstring(std::string &line,std::vector<std::string> &vec
                             ,const std::string &delimiter){
   size_t pos = 0;
   

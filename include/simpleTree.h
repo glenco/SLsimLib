@@ -92,6 +92,8 @@ struct TreeNBStruct{
  *
  * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private
  * methods and a few public ones.
+ *
+ * PType must have a dereferencing operator [] that gives the value to be sorterd
  */
 template<typename PType>
 class TreeSimple {
@@ -101,10 +103,10 @@ public:
 
 	/// Finds the points within a circle around center and puts their index numbers in a list
 	template<typename T>
-  void PointsWithinCircle(T center[2],float radius,std::list<unsigned long> &neighborkist);
+    void PointsWithinCircle(T center[2],float radius,std::list<unsigned long> &neighborkist);
   
 	/// Finds the points within an ellipse around center and puts their index numbers in a list
-  template<typename T>
+    template<typename T>
 	void PointsWithinEllipse(T center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
   
 	/// Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing

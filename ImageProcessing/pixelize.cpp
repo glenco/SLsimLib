@@ -22,6 +22,12 @@
 #include "source.h"
 #include "gridmap.h"
 
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
 /*#if __cplusplus < 201103L
 template<typename T>
 void swap(std::valarray<T>& x, std::valarray<T>& y)
@@ -152,10 +158,16 @@ PixelMap::PixelMap(
                    ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
 )
 {
+    
 #ifdef ENABLE_FITS
   if(fitsfilename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
-  
+
+        
+    if(!Utilities::IO::file_exists(fitsfilename)){
+        std::cerr << "Problem with inputfile " << fitsfilename << std::endl;
+        throw std::invalid_argument("bad file");
+    }
   //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
   
   std::auto_ptr<CCfits::FITS> fp(0);
@@ -166,7 +178,7 @@ PixelMap::PixelMap(
   catch (CCfits::FITS::CantOpen)
   {
     std::cerr << "Cannot open " << fitsfilename << std::endl;
-    exit(1);
+    throw std::invalid_argument("bad file");
   }
 
   
@@ -237,6 +249,7 @@ PixelMap::PixelMap(
   map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
   map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
   
+  map.resize(Nx*Ny);
   h0.read(map);
   //std::cout << "map size : " << map.size() << std::endl;
 #else

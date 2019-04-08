@@ -281,15 +281,16 @@ public:
   void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
   
 private:
-  std::valarray<double> map;
-  void AddGrid_(const PointList &list,LensingVariable val);
 
+  std::valarray<double> map;
 	std::size_t Nx;
 	std::size_t Ny;
 	double resolution,rangeX,rangeY,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
   
-	double LeafPixelArea(IndexType i,Branch * branch1);
+  void AddGrid_(const PointList &list,LensingVariable val);
+
+  double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1) const;
 	bool inMapBox(double * branch1) const;

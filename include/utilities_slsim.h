@@ -1202,6 +1202,12 @@ namespace Utilities
   int GetNThreads();
 
   namespace IO{  ///
+      
+      inline bool file_exists (const std::string& name) {
+          struct stat buffer;
+          return (stat (name.c_str(), &buffer) == 0);
+      }
+      
     /** \brief Read in data from an ASCII file with two columns
      */
     template <class T1,class T2>
@@ -1610,7 +1616,7 @@ namespace Utilities
       }
     }
 
-  }
+  
   
   /*** \brief A class for reading and then looking up objects from a CSV catalog.
    
@@ -1706,5 +1712,56 @@ namespace Utilities
 
   /// split string into vector of seporate strings that were seporated by
   void splitstring(std::string &line,std::vector<std::string> &vec,const std::string &delimiter);
+
+
+/** \brief class for impoting data from a csv file and allowing label string lookup like a data frame.
+ *
+ *
+*/
+template< typename T>
+class DataFrame{
+public:
+    DataFrame(std::string datafile   /// input catalog file in csv format
+          ,size_t MaxNumber = 1000000 /// maximum number of entries read
+          ,char comment_char = '#'  /// comment charactor for header
+          ,char deliniator = ','    /// deliniator between values
+    ):filename(datafile){
+        Utilities::IO::ReadCSVnumerical1(datafile,data, column_names);
+    };
+    
+    /// returns column by name
+    std::vector<T>& operator[](std::string label){
+        int i = 0;
+        for(auto name : column_names){
+            if(name == label){
+                return data[i];
+            }
+            ++i;
+        }
+        for(auto c : column_names ) std::cout << c << " ";
+        std::cout << std::endl;
+        throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    };
+
+
+    /// returns column by number
+    std::vector<T>& operator[](int i){
+        return data[i];
+    };
+
+    /// returns labels of the columns from the data file
+    std::vector<std::string> labels() const{
+        return column_names;
+    };
+    
+    size_t number_of_rows(){return data[0].size();}
+    size_t number_of_columns(){return data.size();}
+private:
+    std::vector<std::vector<T> > data;
+    std::vector<std::string> column_names;
+    std::string filename;
+};
+  }
 }
+
 #endif
