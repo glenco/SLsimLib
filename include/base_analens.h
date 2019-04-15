@@ -142,6 +142,10 @@ public:
   
 protected:
 
+  // make it uncopyable
+  LensHaloBaseNSIE & operator=(const LensHaloBaseNSIE &h){};
+  LensHaloBaseNSIE(const LensHaloBaseNSIE &h){};
+  
   /// critical surface density
   PosType Sigma_crit;
    /// the time delay scale in days/Mpc^2

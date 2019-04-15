@@ -48,7 +48,7 @@ struct MOKAmap{
   /// cosmology
   double omegam,omegal,h,wq;
 	double inarcsec;
-	double center[2];
+	Point_2d center;
 };
 
 /**
@@ -115,28 +115,28 @@ public:
 	void writeImage(std::string fn);
   
 	/// return center in physical Mpc
-	const double* getCenter() const { return map->center; }
+	Point_2d getCenter() const { return map.center; }
 	/// return range of input map in rad
-	double getRangeRad() const { return map->boxlrad; }
+	double getRangeRad() const { return map.boxlrad; }
 	/// return range of input map in physical Mpc
-	double getRangeMpc() const { return map->boxlMpc; }
+	double getRangeMpc() const { return map.boxlMpc; }
 	/// /// return number of pixels on a side in original map
 	size_t getN() const
 	{
-		if(map->nx != map->ny)
+		if(map.nx != map.ny)
 			throw std::runtime_error("mass map is not square");
-		return map->nx;
+		return map.nx;
 	}
 	/// return number of pixels on a x-axis side in original map
-	size_t getNx() const { return map->nx; }
+	size_t getNx() const { return map.nx; }
 	/// return number of pixels on a y-axis side in original map
-	size_t getNy() const { return map->ny; }
-	
+	size_t getNy() const { return map.ny; }
+  
 private:
 	PixelMapType maptype;
 	void initMap();
 	void convertmap(MOKAmap *map,PixelMapType maptype);
-	MOKAmap* map;
+	MOKAmap map;
 	const COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
   int zerosize;

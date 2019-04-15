@@ -1538,8 +1538,8 @@ namespace Utilities
           data[i].push_back(to_numeric<T>(cell));
           i = (i+1)%columns;
         }
-
       }
+                           return 1;
     }
     
     /** \brief Read numerical data from a csv file with a header

@@ -46,7 +46,17 @@ public:
   LensHalo(PosType z,COSMOLOGY &cosmo);
   LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
   LensHalo(InputParams& params,bool needRsize = true);
+  LensHalo(const LensHalo &h);
+  
+  LensHalo(LensHalo &&h):star_tree(nullptr){
+    *this = std::move(h);
+  }
+
 	virtual ~LensHalo();
+  
+  LensHalo & operator=(const LensHalo &h);
+  LensHalo & operator=(LensHalo &&h);
+
   
   /** get the Rmax which is larger than Rsize in Mpc.  This is the region exterior to which the
    halo will be considered a point mass.  Between Rsize and Rmax the deflection and shear are interpolated.
@@ -195,8 +205,8 @@ public:
   void setID(size_t id){idnumber = id;}
   
   PosType renormalization(PosType r_max);
-  PosType mnorm;
-  
+ 
+
 private:
   size_t idnumber; /// Identification number of halo.  It is not always used.
   PosType Dist;
@@ -207,16 +217,13 @@ private:
   // This is the size of the halo beyond which it does not have the profile expected profile.
   float Rsize = 0;
 
-
 protected:
+
+  PosType mnorm;
 
   // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
   // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
   float Rmax;
-
-  // make LensHalo uncopyable
-  void operator=(LensHalo &){};
-  LensHalo(LensHalo &){};
 
  
   PosType alpha_int(PosType x) const;
@@ -246,9 +253,10 @@ protected:
     PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
   };
   
-  IndexType *stars;
+  std::vector<IndexType> stars_index;
   std::vector<StarType> stars_xp;
   TreeQuadParticles<StarType> *star_tree;
+  
   int stars_N;
   PosType star_massscale;
   /// star masses relative to star_massscles
@@ -256,7 +264,7 @@ protected:
   PosType star_fstars;
   PosType star_theta_force;
   int star_Nregions;
-  PosType *star_region;
+  std::vector<PosType> star_region;
   PosType beta;
   void substract_stars_disks(PosType const *ray,PosType *alpha
                              ,KappaType *kappa,KappaType *gamma);
@@ -274,7 +282,7 @@ protected:
   
   
   /// The factor by which Rmax is larger than Rsize
-  const float Rmax_to_Rsize_ratio = 1.2;
+  float Rmax_to_Rsize_ratio = 1.2;
   
   /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
   float rscale;
@@ -291,8 +299,8 @@ protected:
   PosType lo_mass_slope;
   PosType hi_mass_slope;
   /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
-  PosType *star_Sigma;
-  PosType **star_xdisk;
+  std::vector<PosType> star_Sigma;
+  std::vector<Point_2d> star_xdisk;
   
   
   /// point mass case
@@ -678,6 +686,30 @@ public:
               ,int my_stars_N
               ,EllipMethod my_ellip_method=Pseudo);
 	LensHaloNFW(InputParams& params);
+  LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
+    ++count;
+    gmax = h.gmax;
+  }
+  LensHaloNFW(const LensHaloNFW &&h):LensHalo(std::move(h)){
+    ++count;
+    gmax = h.gmax;
+  }
+
+  LensHaloNFW & operator=(const LensHaloNFW &h){
+    if(this != &h){
+      LensHalo::operator=(h);
+      gmax = h.gmax;
+    }
+    return *this;
+  }
+  LensHaloNFW & operator=(const LensHaloNFW &&h){
+    if(this != &h){
+      LensHalo::operator=(std::move(h));
+      gmax = h.gmax;
+    }
+    return *this;
+  }
+  
 	virtual ~LensHaloNFW();
   
 	PosType ffunction(PosType x) const;
@@ -759,8 +791,6 @@ protected:
   
 private:
   PosType gmax;
-  
-  
 };
 // ********************
 

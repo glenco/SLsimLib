@@ -46,6 +46,180 @@ LensHalo::LensHalo(InputParams& params,bool needRsize){
   elliptical_flag = false;
 }
 
+LensHalo::LensHalo(const LensHalo &h){
+  
+  idnumber = h.idnumber; /// Identification number of halo.  It is not always used.
+  Dist = h.Dist;
+  posHalo[0] = h.posHalo[0]; posHalo[1] = h.posHalo[1];
+  zlens = h. zlens;
+  mass = h.mass;
+  Rsize = h.Rsize;
+  mnorm = h.mnorm;
+  Rmax = h.Rmax;
+  
+  stars_index = stars_index;
+  stars_xp = h.stars_xp;
+  
+  stars_N = h.stars_N;
+  star_theta_force = h.star_theta_force;
+  
+  if(stars_N > 1){
+    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
+                                              ,false,false,0,4,star_theta_force);
+  }else{
+    star_tree = nullptr;
+  }
+  star_massscale = h.star_massscale;
+  star_fstars = h.star_fstars;
+  
+  star_Nregions = h.star_Nregions;
+  star_region = star_region;
+  
+  beta = h.beta;
+  
+  Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
+  rscale = h.rscale;
+  
+  stars_implanted = h.stars_implanted;
+  main_stars_imf_type = h.main_stars_imf_type;
+  main_stars_min_mass = h. main_stars_min_mass;
+  main_stars_max_mass = h.main_stars_max_mass;
+  main_ellip_method = h.main_ellip_method;
+  bend_mstar =h.bend_mstar;
+  lo_mass_slope = h.lo_mass_slope;
+  hi_mass_slope = h.hi_mass_slope;
+  
+  star_Sigma = h.star_Sigma;
+  star_xdisk = h.star_xdisk;
+  
+  xmax = h.xmax;
+  mass_norm_factor = h.mass_norm_factor;
+  pa = h.pa;
+  fratio = h.fratio;
+  elliptical_flag = h.elliptical_flag;
+  switch_flag = h.switch_flag;
+  //Nmod = h.Nmod;
+};
+
+LensHalo & LensHalo::operator=(LensHalo &&h){
+  
+  if (this != &h){
+  
+    idnumber = h.idnumber; /// Identification number of halo.  It is not always used.
+    Dist = h.Dist;
+    posHalo[0] = h.posHalo[0]; posHalo[1] = h.posHalo[1];
+    zlens = h. zlens;
+    mass = h.mass;
+    Rsize = h.Rsize;
+    mnorm = h.mnorm;
+    Rmax = h.Rmax;
+  
+    stars_index = stars_index;
+    stars_xp = h.stars_xp;
+  
+    stars_N = h.stars_N;
+    star_theta_force = h.star_theta_force;
+  
+    delete star_tree;
+    star_tree = h.star_tree;
+    h.star_tree = nullptr;
+  
+    star_massscale = h.star_massscale;
+    star_fstars = h.star_fstars;
+  
+    star_Nregions = h.star_Nregions;
+    star_region = star_region;
+  
+    beta = h.beta;
+  
+    Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
+    rscale = h.rscale;
+  
+    stars_implanted = h.stars_implanted;
+    main_stars_imf_type = h.main_stars_imf_type;
+    main_stars_min_mass = h. main_stars_min_mass;
+    main_stars_max_mass = h.main_stars_max_mass;
+    main_ellip_method = h.main_ellip_method;
+    bend_mstar =h.bend_mstar;
+    lo_mass_slope = h.lo_mass_slope;
+    hi_mass_slope = h.hi_mass_slope;
+  
+    star_Sigma = h.star_Sigma;
+    star_xdisk = h.star_xdisk;
+  
+    xmax = h.xmax;
+    mass_norm_factor = h.mass_norm_factor;
+    pa = h.pa;
+    fratio = h.fratio;
+    elliptical_flag = h.elliptical_flag;
+    switch_flag = h.switch_flag;
+    //Nmod = h.Nmod;
+    
+  }
+  return *this;
+};
+
+
+LensHalo & LensHalo::operator=(const LensHalo &h){
+  
+  if(this == &h) return *this;
+  
+  idnumber = h.idnumber; /// Identification number of halo.  It is not always used.
+  Dist = h.Dist;
+  posHalo[0] = h.posHalo[0]; posHalo[1] = h.posHalo[1];
+  zlens = h. zlens;
+  mass = h.mass;
+  Rsize = h.Rsize;
+  mnorm = h.mnorm;
+  Rmax = h.Rmax;
+  
+  stars_index = stars_index;
+  stars_xp = h.stars_xp;
+  
+  stars_N = h.stars_N;
+  star_theta_force = h.star_theta_force;
+  
+  if(stars_N > 1){
+    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
+                                              ,false,false,0,4,star_theta_force);
+  }else{
+    star_tree = nullptr;
+  }
+  star_massscale = h.star_massscale;
+  star_fstars = h.star_fstars;
+  
+  star_Nregions = h.star_Nregions;
+  star_region = star_region;
+  
+  beta = h.beta;
+  
+  Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
+  rscale = h.rscale;
+  
+  stars_implanted = h.stars_implanted;
+  main_stars_imf_type = h.main_stars_imf_type;
+  main_stars_min_mass = h. main_stars_min_mass;
+  main_stars_max_mass = h.main_stars_max_mass;
+  main_ellip_method = h.main_ellip_method;
+  bend_mstar =h.bend_mstar;
+  lo_mass_slope = h.lo_mass_slope;
+  hi_mass_slope = h.hi_mass_slope;
+  
+  star_Sigma = h.star_Sigma;
+  star_xdisk = h.star_xdisk;
+  
+  xmax = h.xmax;
+  mass_norm_factor = h.mass_norm_factor;
+  pa = h.pa;
+  fratio = h.fratio;
+  elliptical_flag = h.elliptical_flag;
+  switch_flag = h.switch_flag;
+  //Nmod = h.Nmod;
+  
+  return *this;
+};
+
+
 void LensHalo::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale
                                 , PosType my_slope, long *seed){
   mass = my_mass;

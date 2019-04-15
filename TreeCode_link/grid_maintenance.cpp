@@ -1057,10 +1057,22 @@ PixelMap Grid::writePixelMap(
                              ,size_t Ny           /// number of pixels in image in on dimension
                              ,PosType resolution        /// resolution of image in radians
                              ,LensingVariable lensvar  /// which quantity is to be displayed
-                             ){
+){
   PixelMap map(center, Nx, Ny, resolution);
   map.AddGrid(*this,lensvar);
-
+  
+  return map;
+}
+/// Outputs a PixelMap of the lensing quantities of a fixed grid
+PixelMap Grid::writePixelMap(
+                             LensingVariable lensvar  /// which quantity is to be displayed
+){
+  
+  Branch *branch = i_tree->getTop();
+  double resolution = (branch->boundary_p2[0] - branch->boundary_p1[0])/Ngrid_init;
+  PixelMap map(branch->center, Ngrid_init, Ngrid_init2, resolution);
+  map.AddGrid(*this,lensvar);
+  
   return map;
 }
 /** \brief Make a fits map that is automatically centered on the grid and has approximately the same range as the grid.  Nx can be used to change the resolution.  Nx = grid.getInitNgrid() will give the initial grid resolution
@@ -1086,7 +1098,6 @@ void Grid::writePixeFits(
  *  grid pixels in one pixelmap pixel it uses one at random.  This is meant
  *  for uniform maps to make equal sized PixelMaps.
  */
-
 void Grid::writeFitsUniform(
                                 const PosType center[]  /// center of image
                                 ,size_t Nx       /// number of pixels in image in on dimension
@@ -1179,6 +1190,7 @@ PixelMap Grid::writePixelMapUniform(
   
   return map;
 }
+
 void Grid::writePixelMapUniform(
                                     PixelMap &map
                                     ,LensingVariable lensvar  /// which quantity is to be displayed

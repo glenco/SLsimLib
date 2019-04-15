@@ -42,7 +42,8 @@ public:
     map.resize(0);
   };
 	
-	PixelMap& operator=(PixelMap other);
+  PixelMap& operator=(const PixelMap &other);
+  PixelMap& operator=(PixelMap &&other);
   
 	inline bool valid() const { return map.size(); };
 	inline std::size_t size() const { return map.size(); };

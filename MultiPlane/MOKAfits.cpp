@@ -72,10 +72,10 @@ void LensHaloMassMap::getDims(){
     
     PHDU *h0=&ff->pHDU();
     
-    map->nx = h0->axis(0);
-    map->ny = h0->axis(1);
+    map.nx = h0->axis(0);
+    map.ny = h0->axis(1);
     std:: cout << "nx           ny " << std:: endl;
-    std:: cout << map->nx << "   " << map->ny << std:: endl;
+    std:: cout << map.nx << "   " << map.ny << std:: endl;
   }
   catch(FITS::CantOpen){
     std::cout << "can not open " << MOKA_input_file << std::endl;
@@ -102,7 +102,7 @@ void LensHaloMassMap::readMap(){
   // try to read MVIR, if it exists is a MOKA map
   bool moka;
   try {
-    h0->readKey ("MVIR",map->m);
+    h0->readKey ("MVIR",map.m);
     moka=true;
   }
   catch(CCfits::HDU::NoSuchKeyword) {
@@ -110,7 +110,7 @@ void LensHaloMassMap::readMap(){
   }
   
   // principal HDU is read
-  h0->read(map->convergence);
+  h0->read(map.convergence);
   
   if(moka){
     // check if they exist if not it has to compute them
@@ -122,31 +122,31 @@ void LensHaloMassMap::readMap(){
     }
     else{
       ExtHDU &h1=ff->extension(1);
-      h1.read(map->alpha1);
+      h1.read(map.alpha1);
       ExtHDU &h2=ff->extension(2);
-      h2.read(map->alpha2);
+      h2.read(map.alpha2);
       ExtHDU &h3=ff->extension(3);
-      h3.read(map->gamma1);
+      h3.read(map.gamma1);
       ExtHDU &h4=ff->extension(4);
-      h4.read(map->gamma2);
+      h4.read(map.gamma2);
       std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
     }
     try{
       /* these are always present in each fits file created by MOKA */
-      h0->readKey ("SIDEL",map->boxlarcsec);
-      h0->readKey ("SIDEL2",map->boxlMpc);  // recall you that MOKA Mpc/h
-      h0->readKey ("ZLENS",map->zlens);
-      h0->readKey ("ZSOURCE",map->zsource);
-      h0->readKey ("OMEGA",map->omegam);
-      h0->readKey ("LAMBDA",map->omegal);
-      h0->readKey ("H",map->h);
-      h0->readKey ("W",map->wq);
-      h0->readKey ("MSTAR",map->mstar);
-      // h0->readKey ("MVIR",map->m);
-      h0->readKey ("CONCENTRATION",map->c);
-      h0->readKey ("DL",map->Dlens);
-      h0->readKey ("DLS",map->DLS);
-      h0->readKey ("DS",map->DS);
+      h0->readKey ("SIDEL",map.boxlarcsec);
+      h0->readKey ("SIDEL2",map.boxlMpc);  // recall you that MOKA Mpc/h
+      h0->readKey ("ZLENS",map.zlens);
+      h0->readKey ("ZSOURCE",map.zsource);
+      h0->readKey ("OMEGA",map.omegam);
+      h0->readKey ("LAMBDA",map.omegal);
+      h0->readKey ("H",map.h);
+      h0->readKey ("W",map.wq);
+      h0->readKey ("MSTAR",map.mstar);
+      // h0->readKey ("MVIR",map.m);
+      h0->readKey ("CONCENTRATION",map.c);
+      h0->readKey ("DL",map.Dlens);
+      h0->readKey ("DLS",map.DLS);
+      h0->readKey ("DS",map.DS);
     }
     catch(CCfits::HDU::NoSuchKeyword){
       std::cerr << "MOKA fits map must have header keywords:" << std::endl
@@ -169,16 +169,16 @@ void LensHaloMassMap::readMap(){
     
   }else{  // Pixelized mass map
     
-    int npixels = map->nx;
+    int npixels = map.nx;
     // cut a square!
-    // if(map->ny<map->nx) npixels = map->ny;
-    // std:: valarray<double> mapbut(map->nx*map->ny);
-    // for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-    //    mapbut[i+map->nx*j] = map->convergence[i+map->nx*j];
+    // if(map.ny<map.nx) npixels = map.ny;
+    // std:: valarray<double> mapbut(map.nx*map.ny);
+    // for(int i=0;i<map.nx;i++) for(int j=0;j<map.ny;j++){
+    //    mapbut[i+map.nx*j] = map.convergence[i+map.nx*j];
     //  }
-    // map->convergence.resize(npixels*npixels);
+    // map.convergence.resize(npixels*npixels);
     // keep it like it is, even if it is a rectangle
-    if(map->ny!=map->nx){
+    if(map.ny!=map.nx){
       std:: cout << " " << std:: endl;
       std:: cout << " the plane maps are rectangles! " << std:: endl;
       std:: cout << " " << std:: endl;
@@ -235,21 +235,21 @@ void LensHaloMassMap::readMap(){
           
           // set the redshift of the plane half distance between
           // d1 and d2
-          map->zlens = Utilities::InterpolateYvec(dli,zi,dll);
+          map.zlens = Utilities::InterpolateYvec(dli,zi,dll);
           */
           
-          map->zlens = cosmo.invComovingDist(( d1 + d2 )*0.5);
+          map.zlens = cosmo.invComovingDist(( d1 + d2 )*0.5);
           
         }else{
           
           // if angular size distances are not set use ZLENS or REDSHIFT
           
           try {
-            h0->readKey("ZLENS",map->zlens);
+            h0->readKey("ZLENS",map.zlens);
           }
           catch(CCfits::HDU::NoSuchKeyword) {
             try {
-              h0->readKey("REDSHIFT",map->zlens);
+              h0->readKey("REDSHIFT",map.zlens);
             }
             catch(CCfits::HDU::NoSuchKeyword){
               std::cout << "unable to read fits mass map header keywords" << std::endl <<  "  either DLUP and DLLOW need to be set or ZLENS or REDSHIFT" << std::endl;
@@ -263,27 +263,27 @@ void LensHaloMassMap::readMap(){
         
       }
     }
-    if(map->zlens <= 0.0){
+    if(map.zlens <= 0.0){
       std::cerr << "Pixel map lens planes cannot have zero or negative redshifts!" << std::endl;
       throw std::runtime_error("Invalid header");
     }
-    map->Dlens = cosmo.angDist(0.,map->zlens);  // physical
-    double inarcsec  = 180./M_PI/map->Dlens*60.*60.;
+    map.Dlens = cosmo.angDist(0.,map.zlens);  // physical
+    double inarcsec  = 180./M_PI/map.Dlens*60.*60.;
     double pixLMpc,pixelunit;
     try{
       // physical size in degrees
-      h0->readKey("PHYSICALSIZE",map->boxlarcsec);
-      map->boxlarcsec=map->boxlarcsec*60.*60.;
-      pixLMpc = map->boxlarcsec/npixels/inarcsec;
-      map->boxlMpc = pixLMpc*npixels;
+      h0->readKey("PHYSICALSIZE",map.boxlarcsec);
+      map.boxlarcsec=map.boxlarcsec*60.*60.;
+      pixLMpc = map.boxlarcsec/npixels/inarcsec;
+      map.boxlMpc = pixLMpc*npixels;
     }
     catch(CCfits::HDU::NoSuchKeyword) {
       try{
         // physical size in degrees
-        h0->readKey("PHYSICAL",map->boxlarcsec);
-        map->boxlarcsec=map->boxlarcsec*60.*60.;
-        pixLMpc = map->boxlarcsec/npixels/inarcsec;
-        map->boxlMpc = pixLMpc*npixels;
+        h0->readKey("PHYSICAL",map.boxlarcsec);
+        map.boxlarcsec=map.boxlarcsec*60.*60.;
+        pixLMpc = map.boxlarcsec/npixels/inarcsec;
+        map.boxlMpc = pixLMpc*npixels;
       }
       catch(CCfits::HDU::NoSuchKeyword) {
         std::cerr << "fits mass map must have header keywords:" << std::endl
@@ -334,10 +334,10 @@ void LensHaloMassMap::readMap(){
      
      std::cout << "unable to read map PHYSICALSIZE" << std::endl;
      std::cout << "assuming is the MultiDark file" << std::endl;
-     map->boxlarcsec = 8.7*60.*60.;    // W1 x-field of view
-     // map->boxlarcsec = 5.5*60.*60.;    // W4 x-field of view
-     pixLMpc = map->boxlarcsec/npixels/inarcsec;
-     map->boxlMpc = pixLMpc*npixels;
+     map.boxlarcsec = 8.7*60.*60.;    // W1 x-field of view
+     // map.boxlarcsec = 5.5*60.*60.;    // W4 x-field of view
+     pixLMpc = map.boxlarcsec/npixels/inarcsec;
+     map.boxlMpc = pixLMpc*npixels;
      pixelunit = 1.e+10/cosmo.gethubble()/pixLMpc/pixLMpc; // by hand
      }*/
     
@@ -346,37 +346,37 @@ void LensHaloMassMap::readMap(){
     // made square // need to be
     // 1. take the part located in the left side
     //for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-    //    map->convergence[i+npixels*j] = mapbut[i+map->nx*j]*pixelunit;
-    //    avkappa += map->convergence[i+npixels*j];
+    //    map.convergence[i+npixels*j] = mapbut[i+map.nx*j]*pixelunit;
+    //    avkappa += map.convergence[i+npixels*j];
     //  }
     // 2. take the part located in the right side
     // for(int i=0;i<npixels;i++) for(int j=0;j<npixels;j++){
-    //    map->convergence[i+npixels*j] = mapbut[(map->nx-npixels+i)+map->nx*j]*pixelunit;
-    //    avkappa += map->convergence[i+npixels*j];
+    //    map.convergence[i+npixels*j] = mapbut[(map.nx-npixels+i)+map.nx*j]*pixelunit;
+    //    avkappa += map.convergence[i+npixels*j];
     //  }
     // avkappa /= (npixels*npixels);
     
-    for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-      map->convergence[i+map->nx*j] *= pixelunit;
+    for(int i=0;i<map.nx;i++) for(int j=0;j<map.ny;j++){
+      map.convergence[i+map.nx*j] *= pixelunit;
     }
     
     if(zeromean){
       double avkappa = 0;
       
-      for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-        avkappa += map->convergence[i+map->nx*j];
+      for(int i=0;i<map.nx;i++) for(int j=0;j<map.ny;j++){
+        avkappa += map.convergence[i+map.nx*j];
       }
-      avkappa /= (map->nx*map->ny);
+      avkappa /= (map.nx*map.ny);
       
-      for(int i=0;i<map->nx;i++) for(int j=0;j<map->ny;j++){
-        map->convergence[i+map->nx*j] = (map->convergence[i+map->nx*j] - avkappa);
+      for(int i=0;i<map.nx;i++) for(int j=0;j<map.ny;j++){
+        map.convergence[i+map.nx*j] = (map.convergence[i+map.nx*j] - avkappa);
       }
     }
     
     // kappa is not divided by the critical surface density
     // they don't need to be preprocessed by fact
     // create alpha and gamma arrays by FFT
-    // valid only to force the map to be square map->nx = map->ny = npixels;
+    // valid only to force the map to be square map.nx = map.ny = npixels;
 #ifdef ENABLE_FFTW
     //std:: cout << "  preProcessing Map " << std:: endl;
     // reducing the size of the maps
@@ -391,7 +391,7 @@ void LensHaloMassMap::readMap(){
      for(int i=0;i<nl;i++) for(int j=0;j<nl;j++){
      double xi = xl[i];
      double yi = xl[j];
-     double ki = getMapVal(map->convergence,npixels,xi,yi,xh,xh);
+     double ki = getMapVal(map.convergence,npixels,xi,yi,xh,xh);
      kl[i+nl*j] = ki;
      if(ki!=ki){
      std:: cout << xi << "  " << yi << "  " << ki << std:: endl;
@@ -399,11 +399,11 @@ void LensHaloMassMap::readMap(){
      }
      }
      std:: cout << "  done " << std:: endl;
-     map->nx = map->ny = nl;
-     map->convergence.resize(nl*nl);
+     map.nx = map.ny = nl;
+     map.convergence.resize(nl*nl);
      std:: cout << "  remapping " << std:: endl;
      for(int i=0;i<nl;i++) for(int j=0;j<nl;j++){
-     map->convergence[i+nl*j] = kl[i+nl*j];
+     map.convergence[i+nl*j] = kl[i+nl*j];
      }
      */
     // carlo test end
@@ -414,10 +414,10 @@ void LensHaloMassMap::readMap(){
 #endif
   }
   
-  // std:: cout << map->boxlMpc << "  " << map->boxlarcsec << std:: endl;
+  // std:: cout << map.boxlMpc << "  " << map.boxlarcsec << std:: endl;
   
-  for(size_t i=0;i<map->convergence.size();++i){
-    assert(map->convergence[i] == map->convergence[i]);
+  for(size_t i=0;i<map.convergence.size();++i){
+    assert(map.convergence[i] == map.convergence[i]);
   }
 #else
   
@@ -433,7 +433,7 @@ void LensHaloMassMap::readMap(){
 void LensHaloMassMap::writeImage(std::string filename){
 #ifdef ENABLE_FITS
   long naxis=2;
-  long naxes[2]={map->nx,map->ny};
+  long naxes[2]={map.nx,map.ny};
   
   std::auto_ptr<FITS> fout(0);
   
@@ -447,34 +447,34 @@ void LensHaloMassMap::writeImage(std::string filename){
   }
   
   std::vector<long> naxex(2);
-  naxex[0]=map->nx;
-  naxex[1]=map->ny;
+  naxex[0]=map.nx;
+  naxex[1]=map.ny;
   
   PHDU *phout=&fout->pHDU();
   
-  phout->write( 1,map->nx*map->ny,map->convergence );
+  phout->write( 1,map.nx*map.ny,map.convergence );
   
-  phout->addKey ("SIDEL",map->boxlarcsec,"arcsec");
-  phout->addKey ("SIDEL2",map->boxlMpc,"Mpc/h");
-  phout->addKey ("ZLENS",map->zlens,"lens redshift");
-  phout->addKey ("ZSOURCE",map->zsource, "source redshift");
-  phout->addKey ("OMEGA",map->omegam,"omega matter");
-  phout->addKey ("LAMBDA",map->omegal,"omega lamda");
-  phout->addKey ("H",map->h,"hubble/100");
-  phout->addKey ("W",map->wq,"dark energy equation of state parameter");
-  phout->addKey ("MSTAR",map->mstar,"stellar mass of the BCG in Msun/h");
-  phout->addKey ("MVIR",map->m,"virial mass of the halo in Msun/h");
-  phout->addKey ("CONCENTRATION",map->c,"NFW concentration");
-  phout->addKey ("DL",map->Dlens,"Mpc/h");
-  phout->addKey ("DLS",map->DLS,"Mpc/h");
-  phout->addKey ("DS",map->DS,"Mpc/h");
+  phout->addKey ("SIDEL",map.boxlarcsec,"arcsec");
+  phout->addKey ("SIDEL2",map.boxlMpc,"Mpc/h");
+  phout->addKey ("ZLENS",map.zlens,"lens redshift");
+  phout->addKey ("ZSOURCE",map.zsource, "source redshift");
+  phout->addKey ("OMEGA",map.omegam,"omega matter");
+  phout->addKey ("LAMBDA",map.omegal,"omega lamda");
+  phout->addKey ("H",map.h,"hubble/100");
+  phout->addKey ("W",map.wq,"dark energy equation of state parameter");
+  phout->addKey ("MSTAR",map.mstar,"stellar mass of the BCG in Msun/h");
+  phout->addKey ("MVIR",map.m,"virial mass of the halo in Msun/h");
+  phout->addKey ("CONCENTRATION",map.c,"NFW concentration");
+  phout->addKey ("DL",map.Dlens,"Mpc/h");
+  phout->addKey ("DLS",map.DLS,"Mpc/h");
+  phout->addKey ("DS",map.DS,"Mpc/h");
   
   ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
-  eh1->write(1,map->nx*map->ny,map->gamma1);
+  eh1->write(1,map.nx*map.ny,map.gamma1);
   ExtHDU *eh2=fout->addImage("gamma2", FLOAT_IMG, naxex);
-  eh2->write(1,map->nx*map->ny,map->gamma2);
+  eh2->write(1,map.nx*map.ny,map.gamma2);
   ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
-  eh3->write(1,map->nx*map->ny,map->gamma3);
+  eh3->write(1,map.nx*map.ny,map.gamma3);
   
   std::cout << *phout << std::endl;
 #else
@@ -609,10 +609,10 @@ void LensHaloMassMap::PreProcessFFTWMap(){
   //int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
   
   // size of the new map in x and y directions, factor by which each size is increased
-  int Nnx=int(zerosize*map->nx);
-  int Nny=int(zerosize*map->ny);
-  double Nboxlx = map->boxlMpc*zerosize;
-  double Nboxly = map->boxlMpc*zerosize/map->nx*map->ny;
+  int Nnx=int(zerosize*map.nx);
+  int Nny=int(zerosize*map.ny);
+  double Nboxlx = map.boxlMpc*zerosize;
+  double Nboxly = map.boxlMpc*zerosize/map.nx*map.ny;
   
   std:: valarray<float> Nmap;
   try{
@@ -624,11 +624,11 @@ void LensHaloMassMap::PreProcessFFTWMap(){
   for( int j=0; j<Nny; j++ ){
     for( int i=0; i<Nnx; i++ ){
       Nmap[i+Nnx*j]=0;
-      if(i>=int(Nnx/2-map->nx/2) && i<int(Nnx/2+map->nx/2) && j>=int(Nny/2-map->ny/2) && j<int(Nny/2+map->ny/2)){
-        int ii = i-int(Nnx/2-map->nx/2);
-        int jj = j-int(Nny/2-map->ny/2);
+      if(i>=int(Nnx/2-map.nx/2) && i<int(Nnx/2+map.nx/2) && j>=int(Nny/2-map.ny/2) && j<int(Nny/2+map.ny/2)){
+        int ii = i-int(Nnx/2-map.nx/2);
+        int jj = j-int(Nny/2-map.ny/2);
         
-        if(ii>=map->nx || jj>=map->ny){
+        if(ii>=map.nx || jj>=map.ny){
           std::cout << " 1 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
@@ -636,7 +636,7 @@ void LensHaloMassMap::PreProcessFFTWMap(){
           std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
-        Nmap[i+Nnx*j]=map->convergence[ii+map->nx*jj];
+        Nmap[i+Nnx*j]=map.convergence[ii+map.nx*jj];
       }
     }
   }
@@ -718,14 +718,14 @@ void LensHaloMassMap::PreProcessFFTWMap(){
     fftw_execute( pp );
     //fftw_destroy_plan(pp);
     
-    map->alpha1.resize(map->nx*map->ny);
+    map.alpha1.resize(map.nx*map.ny);
     
-    for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
-      for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
-        int ii = i-int(Nnx/2-map->nx/2);
-        int jj = j-int(Nny/2-map->ny/2);
+    for( int j=Nny/2-map.ny/2; j<Nny/2+map.ny/2; j++ ){
+      for( int i=Nnx/2-map.nx/2; i<Nnx/2+map.nx/2; i++ ){
+        int ii = i-int(Nnx/2-map.nx/2);
+        int jj = j-int(Nny/2-map.ny/2);
         
-        map->alpha1[ii+map->nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
+        map.alpha1[ii+map.nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
       }
     }
   }
@@ -752,14 +752,14 @@ void LensHaloMassMap::PreProcessFFTWMap(){
     fftw_execute( pp );
     //fftw_destroy_plan(pp);
     
-    map->alpha2.resize(map->nx*map->ny);
+    map.alpha2.resize(map.nx*map.ny);
     
-    for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
-      for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
-        int ii = i-int(Nnx/2-map->nx/2);
-        int jj = j-int(Nny/2-map->ny/2);
+    for( int j=Nny/2-map.ny/2; j<Nny/2+map.ny/2; j++ ){
+      for( int i=Nnx/2-map.nx/2; i<Nnx/2+map.nx/2; i++ ){
+        int ii = i-int(Nnx/2-map.nx/2);
+        int jj = j-int(Nny/2-map.ny/2);
         
-        map->alpha2[ii+map->nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
+        map.alpha2[ii+map.nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
       }
     }
   }
@@ -785,14 +785,14 @@ void LensHaloMassMap::PreProcessFFTWMap(){
     fftw_execute( pp );
     //fftw_destroy_plan(pp);
     
-    map->gamma1.resize(map->nx*map->ny);
+    map.gamma1.resize(map.nx*map.ny);
     
-    for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
-      for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
-        int ii = i-int(Nnx/2-map->nx/2);
-        int jj = j-int(Nny/2-map->ny/2);
+    for( int j=Nny/2-map.ny/2; j<Nny/2+map.ny/2; j++ ){
+      for( int i=Nnx/2-map.nx/2; i<Nnx/2+map.nx/2; i++ ){
+        int ii = i-int(Nnx/2-map.nx/2);
+        int jj = j-int(Nny/2-map.ny/2);
         
-        map->gamma1[ii+map->nx*jj] = float( realsp[i+Nnx*j]/Nnx/Nny);
+        map.gamma1[ii+map.nx*jj] = float( realsp[i+Nnx*j]/Nnx/Nny);
         
       }
     }
@@ -819,14 +819,14 @@ void LensHaloMassMap::PreProcessFFTWMap(){
     fftw_execute( pp );
     //fftw_destroy_plan(pp);
     
-    map->gamma2.resize(map->nx*map->ny);
+    map.gamma2.resize(map.nx*map.ny);
     
-    for( int j=Nny/2-map->ny/2; j<Nny/2+map->ny/2; j++ ){
-      for( int i=Nnx/2-map->nx/2; i<Nnx/2+map->nx/2; i++ ){
-        int ii = i-int(Nnx/2-map->nx/2);
-        int jj = j-int(Nny/2-map->ny/2);
+    for( int j=Nny/2-map.ny/2; j<Nny/2+map.ny/2; j++ ){
+      for( int i=Nnx/2-map.nx/2; i<Nnx/2+map.nx/2; i++ ){
+        int ii = i-int(Nnx/2-map.nx/2);
+        int jj = j-int(Nny/2-map.ny/2);
         
-        map->gamma2[ii+map->nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+        map.gamma2[ii+map.nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
         
       }
     }

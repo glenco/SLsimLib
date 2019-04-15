@@ -353,7 +353,15 @@ PixelMap::PixelMap(
 //  map.resize(0);
 //}
 
-PixelMap& PixelMap::operator=(PixelMap other)
+PixelMap& PixelMap::operator=(const PixelMap &other)
+{
+  if(this != &other){
+    PixelMap copy(other);
+    PixelMap::swap(*this, copy);
+  }
+  return *this;
+}
+PixelMap& PixelMap::operator=(PixelMap &&other)
 {
   if(this != &other){
     PixelMap::swap(*this, other);
