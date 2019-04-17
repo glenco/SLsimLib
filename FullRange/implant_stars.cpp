@@ -173,7 +173,7 @@ void LensHalo::implant_stars(
   
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
   
-	float dummy=0;
+	//float dummy=0;
 	//star_tree = new TreeForce(stars_xp,stars_N,star_masses,&dummy
 	//		,false,false,5,2,false,star_theta_force);
   

@@ -1726,23 +1726,30 @@ public:
           ,char comment_char = '#'  /// comment charactor for header
           ,char deliniator = ','    /// deliniator between values
     ):filename(datafile){
-        Utilities::IO::ReadCSVnumerical1(datafile,data, column_names);
+      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names);
+      for(int i=0 ; i<column_names.size() ; ++i){
+        datamap[column_names[i]] = i;
+      }
     };
     
     /// returns column by name
-    std::vector<T>& operator[](std::string label){
-        int i = 0;
-        for(auto name : column_names){
-            if(name == label){
-                return data[i];
-            }
-            ++i;
-        }
-        for(auto c : column_names ) std::cout << c << " ";
-        std::cout << std::endl;
-        throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    std::vector<T>& operator[](const std::string &label){
+      return data[datamap[label]];
+      for(auto c : column_names ) std::cout << c << " ";
+      std::cout << std::endl;
+      throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
     };
 
+  /// add a column to the data frame.  This does a copy.
+  void add_column(const std::string &name,const std::vector<T> &vec){
+    if(vec.size() != data[0].size()){
+      std::cerr << "Added column to DataFrame needs to have the same size." << std::endl;
+      throw std::invalid_argument("wrong size");
+    }
+    column_names.push_back(name);
+    data.push_back(vec);
+    data[name] = data.size()-1;
+  };
 
     /// returns column by number
     std::vector<T>& operator[](int i){
@@ -1757,9 +1764,10 @@ public:
     size_t number_of_rows(){return data[0].size();}
     size_t number_of_columns(){return data.size();}
 private:
-    std::vector<std::vector<T> > data;
-    std::vector<std::string> column_names;
-    std::string filename;
+  std::map<std::string,int> datamap;
+  std::vector<std::vector<T> > data;
+  std::vector<std::string> column_names;
+  std::string filename;
 };
   }
 }
