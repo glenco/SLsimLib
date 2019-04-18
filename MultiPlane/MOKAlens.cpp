@@ -63,7 +63,7 @@ void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm
  * \brief loads a mass map from a given filename
  */
 
-LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad,bool my_zeromean, const COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad,bool my_zeromean, COSMOLOGY& lenscosmo)
 : LensHalo(),
 MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
 maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
@@ -86,7 +86,7 @@ LensHaloMassMap::LensHaloMassMap(
                                  ,double redshift          /// redshift of lens
                                  ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
                                  ,bool my_zeromean         /// if true, subtracts average density
-                                 ,const COSMOLOGY& lenscosmo  /// cosmology
+                                 ,COSMOLOGY& lenscosmo  /// cosmology
 )
 :LensHalo()
 , flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
@@ -176,7 +176,7 @@ LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_
  *
  *  In the future this could be used to read in individual PixelDMaps or other types of maps if the type were specified in the paramfile.
  */
-LensHaloMassMap::LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
 : LensHalo(), maptype(moka), cosmo(lenscosmo)
 {
   // read in parameters

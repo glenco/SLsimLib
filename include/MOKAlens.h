@@ -68,12 +68,12 @@ public:
                   ,PixelMapType maptype
                   ,int pixel_map_zeropad
                   ,bool my_zeromean
-                  , const COSMOLOGY& lenscosmo
+                  ,COSMOLOGY& lenscosmo
                   );
   
   //LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
   
-	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
+	LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
   LensHaloMassMap(
                   const PixelMap &MassMap   /// mass map in solar mass units
@@ -81,8 +81,41 @@ public:
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
                   ,bool my_zeromean         /// if true, subtracts average density
-                  ,const COSMOLOGY& lenscosmo  /// cosmology
+                  ,COSMOLOGY& lenscosmo  /// cosmology
   );
+  
+  LensHaloMassMap(const LensHaloMassMap &h):cosmo(h.cosmo){
+//    LensHaloMassMap(const LensHaloMassMap &h){
+    maptype = h.maptype;
+    map = h.map;
+    zerosize = h.zerosize;
+    zeromean = h.zeromean;
+  }
+ LensHaloMassMap(LensHaloMassMap &&h):cosmo(h.cosmo){
+//    LensHaloMassMap(LensHaloMassMap &&h){
+    *this = std::move(h);
+  }
+  
+  LensHaloMassMap & operator=(LensHaloMassMap &h){
+    if(&h != this){
+      //cosmo = h.cosmo;
+      maptype = h.maptype;
+      map = h.map;
+      zerosize = h.zerosize;
+      zeromean = h.zeromean;
+    }
+    return *this;
+  }
+  LensHaloMassMap & operator=(LensHaloMassMap &&h){
+    if(&h != this){
+      //cosmo = h.cosmo;
+      maptype = h.maptype;
+      map = std::move(h.map);
+      zerosize = h.zerosize;
+      zeromean = h.zeromean;
+    }
+    return *this;
+  }
 
 	~LensHaloMassMap();
 	
@@ -137,7 +170,7 @@ private:
 	void initMap();
 	void convertmap(MOKAmap *map,PixelMapType maptype);
 	MOKAmap map;
-	const COSMOLOGY& cosmo;
+	COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
   int zerosize;
   bool zeromean;
