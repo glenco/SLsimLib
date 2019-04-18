@@ -182,22 +182,22 @@ bool idcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
  */
 class SourceMultiShapelets: public Source{
 public:
-    SourceMultiShapelets(InputParams& params);
-    ~SourceMultiShapelets();
-    void sortInRedshift();
-    void sortInMag();
-
-    /// Surface brightness of current galaxy.
-	PosType SurfaceBrightness(PosType* x) {
+  
+  SourceMultiShapelets(InputParams& params);
+  ~SourceMultiShapelets();
+  void sortInRedshift();
+  void sortInMag();
+  /// Surface brightness of current galaxy.
+  PosType SurfaceBrightness(PosType* x) {
 		PosType sb = galaxies[index].SurfaceBrightness(x);
 		if (sb < sb_limit) return 0.;
 		return sb;
-    }
+  }
     
 	void printSource();
-    std::size_t getNumberOfGalaxies() const {return galaxies.size();}
+  std::size_t getNumberOfGalaxies() const {return galaxies.size();}
   /// number of galaxies
-    std::size_t size() const {return galaxies.size();}
+  std::size_t size() const {return galaxies.size();}
 
     /// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
 	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
@@ -207,7 +207,7 @@ public:
 	/// Set angular position of current source.
 	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
 	void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
-    void setTheta(const Point_2d &p){galaxies[index].setTheta(p);}
+  void setTheta(const Point_2d &p){galaxies[index].setTheta(p);}
 
     /// Return redshift of current source.
 	PosType getZ() const {return galaxies[index].getZ();}
@@ -222,6 +222,8 @@ public:
 			index = i;
 		return galaxies[index];
 	}
+  size_t getIndex() const {return index;}
+  
     /** The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.
 	 */

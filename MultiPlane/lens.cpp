@@ -236,9 +236,7 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
 Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
-  
-	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
-  
+    
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
   std::cout << "In Lens structure" << std::endl;
@@ -1478,7 +1476,7 @@ void Lens::clearMainHalos(bool verbose)
  *
  *  The angular position of the halo should be preserved, but the x coordinates may change
  */
-
+/*
 void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   halo->setCosmology(cosmo);
@@ -1492,6 +1490,7 @@ void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verb
   
   combinePlanes(verbose);
 }
+*/
 
 /**
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
@@ -1528,7 +1527,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
  * Note that this does not delete the halos that were there.  It just removes
  * them from the lens.
  */
-void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
+/*void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   main_halos.clear();
   
@@ -1542,6 +1541,7 @@ void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool ver
   createMainPlanes();
   combinePlanes(verbose);
 }
+*/
 
 /**
  * \brief Inserts a sequense of main lens halos and remove all previous ones.
