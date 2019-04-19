@@ -196,7 +196,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
  * \param seeing FWHM in arcsecs of the image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
-diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), seeing(seeing),Npix_x(Npix_x),Npix_y(Npix_y)
+diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron)
+,Npix_x(Npix_x),Npix_y(Npix_y),seeing(seeing)
 		{
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 			telescope = false;
@@ -214,7 +215,8 @@ diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_
  * \param oversample Oversampling rate of the PSF image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
-diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), oversample(oversample),Npix_x(Npix_x),Npix_y(Npix_y)
+diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),Npix_x(Npix_x),Npix_y(Npix_y)
+ , ron(ron), oversample(oversample)
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 

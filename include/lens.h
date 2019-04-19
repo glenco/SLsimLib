@@ -168,13 +168,12 @@ public:
    * \brief Inserts a single main lens halo and deletes all previous ones.
    * Then all lensing planes are updated accordingly.
    *
-   * Note that this does not delete the halos that were there.  It just removes
-   * them from the lens.
+   * Note that this does delete all the halos that were there.
    */
   template <typename T>
   void replaceMainHalo(const T &halo_in,bool addplanes,bool verbose=false)
   {
-    main_halos.clear();
+    Utilities::delete_container(main_halos);   // ????
     
     T * halo = new T(halo_in);
     halo->setCosmology(cosmo);
@@ -187,15 +186,69 @@ public:
     combinePlanes(verbose);
   }
 
+  /**
+   * \brief Inserts a sequense of main lens halos and adds them to the existing ones.
+   * Then all lensing planes are updated accordingly.
+   * If addplanes is true new planes will be added otherwise
+   * the halo is added to the nearest plane and a plane is added only
+   * if none exited on entry.
+   *
+   *  The angular position of the halo should be preserved, but the x coordinates may change
+   *  The halos are copied so the input halos can be destoyed without affecting the Lens.
+   */
+  template <typename T>
+  void insertMainHalos(std::vector<T> &my_halos,bool addplanes, bool verbose)
+  {
+    T* ptr;
+    //for(std::size_t i = 0; i < my_halos.size() ; ++i)
+    for(T &h : my_halos){
+      ptr = new T(h);
+      ptr->setCosmology(cosmo);
+      ptr->setDist(cosmo);
+      main_halos.push_back( ptr );
+      if(addplanes) addMainHaloToPlane( ptr );
+      else addMainHaloToNearestPlane( ptr );
+    }
+    
+    flag_switch_main_halo_on = true;
+    
+    combinePlanes(verbose);
+  }
+  /**
+   * \brief Inserts a sequense of main lens halos and remove all previous ones.
+   *
+   * Note that this does delete the halos that were there.
+   * Then all lensing planes are updated accordingly.
+   */
+  template <typename T>
+  void replaceMainHalos(std::vector<T> &my_halos,bool verbose)
+  {
+    Utilities::delete_container(main_halos);   // ????
+
+    T* ptr;
+    //for(std::size_t i = 0; i < my_halos.size() ; ++i)
+    for(T &h : my_halos){
+      ptr = new T(h);
+      ptr->setCosmology(cosmo);
+      ptr->setDist(cosmo);
+      main_halos.push_back( ptr );
+    }
+    
+    flag_switch_main_halo_on = true;
+    
+    Utilities::delete_container(main_planes);
+    createMainPlanes();
+    combinePlanes(verbose);
+  }
 
 	/// inserts a sequence of main lens halos and adds them to the existing ones
-	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
+	//void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a single main halo
   //void replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a sequence of main halos
-	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
+	// replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
   /** \brief Add substructures to the lens.
    
@@ -230,6 +283,7 @@ public:
 	
 	/// get single main halo
 	LensHalo* getMainHalo(std::size_t i);
+  
 	/// get single main halo of given type
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);

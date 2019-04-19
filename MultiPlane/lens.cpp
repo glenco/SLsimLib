@@ -1492,7 +1492,7 @@ void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verb
 }
 */
 
-/**
+/*
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
  * If addplanes is true new planes will be added otherwise
@@ -1501,7 +1501,7 @@ void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verb
  *
  *  The angular position of the halo should be preserved, but the x coordinates may change
  */
-void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, bool verbose)
+/*void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, bool verbose)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
@@ -1515,12 +1515,9 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 	flag_switch_main_halo_on = true;
 	
 	combinePlanes(verbose);
-}
+}*/
 
-
-
-
-/**
+/*
  * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  *
@@ -1550,7 +1547,7 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
  * them from the lens.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
+/*void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 {
 	main_halos.clear();
 	
@@ -1567,6 +1564,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	createMainPlanes();
 	combinePlanes(verbose);
 }
+ */
 
 
 /**
