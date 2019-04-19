@@ -49,6 +49,125 @@ struct MOKAmap{
   double omegam,omegal,h,wq;
 	double inarcsec;
 	Point_2d center;
+  
+  
+  MOKAmap(){}
+  MOKAmap(const MOKAmap &map){
+      convergence = map.convergence;
+      alpha1 = map.alpha1;
+      alpha2 = map.alpha2;
+      gamma1 = map.gamma1;
+      gamma2 = map.gamma2;
+      gamma3 = map.gamma3;
+      phi = map.phi;
+      Signlambdar = map.Signlambdar;
+      Signlambdat = map.Signlambdat;
+      x = map.x;
+      nx = map.nx;
+      ny = map.ny;
+      zlens = map.zlens;
+      m = map.m;
+      zsource = map.zsource;
+      Dlens = map.Dlens;
+      DLS = map.DLS;
+      DS = map.DS;
+      c = map.c;
+      cS = map.cS;
+      fsub = map.fsub;
+      mstar = map.mstar;
+      minsubmass = map.minsubmass;
+      boxlarcsec = map.boxlarcsec;
+      boxlMpc = map.boxlMpc;
+      boxlrad = map.boxlrad;
+      omegam = map.omegam;
+      omegal = map.omegal;
+      h = map.h;
+      wq = map.wq;
+      inarcsec = map.inarcsec;
+      center = map.center;
+  }
+
+  MOKAmap(MOKAmap &&map){
+    *this = std::move(map);
+  }
+  
+  MOKAmap & operator=(MOKAmap &&map){
+    if(this != &map){
+      convergence = std::move(map.convergence);
+      alpha1 = std::move(map.alpha1);
+      alpha2 = std::move(map.alpha2);
+      gamma1 = std::move(map.gamma1);
+      gamma2 = std::move(map.gamma2);
+      gamma3 = std::move(map.gamma3);
+      phi = std::move(map.phi);
+      Signlambdar = std::move(map.Signlambdar);
+      Signlambdat = std::move(map.Signlambdat);
+      x = std::move(map.x);
+      nx = map.nx;
+      ny = map.ny;
+      zlens = map.zlens;
+      m = map.m;
+      zsource = map.zsource;
+      Dlens = map.Dlens;
+      DLS = map.DLS;
+      DS = map.DS;
+      c = map.c;
+      cS = map.cS;
+      fsub = map.fsub;
+      mstar = map.mstar;
+      minsubmass = map.minsubmass;
+      boxlarcsec = map.boxlarcsec;
+      boxlMpc = map.boxlMpc;
+      boxlrad = map.boxlrad;
+      omegam = map.omegam;
+      omegal = map.omegal;
+      h = map.h;
+      wq = map.wq;
+      inarcsec = map.inarcsec;
+      center = map.center;
+    }
+    
+    return *this;
+  }
+  MOKAmap & operator=(const MOKAmap &map){
+    if(this != &map){
+      convergence = map.convergence;
+      alpha1 = map.alpha1;
+      alpha2 = map.alpha2;
+      gamma1 = map.gamma1;
+      gamma2 = map.gamma2;
+      gamma3 = map.gamma3;
+      phi = map.phi;
+      Signlambdar = map.Signlambdar;
+      Signlambdat = map.Signlambdat;
+      x = map.x;
+      nx = map.nx;
+      ny = map.ny;
+      zlens = map.zlens;
+      m = map.m;
+      zsource = map.zsource;
+      Dlens = map.Dlens;
+      DLS = map.DLS;
+      DS = map.DS;
+      c = map.c;
+      cS = map.cS;
+      fsub = map.fsub;
+      mstar = map.mstar;
+      minsubmass = map.minsubmass;
+      boxlarcsec = map.boxlarcsec;
+      boxlMpc = map.boxlMpc;
+      boxlrad = map.boxlrad;
+      omegam = map.omegam;
+      omegal = map.omegal;
+      h = map.h;
+      wq = map.wq;
+      inarcsec = map.inarcsec;
+      center = map.center;
+    }
+    
+    return *this;
+  }
+
 };
 
 /**
