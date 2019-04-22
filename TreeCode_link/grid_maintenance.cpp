@@ -306,6 +306,19 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
   
 	return total;
 }
+
+PosType Grid::EinsteinArea() const {
+  PosType total=0;
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    if( (*it)->invmag < 0) total += (*it)->gridsize * (*it)->gridsize;
+  }
+  
+  return total;
+}
+
 /**
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */
@@ -1075,6 +1088,18 @@ PixelMap Grid::writePixelMap(
   
   return map;
 }
+
+PixelMap  Grid::MapSurfaceBrightness(double resolution){
+  Branch *branch = i_tree->getTop();
+  int Nx = (int)( (branch->boundary_p2[0] - branch->boundary_p1[0])/resolution );
+  int Ny = (int)( (branch->boundary_p2[1] - branch->boundary_p1[1])/resolution );
+  
+  PixelMap map(branch->center,Nx,Ny,resolution);
+  map.AddGridBrightness(*this);
+
+  return map;
+}
+
 /** \brief Make a fits map that is automatically centered on the grid and has approximately the same range as the grid.  Nx can be used to change the resolution.  Nx = grid.getInitNgrid() will give the initial grid resolution
  */
 void Grid::writePixeFits(

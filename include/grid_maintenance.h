@@ -38,7 +38,8 @@ struct Grid{
   double RefreshSurfaceBrightnesses(SourceHndl source);
   double ClearSurfaceBrightnesses();
   unsigned long getNumberOfPoints() const;
-  
+  /// area of region with negative magnification
+  PosType EinsteinArea() const;
   
   /// tree on image plane
   TreeHndl i_tree;
@@ -78,20 +79,53 @@ struct Grid{
   /// With the initial boundaries and resolution, ie no refinement
   PixelMap writePixelMap(LensingVariable lensvar);
   
+  /// make image of surface brightness
+  void MapSurfaceBrightness(PixelMap &map){
+    map.Clean();
+    map.AddGridBrightness(*this);
+  }
+  /// map a map of the whole gridded area with given resolution
+  PixelMap MapSurfaceBrightness(double resolution);
+
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
+  
+  Grid(Grid &&grid){
+    *this = std::move(grid);
+  }
+  
+  Grid & operator=(Grid &&grid){
+    i_tree = grid.i_tree;
+    grid.i_tree = nullptr;
+    s_tree = grid.s_tree;
+    grid.s_tree = nullptr;
+    neighbors = grid.neighbors;
+    grid.neighbors = nullptr;
+    trashkist = grid.trashkist;
+    grid.trashkist = nullptr;
+
+    Ngrid_init = grid.Ngrid_init;
+    Ngrid_init2 = grid.Ngrid_init2;
+    Ngrid_block = grid.Ngrid_block;
+    initialized = grid.initialized;
+    maglimit = grid.maglimit;
+    pointID = grid.pointID;
+    axisratio = grid.axisratio;
+    
+    return *this;
+  }
   
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   
   /// one dimensional size of initial grid
-  const int Ngrid_init;
+  int Ngrid_init;
   int Ngrid_init2;
   
   /// one dimensional number of cells a cell will be divided into on each refinement step
-  const int Ngrid_block;
+  int Ngrid_block;
   bool initialized;
   Kist<Point> * trashkist;
   
@@ -105,7 +139,6 @@ private:
   unsigned long pointID;
   PosType axisratio;
   void writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val);
-  
   static std::mutex grid_mutex;
 };
 

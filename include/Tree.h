@@ -195,8 +195,6 @@ private:
   void _FindBox(TreeStruct::iterator &current,const PosType* ray) const;
   
   void _NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction,TreeStruct::Globals &glabs) const;
-
-
 };
 
 typedef struct TreeStruct *TreeHndl;

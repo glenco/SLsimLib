@@ -236,10 +236,9 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
 Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
-    
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
-  std::cout << "In Lens structure" << std::endl;
+  //std::cout << "In Lens destructor" << std::endl;
 }
 
 /// read in Cosmological Parameters
