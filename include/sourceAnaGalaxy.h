@@ -184,6 +184,9 @@ class SourceMultiShapelets: public Source{
 public:
   
   SourceMultiShapelets(InputParams& params);
+  /// Reads in sources from a catalog.
+  SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit = -1);
+
   ~SourceMultiShapelets();
   void sortInRedshift();
   void sortInMag();
@@ -227,12 +230,16 @@ public:
     /** The indexing operator can be used to change the "current" source that is returned when the surface brightness is subsequently
 	 * called.
 	 */
-	SourceShapelets& operator[] (std::size_t i){
-		if(i < galaxies.size())
-			return galaxies[i];
-		return galaxies[index];
-	}
-	
+  SourceShapelets& operator[] (std::size_t i){
+    if(i < galaxies.size())
+      return galaxies[i];
+    return galaxies[index];
+  }
+
+  SourceShapelets& back(){
+    return galaxies.back();
+  }
+
 	const SourceShapelets& operator[] (std::size_t i) const {
 		if(i < galaxies.size())
 			return galaxies[i];
@@ -265,7 +272,6 @@ private:
 
   void readCatalog();
 	std::string shapelets_folder;
-    
 };
 
 bool redshiftcompare_shap(SourceShapelets s1,SourceShapelets s2);

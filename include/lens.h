@@ -721,3 +721,4 @@ inline HaloType* Lens::getMainHalo(std::size_t i)
 typedef Lens* LensHndl;
 
 #endif /* MULTIPLANE_H_ */
+

@@ -886,10 +886,10 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 
 			locateD(x-1,(*current)->npoints,xcut,&cut);
 		}
-    assert(branch1->boundary_p1[0] < branch1->boundary_p2[0]);
-    assert(branch1->boundary_p1[1] < branch1->boundary_p2[1]);
-    assert(branch2->boundary_p1[0] < branch2->boundary_p2[0]);
-    assert(branch2->boundary_p1[1] < branch2->boundary_p2[1]);
+    assert(branch1->boundary_p1[0] <= branch1->boundary_p2[0]);
+    assert(branch1->boundary_p1[1] <= branch1->boundary_p2[1]);
+    assert(branch2->boundary_p1[0] <= branch2->boundary_p2[0]);
+    assert(branch2->boundary_p1[1] <= branch2->boundary_p2[1]);
     assert((*current)->boundary_p1[0] < (*current)->boundary_p2[0]);
     assert((*current)->boundary_p1[1] < (*current)->boundary_p2[1]);
 		delete[] x;

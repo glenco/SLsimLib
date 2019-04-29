@@ -203,7 +203,7 @@ public:
                   ,COSMOLOGY& lenscosmo  /// cosmology
   );
   
-  LensHaloMassMap(const LensHaloMassMap &h):cosmo(h.cosmo){
+  LensHaloMassMap(const LensHaloMassMap &h):LensHalo(h),cosmo(h.cosmo){
 //    LensHaloMassMap(const LensHaloMassMap &h){
     maptype = h.maptype;
     map = h.map;
@@ -217,6 +217,7 @@ public:
   
   LensHaloMassMap & operator=(LensHaloMassMap &h){
     if(&h != this){
+      LensHalo::operator=(h);
       //cosmo = h.cosmo;
       maptype = h.maptype;
       map = h.map;
@@ -227,6 +228,7 @@ public:
   }
   LensHaloMassMap & operator=(LensHaloMassMap &&h){
     if(&h != this){
+      LensHalo::operator=(h);
       //cosmo = h.cosmo;
       maptype = h.maptype;
       map = std::move(h.map);

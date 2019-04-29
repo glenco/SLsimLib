@@ -945,18 +945,34 @@ private:
 
 class LensHaloRealNSIE : public LensHalo{
 public:
-  /*LensHaloRealNSIE(){
-   sigma = zlens = fratio = pa = rcore = 0.;
-   }*/
-  
-  //LensHaloRealNSIE(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
-  
+
   /// explicit constructor, Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
                    ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
   
   /// Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
 	LensHaloRealNSIE(InputParams& params);
+  
+  LensHaloRealNSIE(const LensHaloRealNSIE &h):
+  LensHalo(h)
+  {
+    ++objectCount;
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+  }
+  
+  LensHaloRealNSIE &operator=(const LensHaloRealNSIE &h){
+    if(&h == this) return *this;
+    LensHalo::operator=(h);
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    return *this;
+  }
+  
 	~LensHaloRealNSIE();
   
 	/// overridden function to calculate the lensing properties

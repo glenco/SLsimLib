@@ -738,6 +738,17 @@ SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
   readCatalog();
 }
 
+SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
+: Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)
+{
+  
+  if(sb_limit == -1)
+    setSBlimit_magarcsec(30.);
+  else
+    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+  
+  readCatalog();
+}
 SourceMultiShapelets::~SourceMultiShapelets()
 {
 }
@@ -776,7 +787,6 @@ void SourceMultiShapelets::assignParams(InputParams& params){
     std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
     exit(1);
   }
-  
   
   if(!params.get("source_sb_limit",sb_limit))
     setSBlimit_magarcsec(30.);

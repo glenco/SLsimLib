@@ -312,7 +312,7 @@ void ImageFinding::find_crit(
   if(TEST){
     
     //*********************  test lines ****************************
-    // This tests that every every radial or pseudo critical line is near at
+    // This tests that every radial or pseudo critical line is near at
     // least one negative mag point
     Kist<Point> nkist;
     for(auto &crit : crtcurve){
