@@ -184,7 +184,8 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
   
   //double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
   double index = ran() + 3.5 ;
-  double q = 1 + (0.5-1)*ran();
+  
+  double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
   //spheroid = new SourceSersic(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);

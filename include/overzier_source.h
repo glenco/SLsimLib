@@ -75,7 +75,9 @@ public:
 	
   /// the bulge to total flux ratio
 	PosType getBtoT() const { return pow(10,(-current.mag_bulge + current.mag)/2.5); }
+  /// position angle in radians
 	PosType getPA() const { return current.PA; }
+  /// inclination in radians
 	PosType getInclination() const { return current.inclination;}
   float getSEDtype() const {return sedtype;}
   void setSEDtype(float s){ sedtype = s;}
@@ -125,7 +127,7 @@ protected:
       std::cout << "Reff :" << Reff/arcsecTOradians << " arcsec ";
       std::cout << "Rh :" << Rh/arcsecTOradians << " arcsec ";
       std::cout << "PA :" << PA << " ";
-      std::cout << "inclination :" << inclination << " ";
+      std::cout << "inclination :" << inclination << " radians";
       std::cout << "sbDo :" << sbDo << " ";
       std::cout << "sbSo :" << sbSo << " ";
       std::cout << "mag :" << mag << " ";

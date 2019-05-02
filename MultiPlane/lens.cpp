@@ -83,7 +83,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   //flag_switch_lensing_off = false;
   
   PosType ztmp = zsource;
-  combinePlanes(true);
+  combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   //std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
