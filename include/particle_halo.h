@@ -58,7 +58,7 @@ public:
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
   );
-  
+ 
   ~LensHaloParticles();
   
   void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
@@ -107,8 +107,15 @@ public:
                             ,int Nsmooth
                             ,PosType min_size);
 
-private:
+protected:
+  // constructure for derived classes
+  LensHaloParticles(float redshift        /// redshift of origin
+                    ,const COSMOLOGY& cosmo  /// cosmology
+  ): LensHalo(redshift,cosmo){}
 
+protected:
+
+  
   Point_3d mcenter;
   void rotate_particles(PosType theta_x,PosType theta_y);
 
@@ -116,6 +123,7 @@ private:
   
   void assignParams(InputParams& params);
 
+  
   PType *pp;
   //PosType **xp;
   //std::vector<float> masses;
@@ -865,6 +873,5 @@ private:
 #endif
 
 };
-
 
 #endif

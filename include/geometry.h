@@ -88,13 +88,16 @@ namespace Utilities {
     
     class Quaternion{
     public:
+      Quaternion(){
+        v[0] = v[1] = v[2] = v[3] = 0;
+      }
       Quaternion(double s,double x,double y,double z){
         v[0] = s;
         v[1] = x;
         v[2] = y;
         v[3] = z;
       }
-      Quaternion(const Quaternion &q){
+     Quaternion(const Quaternion &q){
         v[0] = q.v[0];
         v[1] = q.v[1];
         v[2] = q.v[2];
@@ -246,6 +249,8 @@ namespace Utilities {
       
       /// the components of the Quaternion
       double v[4];
+      /// components, 0,1,2,3
+      double & operator[](int i){return v[i];}
 
       /// returns the rotation Quaternion for a rotation around the x-axis
       static Quaternion q_x_rotation(double theta){

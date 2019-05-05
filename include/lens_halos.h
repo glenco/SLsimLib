@@ -43,7 +43,7 @@
 class LensHalo{
 public:
 	LensHalo();
-  LensHalo(PosType z,COSMOLOGY &cosmo);
+  LensHalo(PosType z,const COSMOLOGY &cosmo);
   LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
   LensHalo(InputParams& params,bool needRsize = true);
   LensHalo(const LensHalo &h);
@@ -214,7 +214,7 @@ private:
   PosType posHalo[2];
   PosType zlens;
   float mass;
-  // This is the size of the halo beyond which it does not have the profile expected profile.
+  // This is the size of the halo beyond which it does not have the expected profile.
   float Rsize = 0;
 
 protected:

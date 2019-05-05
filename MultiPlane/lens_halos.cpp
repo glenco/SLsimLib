@@ -20,7 +20,7 @@ LensHalo::LensHalo(){
   zlens = 0.0;
 }
 
-LensHalo::LensHalo(PosType z,COSMOLOGY &cosmo){
+LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
   rscale = 1.0;
   mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
   stars_implanted = false;
