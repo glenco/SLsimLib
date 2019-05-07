@@ -1,15 +1,19 @@
 #include "particle_halo.h"
 
+#ifndef GLAMER_disk_halo_h
+#define GLAMER_disk_halo_h
+
 using Utilities::Geometry::Quaternion;
 
 template <typename T=float>
 class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
   
+public:
   LensHaloDisk(double mass
                ,double disk_scale       /// scale length in Mpc
                ,double Rperp            /// vertical scale length in Mpc
                ,double mass_res
-               ,float my_inclination    /// disk inclination (radians)
+               ,float my_inclination    /// disk inclination, 0 is face on (radians)
                ,float my_PA             /// position angle (radians)
                ,Utilities::RandomNumbers_NR &ran
                ,float redshift
@@ -40,8 +44,8 @@ class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
       ++i;
     }
     
-    Rmax = -3 * Rscale * log(1 - (float)(N-1) / N );
-    LensHalo::setRsize( Rmax );
+    LensHalo::Rmax = -3 * Rscale * log(1 - (float)(N-1) / N );
+    LensHalo::setRsize( LensHalo::Rmax );
     
     LensHaloParticles<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
     
@@ -50,28 +54,24 @@ class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
     rotate_all(R);
     qrot_invers = R.conj();
     
-    mcenter *= 0.0;
+    LensHaloParticles<ParticleType<T> >::mcenter *= 0.0;
     LensHalo::setMass(mass);
     
-    qtree = new TreeQuadParticles<ParticleType<T> >(particles.data(),particles.size(),-1,-1,0,20);
-  }
-  
-  /// Reorient the disk
-  void reorient(float my_inclination,float my_PA){
-    inclination = my_inclination;
-    PA=my_PA;
-    
-    Quaternion R = Quaternion::q_z_rotation(PA)*Quaternion::q_x_rotation(inclination)*qrot_invers;
-    rotate_all(R);
-    qrot_invers = Quaternion::q_x_rotation(-inclination)*Quaternion::q_z_rotation(-PA);
-    
-    // reconstruct LensHaloParticles base class
-    delete qtree;
-    qtree = new TreeQuadParticles<ParticleType<T> >(particles.data(),particles.size(),-1,-1,0,20);
+    LensHaloParticles<ParticleType<T> >::qtree = new TreeQuadParticles<ParticleType<T> >(particles.data(),particles.size(),-1,-1,0,20);
   }
   
   LensHaloDisk(LensHaloDisk &&h):LensHaloParticles<ParticleType<T> >(std::move(h)){
-    *this = std::move(h);
+    particles=std::move(h.particles);
+    
+    //??? This and the move assignment operator depends on the move operator
+    //  for the std::vector keeping the pointers valid.  I think this is always
+    //  the case but it is not required by the C++ standard.
+    
+    qrot_invers = h.qrot_invers;  // rotation that brings the disk back to face on
+    Rscale = h.Rscale;
+    Rhight = h.Rhight;
+    PA = h.PA;
+    inclination = h.inclination;
   }
   
   LensHaloDisk & operator=(LensHaloDisk &&h){
@@ -86,6 +86,22 @@ class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
     
     return *this;
   }
+
+  
+  /// Reorient the disk
+  void reorient(float my_inclination,float my_PA){
+    inclination = my_inclination;
+    PA=my_PA;
+    
+    Quaternion R = Quaternion::q_z_rotation(PA)*Quaternion::q_x_rotation(inclination)*qrot_invers;
+    rotate_all(R);
+    qrot_invers = Quaternion::q_x_rotation(-inclination)*Quaternion::q_z_rotation(-PA);
+    
+    // reconstruct LensHaloParticles base class
+    delete LensHaloParticles<ParticleType<T> >::qtree;
+    LensHaloParticles<ParticleType<T> >::qtree = new TreeQuadParticles<ParticleType<T> >(particles.data(),particles.size(),-1,-1,0,20);
+  }
+  
   
 private:
   
@@ -108,4 +124,4 @@ private:
   std::vector<ParticleType<T> > particles;
 };
 
-
+#endif
