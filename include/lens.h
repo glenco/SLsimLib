@@ -164,6 +164,28 @@ public:
     combinePlanes(verbose);
   }
   
+  /** \brief This has the same effect as insertMainHalo(), but the halo is not
+   copied, it is moved.
+  
+   The Lens will take possession of the halo and will destroy it when it is destroyed.
+   This is to avoid copying halos that take up a lot of memory and require
+   a lot of time to copy like LensHaloParticles().
+  **/
+  template <typename T>
+  void moveinMainHalo(T &halo_in, bool addplanes,bool verbose=false)
+  {
+    T * halo = new T(std::move(halo_in));
+    halo->setCosmology(cosmo);
+    main_halos.push_back(halo);
+    
+    flag_switch_main_halo_on = true;
+    
+    if(addplanes) addMainHaloToPlane(halo);
+    else addMainHaloToNearestPlane(halo);
+    
+    combinePlanes(verbose);
+  }
+  
   /**
    * \brief Inserts a single main lens halo and deletes all previous ones.
    * Then all lensing planes are updated accordingly.

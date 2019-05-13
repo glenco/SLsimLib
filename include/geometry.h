@@ -74,6 +74,9 @@ namespace Utilities {
      // apply the rotation
      q = q.Rotate(R);
      
+     // rotate in place, same as above but with one less copy
+     q.RotInplace(R);
+     
      // convert to a Point_3d
      Point_3d p = q.to_point_3d();
      
@@ -179,18 +182,24 @@ namespace Utilities {
         return R*(*this)*R.conj();
       }
       
+      /** returns the Quaternion rotated with the rotation Quaternion R.
+       It is assumed that R has norm = 1, ie ||R|| = 1 */
+      void RotInplace(const Quaternion &R){
+        *this = R*(*this)*R.conj();
+      }
+      
       
       /// rotate a Point_3d using a rotation Quaternion
       static Point_3d Rotate(const Point_3d &p,const Quaternion &R){
         Quaternion q(p);
-        q.Rotate(R);
+        q.RotInplace(R);
         return q.to_point_3d();
       }
 
       /// rotate a SpericalPoint using a rotation Quaternion
       static SphericalPoint Rotate(const SphericalPoint &p,const Quaternion &R){
         Quaternion q(p);
-        q.Rotate(R);
+        q.RotInplace(R);
         return q.to_SpericalPoint();
       }
       

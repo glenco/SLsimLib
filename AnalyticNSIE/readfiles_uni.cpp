@@ -76,11 +76,13 @@ LensHaloUniform::~LensHaloUniform(){
 void LensHaloUniform::setCosmology(const COSMOLOGY& cosmo)
 {
   PosType zlens = LensHalo::getZlens();
-	Dl = cosmo.angDist(0,zlens); // In comoving Mpc
-	Ds = cosmo.angDist(0,zsource_reference);
-	Dls = cosmo.angDist(zlens,zsource_reference);
-  SigmaCrit = Ds/Dl/Dls/(4*PI*Grav);
+	//Dl = cosmo.angDist(0,zlens); // In comoving Mpc
+	//Ds = cosmo.angDist(0,zsource_reference);
+	//Dls = cosmo.angDist(zlens,zsource_reference);
+  //SigmaCrit = Ds/Dl/Dls/(4*PI*Grav);
 	
+  SigmaCrit = cosmo.SigmaCrit(zlens,zsource_reference);
+  
   Sigma_uniform = kappa_uniform*SigmaCrit;
   gammaCrit_uniform[0] = gamma_uniform[0]*SigmaCrit;
   gammaCrit_uniform[1] = gamma_uniform[1]*SigmaCrit;
@@ -100,19 +102,20 @@ void LensHaloUniform::force_halo(
                                  ,PosType screening
                                  )
 {
-  PosType alpha_tmp[2];
-  KappaType gamma_tmp[3], phi_tmp;
+  //PosType alpha_tmp[2];
+  //KappaType gamma_tmp[3], phi_tmp;
   
-  gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-  alpha_tmp[0] = alpha_tmp[1] = 0.0;
-  phi_tmp = 0.0;
+  //gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+  //alpha_tmp[0] = alpha_tmp[1] = 0.0;
+  //phi_tmp = 0.0;
   
-  *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&phi_tmp);
-  
+  //*kappa += lens_expand(perturb_modes,xcm,alpha,gamma,&phi_tmp);
+  *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,phi);
+
   alpha[0] *= -1;
   alpha[1] *= -1;
   
-  *phi += phi_tmp ;
+  //*phi += phi_tmp ;
   
   // add stars for microlensing
   if(stars_N > 0 && stars_implanted)

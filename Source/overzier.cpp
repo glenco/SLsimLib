@@ -169,6 +169,7 @@ void SourceOverzier::renormalize_current(){
 SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rh,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
 SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,theta)
 {
+  assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
   original = current;
 
@@ -365,9 +366,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     current.mag += tmp;
     
     current.PA = PI*ran();
-    current.inclination = 1.0*PI/2*ran();
-    if(cos(current.inclination)< 0.25) current.inclination = acos(0.25);
-
+    current.inclination = MIN(ran()*PI/2,0.95*PI/2);
     
     cospa = cos(current.PA);
     sinpa = sin(current.PA);

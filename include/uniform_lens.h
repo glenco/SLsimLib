@@ -74,7 +74,7 @@ public:
 	float* getGammaCrit_uniform(){return gammaCrit_uniform;}
   /// Unitless convergence
 	float getKappa_uniform() const {return Sigma_uniform/SigmaCrit;}
-  /// Shear times the critical surface density
+  /// Magnification if there are no other lenses
 	PosType getAveMag() const { return 1.0/( pow(1-Sigma_uniform/SigmaCrit,2) -
                                   (gammaCrit_uniform[0]*gammaCrit_uniform[0] + gammaCrit_uniform[1]*gammaCrit_uniform[1])/SigmaCrit/SigmaCrit );}
   /// Critical surface density
