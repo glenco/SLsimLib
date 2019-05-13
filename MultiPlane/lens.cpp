@@ -1406,7 +1406,8 @@ void Lens::createMainHalos(InputParams& params)
       main_halos.push_back(new LensHaloAnaNSIE(params));
       break;
     case uni_lens:
-      main_halos.push_back(new LensHaloUniform(params));
+      throw std::invalid_argument("Can't add uniform lens in this way now");
+//      main_halos.push_back(new LensHaloUniform(params));
       break;
     case moka_lens:
       main_halos.push_back(new LensHaloMassMap(params, cosmo));
