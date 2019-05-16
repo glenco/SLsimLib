@@ -48,6 +48,7 @@ public:
                     ,bool recenter           /// center on center of mass
                     ,bool my_multimass       /// set to true is particles have different sizes
                     ,PosType MinPSize        /// minimum particle size
+                    ,bool verbose=false
   );
  
   LensHaloParticles(std::vector<PType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
@@ -57,12 +58,13 @@ public:
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
+                    ,bool verbose=false
   ):min_size(MinPSize),multimass(true)
   {
     std::swap(pvector,trash_collector);
     pp = trash_collector.data();
     Npoints = trash_collector.size();
-    set_up(redshift,cosmo,theta_rotate,recenter);
+    set_up(redshift,cosmo,theta_rotate,recenter,verbose);
   }
   ~LensHaloParticles();
   
@@ -145,9 +147,10 @@ protected:
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
+                    ,bool verbose
   ):pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
   {
-    set_up(redshift,cosmo,theta_rotate,recenter);
+    set_up(redshift,cosmo,theta_rotate,recenter,verbose);
   }
 
   void rotate_particles(PosType theta_x,PosType theta_y);
@@ -169,7 +172,7 @@ protected:
   std::string sizefile;
   
   TreeQuadParticles<PType> * qtree;
-  void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,bool recenter);
+  void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,bool recenter,bool verbose);
 };
 
 template<typename PType>
@@ -182,6 +185,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
                                             ,bool recenter
                                             ,bool my_multimass
                                             ,PosType MinPSize
+                                            ,bool verbose
                                             )
 :min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
@@ -240,7 +244,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   
   mcenter /= mass;
   
-  std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
   
   
   if(recenter){
@@ -269,6 +273,7 @@ void LensHaloParticles<PType>::set_up(
                                  ,const COSMOLOGY& cosmo  /// cosmology
                                  ,Point_2d theta_rotate   /// rotation of particles around the origin
                                  ,bool recenter           /// center on center of mass
+                                 ,bool verbose
 ){
 
   LensHalo::setZlens(redshift);
@@ -300,7 +305,7 @@ void LensHaloParticles<PType>::set_up(
   
   mcenter /= mass;
   
-  std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
   
   if(recenter){
     PosType r2,r2max=0;

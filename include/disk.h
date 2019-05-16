@@ -141,7 +141,7 @@ qrot_invers(1,0,0,0),Rscale(disk_scale),Rhight(Rperp),zpa(-my_PA),inclination(my
   LensHaloParticles<ParticleType<T> >::multimass=false;
   
   Point_2d no_rotation;
-  LensHaloParticles<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,false);
+  LensHaloParticles<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,false,false);
 };
 
 #endif

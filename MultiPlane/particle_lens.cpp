@@ -190,8 +190,9 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
                                                                   ,cosmo
                                                                   ,theta_rotate
                                                                   ,false
-                                                                  ,0)
+                                                                  ,0,false)
                       );
+  
       /*/
        /*LensHaloParticles<ParticleType<float> > halo(pp
        ,nparticles[i]
