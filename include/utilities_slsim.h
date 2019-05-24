@@ -1203,6 +1203,13 @@ namespace Utilities
 
   /// namespace for input/output utilities
   namespace IO{  ///
+    
+    /// checks if file exists
+    inline bool checkfile (const std::string& name) {
+      struct stat buffer;
+      return (stat (name.c_str(), &buffer) == 0);
+    }
+    
     /** \brief Read in data from an ASCII file with two columns
      */
     template <class T1,class T2>

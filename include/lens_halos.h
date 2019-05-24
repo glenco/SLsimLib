@@ -43,7 +43,7 @@
 class LensHalo{
 public:
 	LensHalo();
-  LensHalo(PosType z,COSMOLOGY &cosmo);
+  LensHalo(PosType z,const COSMOLOGY &cosmo);
   LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
   LensHalo(InputParams& params,bool needRsize = true);
 	virtual ~LensHalo();

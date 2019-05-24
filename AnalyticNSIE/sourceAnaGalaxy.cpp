@@ -219,7 +219,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
     << "  " << H_band_Bulge << "  " << Ks_band_Bulge << "  " << i1_Bulge << "  " << i2_Bulge
     << std::endl;
 
-		if(mag < mag_limit){
+		//if(mag < mag_limit){
       //std::cout << "good mag " << std::endl;
 
 			/*
@@ -299,7 +299,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
       assert(galaxies.back().getMag(band) == galaxies.back().getMag() );
       //std::cout << " j in SourceMultiAnaGalaxy : " << j << std::endl;
 			++j;
-		}
+		//}
 	}
 
   std::cout << " closing file in SourceMultiAnaGalaxy : " << std::endl;

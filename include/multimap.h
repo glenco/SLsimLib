@@ -31,7 +31,11 @@
  */
 struct LensMap{
   
-  LensMap():nx(0),ny(0),boxlMpc(0),z(0){};
+  LensMap():nx(0),ny(0),boxlMpc(0){};
+  
+  // move operators
+  LensMap(LensMap &&m);
+  LensMap& operator=(LensMap &&m);
   
 	/// values for the map
 	std::valarray<float> surface_density;  // Msun / Mpc^2
@@ -39,42 +43,36 @@ struct LensMap{
 	std::valarray<float> alpha2_bar;
 	std::valarray<float> gamma1_bar;
 	std::valarray<float> gamma2_bar;
-	//std::valarray<double> gamma3_bar;
   std::valarray<float> phi_bar;
-	//std::vector<double> x;
   int nx,ny;
-  // boxlMpc is Mpc/h for MOKA
-	/// lens and source properties
-  //double zlens,m,zsource,Dlens,DLS,DS,c,cS,fsub,mstar,minsubmass;
-  /// range in x direction, pixels are square
-  //double boxlarcsec,boxlrad;
   double boxlMpc;
-  /// cosmology
-  //double omegam,omegal,h,wq;
-	//double inarcsec;
 	Point_2d center;
   Point_2d lowerleft;
   Point_2d upperright;
   
-  double z;
+  //double z;
   
 #ifdef ENABLE_FITS
 
-  LensMap(std::string fits_input_file,float h){
-    read(fits_input_file,h);
+  LensMap(std::string fits_input_file,float h,float z){
+    read(fits_input_file,h,z);
   }
   
   /// read an entire map
-  void read(std::string input_fits,float h);
+  void read(std::string input_fits,float h,float z);
+  /// read from a file that has been generated with LensMap::write()
+  void Myread(std::string fits_input_file);
+
   
   /// read only header information
-  void read_header(std::string input_fits,float h);
+  void read_header(std::string input_fits,float h,float z);
 
   /// read a subsection of the fits map
   void read_sub(std::string input_fits
                          ,const std::vector<long> &first
                          ,const std::vector<long> &last
                          ,float h
+                         ,float z
                          );
   
   
@@ -84,6 +82,7 @@ struct LensMap{
                 ,const std::vector<long> &first
                 ,const std::vector<long> &last
                 ,float h
+                ,float z
                 );
 
   void write(std::string filename);
@@ -115,25 +114,30 @@ public:
 
   LensHaloMultiMap(
                    std::string fitsfile  /// Original fits map of the density
-                   ,double mass_unit     /// shoudl include h factors
+                   ,double redshift
+                   ,double mass_unit     /// should include h factors
                    ,const COSMOLOGY &c
                    ,bool single_grid_mode = false
                    );
 
-  //double Wlr(double k2){return exp(-k2*rs2);}
-    
   ~LensHaloMultiMap(){
     delete ff;
   };
 	
   const double f = 5,g = 6;
   
+  /// Set highres map be specifying the corners in pixel values
   void submap(
               const std::vector<long> &lower_left
               ,const std::vector<long> &upper_right
               );
-  /// in physical coordinates relative to the center of the original map
-  void submap(Point_2d ll,Point_2d ur);
+  /// Sets the highres smaller map in physical coordinates relative to the center of the original map, periodic boundary conditions apply
+  void submapPhys(Point_2d ll,Point_2d ur);
+  
+  void submapAngular(Point_2d ll,Point_2d ur){
+    double D = getDist();
+    submapPhys(ll*D,ur*D);
+  }
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
@@ -173,12 +177,18 @@ public:
   size_t getNx() const { return Noriginal[0]; }
   /// return number of pixels on a y-axis side in original map
   size_t getNy() const { return Noriginal[1]; }
+  
+  double getMax() const {return max_pix;}
+  double getMin() const {return min_pix;}
 
 private:
   
   bool single_grid;
   const COSMOLOGY &cosmo;
   CCfits::FITS *ff;
+  
+  double max_pix = std::numeric_limits<double>::lowest();
+  double min_pix = std::numeric_limits<double>::max();
   
 public:  // ?????
   LensMap long_range_map;
@@ -195,7 +205,7 @@ private:  // ?????
   
 	//const COSMOLOGY& cosmo;
   int zerosize;
-  
+
   struct UNIT{
     int operator()(float k2){return 1;}
   };
@@ -471,7 +481,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
       for( int i=imin; i<imax; i++ ){
         int ii = i-imin;
         
-        surface_density[ii+nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+        surface_density[ii+nx*jj] = float(realsp[i+Nnx*j]/Nnx/Nny);
         
       }
     }
