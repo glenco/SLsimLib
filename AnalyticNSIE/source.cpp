@@ -359,9 +359,9 @@ void SourcePixelled::assignParams(InputParams& params){}
  *
  */
 PosType Source::changeFilter(
-                             std::string filter_in  				/// file with the old observing filter
-                             , std::string filter_out			/// file with the new observing filter
-                             , std::string sed					/// file with the galaxy spectral energy distribution
+                             std::string filter_in  /// file with the old observing filter
+                             , std::string filter_out	/// file with the new observing filter
+                             , std::string sed			/// file with the galaxy spectral energy distribution
 )
 {
   
@@ -770,19 +770,22 @@ void SourceMultiShapelets::readCatalog()
     {
       SourceShapelets s(shap_file.c_str());
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag() < mag_limit)
+      if (s.getMag() > 0. && s.getMag() < mag_limit
+          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0 ){
         galaxies.push_back(s);
-      shap_input.close();
+        shap_input.close();
+      }
+      /*else if (i == 1)
+      {
+        std::cout << "Can't open file " << shap_file << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+        exit(1);
+      }*/
     }
-    else if (i == 1)
-    {
-      std::cout << "Can't open file " << shap_file << std::endl;
-      ERROR_MESSAGE();
-      throw std::runtime_error(" Cannot open file.");
-      exit(1);
-    }
-    
   }
+  std::cout << galaxies.size() << " shapelet sources out of " << max_num
+  << " passed selection." << std::endl;
   band = galaxies[0].getBand();
 }
 
