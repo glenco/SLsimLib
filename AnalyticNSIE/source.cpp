@@ -502,6 +502,8 @@ void SourceShapelets::setActiveBand(Band band)
       flux = std::numeric_limits<PosType>::epsilon();
     else
       flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  
+  assert(flux > 0);
   current_band = band;
   return;
 }
@@ -529,6 +531,7 @@ SourceShapelets::SourceShapelets(
   source_r = my_scale;
   
   flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  assert(flux > 0.0);
   
   NormalizeFlux();
 }
@@ -582,6 +585,7 @@ SourceShapelets::SourceShapelets(
 #endif
   
   flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  assert(flux > 0);
   
   NormalizeFlux();
   
@@ -686,6 +690,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   }
   sb *= exp(-0.5*(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]) )/source_r;
   sb *= flux/coeff_flux;
+  assert(flux > 0);
   
   return max(sb,std::numeric_limits<PosType>::epsilon());
 }

@@ -124,7 +124,7 @@ qrot_invers(1,0,0,0),Rscale(disk_scale),Rhight(Rperp),zpa(-my_PA),inclination(my
     ++i;
   }
   
-  LensHalo::Rmax = -3 * Rscale * log(1 - (float)(N-1) / N );
+  LensHalo::Rmax = -5 * Rscale * log(1 - (float)(N-1) / N );
   LensHalo::setRsize( LensHalo::Rmax );
   
   LensHaloParticles<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
