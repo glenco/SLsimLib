@@ -71,7 +71,7 @@ public:
   LensHaloParticles(LensHaloParticles &&h):LensHalo(std::move(h)){
     mcenter = h.mcenter;
     trash_collector =std::move(h.trash_collector);
-    pp = h.pp;  // note: this depends on std:move keeping the pointer valid if it is constructed with the public constructor
+    pp = trash_collector.data();
     h.pp = nullptr;
     
     min_size = h.min_size;
