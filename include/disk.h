@@ -34,8 +34,11 @@ public:
   }
   
   LensHaloDisk & operator=(LensHaloDisk &&h){
+    assert(&h != this);
+    
     LensHaloParticles<ParticleType<T> >::operator=(std::move(h));
     
+    particles = LensHaloParticles<ParticleType<T> >::trash_collector;
     qrot_invers = h.qrot_invers;  // rotation that brings the disk back to face on
     Rscale = h.Rscale;
     Rhight = h.Rhight;
