@@ -96,6 +96,8 @@ struct Grid{
   }
   
   Grid & operator=(Grid &&grid){
+    assert(&grid != this);
+    
     i_tree = grid.i_tree;
     grid.i_tree = nullptr;
     s_tree = grid.s_tree;
