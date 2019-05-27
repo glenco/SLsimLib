@@ -114,7 +114,8 @@ public:
   
   static void calculate_smoothing(int Nsmooth
                                   ,PType *pp
-                                  ,size_t Npoints);
+                                  ,size_t Npoints
+                                  ,bool verbose = false);
   
   void readPositionFileASCII(const std::string &filename);
   
@@ -572,11 +573,13 @@ void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y)
 
 template<typename PType>
 void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
-                                                   ,size_t Npoints){
+                                                   ,size_t Npoints
+                                                   ,bool verbose
+                                                   ){
   
   int nthreads = Utilities::GetNThreads();
   
-  std::cout << "Calculating smoothing of particles ..." << std::endl
+  if(verbose) std::cout << "Calculating smoothing of particles ..." << std::endl
   << Nsmooth << " neighbors.  If there are a lot of particles this could take a while." << std::endl;
   
   time_t to,t;
@@ -606,7 +609,7 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
     for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
   }
   time(&t);
-  std::cout << "done in " << difftime(t,to) << " secs" << std::endl;
+  if(verbose) std::cout << "done in " << difftime(t,to) << " secs" << std::endl;
 }
 
 template<typename PType>
