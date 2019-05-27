@@ -737,6 +737,7 @@ inline LensHalo* Lens::getMainHalo(std::size_t i)
 template<typename HaloType>
 inline HaloType* Lens::getMainHalo(std::size_t i)
 {
+  if(main_halos.size<HaloType>() == 0 ) return nullptr;
 	return main_halos.at<HaloType>(i);
 }
 
