@@ -1734,6 +1734,9 @@ public:
     
     /// returns column by name
     std::vector<T>& operator[](const std::string &label){
+      if(datamap.find(label) == datamap.end()){
+        throw std::invalid_argument("no label");
+      }
       return data[datamap[label]];
       for(auto c : column_names ) std::cout << c << " ";
       std::cout << std::endl;

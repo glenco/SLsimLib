@@ -23,13 +23,13 @@ class SourceOverzier : public Source
 {
 public:
 	//SourceOverzier();
-	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
+	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
   
   SourceOverzier(const SourceOverzier &s);
   SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
-	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
+	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
   virtual PosType SurfaceBrightness(PosType *x);
 	PosType getTotalFlux() const;
 	void printSource();
@@ -63,15 +63,18 @@ public:
   */
   
   /// magnitude in specific band
-  void setMag(Band band,PosType my_mag);
-  
+  virtual void setMag(Band band,PosType my_mag){
+    current.mag_map[band] = my_mag;
+  };
   /// magnitude in specific band
-  void setMagBulge(Band band,PosType my_mag);
+  virtual void setMagBulge(Band band,PosType my_mag){
+    current.bulge_mag_map[band] = my_mag;
+  }
   
 	/// bulge half light radius in arcseconds
 	PosType getReff() const { return current.Reff/arcsecTOradians; }
 	/// disk scale height in arcseconds
-	PosType getRh() const { return current.Rh/arcsecTOradians; }
+	PosType getRdisk() const { return current.Rdisk/arcsecTOradians; }
 	
   /// the bulge to total flux ratio
 	PosType getBtoT() const { return pow(10,(-current.mag_bulge + current.mag)/2.5); }
@@ -88,7 +91,7 @@ public:
 	/** Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
 	* TODO: Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
   */
-	inline PosType getMinSize(PosType f) {return std::min(1.678*current.Reff*fabs(cos(current.inclination))*pow(-log (f)/7.67,4),current.Rh*(-log (f)/1.67));}
+	inline PosType getMinSize(PosType f) {return std::min(1.678*current.Reff*fabs(cos(current.inclination))*pow(-log (f)/7.67,4),current.Rdisk*(-log (f)/1.67));}
 
   static PosType *getx(SourceOverzier &sourceo){return sourceo.source_x.x;}
 
@@ -103,10 +106,11 @@ protected:
 	unsigned long haloID;
 
   struct Params{
+
     /// bulge half light radius
     PosType Reff=0;
     /// disk scale height
-    PosType Rh=0;
+    PosType Rdisk=0;
 	
     //PosType BtoT;
     PosType PA=0;
@@ -125,7 +129,7 @@ protected:
     void print(){
       /// bulge half light radius
       std::cout << "Reff :" << Reff/arcsecTOradians << " arcsec ";
-      std::cout << "Rh :" << Rh/arcsecTOradians << " arcsec ";
+      std::cout << "Rdisk :" << Rdisk/arcsecTOradians << " arcsec ";
       std::cout << "PA :" << PA << " ";
       std::cout << "inclination :" << inclination << " radians";
       std::cout << "sbDo :" << sbDo << " ";
@@ -149,7 +153,7 @@ public:
                                          PosType my_mag         /// total magnitude
                                          ,PosType my_mag_bulge  /// magnitude of bulge
                                          ,PosType my_Reff       /// effective radius of bulge
-                                         ,PosType my_Rh         /// scale hight of disk
+                                         ,PosType my_Rdisk         /// scale hight of disk
                                          ,PosType my_PA         /// position angle
                                          ,PosType inclination   /// inclination
                                          ,unsigned long my_id
@@ -169,6 +173,17 @@ public:
 
   PosType SurfaceBrightness(PosType *y);
 
+  /// magnitude in specific band
+  void setMag(Band band,PosType my_mag){
+    current.mag_map[band] = my_mag;
+    original.mag_map[band] = my_mag;
+  }
+  /// magnitude in specific band
+  void setMagBulge(Band band,PosType my_mag){
+    current.bulge_mag_map[band] = my_mag;
+    original.bulge_mag_map[band] = my_mag;
+  }
+  
   int getNarms() const {return Narms;}
   PosType getArmAmplitude() const {return Ad;}
   PosType getArmAlpha() const {return arm_alpha;}

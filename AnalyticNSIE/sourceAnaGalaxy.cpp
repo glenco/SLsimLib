@@ -14,7 +14,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		PosType mag              /// Total magnitude
 		,PosType mag_bulge        /// magnitude of Bulge
 		,PosType Reff            /// Bulge half light radius (arcs)
-		,PosType Rh              /// disk scale hight (arcs)
+		,PosType Rdisk              /// disk scale hight (arcs)
 		,PosType PA              /// Position angle (radians)
 		,PosType inclination     /// inclination of disk (radians)
 		,PosType my_z               /// redshift of source
@@ -22,7 +22,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
     ,Utilities::RandomNumbers_NR &ran
 		): Source(),index(0){
 	
-	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rh,PA,inclination,0,my_z,my_theta,ran));
+	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rdisk,PA,inclination,0,my_z,my_theta,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -71,7 +71,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 	unsigned long i,j;
 
 	unsigned long GalID,HaloID;
-	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g
+	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rdisk,Ref,SDSS_u,SDSS_g
   ,SDSS_r,SDSS_i,SDSS_z,J_band,H_band,Ks_band,i1,i2
   ,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
 	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
@@ -147,7 +147,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 	addr[6] = &Dlum;
 	addr[7] = &inclination;
 	addr[8] = &pa;
-	addr[9] = &Rh;
+	addr[9] = &Rdisk;
 	addr[10] = &Ref;
   
 	addr[11] = &SDSS_u;
@@ -242,7 +242,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
       //std::cout << "adding to galaxies" << std::endl;
 			/***************************/
     
-    SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge,Ref,Rh
+    SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge,Ref,Rdisk
                                 ,pa,inclination,HaloID,z_cosm,theta,ran);
      //std::cout << "filling last galaxy" << std::endl;
 
@@ -353,7 +353,7 @@ void SourceMultiAnaGalaxy::multiplier(
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
 				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getMagBulge()
-                ,galaxies[i].getReff(),galaxies[i].getRh(),ran()*PI,ran()*2*PI
+                ,galaxies[i].getReff(),galaxies[i].getRdisk(),ran()*PI,ran()*2*PI
 					,Nold+NtoAdd,galaxies[i].getZ(),theta,ran));
 
 				++NtoAdd;

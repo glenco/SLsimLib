@@ -19,7 +19,7 @@ SourceOverzier::SourceOverzier(
 		PosType my_mag          /// Total magnitude
 		,double my_mag_bulge    /// Bulge to total ratio
 		,double my_Reff         /// Bulge half light radius (arcs)
-		,double my_Rh           /// disk scale hight (arcs)
+		,double my_Rdisk           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
 		,double my_inclination  /// inclination of disk (radians)
 		,unsigned long my_id          ///          id number
@@ -28,9 +28,11 @@ SourceOverzier::SourceOverzier(
 		){
 
       //std::cout << "SourceOverzier constructor" << std::endl;
-  setInternals(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,my_inclination,my_id,my_z,my_theta);
+  setInternals(my_mag,my_mag_bulge,my_Reff
+               ,my_Rdisk,my_PA,my_inclination
+               ,my_id,my_z,my_theta);
 
-  assert(current.Reff != 0 || current.Rh !=0 );
+  assert(current.Reff != 0 || current.Rdisk !=0 );
 }
 
 SourceOverzier::~SourceOverzier()
@@ -54,22 +56,22 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
-void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Reff,double my_Rh,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
+void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Reff,double my_Rdisk,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
 	haloID = my_id;
 
   if(my_Reff < 0.05) my_Reff = 0.05; // ????
 	current.Reff = my_Reff*arcsecTOradians;
-	current.Rh = my_Rh*arcsecTOradians;
+	current.Rdisk = my_Rdisk*arcsecTOradians;
 	current.mag = my_mag;
   current.mag_bulge = my_mag_bulge;
 	current.PA = my_PA;
 	current.inclination = incl;
 
-	if(current.Rh > 0.0){
-		current.cxx = ( pow(cos(current.PA),2) + pow(sin(current.PA)/cos(incl),2) )/current.Rh/current.Rh;
-		current.cyy = ( pow(sin(current.PA),2) + pow(cos(current.PA)/cos(incl),2) )/current.Rh/current.Rh;
-		current.cxy = ( 2*cos(current.PA)*sin(current.PA)*(1-pow(1/cos(incl),2)) )/current.Rh/current.Rh;
+	if(current.Rdisk > 0.0){
+		current.cxx = ( pow(cos(current.PA),2) + pow(sin(current.PA)/cos(incl),2) )/current.Rdisk/current.Rdisk;
+		current.cyy = ( pow(sin(current.PA),2) + pow(cos(current.PA)/cos(incl),2) )/current.Rdisk/current.Rdisk;
+		current.cxy = ( 2*cos(current.PA)*sin(current.PA)*(1-pow(1/cos(incl),2)) )/current.Rdisk/current.Rdisk;
 	}else{
 		current.cxx = current.cyy = current.cxy = 0.0;
 	}
@@ -82,9 +84,9 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 	// radius
 	// weighted mean between the radii that enclose 99% of the flux
 	// in the pure De Vacouleur/exponential disk case
-	// 6.670 = 3.975*Re = 3.975*1.678*Rh
+	// 6.670 = 3.975*Re = 3.975*1.678*Rdisk
   float BtoT = getBtoT();
-	setRadius(6.670*current.Rh*(1 - BtoT) + 18.936 * current.Reff * BtoT);
+	setRadius(6.670*current.Rdisk*(1 - BtoT) + 18.936 * current.Reff * BtoT);
 	
 	// position
 	if(my_theta != NULL)
@@ -139,14 +141,6 @@ PosType SourceOverzier::getMagBulge(Band band) const {
   return current.bulge_mag_map.at(band);
 }
 
-void SourceOverzier::setMag(Band band,PosType my_mag){
-  current.mag_map[band] = my_mag;
- }
-
-void SourceOverzier::setMagBulge(Band band,PosType my_mag){
-  current.bulge_mag_map[band] = my_mag;
- }
-
  void SourceOverzier::changeBand(Band band){
    
    current.mag = current.mag_map[band];
@@ -157,8 +151,8 @@ void SourceOverzier::setMagBulge(Band band,PosType my_mag){
 
 void SourceOverzier::renormalize_current(){
   float BtoT = getBtoT();
-  if(current.Rh > 0.0) current.sbDo = pow(10,-current.mag/2.5)*0.159148*(1-BtoT)
-    /pow(current.Rh,2);
+  if(current.Rdisk > 0.0) current.sbDo = pow(10,-current.mag/2.5)*0.159148*(1-BtoT)
+    /pow(current.Rdisk,2);
   else current.sbDo = 0.0;
   if(current.Reff > 0.0) current.sbSo = pow(10,-current.mag/2.5)*94.484376*BtoT
     /pow(current.Reff,2);
@@ -166,8 +160,8 @@ void SourceOverzier::renormalize_current(){
 }
 
 
-SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rh,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
-SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,theta)
+SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
+SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,my_PA,inclination,my_id,my_z,theta)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -202,7 +196,7 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rh,my_PA,inclination,my_id,my_z,th
     mod = 2.0e-2*ran();
   }
 
-  assert(original.Rh != 0 || original.Reff != 0);
+  assert(original.Rdisk != 0 || original.Reff != 0);
 }
 
 SourceOverzierPlus::~SourceOverzierPlus(){
@@ -223,6 +217,15 @@ Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
                               ,p.spheroid->getZ()
                               ,p.spheroid->getTheta().x);
    */
+  
+  Narms=p.Narms;
+  Ad=p.Ad;
+  mctalpha=p.mctalpha;
+  arm_alpha=p.arm_alpha;
+  disk_phase=p.disk_phase;
+  cospa=p.cospa;
+  sinpa=p.sinpa;
+  cosi=p.cosi;
   
   spheroid = p.spheroid;
   modes = p.modes;
@@ -266,7 +269,7 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
     z[1] = ( sinpa*x[0] + cospa*x[1] )/cosi;
     
     //PosType R = sqrt( cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1] );
-    PosType R = z.length()/current.Rh;
+    PosType R = z.length()/current.Rdisk;
     PosType theta = atan2(z[1],z[0]);
     
     //disk
@@ -341,8 +344,11 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   float BtoT;
   { // SourceOverzier variables
     
-    current.Reff *= (1 + 0.2*(2*ran()-1.));
-    current.Rh *= (1 + 0.2*(2*ran()-1.));
+    float minsize = 0.01*arcsecTOradians;
+    current.Reff *= MAX( (1 + 0.2*(2*ran()-1.))
+                        , minsize );
+    current.Rdisk *= MAX( (1 + 0.2*(2*ran()-1.))
+                      , minsize);
     
     PosType tmp = 0.01*(2*ran()-1.);
     
@@ -366,16 +372,16 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     current.mag += tmp;
     
     current.PA = PI*ran();
-    current.inclination = MIN(ran()*PI/2,0.95*PI/2);
+    current.inclination = MIN(ran()*PI/2,0.8*PI/2);
     
     cospa = cos(current.PA);
     sinpa = sin(current.PA);
     cosi  = cos(current.inclination);
 
-    if(current.Rh > 0.0){
-      current.cxx = ( cospa*cospa + pow(sinpa/cosi,2) )/current.Rh/current.Rh;
-      current.cyy = ( sinpa*sinpa + pow(cospa/cosi,2) )/current.Rh/current.Rh;
-      current.cxy = ( 2*cospa*sinpa*(1-1./cosi/cosi) ) /current.Rh/current.Rh;
+    if(current.Rdisk > 0.0){
+      current.cxx = ( cospa*cospa + pow(sinpa/cosi,2) )/current.Rdisk/current.Rdisk;
+      current.cyy = ( sinpa*sinpa + pow(cospa/cosi,2) )/current.Rdisk/current.Rdisk;
+      current.cxy = ( 2*cospa*sinpa*(1-1./cosi/cosi) ) /current.Rdisk/current.Rdisk;
     }else{
       current.cxx = current.cyy = current.cxy = 0.0;
     }
@@ -385,9 +391,9 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     // radius
     // weighted mean between the radii that enclose 99% of the flux
     // in the pure De Vacouleur/exponential disk case
-    // 6.670 = 3.975*Re = 3.975*1.678*Rh
+    // 6.670 = 3.975*Re = 3.975*1.678*Rdisk
     BtoT = getBtoT();
-    setRadius(6.670*current.Rh*(1-BtoT) + 18.936*current.Reff*BtoT);
+    setRadius(6.670*current.Rdisk*(1-BtoT) + 18.936*current.Reff*BtoT);
   }
   
   float minA = 0.01,maxA = 0.2; // minimum and maximum amplitude of arms
@@ -403,7 +409,9 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   //double index = 4 + 3*(ran()-0.5)*2;
   
   
-  double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  //double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
+  //double index = 4*pow(10,0.2*(ran()-0.5));
+  double index = ran() + 3.5;
   assert(index > 0.5 && index < 9);
   double q = 1 + (0.5-1)*ran();
   
