@@ -183,12 +183,10 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,my_PA,inclination,my_id,my_z
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
-  //spheroid = new SourceSersic(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
-  
-  spheroid.ReSet(my_mag_bulge,my_Reff,-my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
+  spheroid.ReSet(my_mag_bulge,my_Reff,my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
   
   cospa = cos(current.PA);
-  sinpa = sin(current.PA);
+  sinpa = sin(-current.PA);
   cosi  = cos(current.inclination);
   
   modes.resize(6);
@@ -372,10 +370,10 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
     current.mag += tmp;
     
     current.PA = PI*ran();
-    current.inclination = MIN(ran()*PI/2,0.8*PI/2);
+    current.inclination = ran()*0.90*PI/2;
     
     cospa = cos(current.PA);
-    sinpa = sin(current.PA);
+    sinpa = sin(-current.PA);
     cosi  = cos(current.inclination);
 
     if(current.Rdisk > 0.0){
@@ -416,10 +414,10 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   double q = 1 + (0.5-1)*ran();
   
   /*delete spheroid;
-  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,-PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
+  spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   */
   
-  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,-current.PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
+  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,current.PA + 5*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   
   
   for(PosType &mod : modes){

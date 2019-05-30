@@ -155,7 +155,7 @@ public:
                                          ,PosType my_Reff       /// effective radius of bulge
                                          ,PosType my_Rdisk         /// scale hight of disk
                                          ,PosType my_PA         /// position angle
-                                         ,PosType inclination   /// inclination
+                                         ,PosType inclination   /// inclination in radians
                                          ,unsigned long my_id
                                          ,PosType my_z
                                          ,const PosType *theta

@@ -52,7 +52,7 @@ public:
   /// Reorient the disk
   void reorient(float my_inclination,float my_PA){
     inclination = my_inclination;
-    zpa = -my_PA;
+    zpa = my_PA;
     
     Quaternion R = Quaternion::q_z_rotation(zpa)*Quaternion::q_x_rotation(inclination)*qrot_invers;
     rotate_all(R);
@@ -65,7 +65,7 @@ public:
   /// inclination in radians, 0 is face on
   float getInclination(){return inclination;}
   /// postion angle in radians,
-  float getPA(){return -zpa;}
+  float getPA(){return zpa;}
 
 private:
   
@@ -102,7 +102,8 @@ LensHaloDisk<T>::LensHaloDisk(
              ):
 LensHaloParticles<ParticleType<T> >(redshift,cosmo),
 particles(LensHaloParticles<ParticleType<T> >::trash_collector),
-qrot_invers(1,0,0,0),Rscale(disk_scale),Rhight(Rperp),zpa(-my_PA),inclination(my_inclination)
+qrot_invers(1,0,0,0),Rscale(disk_scale),Rhight(Rperp),zpa(my_PA),
+inclination(my_inclination)
 {
   
   /// set up base Lenshalo
@@ -111,12 +112,30 @@ qrot_invers(1,0,0,0),Rscale(disk_scale),Rhight(Rperp),zpa(-my_PA),inclination(my
   LensHaloParticles<ParticleType<T> >::pp = particles.data();
   LensHaloParticles<ParticleType<T> >::Npoints = particles.size();
 
-  double r,theta;
-  
+  double r,theta=0;
+  double dt = PI +  PI*ran()/10.;
+
+  //std::cout << "dt = " << dt/PI << std::endl;
   size_t i = 0;
+  double deltaF = 1.0/(N-1);
+  double x = 0;
   for(auto &p : particles){
-    r = -Rscale * log(1 - (float)(i) / N );
-    theta = 2*PI*ran();
+    r = Rscale * x;
+    
+    // quadratic recursive approximation
+    //x = x + 0.5*( sqrt(x + 4*(1-x)*exp(x)*deltaF ) - x)
+    ///(1-x);
+    
+    if(x==0){
+      x = sqrt(deltaF);
+    }else{
+      x = x + deltaF*exp(x)/x;
+    }
+    
+    assert(!isnan(x));
+    //r = -Rscale * log(1 - (float)(i) / N );
+    //theta = 2*PI*ran();
+    theta += dt;
     
     p.x[0] = r*cos(theta);
     p.x[1] = r*sin(theta);
