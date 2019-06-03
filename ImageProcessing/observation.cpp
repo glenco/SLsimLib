@@ -43,7 +43,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.8;
       ron = 5.;
       seeing = 0.18;
-      pix_size = .1/60./60./180.*PI;
+      pix_size = .1*arcsecTOradians;
       break;
    case Euclid_Y:
       diameter = 119.;
@@ -53,7 +53,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.57;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*PI;
+      pix_size = .3*arcsecTOradians;
       break;
     case Euclid_J:
       diameter = 119.;
@@ -63,7 +63,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.53;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*PI;
+      pix_size = .3*arcsecTOradians;
       break;
     case Euclid_H:
       diameter = 119.;

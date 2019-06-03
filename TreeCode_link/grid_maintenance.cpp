@@ -319,6 +319,21 @@ PosType Grid::EinsteinArea() const {
   return total;
 }
 
+PosType Grid::magnification() const{
+  double mag = 0,flux = 0;
+  
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    double area = (*it)->gridsize*(*it)->gridsize;
+    mag += (*it)->surface_brightness*fabs((*it)->invmag)*area;
+    flux += (*it)->surface_brightness*area;
+  }
+
+  return flux/mag;
+}
+
 /**
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */

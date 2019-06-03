@@ -118,6 +118,8 @@ struct Grid{
     return *this;
   }
   
+  /// flux weighted magnification
+  PosType magnification() const;
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
