@@ -1550,8 +1550,8 @@ namespace Utilities
      It will skip the comment lines if they are at the head of the file.  The
      number of columns and rows are returned.
      
-     Comments must only be before the data.  There must be a line with the
-     column names after the comments and before the data.
+     Comments must only be before the data.  Then if header==true there
+     should be a line of column names.  If header!=true there are non column names.
      
      This function is not particularly fast for large amounts of data.  If the
      number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
@@ -1563,12 +1563,13 @@ namespace Utilities
                          ,std::vector<std::string> &column_names /// list of column names
                           ,size_t Nmax = 1000000
                           ,char comment_char = '#'  /// comment charactor for header
-                         ,char deliniator = ','    /// deliniator between values
+                          ,char deliniator = ','    /// deliniator between values
+                          ,bool header = true    /// false if there are no column names
     ){
       
       
       std::ifstream file(filename);
-      // find number of particles
+      
       if (!file.is_open()){
         std::cerr << "file " << filename << " cann't be opened." << std::endl;
         throw std::runtime_error("no file");
@@ -1584,25 +1585,39 @@ namespace Utilities
       std::stringstream          lineStream(line);
       std::string                cell;
       column_names.empty();
-      while(std::getline(lineStream,cell, ','))
+      
+      while(std::getline(lineStream,cell,deliniator))
       {
-        column_names.push_back(cell);
+          column_names.push_back(cell);
       }
+
       // This checks for a trailing comma with no data after it.
       if (!lineStream && cell.empty())
       {
-        column_names.push_back("");
+          column_names.push_back("");
       }
       
       int columns = NumberOfEntries(line,deliniator);
+      
       size_t ii = 0;
     
       for(auto &v : data ) v.empty();
+      
+      if(!header){
+        data.emplace_back(columns);
+        int i=0;
+        for(auto a : column_names){
+          data.back()[i++] = to_numeric<T>(a);
+        }
+         ++ii;
+      }
+
+      
       while(std::getline(file,line) && ii < Nmax){
         
         data.emplace_back(columns);
         
-        // read the names
+        // read the numbers
         std::stringstream          lineStream(line);
         std::string                cell;
         
@@ -1610,10 +1625,12 @@ namespace Utilities
         while(std::getline(lineStream,cell, deliniator))
         {
           data.back()[i] = to_numeric<T>(cell);
-          i = (i+1)%columns;
+          ++i;
         }
         ++ii;
       }
+      
+      return 1;
     }
 
   
