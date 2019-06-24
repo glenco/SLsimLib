@@ -208,8 +208,53 @@ public:
   inline long getID() const {return id;}
   inline float getSEDtype() const {return sed_type;}
   void setActiveBand(Band band);
+  
+  void setBand(Band band,float m){mag_map[band]=m;};
+  
+  void pepper(int n,double s,Utilities::RandomNumbers_NR &ran){
+  
+    double f = SurfaceBrightness(source_x.x);
+    
+    double t=0.9,t2=0.3;
+    
+    for(int i=0 ; i < n ; ++i){
+      double r = source_r*sqrt(ran());
+      double theta = 2*PI*ran();
+      double ff = f*( t - t2 * ran() );
+      
+      Point_2d x( r*cos(theta) , r*sin(theta) );
+    
+      grains.emplace_back(ff,s,x);
+    }
+  }
+  
+  double sub_structure_sb(double *x){
+    
+    double sum = 0;
+    for(auto &g : grains){
+      sum += g(x);
+    }
+    
+    return sum;
+  }
 
+  class PepperCorn{
+  public:
+    PepperCorn(double f,double sig,Point_2d &x):
+    x(x),sigma(sig),fo(f){};
+    
+    double operator()(double *y){
+      return fo * exp(-( (x[0]-y[0])*(x[0]-y[0]) - (x[1]-y[1])*(x[1]-y[1]) ) /sigma/sigma);
+    }
+    
+  private:
+    Point_2d x;
+    double sigma;
+    double fo;
+  };
+  
 private:
+  
   Band current_band;
   float sed_type = -1;
 	void assignParams(InputParams& params);
@@ -223,6 +268,8 @@ private:
 	PosType ang;
   std::map<Band,PosType> mag_map;
   PosType coeff_flux;
+  
+  std::vector<PepperCorn> grains;
 };
 
 /// A uniform surface brightness circular source.
@@ -396,5 +443,9 @@ struct SourceFunctor
 	
 	Source& source;
 };
+
+
+
+
 
 #endif /* SOURCE_H_ */

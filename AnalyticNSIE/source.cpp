@@ -509,7 +509,7 @@ void SourceShapelets::setActiveBand(Band band)
 }
 
 SourceShapelets::SourceShapelets(
-                                 PosType my_z                              /// redshift of the source
+                                 PosType my_z                  /// redshift of the source
                                  , PosType my_mag							/// magnitude
                                  , PosType my_scale						/// scale of the shapelets decomposition
                                  , std::valarray<PosType> my_coeff  	/// coefficients of the shapelets decomposition
@@ -761,6 +761,69 @@ SourceMultiShapelets::~SourceMultiShapelets()
 /// Reads in the default catalog
 void SourceMultiShapelets::readCatalog()
 {
+  
+  // read in shaplet catalogs
+  
+  std::vector<std::vector<float> > viz_cat;
+  std::vector<std::string> col_names;
+  
+  Utilities::IO::ReadCSVnumerical2<float>(
+                                          shapelets_folder + "/euclid_cats/euclid_riz.cat"
+                                          ,viz_cat
+                                          ,col_names
+                                          ,1000000
+                                          ,'#'
+                                          ,' '
+                                          ,false);
+  
+  
+  //sort by id number
+  std::sort(viz_cat.begin(),viz_cat.end()
+            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+  int ii=0;
+  for(auto &a : viz_cat){
+    if(a[1] >= 0) break;
+    ++ii;
+  }
+  
+  std::vector<std::vector<float> > h_cat;
+  Utilities::IO::ReadCSVnumerical2<float>(
+                                          shapelets_folder + "/euclid_cats/euclid_H.cat"
+                                          ,h_cat
+                                          ,col_names
+                                          ,1000000
+                                          ,'#'
+                                          ,' '
+                                          ,false);
+  std::sort(h_cat.begin(),h_cat.end()
+            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+
+  std::vector<std::vector<float> > y_cat;
+  Utilities::IO::ReadCSVnumerical2<float>(
+                                          shapelets_folder + "/euclid_cats/euclid_Y.cat"
+                                          ,y_cat
+                                          ,col_names
+                                          ,1000000
+                                          ,'#'
+                                          ,' '
+                                          ,false);
+  std::sort(y_cat.begin(),y_cat.end()
+            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+
+  std::vector<std::vector<float> > j_cat;
+  Utilities::IO::ReadCSVnumerical2<float>(
+                                          shapelets_folder + "/euclid_cats/euclid_J.cat"
+                                          ,j_cat
+                                          ,col_names
+                                          ,1000000
+                                          ,'#'
+                                          ,' '
+                                          ,false);
+  std::sort(j_cat.begin(),j_cat.end()
+            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+  
+  
+  int j=ii;
   int max_num = 37012;
   for (int i = 0; i < max_num+1; i++)
   {
@@ -769,6 +832,18 @@ void SourceMultiShapelets::readCatalog()
     if (shap_input)
     {
       SourceShapelets s(shap_file.c_str());
+      
+      assert(viz_cat[j][1] == i);
+      assert(y_cat[j][1] == i);
+      assert(j_cat[j][1] == i);
+      assert(h_cat[j][1] == i);
+
+      s.setBand(EUC_VIS,viz_cat[j][2]);
+      s.setBand(EUC_Y,y_cat[j][2]);
+      s.setBand(EUC_J,j_cat[j][2]);
+      s.setBand(EUC_H,h_cat[j++][2]);
+      
+      
       //s.setActiveBand(band);
       if (s.getMag() > 0. && s.getMag() < mag_limit
           && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0 ){
