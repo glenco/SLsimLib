@@ -13,7 +13,7 @@
 #include "InputParams.h"
 #include "lens_halos.h"
 
-/**
+/*
  * \brief An "analytic" model to represent a lens on a single plane.
  *
  * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion

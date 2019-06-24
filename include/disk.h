@@ -5,6 +5,13 @@
 
 using Utilities::Geometry::Quaternion;
 
+/** \brief Creates a exponential disk out of particles.
+ 
+ The disk is created out of particles and the smoothing done by nearest-N neighbour
+ B-spline smoothing as if they came from a simulation, but they are placed more regularly
+ so that the surface density is relatively smooth.
+ */
+
 template <typename T=float>
 class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
   

@@ -56,7 +56,7 @@ Some of them are:
 
 `SourceGaussian` : Source with a Gaussian profile
 
-`SourceShapelet` : a source made from a shapelet decomposition 
+`SourceShapelets` : a source made from a shapelet decomposition 
 
 `SourceSersic` : a source with a Sersic profile
 

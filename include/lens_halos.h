@@ -15,7 +15,7 @@
 #include "particle_types.h"
 
 /**
- * \brief A base class for all types of lensing halos.
+ * \brief A base class for all types of lensing "halos" which are any mass distribution that cause lensing.
  *
  * It contains the mass, maximum radius (Rsize), and scale radius (rscale) of the halo,
  * as well as the redshift (zlens).
@@ -873,9 +873,7 @@ private:
 };
 
 
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
+/** \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
  *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
@@ -942,7 +940,10 @@ private:
 
 
 
+/** \brief Represents a non-singular isothermal elliptical lens
 
+This is a true NSIE lens rather than an expansion that approximates one.
+*/
 class LensHaloRealNSIE : public LensHalo{
 public:
 
