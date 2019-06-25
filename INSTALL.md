@@ -168,7 +168,7 @@ where to find the libraries.
 ### Creating new projects
 
 The easiest way to start a project is to copy the sample project from the
-`examples/project` folder or clone one of the example projects from the [Glenco Github page]("https://github.com/glenco").  The new project should be in its own directory outside of the *GLAMER* directory tree.
+`examples/project` folder or clone one of the example projects from the [Glenco Github page]("https://github.com/glenco"), specifically [Example1]("https://github.com/glenco/Example1"), [ExampleImage]("https://github.com/glenco/ExampleImage") and [ParticleExample]("https://github.com/glenco/ParticleExample").  The new project should be in its own directory outside of the *GLAMER* directory tree.
 
 
 In the enclosed `CMakeLists.txt` file, all instances

@@ -345,6 +345,7 @@ void LensHaloParticles<PType>::force_halo(double *alpha,KappaType *kappa,KappaTy
   alpha[1] *= -1;
 }
 
+/// rotate simulation
 template<typename PType>
 void LensHaloParticles<PType>::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
@@ -374,7 +375,7 @@ void LensHaloParticles<PType>::readPositionFileASCII(const std::string &filename
   
   std::ifstream myfile(filename);
   
-  size_t Npoints = 0;
+  //size_t Npoints = 0;
   
   // find number of particles
   
