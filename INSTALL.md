@@ -66,6 +66,7 @@ Library   | Required by   || Description
 [FFTW]    | `ENABLE_FFTW` |required| Library for Fast Fourier Transform algorithms.
 [GSL]     | `ENABLE_GSL`  |optional| Library for scientific computation
 [HDF5 C++]    | `ENABLE_HDF5` |optional| I/O in hdf5 format
+[HealPix] |  ENABLE_HEALPIX |optional| C++ Healpix interface
 
 
 Building the library
@@ -232,4 +233,5 @@ Building the project will not build the GLAMER libraries automatically!
 [fftw]: http://www.fftw.org "FFTW Home Page"
 [gsl]: http://www.gnu.org/software/gsl/ "GNU Scientific Library"
 [HDF5 C++]: https://support.hdfgroup.org/HDF5/doc/cpplus_RM/index.html"
+[HealPix]:https://healpix.jpl.nasa.gov/html/Healpix_cxx/index.html"
 [conda]:https://docs.conda.io/projects/conda/en/latest/"
