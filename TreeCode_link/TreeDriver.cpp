@@ -1479,7 +1479,7 @@ RAY ImageInfo::closestRay(const Point_2d &y){
   
   Point *p;
   
-  double r2min = HUGE;
+  double r2min = HUGE_VALL;
   for(Kist<Point>::iterator it = imagekist->begin()
       ; it != imagekist->end()
       ; ++it){
