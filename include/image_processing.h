@@ -19,14 +19,14 @@
 // forward declaration
 struct Grid;
 struct GridMap;
+class Source;
+
 
 /**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
  * can be exported as a fits file, smoothed, etc. like an image.
  *
  */
-class Source;
-
 class PixelMap
 {
 public:
