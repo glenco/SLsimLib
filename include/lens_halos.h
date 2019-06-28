@@ -982,7 +982,7 @@ public:
   
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
-	/// get the NSIE radius
+	// get the NSIE radius
 	//float get_Rsize(){return Rsize;};
 	/// get the axis ratio
 	float get_fratio(){return fratio;};
@@ -993,13 +993,13 @@ public:
   
 	/// set the velocity dispersion
 	void set_sigma(float my_sigma){sigma=my_sigma;};
-	/// set the NSIE radius
+	// set the NSIE radius
 	//void set_Rsize(float my_Rsize){Rsize=my_Rsize;};
 	///set the axis ratio
 	void set_fratio(float my_fratio){fratio=my_fratio;};
 	/// set the position angle
 	void set_pa(float my_pa){pa=my_pa;};
-	/// set the core radius
+	/// set the core radius Einstein radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
   
 protected:
@@ -1046,7 +1046,7 @@ protected:
 
 
 
-/** \ingroup DeflectionL2
+/**
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Hernquist mass profiles.
@@ -1124,7 +1124,7 @@ private:
   PosType gmax;
 };
 
-/** \ingroup DeflectionL2
+/** 
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Jaffe mass profiles.

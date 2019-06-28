@@ -20,7 +20,7 @@
 struct Grid;
 struct GridMap;
 
-/** \ingroup Image
+/**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
  * can be exported as a fits file, smoothed, etc. like an image.
  *
@@ -340,7 +340,7 @@ typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,
 
 typedef enum {counts_x_sec, flux} unitType;
 
-/** \ingroup Image
+/** 
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.

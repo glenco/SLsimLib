@@ -12,7 +12,7 @@
 const bool verbose = false;
 const PosType FracResTarget = 3.0e-5;
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses ImageFinding::find_images_kist() to initially find and refine images and then using 

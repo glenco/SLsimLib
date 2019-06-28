@@ -1,5 +1,5 @@
 /** \file
- * \ingroup \HighLevel
+ * 
  *
  * \brief Master header file for all routines in SLsimLib.  Should be the only header file that needs to be included.
  *

@@ -617,7 +617,7 @@ void LensHaloMassMap::saveProfiles(double &RE3,double &xxc,double &yyc){
   else RE3 = pow(10.,RE3)*map.inarcsec;
 }
 
-/** \ingroup DeflectionL2
+/** 
  *
  * \brief Routine for obtaining the deflection and other lensing quantities for
  * a MOKA map (MOKALensHalo), for just one ray!!

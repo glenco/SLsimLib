@@ -46,7 +46,7 @@ bool TreeStruct::Test(){
   return true;
 }
 
-/** \ingroup ImageFundingL2
+/** 
  *
  * \brief Finds all the leaves that are neighboring a point.
 *
@@ -107,7 +107,7 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors) c
 // *************************************************/
 	return;
 }
-/**  \ingroup LowLevel
+/**  
  * A recessive function that was used in FindAllBoxNeighborsKist().
 *    It has been known to cause stack overflow. Use _FindAllBoxNeighborsKist_iter instead.
 */
@@ -144,7 +144,7 @@ void TreeStruct::_FindAllBoxNeighborsKist(Branch *leaf,TreeStruct::iterator &cur
 
 	return;
 }
-/**  \ingroup LowLevel
+/**  
  * Used in FindAllBoxNeighborsKist to walk tree for neighbors.
 */
 void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,TreeStruct::iterator &current,Kist<Point> * neighbors) const{
@@ -182,7 +182,7 @@ void TreeStruct::_FindAllBoxNeighborsKist_iter(Branch *leaf,TreeStruct::iterator
 
 	return;
 }
-/** \ingroup ImageFundingL2
+/** 
  * \brief Finds points within an ellipse
  *
  * This becomes less efficient when the ellipse is very elongated.  Could
@@ -219,7 +219,7 @@ void TreeStruct::PointsWithinEllipKist(
 	}
 	return;
 }
-/** \ingroup ImageFindingL2
+/** 
  * \brief Finds all points in tree that lie within rmax of the point ray[]
  *
  *   markpoints = 0  does not change in_image variable in any point, gives a list of neighbors
@@ -268,7 +268,7 @@ PosType TreeStruct::PointsWithinKist(
 
 	return maxgridsize;
 }
-/** \ingroup LowLevel
+/** 
  * Used in PointsWithinKist() to walk tree.*/
 void TreeStruct::_PointsWithinKist(TreeStruct::iterator &current,PosType *rmax,Kist<Point> * neighborkist
                                    ,short markpoints,PosType *maxgridsize,TreeStruct::Globals &globs) const{
@@ -438,7 +438,7 @@ void TreeStruct::_PointsWithinKist(TreeStruct::iterator &current,PosType *rmax,K
   return;
 }
 
-/** \ingroup ImageFindingL2
+/** 
  *
  * \brief Finds all points within a circle.  Much simpler, iterative algorithm.
  *
@@ -548,7 +548,7 @@ void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rm
 	}
 }
 
-/** \ingroup ImageFundingL2
+/** 
  *
  * \brief Finds nearest neighbor points to ray.
  *

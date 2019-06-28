@@ -10,7 +10,7 @@
 //static PosType realray[2];
 //Point *point_global;
 
-/** \ingroup ImageFundingL2
+/** 
  *
  * \brief Finds nearest neighbor points to ray.
  *

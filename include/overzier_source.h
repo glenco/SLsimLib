@@ -145,6 +145,11 @@ protected:
 	// optional position variables
 };
 
+/** \brief Adds some extra features to the SourceOverzier source like spiral
+ * arms, and randomizations.
+ *
+ */
+
 class SourceOverzierPlus : public SourceOverzier
 {
 public:

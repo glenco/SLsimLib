@@ -12,7 +12,7 @@
 
 std::mutex Grid::grid_mutex;
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing square grid.
  *
  * Note: Deflection solver must be specified before creating a Grid.
@@ -53,7 +53,7 @@ Grid::Grid(
   
 }
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing rectangular grid.
  *
  * Cells of grid will always be square with initial resolution rangeX/(Nx-1).
@@ -127,7 +127,7 @@ Grid::Grid(
     
 }
 
-/** \ingroup Constructor
+/** 
  * \brief Destructor for a Grid.  Frees all memory.
  */
 Grid::~Grid(){
@@ -140,7 +140,7 @@ Grid::~Grid(){
   return;
 }
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Reinitializes the grid so that it is back to the original coarse grid, but if
  *  the lens has changed the source positions will be updated.
  */
@@ -227,7 +227,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
 }
 
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Reshoot the rays with the same image postions.
  *
  *  The source positions and source tree are updated to the current lens model.
@@ -279,7 +279,7 @@ void Grid::ReShoot(LensHndl lens){
 }
 
 
-/** \ingroup ImageFinding
+/** Finding
  * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.
  *
  *  Recalculate the surface brightness at all points on the grid.
@@ -352,7 +352,7 @@ PosType Grid::ClearSurfaceBrightnesses(){
 	return total;
 }
 
-/** \ingroup ImageFinding
+/** Finding
  * \brief Returns number of points on image plane.
  */
 unsigned long Grid::getNumberOfPoints() const{
@@ -363,7 +363,7 @@ unsigned long Grid::getNumberOfPoints() const{
 	return i_tree->getTop()->npoints;
 }
 
-/**  \ingroup ImageFindingL2
+/**  
  *
  * \brief Fundamental function used to divide a leaf in the tree into nine subcells.
  *

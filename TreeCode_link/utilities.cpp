@@ -87,7 +87,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
   return;
 }
 
-/** \ingroup Utill
+/** 
  *
  * The two functions below are inverses of each other for converting
  *   between a 1d array index and a square grid of positions
@@ -177,7 +177,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
 	  return -1;
 }
 
-  /** \ingroup Utill
+  /** 
    * \brief bilinear interpolation from a map.
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
@@ -236,7 +236,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
   }
 
 
-/** \ingroup Utill
+/** 
  * This function finds the largest power of 2 that is < k
  */
 unsigned long prevpower(unsigned long k){
