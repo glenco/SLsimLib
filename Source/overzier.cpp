@@ -17,7 +17,7 @@
 
 SourceOverzier::SourceOverzier(
 		PosType my_mag          /// Total magnitude
-		,double my_mag_bulge    /// Bulge to total ratio
+		,double my_mag_bulge    /// magnitude of bulge
 		,double my_Reff         /// Bulge half light radius (arcs)
 		,double my_Rdisk           /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)

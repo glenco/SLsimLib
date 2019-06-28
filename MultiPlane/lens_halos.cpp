@@ -887,12 +887,12 @@ std::vector<double> LensHaloRealNSIE::q_table;
 std::vector<double> LensHaloRealNSIE::Fofq_table;
 
 LensHaloRealNSIE::LensHaloRealNSIE(
-                                   float my_mass
-                                   ,PosType my_zlens
+                                   float my_mass     /// mass, sets truncation radius
+                                   ,PosType my_zlens /// redshift
                                    ,float my_sigma   /// in km/s
                                    ,float my_rcore   /// in units of R_einstein
-                                   ,float my_fratio
-                                   ,float my_pa
+                                   ,float my_fratio  /// axis ratio
+                                   ,float my_pa      /// postion angle
                                    ,int my_stars_N)
 :LensHalo(){
   rscale=1.0;
@@ -901,7 +901,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(
 
 
   sigma=my_sigma, rcore=my_rcore;
-  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
+  fratio=my_fratio, pa = PI/2 - my_pa, stars_N=my_stars_N;
   stars_implanted = false;
   
   if(fratio  != 1.0) elliptical_flag = true;
@@ -920,6 +920,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(
     LensHalo::setMass(MassBy1DIntegation(LensHalo::getRsize()));
   }
   
+  units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical);
 }
 
 LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params):LensHalo(params,false){
@@ -947,6 +948,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params):LensHalo(params,false){
     LensHalo::setMass(MassBy1DIntegation(LensHalo::getRsize()) );
   }
 
+   units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 }
 
 void LensHaloRealNSIE::assignParams(InputParams& params){
@@ -1417,7 +1419,6 @@ void LensHaloRealNSIE::force_halo(
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
     //PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-    float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
    // std::cout << "rsize , rmax,  mass_norm =" << LensHalo::getRsize() << " , " << Rmax << " , " << mass_norm_factor << std::endl;
     if(rcm2 > LensHalo::getRsize()*LensHalo::getRsize())
       //if(ellipR > LensHalo::getRsize()*LensHalo::getRsize())

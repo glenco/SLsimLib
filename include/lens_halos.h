@@ -962,6 +962,7 @@ public:
     fratio = h.fratio;
     pa = h.pa;
     rcore = h.rcore;
+    units = h.units;
   }
   
   LensHaloRealNSIE &operator=(const LensHaloRealNSIE &h){
@@ -971,6 +972,7 @@ public:
     fratio = h.fratio;
     pa = h.pa;
     rcore = h.rcore;
+    units = h.units;
     return *this;
   }
   
@@ -1002,7 +1004,15 @@ public:
 	/// set the core radius Einstein radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
   
+  void setZlens(PosType my_zlens){
+    LensHalo::setZlens(my_zlens);
+    
+  }
+
+  
 protected:
+  
+  float units;
   
   static size_t objectCount;
   static std::vector<double> q_table;
