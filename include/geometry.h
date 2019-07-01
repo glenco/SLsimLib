@@ -39,8 +39,12 @@ namespace Utilities {
       void sphericalTOcartisian(PosType x[]) const;
       void cartisianTOspherical(PosType const x[]);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
+      void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
+      Point_2d StereographicProjection(const SphericalPoint &central) const;
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
+      Point_2d OrthographicProjection(const SphericalPoint &central) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
+      void InverseOrthographicProjection(const SphericalPoint &central,const Point_2d &x);
     };
     /** \brief Quaternion class that is especially useful for rotations.
      
@@ -52,7 +56,7 @@ namespace Utilities {
      
      
      #include "geometry.h"
-     {
+     { 
      using Utilities::Geometry::SphericalPoint;
      using Utilities::Geometry::Quaternion;
      
