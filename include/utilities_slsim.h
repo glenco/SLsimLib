@@ -420,7 +420,7 @@ namespace Utilities
     {
       return *items[i];
     }
-    
+
     /// indexed access for type SubclassT
     template<typename SubclassT>
     SubclassT& get(std::size_t i)
@@ -648,6 +648,18 @@ namespace Utilities
       return *this;
     }
     
+    /// back of list
+    BaseT& back()
+    {
+      return items.back();
+    }
+    
+    /// back of list
+    const BaseT& back() const
+    {
+      return items.back();
+    }
+
     /// add an object of type SubclassT to the vector
     void push_back(BaseT* obj)
     {

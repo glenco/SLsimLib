@@ -8,7 +8,7 @@
 #include "base_analens.h"
 #include <complex>
 
-/** \ingroup DeflectionL2 \ingroup function
+/**
  * \brief Deflection angle for non-singular isothermal ellipsoid in units of Einstein radii
  */
 void alphaNSIE(
@@ -81,7 +81,7 @@ void alphaNSIE(
   return;
 }
 
-/**\ingroup DeflectionL2 \ingroup function
+/**
  * \brief Convergence for non-singular isothermal ellipsoid, units \f$ \frac{r_{einstein}}{units(x)} \f$
  * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$
  */
@@ -104,7 +104,7 @@ KappaType kappaNSIE(
   return 0.5*sqrt(f/(b2+bc*bc));
 }
 
-/**\ingroup DeflectionL2 \ingroup function
+/**
  * \brief Shear for non-singular isothermal ellipsoid, units \f$ \frac{r_{einstein}}{units(x)} \f$
 * or \f$ \frac{\sigma^2}{\Sigma_{crit}G\, units(xt) } \f$
 * */
@@ -143,7 +143,7 @@ void gammaNSIE(
 
   return;
 }
-/** \ingroup function
+/**
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ of a NonSingular Isothermal Ellipsoid
  */
 
@@ -158,7 +158,7 @@ PosType rmaxNSIE(
 	return sqrt( pow(mass*Grav*lightspeed*lightspeed*f/PI/sigma/sigma + rc,2) - rc*rc );
 }
 
-/** \ingroup function
+/**
  *  \brief Elliptical radius \f$ R^2 = x^2 + f^2 y^2 \f$ given f and position angle of model
  */
 PosType ellipticRadiusNSIE(
@@ -206,7 +206,7 @@ namespace Utilities{
 
 
 
-/**\ingroup function
+/**
  *
  * Structure that does allow the integration of alphaNSIE in phiNSIE.
  *
@@ -249,7 +249,7 @@ struct alphaForInt {
 
 
 
-/**\ingroup function
+/**
  *
  * Compute the potential for the NSIE (in physical Mpc) by integration of alphaNSIE.
  *
@@ -345,7 +345,7 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
 
 
 
-/**\ingroup function
+/**
  *
  * Quadropole moment of an elliptically truncated NSIE
  * Units are unit[mass]*unit[Rsize]^2

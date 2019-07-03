@@ -123,6 +123,7 @@ public:
 	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val);
 	SourcePixelled(const PixelMap& gal_map, PosType z, PosType factor = 1.);
 	SourcePixelled(InputParams& params);
+  
 	~SourcePixelled();
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();

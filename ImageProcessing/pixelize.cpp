@@ -996,7 +996,7 @@ void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string
 #endif
 }
 
-/** \ingroup Image
+/** 
  *
  * \brief Smoothes a map with a Gaussian kernel of width sigma (in arcseconds)
  */

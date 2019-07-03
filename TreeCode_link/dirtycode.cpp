@@ -7,7 +7,7 @@
 
 #include "slsimlib.h"
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *  \brief Divides kist of points into friends-of-friends groups with.  Does not need
  *  a tree to be built, but takes N^2 time so it is not good for a large number of points.
@@ -69,7 +69,7 @@ void _DirtyFoF(Kist<Point> * neighbors,Kist<Point> * wholekist,PosType linkingle
 	return ;
 }
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *  \brief Divides kist of points into groups.
  *

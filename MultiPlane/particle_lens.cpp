@@ -35,7 +35,10 @@ MakeParticleLenses::MakeParticleLenses(
   
   if(format == glmb ){
     nparticles.resize(6,0);
-    readSizesB(filename,data,Nsmooth,nparticles,z_original);
+    if(!readSizesB(filename,data,Nsmooth,nparticles,z_original)){
+      std::cerr << " Cannot read file " << filename << std::endl;
+      throw std::invalid_argument("Can't find file.");
+    }
   }else{
     
     std::string sizefile = filename + "_S"
@@ -62,6 +65,8 @@ MakeParticleLenses::MakeParticleLenses(
         case csv6:
           readCSV(6);
         default:
+          std::cerr << "Data file formate is not supported in MakeParticleLens." << std::endl;
+          throw std::invalid_argument("missing format");
           break;
       }
       

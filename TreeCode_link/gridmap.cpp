@@ -12,7 +12,7 @@
 
 std::mutex GridMap::grid_mutex;
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing rectangular grid.
  *
  * Cells of grid will always be square with initial resolution rangeX/(Nx-1).
@@ -77,7 +77,7 @@ GridMap::GridMap(
   }
 }
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing square grid.
  *
  * Note: Deflection solver must be specified before creating a GridMap.

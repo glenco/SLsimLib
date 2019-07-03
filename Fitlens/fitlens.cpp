@@ -8,7 +8,7 @@ static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2]
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;
 static double oldsm;//,tang[2],length,yot[2],radsourceT;
 
-/** \ingroup FitLens
+/** 
  *
  *  \brief Wrapper that allows simple lens to be found with a single
  * lens with a single source and translates result into data structures used in the other code.
@@ -42,7 +42,7 @@ void LensHaloFit::FindLensSimple(
 
 
 
-/** \ingroup FitLens
+/** 
  *
  *  \brief Same as FindLensSimple but with some tests in it.
  *
@@ -276,7 +276,7 @@ bool LensHaloFit::SafeFindLensSimple(
 }
 
 
-/** \ingroup FitLens
+/** 
  *
  *  \brief Wrapper that allows simple lens to be found with a single
  * lens with a single source and translates result into data structures used in the other code.
@@ -482,7 +482,7 @@ void LensHaloFit::FindLensSimple(
 
 
 
-/** \ingroup FitLensL2
+/** L2
  * \brief Find most elliptical lens
  *
  ******
@@ -738,7 +738,7 @@ double minEllip(double *par){
   return sm;
 }
 
-/** \ingroup FitLensL2
+/** L2
  *
  * \brief Calculates a lens that fits the image positions
  *
@@ -918,7 +918,7 @@ void LensHaloFit::get_perturbmodes(std::vector<PosType> & ListModes)
 
 
 
-/** \ingroup FitLensL2
+/** L2
  *
  * \brief  calculate the sources position, surface density and magnification at x
  * given lens model
@@ -1031,7 +1031,7 @@ double LensHaloAnaNSIE::deflect_translated(double beta,double *mod,double *x,dou
   
   return kappa;
 }
-/** \ingroup FitLensL2
+/** L2
  * \brief find degenerate model most like modo modulo a normalization
  */
 double regularize(int Nmax,int Nmin,int N,int Nsources,int degen

@@ -189,7 +189,7 @@ namespace Utilities{
 #undef NSTACK
 #undef NRANSI
   
-  /** \ingroup Utill
+  /** 
    * \brief Sorts points from smallest to largest according to the value of arr[].
    * Sorts arr[] and pointarray[] simultaneously.
    */

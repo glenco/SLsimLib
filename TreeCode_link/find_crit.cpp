@@ -12,7 +12,7 @@
 #define NMAXCRITS 1000
 
 using namespace std;
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief Finds critical curves and caustics.
  *
@@ -1662,7 +1662,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
 
 
 
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief Finds iso kappa contours.
  *

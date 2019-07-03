@@ -16,7 +16,7 @@
 #include "source.h"
 #include <mutex>
 
-/** \ingroup ImageFinding
+/** 
  * \brief A simplified version of the Grid structure for making non-adaptive maps of the lensing quantities (kappa, gamma, etc...)
  *
  *  GripMap is faster and uses less memory than Grid.  It does not construct the tree structures for the points 

@@ -21,7 +21,15 @@ class SourceSersic : public Source
 public:
   /// sets values to invalid values
   SourceSersic();
-  SourceSersic(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
+  SourceSersic(
+               double my_mag            /// Total magnitude
+               ,double my_Reff          /// Bulge half light radius (arcs)
+               ,double my_PA            /// Position angle (radians)
+               ,double my_index         /// Sersic index
+               ,double my_q             /// axes ratio
+               ,double my_z             /// redshift
+               ,const double *my_theta=0  /// optional angular position on the sky
+  );
 	~SourceSersic();
   
   SourceSersic(const SourceSersic &p);

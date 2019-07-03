@@ -534,6 +534,9 @@ void Observation::ApplyPSF(PixelMap &pmap)
  */
 void Observation::CorrelateNoise(PixelMap &pmap)
 {
+  
+  if(sqrt_noise_power.size()==0)return;
+  
   if(pmap.getNx() != pmap.getNy()){
     std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");

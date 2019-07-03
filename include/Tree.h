@@ -291,7 +291,7 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 
-/// \ingroup Util
+///
 namespace Utilities{
     ///Separation squared between two positions in 2 dimensions.
 	inline PosType sepSQR(PosType *xx,PosType *yy){
@@ -521,7 +521,7 @@ namespace Utilities{
   }
 
 
-  /** \ingroup Utill
+  /** 
    * \brief Bilinear interpolation class for interpolating from a 2D uniform grid.
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.

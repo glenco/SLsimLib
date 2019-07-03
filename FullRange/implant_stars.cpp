@@ -11,7 +11,7 @@ using namespace std;
 
 
 
-/** \ingroup ChangeLens
+/** 
  * \brief  Implant or randomize stars into the lens around the images.
  *
  * The first time this is called the memory for the stars is allocated.

@@ -14,7 +14,7 @@ const PosType target_all = 1.0e-3;
 const float tol_UniformMag = 1.0e-3;
 const bool verbose = false;
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses ImageFinding::find_images_kist() to initially find and refine images and then uses a surface brightness
@@ -575,7 +575,7 @@ void ImageFinding::map_images(
 	return ;
 }
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Find the images without any additional grid refinement or ray shooting.
  *
  *   The images and surface brighnesses are found.  This will be much faster than map_images(), 
@@ -1216,7 +1216,7 @@ bool IF_routines::RefinePoint(Point *point,TreeHndl i_tree,PosType image_area,Po
 	return false;
 }
 */
-/** \ingroup mageFindingL2
+/** 
  * \brief Checks to see if the image has a nearly uniform magnification across it and thus can be considered linearly
  * distorted.
  */
