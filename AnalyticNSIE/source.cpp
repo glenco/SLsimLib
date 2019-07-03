@@ -833,16 +833,15 @@ void SourceMultiShapelets::readCatalog()
     {
       SourceShapelets s(shap_file.c_str());
       
-      assert(viz_cat[j][1] == i);
-      assert(y_cat[j][1] == i);
-      assert(j_cat[j][1] == i);
-      assert(h_cat[j][1] == i);
+//      assert(viz_cat[j][1] == i);
+//      assert(y_cat[j][1] == i);
+//      assert(j_cat[j][1] == i);
+//      assert(h_cat[j][1] == i);
 
-      s.setBand(EUC_VIS,viz_cat[j][2]);
-      s.setBand(EUC_Y,y_cat[j][2]);
-      s.setBand(EUC_J,j_cat[j][2]);
-      s.setBand(EUC_H,h_cat[j++][2]);
-      
+//      s.setBand(EUC_VIS,viz_cat[j][2]);
+//      s.setBand(EUC_Y,y_cat[j][2]);
+//      s.setBand(EUC_J,j_cat[j][2]);
+//      s.setBand(EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
       if (s.getMag() > 0. && s.getMag() < mag_limit
@@ -859,8 +858,8 @@ void SourceMultiShapelets::readCatalog()
       }*/
     }
   }
-  std::cout << galaxies.size() << " shapelet sources out of " << max_num
-  << " passed selection." << std::endl;
+  std::cout << galaxies.size() << " shapelet sources out of "
+  << max_num  << " passed selection." << std::endl;
   band = galaxies[0].getBand();
 }
 

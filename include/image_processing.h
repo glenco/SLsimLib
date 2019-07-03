@@ -104,8 +104,9 @@ public:
     size_t block = map.size()/nthreads;
     for(int i = 0; i < nthreads ;++i){
       thr.push_back(std::thread(&PixelMap::addsource_<T>,this
-                                   ,i*block,std::min((i+1)*block-1,map.size()-1),
-                                oversample,std::ref(source),std::ref(totals[i])));
+                      ,i*block,std::min((i+1)*block-1,map.size()-1)
+                      ,oversample,std::ref(source)
+                      ,std::ref(totals[i])));
     }
  
     for(int ii=0;ii < nthreads;++ii) thr[ii].join();
