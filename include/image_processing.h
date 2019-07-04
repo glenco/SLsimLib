@@ -21,6 +21,8 @@ struct Grid;
 struct GridMap;
 class Source;
 
+/// these are partial units for the pixel map that can be used to ensure consistency
+enum PixelMapUnits {ndef,surfb,photon_flux,count_per_sec,mass,mass_density};
 
 /**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
@@ -35,15 +37,19 @@ public:
   PixelMap(const PixelMap& other);
   PixelMap(PixelMap&& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
-	PixelMap(const double* center, std::size_t Npixels, double resolution);
-	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution);
-	PixelMap(std::string fitsfilename,double resolution = -1);
+	PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = ndef);
+	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = ndef);
+	PixelMap(std::string fitsfilename
+           ,double resolution = -1,PixelMapUnits u = ndef);
   ~PixelMap(){
     map.resize(0);
   };
 	
   PixelMap& operator=(const PixelMap &other);
   PixelMap& operator=(PixelMap &&other);
+  
+  void ChangeUnits(PixelMapUnits u){units=u;}
+  PixelMapUnits getUnits() const {return units;}
   
 	inline bool valid() const { return map.size(); };
 	inline std::size_t size() const { return map.size(); };
@@ -143,16 +149,19 @@ public:
 	
   
 	PixelMap& operator+=(const PixelMap& rhs);
-	friend PixelMap operator+(const PixelMap&, const PixelMap&);
+  //friend PixelMap operator+(const PixelMap&, const PixelMap&);
+  PixelMap operator+(const PixelMap&) const;
 
 	PixelMap& operator-=(const PixelMap& rhs);
-	friend PixelMap operator-(const PixelMap&, const PixelMap&);
-    
+  //friend PixelMap operator-(const PixelMap&, const PixelMap&);
+  PixelMap operator-(const PixelMap&) const;
+
 	PixelMap& operator*=(const PixelMap& rhs);
-	friend PixelMap operator*(const PixelMap&, const PixelMap&);
+	//friend PixelMap operator*(const PixelMap&, const PixelMap&);
+  PixelMap operator*(const PixelMap& a) const;
 
 	PixelMap& operator*=(PosType b);
-	friend PixelMap operator*(const PixelMap&, PosType b);
+	//friend PixelMap operator*(const PixelMap&, PosType b);
 	
 	std::valarray<double>& data() { return map; }
 	
@@ -288,6 +297,7 @@ private:
 	std::size_t Ny;
 	double resolution,rangeX,rangeY,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
+  PixelMapUnits units=ndef;
   
   void AddGrid_(const PointList &list,LensingVariable val);
 
