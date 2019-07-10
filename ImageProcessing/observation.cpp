@@ -369,6 +369,7 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
  */
 void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
 {
+  
   if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
   {
     std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
@@ -383,6 +384,7 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitT
   {
     double counts_to_flux = pow(10,-0.4*mag_zeropoint);
     map.Renormalize(counts_to_flux);
+    map.ChangeUnits(photon_flux);
   }
   return;
 }
@@ -391,8 +393,15 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitT
 void Observation::Convert_back (PixelMap &map)
 {
 	//PixelMap outmap(map);
+  
+  if(map.getUnits() != photon_flux){
+    std::cerr << "Map needs to be in photon flux units." << std::endl;
+      throw std::runtime_error("wrong units");
+  }
+
 	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
 	map.Renormalize(1./Q);
+  map.ChangeUnits(count_per_sec);
 	return;
 }
 
@@ -685,18 +694,22 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
   //std::cout << "Noise Variance in flux units is : " << sum2 << std::endl;
   
   CorrelateNoise(noise_map);
-  
   pmap += noise_map;
   
   return;
 }
 
-/// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope pixel counts
+/// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second
 void Observation::PhotonToCounts(PixelMap &pmap)
 {
-	//PixelMap outmap(pmap);
+  if(pmap.getUnits() != photon_flux){
+    std::cerr << "Map needs to be in photon flux units." << std::endl;
+    throw std::runtime_error("wrong units");
+  }
+
 	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
 	pmap.Renormalize(Q);
+  pmap.ChangeUnits(count_per_sec);
 	return;
 }
 
