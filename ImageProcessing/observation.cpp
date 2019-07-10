@@ -380,7 +380,7 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitT
   if (psf == true)  ApplyPSF(map);
   if (noise == true) AddNoise(map,seed);
   
-  if (unit == flux)
+  if (unit == flux && map.getUnits() != photon_flux )
   {
     double counts_to_flux = pow(10,-0.4*mag_zeropoint);
     map.Renormalize(counts_to_flux);
@@ -402,6 +402,7 @@ void Observation::Convert_back (PixelMap &map)
 	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
 	map.Renormalize(1./Q);
   map.ChangeUnits(count_per_sec);
+  
 	return;
 }
 
@@ -702,12 +703,17 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second
 void Observation::PhotonToCounts(PixelMap &pmap)
 {
-  if(pmap.getUnits() != photon_flux){
+  
+  double Q;
+  if(pmap.getUnits() == surfb){
+    Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
+  }else if(pmap.getUnits() == photon_flux ){
+    Q = pow(10,0.4*mag_zeropoint);
+  }else{
     std::cerr << "Map needs to be in photon flux units." << std::endl;
     throw std::runtime_error("wrong units");
   }
-
-	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
+  
 	pmap.Renormalize(Q);
   pmap.ChangeUnits(count_per_sec);
 	return;
