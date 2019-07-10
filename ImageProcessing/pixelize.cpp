@@ -527,7 +527,7 @@ void PixelMap::AddImages(
 
 ){
   
-  if(units != photon_flux) throw std::invalid_argument("wrong units");
+  if(units != surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -564,7 +564,7 @@ void PixelMap::AddImages(
 
 void PixelMap::AddGridBrightness(Grid &grid){
   
-  if(units != photon_flux) throw std::invalid_argument("wrong units");
+  if(units != surfb) throw std::invalid_argument("wrong units");
   PointList *plist = grid.i_tree->pointlist;
   
   if(plist->size() == 0) return;
@@ -596,7 +596,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
 
 void PixelMap::AddGridMapBrightness(const GridMap &grid){
   
-  if(units != photon_flux) throw std::invalid_argument("wrong units");
+  if(units != surfb) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
     grid.getPixelMap(*this);
@@ -635,7 +635,7 @@ void PixelMap::AddUniformImages(
                       ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
                       ,int Nimages,double value){
   
-  if(units != photon_flux) throw std::invalid_argument("wrong units");
+  if(units != surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -2108,7 +2108,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 PosType PixelMap::AddSource(Source &source){
-  if(units != photon_flux) throw std::invalid_argument("wrong units");
+  if(units != surfb) throw std::invalid_argument("wrong units");
   Point_2d s_center;
   source.getTheta(s_center);
   
@@ -2132,7 +2132,7 @@ PosType PixelMap::AddSource(Source &source){
 }
 
 PosType PixelMap::AddSource(Source &source,int oversample){
-  if(units != photon_flux) throw std::invalid_argument("wrong units");
+  if(units != surfb) throw std::invalid_argument("wrong units");
 
   Point_2d s_center;
   source.getTheta(s_center);
