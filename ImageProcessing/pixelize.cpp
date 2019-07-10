@@ -65,7 +65,7 @@ void swap(PixelMap& x, PixelMap& y)
 }
 
 PixelMap::PixelMap()
-: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0)
+: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(ndef)
 {
   center[0] = 0;
   center[1] = 0;
@@ -78,7 +78,7 @@ PixelMap::PixelMap()
 
 PixelMap::PixelMap(const PixelMap& other)
 : map(other.map),
-Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY)
+Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY),units(other.units)
 {
   std::copy(other.center, other.center + 2, center);
   std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
@@ -87,7 +87,7 @@ Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), 
 
 // move constructor
 PixelMap::PixelMap(PixelMap&& other)
-:Nx(0),Ny(0),map(std::move(other.map)),resolution(0), rangeX(0), rangeY(0){
+:Nx(0),Ny(0),map(std::move(other.map)),resolution(0), rangeX(0), rangeY(0),units(other.units){
  
   Nx = other.Nx;
   Ny = other.Ny;
@@ -115,9 +115,10 @@ PixelMap::PixelMap(
                    const PosType* center,  /// The location of the center of the map
                    std::size_t Npixels,  /// Number of pixels in one dimension of map.
                    PosType resolution        /// One dimensional range of map in whatever units the point positions are in
+                   ,PixelMapUnits u
 )
 : map(0.0, Npixels*Npixels),
-Nx(Npixels), Ny(Npixels), resolution(resolution)
+Nx(Npixels), Ny(Npixels), resolution(resolution),units(u)
 {
   if(Npixels == 0 || resolution <=0) throw std::invalid_argument("invalid arguments");
   std::copy(center, center + 2, this->center);
@@ -136,9 +137,10 @@ PixelMap::PixelMap(
                    std::size_t Nx,  /// Number of pixels in x dimension of map.
                    std::size_t Ny,  /// Number of pixels in y dimension of map.
                    PosType resolution        /// One dimensional range of map in whatever units the point positions are in
+                   ,PixelMapUnits u
 )
 : map(0.0, Nx*Ny),
-Nx(Nx), Ny(Ny), resolution(resolution)
+Nx(Nx), Ny(Ny), resolution(resolution),units(u)
 {
   std::copy(center, center + 2, this->center);
   rangeX = resolution*Nx;
@@ -155,8 +157,9 @@ Nx(Nx), Ny(Ny), resolution(resolution)
  */
 PixelMap::PixelMap(
                    std::string fitsfilename   /// file name of fits file to be read
-                   ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
-)
+                    ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
+                   ,PixelMapUnits u
+):units(u)
 {
     
 #ifdef ENABLE_FITS
@@ -232,7 +235,7 @@ PixelMap::PixelMap(
           std::cerr << "PixelMap input fits field must have header keywords:" << std::endl
           << " PHYSICALSIZE - size of map in degrees" <<std::endl
           << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
-          exit(1);
+          throw std::invalid_argument("bad header");
         }
         my_res = ps/Nx;
       }
@@ -267,6 +270,7 @@ PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the sta
 )
 : map(0.0, my_Npixels*my_Npixels),
 Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
+,units(pmap.units)
 {
 		std::copy(center, center + 2, this->center);
 		rangeX = resolution*Nx;
@@ -315,6 +319,7 @@ PixelMap::PixelMap(
   map_boundary_p1[1] = center[1] - (Ny*resolution)/2.;
   map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
   map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
+  units = pmap.units;
   
   map.resize(Nx*Ny);
   
@@ -387,6 +392,7 @@ void PixelMap::swap(PixelMap &map1,PixelMap &map2)
 
   std::swap(map1.map_boundary_p2[0],map2.map_boundary_p2[0]);
   std::swap(map1.map_boundary_p2[1],map2.map_boundary_p2[1]);
+  std::swap(map1.units,map2.units);
 
   return;
 }
@@ -422,7 +428,8 @@ bool PixelMap::agrees(const PixelMap& other) const
   (Ny == other.Ny) &&
   (resolution == other.resolution) &&
   (center[0] == other.center[0]) &&
-  (center[1] == other.center[1]);
+  (center[1] == other.center[1]) &&
+  (units == other.units);
 }
 
 /// Add the values of another PixelMap to this one.
@@ -431,15 +438,19 @@ PixelMap& PixelMap::operator+=(const PixelMap& rhs)
   // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
+  if(units != rhs.units)
+    throw std::runtime_error("Units of maps are not compatible");
   for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
   return *this;
 }
 
 /// Add two PixelMaps.
-PixelMap operator+(const PixelMap& a, const PixelMap& b)
+PixelMap PixelMap::operator+(const PixelMap& a) const
 {
+  if(a.units != units)
+    throw std::runtime_error("Units of maps are not compatible");
   PixelMap sum(a);
-  sum += b;
+  sum += *this;
   return sum;
 }
 
@@ -449,15 +460,19 @@ PixelMap& PixelMap::operator-=(const PixelMap& rhs)
   // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
+  if(units != rhs.units)
+    throw std::runtime_error("Units of maps are not compatible");
   for(size_t i=0;i<map.size();++i) map[i] -= rhs.map[i];
   return *this;
 }
 
 /// Subtract two PixelMaps.
-PixelMap operator-(const PixelMap& a, const PixelMap& b)
+PixelMap PixelMap::operator-(const PixelMap& a) const
 {
+  if(units != a.units)
+    throw std::runtime_error("Units of maps are not compatible");
   PixelMap diff(a);
-  diff -= b;
+  diff -= *this;
   return diff;
 }
 
@@ -479,18 +494,10 @@ PixelMap& PixelMap::operator*=(PosType b)
 }
 
 /// Multiply two PixelMaps.
-PixelMap operator*(const PixelMap& a, const PixelMap& b)
+PixelMap PixelMap::operator*(const PixelMap& a) const
 {
   PixelMap diff(a);
-  diff *= b;
-  return diff;
-}
-
-/// Multiply two PixelMaps.
-PixelMap operator*(const PixelMap& a, PosType b)
-{
-  PixelMap diff(a);
-  diff *= b;
+  diff *= *this;
   return diff;
 }
 
@@ -520,6 +527,7 @@ void PixelMap::AddImages(
 
 ){
   
+  if(units != photon_flux) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -556,6 +564,7 @@ void PixelMap::AddImages(
 
 void PixelMap::AddGridBrightness(Grid &grid){
   
+  if(units != photon_flux) throw std::invalid_argument("wrong units");
   PointList *plist = grid.i_tree->pointlist;
   
   if(plist->size() == 0) return;
@@ -587,6 +596,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
 
 void PixelMap::AddGridMapBrightness(const GridMap &grid){
   
+  if(units != photon_flux) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
     grid.getPixelMap(*this);
@@ -625,6 +635,7 @@ void PixelMap::AddUniformImages(
                       ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
                       ,int Nimages,double value){
   
+  if(units != photon_flux) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -2097,6 +2108,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 PosType PixelMap::AddSource(Source &source){
+  if(units != photon_flux) throw std::invalid_argument("wrong units");
   Point_2d s_center;
   source.getTheta(s_center);
   
@@ -2120,6 +2132,8 @@ PosType PixelMap::AddSource(Source &source){
 }
 
 PosType PixelMap::AddSource(Source &source,int oversample){
+  if(units != photon_flux) throw std::invalid_argument("wrong units");
+
   Point_2d s_center;
   source.getTheta(s_center);
   
