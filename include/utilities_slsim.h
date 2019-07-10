@@ -1597,33 +1597,37 @@ namespace Utilities
       std::stringstream          lineStream(line);
       std::string                cell;
       column_names.empty();
-      
-      while(std::getline(lineStream,cell,deliniator))
-      {
-          column_names.push_back(cell);
-      }
-
-      // This checks for a trailing comma with no data after it.
-      if (!lineStream && cell.empty())
-      {
-          column_names.push_back("");
-      }
-      
-      int columns = NumberOfEntries(line,deliniator);
-      
       size_t ii = 0;
-    
-      for(auto &v : data ) v.empty();
       
-      if(!header){
-        data.emplace_back(columns);
+      if(header){
+        while(std::getline(lineStream,cell,deliniator))
+        {
+            column_names.push_back(cell);
+        }
+        
+        // This checks for a trailing comma with no data after it.
+        if (!lineStream && cell.empty())
+        {
+            column_names.push_back("");
+        }
+      }else{
+        
+        while(std::getline(lineStream,cell,deliniator))
+        {
+          column_names.push_back(cell);
+        }
+        
+        data.emplace_back(column_names.size());
         int i=0;
         for(auto a : column_names){
           data.back()[i++] = to_numeric<T>(a);
         }
-         ++ii;
+        ++ii;
       }
-
+      
+      int columns = NumberOfEntries(line,deliniator);
+      
+      for(auto &v : data ) v.empty();
       
       while(std::getline(file,line) && ii < Nmax){
         
@@ -1636,6 +1640,7 @@ namespace Utilities
         int i=0;
         while(std::getline(lineStream,cell, deliniator))
         {
+          assert(i < columns);
           data.back()[i] = to_numeric<T>(cell);
           ++i;
         }
