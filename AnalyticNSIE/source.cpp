@@ -671,6 +671,11 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
   y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1])*cos(ang))/source_r;
   //PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
+  
+  double r_norm2 = (y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1])/2;
+  
+  if(r_norm2 > 10) return 0;
+  
   std::vector<PosType> Her1,Her2;
   
   Hermite(Her1,n1,y_norm[0]);
@@ -688,11 +693,12 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
       sb += norm*coeff[j*n1+i]*Her1[i]*Her2[j];
     }
   }
-  sb *= exp(-0.5*(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]) )/source_r;
+  sb *= exp(- r_norm2 )/source_r;
   sb *= flux/coeff_flux;
   assert(flux > 0);
   
-  return max(sb,std::numeric_limits<PosType>::epsilon());
+  return MAX(sb,0);
+  //return max(sb,std::numeric_limits<PosType>::epsilon());
 }
 
 /// Returns the value of the Hermite polynomials from degree 0 to n at position x

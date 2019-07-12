@@ -30,10 +30,19 @@ namespace Utilities {
     public:
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
       SphericalPoint():r(0),theta(0),phi(0){};
+      SphericalPoint(Point_3d &x){
+        r = x.length();
+        theta = asin(x[2]/r);
+        phi = acos( x[0]/sqrt(x[0]*x[0] + x[1]*x[1]) );
+      }
       
       PosType r;
       PosType theta;
       PosType phi;
+      
+      Point_3d cartision(){
+        return Point_3d(r*cos(phi)*cos(theta) ,r*sin(phi)*cos(theta) ,r*sin(theta));
+      };
       
       /// output Cartesian coordinates of the point
       void sphericalTOcartisian(PosType x[]) const;
@@ -42,6 +51,7 @@ namespace Utilities {
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
     };
+    
     /** \brief Quaternion class that is especially useful for rotations.
      
      
