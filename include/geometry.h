@@ -31,22 +31,32 @@ namespace Utilities {
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
       SphericalPoint():r(0),theta(0),phi(0){};
       SphericalPoint(Point_3d &x){
-        r = x.length();
-        theta = asin(x[2]/r);
-        phi = acos( x[0]/sqrt(x[0]*x[0] + x[1]*x[1]) );
+        TOspherical(x);
       }
       
+      SphericalPoint & operator=(const SphericalPoint &p){
+        if(&p != this){
+          r = p.r;
+          theta = p.theta;
+          phi = p.phi;
+        }
+        return *this;
+      }
+      
+      SphericalPoint & operator=(Point_3d &x){
+        TOspherical(x);
+        return *this;
+      }
+
       PosType r;
       PosType theta;
       PosType phi;
       
-      Point_3d cartision(){
-        return Point_3d(r*cos(phi)*cos(theta) ,r*sin(phi)*cos(theta) ,r*sin(theta));
-      };
-      
       /// output Cartesian coordinates of the point
-      void sphericalTOcartisian(PosType x[]) const;
+      void TOcartisian(PosType x[]) const;
+      Point_3d TOcartisian() const;
       void cartisianTOspherical(PosType const x[]);
+      void TOspherical(Point_3d &x);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
       void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
       Point_2d StereographicProjection(const SphericalPoint &central) const;
@@ -127,7 +137,7 @@ namespace Utilities {
         v[3] = p[2];
       }
       Quaternion(SphericalPoint sp){
-        sp.sphericalTOcartisian(v+1);
+        sp.TOcartisian(v+1);
         v[0] = 0;
       }
       
