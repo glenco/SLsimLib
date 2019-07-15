@@ -47,6 +47,12 @@ namespace Utilities {
         TOspherical(x);
         return *this;
       }
+ 
+      bool operator==(const SphericalPoint &p) const{
+        if(&p == this) return true;
+        return (r==p.r)*(theta==p.theta)*(phi==p.phi);
+      }
+
 
       PosType r;
       PosType theta;

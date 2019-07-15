@@ -128,6 +128,9 @@ PosType Utilities::Geometry::Seporation(const SphericalPoint &p1,const Spherical
     
 ///  Angular seporation between points
 PosType Utilities::Geometry::AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2){
+  if(p1 == p2) return 0;
+  double ans = sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi);
+  if(fabs(ans) > 1) return 0;
   return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
 }
 
