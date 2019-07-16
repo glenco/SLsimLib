@@ -139,7 +139,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 }
 namespace Utilities{
 
-  /** \ingroup Utill
+  /** 
    *
    * \brief Orders points on a closed curve.
    *
@@ -464,7 +464,7 @@ namespace Utilities{
  
 	return true;
  }*/
-/* \ingroup Utill
+/* 
  *
  * \brief Finds area within a curve by summing every cell.
  *
@@ -1597,7 +1597,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
  *  perform generic tasks.
  */
 namespace Utilities{
-  /** \ingroup Utill
+  /** 
    * \brief windings(): winding number test for a point in a polygon
    * Returns: Number of times a curves winds around the point x.
    *
@@ -1774,7 +1774,7 @@ namespace Utilities{
       return wn;
     }
   
-  /** \ingroup Utill
+  /** 
    *
    *  \brief determines whether a point is inside a curve, that has been stretched 1.2 times
    *  returns the area of the stretched curve

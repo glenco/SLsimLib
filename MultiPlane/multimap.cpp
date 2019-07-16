@@ -58,7 +58,7 @@ LensHaloMultiMap::LensHaloMultiMap(
   size_t nx = long_range_map.nx = submap.nx / desample ;
   size_t ny = long_range_map.ny = submap.ny / desample ;
 
-  if( Utilities::IO::checkfile(fitsfile + "_lr.fits") ){
+  if( Utilities::IO::file_exists(fitsfile + "_lr.fits") ){
   
     std::cout << " reading file " << fitsfile + "_lr.fits .. " << std::endl;
     long_range_map.Myread(fitsfile + "_lr.fits");
@@ -147,7 +147,7 @@ LensHaloMultiMap::LensHaloMultiMap(
     p /= area;
   }
   
-  if( !Utilities::IO::checkfile(fitsfile + "_lr.fits") ){
+  if( !Utilities::IO::file_exists(fitsfile + "_lr.fits") ){
     if(single_grid){
       long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);
     }else{
@@ -580,7 +580,7 @@ void LensMap::Myread(std::string fits_input_file){
   
   // principal HDU is read
   h0.read(surface_density);
-  int nhdu = h0.axes();
+  //int nhdu = h0.axes();
   
   // file contains other lensing quantities
   alpha1_bar.resize(size);

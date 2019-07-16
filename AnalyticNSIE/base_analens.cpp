@@ -437,10 +437,7 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 	if(stars_N > 0 && stars_implanted){
 		// std::cout << "deleting stars" << endl;
 		//delete[] star_masses;
-		delete[] stars;
-		delete[] star_region;
-		delete[] star_Sigma;
-		Utilities::free_PosTypeMatrix(star_xdisk,star_Nregions,2);
+		star_xdisk.clear();
 		delete star_tree;
 	}
 }

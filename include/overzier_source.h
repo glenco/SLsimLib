@@ -22,14 +22,14 @@
 class SourceOverzier : public Source
 {
 public:
-	SourceOverzier();
-	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
+	//SourceOverzier();
+	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
   
   SourceOverzier(const SourceOverzier &s);
   SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
-	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
+	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
   virtual PosType SurfaceBrightness(PosType *x);
 	PosType getTotalFlux() const;
 	void printSource();
@@ -38,9 +38,9 @@ public:
 	unsigned long getID() { return haloID; }
 	
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
-  PosType getMag() const { return mag; }
+  PosType getMag() const { return current.mag; }
   PosType getMag(Band band) const ;
-  PosType getMagBulge() const { return mag_bulge; }
+  PosType getMagBulge() const { return current.mag_bulge; }
   PosType getMagBulge(Band band) const;
   
   /*
@@ -63,20 +63,25 @@ public:
   */
   
   /// magnitude in specific band
-  void setMag(Band band,PosType my_mag);
-  
+  virtual void setMag(Band band,PosType my_mag){
+    current.mag_map[band] = my_mag;
+  };
   /// magnitude in specific band
-  void setMagBulge(Band band,PosType my_mag);
+  virtual void setMagBulge(Band band,PosType my_mag){
+    current.bulge_mag_map[band] = my_mag;
+  }
   
-	/// bulge half light radius in radians
-	PosType getReff() const { return Reff/(PI/180/60/60); }
-	/// disk scale height in radians
-	PosType getRh() const { return Rh/(PI/180/60/60); }
+	/// bulge half light radius in arcseconds
+	PosType getReff() const { return current.Reff/arcsecTOradians; }
+	/// disk scale height in arcseconds
+	PosType getRdisk() const { return current.Rdisk/arcsecTOradians; }
 	
   /// the bulge to total flux ratio
-	PosType getBtoT() const { return pow(10,(-mag_bulge + mag)/2.5); }
-	PosType getPA() const { return PA; }
-	PosType getInclination() const { return inclination;}
+	PosType getBtoT() const { return pow(10,(-current.mag_bulge + current.mag)/2.5); }
+  /// position angle in radians
+	PosType getPA() const { return current.PA; }
+  /// inclination in radians
+	PosType getInclination() const { return current.inclination;}
   float getSEDtype() const {return sedtype;}
   void setSEDtype(float s){ sedtype = s;}
 
@@ -86,7 +91,7 @@ public:
 	/** Returns minimum of the radii at which disk and bulge have a surf. brightness equal to a fraction f of the central one
 	* TODO: Fabio: Needs to be tested and improved (Bulge is so steep in the center that output values are very small)
   */
-	inline PosType getMinSize(PosType f) {return std::min(1.678*Reff*fabs(cos(inclination))*pow(-log (f)/7.67,4),Rh*(-log (f)/1.67));}
+	inline PosType getMinSize(PosType f) {return std::min(1.678*current.Reff*fabs(cos(current.inclination))*pow(-log (f)/7.67,4),current.Rdisk*(-log (f)/1.67));}
 
   static PosType *getx(SourceOverzier &sourceo){return sourceo.source_x.x;}
 
@@ -94,39 +99,74 @@ protected:
   
   float sedtype = -1;
   // renormalize the disk and bulge to agree with current mag and mag_bulge
-  void renormalize();
+  void renormalize_current();
 	void assignParams(InputParams& params);
 	
 	/// haloID
 	unsigned long haloID;
 
-	/// bulge half light radius
-	PosType Reff;
-	/// disk scale height
-	PosType Rh;
-	
-	//PosType BtoT;
-	PosType PA;
-	PosType inclination;
-	
-	PosType cxx,cyy,cxy;
-	PosType sbDo;
-	PosType sbSo;
-	PosType mag;
-  PosType mag_bulge;
-	
-  // colors
-  std::map<Band,double> mag_map;
-  std::map<Band,double> bulge_mag_map;
+  struct Params{
 
+    /// bulge half light radius
+    PosType Reff=0;
+    /// disk scale height
+    PosType Rdisk=0;
+	
+    //PosType BtoT;
+    PosType PA=0;
+    PosType inclination=0;
+	
+    PosType cxx=0,cyy=0,cxy=0;
+    PosType sbDo=0;
+    PosType sbSo=0;
+    PosType mag=0;
+    PosType mag_bulge=0;
+    
+    // colors
+    std::map<Band,double> mag_map;
+    std::map<Band,double> bulge_mag_map;
+    
+    void print(){
+      /// bulge half light radius
+      std::cout << "Reff :" << Reff/arcsecTOradians << " arcsec ";
+      std::cout << "Rdisk :" << Rdisk/arcsecTOradians << " arcsec ";
+      std::cout << "PA :" << PA << " ";
+      std::cout << "inclination :" << inclination << " radians";
+      std::cout << "sbDo :" << sbDo << " ";
+      std::cout << "sbSo :" << sbSo << " ";
+      std::cout << "mag :" << mag << " ";
+      std::cout << "mag_bulge :" << mag_bulge << " ";
+      
+      std::cout << "BtoT :" << pow(10,(-mag_bulge + mag)/2.5) << std::endl;
+    }
+  };
+	
+  Params current;
 	// optional position variables
 };
+
+/** \brief Adds some extra features to the SourceOverzier source like spiral
+ * arms, and randomizations.
+ *
+ */
 
 class SourceOverzierPlus : public SourceOverzier
 {
 public:
   //SourceOverzierPlus();
-  SourceOverzierPlus(PosType mag,PosType BtoT,PosType Reff,PosType Rh,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran);
+  SourceOverzierPlus(
+                                         PosType my_mag         /// total magnitude
+                                         ,PosType my_mag_bulge  /// magnitude of bulge
+                                         ,PosType my_Reff       /// effective radius of bulge
+                                         ,PosType my_Rdisk         /// scale hight of disk
+                                         ,PosType my_PA         /// position angle
+                                         ,PosType inclination   /// inclination in radians
+                                         ,unsigned long my_id
+                                         ,PosType my_z
+                                         ,const PosType *theta
+                                         ,Utilities::RandomNumbers_NR &ran
+                                         );
+
   ~SourceOverzierPlus();
   
   SourceOverzierPlus(const SourceOverzierPlus &p);
@@ -138,6 +178,17 @@ public:
 
   PosType SurfaceBrightness(PosType *y);
 
+  /// magnitude in specific band
+  void setMag(Band band,PosType my_mag){
+    current.mag_map[band] = my_mag;
+    original.mag_map[band] = my_mag;
+  }
+  /// magnitude in specific band
+  void setMagBulge(Band band,PosType my_mag){
+    current.bulge_mag_map[band] = my_mag;
+    original.bulge_mag_map[band] = my_mag;
+  }
+  
   int getNarms() const {return Narms;}
   PosType getArmAmplitude() const {return Ad;}
   PosType getArmAlpha() const {return arm_alpha;}
@@ -175,5 +226,7 @@ private:
   std::vector<PosType> modes;
   PosType disk_phase;
   PosType cospa,sinpa,cosi;
+  
+  SourceOverzier::Params original;  // original parameters
 };
 #endif /* GALAXIES_OVERZIER_H_ */

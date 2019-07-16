@@ -215,7 +215,23 @@ void InputParams::print_unused() const
 
 std::ostream &operator<<(std::ostream &os, InputParams const &p) {
   std::size_t n = 0;
+  os << "Used :" << std::endl;
   for(InputParams::const_iterator it = p.params.begin(); it != p.params.end(); ++it)
+  {
+    if(p.use_counter.is_used(it->first))
+    {
+      InputParams::const_iterator comment = p.comments.find(it->first);
+      if(comment != p.comments.end())
+        printrow(os, it->first, it->second, comment->second);
+      else
+        printrow(os, it->first, it->second);
+      ++n;
+    }
+  }
+
+
+  os << "Unused :" << std::endl;
+ for(InputParams::const_iterator it = p.params.begin(); it != p.params.end(); ++it)
   {
     if(!p.use_counter.is_used(it->first))
     {
@@ -227,7 +243,6 @@ std::ostream &operator<<(std::ostream &os, InputParams const &p) {
       ++n;
     }
   }
-  
   return os;
 }
 

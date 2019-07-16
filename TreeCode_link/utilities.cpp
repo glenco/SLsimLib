@@ -87,7 +87,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
   return;
 }
 
-/** \ingroup Utill
+/** 
  *
  * The two functions below are inverses of each other for converting
  *   between a 1d array index and a square grid of positions
@@ -177,7 +177,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
 	  return -1;
 }
 
-  /** \ingroup Utill
+  /** 
    * \brief bilinear interpolation from a map.
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
@@ -236,7 +236,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
   }
 
 
-/** \ingroup Utill
+/** 
  * This function finds the largest power of 2 that is < k
  */
 unsigned long prevpower(unsigned long k){
@@ -727,7 +727,7 @@ int Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
   return number;
 }
 
-Utilities::XYcsvLookUp::XYcsvLookUp(
+Utilities::IO::XYcsvLookUp::XYcsvLookUp(
                                     std::string datafile   /// input catalog file in csv format
                                     ,std::string Xlabel
                                     ,std::string Ylabel
@@ -776,7 +776,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   //**********************************
   
   // sort by redshift
-  std::sort(data.begin(),data.end(), [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+  std::sort(data.begin(),data.end(), [this](const std::vector<double> &v1,const std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
   //&v1,std::vector<double> &v2){return v1[1] < v2[1];});
   NinXbins = data.size()/Nxbins;
   Xborders.resize(Nxbins);
@@ -786,7 +786,7 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   if(verbose){
     std::cout << "min X : "<< data[0][Xindex] << " max X : "
     << data.back()[Xindex] << std::endl;
-    std::cout << "redshift bins " << std::endl;
+    std::cout << column_names[Xindex] << " Bins " << std::endl;
   }
   for(int i=1 ; i<Nxbins ; ++i){
     Xborders[i] = data[i*NinXbins][Xindex];
@@ -801,14 +801,15 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   
   // sort by mass within x bins
   for(int i=0 ; i < Nxbins ; ++i){
-    std::sort(borders[i],borders[i+1], [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+    std::sort(borders[i],borders[i+1], [this](const std::vector<double> &v1
+                                              ,const std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
   }
   
   current = data.begin();
 }
 
-Utilities::XYcsvLookUp::XYcsvLookUp(
-                                    std::string datafile   /// input catalog file in csv format
+Utilities::IO::XYcsvLookUp::XYcsvLookUp(
+                                std::string datafile   /// input catalog file in csv format
                                     ,std::string Xlabel
                                     ,std::string Ylabel
                                     ,std::vector<double> Xbins
@@ -848,7 +849,8 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   }
   
   // sort by redshift
-  std::sort(data.begin(),data.end(), [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+  std::sort(data.begin(),data.end(), [this](const std::vector<double> &v1
+                                            ,const std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
 
   size_t Nxbins = Xborders.size();
   NinXbins = data.size()/Nxbins;
@@ -868,29 +870,33 @@ Utilities::XYcsvLookUp::XYcsvLookUp(
   
   // sort by mass within x bins
   for(int i=0 ; i < Nxbins ; ++i){
-    std::sort(borders[i],borders[i+1], [this](std::vector<double> &v1,std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+    std::sort(borders[i],borders[i+1], [this](const std::vector<double> &v1
+                                              ,const std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
   }
   
   current = data.begin();
 }
 
-std::vector<double> Utilities::XYcsvLookUp::find(double x,double y){
+std::vector<double> Utilities::IO::XYcsvLookUp::find(double x,double y){
   long xbin = Utilities::locate(Xborders, x);
   current = std::upper_bound(borders[xbin],borders[xbin+1],y
-                             , [this](double y,std::vector<double> &v1){return y < v1[Yindex];});
+                             , [this](double y,const std::vector<double> &v1){return y < v1[Yindex];});
   
+  if(current == borders[xbin+1]) current = borders[xbin+1] - 1;
+  //std::cout << "XYcsvLookUp boundaries :" << (*borders[xbin])[Yindex] << " " << (*borders[xbin+1])[Yindex] << std::endl;
+  //assert(fabs(y-(*current)[Yindex]) < 1);
   return *current;
 }
-double Utilities::XYcsvLookUp::Ymin(double x) const{
+double Utilities::IO::XYcsvLookUp::Ymin(double x) const{
   long xbin = Utilities::locate(Xborders, x);
   return (*borders[xbin])[Yindex];
 }
-double Utilities::XYcsvLookUp::Ymax(double x) const{
+double Utilities::IO::XYcsvLookUp::Ymax(double x) const{
   long xbin = Utilities::locate(Xborders, x);
   return (*(borders[xbin+1]-1))[Yindex];
 }
 
-double Utilities::XYcsvLookUp::operator[](std::string label) const{
+double Utilities::IO::XYcsvLookUp::operator[](std::string label) const{
   int i = 0;
   for(auto name : column_names){
     if(name == label){

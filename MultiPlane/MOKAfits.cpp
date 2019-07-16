@@ -150,8 +150,10 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
 
       ExtHDU &h1=ff->extension(1);
       h1.read(alpha1_bar);
+
       ExtHDU &h2=ff->extension(2);
       h2.read(alpha2_bar);
+
       ExtHDU &h3=ff->extension(3);
       h3.read(gamma1_bar);
       ExtHDU &h4=ff->extension(4);
@@ -159,7 +161,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
     }
     try{
-      /* these are always present in each fits file created by MOKA */
+      // these are always present in each fits file created by MOKA
       h0->readKey ("SIDEL",boxlarcsec);
       h0->readKey ("SIDEL2",boxlMpc);  // recall you that MOKA Mpc/h
       h0->readKey ("ZLENS",zlens);
@@ -197,13 +199,9 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
   }else{  // Pixelized mass map
     
     int npixels = nx;
+
     // cut a square!
-    // if(ny<nx) npixels = ny;
-    // std:: valarray<double> mapbut(nx*ny);
-    // for(int i=0;i<nx;i++) for(int j=0;j<ny;j++){
-    //    mapbut[i+nx*j] = convergence[i+nx*j];
     //  }
-    // convergence.resize(npixels*npixels);
     // keep it like it is, even if it is a rectangle
     if(ny!=nx){
       std:: cout << " " << std:: endl;
@@ -276,6 +274,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       std::cerr << "Pixel map lens planes cannot have zero or negative redshifts!" << std::endl;
       throw std::runtime_error("Invalid header");
     }
+
     Dlens = cosmo.angDist(0.,zlens);  // physical
     double inarcsec  = 180./M_PI/Dlens*60.*60.;
     double pixLMpc,pixelunit;
@@ -285,7 +284,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       boxlarcsec=boxlarcsec*60.*60.;
       pixLMpc = boxlarcsec/npixels/inarcsec;
       boxlMpc = pixLMpc*npixels;
-    }
+   }
     catch(CCfits::HDU::NoSuchKeyword) {
       try{
         // physical size in degrees
@@ -343,6 +342,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       for(int i=0;i<nx;i++) for(int j=0;j<ny;j++){
         ave_sigma += surface_density[i+nx*j];
       }
+
       ave_sigma /= (nx*ny);
       
       for(int i=0;i<nx;i++) for(int j=0;j<ny;j++){
@@ -367,6 +367,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
      for(int i=0;i<nl;i++) for(int j=0;j<nl;j++){
      double xi = xl[i];
      double yi = xl[j];
+
      double ki = getMapVal(convergence,npixels,xi,yi,xh,xh);
      kl[i+nl*j] = ki;
      if(ki!=ki){
@@ -377,17 +378,18 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
      std:: cout << "  done " << std:: endl;
      nx = ny = nl;
      convergence.resize(nl*nl);
+
      std:: cout << "  remapping " << std:: endl;
      for(int i=0;i<nl;i++) for(int j=0;j<nl;j++){
+
      convergence[i+nl*j] = kl[i+nl*j];
      }
      */
     // carlo test end
     //PreProcessFFTWMap(zerosize);
   }
-  
   // std:: cout << boxlMpc << "  " << boxlarcsec << std:: endl;
-  
+
   for(size_t i=0;i<surface_density.size();++i){
     assert(surface_density[i] == surface_density[i]);
   }
@@ -445,7 +447,7 @@ void MOKAmap::write(std::string filename){
   eh2->write(1,nx*ny,gamma2_bar);
   //ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
   //eh3->write(1,nx*ny,gamma3_bar);
-  
+
   std::cout << *phout << std::endl;
 #else
   std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
@@ -572,17 +574,17 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
  * \brief pre-process surface mass density map computing deflection angles and shear in FFT,
  *  generalized to work with rectangular maps
  */
-
 void MOKAmap::PreProcessFFTWMap(float zerosize){
   // initialize the quantities
   //int npix_filter = 0;   // filter the map if you want on a given number of pixels: CHECK IT NOT IMPLEMENTED YET
   
   // size of the new map in x and y directions, factor by which each size is increased
+
   int Nnx=int(zerosize*nx);
   int Nny=int(zerosize*ny);
   double Nboxlx = boxlMpc*zerosize;
   double Nboxly = boxlMpc*zerosize/nx*ny;
-  
+
   std:: valarray<float> Nmap;
   try{
     Nmap.resize( Nnx*Nny );
@@ -688,12 +690,11 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
     //fftw_destroy_plan(pp);
     
     alpha1_bar.resize(nx*ny);
-    
+   
     for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
       for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
         int ii = i-int(Nnx/2-nx/2);
         int jj = j-int(Nny/2-ny/2);
-        
         alpha1_bar[ii+nx*jj] = -1*float(realsp[i+Nnx*j]/Nnx/Nny);
       }
     }
@@ -760,7 +761,7 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
       for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
         int ii = i-int(Nnx/2-nx/2);
         int jj = j-int(Nny/2-ny/2);
-        
+
         gamma1_bar[ii+nx*jj] = float( realsp[i+Nnx*j]/Nnx/Nny);
         
       }
@@ -796,7 +797,6 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
         int jj = j-int(Nny/2-ny/2);
         
         gamma2_bar[ii+nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
-        
       }
     }
   }

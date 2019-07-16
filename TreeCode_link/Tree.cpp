@@ -18,7 +18,7 @@
  * Returns pointer to new Branch struct.  Initializes children pointers to NULL,
  * and sets data field to input.  Private.
  ************************************************************************/
-/** \ingroup ConstructorL2
+/** 
  *
  * Gives each branch a unique number even if branches are destroed.
  */
@@ -146,7 +146,7 @@ void Branch::print(){
 	 std::cout << "  refined " << refined << std::endl;
 }
 
-/** \ingroup ConstructorL2
+/** 
 *
 void FreeBranch(Branch *branch){
 
@@ -156,7 +156,7 @@ void FreeBranch(Branch *branch){
     return;
 }*/
 
-  /** \ingroup ConstructorL2
+  /** 
  **/
 Point *NewPointArray(
 		unsigned long N  /// number of points in array
@@ -173,7 +173,7 @@ Point *NewPointArray(
   return points;
 }
 
-/** \ingroup ConstructorL2
+/** 
  *
  */
 void FreePointArray(Point *array,bool NewXs){
@@ -246,7 +246,7 @@ void TreeStruct::construct_root(
   //return(tree);
 }
 
-/** \ingroup ConstructorL2
+/** 
  * \brief Free tree and the linked list of points in it.
  */
 TreeStruct::~TreeStruct(){
@@ -758,7 +758,7 @@ void PrintPoint(Point *point){
   std::cout << " gamma = " << point->gamma[0] << " " << point->gamma[1];
   std::cout << " invmag " << point->in_image << std::endl;
 }
-/** \ingroup Constructor
+/** 
  * Make an array of imageinfo types.
  */
 ImageInfo::ImageInfo(){
@@ -793,7 +793,7 @@ ImageInfo::ImageInfo(){
   return imageinfo;
 }*/
 
-/** \ingroup Constructor
+/** 
  * Destructor of imageinfo types.
  */
 ImageInfo::~ImageInfo(){
@@ -866,7 +866,7 @@ OldImageInfo::~OldImageInfo(){
     delete outerborder;
 }
 
-/** \ingroup LowLevel
+/** 
  *  step for walking tree by iteration instead of recursion
  *
 bool TreeStruct::TreeWalkStep(bool allowDescent){
@@ -975,6 +975,7 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   
   int i_max = 0,i=0;
   double area = critcurves[0].critical_area;
+
   Point_2d p1,p2,p_min,p_max;
   p1 = p2 = p_min = p_max = critcurves[0].critical_center;
   

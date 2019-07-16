@@ -45,8 +45,6 @@ public:
     return *this;
   }
 
-
-	
 	// in lens.cpp
 	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
@@ -125,6 +123,7 @@ public:
 	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val);
 	SourcePixelled(const PixelMap& gal_map, PosType z, PosType factor = 1.);
 	SourcePixelled(InputParams& params);
+  
 	~SourcePixelled();
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
@@ -204,7 +203,7 @@ public:
 	void printSource();
 	inline PosType getTotalFlux() const {return flux;}
 	inline PosType getRadius() const {return source_r*10.;}
-	inline PosType getMag() const {return mag;}
+  inline PosType getMag() const { assert(current_band != NoBand); return mag;}
 	inline PosType getMag(Band band) const {return mag_map.at(band);}
   inline Band getBand() const{return current_band;}
   inline long getID() const {return id;}

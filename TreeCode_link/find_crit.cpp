@@ -12,7 +12,7 @@
 #define NMAXCRITS 1000
 
 using namespace std;
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief Finds critical curves and caustics.
  *
@@ -312,7 +312,7 @@ void ImageFinding::find_crit(
   if(TEST){
     
     //*********************  test lines ****************************
-    // This tests that every every radial or pseudo critical line is near at
+    // This tests that every radial or pseudo critical line is near at
     // least one negative mag point
     Kist<Point> nkist;
     for(auto &crit : crtcurve){
@@ -1662,7 +1662,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
 
 
 
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief Finds iso kappa contours.
  *

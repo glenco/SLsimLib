@@ -7,7 +7,7 @@
 
 #include "slsimlib.h"
 
-/** \ingroup DeflectionL2
+/** 
  *
  * \brief This is the function that does the deflection calculation with multiple lens planes.
  *

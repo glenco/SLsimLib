@@ -420,7 +420,7 @@ namespace Utilities
     {
       return *items[i];
     }
-    
+
     /// indexed access for type SubclassT
     template<typename SubclassT>
     SubclassT& get(std::size_t i)
@@ -648,6 +648,18 @@ namespace Utilities
       return *this;
     }
     
+    /// back of list
+    BaseT& back()
+    {
+      return items.back();
+    }
+    
+    /// back of list
+    const BaseT& back() const
+    {
+      return items.back();
+    }
+
     /// add an object of type SubclassT to the vector
     void push_back(BaseT* obj)
     {
@@ -1203,13 +1215,12 @@ namespace Utilities
 
   /// namespace for input/output utilities
   namespace IO{  ///
-    
-    /// checks if file exists
-    inline bool checkfile (const std::string& name) {
-      struct stat buffer;
-      return (stat (name.c_str(), &buffer) == 0);
-    }
-    
+      
+      inline bool file_exists (const std::string& name) {
+          struct stat buffer;
+          return (stat (name.c_str(), &buffer) == 0);
+      }
+
     /** \brief Read in data from an ASCII file with two columns
      */
     template <class T1,class T2>
@@ -1543,8 +1554,8 @@ namespace Utilities
           data[i].push_back(to_numeric<T>(cell));
           i = (i+1)%columns;
         }
-
       }
+                           return 1;
     }
     
     /** \brief Read numerical data from a csv file with a header
@@ -1555,8 +1566,8 @@ namespace Utilities
      It will skip the comment lines if they are at the head of the file.  The
      number of columns and rows are returned.
      
-     Comments must only be before the data.  There must be a line with the
-     column names after the comments and before the data.
+     Comments must only be before the data.  Then if header==true there
+     should be a line of column names.  If header!=true there are non column names.
      
      This function is not particularly fast for large amounts of data.  If the
      number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
@@ -1568,12 +1579,13 @@ namespace Utilities
                          ,std::vector<std::string> &column_names /// list of column names
                           ,size_t Nmax = 1000000
                           ,char comment_char = '#'  /// comment charactor for header
-                         ,char deliniator = ','    /// deliniator between values
+                          ,char deliniator = ','    /// deliniator between values
+                          ,bool header = true    /// false if there are no column names
     ){
       
       
       std::ifstream file(filename);
-      // find number of particles
+      
       if (!file.is_open()){
         std::cerr << "file " << filename << " cann't be opened." << std::endl;
         throw std::runtime_error("no file");
@@ -1589,25 +1601,39 @@ namespace Utilities
       std::stringstream          lineStream(line);
       std::string                cell;
       column_names.empty();
-      while(std::getline(lineStream,cell, ','))
+      
+      while(std::getline(lineStream,cell,deliniator))
       {
-        column_names.push_back(cell);
+          column_names.push_back(cell);
       }
+
       // This checks for a trailing comma with no data after it.
       if (!lineStream && cell.empty())
       {
-        column_names.push_back("");
+          column_names.push_back("");
       }
       
       int columns = NumberOfEntries(line,deliniator);
+      
       size_t ii = 0;
     
       for(auto &v : data ) v.empty();
+      
+      if(!header){
+        data.emplace_back(columns);
+        int i=0;
+        for(auto a : column_names){
+          data.back()[i++] = to_numeric<T>(a);
+        }
+         ++ii;
+      }
+
+      
       while(std::getline(file,line) && ii < Nmax){
         
         data.emplace_back(columns);
         
-        // read the names
+        // read the numbers
         std::stringstream          lineStream(line);
         std::string                cell;
         
@@ -1615,10 +1641,12 @@ namespace Utilities
         while(std::getline(lineStream,cell, deliniator))
         {
           data.back()[i] = to_numeric<T>(cell);
-          i = (i+1)%columns;
+          ++i;
         }
         ++ii;
       }
+      
+      return 1;
     }
   
   /** \brief write a CSV data file for some data vectors
@@ -1664,7 +1692,6 @@ namespace Utilities
       s << data.back()->operator[](j) << "\n";
     }
   }
-  } // Utilities::IO
 
   /*** \brief A class for reading and then looking up objects from a CSV catalog.
    
@@ -1757,8 +1784,70 @@ namespace Utilities
     size_t NinXbins;
     std::string filename;
   };
+  } // Utilities::IO
 
   /// split string into vector of seporate strings that were seporated by
   void splitstring(std::string &line,std::vector<std::string> &vec,const std::string &delimiter);
-} // Utilities
+
+/** \brief class for impoting data from a csv file and allowing label string lookup like a data frame.
+ *
+ *
+*/
+template< typename T>
+class DataFrame{
+public:
+    DataFrame(std::string datafile   /// input catalog file in csv format
+          ,size_t MaxNumber = 1000000 /// maximum number of entries read
+          ,char comment_char = '#'  /// comment charactor for header
+          ,char deliniator = ','    /// deliniator between values
+    ):filename(datafile){
+      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names);
+      for(int i=0 ; i<column_names.size() ; ++i){
+        datamap[column_names[i]] = i;
+      }
+    };
+    
+    /// returns column by name
+    std::vector<T>& operator[](const std::string &label){
+      if(datamap.find(label) == datamap.end()){
+        throw std::invalid_argument("no label");
+      }
+      return data[datamap[label]];
+      for(auto c : column_names ) std::cout << c << " ";
+      std::cout << std::endl;
+      throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    };
+
+  /// add a column to the data frame.  This does a copy.
+  void add_column(const std::string &name,const std::vector<T> &vec){
+    if(vec.size() != data[0].size()){
+      std::cerr << "Added column to DataFrame needs to have the same size." << std::endl;
+      throw std::invalid_argument("wrong size");
+    }
+    column_names.push_back(name);
+    data.push_back(vec);
+    data[name] = data.size()-1;
+  };
+
+    /// returns column by number
+    std::vector<T>& operator[](int i){
+        return data[i];
+    };
+
+    /// returns labels of the columns from the data file
+    std::vector<std::string> labels() const{
+        return column_names;
+    };
+    
+    size_t number_of_rows(){return data[0].size();}
+    size_t number_of_columns(){return data.size();}
+private:
+  std::map<std::string,int> datamap;
+  std::vector<std::vector<T> > data;
+  std::vector<std::string> column_names;
+  std::string filename;
+};
+  
+}  // Utilities
+
 #endif

@@ -129,11 +129,22 @@ struct Point_2d{
     return x[0]*x[0] + x[1]*x[1];
   }
   
+  // rotates the point
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
     x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
+  }
+  
+  /// returns a copy of the point that it rotated
+  Point_2d rotated(PosType theta) const{
+    Point_2d p;
+    PosType c = cos(theta),s = sin(theta);
+    p[0] = c*x[0] - s*x[1];
+    p[1] = c*x[1] + s*x[0];
+    
+    return p;
   }
   
   /// rescale to make a unit length vector

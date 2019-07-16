@@ -534,7 +534,7 @@ void TreeQuadHalos::walkTree_iter(
   IndexType i;
   bool allowDescent=true;
   unsigned long count=0,tmp_index;
-  PosType arg1, arg2, prefac;
+  PosType prefac;
   //bool notscreen = true;
   
   assert(tree);
