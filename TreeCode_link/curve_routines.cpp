@@ -139,7 +139,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 }
 namespace Utilities{
 
-  /** \ingroup Utill
+  /** 
    *
    * \brief Orders points on a closed curve.
    *
@@ -464,7 +464,7 @@ namespace Utilities{
  
 	return true;
  }*/
-/* \ingroup Utill
+/* 
  *
  * \brief Finds area within a curve by summing every cell.
  *
@@ -989,7 +989,10 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
     
     if(delta){
       if(i==(*end)) *end=(*j)+1;
-      for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+      for(k=i;k>(*j)+1;--k){
+        assert(k < Npoints);
+        SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+      }
       ++(*j);
       i=(*j);
       step=1;
@@ -1073,7 +1076,10 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
           // add neighbor to end of curve and restart
           if(i==*end) *end=*j+1;
           // move point to position after last one
-          for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]),&(points[k-1]) );
+          for(k=i;k>(*j)+1;--k){
+            assert(k < Npoints);
+            SwapPointsInArray( &(points[k]),&(points[k-1]) );
+          }
           //SwapPointsInArray(&(points[(*j)+1]),&(points[i]) );
           ++(*j);
           return 1;
@@ -1591,7 +1597,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
  *  perform generic tasks.
  */
 namespace Utilities{
-  /** \ingroup Utill
+  /** 
    * \brief windings(): winding number test for a point in a polygon
    * Returns: Number of times a curves winds around the point x.
    *
@@ -1768,7 +1774,7 @@ namespace Utilities{
       return wn;
     }
   
-  /** \ingroup Utill
+  /** 
    *
    *  \brief determines whether a point is inside a curve, that has been stretched 1.2 times
    *  returns the area of the stretched curve

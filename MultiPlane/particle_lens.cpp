@@ -27,6 +27,7 @@ MakeParticleLenses::MakeParticleLenses(
                    ,SimFileFormat format
                    ,int Nsmooth   /// number of nearest neighbors used for smoothing
                    ,bool recenter /// recenter so that the LenHalos are centered on the center of mass of all the particles
+                  ,bool ignore_type_in_smoothing
                    ):filename(filename),Nsmooth(Nsmooth)
 {
   
@@ -34,7 +35,10 @@ MakeParticleLenses::MakeParticleLenses(
   
   if(format == glmb ){
     nparticles.resize(6,0);
-    readSizesB(filename,data,Nsmooth,nparticles,z_original);
+    if(!readSizesB(filename,data,Nsmooth,nparticles,z_original)){
+      std::cerr << " Cannot read file " << filename << std::endl;
+      throw std::invalid_argument("Can't find file.");
+    }
   }else{
     
     std::string sizefile = filename + "_S"
@@ -47,7 +51,7 @@ MakeParticleLenses::MakeParticleLenses(
       // processed file does not exist read the gadget file and find sizes
       switch (format) {
         case gadget2:
-          readGadget2();
+          readGadget2(ignore_type_in_smoothing);
           break;
         case csv3:
           readCSV(3);
@@ -61,6 +65,8 @@ MakeParticleLenses::MakeParticleLenses(
         case csv6:
           readCSV(6);
         default:
+          std::cerr << "Data file formate is not supported in MakeParticleLens." << std::endl;
+          throw std::invalid_argument("missing format");
           break;
       }
       
@@ -71,6 +77,9 @@ MakeParticleLenses::MakeParticleLenses(
   
   // find center of mass
   cm[0]=cm[1]=cm[2]=0;
+  bbox_ll[0] = bbox_ur[0] = data[0][0];
+  bbox_ll[1] = bbox_ur[1] = data[0][1];
+  bbox_ll[2] = bbox_ur[2] = data[0][2];
   double m=0;
   for(auto p : data){
     for(int i=0 ; i < 3 ; ++i){
@@ -124,18 +133,22 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
   
   // subtract center of mass
   if(recenter){
-    for(auto &p : data){
-      p[0] -= cm[0];
-      p[1] -= cm[1];
-      p[2] -= cm[2];
-    }
-    
-    for(int i=0 ; i < 3 ; ++i){
-      bbox_ll[i] -= cm[i];
-      bbox_ur[i] -= cm[i];
-    }
-    cm[0]=cm[1]=cm[2]=0;
+    Recenter(cm);
+   }
+}
+
+void MakeParticleLenses::Recenter(Point_3d x){
+  for(auto &p : data){
+    p[0] -= x[0];
+    p[1] -= x[1];
+    p[2] -= x[2];
   }
+  
+  bbox_ll -= x;
+  bbox_ur -= x;
+  cm -= x;
+  
+  Utilities::delete_container(halos);
 }
 
 void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
@@ -182,8 +195,9 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
                                                                   ,cosmo
                                                                   ,theta_rotate
                                                                   ,false
-                                                                  ,0)
+                                                                  ,0,false)
                       );
+  
       /*/
        /*LensHaloParticles<ParticleType<float> > halo(pp
        ,nparticles[i]
@@ -208,7 +222,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   size_t ntot = 0;
   while (getline(file, line) && line[0] == '#');
   std::vector<std::string> vec;
-  Utilities::splitstring(line,vec,delimiter);
+    Utilities::IO::splitstring(line,vec,delimiter);
   const int ncolumns = vec.size();
   
   if(ncolumns < columns_used){
@@ -236,7 +250,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   if(columns_used == 3){
     do{
       std::vector<std::string> vec;
-      Utilities::splitstring(line,vec,delimiter);
+        Utilities::IO::splitstring(line,vec,delimiter);
     
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -249,7 +263,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   }else if(columns_used == 4){
     do{
       std::vector<std::string> vec;
-      Utilities::splitstring(line,vec,delimiter);
+        Utilities::IO::splitstring(line,vec,delimiter);
       
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -264,7 +278,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
     std::cout << "Using the particle sizes from " << filename << std::endl;
     do{
       std::vector<std::string> vec;
-      Utilities::splitstring(line,vec,delimiter);
+        Utilities::IO::splitstring(line,vec,delimiter);
     
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -282,7 +296,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
 
     do{
       std::vector<std::string> vec;
-      Utilities::splitstring(line,vec,delimiter);
+        Utilities::IO::splitstring(line,vec,delimiter);
       
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -325,26 +339,23 @@ bool MakeParticleLenses::readCSV(int columns_used){
       }
       skip += nparticles[i];
     }
-  }
-  
-  //LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),data.size());
-  
+   }
   return true;
 };
 
 
 
-bool MakeParticleLenses::readGadget2(){
+bool MakeParticleLenses::readGadget2(bool ignore_type){
   
   GadgetFile<ParticleType<float> > gadget_file(filename,data);
    z_original = gadget_file.redshift;
    
-   for(int n=0 ; n < gadget_file.numfiles ; ++n){
+   //for(int n=0 ; n < gadget_file.numfiles ; ++n){
      gadget_file.openFile();
      gadget_file.readBlock("POS");
      gadget_file.readBlock("MASS");
      gadget_file.closeFile();
-   }
+   //}
   
   double a = 1.0e-3/(1 + z_original);
   // **** convert to physical Mpc/h and Msun/h
@@ -365,14 +376,20 @@ bool MakeParticleLenses::readGadget2(){
      nparticles.push_back(gadget_file.npart[i]);
      masses.push_back(gadget_file.masstab[i]);
    
-     if(gadget_file.npart[i] > 0){
-       pp = data.data() + skip;  // pointer to first particle of type
-       size_t N = gadget_file.npart[i];
+     if(!ignore_type){
+       if(gadget_file.npart[i] > 0){
+         pp = data.data() + skip;  // pointer to first particle of type
+         size_t N = gadget_file.npart[i];
    
-       LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+         LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+       }
+       skip += gadget_file.npart[i];
      }
-     skip += gadget_file.npart[i];
    }
+  
+  if(ignore_type){
+    LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),gadget_file.ntot);
+  }
   
   return true;
 };
@@ -431,7 +448,7 @@ bool MakeParticleLenses::readHDF5(){
 #endif
 */
 // remove particles that are beyond radius (Mpc/h) of center
-void MakeParticleLenses::radialCut(Point_2d center,double radius){
+void MakeParticleLenses::radialCut(Point_3d center,double radius){
   
   double radius2 = radius*radius;
   double r2;
@@ -462,6 +479,22 @@ void MakeParticleLenses::radialCut(Point_2d center,double radius){
     // sort by type
     std::sort(data.begin(),data.end(),[](const ParticleType<float> &a1,const ParticleType<float> &a2){return a1.type < a2.type;});
   }
+}
+
+Point_3d MakeParticleLenses::densest_particle() const{
+  
+  double dmax = -1,d;
+  Point_3d x;
+  for(auto p : data){
+    d = p.mass()/p.size()/p.size()/p.size();
+    if(d > dmax){
+      dmax = d;
+      x[0] = p[0];
+      x[1] = p[1];
+      x[2] = p[2];
+    }
+  }
+  return x;
 }
 
 // remove particles that are beyond cylindrical radius (Mpc/h) of center

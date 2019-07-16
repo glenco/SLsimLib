@@ -83,7 +83,7 @@ Lens::Lens(long* my_seed,PosType z_source, const COSMOLOGY &cosmoset,bool verbos
   //flag_switch_lensing_off = false;
   
   PosType ztmp = zsource;
-  combinePlanes(true);
+  combinePlanes(verbose);
   if(zsource != ztmp) ResetSourcePlane(ztmp,false);
   //std::cout << "number of field halos :" << field_halos.size() << std::endl;
 }
@@ -236,12 +236,9 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
 Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
-  
-	//Utilities::free_PosTypeMatrix(halo_pos, field_halos.size(), 3);
-  
 	Utilities::delete_container(field_halos);
   Utilities::delete_container(substructure.halos);
-  std::cout << "In Lens structure" << std::endl;
+  //std::cout << "In Lens destructor" << std::endl;
 }
 
 /// read in Cosmological Parameters
@@ -1409,7 +1406,8 @@ void Lens::createMainHalos(InputParams& params)
       main_halos.push_back(new LensHaloAnaNSIE(params));
       break;
     case uni_lens:
-      main_halos.push_back(new LensHaloUniform(params));
+      throw std::invalid_argument("Can't add uniform lens in this way now");
+//      main_halos.push_back(new LensHaloUniform(params));
       break;
     case moka_lens:
       main_halos.push_back(new LensHaloMassMap(params, cosmo));
@@ -1478,7 +1476,7 @@ void Lens::clearMainHalos(bool verbose)
  *
  *  The angular position of the halo should be preserved, but the x coordinates may change
  */
-
+/*
 void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   halo->setCosmology(cosmo);
@@ -1492,8 +1490,9 @@ void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verb
   
   combinePlanes(verbose);
 }
+*/
 
-/**
+/*
  * \brief Inserts a sequense of main lens halos and ads them to the existing ones.
  * Then all lensing planes are updated accordingly.
  * If addplanes is true new planes will be added otherwise
@@ -1502,7 +1501,7 @@ void Lens::insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verb
  *
  *  The angular position of the halo should be preserved, but the x coordinates may change
  */
-void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, bool verbose)
+/*void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, bool verbose)
 {
 	for(std::size_t i = 0; i < Nhalos; ++i)
 	{
@@ -1516,19 +1515,16 @@ void Lens::insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes, 
 	flag_switch_main_halo_on = true;
 	
 	combinePlanes(verbose);
-}
+}*/
 
-
-
-
-/**
+/*
  * \brief Inserts a single main lens halo and deletes all previous ones.
  * Then all lensing planes are updated accordingly.
  *
  * Note that this does not delete the halos that were there.  It just removes
  * them from the lens.
  */
-void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
+/*void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose)
 {
   main_halos.clear();
   
@@ -1542,6 +1538,7 @@ void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool ver
   createMainPlanes();
   combinePlanes(verbose);
 }
+*/
 
 /**
  * \brief Inserts a sequense of main lens halos and remove all previous ones.
@@ -1550,7 +1547,7 @@ void Lens::replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool ver
  * them from the lens.
  * Then all lensing planes are updated accordingly.
  */
-void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
+/*void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 {
 	main_halos.clear();
 	
@@ -1567,6 +1564,7 @@ void Lens::replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose)
 	createMainPlanes();
 	combinePlanes(verbose);
 }
+ */
 
 
 /**

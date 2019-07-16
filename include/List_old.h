@@ -10,7 +10,7 @@
 
 #include <point.h>
 
-/** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
+/* \brief link list for points, uses the linking pointers within the Point type unlike  Kist 
 typedef struct PointList{
   Point *top;
   Point *bottom;
@@ -25,6 +25,7 @@ typedef struct PointList *ListHndl;
    routines for linked list of points
 ************************************************************/
 
+/*
 ListHndl NewList(void);
 Point *NewPoint(double *x,unsigned long id);
 void InsertAfterCurrent(ListHndl list,double *x,unsigned long id,Point *image);
@@ -53,3 +54,4 @@ void EmptyList(ListHndl list);
 void UnionList(ListHndl list1,ListHndl list2);
 bool ArePointsUniqueList(ListHndl list);
 bool IntersectionList(ListHndl list1,ListHndl list2,ListHndl intersection);
+*/

@@ -195,8 +195,6 @@ private:
   void _FindBox(TreeStruct::iterator &current,const PosType* ray) const;
   
   void _NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction,TreeStruct::Globals &glabs) const;
-
-
 };
 
 typedef struct TreeStruct *TreeHndl;
@@ -293,7 +291,7 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 
-/// \ingroup Util
+///
 namespace Utilities{
     ///Separation squared between two positions in 2 dimensions.
 	inline PosType sepSQR(PosType *xx,PosType *yy){
@@ -399,6 +397,7 @@ namespace Utilities{
     
     // move pivot to end of array
     std::swap(arr[pivotindex],arr[N-1]);
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
@@ -446,12 +445,14 @@ namespace Utilities{
     pivotvalue=func(pointarray[pivotindex]);
     
     // move pivot to end of array
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
     // partition list and array
     for(i=0;i<N;++i){
       if(func(pointarray[i]) <= pivotvalue){
+        assert(newpivotindex < N);
         SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
         ++newpivotindex;
       }
@@ -461,12 +462,14 @@ namespace Utilities{
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
         return quicksortPoints_multithread<lev>(pointarray,func,newpivotindex,level + 1); });
-      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func
+                                       ,N-newpivotindex-1,level + 1);
       
       //thread1.wait();
     }else{
       quicksortPoints_multithread<lev>(pointarray,func,newpivotindex,level + 1);
-      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func
+                                       ,N-newpivotindex-1,level + 1);
     }
     return ;
   }
@@ -489,6 +492,7 @@ namespace Utilities{
     pivotvalue=func(array[pivotindex]);
     
     // move pivot to end of array
+    assert(pivotindex < N);
     SwapPointsInArray(&array[pivotindex],&array[N-1]);
     newpivotindex=0;
     
@@ -503,19 +507,21 @@ namespace Utilities{
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
-        return quicksortPoints_multithread<lev>(array,func,newpivotindex,level + 1); });
-      quicksort_multithread<lev>(&array[newpivotindex+1],func,N-newpivotindex-1,level + 1);
-      
+        return quicksortPoints_multithread<lev>(array,func
+                                                ,newpivotindex,level + 1); });
+      quicksort_multithread<lev>(&array[newpivotindex+1],func
+                                 ,N-newpivotindex-1,level + 1);
       //thread1.wait();
     }else{
       quicksort_multithread<lev>(array,func,newpivotindex,level + 1);
-      quicksort_multithread<lev>(&array[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      quicksort_multithread<lev>(&array[newpivotindex+1],func
+                                 ,N-newpivotindex-1,level + 1);
     }
     return ;
   }
 
 
-  /** \ingroup Utill
+  /** 
    * \brief Bilinear interpolation class for interpolating from a 2D uniform grid.
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.

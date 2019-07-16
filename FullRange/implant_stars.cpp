@@ -11,7 +11,7 @@ using namespace std;
 
 
 
-/** \ingroup ChangeLens
+/** 
  * \brief  Implant or randomize stars into the lens around the images.
  *
  * The first time this is called the memory for the stars is allocated.
@@ -39,15 +39,14 @@ void LensHalo::implant_stars(
 	if(!(stars_implanted) ){
     
 		//star_masses = new float[stars_N];
-		stars = new unsigned long[stars_N];
+		stars_index.resize(stars_N);
     stars_xp.resize(stars_N);
 		star_theta_force = 1.0e-1;
 		assert(Nregions > 0);
 		star_Nregions = Nregions;
-		star_region = new PosType[Nregions];
-		star_Sigma = new PosType[Nregions];
-		star_xdisk = Utilities::PosTypeMatrix(Nregions,2);
-    
+		star_region.resize(Nregions);
+		star_Sigma.resize(Nregions);
+		star_xdisk.resize(Nregions);
 	}
   
   PosType mean_mstar[Nregions];
@@ -174,7 +173,7 @@ void LensHalo::implant_stars(
   
 	//std::printf("last star x = %e %e\n",stars_xp[stars_N-1][0],stars_xp[stars_N-1][1]);
   
-	float dummy=0;
+	//float dummy=0;
 	//star_tree = new TreeForce(stars_xp,stars_N,star_masses,&dummy
 	//		,false,false,5,2,false,star_theta_force);
   
@@ -205,10 +204,10 @@ void LensHalo::remove_stars(){
 	if(stars_implanted){
     
     delete star_tree;
-		delete stars;
-		delete star_region;
-		delete star_Sigma;
-    Utilities::free_PosTypeMatrix(star_xdisk,star_Nregions,2);
+    stars_index.clear();;
+		star_region.clear();
+		star_Sigma.clear();
+    star_xdisk.clear();
     star_Nregions = 0;
     
     stars_implanted = false;

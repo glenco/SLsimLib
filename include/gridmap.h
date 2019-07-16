@@ -16,7 +16,7 @@
 #include "source.h"
 #include <mutex>
 
-/** \ingroup ImageFinding
+/** 
  * \brief A simplified version of the Grid structure for making non-adaptive maps of the lensing quantities (kappa, gamma, etc...)
  *
  *  GripMap is faster and uses less memory than Grid.  It does not construct the tree structures for the points 
@@ -31,7 +31,7 @@ struct GridMap{
   GridMap(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
 	~GridMap();
   
-  /// reshoot the rays for example when the source plane has been changed
+    /// reshoot the rays for example when the source plane has been changed
   void ReInitializeGrid(LensHndl lens);
 	double RefreshSurfaceBrightnesses(SourceHndl source);
   void ClearSurfaceBrightnesses();
@@ -68,12 +68,33 @@ struct GridMap{
   
   Point * operator[](size_t i){return i_points + i;};
   
+  GridMap(GridMap &&grid){
+    *this = std::move(grid);
+  }
+  
+  GridMap & operator=(GridMap &&grid){
+    Ngrid_init = grid.Ngrid_init;
+    Ngrid_init2 = grid.Ngrid_init2;
+    pointID = grid.pointID;
+    axisratio = grid.axisratio;
+    x_range = grid.x_range;
+    
+    i_points = grid.i_points;
+    grid.i_points = nullptr;
+    s_points = grid.s_points;
+    grid.s_points = nullptr;
+    
+    center = grid.center;
+
+    return *this;
+  }
+
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   
 	/// one dimensional size of initial grid
-	const int Ngrid_init;
+	int Ngrid_init;
   int Ngrid_init2;
   
   unsigned long pointID;

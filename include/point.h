@@ -92,16 +92,24 @@ struct Point_2d{
     x[1]/=value;
     return *this;
   }
-  Point_2d & operator/(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    return *this;
+  Point_2d operator/(PosType value) const{
+    Point_2d tmp;
+    tmp[0] = x[0]/value;
+    tmp[1] = x[1]/value;
+    return tmp;
   }
   Point_2d & operator*=(PosType value){
     x[0]*=value;
     x[1]*=value;
     return *this;
   }
+  Point_2d operator*(PosType value) const{
+    Point_2d tmp;
+    tmp[0] = x[0]*value;
+    tmp[1] = x[1]*value;
+    return tmp;
+  }
+
   /// scalar product
   PosType operator*(const Point_2d &p){
     return x[0]*p.x[0] + x[1]*p.x[1];
@@ -121,11 +129,22 @@ struct Point_2d{
     return x[0]*x[0] + x[1]*x[1];
   }
   
+  // rotates the point
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
     x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
+  }
+  
+  /// returns a copy of the point that it rotated
+  Point_2d rotated(PosType theta) const{
+    Point_2d p;
+    PosType c = cos(theta),s = sin(theta);
+    p[0] = c*x[0] - s*x[1];
+    p[1] = c*x[1] + s*x[0];
+    
+    return p;
   }
   
   /// rescale to make a unit length vector
@@ -477,20 +496,25 @@ struct Point_3d{
     x[2]+=p.x[2];
     return *this;
   }
+  Point_3d & operator-=(const Point_3d &p){
+    x[0]-=p.x[0];
+    x[1]-=p.x[1];
+    x[2]-=p.x[2];
+    return *this;
+  }
   Point_3d & operator/=(PosType value){
     x[0]/=value;
     x[1]/=value;
     x[2]/=value;
     return *this;
   }
-  Point_3d & operator/(PosType value){
+  Point_3d operator/(PosType value) const{
     Point_3d tmp;
-    
     tmp[0] = x[0]/value;
     tmp[1] = x[1]/value;
     tmp[2] = x[2]/value;
     
-    return *this;
+    return tmp;
   }
   Point_3d & operator*=(PosType value){
     x[0] *=value;

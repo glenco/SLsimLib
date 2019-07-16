@@ -1192,6 +1192,7 @@ public:
            );
   ~TreeQuadHalos();
   
+  friend class LensPlaneTree;
   void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
                        ,KappaType *phi) const;
   

@@ -114,6 +114,8 @@ void GadgetFile<PType>::checkMultiple(){
         printf("PartSpecies %d, anz=%d, masstab=%f\n",i,npart[i],masstab[i]);
         ntot += npart[i];
       }
+      printf("Omage %f Lambda %f hubble %f\n",omega,lambda,hubble);
+      //numfiles = 1;
     }
     fclose(fd);
   } else {

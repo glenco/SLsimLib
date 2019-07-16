@@ -48,7 +48,126 @@ struct MOKAmap{
   /// cosmology
   double omegam,omegal,h,wq;
 	double inarcsec;
-	double center[2];
+	Point_2d center;
+  
+  
+  MOKAmap(){}
+  MOKAmap(const MOKAmap &map){
+      convergence = map.convergence;
+      alpha1 = map.alpha1;
+      alpha2 = map.alpha2;
+      gamma1 = map.gamma1;
+      gamma2 = map.gamma2;
+      gamma3 = map.gamma3;
+      phi = map.phi;
+      Signlambdar = map.Signlambdar;
+      Signlambdat = map.Signlambdat;
+      x = map.x;
+      nx = map.nx;
+      ny = map.ny;
+      zlens = map.zlens;
+      m = map.m;
+      zsource = map.zsource;
+      Dlens = map.Dlens;
+      DLS = map.DLS;
+      DS = map.DS;
+      c = map.c;
+      cS = map.cS;
+      fsub = map.fsub;
+      mstar = map.mstar;
+      minsubmass = map.minsubmass;
+      boxlarcsec = map.boxlarcsec;
+      boxlMpc = map.boxlMpc;
+      boxlrad = map.boxlrad;
+      omegam = map.omegam;
+      omegal = map.omegal;
+      h = map.h;
+      wq = map.wq;
+      inarcsec = map.inarcsec;
+      center = map.center;
+  }
+
+  MOKAmap(MOKAmap &&map){
+    *this = std::move(map);
+  }
+  
+  MOKAmap & operator=(MOKAmap &&map){
+    if(this != &map){
+      convergence = std::move(map.convergence);
+      alpha1 = std::move(map.alpha1);
+      alpha2 = std::move(map.alpha2);
+      gamma1 = std::move(map.gamma1);
+      gamma2 = std::move(map.gamma2);
+      gamma3 = std::move(map.gamma3);
+      phi = std::move(map.phi);
+      Signlambdar = std::move(map.Signlambdar);
+      Signlambdat = std::move(map.Signlambdat);
+      x = std::move(map.x);
+      nx = map.nx;
+      ny = map.ny;
+      zlens = map.zlens;
+      m = map.m;
+      zsource = map.zsource;
+      Dlens = map.Dlens;
+      DLS = map.DLS;
+      DS = map.DS;
+      c = map.c;
+      cS = map.cS;
+      fsub = map.fsub;
+      mstar = map.mstar;
+      minsubmass = map.minsubmass;
+      boxlarcsec = map.boxlarcsec;
+      boxlMpc = map.boxlMpc;
+      boxlrad = map.boxlrad;
+      omegam = map.omegam;
+      omegal = map.omegal;
+      h = map.h;
+      wq = map.wq;
+      inarcsec = map.inarcsec;
+      center = map.center;
+    }
+    
+    return *this;
+  }
+  MOKAmap & operator=(const MOKAmap &map){
+    if(this != &map){
+      convergence = map.convergence;
+      alpha1 = map.alpha1;
+      alpha2 = map.alpha2;
+      gamma1 = map.gamma1;
+      gamma2 = map.gamma2;
+      gamma3 = map.gamma3;
+      phi = map.phi;
+      Signlambdar = map.Signlambdar;
+      Signlambdat = map.Signlambdat;
+      x = map.x;
+      nx = map.nx;
+      ny = map.ny;
+      zlens = map.zlens;
+      m = map.m;
+      zsource = map.zsource;
+      Dlens = map.Dlens;
+      DLS = map.DLS;
+      DS = map.DS;
+      c = map.c;
+      cS = map.cS;
+      fsub = map.fsub;
+      mstar = map.mstar;
+      minsubmass = map.minsubmass;
+      boxlarcsec = map.boxlarcsec;
+      boxlMpc = map.boxlMpc;
+      boxlrad = map.boxlrad;
+      omegam = map.omegam;
+      omegal = map.omegal;
+      h = map.h;
+      wq = map.wq;
+      inarcsec = map.inarcsec;
+      center = map.center;
+    }
+    
+    return *this;
+  }
+
 };
 
 /**
@@ -65,15 +184,15 @@ class LensHaloMassMap : public LensHalo
 {
 public:
 	LensHaloMassMap(const std::string& filename
-                  , PixelMapType maptype
+                  ,PixelMapType maptype
                   ,int pixel_map_zeropad
                   ,bool my_zeromean
-                  , const COSMOLOGY& lenscosmo
+                  ,COSMOLOGY& lenscosmo
                   );
   
   //LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
   
-	LensHaloMassMap(InputParams& params, const COSMOLOGY& lenscosmo);
+	LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
   LensHaloMassMap(
                   const PixelMap &MassMap   /// mass map in solar mass units
@@ -81,8 +200,43 @@ public:
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
                   ,bool my_zeromean         /// if true, subtracts average density
-                  ,const COSMOLOGY& lenscosmo  /// cosmology
+                  ,COSMOLOGY& lenscosmo  /// cosmology
   );
+  
+  LensHaloMassMap(const LensHaloMassMap &h):LensHalo(h),cosmo(h.cosmo){
+//    LensHaloMassMap(const LensHaloMassMap &h){
+    maptype = h.maptype;
+    map = h.map;
+    zerosize = h.zerosize;
+    zeromean = h.zeromean;
+  }
+ LensHaloMassMap(LensHaloMassMap &&h):cosmo(h.cosmo){
+//    LensHaloMassMap(LensHaloMassMap &&h){
+    *this = std::move(h);
+  }
+  
+  LensHaloMassMap & operator=(LensHaloMassMap &h){
+    if(&h != this){
+      LensHalo::operator=(h);
+      //cosmo = h.cosmo;
+      maptype = h.maptype;
+      map = h.map;
+      zerosize = h.zerosize;
+      zeromean = h.zeromean;
+    }
+    return *this;
+  }
+  LensHaloMassMap & operator=(LensHaloMassMap &&h){
+    if(&h != this){
+      LensHalo::operator=(h);
+      //cosmo = h.cosmo;
+      maptype = h.maptype;
+      map = std::move(h.map);
+      zerosize = h.zerosize;
+      zeromean = h.zeromean;
+    }
+    return *this;
+  }
 
 	~LensHaloMassMap();
 	
@@ -115,29 +269,29 @@ public:
 	void writeImage(std::string fn);
   
 	/// return center in physical Mpc
-	const double* getCenter() const { return map->center; }
+	Point_2d getCenter() const { return map.center; }
 	/// return range of input map in rad
-	double getRangeRad() const { return map->boxlrad; }
+	double getRangeRad() const { return map.boxlrad; }
 	/// return range of input map in physical Mpc
-	double getRangeMpc() const { return map->boxlMpc; }
+	double getRangeMpc() const { return map.boxlMpc; }
 	/// /// return number of pixels on a side in original map
 	size_t getN() const
 	{
-		if(map->nx != map->ny)
+		if(map.nx != map.ny)
 			throw std::runtime_error("mass map is not square");
-		return map->nx;
+		return map.nx;
 	}
 	/// return number of pixels on a x-axis side in original map
-	size_t getNx() const { return map->nx; }
+	size_t getNx() const { return map.nx; }
 	/// return number of pixels on a y-axis side in original map
-	size_t getNy() const { return map->ny; }
-	
+	size_t getNy() const { return map.ny; }
+  
 private:
 	PixelMapType maptype;
 	void initMap();
 	void convertmap(MOKAmap *map,PixelMapType maptype);
-	MOKAmap* map;
-	const COSMOLOGY& cosmo;
+	MOKAmap map;
+	COSMOLOGY& cosmo;
 	void PreProcessFFTWMap();
   int zerosize;
   bool zeromean;

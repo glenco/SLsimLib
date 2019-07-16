@@ -85,7 +85,7 @@ private:
 };
 
 /**
- * \brief An "analytic" model to represent a lens on a single plane.
+ * \brief A NSIE lens with distortions in shape, substructures and stars included.
  *
  * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion
  * modes, substructures and stars.  LensHaloAnaNSIE differs from a LensHaloBaseNSIE in that there are additional

@@ -15,7 +15,7 @@ static const float FracResTarget = 4.0e-4;
 //static const float telescope_low = 0.01;
 //extern const PosType initialgridsize;
 
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief  Finds images given a source position and size.
  *
@@ -501,7 +501,7 @@ PosType ImageFinding::Temporary::mindyfunc(PosType *x){
   + (y[1]-point->image->x[1])*(y[1]-point->image->x[1]);
 }
 
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief  Finds images given a source position and size.
  *
@@ -1572,7 +1572,7 @@ void ImageFinding::find_images_microlens_exper(
 }
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
  * \brief Finds images for a given source position and size.  Not meant for high level user.
  *
@@ -1770,7 +1770,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
 }
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *\brief Refines every point in the given image and its outer border that satisfies the refinement criterion.
  *
@@ -1957,7 +1957,7 @@ int ImageFinding::IF_routines::refine_grid_kist(
 }
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
  * \brief Finds inner and outer borders of an image using bordering box method.
  *
