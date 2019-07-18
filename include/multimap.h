@@ -116,7 +116,7 @@ public:
                    std::string fitsfile  /// Original fits map of the density
                    ,double redshift
                    ,double mass_unit     /// should include h factors
-                   ,const COSMOLOGY &c
+                   ,COSMOLOGY &c
                    ,bool single_grid_mode = false
                    );
 
@@ -156,7 +156,6 @@ public:
   Point_2d getUpperRight_sr() const { return short_range_map.upperright; }
   /// center of short range map in physical Mpc
   Point_2d getCenter_sr() const { return short_range_map.center; }
-
   
   /// return range of long range map in physical Mpc
   double getRangeMpc_lr() const { return long_range_map.boxlMpc; }
@@ -181,18 +180,61 @@ public:
   double getMax() const {return max_pix;}
   double getMin() const {return min_pix;}
 
+  void operator =(LensHaloMultiMap &&m){
+    cosmo = m.cosmo;
+    long_range_map = std::move(m.long_range_map);
+    short_range_map = std::move(m.short_range_map);
+    single_grid = m.single_grid;
+    ff = m.ff;
+    m.ff = nullptr;
+    max_pix = m.max_pix;
+    min_pix = m.min_pix;
+    mass_unit = m.mass_unit;
+    Noriginal[0] = m.Noriginal[0];
+    Noriginal[1] = m.Noriginal[1];
+    resolution = m.resolution;
+    border_width = m.border_width;
+    fitsfilename = m.fitsfilename;
+    rs2 = m.rs2;
+    zerosize = m.zerosize;
+    unit = m.unit;
+    wsr = m.wsr;
+    wlr = m.wlr;
+  }
+  LensHaloMultiMap(LensHaloMultiMap &&m):cosmo(m.cosmo){
+    long_range_map = std::move(m.long_range_map);
+    short_range_map = std::move(m.short_range_map);
+    single_grid = m.single_grid;
+    ff = m.ff;
+    m.ff = nullptr;
+    max_pix = m.max_pix;
+    min_pix = m.min_pix;
+    mass_unit = m.mass_unit;
+    Noriginal[0] = m.Noriginal[0];
+    Noriginal[1] = m.Noriginal[1];
+    resolution = m.resolution;
+    border_width = m.border_width;
+    fitsfilename = m.fitsfilename;
+    rs2 = m.rs2;
+    zerosize = m.zerosize;
+    unit = m.unit;
+    wsr = m.wsr;
+    wlr = m.wlr;
+  }
+
+public:  // ?????
+  LensMap long_range_map;
+  LensMap short_range_map;
+
 private:
   
   bool single_grid;
-  const COSMOLOGY &cosmo;
+  COSMOLOGY &cosmo;
   CCfits::FITS *ff;
   
   double max_pix = std::numeric_limits<double>::lowest();
   double min_pix = std::numeric_limits<double>::max();
   
-public:  // ?????
-  LensMap long_range_map;
-  LensMap short_range_map;
 private:  // ?????
   double mass_unit;
   

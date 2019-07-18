@@ -13,7 +13,7 @@ LensHaloMultiMap::LensHaloMultiMap(
                  std::string fitsfile  /// Original fits map of the density
                  ,double redshift
                  ,double mass_unit
-                 ,const COSMOLOGY &c
+                 ,COSMOLOGY &c
                  ,bool single_grid_mode
                  ):LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
 {
