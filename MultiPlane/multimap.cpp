@@ -549,7 +549,7 @@ void LensMap::read(std::string fits_input_file,float h,float z){
     exit(1);
   }
   
-  double res = nx/boxlMpc;
+  double res = boxlMpc/nx;
   center *= 0;
   
   lowerleft = center;
@@ -603,7 +603,7 @@ void LensMap::Myread(std::string fits_input_file){
   //h0.readKey ("REDSHIFT",z);
   h0.readKey("SIDEL2",boxlMpc);
  
-  double res = nx/boxlMpc;
+  double res = boxlMpc/nx;
   center *= 0;
   
   lowerleft = center;

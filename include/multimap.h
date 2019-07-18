@@ -181,6 +181,7 @@ public:
   double getMin() const {return min_pix;}
 
   void operator =(LensHaloMultiMap &&m){
+    LensHalo::operator=(std::move(m));
     cosmo = m.cosmo;
     long_range_map = std::move(m.long_range_map);
     short_range_map = std::move(m.short_range_map);
@@ -201,7 +202,8 @@ public:
     wsr = m.wsr;
     wlr = m.wlr;
   }
-  LensHaloMultiMap(LensHaloMultiMap &&m):cosmo(m.cosmo){
+  LensHaloMultiMap(LensHaloMultiMap &&m):LensHalo(std::move(m))
+  ,cosmo(m.cosmo){
     long_range_map = std::move(m.long_range_map);
     short_range_map = std::move(m.short_range_map);
     single_grid = m.single_grid;
