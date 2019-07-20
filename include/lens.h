@@ -70,8 +70,8 @@ GLAMER_TEST_USES(LensTest)
 
 class Lens{
 public:
-  Lens(long* seed, PosType z_source,CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
-  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
+  Lens(long* seed, PosType z_source,CosmoParamSet cosmoset, bool verbose = false);
+  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose = false);
   Lens(long* seed, PosType z_source,const COSMOLOGY &cosmo, bool verbose = false);
   Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmo, bool verbose = false);
   
@@ -225,7 +225,7 @@ public:
    *  The halos are copied so the input halos can be destoyed without affecting the Lens.
    */
   template <typename T>
-  void insertMainHalos(std::vector<T> &my_halos,bool addplanes, bool verbose)
+  void insertMainHalos(std::vector<T> &my_halos,bool addplanes, bool verbose=false)
   {
     T* ptr;
     //for(std::size_t i = 0; i < my_halos.size() ; ++i)

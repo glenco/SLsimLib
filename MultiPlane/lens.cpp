@@ -1226,7 +1226,8 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_plane_redshifts.push_back(halo_z);
 		main_Dl.push_back(halo_Dl);
     //halo->setDist(halo_Dl/(1+halo_z));
-    halo->setZlensDist(halo_z,cosmo);
+    if(halo_z != halo->getZlens())
+      halo->setZlensDist(halo_z,cosmo);
 	}
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
@@ -2924,7 +2925,6 @@ void Lens::combinePlanes(bool verbose)
   
   // output resulting setup
   if(verbose)
-
   {
     std::cout << "\ncombinePlanes()" << "\n---------------" << std::endl;
     std::cout << "\nz:";
