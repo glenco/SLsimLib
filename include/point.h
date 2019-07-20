@@ -104,10 +104,7 @@ struct Point_2d{
     return *this;
   }
   Point_2d operator*(PosType value) const{
-    Point_2d tmp;
-    tmp[0] = x[0]*value;
-    tmp[1] = x[1]*value;
-    return tmp;
+    return Point_2d(x[0]*value,x[1]*value);
   }
 
   /// scalar product

@@ -50,39 +50,47 @@ struct LensMap{
   Point_2d lowerleft;
   Point_2d upperright;
   
+  double x_resolution(){return boxlMpc/nx;}
+  double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}
+  double x_range(){return boxlMpc;}
+  double y_range(){return (upperright[1]-lowerleft[1]);}
+
   //double z;
   
 #ifdef ENABLE_FITS
 
-  LensMap(std::string fits_input_file,float h,float z){
-    read(fits_input_file,h,z);
+  LensMap(std::string fits_input_file,double angDist){
+    read(fits_input_file,angDist);
   }
   
   /// read an entire map
-  void read(std::string input_fits,float h,float z);
+  void read(std::string input_fits,double angDist);//,float h,float z);
   /// read from a file that has been generated with LensMap::write()
   void Myread(std::string fits_input_file);
 
   
   /// read only header information
-  void read_header(std::string input_fits,float h,float z);
+  //void read_header(std::string input_fits,float h,float z);
+  void read_header(std::string input_fits,double angDist);
 
   /// read a subsection of the fits map
   void read_sub(std::string input_fits
-                         ,const std::vector<long> &first
-                         ,const std::vector<long> &last
-                         ,float h
-                         ,float z
-                         );
+                ,const std::vector<long> &first
+                ,const std::vector<long> &last
+                ,double Dist
+//                         ,float h
+//                         ,float z
+                );
   
   
-  void read_header(std::unique_ptr<CCfits::FITS> ff,float h);
+  //void read_header(std::unique_ptr<CCfits::FITS> ff,float h);
 
   void read_sub(CCfits::FITS *ff
                 ,const std::vector<long> &first
                 ,const std::vector<long> &last
-                ,float h
-                ,float z
+                ,double Dist
+//                ,float h
+//                ,float z
                 );
 
   void write(std::string filename);
