@@ -60,7 +60,9 @@ LensHaloMultiMap::LensHaloMultiMap(
   Noriginal[0] = submap.nx;
   Noriginal[1] = submap.ny;
 
-  if( Utilities::IO::file_exists(fitsfile + "_lr.fits") ){
+  bool long_range_file_exists = Utilities::IO::file_exists(fitsfile + "_lr.fits");
+  
+  if( long_range_file_exists ){
   
     std::cout << " reading file " << fitsfile + "_lr.fits .. " << std::endl;
     long_range_map.Myread(fitsfile + "_lr.fits");
@@ -153,29 +155,28 @@ LensHaloMultiMap::LensHaloMultiMap(
     assert(jj == ny-1);
     
     wlr.rs2 = wsr.rs2 = rs2;
-  }
   
-//  double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
-  //double area = long_range_map.x_resolution()
-  //*long_range_map.y_resolution()/mass_unit/resolution/resolution; //*** units  ???
-  double area = long_range_map.x_resolution()
-  *long_range_map.y_resolution()/mass_unit; //*** units  ???
-  //double area = 1.0/mass_unit;
+  
+    //  double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
+    //double area = long_range_map.x_resolution()
+    //*long_range_map.y_resolution()/mass_unit/resolution/resolution; //*** units  ???
+    double area = long_range_map.x_resolution()
+    *long_range_map.y_resolution()/mass_unit; //*** units  ???
+    //double area = 1.0/mass_unit;
 
-  // convert to
-  double ave = 0;
-  for(auto &p : long_range_map.surface_density){
-    p /= area;
-    ave += p;
-  }
-  if(subtract_ave){
-    ave /= long_range_map.surface_density.size();
-    for(float &p : long_range_map.surface_density){
-      p -= ave;
+    // convert to
+    double ave = 0;
+    for(auto &p : long_range_map.surface_density){
+      p /= area;
+      ave += p;
     }
-  }
-  
-  if( !Utilities::IO::file_exists(fitsfile + "_lr.fits") ){
+    if(subtract_ave){
+      ave /= long_range_map.surface_density.size();
+      for(float &p : long_range_map.surface_density){
+        p -= ave;
+      }
+    }
+    
     if(single_grid){
       long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);
     }else{
