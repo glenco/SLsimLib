@@ -391,12 +391,6 @@ void PixelMap::swap(PixelMap &map1,PixelMap &map2)
   return;
 }
 
-/// Zero the whole map
-void PixelMap::Clean()
-{
-  map *= 0;
-}
-
 /// Multiplies the whole map by a scalar factor
 void PixelMap::Renormalize(PosType factor)
 {
@@ -2212,6 +2206,40 @@ void PixelMap::copy_in(
       for(size_t i = imin ; i <= imax ; ++i ){
         double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
         map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
+      }
+    }
+  }
+}
+void PixelMap::paste(const PixelMap& pmap){
+  
+  if(resolution < pmap.resolution){
+    std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
+    throw std::invalid_argument("low resolution");
+  }
+  
+  // case where the maps do not overlap
+  if( (map_boundary_p1[0] > pmap.map_boundary_p2[0]) || (pmap.map_boundary_p1[0] > map_boundary_p2[0])
+     || (map_boundary_p1[1] > pmap.map_boundary_p2[1]) || (pmap.map_boundary_p1[1] > map_boundary_p2[1])
+     ){
+    return;
+  }
+  
+  double x[2];
+  
+  if(map.size() < pmap.map.size() ){
+    for(size_t i=0 ; i < map.size() ; ++i ){
+      find_position(x,i);
+      long j = pmap.find_index(x[0], x[1]);
+      if(j >= 0 ){
+        map[i] = pmap(j);
+      }
+    }
+  }else{
+    for(size_t j=0 ; j < pmap.map.size() ; ++j ){
+      pmap.find_position(x,j);
+      long i = find_index(x[0], x[1]);
+      if(i >= 0 ){
+        map[i] = pmap(j);
       }
     }
   }

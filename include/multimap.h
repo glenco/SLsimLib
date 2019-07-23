@@ -125,6 +125,7 @@ public:
                    ,double redshift
                    ,double mass_unit     /// should include h factors
                    ,COSMOLOGY &c
+                   ,bool subtract_ave = true  /// subtract the average of the full field
                    ,bool single_grid_mode = false
                    );
 

@@ -60,7 +60,8 @@ public:
   }
 	inline double getResolution() const { return resolution; }
 	
-	void Clean();
+  // Zero the whole map
+  void Clean(){map *= 0;}
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
@@ -80,6 +81,17 @@ public:
    of the map within the area of overlaping pixels.
    **/
   void copy_in(const PixelMap& pmap);
+  
+  /** \brief Replace overlaping pixel values with those of the input map.
+   
+   No attempt is made to interpolate or average the pixels of pmap.  No integration
+   is done.  If the resolution of input map is higher than the reslution of the map then
+   the pixels values will just be that of the last pixel visited while going through them.
+   
+   This can be used to sew tiles together into a larger map.
+   **/
+  void paste(const PixelMap& pmap);
+  
   /** \brief copy a PixelMap that must be the same without creating a new one..
    
    This avoids calling a any constructor or destructor.
