@@ -14,6 +14,7 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,double redshift
                  ,double mass_unit
                  ,COSMOLOGY &c
+                 ,bool subtract_ave
                  ,bool single_grid_mode
                  ):LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
 {
@@ -162,8 +163,16 @@ LensHaloMultiMap::LensHaloMultiMap(
   //double area = 1.0/mass_unit;
 
   // convert to
+  double ave = 0;
   for(auto &p : long_range_map.surface_density){
     p /= area;
+    ave += p;
+  }
+  if(subtract_ave){
+    ave /= long_range_map.surface_density.size();
+    for(float &p : long_range_map.surface_density){
+      p -= ave;
+    }
   }
   
   if( !Utilities::IO::file_exists(fitsfile + "_lr.fits") ){
