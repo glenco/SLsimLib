@@ -50,8 +50,8 @@ struct LensMap{
   Point_2d lowerleft;
   Point_2d upperright;
   
-  double x_resolution(){return boxlMpc/nx;}
-  double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}
+  double x_resolution(){return boxlMpc / nx ;}                        // nx or nx-1 ????
+  double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}   //  ????
   double x_range(){return boxlMpc;}
   double y_range(){return (upperright[1]-lowerleft[1]);}
 
@@ -74,13 +74,11 @@ struct LensMap{
   void read_header(std::string input_fits,double angDist);
 
   /// read a subsection of the fits map
-  void read_sub(std::string input_fits
-                ,const std::vector<long> &first
-                ,const std::vector<long> &last
-                ,double Dist
-//                         ,float h
-//                         ,float z
-                );
+//  void read_sub(std::string input_fits
+//                ,const std::vector<long> &first
+//                ,const std::vector<long> &last
+//                ,double Dist
+//                );
   
   
   //void read_header(std::unique_ptr<CCfits::FITS> ff,float h);
@@ -89,8 +87,6 @@ struct LensMap{
                 ,const std::vector<long> &first
                 ,const std::vector<long> &last
                 ,double Dist
-//                ,float h
-//                ,float z
                 );
 
   void write(std::string filename);
@@ -133,7 +129,8 @@ public:
     delete ff;
   };
 	
-  const double f = 5,g = 6;
+  //const double ffactor = 5,gfactor = 6;
+  const double ffactor = 10,gfactor = 10;    // ??????
   
   /// Set highres map be specifying the corners in pixel values
   void submap(
@@ -246,7 +243,6 @@ private:
   double max_pix = std::numeric_limits<double>::lowest();
   double min_pix = std::numeric_limits<double>::max();
   
-private:  // ?????
   double mass_unit;
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
