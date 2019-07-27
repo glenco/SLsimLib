@@ -55,7 +55,7 @@ struct LensMap{
   double x_range(){return boxlMpc;}
   double y_range(){return (upperright[1]-lowerleft[1]);}
 
-  //double z;
+  bool evaluate(const double *x,float &sigma,float *gamma,double *alpha);
   
 #ifdef ENABLE_FITS
 
