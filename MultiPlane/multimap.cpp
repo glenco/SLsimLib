@@ -57,7 +57,6 @@ LensHaloMultiMap::LensHaloMultiMap(
   border_width = ffactor * sqrt(rs2) / resolution + 1;
  
   int desample = sqrt(0.5*submap.nx) / sqrt(ffactor * gfactor);
-  //int desample = 1; // ????
 
   Noriginal[0] = submap.nx;
   Noriginal[1] = submap.ny;
@@ -815,7 +814,7 @@ void LensMap::read_sub(CCfits::FITS *ff
   
   boxlMpc = res*nx;
   
-  std::cout << "Subs map resolution : " << x_resolution() << " " << y_resolution() << std::endl;
+  //std::cout << "Subs map resolution : " << x_resolution() << " " << y_resolution() << std::endl;
 }
 
 /**

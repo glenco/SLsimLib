@@ -50,8 +50,8 @@ struct LensMap{
   Point_2d lowerleft;
   Point_2d upperright;
   
-  double x_resolution(){return boxlMpc / nx ;}                        // nx or nx-1 ????
-  double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}   //  ????
+  double x_resolution(){return boxlMpc / nx ;}
+  double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}
   double x_range(){return boxlMpc;}
   double y_range(){return (upperright[1]-lowerleft[1]);}
 
@@ -129,9 +129,9 @@ public:
     delete ff;
   };
 	
-  //const double ffactor = 5,gfactor = 6;
-  const double ffactor = 10,gfactor = 10;    // ??????
-  
+  const double ffactor = 5,gfactor = 5;
+  //const double ffactor = 10,gfactor = 10;
+
   /// Set highres map be specifying the corners in pixel values
   void submap(
               const std::vector<long> &lower_left
@@ -230,7 +230,7 @@ public:
     wlr = m.wlr;
   }
 
-public:  // ?????
+public:
   LensMap long_range_map;
   LensMap short_range_map;
 
