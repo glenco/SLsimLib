@@ -290,21 +290,44 @@ void Grid::ReShoot(LensHndl lens){
  * returns the sum of the surface brightnesses
  */
 PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
-	PosType total=0,tmp;
+  PosType total=0,tmp;
   
   PointList::iterator s_tree_pointlist_it;
   s_tree_pointlist_it.current = (s_tree->pointlist->Top());
-	for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
-		tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
-		(*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
+  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+    tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
+    (*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
     = tmp;
-		total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
-		assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
-		(*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
+    total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+    assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
+    (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
     = NO;
-	}
+  }
   
-	return total;
+  return total;
+}
+/**
+ * \brief Recalculate surface brightness just like Grid::RefreshSurfaceBrightness but
+ * the new source is added to any sources that were already there.  
+ *
+ * returns the sum of the surface brightnesses from the new source
+ */
+PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
+  PosType total=0,tmp;
+  
+  PointList::iterator s_tree_pointlist_it;
+  s_tree_pointlist_it.current = (s_tree->pointlist->Top());
+  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+    tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
+    (*s_tree_pointlist_it)->surface_brightness += tmp;
+    (*s_tree_pointlist_it)->image->surface_brightness += tmp;
+    total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+    assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
+    (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
+    = NO;
+  }
+  
+  return total;
 }
 
 PosType Grid::EinsteinArea() const {

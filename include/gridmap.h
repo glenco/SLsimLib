@@ -33,7 +33,24 @@ struct GridMap{
   
     /// reshoot the rays for example when the source plane has been changed
   void ReInitializeGrid(LensHndl lens);
-	double RefreshSurfaceBrightnesses(SourceHndl source);
+  /** Finding
+   * \brief Recalculate surface brightness at every point without changing the positions of the gridmap or any lens properties.
+   *
+   *  Recalculate the surface brightness at all points on the gridmap.
+   * This is useful when changing the source model while preserving changes in the grid.
+   * Both i_tree and s_tree are both changed although only s_tree shows up here.
+   *
+   * returns the sum of the surface brightnesses
+   */
+  double RefreshSurfaceBrightnesses(SourceHndl source);
+  /**
+   * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
+   * the new source is added to any sources that were already there.
+   *
+   * returns the sum of the surface brightnesses from the new source
+   */
+  double AddSurfaceBrightnesses(SourceHndl source);
+
   void ClearSurfaceBrightnesses();
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
