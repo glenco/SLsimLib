@@ -194,6 +194,19 @@ double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
   
   return total;
 }
+double GridMap::AddSurfaceBrightnesses(SourceHndl source){
+  PosType total=0,tmp;
+  
+  for(size_t i=0;i <s_points[0].head;++i){
+    tmp = source->SurfaceBrightness(s_points[i].x);
+    s_points[i].surface_brightness += tmp;
+    s_points[i].image->surface_brightness += tmp;
+    total += tmp;
+    s_points[i].in_image = s_points[i].image->in_image = NO;
+  }
+  
+  return total;
+}
 
 void GridMap::ClearSurfaceBrightnesses(){
   
