@@ -30,16 +30,37 @@ void Utilities::Geometry::SphericalPoint::cartisianTOspherical(PosType const x[]
        * onto a tangent plane.
        */
 void Utilities::Geometry::SphericalPoint::StereographicProjection(
-      const SphericalPoint &central   /// point on the sphere where the tangent plane touches
-      ,PosType x[]             /// 2D output coordinate on projection
-  ) const{
-
+                                                                  const SphericalPoint &central   /// point on the sphere where the tangent plane touches
+                                                                  ,PosType x[]             /// 2D output coordinate on projection
+) const{
+  
   PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
   
   x[0] = k*(cos(theta)*sin(phi - central.phi));
   x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
 }
-      
+void Utilities::Geometry::SphericalPoint::StereographicProjection(
+                                                                  const SphericalPoint &central   /// point on the sphere where the tangent plane touches
+                                                                  ,Point_2d &x  /// 2D output coordinate on projection
+) const{
+  
+  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
+  
+  x[0] = k*(cos(theta)*sin(phi - central.phi));
+  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+}
+
+Point_2d Utilities::Geometry::SphericalPoint::StereographicProjection(
+                                                                  const SphericalPoint &central   /// point on the sphere where the tangent plane touches
+) const{
+  
+  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
+  
+  return Point_2d(k*(cos(theta)*sin(phi - central.phi)),k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi)));
+//  x[0] = k*(cos(theta)*sin(phi - central.phi));
+//  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+}
+
 /** \brief Calculates the orthographic projection of the point onto a plane.
 *
 * The result is in radian units.  Near the central point this is a rectolinear projection
@@ -52,7 +73,15 @@ void Utilities::Geometry::SphericalPoint::OrthographicProjection(
   x[0] = cos(theta)*sin(phi - central.phi);
   x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi);
 }
-      
+
+Point_2d Utilities::Geometry::SphericalPoint::OrthographicProjection(
+                                                                 const SphericalPoint &central   /// point on the sphere where the tangent plane touches
+ ) const{
+   
+  return Point_2d( cos(theta)*sin(phi - central.phi),
+  cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi) );
+}
+
 /** \brief Convert from an orthographic projection of the plane onto the unit sphere
 */
 void Utilities::Geometry::SphericalPoint::InverseOrthographicProjection(
@@ -65,6 +94,17 @@ void Utilities::Geometry::SphericalPoint::InverseOrthographicProjection(
   theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
   phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
                                   - x[1]*sin(central.theta)*sin(c) );
+}
+void Utilities::Geometry::SphericalPoint::InverseOrthographicProjection(
+                                                                        const SphericalPoint &central   /// point on the sphere where the tangent plane touches
+                                                                        ,const Point_2d &x             /// 2D output coordinate on projection
+){
+  PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
+  PosType c = asin(rho);
+  r=1.0;
+  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
+  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
+                            - x[1]*sin(central.theta)*sin(c) );
 }
 
 ///  3 dimensional distance between points
