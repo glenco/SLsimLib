@@ -23,8 +23,6 @@
  *  and thus cannot be used for adaptive mapping or image finding.
  */
 
-//class PixelMap;
-
 struct GridMap{
   
 	GridMap(LensHndl lens,unsigned long N1d,const double center[2],double range);
@@ -33,7 +31,24 @@ struct GridMap{
   
     /// reshoot the rays for example when the source plane has been changed
   void ReInitializeGrid(LensHndl lens);
-	double RefreshSurfaceBrightnesses(SourceHndl source);
+  /**
+   * \brief Recalculate surface brightness at every point without changing the positions of the gridmap or any lens properties.
+   *
+   *  Recalculate the surface brightness at all points on the gridmap.
+   * This is useful when changing the source model while preserving changes in the grid.
+   * Both i_tree and s_tree are both changed although only s_tree shows up here.
+   *
+   * returns the sum of the surface brightnesses
+   */
+  double RefreshSurfaceBrightnesses(SourceHndl source);
+  /**
+   * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
+   * the new source is added to any sources that were already there.
+   *
+   * returns the sum of the surface brightnesses from the new source
+   */
+  double AddSurfaceBrightnesses(SourceHndl source);
+
   void ClearSurfaceBrightnesses();
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
@@ -42,7 +57,7 @@ struct GridMap{
 	/// return initial range of gridded region.  This is the distance from the first ray in a row to the last (unlike PixelMap)
 	double getXRange(){return x_range;}
 	double getYRange(){return x_range*axisratio;}
-  // resolution in radians
+  /// resolution in radians, this is range / (N-1)
   double getResolution(){return x_range/(Ngrid_init-1);}
   
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
@@ -115,4 +130,4 @@ private:
   static std::mutex grid_mutex;
 };
 
-#endif /* defined(__GLAMER__gridmap__) */
+#endif // defined(__GLAMER__gridmap__)

@@ -30,17 +30,28 @@ namespace Utilities {
     public:
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
       SphericalPoint():r(0),theta(0),phi(0){};
+      SphericalPoint(Point_3d &x){
+        r = sqrt( x[0]*x[0] + x[1]*x[1] +x[2]*x[2]);
+        theta = asin(x[2]/r);
+        phi = atan2(x[1],x[0]);
+      }
       
       PosType r;
       PosType theta;
       PosType phi;
       
       /// output Cartesian coordinates of the point
-      void sphericalTOcartisian(PosType x[]) const;
+      void TOcartisian(PosType x[]) const;
+      Point_3d TOcartisian() const;
+      
       void cartisianTOspherical(PosType const x[]);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
+      void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
+      Point_2d StereographicProjection(const SphericalPoint &central) const;
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
+      Point_2d OrthographicProjection(const SphericalPoint &central) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
+      void InverseOrthographicProjection(const SphericalPoint &central,const Point_2d &x);
     };
     /** \brief Quaternion class that is especially useful for rotations.
      
@@ -52,7 +63,7 @@ namespace Utilities {
      
      
      #include "geometry.h"
-     {
+     { 
      using Utilities::Geometry::SphericalPoint;
      using Utilities::Geometry::Quaternion;
      
@@ -113,7 +124,7 @@ namespace Utilities {
         v[3] = p[2];
       }
       Quaternion(SphericalPoint sp){
-        sp.sphericalTOcartisian(v+1);
+        sp.TOcartisian(v+1);
         v[0] = 0;
       }
       
