@@ -51,8 +51,6 @@ LensHaloMultiMap::LensHaloMultiMap(
 
   wlr.rs2 = wsr.rs2 = rs2;
   
-  resolution = submap.boxlMpc / submap.nx ;
-
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width = ffactor * sqrt(rs2) / resolution + 1;
  
@@ -176,8 +174,7 @@ LensHaloMultiMap::LensHaloMultiMap(
       }
     }
     assert(jj == ny-1);
-    
-  
+ 
     //  double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
     //double area = long_range_map.x_resolution()
     //*long_range_map.y_resolution()/mass_unit/resolution/resolution; //*** units  ???
