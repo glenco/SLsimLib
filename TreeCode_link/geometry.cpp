@@ -16,6 +16,7 @@ void Utilities::Geometry::SphericalPoint::TOcartisian(PosType x[]) const{
   x[1] = r*cos(theta)*sin(phi);
   x[2] = r*sin(theta);
 }
+
 /// output cartisian coordinates of the point
 Point_3d Utilities::Geometry::SphericalPoint::TOcartisian() const{
   return Point_3d(r*cos(theta)*cos(phi),r*cos(theta)*sin(phi),r*sin(theta) );
@@ -27,6 +28,7 @@ void Utilities::Geometry::SphericalPoint::cartisianTOspherical(PosType const x[]
   theta = asin(x[2]/r);
   phi = atan2(x[1],x[0]);
 }
+
 void Utilities::Geometry::SphericalPoint::TOspherical(Point_3d &x){
   r = sqrt( x[0]*x[0] + x[1]*x[1] +x[2]*x[2]);
   theta = asin(x[2]/r);

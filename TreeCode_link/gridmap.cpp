@@ -194,6 +194,19 @@ double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
   
   return total;
 }
+double GridMap::AddSurfaceBrightnesses(SourceHndl source){
+  PosType total=0,tmp;
+  
+  for(size_t i=0;i <s_points[0].head;++i){
+    tmp = source->SurfaceBrightness(s_points[i].x);
+    s_points[i].surface_brightness += tmp;
+    s_points[i].image->surface_brightness += tmp;
+    total += tmp;
+    s_points[i].in_image = s_points[i].image->in_image = NO;
+  }
+  
+  return total;
+}
 
 void GridMap::ClearSurfaceBrightnesses(){
   
@@ -236,10 +249,64 @@ PixelMap GridMap::writePixelMapUniform(
   size_t Ny = Ngrid_init2;
   
   PixelMap map( center.x, Nx, Ny,x_range/(Nx-1) );
-  map.Clean();
   
-  writePixelMapUniform(map,lensvar);
+  size_t N = map.size();
+  assert(N == Nx*Ny);
   
+  double tmp2[2];
+  switch (lensvar) {
+    case ALPHA:
+      for(size_t i=0 ; i<N ; ++i){
+        tmp2[0] = i_points[i].x[0] - i_points[i].image->x[0];
+        tmp2[1] = i_points[i].x[1] - i_points[i].image->x[1];
+        map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+      }
+      break;
+    case ALPHA1:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = (i_points[i].x[0] - i_points[i].image->x[0]);
+      break;
+    case ALPHA2:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = (i_points[i].x[1] - i_points[i].image->x[1]);
+      break;
+    case KAPPA:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].kappa;
+      break;
+    case GAMMA:
+       for(size_t i=0 ; i<N ; ++i){
+         tmp2[0] = i_points[i].gamma[0];
+         tmp2[1] = i_points[i].gamma[1];
+         map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+      }
+      break;
+    case GAMMA1:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma[0];
+      break;
+    case GAMMA2:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma[1];
+      break;
+    case GAMMA3:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma[2];
+      break;
+    case INVMAG:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].invmag;
+      break;
+    case DT:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].dt;
+      break;
+    default:
+      std::cerr << "GridMap::writePixelMapUniform() does not work for the input LensingVariable" << std::endl;
+      throw std::runtime_error("GridMap::writePixelMapUniform() does not work for the input LensingVariable");
+      break;
+      // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+  }
   return map;
 }
 void GridMap::writePixelMapUniform(

@@ -61,6 +61,7 @@ namespace Utilities {
       /// output Cartesian coordinates of the point
       void TOcartisian(PosType x[]) const;
       Point_3d TOcartisian() const;
+
       void cartisianTOspherical(PosType const x[]);
       void TOspherical(Point_3d &x);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
