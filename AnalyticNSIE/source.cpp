@@ -844,10 +844,14 @@ void SourceMultiShapelets::readCatalog()
 //      assert(j_cat[j][1] == i);
 //      assert(h_cat[j][1] == i);
 
-//      s.setBand(EUC_VIS,viz_cat[j][2]);
-//      s.setBand(EUC_Y,y_cat[j][2]);
-//      s.setBand(EUC_J,j_cat[j][2]);
-//      s.setBand(EUC_H,h_cat[j++][2]);
+      assert(viz_cat.size() > j );
+      s.setBand(EUC_VIS,viz_cat[j][2]);
+      assert(y_cat.size() > j );
+      s.setBand(EUC_Y,y_cat[j][2]);
+      assert(j_cat.size() > j );
+      s.setBand(EUC_J,j_cat[j][2]);
+      assert(h_cat.size() > j );
+      s.setBand(EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
       if (s.getMag() > 0. && s.getMag() < mag_limit

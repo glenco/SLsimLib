@@ -8,6 +8,7 @@
 #ifndef particle_types_h
 #define particle_types_h
 
+/// formats for particle data files
 enum SimFileFormat {glmb,csv3,csv4,csv5,csv6,gadget2,ascii};
 
 // Atomic data class for simulation particles with individual sizes and masses

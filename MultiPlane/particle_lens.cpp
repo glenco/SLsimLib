@@ -24,7 +24,7 @@ using namespace CCfits;
 
 MakeParticleLenses::MakeParticleLenses(
                     const std::string &filename  /// path / root name of gadget-2 snapshot
-                   ,SimFileFormat format
+                   ,SimFileFormat format  /// format of data file
                    ,int Nsmooth   /// number of nearest neighbors used for smoothing
                    ,bool recenter /// recenter so that the LenHalos are centered on the center of mass of all the particles
                   ,bool ignore_type_in_smoothing
