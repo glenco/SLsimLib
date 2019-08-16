@@ -15,6 +15,7 @@
 
 #include "utilities_slsim.h"
 #include "source.h"
+#include <complex>
 
 // forward declaration
 struct Grid;
@@ -147,7 +148,7 @@ public:
 	inline double & operator[](std::size_t i) { return map[i]; };
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
-	
+  inline double & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
   
 	PixelMap& operator+=(const PixelMap& rhs);
   //friend PixelMap operator+(const PixelMap&, const PixelMap&);
@@ -415,6 +416,22 @@ private:
   
 	void PhotonToCounts(PixelMap &pmap);
 	void ApplyPSF(PixelMap &pmap);
+  void fftpsf();  // FFT the psf for later use
+  std::vector<std::complex<double> > fft_psf;
+  std::vector<std::complex<double> > fft_padded;
+  std::vector<double> image_padded;
+  
+  // size of borders for psf convolution
+  size_t nborder_x = 0;
+  size_t nborder_y = 0;
+  
+  // size of padded images
+  size_t n_x = 0;
+  size_t n_y = 0;
+
+  fftw_plan image_to_fft;
+  fftw_plan fft_to_image;
+
   void CorrelateNoise(PixelMap &pmap);
 
   //PixelMap noise_correlation;
