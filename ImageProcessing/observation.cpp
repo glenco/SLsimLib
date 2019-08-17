@@ -330,7 +330,8 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
   std::vector<double> ncorr_big_zeropad(ncorr_big_zeropad_Npixels2);
   std::vector<std::complex<double> > out_ncorr(ncorr_big_zeropad_Npixels*(ncorr_big_zeropad_Npixels/2+1));
   
-  sqrt_noise_power.resize(ncorr_big_zeropad_Npixels*(ncorr_big_zeropad_Npixels/2+1));
+  size_t fftsize = ncorr_big_zeropad_Npixels*(ncorr_big_zeropad_Npixels/2+1);
+  sqrt_noise_power.resize(fftsize);
   
   p_ncorr = fftw_plan_dft_r2c_2d(ncorr_big_zeropad_Npixels,ncorr_big_zeropad_Npixels,ncorr_big_zeropad.data(), reinterpret_cast<fftw_complex*>(out_ncorr.data()), FFTW_ESTIMATE);
   long ix, iy;
@@ -360,6 +361,20 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
   sum /= sqrt_noise_power.size();
   for(size_t i = 0 ; i < sqrt_noise_power.size() ; ++i)
     sqrt_noise_power[i] = sqrt( out_ncorr[i].real()/sum );
+  
+  
+  noise_fft_image.resize(fftsize);
+  noise_in_zeropad.resize(ncorr_big_zeropad_Npixels2);
+  p_noise_r2c = fftw_plan_dft_r2c_2d(ncorr_big_zeropad_Npixels,ncorr_big_zeropad_Npixels
+                                     ,noise_in_zeropad.data()
+                                     , reinterpret_cast<fftw_complex*>(noise_fft_image.data())
+                                     , FFTW_ESTIMATE);
+
+  noise_image_out.resize(ncorr_big_zeropad_Npixels2);
+  p_noise_c2r = fftw_plan_dft_c2r_2d(ncorr_big_zeropad_Npixels,ncorr_big_zeropad_Npixels
+                                     ,reinterpret_cast<fftw_complex*>(noise_fft_image.data())
+                                     , noise_image_out.data()
+                                     , FFTW_ESTIMATE);
 }
 
 /**  \brief Converts the input map to a realistic image
@@ -424,29 +439,13 @@ void Observation::fftpsf(){
 
   n_x = Npix_x + 2*nborder_x;
   n_y = Npix_y + 2*nborder_y;
-
-  long imin = (n_x - n_side_psf*1.0/oversample)/2;
-  long jmin = (n_y - n_side_psf*1.0/oversample)/2;
   
   // make extended map of psf
   std::vector<double> psf_padded(n_x * n_y);
   for(double &a : psf_padded) a=0;
   
-  /*
-  for(size_t i=0 ; i<n_side_psf ;  ++i ){
-    int ii = imin + i/oversample;
-    if( ii > -1 && ii < n_x){
-      for(size_t j=0 ; j<n_side_psf ; ++j ){
-        int jj = jmin + j/oversample;
-        if( jj > -1 && jj < n_y)
-          psf_padded[ii*n_x + jj] += map_psf[i*n_side_psf + j]/map_norm;
-      }
-    }
-  }
-*/
-  
   // shift center of psf to bottom left whish a rap
-  long half_psf = n_side_psf/2;
+  long0 half_psf = n_side_psf/2;
   for(long i=0 ; i< n_side_psf ; ++i){
     size_t ii = (i >= half_psf) ? (i - half_psf)/oversample : n_x + (i - half_psf)/oversample;
     for(long j=0 ; j< n_side_psf ; ++j){
@@ -564,23 +563,19 @@ void Observation::CorrelateNoise(PixelMap &pmap)
     // rows and columns between first_p and last_p are copied in the zero-padded version
     long first_p = side_ncorr/2;
     long last_p = first_p + (Npix-1);
-    std::vector<std::complex<double> > out(fftsize);
     
     // add zero-padding
-    std::vector<double> in_zeropad(Npix_zeropad*Npix_zeropad);
-    for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
+     for (int i = 0; i < Npix_zeropad*Npix_zeropad; i++)
     {
       long ix = i/Npix_zeropad;
       long iy = i%Npix_zeropad;
       if (ix >= first_p && ix <= last_p && iy >= first_p && iy <= last_p)
-        in_zeropad[i] = pmap[(ix-side_ncorr/2)*Npix+(iy-side_ncorr/2)];
+        noise_in_zeropad[i] = pmap[(ix-side_ncorr/2)*Npix+(iy-side_ncorr/2)];
       else
-        in_zeropad[i] = 0.;
+        noise_in_zeropad[i] = 0.;
     }
     
-    fftw_plan p = fftw_plan_dft_r2c_2d(Npix_zeropad,Npix_zeropad,in_zeropad.data()
-                             , reinterpret_cast<fftw_complex*>(out.data()), FFTW_ESTIMATE);
-    fftw_execute(p);
+     fftw_execute(p_noise_r2c);
   
     // performs convolution in Fourier space , and transforms back to real space
     for (unsigned long i = 0; i < fftsize ; i++)
@@ -588,17 +583,15 @@ void Observation::CorrelateNoise(PixelMap &pmap)
       size_t ix = i/(Npix_zeropad/2+1);
       size_t iy = i%(Npix_zeropad/2+1);
       if (ix>Npix_zeropad/2)
-        out[i] *= sqrt_noise_power[(ncorr_big_zeropad_Npixels-(Npix_zeropad-ix))*(ncorr_big_zeropad_Npixels/2+1)+iy];
+        noise_fft_image[i] *= sqrt_noise_power[(ncorr_big_zeropad_Npixels-(Npix_zeropad-ix))*(ncorr_big_zeropad_Npixels/2+1)+iy];
       else
-        out[i] *= sqrt_noise_power[ix*(ncorr_big_zeropad_Npixels/2+1)+iy];
+        noise_fft_image[i] *= sqrt_noise_power[ix*(ncorr_big_zeropad_Npixels/2+1)+iy];
     }
   
   // creats plane for perform backward fft after convolution, sets output data
   //double* image_out = new double[Npix_zeropad*Npix_zeropad];
-  std::vector<double> image_out(Npix_zeropad*Npix_zeropad);
-  fftw_plan p2 = fftw_plan_dft_c2r_2d(Npix_zeropad,Npix_zeropad,reinterpret_cast<fftw_complex*>(out.data()), image_out.data(), FFTW_ESTIMATE);
   
-    fftw_execute(p2);
+    fftw_execute(p_noise_c2r);
     
     // translates array of data in (normalised) counts map
     for (unsigned long i = 0; i < Npix_zeropad*Npix_zeropad; i++)
@@ -608,7 +601,7 @@ void Observation::CorrelateNoise(PixelMap &pmap)
       if (ix >= first_p && ix <= last_p && iy >= first_p && iy <= last_p)
       {
         int ii = (ix-side_ncorr/2)*Npix + (iy-side_ncorr/2);
-        pmap[ii] = image_out[i]/(Npix_zeropad*Npix_zeropad);
+        pmap[ii] = noise_image_out[i]/(Npix_zeropad*Npix_zeropad);
       }
     }
     return;

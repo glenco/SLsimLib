@@ -435,6 +435,11 @@ private:
   void CorrelateNoise(PixelMap &pmap);
 
   //PixelMap noise_correlation;
+  std::vector<std::complex<double> > noise_fft_image;
+  std::vector<double> noise_in_zeropad;
+  fftw_plan p_noise_r2c;
+  std::vector<double> noise_image_out;
+  fftw_plan p_noise_c2r;
 };
 
 void pixelize(double *map,long Npixels,double range,double *center
