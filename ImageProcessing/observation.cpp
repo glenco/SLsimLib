@@ -445,7 +445,7 @@ void Observation::fftpsf(){
   for(double &a : psf_padded) a=0;
   
   // shift center of psf to bottom left whish a rap
-  long0 half_psf = n_side_psf/2;
+  long half_psf = n_side_psf/2;
   for(long i=0 ; i< n_side_psf ; ++i){
     size_t ii = (i >= half_psf) ? (i - half_psf)/oversample : n_x + (i - half_psf)/oversample;
     for(long j=0 ; j< n_side_psf ; ++j){
