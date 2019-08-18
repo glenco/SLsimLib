@@ -262,6 +262,10 @@ public:
   int locateZ(PosType z) const {
       return Utilities::locate<SourceShapelets,PosType>(galaxies, z, [](PosType z,const SourceShapelets &s){return (z < s.getZ());});
   }
+  
+  int getCurrentID(){
+    return galaxies[index].id;
+  }
     
 private:
 	void assignParams(InputParams& params);

@@ -494,6 +494,8 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
  }
  */
 
+size_t SourceShapelets::count = 0;;
+
 void SourceShapelets::setActiveBand(Band band)
 {
   
@@ -534,6 +536,9 @@ SourceShapelets::SourceShapelets(
   assert(flux > 0.0);
   
   NormalizeFlux();
+  
+  ++count;
+  id = 0;
 }
 
 SourceShapelets::SourceShapelets(
@@ -590,6 +595,8 @@ SourceShapelets::SourceShapelets(
   NormalizeFlux();
   
   current_band = NoBand;
+  ++count;
+  id = 0;
 }
 
 SourceShapelets::SourceShapelets(
@@ -660,6 +667,8 @@ SourceShapelets::SourceShapelets(
   mag_map[EUC_H] = mag_map.at(F160W);
   
   NormalizeFlux();
+  ++count;
+  id = 0;
 }
 
 /// Returns surface brightness in erg/cm2/sec/Hz, normalized by hplanck.
@@ -839,6 +848,7 @@ void SourceMultiShapelets::readCatalog()
     {
       SourceShapelets s(shap_file.c_str());
       
+      s.id = i;
 //      assert(viz_cat[j][1] == i);
 //      assert(y_cat[j][1] == i);
 //      assert(j_cat[j][1] == i);
@@ -854,7 +864,7 @@ void SourceMultiShapelets::readCatalog()
       s.setBand(EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag() < mag_limit
+      if (s.getMag() > 0. && s.getMag(EUC_VIS) < mag_limit
           && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0 ){
         galaxies.push_back(s);
         shap_input.close();

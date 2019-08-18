@@ -151,6 +151,7 @@ private:
 	std::valarray<PosType> values;
 };
 
+class SourceMultiShapelets;
 
 /** \brief Class for sources described by shapelets.
  *
@@ -161,10 +162,14 @@ private:
  */
 class SourceShapelets: public Source{
 public:
+  
+  friend SourceMultiShapelets;
     //SourceShapelets();
 	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
 	SourceShapelets(std::string shap_file, PosType* my_center = 0, PosType my_ang = 0.);
+  
+  ~SourceShapelets(){--count;}
   
   SourceShapelets(const SourceShapelets &s):Source(s){
     coeff = s.coeff;
@@ -178,6 +183,7 @@ public:
     coeff_flux = s.coeff_flux;
     current_band = s.current_band;
     sed_type = s.sed_type;
+    ++count;
   }
 
   SourceShapelets & operator= (const SourceShapelets &s){
@@ -195,7 +201,7 @@ public:
     coeff_flux = s.coeff_flux;
     current_band = s.current_band;
     sed_type = s.sed_type;
-
+    
     return *this;
   }
 
@@ -254,6 +260,7 @@ public:
     double fo;
   };
   
+  int getID(){return id;}
 private:
   
   Band current_band;
@@ -271,6 +278,8 @@ private:
   PosType coeff_flux;
   
   std::vector<PepperCorn> grains;
+  
+  static size_t count;
 };
 
 /// A uniform surface brightness circular source.

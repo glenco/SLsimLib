@@ -167,7 +167,7 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,my_PA,inclination,my_id,my_z
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
   original = current;
 
-  float minA = 0.01,maxA = 0.2; // minimum and maximum amplitude of arms
+  float minA = 0.01,maxA = 0.4; // minimum and maximum amplitude of arms
   Narms = (ran() > 0.2) ? 2 : 4;  // number of arms
   arm_alpha = (21 + 10*(ran()-0.5)*2)*degreesTOradians; // arm pitch angle
   mctalpha = Narms/tan(arm_alpha);
