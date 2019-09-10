@@ -399,9 +399,6 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   /* set dimension to cut box */
   dimension=(cbranch->level % 2);
 
-  //PosType *x = new PosType[cbranch->npoints];
-  //assert(x);
-
    /* reorder points */
   PointList::iterator pointlist_current( (*current)->points );
 
@@ -1432,7 +1429,7 @@ unsigned long Grid::PrunePointsOutside(
  *  \brief Empty trash points.
  *
  *  Frees point arrays whose heads are stored in trashlist.
- *  If check=true if will only free arrays where all the points have NULL leafs.
+ *  If check=true it will only free arrays where all the points have NULL leafs.
  *     check=false all the point arrays are freed..
  *
  */
