@@ -26,22 +26,23 @@ typedef unsigned long IndexType;
 /** \brief Box representing a branch in a tree.  It has four children.  Used in QTreeNB which is used in TreeQuad.
  */
 struct QBranchNB{
-  QBranchNB(){
+  QBranchNB(QBranchNB *parent):prev(parent){
     static unsigned long n=0;
     child0 = NULL;
     child1 = NULL;
     child2 = NULL;
     child3 = NULL;
-    prev = NULL;
     brother = NULL;
     particles = NULL;
-    big_particles = NULL;
+    big_particles = nullptr;
     nparticles = 0;
     number = n;
     ++n;
   };
   
-  ~QBranchNB(){};
+  ~QBranchNB(){
+    delete [] big_particles;
+  };
   
   /// array of particles in QBranchNB
   IndexType *particles;
@@ -82,7 +83,6 @@ struct QBranchNB{
   /* force calculation */
   PosType rcrit_part;
   //PosType cm[2]; /* projected center of mass */
-  
 };
 
 /** \brief
@@ -138,7 +138,7 @@ template<typename PType>
 QTreeNB<PType>::QTreeNB(PType *xp,IndexType *particles,IndexType nparticles
                           ,PosType boundary_p1[],PosType boundary_p2[]): xxp(xp) {
   
-  top = new QBranchNB();
+  top = new QBranchNB(nullptr);
   
   top->boundary_p1[0] = boundary_p1[0];
   top->boundary_p1[1] = boundary_p1[1];

@@ -101,7 +101,10 @@ QTreeNB<PosType *> * TreeQuadHalos::BuildQTreeNB(PosType **xp,IndexType Nparticl
   tree = new QTreeNB<PosType *>(xp,particles,Nparticles,p1,p2);
   
   /* build the tree */
+  workspace.resize(Nparticles);
   _BuildQTreeNB(Nparticles,particles);
+  workspace.clear();
+  workspace.shrink_to_fit();
   
   /* visit every branch to find center of mass and cutoff scale */
   tree->moveTop();
@@ -154,7 +157,8 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   
   // find particles too big to be in children
   
-  PosType *x = new PosType[cbranch->nparticles];
+  //PosType *x = new PosType[cbranch->nparticles];
+  PosType *x = workspace.data();
   
   cbranch->Nbig_particles=0;
   
@@ -197,17 +201,17 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   assert(NpInChildren >= 0);
   
   if(NpInChildren == 0){
-    delete[] x;
+    //delete[] x;
     return;
   }
   
   IndexType cutx,cuty;
   PosType xcut,ycut;
   
-  QBranchNB *child0 = new QBranchNB();
-  QBranchNB *child1 = new QBranchNB();
-  QBranchNB *child2 = new QBranchNB();
-  QBranchNB *child3 = new QBranchNB();
+  QBranchNB *child0 = new QBranchNB(cbranch);
+  QBranchNB *child1 = new QBranchNB(cbranch);
+  QBranchNB *child2 = new QBranchNB(cbranch);
+  QBranchNB *child3 = new QBranchNB(cbranch);
   
   tree->attachChildrenToCurrent(child0,child1,child2,child3);
   
@@ -293,7 +297,7 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
     child0->particles = NULL;
   }
   
-  delete[] x;
+  //delete[] x;
   
   tree->moveToChild(0);
   _BuildQTreeNB(child0->nparticles,child0->particles);

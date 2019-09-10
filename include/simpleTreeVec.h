@@ -149,13 +149,15 @@ protected:
 	PosType realray[2];
 	T *points;
   PosType *(*position)(T&);
+  
+  std::vector<PosType> workspace;
     
-    BranchV *top;
-    BranchV *current;
+  BranchV *top;
+  BranchV *current;
     /// number of branches in tree
-    unsigned long Nbranches;
+  unsigned long Nbranches;
     /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
-    short Ndimensions;
+  short Ndimensions;
     
 	void BuildTree();
     
@@ -580,7 +582,10 @@ void TreeSimpleVec<T>::BuildTree(){
     Nbranches = 1;
   
     /* build the tree */
+    workspace.resize(Nparticles);
     _BuildTree(Nparticles,index);
+    workspace.clear();
+    workspace.shrink_to_fit();
   }else{
     
     for(j=0;j<Ndimensions;++j){
@@ -627,7 +632,8 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     /* set dimension to cut box */
     dimension=(cbranch->level % Ndimensions);
   
-    PosType *x = new PosType[cbranch->nparticles];
+   // PosType *x = new PosType[cbranch->nparticles];
+    PosType *x = workspace.data();
     for(i=0;i<cbranch->nparticles;++i) x[i] = position(points[tmp_index[i]])[dimension];
     
     if(median_cut){
@@ -656,7 +662,7 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
         branch2.branch_index = &tmp_index[cut];
     else branch2.branch_index=NULL;
     
-    delete[] x;
+    //delete[] x;
   
     if(branch1.nparticles > 0) attachChildToCurrent(branch1,1);
     if(branch2.nparticles > 0) attachChildToCurrent(branch2,2);

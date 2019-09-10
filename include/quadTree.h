@@ -89,6 +89,8 @@ protected:
 	QTreeNB<PType> * tree;
   IndexType *index;
   
+  std::vector<PosType> workspace;
+  
 	//bool haloON;
 	//LensHaloHndl *halos;
   
@@ -327,7 +329,10 @@ QTreeNB<PType> * TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Npa
   tree = new QTreeNB<PType>(xxp,particles,Nparticles,p1,p2);
   
   /* build the tree */
+  workspace.resize(Nparticles);
   _BuildQTreeNB(Nparticles,particles);
+  workspace.clear();
+  workspace.shrink_to_fit();
   
   /* visit every branch to find center of mass and cutoff scale */
   tree->moveTop();
@@ -378,7 +383,8 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
   
   // find particles too big to be in children
   
-  PosType *x = new PosType[cbranch->nparticles];
+  //PosType *x = new PosType[cbranch->nparticles];
+  PosType *x = workspace.data();
   
   cbranch->Nbig_particles=0;
   
@@ -420,17 +426,17 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
   assert(NpInChildren >= 0);
   
   if(NpInChildren == 0){
-    delete[] x;
+    //delete[] x;
     return;
   }
   
   IndexType cutx,cuty;
   PosType xcut,ycut;
   
-  QBranchNB *child0 = new QBranchNB();
-  QBranchNB *child1 = new QBranchNB();
-  QBranchNB *child2 = new QBranchNB();
-  QBranchNB *child3 = new QBranchNB();
+  QBranchNB *child0 = new QBranchNB(cbranch);
+  QBranchNB *child1 = new QBranchNB(cbranch);
+  QBranchNB *child2 = new QBranchNB(cbranch);
+  QBranchNB *child3 = new QBranchNB(cbranch);
   
   tree->attachChildrenToCurrent(child0,child1,child2,child3);
   
@@ -516,7 +522,7 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
     child0->particles = NULL;
   }
   
-  delete[] x;
+  //delete[] x;
   
   tree->moveToChild(0);
   _BuildQTreeNB(child0->nparticles,child0->particles);
@@ -1209,6 +1215,7 @@ public:
   
 protected:
   
+  std::vector<PosType> workspace;
   PosType **xp;
   bool MultiMass;
   bool MultiRadius;
