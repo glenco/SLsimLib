@@ -18,8 +18,8 @@ class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
 public:
   LensHaloDisk(
                double mass            /// mass of disk
-               ,double disk_scale     /// scale hight of disk
-               ,double Rperp          /// vertical scale hight of disk
+               ,double disk_scale     /// scale hight of disk (Mpc)
+               ,double Rperp          /// vertical scale hight of disk (Mpc)
                ,double mass_res       /// mass resolution, mass of particles
                ,float my_PA           /// position angle in radians
                ,float my_inclination  /// inclination of disk in radians, 0 is face on

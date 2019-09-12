@@ -140,7 +140,8 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
       if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
     }
     if(cbranch->Nbig_particles){
-      cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
       for(i=0,j=0;i<cbranch->nparticles;++i){
         jt = particles[i]*MultiRadius;
         r = halos[jt]->get_Rmax();
@@ -149,7 +150,7 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
       }
     }
     else{
-      cbranch->big_particles = NULL;
+      cbranch->big_particles.reset(nullptr);
     }
     
     return;
@@ -182,7 +183,8 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
         cbranch->Nbig_particles = cut2;
       }
       
-      cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
       for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
     }
     
@@ -192,7 +194,10 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
     if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
        && x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
       cbranch->Nbig_particles = cbranch->nparticles;
-      cbranch->big_particles = cbranch->particles;
+      //cbranch->big_particles = cbranch->particles;
+      cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
+      for(i=0;i<cbranch->Nbig_particles;++i) cbranch->big_particles[i] = particles[i];
+
     }
   }
   

@@ -34,19 +34,16 @@ struct QBranchNB{
     child3 = NULL;
     brother = NULL;
     particles = NULL;
-    big_particles = nullptr;
     nparticles = 0;
     number = n;
     ++n;
   };
   
-  ~QBranchNB(){
-    delete [] big_particles;
-  };
+  ~QBranchNB(){ };
   
   /// array of particles in QBranchNB
   IndexType *particles;
-  IndexType *big_particles;
+  std::unique_ptr<IndexType[]> big_particles;
   IndexType nparticles;
   /// the number of particles that aren't in children
   IndexType Nbig_particles;
@@ -208,7 +205,9 @@ QTreeNB<PType>::~QTreeNB(){
   
   empty();
   delete top;
+  --Nbranches;
   
+  assert(Nbranches ==0);
   return;
 }
 
@@ -229,8 +228,8 @@ void QTreeNB<PType>::_freeQTree(short child){
   QBranchNB *branch;
   
   assert(current);
-  if(current->particles != current->big_particles
-     && current->big_particles != NULL) delete[] current->big_particles;
+  //if(current->particles != current->big_particles
+  //   && current->big_particles != NULL) delete[] current->big_particles;
   
   if(current->child0 != NULL){
     moveToChild(0);
@@ -259,6 +258,7 @@ void QTreeNB<PType>::_freeQTree(short child){
     branch = current;
     moveUp();
     delete branch;
+    --Nbranches;
     
     /*printf("*** removing branch %i number of branches %i\n",branch->number
      ,Nbranches-1);*/
@@ -268,7 +268,6 @@ void QTreeNB<PType>::_freeQTree(short child){
     if(child==2) current->child2 = NULL;
     if(child==3) current->child3 = NULL;
     
-    --Nbranches;
     
     return;
   }

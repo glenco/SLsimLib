@@ -35,6 +35,7 @@ public:
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
                 ,PosType *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
                   ){
+                    
         index = new IndexType[Npoints];
         IndexType ii;
         position = Mypos;
@@ -55,6 +56,7 @@ public:
     {
         freeTree();
         delete[] index;
+      assert(Nbranches == 0);
         return;
     };
   
@@ -736,16 +738,15 @@ void TreeSimpleVec<T>::_freeTree(short child){
         
     	branch = current;
     	moveUp();
-       	delete branch;
-        
+      delete branch;
+      --Nbranches;
+      
     	/*printf("*** removing branch %i number of branches %i\n",branch->number
          ,Nbranches-1);*/
         
-       	if(child==1) current->child1 = NULL;
+      if(child==1) current->child1 = NULL;
     	if(child==2) current->child2 = NULL;
-        
-    	--Nbranches;
-        
+      
     	return;
     }
     
@@ -923,10 +924,11 @@ void TreeSimpleVec<T>::attachChildToCurrent(IndexType *branch_index,IndexType np
                                            ,int child){
     
     /*printf("attaching child%i  current paricle number %i\n",child,current->nparticles);*/
-
-
-    BranchV *branchV= new BranchV(Ndimensions,branch_index,nparticles,boundary_p1,boundary_p2
+  BranchV *branchV= new BranchV(Ndimensions,branch_index,nparticles,boundary_p1,boundary_p2
                            ,current->level+1,Nbranches);
+  
+  Nbranches++;
+  
     
     if( offEnd() ){
         
@@ -952,9 +954,7 @@ void TreeSimpleVec<T>::attachChildToCurrent(IndexType *branch_index,IndexType np
         }
         current->child2 = branchV;
     }
-    
-    Nbranches++;
-    
+  
     return;
 }
 

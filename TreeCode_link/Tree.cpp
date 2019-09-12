@@ -252,7 +252,7 @@ void TreeStruct::construct_root(
 TreeStruct::~TreeStruct(){
 
 	emptyTree();
-	//free(current);
+  assert(Nbranches==1);
   free(top);
 	--Nbranches;
 

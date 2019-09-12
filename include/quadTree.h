@@ -86,8 +86,8 @@ protected:
   
   PosType force_theta;
   
-	QTreeNB<PType> * tree;
-  IndexType *index;
+  std::unique_ptr<QTreeNB<PType> > tree;
+  std::vector<IndexType> index;
   
   std::vector<PosType> workspace;
   
@@ -103,7 +103,8 @@ protected:
   PosType original_xl;  // x-axis size of simulation used for peridic buffering.  Requrement that it top branch be square my make it differ from the size of top branch.
   PosType original_yl;  // x-axis size of simulation used for peridic buffering.
   
-	QTreeNB<PType> * BuildQTreeNB(PType *xp,IndexType Nparticles,IndexType *particles);
+  //QTreeNB<PType> * BuildQTreeNB(PType *xp,IndexType Nparticles,IndexType *particles);
+  void BuildQTreeNB(PType *xp,IndexType Nparticles);
   void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
   
   inline short WhichQuad(PosType *x,QBranchNB &branch);
@@ -255,7 +256,7 @@ xxp(xpt)
 ,Nbucket(bucket),force_theta(theta_force),periodic_buffer(my_periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 {
-  index = new IndexType[Npoints];
+  index.resize(Npoints);
   IndexType ii;
   if(mass_fixed <= 0 ) MultiMass = true; else MultiMass = false;
   if(size_fixed <= 0 ) MultiRadius = true; else MultiRadius = false;
@@ -265,9 +266,10 @@ xxp(xpt)
   //haloON = false; // don't use internal halo parameters
   //halos = NULL;
   
-  tree = BuildQTreeNB(xxp,Npoints,index);
+  //tree = BuildQTreeNB(xxp,Npoints,index);
   if(Npoints > 0){
-    tree = BuildQTreeNB(xxp,Npoints,index);
+    //tree = BuildQTreeNB(xxp,Npoints,index);
+    BuildQTreeNB(xxp,Npoints);
     CalcMoments();
   }
   
@@ -281,13 +283,12 @@ template<typename PType>
 TreeQuadParticles<PType>::~TreeQuadParticles()
 {
   if(Nparticles == 0) return;
-  delete tree;
-  delete[] index;
   return;
 }
 
 template<typename PType>
-QTreeNB<PType> * TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles,IndexType *particles){
+//QTreeNB<PType> * TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles,IndexType *particles){
+void TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
   IndexType i;
   short j;
   PosType p1[2],p2[2];
@@ -326,18 +327,20 @@ QTreeNB<PType> * TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Npa
   p2[j] = p1[j] + lengths[!j];
   
   /* Initialize tree root */
-  tree = new QTreeNB<PType>(xxp,particles,Nparticles,p1,p2);
-  
+  //tree = new QTreeNB<PType>(xxp,particles,Nparticles,p1,p2);
+  tree.reset( new QTreeNB<PType>(xxp,index.data(),Nparticles,p1,p2) );
+
   /* build the tree */
   workspace.resize(Nparticles);
-  _BuildQTreeNB(Nparticles,particles);
+  _BuildQTreeNB(Nparticles,index.data());
   workspace.clear();
   workspace.shrink_to_fit();
   
   /* visit every branch to find center of mass and cutoff scale */
   tree->moveTop();
   
-  return tree;
+  //return tree;
+  return;
 }
 
 /// returns an index for which of the four quadrangles of the branch the point x[] is in
@@ -368,14 +371,16 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
       if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
     }
     if(cbranch->Nbig_particles){
-      cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      cbranch->big_particles.reset(new IndexType[cbranch->Nbig_particles]);
+      
       for(i=0,j=0;i<cbranch->nparticles;++i){
         r = xxp[particles[i]*MultiRadius].size();
         if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
       }
     }
     else{
-      cbranch->big_particles = NULL;
+      cbranch->big_particles.reset(nullptr);
     }
     
     return;
@@ -407,7 +412,8 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
         cbranch->Nbig_particles = cut2;
       }
       
-      cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+      cbranch->big_particles.reset(new IndexType[cbranch->Nbig_particles]);
       for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
     }
     
@@ -417,7 +423,9 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
     if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
        && x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
       cbranch->Nbig_particles = cbranch->nparticles;
-      cbranch->big_particles = cbranch->particles;
+      //cbranch->big_particles = cbranch->particles;
+      cbranch->big_particles.reset(new IndexType[cbranch->Nbig_particles]);
+      for(i=0;i<cbranch->nparticles;++i) cbranch->big_particles[i] = cbranch->particles[particles[i]];
     }
   }
   
