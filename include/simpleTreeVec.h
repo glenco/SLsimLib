@@ -34,30 +34,29 @@ public:
                   ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
                 ,PosType *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
-                  ){
-                    
-        index = new IndexType[Npoints];
-        IndexType ii;
-        position = Mypos;
+  ):Nbranches(0)
+  {
+    index.resize(Npoints);
+    for(IndexType ii=0;ii<Npoints;++ii) index[ii] = ii;
     
-        Nbucket = bucket;
-        Ndimensions = dimensions;
-        median_cut = median;
-        Nparticles = Npoints;
+    position = Mypos;
+    
+    Nbucket = bucket;
+    Ndimensions = dimensions;
+    median_cut = median;
+    Nparticles = Npoints;
         
-        points = xpt;
+    points = xpt;
 
-        for(ii=0;ii<Npoints;++ii) index[ii] = ii;
-        
-        BuildTree();
-    }
+    BuildTree();
+  }
 
   virtual ~TreeSimpleVec()
     {
-        freeTree();
-        delete[] index;
+      freeTree();
+      //delete[] index;
       assert(Nbranches == 0);
-        return;
+      return;
     };
   
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
@@ -71,37 +70,37 @@ public:
      */
 
     struct BranchV{
-        
-        int Ndim;
+      
+      int Ndim;
         /// array of branch_index in BranchV
-        IndexType *branch_index;
-        IndexType nparticles;
+      IndexType *branch_index;
+      IndexType nparticles;
         /// level in tree
-        int level;
-        unsigned long number;
+      int level;
+      unsigned long number;
         /// bottom, left, back corner of box
-        PosType *boundary_p1;
+      PosType *boundary_p1 = nullptr;
         /// top, right, front corner of box
-        PosType *boundary_p2;
-        BranchV *child1;
-        BranchV *child2;
+      PosType *boundary_p2 = nullptr;
+      BranchV *child1;
+      BranchV *child2;
         /// father of branch
-        BranchV *prev;
+      BranchV *prev;
         /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
         /// Used for iterative tree walk.
-        BranchV *brother;
+      BranchV *brother;
         
         
-        BranchV(int my_Ndim,IndexType *my_branch_index,IndexType my_nparticles
+      BranchV(int my_Ndim,IndexType *my_branch_index,IndexType my_nparticles
                 ,PosType my_boundary_p1[],PosType my_boundary_p2[]
                 ,int my_level,unsigned long my_BranchVnumber)
         :Ndim(my_Ndim),branch_index(my_branch_index),nparticles(my_nparticles)
          ,level(my_level),number(my_BranchVnumber)
         {
             
-            boundary_p1 = new PosType[Ndim*2];
-            boundary_p2 = &boundary_p1[Ndim];
-            
+          boundary_p1 = new PosType[Ndim*2];
+          boundary_p2 = &boundary_p1[Ndim];
+
             for(size_t i=0;i<Ndim;++i){
                 boundary_p1[i]= my_boundary_p1[i];
                 boundary_p2[i]= my_boundary_p2[i];
@@ -135,16 +134,14 @@ public:
             };
         
         ~BranchV(){
-            delete[] boundary_p1;
+          delete [] boundary_p1;
         };
-        
-        
     };
     
 protected:
     
 	int incell,incell2;
-	IndexType *index;
+  std::vector<IndexType> index;
 	IndexType Nparticles;
 	bool median_cut;
 	int Nbucket;
@@ -170,7 +167,7 @@ protected:
     
 	void freeTree();
     
-	short emptyTree();
+	short clearTree();
 	void _freeTree(short child);
 	bool isEmpty();
 	bool atTop();
@@ -273,13 +270,7 @@ void TreeSimpleVec<T>::PointsWithinCircle(
         
         ray[1] = (ray[1] > current->boundary_p1[1]) ? ray[1] : current->boundary_p1[1];
         ray[1] = (ray[1] < current->boundary_p2[1]) ? ray[1] : current->boundary_p2[1];
-        
-        //cout << "ray = " << ray[0] << " " << ray[1] << endl;
-        //ray[0]=DMAX(ray[0],current->boundary_p1[0]);
-        //ray[0]=DMIN(ray[0],current->boundary_p2[0]);
-        
-        //ray[1]=DMAX(ray[1],current->boundary_p1[1]);
-        //ray[1]=DMIN(ray[1],current->boundary_p2[1]);
+      
     }
     incell=1;
     
@@ -375,18 +366,12 @@ void TreeSimpleVec<T>::_PointsWithin(PosType *ray,float *rmax,std::list <unsigne
                     for(j=0,radius=0.0;j<2;++j) radius+=pow(position(points[current->branch_index[i]])[j]-ray[j],2);
                     if( radius < *rmax**rmax ){
                         neighborlist.push_back(current->branch_index[i]);
-                        //InsertAfterCurrentKist(neighborlist,current->branch_index[i]);
-                        //cout << "add point to list" << neighborlist.size() << endl;
-                        
                     }
                 }
             }else if(pass==1){ // whole box is inside radius
                 
                 for(i=0;i<current->nparticles;++i){
                     neighborlist.push_back(current->branch_index[i]);
-                    //InsertAfterCurrentKist(neighborlist,current->branch_index[i]);
-                    //cout << "add point to list" << neighborlist.size() << endl;
-                    
                 }
             }else{
                 if(current->child1 !=NULL){
@@ -444,11 +429,8 @@ void TreeSimpleVec<T>::NearestNeighbors(
         //ERROR_MESSAGE();
         
         for(j=0;j<Ndimensions;++j){
-            ray[j] = (ray[j] > current->boundary_p1[j]) ? ray[j] : current->boundary_p1[j];
-            ray[j] = (ray[j] < current->boundary_p2[j]) ? ray[j] : current->boundary_p2[j];
-            
-            //ray[j]=DMAX(ray[j],current->boundary_p1[j]);
-            //ray[j]=DMIN(ray[j],current->boundary_p2[j]);
+          ray[j] = (ray[j] > current->boundary_p1[j]) ? ray[j] : current->boundary_p1[j];
+          ray[j] = (ray[j] < current->boundary_p2[j]) ? ray[j] : current->boundary_p2[j];
         }
     }
     incell = 1;
@@ -575,17 +557,17 @@ void TreeSimpleVec<T>::BuildTree(){
     }
     
     /* Initialize tree root */
-    top = current = new BranchV(Ndimensions,index,Nparticles,p1.data(),p2.data(),0,0);
+    top = current = new BranchV(Ndimensions,index.data(),Nparticles,p1.data(),p2.data(),0,0);
+    ++Nbranches;
     if (!(top)){
       ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTree()\n");
       exit(1);
     }
   
-    Nbranches = 1;
   
     /* build the tree */
     workspace.resize(Nparticles);
-    _BuildTree(Nparticles,index);
+    _BuildTree(Nparticles,index.data());
     workspace.clear();
     workspace.shrink_to_fit();
   }else{
@@ -595,14 +577,12 @@ void TreeSimpleVec<T>::BuildTree(){
       p2[j] *= 0;
     }
 
-    top = current = new BranchV(Ndimensions,index,0,p1.data(),p2.data(),0,0);
+    top = current = new BranchV(Ndimensions,index.data(),0,p1.data(),p2.data(),0,0);
+    ++Nbranches;
     if (!(top)){
       ERROR_MESSAGE(); fprintf(stderr,"allocation failure in NewTree()\n");
       exit(1);
     }
-    
-    Nbranches = 1;
-    
   }
     /* visit every branch to find center of mass and cutoff scale */
     moveTop();
@@ -617,13 +597,9 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     PosType xcut;
 
     
-    cbranch=current; /* pointer to current branch */
-    
-    //cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
-    //cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
-    //cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
-    
-    /* leaf case */
+    cbranch=current; // pointer to current branch
+  
+    // leaf case
     if(cbranch->nparticles <= Nbucket){
         return;
     }
@@ -631,7 +607,7 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     
     // **** makes sure force does not require nbucket at leaf
     
-    /* set dimension to cut box */
+    // set dimension to cut box
     dimension=(cbranch->level % Ndimensions);
   
    // PosType *x = new PosType[cbranch->nparticles];
@@ -653,18 +629,15 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
                                   ,x,cbranch->nparticles);
     }
     
-    /* set particle numbers and pointers to my_index */
+    // set particle numbers and pointers to my_index
     branch1.prev=cbranch;
     branch1.nparticles=cut;
-    //branch1.branch_index=branch_index+cbranch->big_particle;
-    
+  
     branch2.prev=cbranch;
     branch2.nparticles=cbranch->nparticles - cut;
     if(cut < (cbranch->nparticles) )
         branch2.branch_index = &tmp_index[cut];
     else branch2.branch_index=NULL;
-    
-    //delete[] x;
   
     if(branch1.nparticles > 0) attachChildToCurrent(branch1,1);
     if(branch2.nparticles > 0) attachChildToCurrent(branch2,2);
@@ -699,14 +672,15 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
 template <class T>
 void TreeSimpleVec<T>::freeTree(){
     
-	emptyTree();
-  	delete top;
+	clearTree();
+  delete top;
+  --Nbranches;
 
 	return;
 }
 
 template <class T>
-short TreeSimpleVec<T>::emptyTree(){
+short TreeSimpleVec<T>::clearTree(){
     
 	moveTop();
 	_freeTree(0);
@@ -927,7 +901,7 @@ void TreeSimpleVec<T>::attachChildToCurrent(IndexType *branch_index,IndexType np
   BranchV *branchV= new BranchV(Ndimensions,branch_index,nparticles,boundary_p1,boundary_p2
                            ,current->level+1,Nbranches);
   
-  Nbranches++;
+  ++Nbranches;
   
     
     if( offEnd() ){
