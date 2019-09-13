@@ -178,7 +178,9 @@ public:
     id = s.id;
     flux = s.flux;
     mag = s.mag;
-    ang = s.ang;
+    //ang = s.ang;
+    cos_sin[0] = s.cos_sin[0];
+    cos_sin[1] = s.cos_sin[1];
     mag_map = s.mag_map;
     coeff_flux = s.coeff_flux;
     current_band = s.current_band;
@@ -196,13 +198,22 @@ public:
     id = s.id;
     flux = s.flux;
     mag = s.mag;
-    ang = s.ang;
+    //ang = s.ang;
+    cos_sin[0] = s.cos_sin[0];
+    cos_sin[1] = s.cos_sin[1];
     mag_map = s.mag_map;
     coeff_flux = s.coeff_flux;
     current_band = s.current_band;
     sed_type = s.sed_type;
     
     return *this;
+  }
+  
+  /// rotate source
+  void rotate(PosType ang  /// angle in radians
+              ){
+    cos_sin[0] = cos(ang);
+    cos_sin[1] = sin(ang);
   }
 
 	PosType SurfaceBrightness(PosType *y);
@@ -273,7 +284,8 @@ private:
 	int n1,n2;
   int id;
 	PosType flux, mag;
-	PosType ang;
+	//PosType ang;
+  PosType cos_sin[2];  // [0] is cos(ang), [1] is sin(ang)
   std::map<Band,PosType> mag_map;
   PosType coeff_flux;
   

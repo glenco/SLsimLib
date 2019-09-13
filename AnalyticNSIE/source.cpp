@@ -526,7 +526,10 @@ SourceShapelets::SourceShapelets(
     setTheta(my_center[0], my_center[1]);
   else
     setTheta(0, 0);
-  ang = my_ang;
+
+  cos_sin[0] = cos(my_ang);
+  cos_sin[1] = sin(my_ang);
+
   n1 = sqrt(my_coeff.size());
   n2 = n1;
   coeff = my_coeff;
@@ -556,7 +559,9 @@ SourceShapelets::SourceShapelets(
     setTheta(my_center[0], my_center[1]);
   else
     setTheta(0, 0);
-  ang = my_ang;
+  
+  cos_sin[0] = cos(my_ang);
+  cos_sin[1] = sin(my_ang);
   
 #ifdef ENABLE_FITS
   if(shap_file.empty())
@@ -610,7 +615,10 @@ SourceShapelets::SourceShapelets(
     setTheta(my_center[0], my_center[1]);
   else
     setTheta(0, 0);
-  ang = my_ang;
+  
+  cos_sin[0] = cos(my_ang);
+  cos_sin[1] = sin(my_ang);
+
   
 #ifdef ENABLE_FITS
   if(shap_file.empty())
@@ -677,9 +685,10 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
 {
   PosType sb = 0.;
   PosType y_norm[2],tmp;
-  y_norm[0] = ((y[0]-source_x[0])*cos(ang)+(y[1]-source_x[1])*sin(ang))/source_r;
-  y_norm[1] = ((y[0]-source_x[0])*sin(ang)-(y[1]-source_x[1])*cos(ang))/source_r;
+  y_norm[0] = ((y[0]-source_x[0])*cos_sin[0]-(y[1]-source_x[1])*cos_sin[1])/source_r;
+  y_norm[1] = ((y[0]-source_x[0])*cos_sin[1]+(y[1]-source_x[1])*cos_sin[0])/source_r;
   //PosType dist = sqrt(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]);
+  
   
   double r_norm2 = (y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1])/2;
   
