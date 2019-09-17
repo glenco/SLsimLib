@@ -526,7 +526,11 @@ struct Point_3d{
   PosType operator*(const Point_3d &p){
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
-  
+
+  Point_3d operator*(PosType f){
+    return Point_3d(x[0]*f,x[1]*f,x[2]*f);
+  }
+
   /// length
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
