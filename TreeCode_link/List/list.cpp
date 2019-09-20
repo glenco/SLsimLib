@@ -356,9 +356,6 @@ std::ostream &operator<<(std::ostream &os, Point_2d const &p) {
   return os << p.x[0] << " " << p.x[1];
 }
 
-std::ostream &operator<<(std::ostream &os, Point_3d const &p) {
-  return os << p.x[0] << " " << p.x[1] << " " << p.x[2];
-}
 
 std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == ND) return os << "not determined";

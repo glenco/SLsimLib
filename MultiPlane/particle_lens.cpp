@@ -137,7 +137,7 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
    }
 }
 
-void MakeParticleLenses::Recenter(Point_3d x){
+void MakeParticleLenses::Recenter(Point_3d<> x){
   for(auto &p : data){
     p[0] -= x[0];
     p[1] -= x[1];
@@ -448,7 +448,7 @@ bool MakeParticleLenses::readHDF5(){
 #endif
 */
 // remove particles that are beyond radius (Mpc/h) of center
-void MakeParticleLenses::radialCut(Point_3d center,double radius){
+void MakeParticleLenses::radialCut(Point_3d<> center,double radius){
   
   double radius2 = radius*radius;
   double r2;
@@ -481,10 +481,10 @@ void MakeParticleLenses::radialCut(Point_3d center,double radius){
   }
 }
 
-Point_3d MakeParticleLenses::densest_particle() const{
+Point_3d<> MakeParticleLenses::densest_particle() const{
   
   double dmax = -1,d;
-  Point_3d x;
+  Point_3d<> x;
   for(auto p : data){
     d = p.mass()/p.size()/p.size()/p.size();
     if(d > dmax){

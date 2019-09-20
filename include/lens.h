@@ -121,7 +121,7 @@ public:
 		}
 	}
   
-  Utilities::Geometry::SphericalPoint getCenter() const {return central_point_sphere;}
+  Utilities::Geometry::SphericalPoint<> getCenter() const {return central_point_sphere;}
 
 	/// remove all main halos
 	void clearMainHalos(bool verbose=false);
@@ -716,7 +716,7 @@ private: /* input */
 	void readPixelizedDensity();
   
   /// the center of the lens in spherical coordinates
-  Utilities::Geometry::SphericalPoint central_point_sphere;
+  Utilities::Geometry::SphericalPoint<PosType> central_point_sphere;
   /// optional angular radius of simulation cone that will be included
   PosType sim_angular_radius;
   /// inverse of the angular screening scale in the tree force calculation

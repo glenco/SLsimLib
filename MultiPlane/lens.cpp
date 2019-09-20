@@ -1915,7 +1915,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
 	if(verbose) std::cout << "   skipped "<< i << " comment lines in file " << field_input_sim_file << std::endl;
   
 	//std::vector<PosType *> halo_pos_vec;
-  Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
+  Utilities::Geometry::SphericalPoint<PosType> tmp_sph_point(1,0,0);
   
 	// read in data
 	int j_max;
@@ -2209,7 +2209,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
 //  const PosType masslimit =2.0e12;
   const PosType masslimit = 0.0;
   
-  Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
+  Utilities::Geometry::SphericalPoint<PosType> tmp_sph_point(1,0,0);
   
 	PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
   
@@ -2543,7 +2543,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
   PosType field_galaxy_mass_fraction = 0;
   //const PosType masslimit =2.0e12;
 
-  Utilities::Geometry::SphericalPoint tmp_sph_point(1,0,0);
+  Utilities::Geometry::SphericalPoint<PosType> tmp_sph_point(1,0,0);
   
   PosType rmax=0,rtmp=0,boundary_p1[2],boundary_p2[2],boundary_diagonal[2];
   

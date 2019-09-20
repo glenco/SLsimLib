@@ -96,7 +96,7 @@ public:
   void rotate(Point_2d theta);
   
   /// get current center of mass in input coordinates
-  Point_3d CenterOfMass(){return mcenter;}
+  Point_3d<> CenterOfMass(){return mcenter;}
   
   /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
    
@@ -158,14 +158,14 @@ protected:
   static void smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth);
   void assignParams(InputParams& params);
 
-  Point_3d mcenter;
+  Point_3d<> mcenter;
   PType *pp;
   std::vector<PType> trash_collector;
   
   PosType min_size;
   bool multimass;
   
-  Utilities::Geometry::SphericalPoint center;
+  Utilities::Geometry::SphericalPoint<> center;
   
   size_t Npoints;
   
@@ -667,7 +667,7 @@ void LensHaloParticles<PType>::makeSIE(
   
   size_t Npoints = total_mass/particle_mass;
   PosType Rmax = (1+redshift)*total_mass*Grav*lightspeed*lightspeed/sigma/sigma/2;
-  Point_3d point;
+  Point_3d<> point;
   double qq = sqrt(q);
   
   std::ofstream datafile;
@@ -840,23 +840,23 @@ public:
   
   /// recenter the particles to 3d point in physical Mpc/h units
   /// If the halos have already been created they will be destroyed.
-  void Recenter(Point_3d x);
+  void Recenter(Point_3d<> x);
 
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);
   
   /// remove particles that are beyond radius (Mpc/h) from center
-  void radialCut(Point_3d center,double radius);
+  void radialCut(Point_3d<> center,double radius);
   /// remove particles that are beyond cylindrical radius (Mpc/h) of center
   void cylindricalCut(Point_2d center,double radius);
 
   /// returns the original center of mass of all the particles
-  Point_3d getCenterOfMass() const{return cm;}
+  Point_3d<> getCenterOfMass() const{return cm;}
   
   /// returns the location of the densest particle in (Mpc/h)
-  Point_3d densest_particle() const;
+  Point_3d<> densest_particle() const;
 
   /// return the maximum and minimum coordinates of the particles in each dimension in for the original simulation in Mpc/h
-  void getBoundingBox(Point_3d &Xmin,Point_3d &Xmax) const{
+  void getBoundingBox(Point_3d<> &Xmin,Point_3d<> &Xmax) const{
     Xmin = bbox_ll;
     Xmax = bbox_ur;
   }
@@ -868,13 +868,13 @@ private:
   const std::string filename;
   int Nsmooth;
   
-  Point_3d bbox_ll;  // minumum coordinate values of particles
-  Point_3d bbox_ur;  // maximim coordinate values of particles
+  Point_3d<> bbox_ll;  // minumum coordinate values of particles
+  Point_3d<> bbox_ur;  // maximim coordinate values of particles
   
   double z_original = -1;
   std::vector<size_t> nparticles;
   std::vector<float> masses;
-  Point_3d cm;
+  Point_3d<> cm;
 
   // write a glamB format file with all required particle data
   static void writeSizesB(const std::string &filename

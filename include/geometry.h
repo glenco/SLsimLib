@@ -25,12 +25,14 @@ namespace Utilities {
   namespace Geometry{
     
     /// represents a point in spherical coordinates theta = 0 is equator
+    template <typename T = double>
     class SphericalPoint{
       
     public:
-      SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
+      SphericalPoint(T r,T theta,T phi):
+      r(r),theta(theta),phi(phi){};
       SphericalPoint():r(0),theta(0),phi(0){};
-      SphericalPoint(Point_3d &x){
+      SphericalPoint(Point_3d<T> &x){
         TOspherical(x);
       }
       
@@ -43,7 +45,7 @@ namespace Utilities {
         return *this;
       }
       
-      SphericalPoint & operator=(Point_3d &x){
+      SphericalPoint & operator=(Point_3d<T> &x){
         TOspherical(x);
         return *this;
       }
@@ -54,22 +56,24 @@ namespace Utilities {
       }
 
 
-      PosType r;
-      PosType theta;
-      PosType phi;
+      T r;
+      T theta;
+      T phi;
       
       /// output Cartesian coordinates of the point
-      void TOcartisian(PosType x[]) const;
-      Point_3d TOcartisian() const;
+      void TOcartisian(T x[]) const;
+      Point_3d<T> TOcartisian() const;
 
-      void cartisianTOspherical(PosType const x[]);
-      void TOspherical(Point_3d &x);
-      void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
+      void cartisianTOspherical(T const x[]);
+      void TOspherical(Point_3d<T> &x);
+      void StereographicProjection(const SphericalPoint &central
+                                   ,T x[]) const;
       void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
       Point_2d StereographicProjection(const SphericalPoint &central) const;
-      void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
+      void OrthographicProjection(const SphericalPoint &central
+                                  ,T x[]) const;
       Point_2d OrthographicProjection(const SphericalPoint &central) const;
-      void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
+      void InverseOrthographicProjection(const SphericalPoint &central,T const x[]);
       void InverseOrthographicProjection(const SphericalPoint &central,const Point_2d &x);
     };
     
@@ -120,12 +124,13 @@ namespace Utilities {
      <\pre>
      */
     
+    template <typename T = double>
     class Quaternion{
     public:
       Quaternion(){
         v[0] = v[1] = v[2] = v[3] = 0;
       }
-      Quaternion(double s,double x,double y,double z){
+      Quaternion(T s,T x,T y,T z){
         v[0] = s;
         v[1] = x;
         v[2] = y;
@@ -137,13 +142,13 @@ namespace Utilities {
         v[2] = q.v[2];
         v[3] = q.v[3];
       }
-      Quaternion(Point_3d p){
+      Quaternion(Point_3d<T> p){
         v[0] = 0;
         v[1] = p[0];
         v[2] = p[1];
         v[3] = p[2];
       }
-      Quaternion(SphericalPoint sp){
+      Quaternion(SphericalPoint<T> sp){
         sp.TOcartisian(v+1);
         v[0] = 0;
       }
@@ -184,17 +189,17 @@ namespace Utilities {
       }
       
       /// returns the Quaternion rotated around the x-axis by theta in radians
-      Quaternion RotateX(double theta){
+      Quaternion RotateX(T theta){
         Quaternion R = q_x_rotation(theta);
         return R*(*this)*R.conj();
       }
       /// returns the Quaternion rotated around the y-axis by theta in radians
-      Quaternion RotateY(double theta){
+      Quaternion RotateY(T theta){
         Quaternion R = q_y_rotation(theta);
         return R*(*this)*R.conj();
       }
       /// returns the Quaternion rotated around the z-axis by theta in radians
-      Quaternion RotateZ(double theta){
+      Quaternion RotateZ(T theta){
         Quaternion R = q_z_rotation(theta);
         return R*(*this)*R.conj();
       }
@@ -202,7 +207,7 @@ namespace Utilities {
       around the z-axis by theta, this is more efficient than doing two rotation 
        sequentially.  Usefull for recentering a field of points.
        */
-      Quaternion RotateYZ(double theta,double phi){
+      Quaternion RotateYZ(T theta,T phi){
         Quaternion R = q_z_rotation(theta)*q_z_rotation(phi);
         return R*(*this)*R.conj();
       }
@@ -221,14 +226,17 @@ namespace Utilities {
       
       
       /// rotate a Point_3d using a rotation Quaternion
-      static Point_3d Rotate(const Point_3d &p,const Quaternion &R){
+      static Point_3d<T> Rotate(const Point_3d<T> &p
+                                ,const Quaternion &R){
         Quaternion q(p);
         q.RotInplace(R);
         return q.to_point_3d();
       }
 
       /// rotate a SpericalPoint using a rotation Quaternion
-      static SphericalPoint Rotate(const SphericalPoint &p,const Quaternion &R){
+      
+      static SphericalPoint<T> Rotate(const SphericalPoint<T> &p
+                                      ,const Quaternion &R){
         Quaternion q(p);
         q.RotInplace(R);
         return q.to_SpericalPoint();
@@ -265,54 +273,48 @@ namespace Utilities {
       }
       
       /// cross (outer) product
-      Point_3d cross(const Quaternion &q) const{
+      Point_3d<T> cross(const Quaternion &q) const{
         return (*this*q).to_point_3d();
       }
 
       /// scalar product of vector part of the Quaternions
-      double scalor(const Quaternion &q) const{
+      T scalor(const Quaternion &q) const{
         return v[1]*q.v[1] + v[2]*q.v[2] + v[3]*q.v[3];
       }
       
       /// returns the vector part of the Quaternion as a Point_3d
-      Point_3d to_point_3d() const{
-        return Point_3d(v[1],v[2],v[3]);
+      Point_3d<T> to_point_3d() const{
+        return Point_3d<T>(v[1],v[2],v[3]);
       }
 
       /// returns the vector part of the Quaternion as a SpericalPoint
-      SphericalPoint to_SpericalPoint() const{
-        SphericalPoint sp;
+      SphericalPoint<T> to_SpericalPoint() const{
+        SphericalPoint<T> sp;
         sp.cartisianTOspherical(v+1);
         return sp;
       }
 
       
       /// the components of the Quaternion
-      double v[4];
+      T v[4];
       /// components, 0,1,2,3
-      double & operator[](int i){return v[i];}
+      T & operator[](int i){return v[i];}
 
       /// returns the rotation Quaternion for a rotation around the x-axis
-      static Quaternion q_x_rotation(double theta){
+      static Quaternion q_x_rotation(T theta){
         return Quaternion(cos(theta/2),sin(theta/2),0,0);
       }
       /// returns the rotation Quaternion for a rotation around the y-axis
-      static Quaternion q_y_rotation(double theta){
+      static Quaternion q_y_rotation(T theta){
         return Quaternion(cos(theta/2),0,-sin(theta/2),0);
       }
       /// returns the rotation Quaternion for a rotation around the z-axis
-      static Quaternion q_z_rotation(double theta){
+      static Quaternion q_z_rotation(T theta){
         return Quaternion(cos(theta/2),0,0,sin(theta/2));
       }
       
     };
     
-    
-    ///  3 dimensional distance between points
-    PosType Seporation(const SphericalPoint &p1,const SphericalPoint &p2);
-    ///  Angular seporation between points
-    PosType AngleSeporation(const SphericalPoint &p1,const SphericalPoint &p2);
-
     /// Determine if line segments a1a2 and b1b2 intersect.  Sharing an endpoint does not count as intersecting
     bool intersect(const PosType a1[],const PosType a2[]
                    ,const PosType b1[],const PosType b2[]);
@@ -343,6 +345,154 @@ namespace Utilities {
   }  
 }
 
-std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint const &p);
+namespace Utilities {
+  namespace Geometry{
+
+    /// output cartisian coordinates
+template <typename T>
+void SphericalPoint<T>::TOcartisian(T x[]) const{
+  x[0] = r*cos(theta)*cos(phi);
+  x[1] = r*cos(theta)*sin(phi);
+  x[2] = r*sin(theta);
+}
+
+/// output cartisian coordinates of the point
+template <typename T>
+Point_3d<T> SphericalPoint<T>::TOcartisian() const{
+  return Point_3d<T>(r*cos(theta)*cos(phi),r*cos(theta)*sin(phi),r*sin(theta) );
+}
+
+/// set the spherical coordinates of the point from the cartisian coordinates
+template <typename T>
+void SphericalPoint<T>::cartisianTOspherical(T const x[]){
+  r = sqrt( x[0]*x[0] + x[1]*x[1] +x[2]*x[2]);
+  theta = asin(x[2]/r);
+  phi = atan2(x[1],x[0]);
+}
+
+template <typename T>
+void SphericalPoint<T>::TOspherical(Point_3d<T> &x){
+  r = sqrt( x[0]*x[0] + x[1]*x[1] +x[2]*x[2]);
+  theta = asin(x[2]/r);
+  phi = atan2(x[1],x[0]);
+}
+
+
+/** \brief Calculates the stereographic projection of the point onto a plane.
+ *
+ * The result is in radian units.  Near the central point this is a rectolinear projection
+ * onto a tangent plane.
+ */
+template <typename T>
+void SphericalPoint<T>::StereographicProjection(
+    const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+   ,T x[]             /// 2D output coordinate on projection
+) const{
+  
+  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
+  
+  x[0] = k*(cos(theta)*sin(phi - central.phi));
+  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+}
+template <typename T>
+void SphericalPoint<T>::StereographicProjection(
+  const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+  ,Point_2d &x  /// 2D output coordinate on projection
+) const{
+  
+  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
+  
+  x[0] = k*(cos(theta)*sin(phi - central.phi));
+  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+}
+
+template <typename T>
+Point_2d SphericalPoint<T>::StereographicProjection(
+  const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+) const{
+  
+  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
+  
+  return Point_2d(k*(cos(theta)*sin(phi - central.phi)),k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi)));
+  //  x[0] = k*(cos(theta)*sin(phi - central.phi));
+  //  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+}
+
+
+/** \brief Calculates the orthographic projection of the point onto a plane.
+ *
+ * The result is in radian units.  Near the central point this is a rectolinear projection
+ * onto a tangent plane.
+ */
+template <typename T>
+void SphericalPoint<T>::OrthographicProjection(
+    const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+    ,T x[]             /// 2D output coordinate on projection
+) const{
+  x[0] = cos(theta)*sin(phi - central.phi);
+  x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi);
+}
+
+template <typename T>
+Point_2d SphericalPoint<T>::OrthographicProjection(
+      const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+) const{
+  
+  return Point_2d( cos(theta)*sin(phi - central.phi),
+                  cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi) );
+}
+
+/** \brief Convert from an orthographic projection of the plane onto the unit sphere
+ */
+    template <typename T>
+void SphericalPoint<T>::InverseOrthographicProjection(
+    const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+    ,T const x[]             /// 2D output coordinate on projection
+){
+  PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
+  PosType c = asin(rho);
+  r=1.0;
+  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
+  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
+                            - x[1]*sin(central.theta)*sin(c) );
+}
+    template <typename T>
+void SphericalPoint<T>::InverseOrthographicProjection(
+    const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+    ,const Point_2d &x             /// 2D output coordinate on projection
+){
+  PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
+  PosType c = asin(rho);
+  r=1.0;
+  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
+  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
+                            - x[1]*sin(central.theta)*sin(c) );
+}
+
+///  3 dimensional distance between points
+    template <typename T>
+T Seporation(const SphericalPoint<T> &p1
+                   ,const SphericalPoint<T> &p2){
+  T x1[3],x2[3];
+  
+  p1.TOcartisian(x1);
+  p2.TOcartisian(x2);
+  return sqrt( (x1[0]-x2[0])*(x1[0]-x2[0]) + (x1[1]-x2[1])*(x1[1]-x2[1])
+              + (x1[2]-x2[2])*(x1[2]-x2[2]) );
+}
+
+///  Angular seporation between points
+    template <typename T>
+T AngleSeporation(const SphericalPoint<T> &p1
+                        ,const SphericalPoint<T> &p2){
+  if(p1 == p2) return 0;
+  double ans = sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi);
+  if(fabs(ans) > 1) return 0;
+  return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
+}
+  }
+}
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint<T> const &p);
 
 #endif /* defined(__GLAMER__geometry__) */

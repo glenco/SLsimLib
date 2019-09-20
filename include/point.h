@@ -120,12 +120,12 @@ struct Point_2d{
   }
   
   /// length
-  PosType length(){
+  PosType length() const{
     return sqrt(x[0]*x[0] + x[1]*x[1]);
   }
 
   /// length^2
-  PosType length_sqr(){
+  PosType length_sqr() const{
     return x[0]*x[0] + x[1]*x[1];
   }
   
@@ -452,11 +452,12 @@ Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
 /**  \brief Class for representing points or vectors in 3 dimensions.  Not that the dereferencing operator is overridden.
  
  */
+template <typename T = PosType>
 struct Point_3d{
   Point_3d(){
     x[0]=x[1]=x[2]=0.0;
   }
-  Point_3d(PosType xx,PosType yy,PosType zz){
+  Point_3d(T xx,T yy,T zz){
     x[0]=xx;
     x[1]=yy;
     x[2]=zz;
@@ -502,13 +503,13 @@ struct Point_3d{
     x[2]-=p.x[2];
     return *this;
   }
-  Point_3d & operator/=(PosType value){
+  Point_3d & operator/=(T value){
     x[0]/=value;
     x[1]/=value;
     x[2]/=value;
     return *this;
   }
-  Point_3d operator/(PosType value) const{
+  Point_3d operator/(T value) const{
     Point_3d tmp;
     tmp[0] = x[0]/value;
     tmp[1] = x[1]/value;
@@ -516,34 +517,34 @@ struct Point_3d{
     
     return tmp;
   }
-  Point_3d & operator*=(PosType value){
+  Point_3d & operator*=(T value){
     x[0] *=value;
     x[1] *=value;
     x[2] *=value;
     return *this;
   }
   /// scalar product
-  PosType operator*(const Point_3d &p){
+  T operator*(const Point_3d &p){
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
 
-  Point_3d operator*(PosType f){
+  Point_3d operator*(T f){
     return Point_3d(x[0]*f,x[1]*f,x[2]*f);
   }
 
   /// length
-  PosType length(){
+  T length() const{
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
   }
 
-  PosType length_sqr(){
+  T length_sqr() const{
     return x[0]*x[0] + x[1]*x[1] + x[2]*x[2];
   }
   
   /// a rotation theta around the z-axis followed by a rotation phi around the y-axis
-  void rotate(PosType theta,PosType phi){
-    PosType c = cos(theta),s = sin(theta);
-    PosType tmp = c*x[0] - s*x[1];
+  void rotate(T theta,T phi){
+    T c = cos(theta),s = sin(theta);
+    T tmp = c*x[0] - s*x[1];
     x[1] = c*x[1] + s*x[0];
     
     c = cos(phi);
@@ -554,20 +555,22 @@ struct Point_3d{
   
   /// rescale to make a unit length vector
   void unitize(){
-    PosType s = length();
+    T s = length();
     x[0] /= s;
     x[1] /= s;
     x[2] /= s;
   }
   
-  PosType* data(){return x;}
+  T* data(){return x;}
   
-  PosType x[3];
-  PosType & operator[](size_t i){return x[i];}
+  T x[3];
+  T & operator[](size_t i){return x[i];}
 };
 
-
-std::ostream &operator<<(std::ostream &os, Point_3d const &p);
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Point_3d<T> const &p) {
+  return os << p.x[0] << " " << p.x[1] << " " << p.x[2];
+}
 
 inline double pointx(Point &p){return p.x[0];}
 inline double pointy(Point &p){return p.x[1];}
