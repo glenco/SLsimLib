@@ -69,7 +69,7 @@ struct ImageInfo{
   unsigned long getNimagePoints(){return imagekist->Nunits();}
   /// Computes the time delay averaged over the image
   KappaType aveTimeDelay();
-  /// Computes the inverse magnification averaged over the image
+  /// Computes the inverse magnification averaged over the image, WARNING: This is not always a good measure of the magnification.  It is often better to use ImageInfo::area and the orginial size of the source near or do a flux waited average.
   KappaType aveInvMag();
   /// finds the ray in the image that is closest to the point y on the source plane
   RAY closestRay(const Point_2d &y);
