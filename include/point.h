@@ -157,8 +157,9 @@ struct Point_2d{
   PosType* data(){return x;}
   
   PosType x[2];
-  PosType & operator[](size_t i){return x[i];}
-  PosType operator[](size_t i) const {return x[i];}
+  
+  PosType & operator[](size_t i) {return x[i];}
+  const PosType & operator[](size_t i) const {return x[i];}
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
@@ -565,6 +566,7 @@ struct Point_3d{
   
   T x[3];
   T & operator[](size_t i){return x[i];}
+  const T &  operator[](size_t i) const {return x[i];}
 };
 
 template <typename T>
