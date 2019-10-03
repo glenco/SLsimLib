@@ -529,6 +529,15 @@ struct Point_3d{
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
 
+  /// outer product
+  Point_3d<T> operator^(const Point_3d<T> &p){
+    Point_3d<T> v;
+    v[0] = x[1]*p[2] - x[2]*p[1];
+    v[1] = x[2]*p[0] - x[0]*p[2];
+    v[2] = x[0]*p[1] - x[1]*p[0];
+    return v;
+  }
+
   Point_3d operator*(T f){
     return Point_3d(x[0]*f,x[1]*f,x[2]*f);
   }
