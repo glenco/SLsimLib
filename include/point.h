@@ -61,7 +61,7 @@ struct Point_2d{
   }
 
   
-  bool operator==(const Point_2d &p){
+  bool operator==(const Point_2d &p) const{
     return (x[0] == p.x[0])*(x[1] == p.x[1]);
   }
   
@@ -111,11 +111,11 @@ struct Point_2d{
   }
 
   /// scalar product
-  PosType operator*(const Point_2d &p){
+  PosType operator*(const Point_2d &p) const{
     return x[0]*p.x[0] + x[1]*p.x[1];
   }
   /// outer product
-  PosType operator^(const Point_2d &p){
+  PosType operator^(const Point_2d &p) const{
     return x[0]*p.x[1] - x[1]*p.x[0];
   }
   
@@ -525,12 +525,12 @@ struct Point_3d{
     return *this;
   }
   /// scalar product
-  T operator*(const Point_3d &p){
+  T operator*(const Point_3d &p) const {
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
 
   /// outer product
-  Point_3d<T> operator^(const Point_3d<T> &p){
+  Point_3d<T> operator^(const Point_3d<T> &p) const{
     Point_3d<T> v;
     v[0] = x[1]*p[2] - x[2]*p[1];
     v[1] = x[2]*p[0] - x[0]*p[2];
@@ -538,7 +538,7 @@ struct Point_3d{
     return v;
   }
 
-  Point_3d operator*(T f){
+  Point_3d operator*(T f) const{
     return Point_3d(x[0]*f,x[1]*f,x[2]*f);
   }
 
