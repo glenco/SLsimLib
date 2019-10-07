@@ -137,7 +137,8 @@ public:
 	void smooth(double sigma);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
-	inline double & operator[](std::size_t i) { return map[i]; };
+  inline double & operator[](std::size_t i) { return map[i]; };
+  const double & operator[](std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
 	
@@ -152,8 +153,10 @@ public:
 	friend PixelMap operator*(const PixelMap&, const PixelMap&);
 
 	PixelMap& operator*=(PosType b);
-	friend PixelMap operator*(const PixelMap&, PosType b);
-	
+ 	friend PixelMap operator*(const PixelMap&, PosType b);
+  /// eliment wise multiplictioan
+  PixelMap operator*=(const PixelMap &m) const;
+
 	std::valarray<double>& data() { return map; }
 	
   /// Check whether two PixelMaps agree in their physical dimensions.
