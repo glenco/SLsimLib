@@ -315,7 +315,15 @@ public:
 	/// get single main halo of given type
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
-  
+
+  /**\brief Using to shoot a single ray
+   
+   ray.x should be set to the image position.
+   The kappa,gamma,deflection, time-delay and
+   source position will be calculated at that
+   image point.
+   */
+  void rayshooter(RAY &ray);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
                       ,std::vector<Point_2d> & ang_positions
