@@ -225,6 +225,11 @@ private:
 /** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
 struct RAY{
+  RAY(){
+    kappa = dt = 0.0;
+    gamma[0] = gamma[1] = gamma[2] = 0.0;
+  };
+  
   RAY(const Point &p){
     x = p.x;
     y = p.image->x;
