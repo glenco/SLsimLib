@@ -61,6 +61,13 @@ struct TmpParams{
 /** \brief This function calculates the deflection, shear, convergence, rotation
  and time-delay of rays in parallel.
  */
+void Lens::rayshooter(RAY &ray){
+  Point im(ray.x);
+  Point so;
+  im.image = &so;
+  rayshooterInternal(1,&im);
+  ray = im;
+};
 void Lens::rayshooterInternal(
                                 unsigned long Npoints   /// number of points to be shot
                               , Point *i_points         /// point on the image plane
