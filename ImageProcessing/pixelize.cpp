@@ -727,7 +727,7 @@ int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
         *group_boundary = *test;
         *test = tmp;
         ++group_boundary;
-        --test;
+        //--test;
       }
     }
     ++current;

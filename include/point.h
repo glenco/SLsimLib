@@ -170,6 +170,8 @@ struct Branch;
 struct Point: public Point_2d{
     
   Point();
+  Point(const Point_2d &p);
+  Point(PosType x,PosType y);
   Point *next;    // pointer to next point in linked list
   Point *prev;
   Point *image;  // pointer to point on image or source plane
@@ -220,28 +222,77 @@ private:
 /** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
 struct RAY{
-  RAY(Point *p){
-    x = p->x;
-    y = p->image->x;
-    kappa = p->kappa;
-    dt = p->dt;
+  RAY(){
+    kappa = dt = 0.0;
+    gamma[0] = gamma[1] = gamma[2] = 0.0;
+  };
+  
+  RAY(const Point &p){
+    x = p.x;
+    y = p.image->x;
+    kappa = p.kappa;
+    dt = p.dt;
     
-    gamma[0] = p->gamma[0];
-    gamma[1] = p->gamma[1];
-    gamma[2] = p->gamma[2];
-  }
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+  };
+  RAY(const RAY &p){
+    x = p.x;
+    y = p.y;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+  };
+
+  RAY & operator=(const Point &p){
+    x = p.x;
+    y = p.image->x;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+    
+    return *this;
+  };
+  
+  RAY & operator=(const RAY &p){
+    x = p.x;
+    y = p.y;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+    
+    return *this;
+  };
+  
   ~RAY(){};
   
-  // image position
+  /// image position
   Point_2d x;
-  // source position
+  /// source position
   Point_2d y;
   
-  KappaType kappa,gamma[3],dt;
+  /// convergence
+  KappaType kappa;
+  /// shear
+  KappaType gamma[3];
+  /// time-delay
+  KappaType dt;
   
+  /// inverse of the magnification
   KappaType invmag(){return (1-kappa)*(1-kappa) - gamma[0]*gamma[0]
     - gamma[1]*gamma[1] + gamma[2]*gamma[2];}
   
+  /// deflection angle
   Point_2d alpha(){return x - y;}
 };
 
@@ -532,7 +583,11 @@ struct Point_3d{
   PosType operator*(const Point_3d &p){
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
-  
+
+  Point_3d operator*(PosType f){
+    return Point_3d(x[0]*f,x[1]*f,x[2]*f);
+  }
+
   /// length
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
