@@ -24,6 +24,18 @@ class CPFITS_BASE{
   
 protected:
   CPFITS_BASE():status(0){}
+
+  CPFITS_BASE(CPFITS_BASE &&ff){
+    fptr = ff.fptr;
+    ff.fptr = nullptr;
+    status = ff.status;
+  }
+  
+  void operator=(CPFITS_BASE &&ff){
+    fptr = ff.fptr;
+    ff.fptr = nullptr;
+    status = ff.status;
+  }
   
   fitsfile *fptr;
   int status;
@@ -88,19 +100,19 @@ public:
     int keysexist;
     return fits_get_hdrspace(fptr,&keysexist,NULL,&status);
   }
-  int readKey(std::string &keyname,double &value){
+  int readKey(std::string keyname,double &value){
     return fits_read_key(fptr,TDOUBLE,keyname.c_str(),
                          &value,NULL,&status);
   }
-  int readKey(std::string &keyname,float &value){
+  int readKey(std::string keyname,float &value){
     return fits_read_key(fptr,TFLOAT,keyname.c_str(),
                          &value,NULL,&status);
   }
-  int readKey(std::string &keyname,int &value){
+  int readKey(std::string keyname,int &value){
     return fits_read_key(fptr,TINT,keyname.c_str(),
                          &value,NULL,&status);
   }
-  int readKey(std::string &keyname,size_t &value){
+  int readKey(std::string keyname,size_t &value){
     return fits_read_key(fptr,TULONG,keyname.c_str(),
                          &value,NULL,&status);
   }
@@ -111,8 +123,8 @@ public:
 class CPFITS_READ : public CPFITS_BASE {
 private:
   // make it uncopyable
-  CPFITS_READ(CPFITS_READ &);
-  CPFITS_READ operator=(CPFITS_READ );
+  //CPFITS_READ(CPFITS_READ &);
+  //CPFITS_READ operator=(CPFITS_READ );
   
 public:
   CPFITS_READ(std::string filename,bool verbose = false) {
@@ -130,6 +142,12 @@ public:
   ~CPFITS_READ(){
     fits_close_file(fptr, &status);
     if (status) fits_report_error(stderr, status);
+  }
+  
+  CPFITS_READ(CPFITS_READ &&ff):CPFITS_BASE(std::move(ff)){};
+  
+  void operator=(CPFITS_READ &&ff){
+     CPFITS_BASE::operator=(std::move(ff));
   }
   
   /// close old and reopen a new file
