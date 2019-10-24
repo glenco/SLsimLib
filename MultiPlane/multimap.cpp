@@ -16,14 +16,18 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,COSMOLOGY &c
                  ,bool subtract_ave
                  ,bool single_grid_mode
-                 ):LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),mass_unit(mass_unit),fitsfilename(fitsfile)
+                 ):
+LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
+,mass_unit(mass_unit),fitsfilename(fitsfile)
 {
   
-  try{
+/*  try{
     ff = new CCfits::FITS (fitsfilename, CCfits::Read);
   }catch(...){
     std::cerr << "CCfits throw an exception: probably file " << fitsfile << " does not exist." << std::endl;
   }
+ */
+  
   zerosize = 1;
   rscale = 1.0;
   
@@ -72,8 +76,9 @@ LensHaloMultiMap::LensHaloMultiMap(
     std::vector<long> first = {1,1};
     std::vector<long> last = {(long)Noriginal[0],(long)Noriginal[1]};
     
-    long_range_map.read_sub(ff,first,last,getDist());
-    
+    //long_range_map.read_sub(ff,first,last,getDist());
+    long_range_map.read_sub(cpfits,first,last,getDist());
+
     //double res = submap.boxlMpc/submap.nx;
     //Point_2d dmap = {submap.boxlMpc,submap.ny*resolution};
     //dmap /= 2;
@@ -154,8 +159,8 @@ LensHaloMultiMap::LensHaloMultiMap(
       if( j%chunk == 0 ){
         first[1] = j+1;
         last[1] = MIN(j + chunk,Noriginal[1]);
-        //submap.read_sub(fitsfilename,first,last,cosmo.gethubble());
-        submap.read_sub(ff,first,last,getDist());
+        //submap.read_sub(ff,first,last,getDist());
+        submap.read_sub(cpfits,first,last,getDist());
 
         kj = 0;
       }else{
@@ -274,7 +279,8 @@ void LensHaloMultiMap::submap(
   if( (first[0] > 0)*(first[1] > 0)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
     //map.read_sub(fitsfilename,first,last,getDist());
 
-    map.read_sub(ff,first,last,getDist());
+    //map.read_sub(ff,first,last,getDist());
+    map.read_sub(cpfits,first,last,getDist());
 
   }else{
     
@@ -305,9 +311,9 @@ void LensHaloMultiMap::submap(
         if(jj >= Noriginal[1] ) jj -= Noriginal[1];
 
         first_sub[1] = jj + 1;  last_sub[1] = MIN(jj + chunk + 1,Noriginal[1]);
-        //partmap.read_sub(fitsfilename,first_sub,last_sub,cosmo.gethubble());
-        partmap.read_sub(ff,first_sub,last_sub,getDist());
- 
+        //partmap.read_sub(ff,first_sub,last_sub,getDist());
+        partmap.read_sub(cpfits,first_sub,last_sub,getDist());
+
         k = 0;
       }else{
         ++k;
@@ -760,44 +766,53 @@ void LensMap::read_sub(std::string fits_input_file
 }
 */
 
-void LensMap::read_sub(CCfits::FITS *ff
-                       ,const std::vector<long> &first
-                       ,const std::vector<long> &last
+//void LensMap::read_sub(CCfits::FITS *ff
+void LensMap::read_sub(CPFITS_READ &cpfits
+                       ,std::vector<long> &first
+                       ,std::vector<long> &last
                        ,double angDist
                        ){
 
-  CCfits::PHDU &h0 = ff->pHDU();
+  //CCfits::PHDU &h0 = ff->pHDU();
+ 
+  int bitpix;
+  std::vector<long> sizes;
+  cpfits.imageInfo(bitpix,sizes);
   
-  long nx_orig = h0.axis(0);
-  long ny_orig = h0.axis(1);
-
-  h0.readAllKeys();
+  //long nx_orig = h0.axis(0);
+  //long ny_orig = h0.axis(1);
+  
+   //h0.readAllKeys();
   
   // these are always present in each
   //float wlow,wup,res;
   float res;
-  h0.readKey ("CD1_1",res);  // resolution in
-  //h0.readKey ("REDSHIFT",z);
-  //h0.readKey ("WLOW",wlow);
-  //h0.readKey ("WUP",wup);
+  cpfits.readKey("CD1_1",res);
+  //h0.readKey ("CD1_1",res);  // resolution in
   
-  //double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
-  //if(wlow == wup) D = wup;
-  //D /= (1+z)*h;
   res *= degreesTOradians * angDist;
-  double boxlMpc_orig = res * nx_orig;
-  
-  assert(h0.axes() >= 2);
+  //double boxlMpc_orig = res * nx_orig;
+  double boxlMpc_orig = res * sizes[0];
+
+  assert(sizes.size() >= 2);
   std::vector<long> stride = {1,1};
   
   // principal HDU is read
   //std::cout << surface_density.size() << std::endl;
-  h0.read(surface_density,first,last,stride);
+  //h0.read(surface_density,first,last,stride);
+  cpfits.read_subset(&(surface_density[0])
+                     ,first.data(),last.data());
+  
+  float tmp;
+  cpfits.read_subset(&tmp
+                     ,first.data(),last.data());
+
   //std::cout << surface_density.size() << std::endl;
   
   // set the full field lower left
-  lowerleft = upperright = {-boxlMpc_orig/2,-res*ny_orig/2};
-  
+  //lowerleft = upperright = {-boxlMpc_orig/2,-res*ny_orig/2};
+  lowerleft = upperright = {-boxlMpc_orig/2,-res*sizes[1]/2};
+
   lowerleft[0] += (first[0]-1)*res ;
   lowerleft[1] += (first[1]-1)*res ;
   

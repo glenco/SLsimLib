@@ -12,12 +12,13 @@
 #include "InputParams.h"
 #include "lens_halos.h"
 #include "grid_maintenance.h"
+#include "cpfits.h"
 
 #include <stdexcept>
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-#endif
+//#ifdef ENABLE_FITS
+//#include <CCfits/CCfits>
+//#endif
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -82,10 +83,10 @@ struct LensMap{
   
   
   //void read_header(std::unique_ptr<CCfits::FITS> ff,float h);
-
-  void read_sub(CCfits::FITS *ff
-                ,const std::vector<long> &first
-                ,const std::vector<long> &last
+  //void read_sub(CCfits::FITS *ff
+  void read_sub(CPFITS_READ &cpfits
+                ,std::vector<long> &first
+                ,std::vector<long> &last
                 ,double Dist
                 );
 
@@ -117,16 +118,15 @@ class LensHaloMultiMap : public LensHalo
 public:
 
   LensHaloMultiMap(
-                   std::string fitsfile  /// Original fits map of the density
+                   std::string fitsfile            /// Original fits map of the density
                    ,double redshift
-                   ,double mass_unit     /// should include h factors
+                   ,double mass_unit               /// should include h factors
                    ,COSMOLOGY &c
-                   ,bool subtract_ave = true  /// subtract the average of the full field
+                   ,bool subtract_ave = true       /// subtract the average of the full field
                    ,bool single_grid_mode = false
                    );
 
   ~LensHaloMultiMap(){
-    delete ff;
   };
 	
   const double ffactor = 5,gfactor = 5;
@@ -192,8 +192,8 @@ public:
     long_range_map = std::move(m.long_range_map);
     short_range_map = std::move(m.short_range_map);
     single_grid = m.single_grid;
-    ff = m.ff;
-    m.ff = nullptr;
+    cpfits = std::move(m.cpfits);
+    //m.cpfits = nullptr;
     max_pix = m.max_pix;
     min_pix = m.min_pix;
     mass_unit = m.mass_unit;
@@ -208,13 +208,16 @@ public:
     wsr = m.wsr;
     wlr = m.wlr;
   }
-  LensHaloMultiMap(LensHaloMultiMap &&m):LensHalo(std::move(m))
-  ,cosmo(m.cosmo){
+  
+  LensHaloMultiMap(LensHaloMultiMap &&m):
+  LensHalo(std::move(m)),cosmo(m.cosmo),cpfits(std::move(m.cpfits))
+  {
     long_range_map = std::move(m.long_range_map);
     short_range_map = std::move(m.short_range_map);
     single_grid = m.single_grid;
-    ff = m.ff;
-    m.ff = nullptr;
+    //cpfits = std::move(m.cpfits);
+    //cpfits = m.cpfits;
+    //m.cpfits = nullptr;
     max_pix = m.max_pix;
     min_pix = m.min_pix;
     mass_unit = m.mass_unit;
@@ -238,7 +241,8 @@ private:
   
   bool single_grid;
   COSMOLOGY &cosmo;
-  CCfits::FITS *ff;
+  //CCfits::FITS *ff;
+  CPFITS_READ cpfits;
   
   double max_pix = std::numeric_limits<double>::lowest();
   double min_pix = std::numeric_limits<double>::max();
