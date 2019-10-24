@@ -52,4 +52,5 @@ add_sources(
 	gadget.hh
 	particle_types.h
 	disk.h
+	cpfits.h
 )
