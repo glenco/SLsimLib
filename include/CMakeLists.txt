@@ -53,4 +53,5 @@ add_sources(
 	particle_types.h
 	multimap.h
 	disk.h
+	cpfits.h
 )
