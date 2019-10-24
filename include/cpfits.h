@@ -18,15 +18,12 @@
 
 #include <string.h>
 #include <stdio.h>
- #include "fitsio.h"
+#include "fitsio.h"
 
-/// types of fits tables
-enum HDUtype {IMAGE_HDU, ASCII_TBL, BINARY_TBL};
-
-class COFITS_BASE{
+class CPFITS_BASE{
   
 protected:
-  CPFITS_BASE()::status(0){}
+  CPFITS_BASE():status(0){}
   
   fitsfile *fptr;
   int status;
@@ -48,20 +45,20 @@ public:
   }
 
   /// change the current table number
-  HDUtype change_hdu(int i){
+  int change_hdu(int i){
     int hdunum = get_num_hdus();
-    if(i > hdum || i < 1){
-      throw std::invalid
+    if(i > hdunum || i < 1){
+      throw std::invalid_argument("out of range");
     }
-    HDUtype hdutype;
+    int hdutype;
     fits_movabs_hdu(fptr,i,&hdutype,&status);
     
     return hdutype;
   }
   
-  HDUtype get_current_hdu_type(){
-    HDUtype hdutype;
-    return fits_get_hdu_type(fptr,&hdutype,&status)
+  int get_current_hdu_type(){
+    int hdutype;
+    return fits_get_hdu_type(fptr,&hdutype,&status);
   }
   
   /////////////////////////////////
@@ -77,12 +74,12 @@ public:
    DOUBLE_IMG    = -64   (64-bit floating point pixels)
    */
   void imageInfo(
-                 ,int &bitpix /// type of data
+                 int &bitpix /// type of data
                  ,std::vector<long> &size
                  ){
-    int ndim /// number of dimensions (keyword NAXIS)
+    int ndim;     /// number of dimensions (keyword NAXIS)
     size.resize(10);
-    fits_get_img_param(fptr,10,&bitpix,&ndim,size.data(),&status)
+    fits_get_img_param(fptr,10,&bitpix,&ndim,size.data(),&status);
     size.resize(ndim);
   }
 
@@ -92,23 +89,23 @@ public:
     return fits_get_hdrspace(fptr,&keysexist,NULL,&status);
   }
   int readKey(std::string &keyname,double &value){
-    return fits_read_key(fptr,TDOUBLE,keyname.c_string,
+    return fits_read_key(fptr,TDOUBLE,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string &keyname,float &value){
-    return fits_read_key(fptr,TFLOAT,keyname.c_string,
+    return fits_read_key(fptr,TFLOAT,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string &keyname,int &value){
-    return fits_read_key(fptr,TINT,keyname.c_string,
+    return fits_read_key(fptr,TINT,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string &keyname,size_t &value){
-    return fits_read_key(fptr,TULONG,keyname.c_string,
+    return fits_read_key(fptr,TULONG,keyname.c_str(),
                          &value,NULL,&status);
   }
 
-}
+};
 
 /// read only fits file interface
 class CPFITS_READ : public CPFITS_BASE {
@@ -118,19 +115,19 @@ private:
   CPFITS_READ operator=(CPFITS_READ );
   
 public:
-  CPFITS_READ(std::string filename,bool verboe = false) {
-    fits_open_file(&fptr,filename.c, READONLY, &status);
+  CPFITS_READ(std::string filename,bool verbose = false) {
+    fits_open_file(&fptr,filename.c_str(), READONLY, &status);
     
     //    print any error messages
     if (status) fits_report_error(stderr, status);
     
     if(verbose){
-      std::cout << "Opening file : " << filename << endl;
-      std::cout << "      status : " << status << endl;
+      std::cout << "Opening file : " << filename << std::endl;
+      std::cout << "      status : " << status << std::endl;
     }
   }
   
-  ~CFITS_READ(){
+  ~CPFITS_READ(){
     fits_close_file(fptr, &status);
     if (status) fits_report_error(stderr, status);
   }
@@ -139,14 +136,13 @@ public:
   void reset(std::string filename){
     fits_close_file(fptr, &status);
     assert(status==0);
-    fits_open_file(&fptr,filename.c, READONLY, &status);
+    fits_open_file(&fptr,filename.c_str(), READONLY, &status);
     //    print any error messages
     if (status) fits_report_error(stderr, status);
   }
 
   /// read the whole image into a vector
   int read(std::vector<double> &output){
-    assert(start.size()==2);
     
     std::vector<long> size;
     int dtype;
@@ -161,7 +157,6 @@ public:
   }
   /// read the whole image into a vector
   int read(std::vector<float> &output){
-    assert(start.size()==2);
     
     std::vector<long> size;
     int dtype;
@@ -187,19 +182,22 @@ public:
 
   
   /// read a rectangular subset of the image
-  int read_subset(double *output,long *lowerleft,long *uppertright){
+  int read_subset(double *output,long *lowerleft,long *upperright){
     long inc[2] = {1,1};  // this is a step
-    return fits_read_subset(fptr,TDOUBLE,lowerleft,upperright,&inc
+    return fits_read_subset(fptr,TDOUBLE,lowerleft,upperright,inc
                             ,NULL,output,NULL,&status);
+    //int fits_read_subset(fitsfile *fptr, int  datatype, long *fpixel,
+    //                     long *lpixel, long *inc, void *nulval,  void *array,
+    //                     int *anynul, int *status)
   }
   /// read a rectangular subset of the image
-  int read_subset(float *output,long *lowerleft,long *uppertright){
+  int read_subset(float *output,long *lowerleft,long *upperright){
     long inc[2] = {1,1};  // this is a step
-    return fits_read_subset(fptr,TFLOAT,lowerleft,upperright,&inc
+    return fits_read_subset(fptr,TFLOAT,lowerleft,upperright,inc
                             ,NULL,output,NULL,&status);
   }
 
-}
+};
 
 class CPFITS_WRITE : public CPFITS_BASE {
   
@@ -209,65 +207,68 @@ private:
   CPFITS_WRITE operator=(CPFITS_WRITE );
   
 public:
-  CPFITS_WRITE(std::string filename,bool verboe = false) {
-    fits_create_file(&fptr, filename.c_string(), &status);
+  CPFITS_WRITE(std::string filename,bool verbose = false) {
+    fits_create_file(&fptr, filename.c_str(), &status);
     
     
     //    print any error messages
     if (status) fits_report_error(stderr, status);
     
     if(verbose){
-      std::cout << "Creating file : " << filename << endl;
-      std::cout << "       status : " << status << endl;
+      std::cout << "Creating file : " << filename << std::endl;
+      std::cout << "       status : " << status << std::endl;
     }
   }
   
-  ~CFITS_WRITE(){
+  ~CPFITS_WRITE(){
     fits_close_file(fptr, &status);
     if (status) fits_report_error(stderr, status);
   }
 
   /// add a new image or cube to the file
   int write_image(std::vector<double> &im,std::vector<long> &size){
-    
-    assert(im.size() == size[0]*siz[1]);
+    size_t n=1;
+    for(size_t i : size) n *= i;
+    assert(im.size() == n);
     fits_create_img(fptr,DOUBLE_IMG,size.size(),
                     size.data(), &status);
-    std::vector<long> fpixel(size.sizs(),1);
+    std::vector<long> fpixel(size.size(),1);
     return fits_write_pix(fptr,TDOUBLE,fpixel.data(),
                           im.size(),im.data(),&status);
   }
   int writeImage(std::vector<float> &im,std::vector<long> &size){
-    assert(im.size() == size[0]*siz[1]);
+    size_t n=1;
+    for(size_t i : size) n *= i;
+    assert(im.size() == n);
     fits_create_img(fptr,FLOAT_IMG,size.size(),
                     size.data(), &status);
-    std::vector<long> fpixel(size.sizs(),1);
+    std::vector<long> fpixel(size.size(),1);
     return fits_write_pix(fptr,TFLOAT,fpixel.data(),
                           im.size(),im.data(),&status);
   }
 
   /// add or replace a key value in the header
   int writeKey(std::string &key,double value,std::string &comment ){
-    return fits_update_key(fptr,TDOUBLE,key.c_string(),
-                           &value,comment.c_string(),&status);
+    return fits_update_key(fptr,TDOUBLE,key.c_str(),
+                           &value,comment.c_str(),&status);
   }
   int writeKey(std::string &key,float value,std::string &comment ){
-    return fits_update_key(fptr,TFLOAT,key.c_string(),
-                           &value,comment.c_string(),&status);
+    return fits_update_key(fptr,TFLOAT,key.c_str(),
+                           &value,comment.c_str(),&status);
   }
   int writeKey(std::string &key,int value,std::string &comment ){
-    return fits_update_key(fptr,TINT,key.c_string(),
-                           &value,comment.c_string(),&status);
+    return fits_update_key(fptr,TINT,key.c_str(),
+                           &value,comment.c_str(),&status);
   }
   int writeKey(std::string &key,long value,std::string &comment ){
-    return fits_update_key(fptr,TLONG,key.c_string(),
-                           &value,comment.c_string(),&status);
+    return fits_update_key(fptr,TLONG,key.c_str(),
+                           &value,comment.c_str(),&status);
   }
   int writeKey(std::string &key,size_t value,std::string &comment ){
-    return fits_update_key(fptr,TULONG,key.c_string(),
-                           &value,comment.c_string(),&status);
+    return fits_update_key(fptr,TULONG,key.c_str(),
+                           &value,comment.c_str(),&status);
   }
 
-}
+};
 
 #endif /* cpfits_h */
