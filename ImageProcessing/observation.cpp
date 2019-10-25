@@ -8,10 +8,11 @@
 #include <complex>
 #include "slsimlib.h"
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-//#include <CCfits>
-#endif
+//#ifdef ENABLE_FITS
+//#include <CCfits/CCfits>
+//#endif
+
+#include "cpfits.h"
 
 #ifdef ENABLE_FFTW
 #include "fftw3.h"
@@ -196,8 +197,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
  * \param seeing FWHM in arcsecs of the image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
-diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron)
-,Npix_x(Npix_x),Npix_y(Npix_y),seeing(seeing)
+Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter),transmission(transmission),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),ron(ron),seeing(seeing)
 		{
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 			telescope = false;
@@ -215,15 +215,13 @@ diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_
  * \param oversample Oversampling rate of the PSF image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
-diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),Npix_x(Npix_x),Npix_y(Npix_y)
- , ron(ron), oversample(oversample)
+Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , ron(ron), oversample(oversample)
 		{
-	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
+      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 
-#ifdef ENABLE_FITS
+      CPFITS_READ cpfits(psf_file);
 
-	//std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
-      
+/*
       std::auto_ptr<CCfits::FITS> fp(0);
       try
       {
@@ -234,26 +232,27 @@ diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_
         std::cerr << "Cannot open " << psf_file << std::endl;
         exit(1);
       }
-
+*/
       
-	CCfits::PHDU *h0=&fp->pHDU();
-	int side_psf = h0->axis(0);
-	int N_psf = side_psf*side_psf;
-	map_psf.resize(N_psf);
-	h0->read(map_psf);
-
-#else
-		std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-		exit(1);
-#endif
-		telescope = false;
-		}
+	//CCfits::PHDU *h0=&fp->pHDU();
+      std::vector<long> sizes;
+      cpfits.read(map_psf,sizes);
+      //int side_psf = h0->axis(0);
+      //int side_psf = sizes[0];
+      //int N_psf = side_psf*side_psf;
+      //map_psf.resize(N_psf);
+      //h0->read(map_psf);
+      telescope = false;
+}
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Observation::setPSF(std::string psf_file  /// name of fits file with psf
                          , float os  /// over sampling factor
                          )
 {
+ 
+  CPFITS_READ cpfits(psf_file);
+  /*
 #ifdef ENABLE_FITS
    // std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
  
@@ -267,18 +266,23 @@ void Observation::setPSF(std::string psf_file  /// name of fits file with psf
     std::cerr << "Cannot open " << psf_file << std::endl;
     exit(1);
   }
+*/
+	//CCfits::PHDU *h0=&fp->pHDU();
+  std::vector<long> size;
+  cpfits.read(map_psf, size);
 
-	CCfits::PHDU *h0=&fp->pHDU();
-	int side_psf = h0->axis(0);
-	int N_psf = side_psf*side_psf;
-	map_psf.resize(N_psf);
-	h0->read(map_psf);
-    
+  //int side_psf = h0->axis(0);
+  //int side_psf = size[0];
+	//int N_psf = side_psf*side_psf;
+	//map_psf.resize(N_psf);
+	//h0->read(map_psf);
+
+  /*
 #else
     std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
     exit(1);
 #endif
-    
+    */
   oversample = os;
 }
 
