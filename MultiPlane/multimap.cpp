@@ -5,6 +5,7 @@
 
 #include "slsimlib.h"
 #include "multimap.h"
+#include <CCfits/CCfits>
 
 using namespace std;
 using namespace CCfits;
@@ -523,32 +524,43 @@ LensMap& LensMap::operator=(LensMap &&m){
 void LensMap::read_header(std::string fits_input_file
                           ,double angDist){
   
-   std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
-  
-  //CCfits::PHDU *h0=&ff->pHDU();
-  CCfits::PHDU &h0 = ff->pHDU();
+  CPFITS_READ cpfits(fits_input_file);
+//  std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
+//  CCfits::PHDU &h0 = ff->pHDU();
 
-  h0.readAllKeys();
+//  h0.readAllKeys();
   
-  assert(h0.axes() >= 2);
+  std::vector<long> size;
+  int bitpix;
+  cpfits.imageInfo(bitpix,size);
   
-  nx = h0.axis(0);
-  ny = h0.axis(1);
+  assert(size.size() >=2);
+  //assert(h0.axes() >= 2);
+  //nx = h0.axis(0);
+  //ny = h0.axis(1);
+
+  nx = size[0];
+  ny = size[1];
+
   double phys_res;
   
-  try{
-    /* these are always present in ea*/
-    //float wlow,wup,
-   h0.readKey ("CD1_1",phys_res);  // resolution in degrees
-    //h0.readKey ("REDSHIFT",z);
-    //h0.readKey ("WLOW",wlow);
-    //h0.readKey ("WUP",wup);
+  if(cpfits.readKey("CD_1",phys_res)){
+    std::cerr << "LensMap fits map must have header keywords:" << std::endl
+    << " CD1_1 - length on other side in Mpc/h" << std::endl;
+    //<< " WLOW - closest radial distance in cMpc/h" << std::endl
+    //<< " WUP - furthest radial distance in cMpc/h" << std::endl;
     
-    //double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
-    //if(wlow == wup) D = wlow;
-    //D /= (1+z)*h;
-    //D /= (1+z);
+    exit(1);
+  }
+  phys_res *= degreesTOradians*angDist;
+  boxlMpc = phys_res*nx;
 
+    
+  /*
+  
+  try{
+   h0.readKey ("CD1_1",phys_res);  // resolution in degrees
+ 
     phys_res *= degreesTOradians*angDist;
     boxlMpc = phys_res*nx;
   }
@@ -561,7 +573,7 @@ void LensMap::read_header(std::string fits_input_file
 
     exit(1);
   }
-
+*/
   //double phys_res = boxlMpc/nx;
 
   center *= 0;
