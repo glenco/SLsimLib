@@ -45,15 +45,17 @@ public:
   // HDU-level Routines
   /////////////////////////////////
   
-  /// returns the number of tabels
+  /// returns the number of tabels or images
   int get_num_hdus(){
     int hdunum;
-    return fits_get_num_hdus(fptr, &hdunum, &status);
+    fits_get_num_hdus(fptr, &hdunum, &status);
+    return hdunum;
   }
   /// returns the current table number, 1...
   int get_current_hdu_num(){
     int hdunum;
-    return fits_get_hdu_num(fptr,&hdunum);
+    fits_get_hdu_num(fptr,&hdunum);
+    return hdunum;
   }
 
   /// change the current table number
@@ -70,7 +72,8 @@ public:
   
   int get_current_hdu_type(){
     int hdutype;
-    return fits_get_hdu_type(fptr,&hdutype,&status);
+    fits_get_hdu_type(fptr,&hdutype,&status);
+    return hdutype;
   }
   
   /////////////////////////////////
@@ -131,8 +134,10 @@ public:
     fits_open_file(&fptr,filename.c_str(), READONLY, &status);
     
     //    print any error messages
-    if (status) fits_report_error(stderr, status);
-    
+    if (status){
+      fits_report_error(stderr, status);
+      throw std::invalid_argument("missing file");
+    }
     if(verbose){
       std::cout << "Opening file : " << filename << std::endl;
       std::cout << "      status : " << status << std::endl;
@@ -160,9 +165,8 @@ public:
   }
 
   /// read the whole image into a vector
-  int read(std::vector<double> &output){
+  int read(std::vector<double> &output,std::vector<long> &size){
     
-    std::vector<long> size;
     int dtype;
     imageInfo(dtype,size);
     long nelements=1;
@@ -174,9 +178,8 @@ public:
                          ,NULL,output.data(),NULL, &status);
   }
   /// read the whole image into a vector
-  int read(std::vector<float> &output){
+  int read(std::vector<float> &output,std::vector<long> &size){
     
-    std::vector<long> size;
     int dtype;
     imageInfo(dtype,size);
     long nelements=1;
@@ -186,6 +189,31 @@ public:
     
     return fits_read_pix(fptr,TFLOAT,start.data(),nelements
                          ,NULL,output.data(),NULL, &status);
+  }
+  /// read the whole image into a valarray
+  int read(std::valarray<float> &output,std::vector<long> &size){
+    
+    int dtype;
+    imageInfo(dtype,size);
+    long nelements=1;
+    for(long n : size) nelements *= n;
+    std::vector<long> start(nelements,1);
+    output.resize(nelements);
+    
+    return fits_read_pix(fptr,TFLOAT,start.data(),nelements
+                         ,NULL,&output[0],NULL, &status);
+  }
+  int read(std::valarray<double> &output,std::vector<long> &size){
+    
+    int dtype;
+    imageInfo(dtype,size);
+    long nelements=1;
+    for(long n : size) nelements *= n;
+    std::vector<long> start(nelements,1);
+    output.resize(nelements);
+    
+    return fits_read_pix(fptr,TDOUBLE,start.data(),nelements
+                         ,NULL,&output[0],NULL, &status);
   }
 
   /// read nelements in order from image to output array
@@ -254,7 +282,7 @@ public:
     return fits_write_pix(fptr,TDOUBLE,fpixel.data(),
                           im.size(),im.data(),&status);
   }
-  int writeImage(std::vector<float> &im,std::vector<long> &size){
+  int write_image(std::vector<float> &im,std::vector<long> &size){
     size_t n=1;
     for(size_t i : size) n *= i;
     assert(im.size() == n);
@@ -263,6 +291,26 @@ public:
     std::vector<long> fpixel(size.size(),1);
     return fits_write_pix(fptr,TFLOAT,fpixel.data(),
                           im.size(),im.data(),&status);
+  }
+  int write_image(std::valarray<double> &im,std::vector<long> &size){
+    size_t n=1;
+    for(size_t i : size) n *= i;
+    assert(im.size() == n);
+    fits_create_img(fptr,DOUBLE_IMG,size.size(),
+                    size.data(), &status);
+    std::vector<long> fpixel(size.size(),1);
+    return fits_write_pix(fptr,TDOUBLE,fpixel.data(),
+                          im.size(),&im[0],&status);
+  }
+  int write_image(std::valarray<float> &im,std::vector<long> &size){
+    size_t n=1;
+    for(size_t i : size) n *= i;
+    assert(im.size() == n);
+    fits_create_img(fptr,FLOAT_IMG,size.size(),
+                    size.data(), &status);
+    std::vector<long> fpixel(size.size(),1);
+    return fits_write_pix(fptr,TFLOAT,fpixel.data(),
+                          im.size(),&im[0],&status);
   }
 
   /// add or replace a key value in the header
