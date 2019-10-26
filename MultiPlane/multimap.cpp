@@ -5,10 +5,8 @@
 
 #include "slsimlib.h"
 #include "multimap.h"
-#include <CCfits/CCfits>
 
 using namespace std;
-using namespace CCfits;
 
 LensHaloMultiMap::LensHaloMultiMap(
                  std::string fitsfile  /// Original fits map of the density
@@ -589,56 +587,73 @@ void LensMap::read_header(std::string fits_input_file
 void LensMap::read(std::string fits_input_file,double angDist){
   
   std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
-  std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
   
-  CCfits::PHDU &h0 = ff->pHDU();
+  CPFITS_READ cpfits(fits_input_file);
   
-  h0.readAllKeys();
+  //std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
+  //CCfits::PHDU &h0 = ff->pHDU();
   
-  assert(h0.axes() >= 2);
+  //h0.readAllKeys();
   
-  nx = h0.axis(0);
-  ny = h0.axis(1);
+  int n_images = cpfits.get_num_hdus();
   
-  size_t size = nx*ny;
+  std::vector<long> dims;
+  cpfits.read(surface_density, dims);
+  assert(dims.size() == 2);
+  
+  nx = dims[0];
+  ny = dims[1];
   
   // principal HDU is read
-  h0.read(surface_density);
-  int nhdu = h0.axes();
+  //h0.read(surface_density);
+  //int nhdu = h0.axes();
 
-  if(nhdu > 2){  // file contains other lensing quantities
-    alpha1_bar.resize(size);
-    alpha2_bar.resize(size);
-    gamma1_bar.resize(size);
-    gamma2_bar.resize(size);
-    //gamma3_bar.resize(size);
-    phi_bar.resize(size);
+  if(n_images > 1){  // file contains other lensing quantities
+    
+    assert(n_images == 6);
+    
+    cpfits.change_hdu(2);
+    cpfits.read(alpha1_bar,dims);
+
+    cpfits.change_hdu(3);
+    cpfits.read(alpha2_bar,dims);
+
+    cpfits.change_hdu(4);
+    cpfits.read(gamma1_bar,dims);
+
+    cpfits.change_hdu(5);
+    cpfits.read(gamma2_bar,dims);
+
+    cpfits.change_hdu(6);
+    cpfits.read(phi_bar,dims);
+
+    //alpha1_bar.resize(size);
+    //alpha2_bar.resize(size);
+    //gamma1_bar.resize(size);
+    //gamma2_bar.resize(size);
+    //phi_bar.resize(size);
       
-    CCfits::ExtHDU &h1=ff->extension(1);
-    h1.read(alpha1_bar);
-    CCfits::ExtHDU &h2=ff->extension(2);
-    h2.read(alpha2_bar);
-    CCfits::ExtHDU &h3=ff->extension(3);
-    h3.read(gamma1_bar);
-    CCfits::ExtHDU &h4=ff->extension(4);
-    h4.read(gamma2_bar);
+    //CCfits::ExtHDU &h1=ff->extension(1);
+    //h1.read(alpha1_bar);
+    //CCfits::ExtHDU &h2=ff->extension(2);
+    //h2.read(alpha2_bar);
+    //CCfits::ExtHDU &h3=ff->extension(3);
+    //h3.read(gamma1_bar);
+    //CCfits::ExtHDU &h4=ff->extension(4);
+    //h4.read(gamma2_bar);
     //std::cout << h0 << h1 << h2 << h3  << h4 << std::endl;
   }
-  try{
+  
+  int err = 0;
+  {
     /* these are always present in ea*/
     float res;
-    h0.readKey ("CD1_1",res);  // angular resolution degrees
-    //h0.readKey ("REDSHIFT",z);
-    //h0.readKey ("WLOW",wlow);
-    //h0.readKey ("WUP",wup);
-    
-    //double D = 3*(pow(wup,4) - pow(wlow,4))/(pow(wup,3) - pow(wlow,3))/4;
-    //D /= (1+z)*h;
-
+    err += cpfits.readKey ("CD1_1",res);  // angular resolution degrees
+  
     res *= degreesTOradians*angDist;
     boxlMpc = res * nx;
   }
-  catch(CCfits::HDU::NoSuchKeyword){
+  if(err != 0){
     
     std::cerr << "LensMap fits map must have header keywords:" << std::endl
     << " CD1_1 - length on other side in Mpc/h" << std::endl;
@@ -663,45 +678,32 @@ void LensMap::read(std::string fits_input_file,double angDist){
 void LensMap::Myread(std::string fits_input_file){
   
   std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
-  std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
+  CPFITS_READ cpfits(fits_input_file);
   
-  CCfits::PHDU &h0 = ff->pHDU();
+  assert(cpfits.get_num_hdus() == 5);
   
-  h0.readAllKeys();
-  
-  assert(h0.axes() >= 2);
-  
-  nx = h0.axis(0);
-  ny = h0.axis(1);
-  
-  size_t size = nx*ny;
-  
-  // principal HDU is read
-  h0.read(surface_density);
-  //int nhdu = h0.axes();
-  
-  // file contains other lensing quantities
-  alpha1_bar.resize(size);
-  alpha2_bar.resize(size);
-  gamma1_bar.resize(size);
-  gamma2_bar.resize(size);
-  //phi_bar.resize(size);
-    
-  CCfits::ExtHDU &h1=ff->extension(1);
-  h1.read(alpha1_bar);
-  CCfits::ExtHDU &h2=ff->extension(2);
-  h2.read(alpha2_bar);
-  CCfits::ExtHDU &h3=ff->extension(3);
-  h3.read(gamma1_bar);
-  CCfits::ExtHDU &h4=ff->extension(4);
-  h4.read(gamma2_bar);
-  //std::cout << h0 << h1 << h2 << h3  << h4 << std::endl;
-  
-  // these are always present in each
-  //h0.readKey ("REDSHIFT",z);
   double yrange;
-  h0.readKey("SIDEL1",boxlMpc);
-  h0.readKey("SIDEL2",yrange);
+  cpfits.readKey("SIDEL1",boxlMpc);
+  cpfits.readKey("SIDEL2",yrange);
+
+  std::vector<long> dims;
+  cpfits.read(surface_density,dims);
+  
+  assert(dims.size() == 2 );
+  nx = dims[0];
+  ny = dims[1];
+  
+  cpfits.change_hdu(2);
+  cpfits.read(alpha1_bar,dims);
+  
+  cpfits.change_hdu(3);
+  cpfits.read(alpha2_bar,dims);
+
+  cpfits.change_hdu(4);
+  cpfits.read(gamma1_bar,dims);
+
+  cpfits.change_hdu(5);
+  cpfits.read(gamma2_bar,dims);
 
   //double res = boxlMpc/nx;
   center *= 0;
@@ -849,12 +851,14 @@ void LensMap::read_sub(CPFITS_READ &cpfits
  */
 void LensMap::write(std::string filename
                     ){
-#ifdef ENABLE_FITS
-  long naxis=2;
-  long naxes[2]={nx,ny};
+//#ifdef ENABLE_FITS
+  //long naxis=2;
+  //long naxes[2]={nx,ny};
   
+  CPFITS_WRITE cpfits(filename,false);
+  
+  /*
   std::auto_ptr<FITS> fout(0);
-  
   try{
     fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
   }
@@ -863,32 +867,38 @@ void LensMap::write(std::string filename
     ERROR_MESSAGE();
     exit(1);
   }
+  */
   
   std::vector<long> naxex(2);
   naxex[0]=nx;
   naxex[1]=ny;
   
-  PHDU *phout=&fout->pHDU();
+  //PHDU *phout=&fout->pHDU();
 
-  phout->addKey("SIDEL1",boxlMpc,"x range in physical Mpc");
-  phout->addKey("SIDEL2",y_range(),"y range in physical Mpc");
+  cpfits.writeKey("SIDEL1",boxlMpc,"x range in physical Mpc");
+  cpfits.writeKey("SIDEL2",y_range(),"y range in physical Mpc");
   
-  phout->write( 1,nx*ny,surface_density );
-  
-  ExtHDU *eh1=fout->addImage("alpah1", FLOAT_IMG, naxex);
-  eh1->write(1,nx*ny,alpha1_bar);
-  ExtHDU *eh2=fout->addImage("alpha2", FLOAT_IMG, naxex);
-  eh2->write(1,nx*ny,alpha2_bar);
+  cpfits.write_image(surface_density,naxex);
+  cpfits.write_image(alpha1_bar,naxex);
+  cpfits.write_image(alpha2_bar,naxex);
+  cpfits.write_image(gamma1_bar,naxex);
+  cpfits.write_image(gamma2_bar,naxex);
+  cpfits.write_image(phi_bar,naxex);
 
-  ExtHDU *eh3=fout->addImage("gamma1", FLOAT_IMG, naxex);
-  eh3->write(1,nx*ny,gamma1_bar);
-  ExtHDU *eh4=fout->addImage("gamma2", FLOAT_IMG, naxex);
-  eh4->write(1,nx*ny,gamma2_bar);
+  //ExtHDU *eh1=fout->addImage("alpah1", FLOAT_IMG, naxex);
+  //eh1->write(1,nx*ny,alpha1_bar);
+  //ExtHDU *eh2=fout->addImage("alpha2", FLOAT_IMG, naxex);
+  //eh2->write(1,nx*ny,alpha2_bar);
+
+  //ExtHDU *eh3=fout->addImage("gamma1", FLOAT_IMG, naxex);
+  //eh3->write(1,nx*ny,gamma1_bar);
+  //ExtHDU *eh4=fout->addImage("gamma2", FLOAT_IMG, naxex);
+  //eh4->write(1,nx*ny,gamma2_bar);
   
   //std::cout << *phout << std::endl;
-#else
-  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
+//#else
+//  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
+//  exit(1);
+//#endif
 }
 
