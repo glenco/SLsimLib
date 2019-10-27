@@ -8,11 +8,7 @@
 #include "MOKAlens.h"
 #include <fstream>
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-using namespace CCfits;
-
-#endif
+#include "cpfits.h"
 
 #ifdef ENABLE_FFTW
 #include "fftw3.h"
@@ -66,25 +62,16 @@ using namespace CCfits;
 // carlo test end
 
 void LensHaloMassMap::getDims(){
-#ifdef ENABLE_FITS
-  try{
-    std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
-    
-    PHDU *h0=&ff->pHDU();
-    
-    map.nx = h0->axis(0);
-    map.ny = h0->axis(1);
-    std:: cout << "nx           ny " << std:: endl;
-    std:: cout << map.nx << "   " << map.ny << std:: endl;
-  }
-  catch(FITS::CantOpen){
-    std::cout << "can not open " << MOKA_input_file << std::endl;
-    exit(1);
-  }
-#else
-  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
+  
+  CPFITS_READ cpfits(MOKA_input_file);
+  std::vector<long> size;
+  int bitpix;
+  cpfits.imageInfo(bitpix,size);
+ 
+  map.nx = size[0];
+  map.ny = size[1];
+  std:: cout << "nx           ny " << std:: endl;
+  std:: cout << map.nx << "   " << map.ny << std:: endl;
 }
 
 /**
@@ -102,45 +89,46 @@ void LensHaloMassMap::readMap(){
 void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &cosmo){
   
   std:: cout << " reading lens density map file: " << MOKA_input_file << std:: endl;
-  std::auto_ptr<FITS> ff(new FITS (MOKA_input_file, Read));
+  CPFITS_READ cpfits(MOKA_input_file);
+  std::vector<long> size;
+  cpfits.read(surface_density,size);
   
-  PHDU *h0=&ff->pHDU();
+  assert(size.size() == 2);
   
-  h0->readAllKeys();
+  nx = size[0];
+  ny = size[1];
   
-  assert(h0->axes() >= 2);
-  
-  nx = h0->axis(0);
-  ny = h0->axis(1);
-  
-  size_t size = nx*ny;
-  
-  surface_density.resize(size);
+  //size_t size = nx*ny;
+  //surface_density.resize(size);
 
   // try to read MVIR, if it exists is a MOKA map
   bool moka;
-  try {
-    h0->readKey ("MVIR",m);
+  
+  if(cpfits.readKey ("MVIR",m)){
     moka=true;
-  }
-  catch(CCfits::HDU::NoSuchKeyword) {
+  }else{
     moka=false;
   }
-  
-  // principal HDU is read
-  h0->read(surface_density);
-  
+  int n_images = cpfits.get_num_hdus();
+
   if(moka){
     // check if other quantities exist if not it has to compute them
-    int nhdu = h0->axis(2);
     
-    if(nhdu==1){
-      alpha1_bar.resize(0);
-      //std:: cout << "  preProcessing Map MOKA fits file has only KAPPA map" << std:: endl;
-      //PreProcessFFTWMap(zerosize);
-    }
-    
-    if(nhdu != 1){  // file contains other lensing quantities
+    if(n_images >= 5){  // file contains other lensing quantities
+      
+      cpfits.change_hdu(2);
+      cpfits.read(alpha1_bar,size);
+
+      cpfits.change_hdu(3);
+      cpfits.read(alpha2_bar,size);
+
+      cpfits.change_hdu(4);
+      cpfits.read(gamma1_bar,size);
+      
+      cpfits.change_hdu(5);
+      cpfits.read(gamma2_bar,size);
+
+      /*
       alpha1_bar.resize(size);
       alpha2_bar.resize(size);
       gamma1_bar.resize(size);
@@ -159,25 +147,32 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       ExtHDU &h4=ff->extension(4);
       h4.read(gamma2_bar);
       std::cout << *h0 << h1 << h2 << h3  << h4 << std::endl;
+       */
+      
+      if(n_images == 6){
+        cpfits.change_hdu(6);
+        cpfits.read(phi_bar,size);
+      }
     }
-    try{
+    int error = 0;
+    
       // these are always present in each fits file created by MOKA
-      h0->readKey ("SIDEL",boxlarcsec);
-      h0->readKey ("SIDEL2",boxlMpc);  // recall you that MOKA Mpc/h
-      h0->readKey ("ZLENS",zlens);
-      h0->readKey ("ZSOURCE",zsource);
-      h0->readKey ("OMEGA",omegam);
-      h0->readKey ("LAMBDA",omegal);
-      h0->readKey ("H",h);
-      h0->readKey ("W",wq);
-      h0->readKey ("MSTAR",mstar);
-      // h0->readKey ("MVIR",m);
-      h0->readKey ("CONCENTRATION",c);
-      h0->readKey ("DL",Dlens);
-      h0->readKey ("DLS",DLS);
-      h0->readKey ("DS",DS);
-    }
-    catch(CCfits::HDU::NoSuchKeyword){
+      error += cpfits.readKey ("SIDEL",boxlarcsec);
+      error += cpfits.readKey ("SIDEL2",boxlMpc);  // recall you that MOKA Mpc/h
+      error += cpfits.readKey ("ZLENS",zlens);
+      error += cpfits.readKey ("ZSOURCE",zsource);
+      error += cpfits.readKey ("OMEGA",omegam);
+      error += cpfits.readKey ("LAMBDA",omegal);
+      error += cpfits.readKey ("H",h);
+      error += cpfits.readKey ("W",wq);
+      error += cpfits.readKey ("MSTAR",mstar);
+      // error += cpfits.readKey ("MVIR",m);
+      error += cpfits.readKey ("CONCENTRATION",c);
+      error += cpfits.readKey ("DL",Dlens);
+      error += cpfits.readKey ("DLS",DLS);
+      error += cpfits.readKey ("DS",DS);
+    
+    if(error != 0){
       std::cerr << "MOKA fits map must have header keywords:" << std::endl
       << " SIDEL - length on a side in Mpc/h" << std::endl
       << " SIDEL2 - length on other side in Mpc/h" << std::endl
@@ -200,8 +195,6 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
     
     int npixels = nx;
 
-    // cut a square!
-    //  }
     // keep it like it is, even if it is a rectangle
     if(ny!=nx){
       std:: cout << " " << std:: endl;
@@ -220,27 +213,18 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       // for(int i=0;i<ni;i++) std:: cout << zi[i] << "  " << dli[i] << std:: endl;
       // std:: cout << dli[ni-1] << std:: endl;
       // exit(1);
-      try{
-        h0->readKey("WLOW",d1);
+      int error = cpfits.readKey("WLOW",d1);
         d1=d1/cosmo.gethubble();
-      }
-      catch(CCfits::HDU::NoSuchKeyword){
-        try{
-          h0->readKey("DLLOW",d1);
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
+      
+      if(error){
+        if(cpfits.readKey("DLLOW",d1)){
           d1 = d2 = 0;
         }
         
-        try{
-          h0->readKey("WUP",d2);
-          d2=d2/cosmo.gethubble();
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
-          try{
-            h0->readKey("DLUP",d2);
-          }
-          catch(CCfits::HDU::NoSuchKeyword){
+        error = cpfits.readKey("WUP",d2);
+        d2=d2/cosmo.gethubble();
+        if(error){
+          if(cpfits.readKey("DLUP",d2)){
             d1 = d2 = 0;
           }
         }
@@ -248,22 +232,12 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
           zlens = cosmo.invComovingDist(( d1 + d2 )*0.5);
           
         }else{
-          
           // if angular size distances are not set use ZLENS or REDSHIFT
-          
-          try {
-            h0->readKey("ZLENS",zlens);
-          }
-          catch(CCfits::HDU::NoSuchKeyword) {
-            try {
-              h0->readKey("REDSHIFT",zlens);
-            }
-            catch(CCfits::HDU::NoSuchKeyword){
+          if(cpfits.readKey("ZLENS",zlens)){
+            if(cpfits.readKey("REDSHIFT",zlens)){
               std::cout << "unable to read fits mass map header keywords" << std::endl <<  "  either DLUP and DLLOW need to be set or ZLENS or REDSHIFT" << std::endl;
               exit(1);
             }
-            
-            
           }
           
         }
@@ -278,22 +252,20 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
     Dlens = cosmo.angDist(0.,zlens);  // physical
     double inarcsec  = 180./M_PI/Dlens*60.*60.;
     double pixLMpc,pixelunit;
-    try{
-      // physical size in degrees
-      h0->readKey("PHYSICALSIZE",boxlarcsec);
+    
+    // physical size in degrees
+    int error = cpfits.readKey("PHYSICALSIZE",boxlarcsec);
+    boxlarcsec=boxlarcsec*60.*60.;
+    pixLMpc = boxlarcsec/npixels/inarcsec;
+    boxlMpc = pixLMpc*npixels;
+    if(error){
+        // physical size in degrees
+      error = cpfits.readKey("PHYSICAL",boxlarcsec);
       boxlarcsec=boxlarcsec*60.*60.;
       pixLMpc = boxlarcsec/npixels/inarcsec;
       boxlMpc = pixLMpc*npixels;
-   }
-    catch(CCfits::HDU::NoSuchKeyword) {
-      try{
-        // physical size in degrees
-        h0->readKey("PHYSICAL",boxlarcsec);
-        boxlarcsec=boxlarcsec*60.*60.;
-        pixLMpc = boxlarcsec/npixels/inarcsec;
-        boxlMpc = pixLMpc*npixels;
-      }
-      catch(CCfits::HDU::NoSuchKeyword) {
+      
+      if(error){
         std::cerr << "fits mass map must have header keywords:" << std::endl
         << " REDSHIFT - redshift of map plane" << std::endl
         //<< " DLOW - ?? Mpc/h" << std::endl
@@ -303,23 +275,18 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
         
         std::cout << " unable to read map PIXELUNITS" << std::endl;
         exit(1);
-        
       }
-      
     }
     
+    error = cpfits.readKey("PIXELUNIT",pixelunit);
+    pixelunit=pixelunit/pixLMpc/pixLMpc;
     
-    try {
-      h0->readKey("PIXELUNIT",pixelunit);
+    if(error) {
+
+      error = cpfits.readKey("PIXELUNI",pixelunit);
       pixelunit=pixelunit/pixLMpc/pixLMpc;
-    }
-    catch(CCfits::HDU::NoSuchKeyword) {
       
-      try {
-        h0->readKey("PIXELUNI",pixelunit);
-        pixelunit=pixelunit/pixLMpc/pixLMpc;
-      }
-      catch(CCfits::HDU::NoSuchKeyword) {
+      if(error) {
         std::cerr << "fits mass map must have header keywords:" << std::endl
         << " REDSHIFT - redshift of map plane" << std::endl
         //<< " DLOW - ?? Mpc/h" << std::endl
@@ -403,56 +370,42 @@ void LensHaloMassMap::writeImage(std::string filename){
   map.write(filename);
 }
 void MOKAmap::write(std::string filename){
-#ifdef ENABLE_FITS
-  long naxis=2;
-  long naxes[2]={nx,ny};
   
-  std::auto_ptr<FITS> fout(0);
-  
-  try{
-    fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
-  }
-  catch(FITS::CantCreate){
-    std::cout << "Unable to open fits file " << filename << std::endl;
-    ERROR_MESSAGE();
-    exit(1);
-  }
+  CPFITS_WRITE cpfits(filename,false);
   
   std::vector<long> naxex(2);
   naxex[0]=nx;
   naxex[1]=ny;
   
-  PHDU *phout=&fout->pHDU();
+  cpfits.write_image(surface_density, naxex);
+  //PHDU *phout=&fout->pHDU();
+  //phout->write( 1,nx*ny,surface_density );
   
-  phout->write( 1,nx*ny,surface_density );
+  cpfits.writeKey ("SIDEL",boxlarcsec,"arcsec");
+  cpfits.writeKey ("SIDEL2",boxlMpc,"Mpc/h");
+  cpfits.writeKey ("ZLENS",zlens,"lens redshift");
+  cpfits.writeKey ("ZSOURCE",zsource, "source redshift");
+  cpfits.writeKey ("OMEGA",omegam,"omega matter");
+  cpfits.writeKey ("LAMBDA",omegal,"omega lamda");
+  cpfits.writeKey ("H",h,"hubble/100");
+  cpfits.writeKey ("W",wq,"dark energy equation of state parameter");
+  cpfits.writeKey ("MSTAR",mstar,"stellar mass of the BCG in Msun/h");
+  cpfits.writeKey ("MVIR",m,"virial mass of the halo in Msun/h");
+  cpfits.writeKey ("CONCENTRATION",c,"NFW concentration");
+  cpfits.writeKey ("DL",Dlens,"Mpc/h");
+  cpfits.writeKey ("DLS",DLS,"Mpc/h");
+  cpfits.writeKey ("DS",DS,"Mpc/h");
   
-  phout->addKey ("SIDEL",boxlarcsec,"arcsec");
-  phout->addKey ("SIDEL2",boxlMpc,"Mpc/h");
-  phout->addKey ("ZLENS",zlens,"lens redshift");
-  phout->addKey ("ZSOURCE",zsource, "source redshift");
-  phout->addKey ("OMEGA",omegam,"omega matter");
-  phout->addKey ("LAMBDA",omegal,"omega lamda");
-  phout->addKey ("H",h,"hubble/100");
-  phout->addKey ("W",wq,"dark energy equation of state parameter");
-  phout->addKey ("MSTAR",mstar,"stellar mass of the BCG in Msun/h");
-  phout->addKey ("MVIR",m,"virial mass of the halo in Msun/h");
-  phout->addKey ("CONCENTRATION",c,"NFW concentration");
-  phout->addKey ("DL",Dlens,"Mpc/h");
-  phout->addKey ("DLS",DLS,"Mpc/h");
-  phout->addKey ("DS",DS,"Mpc/h");
+  cpfits.write_image(gamma1_bar, naxex);
+  cpfits.write_image(gamma2_bar, naxex);
   
-  ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
-  eh1->write(1,nx*ny,gamma1_bar);
-  ExtHDU *eh2=fout->addImage("gamma2", FLOAT_IMG, naxex);
-  eh2->write(1,nx*ny,gamma2_bar);
+  //ExtHDU *eh1=fout->addImage("gamma1", FLOAT_IMG, naxex);
+  //eh1->write(1,nx*ny,gamma1_bar);
+  //ExtHDU *eh2=fout->addImage("gamma2", FLOAT_IMG, naxex);
+  //eh2->write(1,nx*ny,gamma2_bar);
   //ExtHDU *eh3=fout->addImage("gamma3", FLOAT_IMG, naxex);
   //eh3->write(1,nx*ny,gamma3_bar);
-
-  std::cout << *phout << std::endl;
-#else
-  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
+  //std::cout << *phout << std::endl;
 }
 
 /**

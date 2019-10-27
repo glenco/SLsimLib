@@ -80,9 +80,8 @@ private:
 
 template<typename PType>
 GadgetFile<PType>::GadgetFile(string inpfn,std::vector<PType> &data):
-multipleFiles(false),numfiles(0)
-,filebasename(inpfn),swap(0),filecnt(0),np_file_start(0),np_file_end(-1),
-p_data(data)
+multipleFiles(false),numfiles(0),filebasename(inpfn),p_data(data),swap(0)
+,filecnt(0),np_file_start(0),np_file_end(-1)
 {
   checkMultiple();
 }

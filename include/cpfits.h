@@ -51,7 +51,7 @@ public:
     fits_get_num_hdus(fptr, &hdunum, &status);
     return hdunum;
   }
-  /// returns the current table number, 1...
+  /// returns the current image / table number, starts with 1 not 0
   int get_current_hdu_num(){
     int hdunum;
     fits_get_hdu_num(fptr,&hdunum);
@@ -103,6 +103,8 @@ public:
     int keysexist;
     return fits_get_hdrspace(fptr,&keysexist,NULL,&status);
   }
+  
+  /// read a key value for the current table / image
   int readKey(std::string keyname,double &value){
     return fits_read_key(fptr,TDOUBLE,keyname.c_str(),
                          &value,NULL,&status);
@@ -253,16 +255,29 @@ private:
   CPFITS_WRITE operator=(CPFITS_WRITE );
   
 public:
-  CPFITS_WRITE(std::string filename,bool verbose = false) {
-    fits_create_file(&fptr, filename.c_str(), &status);
+  CPFITS_WRITE(std::string filename,bool append = false,bool verbose = false) {
     
+    if(!append){
+      if(verbose) std::cout << "Creating file : " << filename << std::endl;
+      if(filename[0] != '!') filename = "!" + filename;
+      fits_create_file(&fptr, filename.c_str(), &status);
+   }else{
+      fits_open_file(&fptr,filename.c_str(),READWRITE,&status);
+      if(status==104){  // create file if it does not exist
+        status = 0;
+        fits_create_file(&fptr, filename.c_str(), &status);
+ 
+        if(verbose) std::cout << "Creating file : " << filename << std::endl;
+      }else{
+        if(verbose) std::cout << "Appending to file : " << filename << std::endl;
+      }
+    }
     
     //    print any error messages
     if (status) fits_report_error(stderr, status);
     
     if(verbose){
-      std::cout << "Creating file : " << filename << std::endl;
-      std::cout << "       status : " << status << std::endl;
+       std::cout << "       status : " << status << std::endl;
     }
   }
   
@@ -313,24 +328,24 @@ public:
                           im.size(),&im[0],&status);
   }
 
-  /// add or replace a key value in the header
-  int writeKey(std::string &key,double value,std::string &comment ){
+  /// add or replace a key value in the header of the current table / image
+  int writeKey(std::string key,double value,std::string comment ){
     return fits_update_key(fptr,TDOUBLE,key.c_str(),
                            &value,comment.c_str(),&status);
   }
-  int writeKey(std::string &key,float value,std::string &comment ){
+  int writeKey(std::string key,float value,std::string comment ){
     return fits_update_key(fptr,TFLOAT,key.c_str(),
                            &value,comment.c_str(),&status);
   }
-  int writeKey(std::string &key,int value,std::string &comment ){
+  int writeKey(std::string key,int value,std::string comment ){
     return fits_update_key(fptr,TINT,key.c_str(),
                            &value,comment.c_str(),&status);
   }
-  int writeKey(std::string &key,long value,std::string &comment ){
+  int writeKey(std::string key,long value,std::string comment ){
     return fits_update_key(fptr,TLONG,key.c_str(),
                            &value,comment.c_str(),&status);
   }
-  int writeKey(std::string &key,size_t value,std::string &comment ){
+  int writeKey(std::string key,size_t value,std::string comment ){
     return fits_update_key(fptr,TULONG,key.c_str(),
                            &value,comment.c_str(),&status);
   }

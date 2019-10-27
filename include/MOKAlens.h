@@ -15,10 +15,6 @@
 
 #include <stdexcept>
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-#endif
-
 /**
  * \brief The MOKA map structure, containing all quantities that define it
  *

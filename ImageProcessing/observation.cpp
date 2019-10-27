@@ -8,10 +8,6 @@
 #include <complex>
 #include "slsimlib.h"
 
-//#ifdef ENABLE_FITS
-//#include <CCfits/CCfits>
-//#endif
-
 #include "cpfits.h"
 
 #ifdef ENABLE_FFTW
@@ -221,20 +217,6 @@ Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter), transmission(transmission), ex
 
       CPFITS_READ cpfits(psf_file);
 
-/*
-      std::auto_ptr<CCfits::FITS> fp(0);
-      try
-      {
-        fp.reset( new CCfits::FITS (psf_file.c_str(), CCfits::Read) );
-      }
-      catch (CCfits::FITS::CantOpen)
-      {
-        std::cerr << "Cannot open " << psf_file << std::endl;
-        exit(1);
-      }
-*/
-      
-	//CCfits::PHDU *h0=&fp->pHDU();
       std::vector<long> sizes;
       cpfits.read(map_psf,sizes);
       //int side_psf = h0->axis(0);
@@ -252,22 +234,7 @@ void Observation::setPSF(std::string psf_file  /// name of fits file with psf
 {
  
   CPFITS_READ cpfits(psf_file);
-  /*
-#ifdef ENABLE_FITS
-   // std::auto_ptr<CCfits::FITS> fp (new CCfits::FITS (psf_file.c_str(), CCfits::Read));
- 
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS (psf_file.c_str(), CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << psf_file << std::endl;
-    exit(1);
-  }
-*/
-	//CCfits::PHDU *h0=&fp->pHDU();
+
   std::vector<long> size;
   cpfits.read(map_psf, size);
 
@@ -277,12 +244,6 @@ void Observation::setPSF(std::string psf_file  /// name of fits file with psf
 	//map_psf.resize(N_psf);
 	//h0->read(map_psf);
 
-  /*
-#else
-    std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-    exit(1);
-#endif
-    */
   oversample = os;
 }
 

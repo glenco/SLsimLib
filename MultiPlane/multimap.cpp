@@ -20,13 +20,6 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
 ,mass_unit(mass_unit),fitsfilename(fitsfile)
 {
   
-/*  try{
-    ff = new CCfits::FITS (fitsfilename, CCfits::Read);
-  }catch(...){
-    std::cerr << "CCfits throw an exception: probably file " << fitsfile << " does not exist." << std::endl;
-  }
- */
-  
   zerosize = 1;
   rscale = 1.0;
   
@@ -51,9 +44,9 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
   //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   rs2 = submap.boxlMpc*submap.boxlMpc/( 2*submap.nx )*gfactor/ffactor;
-
   wlr.rs2 = wsr.rs2 = rs2;
   
+  resolution = submap.x_resolution();
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width = ffactor * sqrt(rs2) / resolution + 1;
  
@@ -117,21 +110,21 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
     Point_2d range = long_range_map.upperright - long_range_map.lowerleft;
     
     long_range_map.nx = submap.nx/desample;
-    double res_x = long_range_map.boxlMpc / long_range_map.nx;
+    double lr_res_x = long_range_map.boxlMpc / long_range_map.nx;
 
     // get the ny that makes the pixels clossest to square
     double Ly = submap.y_range();
-    long_range_map.ny = (int)( Ly/res_x );
+    long_range_map.ny = (int)( Ly/lr_res_x );
     //long_range_map.ny = (int)( Ly/res_x ) - 1;    // ????
-    if(Ly - long_range_map.ny*res_x > res_x/2) long_range_map.ny += 1;
+    if(Ly - long_range_map.ny*lr_res_x > lr_res_x/2) long_range_map.ny += 1;
 
     size_t nx = long_range_map.nx;
     size_t ny = long_range_map.ny;
     
-    double res_y = submap.y_range()/ny;
+    double lr_res_y = submap.y_range()/ny;
     
     std::cout << "ratio of low resolution pixel dimensions "
-    << res_x/res_y << std::endl;
+    << lr_res_x/lr_res_y << std::endl;
     
     size_t  N = long_range_map.ny*long_range_map.nx;
     long_range_map.surface_density.resize(N,0);
@@ -147,8 +140,13 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
   
     size_t kj = 0;
     size_t jj;
+    
+    double res_tmp = resolution / lr_res_y;
+    //double res_tmp = resolution / res_y;
     for(size_t j = 0 ; j < Noriginal[1] ; ++j ){
-      jj = j*resolution/res_y;
+
+      //jj = j / desample;
+      jj = j * res_tmp;
       if( jj >= ny) break;
 
       //assert(jj < ny);
@@ -167,9 +165,11 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
         //assert(kj < submap.nx*submap.ny);
       }
     
-      double tmp;
+      double tmp,res_tmp_x = resolution/lr_res_x;
       for(size_t i = 0 ; i < Noriginal[0] ; ++i ){
-        size_t ii = i*resolution/res_x;
+        size_t ii = i * res_tmp_x;
+        //size_t ii = i / desample;
+        
         if( ii >= nx) break;
         tmp = long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
 
@@ -523,26 +523,19 @@ void LensMap::read_header(std::string fits_input_file
                           ,double angDist){
   
   CPFITS_READ cpfits(fits_input_file);
-//  std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
-//  CCfits::PHDU &h0 = ff->pHDU();
-
-//  h0.readAllKeys();
   
   std::vector<long> size;
   int bitpix;
   cpfits.imageInfo(bitpix,size);
   
-  assert(size.size() >=2);
-  //assert(h0.axes() >= 2);
-  //nx = h0.axis(0);
-  //ny = h0.axis(1);
-
+  assert(size.size() ==2);
+ 
   nx = size[0];
   ny = size[1];
 
   double phys_res;
   
-  if(cpfits.readKey("CD_1",phys_res)){
+  if(cpfits.readKey("CD1_1",phys_res)){
     std::cerr << "LensMap fits map must have header keywords:" << std::endl
     << " CD1_1 - length on other side in Mpc/h" << std::endl;
     //<< " WLOW - closest radial distance in cMpc/h" << std::endl
@@ -552,27 +545,6 @@ void LensMap::read_header(std::string fits_input_file
   }
   phys_res *= degreesTOradians*angDist;
   boxlMpc = phys_res*nx;
-
-    
-  /*
-  
-  try{
-   h0.readKey ("CD1_1",phys_res);  // resolution in degrees
- 
-    phys_res *= degreesTOradians*angDist;
-    boxlMpc = phys_res*nx;
-  }
-  catch(CCfits::HDU::NoSuchKeyword){
-    
-    std::cerr << "LensMap fits map must have header keywords:" << std::endl
-    << " CD1_1 - length on other side in Mpc/h" << std::endl;
-    //<< " WLOW - closest radial distance in cMpc/h" << std::endl
-    //<< " WUP - furthest radial distance in cMpc/h" << std::endl;
-
-    exit(1);
-  }
-*/
-  //double phys_res = boxlMpc/nx;
 
   center *= 0;
   lowerleft = center;
@@ -590,11 +562,6 @@ void LensMap::read(std::string fits_input_file,double angDist){
   
   CPFITS_READ cpfits(fits_input_file);
   
-  //std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS (fits_input_file, CCfits::Read));
-  //CCfits::PHDU &h0 = ff->pHDU();
-  
-  //h0.readAllKeys();
-  
   int n_images = cpfits.get_num_hdus();
   
   std::vector<long> dims;
@@ -604,10 +571,6 @@ void LensMap::read(std::string fits_input_file,double angDist){
   nx = dims[0];
   ny = dims[1];
   
-  // principal HDU is read
-  //h0.read(surface_density);
-  //int nhdu = h0.axes();
-
   if(n_images > 1){  // file contains other lensing quantities
     
     assert(n_images == 6);
@@ -626,22 +589,6 @@ void LensMap::read(std::string fits_input_file,double angDist){
 
     cpfits.change_hdu(6);
     cpfits.read(phi_bar,dims);
-
-    //alpha1_bar.resize(size);
-    //alpha2_bar.resize(size);
-    //gamma1_bar.resize(size);
-    //gamma2_bar.resize(size);
-    //phi_bar.resize(size);
-      
-    //CCfits::ExtHDU &h1=ff->extension(1);
-    //h1.read(alpha1_bar);
-    //CCfits::ExtHDU &h2=ff->extension(2);
-    //h2.read(alpha2_bar);
-    //CCfits::ExtHDU &h3=ff->extension(3);
-    //h3.read(gamma1_bar);
-    //CCfits::ExtHDU &h4=ff->extension(4);
-    //h4.read(gamma2_bar);
-    //std::cout << h0 << h1 << h2 << h3  << h4 << std::endl;
   }
   
   int err = 0;
@@ -780,29 +727,23 @@ void LensMap::read_sub(std::string fits_input_file
 }
 */
 
-//void LensMap::read_sub(CCfits::FITS *ff
 void LensMap::read_sub(CPFITS_READ &cpfits
                        ,std::vector<long> &first
                        ,std::vector<long> &last
                        ,double angDist
                        ){
 
-  //CCfits::PHDU &h0 = ff->pHDU();
- 
   int bitpix;
   std::vector<long> sizes;
   cpfits.imageInfo(bitpix,sizes);
   
   //long nx_orig = h0.axis(0);
   //long ny_orig = h0.axis(1);
-  
-   //h0.readAllKeys();
-  
+    
   // these are always present in each
   //float wlow,wup,res;
   float res;
   cpfits.readKey("CD1_1",res);
-  //h0.readKey ("CD1_1",res);  // resolution in
   
   res *= degreesTOradians * angDist;
   //double boxlMpc_orig = res * nx_orig;
@@ -811,16 +752,13 @@ void LensMap::read_sub(CPFITS_READ &cpfits
   assert(sizes.size() >= 2);
   std::vector<long> stride = {1,1};
   
+  surface_density.resize( (last[0]-first[0]+1) * (last[1]-first[1]+1) );
   // principal HDU is read
   //std::cout << surface_density.size() << std::endl;
   //h0.read(surface_density,first,last,stride);
   cpfits.read_subset(&(surface_density[0])
                      ,first.data(),last.data());
   
-  float tmp;
-  cpfits.read_subset(&tmp
-                     ,first.data(),last.data());
-
   //std::cout << surface_density.size() << std::endl;
   
   // set the full field lower left
@@ -872,18 +810,17 @@ void LensMap::write(std::string filename
   std::vector<long> naxex(2);
   naxex[0]=nx;
   naxex[1]=ny;
+  cpfits.write_image(surface_density,naxex);
   
   //PHDU *phout=&fout->pHDU();
-
   cpfits.writeKey("SIDEL1",boxlMpc,"x range in physical Mpc");
   cpfits.writeKey("SIDEL2",y_range(),"y range in physical Mpc");
   
-  cpfits.write_image(surface_density,naxex);
   cpfits.write_image(alpha1_bar,naxex);
   cpfits.write_image(alpha2_bar,naxex);
   cpfits.write_image(gamma1_bar,naxex);
   cpfits.write_image(gamma2_bar,naxex);
-  cpfits.write_image(phi_bar,naxex);
+  //cpfits.write_image(phi_bar,naxex);
 
   //ExtHDU *eh1=fout->addImage("alpah1", FLOAT_IMG, naxex);
   //eh1->write(1,nx*ny,alpha1_bar);

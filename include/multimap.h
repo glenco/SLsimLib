@@ -16,10 +16,6 @@
 
 #include <stdexcept>
 
-//#ifdef ENABLE_FITS
-//#include <CCfits/CCfits>
-//#endif
-
 /**
  * \brief The MOKA map structure, containing all quantities that define it
  *
@@ -81,10 +77,7 @@ struct LensMap{
 //                ,double Dist
 //                );
   
-  
-  //void read_header(std::unique_ptr<CCfits::FITS> ff,float h);
-  //void read_sub(CCfits::FITS *ff
-  void read_sub(CPFITS_READ &cpfits
+    void read_sub(CPFITS_READ &cpfits
                 ,std::vector<long> &first
                 ,std::vector<long> &last
                 ,double Dist
@@ -241,7 +234,6 @@ private:
   
   bool single_grid;
   COSMOLOGY &cosmo;
-  //CCfits::FITS *ff;
   CPFITS_READ cpfits;
   
   double max_pix = std::numeric_limits<double>::lowest();
@@ -250,7 +242,7 @@ private:
   double mass_unit;
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
-  double resolution;          // resolution of original image and short rnage image in Mpc
+  double resolution;   // resolution of original image and short rnage image in Mpc
   long border_width;   // width of short range maps padding
   std::string fitsfilename;
 

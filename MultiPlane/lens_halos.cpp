@@ -57,7 +57,7 @@ LensHalo::LensHalo(const LensHalo &h){
   mnorm = h.mnorm;
   Rmax = h.Rmax;
   
-  stars_index = stars_index;
+  stars_index = h.stars_index;
   stars_xp = h.stars_xp;
   
   stars_N = h.stars_N;
@@ -73,7 +73,7 @@ LensHalo::LensHalo(const LensHalo &h){
   star_fstars = h.star_fstars;
   
   star_Nregions = h.star_Nregions;
-  star_region = star_region;
+  star_region = h.star_region;
   
   beta = h.beta;
   
@@ -114,7 +114,7 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     mnorm = h.mnorm;
     Rmax = h.Rmax;
   
-    stars_index = stars_index;
+    stars_index = h.stars_index;
     stars_xp = h.stars_xp;
   
     stars_N = h.stars_N;
@@ -128,7 +128,7 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     star_fstars = h.star_fstars;
   
     star_Nregions = h.star_Nregions;
-    star_region = star_region;
+    star_region = h.star_region;
   
     beta = h.beta;
   
@@ -173,7 +173,7 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   mnorm = h.mnorm;
   Rmax = h.Rmax;
   
-  stars_index = stars_index;
+  stars_index = h.stars_index;
   stars_xp = h.stars_xp;
   
   stars_N = h.stars_N;
@@ -189,7 +189,7 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   star_fstars = h.star_fstars;
   
   star_Nregions = h.star_Nregions;
-  star_region = star_region;
+  star_region = h.star_region;
   
   beta = h.beta;
   

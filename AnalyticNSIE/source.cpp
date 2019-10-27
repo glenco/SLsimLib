@@ -7,10 +7,6 @@
 
 #include "slsimlib.h"
 #include <typeinfo>
-//#ifdef ENABLE_FITS
-//#include <CCfits/CCfits>
-//#include <CCfits>
-//#endif
 #include "cpfits.h"
 
 using namespace std;
@@ -558,28 +554,6 @@ SourceShapelets::SourceShapelets(
   
   CPFITS_READ cpfits(shap_file.c_str());
   
-  /*
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << shap_file << std::endl;
-    exit(1);
-  }
-
-  CCfits::PHDU& h0 = fp->pHDU();
-  
-  h0.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*PI;
-  h0.readKey("DIM", n1);
-  h0.readKey("ID", id);
-  n2 = n1;
-  h0.read(coeff);
-  /***/
-  
   cpfits.readKey("BETA", source_r);
   source_r *= 0.03/180./60./60.*PI;
   cpfits.readKey("DIM", n1);
@@ -614,38 +588,6 @@ SourceShapelets::SourceShapelets(
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
  
   CPFITS_READ cpfits(shap_file.c_str());
-
-  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
-  
-  /*
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << shap_file << std::endl;
-    exit(1);
-  }
-
-  CCfits::PHDU& h0 = fp->pHDU();
-  
-  h0.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*PI;
-  h0.readKey("SED_TYPE",sed_type);
-  
-  h0.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude
-  h0.readKey("MAG_V",mag_map[F606W]); // ACS F606W band magnitude
-  h0.readKey("MAG_I",mag_map[F775W]); // ACS F775W band magnitude
-  h0.readKey("MAG_Z",mag_map[F850LP]);// ACS F850LP band magnitude
-  h0.readKey("MAG_J",mag_map[F110W]); // NIC3 F110W band magnitude
-  h0.readKey("MAG_H",mag_map[F160W]);  // NIC3 F160W band magnitude
-  h0.readKey("MAG_u_KIDS",mag_map[KiDS_U]); // u band obtained from SED fitting
-  h0.readKey("MAG_g_KIDS",mag_map[KiDS_G]); // g band obtained from SED fitting
-  h0.readKey("MAG_r_KIDS",mag_map[KiDS_R]); // r band obtained from SED fitting
-  h0.readKey("MAG_i_KIDS",mag_map[KiDS_I]); // i band obtained from SED fitting
-*/
   
   cpfits.readKey("BETA", source_r);
   source_r *= 0.03/180./60./60.*PI;
