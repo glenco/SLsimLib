@@ -147,8 +147,8 @@ public:
   }
   
   ~CPFITS_READ(){
-    fits_close_file(fptr, &status);
     if (status) fits_report_error(stderr, status);
+    fits_close_file(fptr, &status);
   }
   
   CPFITS_READ(CPFITS_READ &&ff):CPFITS_BASE(std::move(ff)){};
@@ -282,9 +282,9 @@ public:
   }
   
   ~CPFITS_WRITE(){
-    fits_close_file(fptr, &status);
     if (status) fits_report_error(stderr, status);
-  }
+   fits_close_file(fptr, &status);
+   }
 
   /// add a new image or cube to the file
   int write_image(std::vector<double> &im,std::vector<long> &size){

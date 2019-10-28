@@ -5,6 +5,7 @@
 
 #include "slsimlib.h"
 #include "multimap.h"
+#include "Tree.h"
 
 using namespace std;
 
@@ -275,9 +276,8 @@ void LensHaloMultiMap::submap(
   
   LensMap map;
 
-  if( (first[0] > 0)*(first[1] > 0)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
+  if( (first[0] > 1)*(first[1] > 1)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
     //map.read_sub(fitsfilename,first,last,getDist());
-
     //map.read_sub(ff,first,last,getDist());
     map.read_sub(cpfits,first,last,getDist());
 
@@ -289,11 +289,35 @@ void LensHaloMultiMap::submap(
     // case where subfield overlaps edge
     std::vector<long> first_sub(2);
     std::vector<long> last_sub(2);
+
+    map.surface_density.resize(nx_big*ny_big);
+
+    /*//////////////////////////////////////////////////////////////
+    std::valarray<float> v;
+    {
+      first_sub[0] = MAX(first[0],1);
+      first_sub[1] = MAX(first[1],1);
+      last_sub[0] = MIN(last[0],Noriginal[0]);
+      last_sub[1] = MIN(last[1],Noriginal[1]);
+ 
+      long nx = (last_sub[0]-first_sub[0]+1);
+      long ny = (last_sub[1]-first_sub[1]+1);
+      
+      v.resize(nx*ny);
+      cpfits.read_subset(&v[0], first_sub.data(), last_sub.data() );
+      
+      for(long i = 0; i < nx ; ++i){
+        long ii = i - first[0] + 1;
+        for(long j = 0; j < ny ; ++j){
+          long jj = j - first[1] + 1;
+          map.surface_density[jj + ii*Noriginal[1]] = v[j+i*ny];
+        }
+      }
+    }
+////////////////////////////////////////////////////////////// */
     
     first_sub[0] = 1;
     last_sub[0] = Noriginal[0];
-    
-    map.surface_density.resize(nx_big*ny_big);
     
     LensMap partmap;
     
@@ -728,8 +752,8 @@ void LensMap::read_sub(std::string fits_input_file
 */
 
 void LensMap::read_sub(CPFITS_READ &cpfits
-                       ,std::vector<long> &first
-                       ,std::vector<long> &last
+                       ,std::vector<long> &first   // 1 to n
+                       ,std::vector<long> &last    // 1 to n
                        ,double angDist
                        ){
 
