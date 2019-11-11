@@ -112,11 +112,13 @@ public:
 
   LensHaloMultiMap(
                    std::string fitsfile            /// Original fits map of the density
+                   ,std::string dir_data
                    ,double redshift
                    ,double mass_unit               /// should include h factors
                    ,COSMOLOGY &c
                    ,bool subtract_ave = true       /// subtract the average of the full field
                    ,bool single_grid_mode = false
+                   ,std::string dir_scratch = ""   /// directory for saving long rang force if different than directory where fitsfile is
                    );
 
   ~LensHaloMultiMap(){

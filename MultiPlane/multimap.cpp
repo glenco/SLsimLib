@@ -11,14 +11,16 @@ using namespace std;
 
 LensHaloMultiMap::LensHaloMultiMap(
                  std::string fitsfile  /// Original fits map of the density
+                 ,std::string dir_data
                  ,double redshift
                  ,double mass_unit
                  ,COSMOLOGY &c
                  ,bool subtract_ave
                  ,bool single_grid_mode
+                 ,std::string dir_scratch
                  ):
 LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
-,mass_unit(mass_unit),fitsfilename(fitsfile)
+,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
 {
   
   zerosize = 1;
@@ -56,14 +58,20 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
   Noriginal[0] = submap.nx;
   Noriginal[1] = submap.ny;
 
-  bool long_range_file_exists = Utilities::IO::file_exists(fitsfile + "_lr.fits");
+  string lr_file = fitsfile + "_lr.fits";
+  if(dir_scratch == ""){
+    lr_file = dir_data + lr_file;
+  }else{
+    lr_file = dir_scratch + lr_file;
+  }
+  bool long_range_file_exists = Utilities::IO::file_exists(lr_file);
   
-  long_range_file_exists = false; // ?????
+  //long_range_file_exists = false; // ?????
   
   if( long_range_file_exists && !single_grid ){
   
     std::cout << " reading file " << fitsfile + "_lr.fits .. " << std::endl;
-    long_range_map.Myread(fitsfile + "_lr.fits");
+    long_range_map.Myread(lr_file);
 
   }else if(single_grid){
     std::vector<long> first = {1,1};
@@ -201,7 +209,8 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
     }
     
     long_range_map.PreProcessFFTWMap<WLR>(1.0,wlr);
-    long_range_map.write("!" + fitsfile + "_lr.fits");
+    long_range_map.write("!" + lr_file);
+ 
   }
 };
 
@@ -408,7 +417,7 @@ void LensHaloMultiMap::submap(
   short_range_map.center = (short_range_map.lowerleft + short_range_map.upperright)/2;
   short_range_map.boxlMpc = short_range_map.nx*resolution;
  
-  if(!single_grid) short_range_map.write("!" + fitsfilename + "_sr.fits");
+  //if(!single_grid) short_range_map.write("!" + fitsfilename + "_sr.fits");
 }
 
 
