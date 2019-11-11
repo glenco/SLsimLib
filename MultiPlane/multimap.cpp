@@ -19,7 +19,7 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,bool single_grid_mode
                  ,std::string dir_scratch
                  ):
-LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(fitsfile)
+LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fitsfile)
 ,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
 {
   
