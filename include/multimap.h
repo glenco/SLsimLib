@@ -35,7 +35,7 @@ struct LensMap{
   LensMap& operator=(LensMap &&m);
   
 	/// values for the map
-	std::valarray<float> surface_density;  // Msun / Mpc^2
+	std::valarray<double> surface_density;  // Msun / Mpc^2
 	std::valarray<float> alpha1_bar;
 	std::valarray<float> alpha2_bar;
 	std::valarray<float> gamma1_bar;
@@ -95,6 +95,8 @@ struct LensMap{
   
   template <class T>
   void PreProcessFFTWMap(float zerosize,T Wphi_of_k);
+  template <class T>
+  void PreProcessFFTWMap(T Wphi_of_k);
   //void PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k = identity);
 #endif
   
@@ -323,8 +325,8 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
           std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
-        //assert(ii+nx*jj < surface_density.size());
-        //assert(i+Nnx*j < extended_map.size());
+        assert(ii+nx*jj < surface_density.size());
+        assert(i+Nnx*j < extended_map.size());
         extended_map[i+Nnx*j] = surface_density[ii+nx*jj];
         //float tmp = extended_map[i+Nnx*j];
         //assert(!isnan(extended_map[i+Nnx*j]));
@@ -534,6 +536,223 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
     }
   }
 
+  // std:: cout << " remapping the map in the original size " << std:: endl;
+  delete[] fft;
+  delete[] fphi;
+  
+  phi_bar.resize(nx*ny);  // ??? this needs to be calculated in the future
+}
+
+/// no padding
+template <typename T>
+void LensMap::PreProcessFFTWMap(T Wphi_of_k){
+  
+  assert(surface_density.size() == nx*ny);
+  
+  // size of the new map in x and y directions, factor by which each size is increased
+  //int Nnx=int(zerosize*nx);
+  //int Nny=int(zerosize*ny);
+  //double boxlx = boxlMpc*zerosize;
+  //double boxly = ny*boxlMpc*zerosize/nx;
+  
+  //int imin = (Nnx-nx)/2;
+  //int imax = (Nnx+nx)/2;
+  //int jmin = (Nny-ny)/2;
+  //int jmax = (Nny+ny)/2;
+  
+  size_t Nkx = (nx/2+1);
+  
+  std::vector<double> kxs(Nkx);
+  for( int i=0; i<Nkx; i++ ){
+    kxs[i] = i*2.*M_PI/boxlMpc;
+  }
+  std::vector<double> kys(ny);
+  for( int j=0; j<ny; j++ ){
+    kys[j]=(j<ny/2)?double(j):double(j-ny);
+    kys[j] *= 2.*M_PI/boxlMpc;
+  }
+  
+  
+  //std::vector<double> extended_map( Nnx*Nny );
+  fftw_complex *fphi   = new fftw_complex[ny*Nkx];
+  
+  ****
+  //float *fp = &(surface_density[0]);
+  fftw_plan p = fftw_plan_dft_r2c_2d(ny,nx,&(surface_density[0])
+                                     ,fphi,FFTW_ESTIMATE);
+  
+  fftw_execute( p );
+  
+  // fourier space
+  // std:: cout << " allocating fourier space maps " << std:: endl;
+  
+  // build modes for each pixel in the fourier space
+  for( int i=0; i<Nkx; i++ ){
+    for( int j=0; j<ny; j++ ){
+      
+      double k2 = kxs[i]*kxs[i] + kys[j]*kys[j];
+      size_t k = i+(Nkx)*j;
+      
+      // null for k2 = 0 no divergence
+      if(k2 == 0){
+        fphi[k][0] = 0.;
+        fphi[k][1] = 0.;
+      }else{
+        
+        //assert(k < Nny*Nkx);
+        //assert(!isnan(fphi[k][0]));
+        
+        // fphi
+        //fphi[i+(Nkx)*j][0]= -2.*fNmap[i+(Nkx)*j][0]/k2;
+        //fphi[i+(Nkx)*j][1]= -2.*fNmap[i+(Nkx)*j][1]/k2;
+        
+        // fphi
+        fphi[k][0] *= -2./k2;
+        fphi[k][1] *= -2./k2;
+        
+        // apply window function
+        double w = Wphi_of_k(k2);
+        fphi[k][0] *= w;
+        fphi[k][1] *= w;
+      }
+    }
+  }
+  
+  fftw_complex *fft= new fftw_complex[ny*(Nkx)];
+  //double *realsp = new double[Nnx*Nny];
+  
+  //std::vector<fftw_complex> fft( Nny*(Nkx) );
+  std::vector<double> realsp(nx*ny);
+  
+  fftw_plan pp = fftw_plan_dft_c2r_2d(ny,nx,fft,realsp.data(),FFTW_MEASURE);
+  
+  // alpha1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nkx; i++ ){
+      for( int j=0; j<ny; j++ ){
+        
+        size_t k = i+(Nkx)*j;
+        fft[k][0] = -kxs[i]*fphi[k][1];
+        fft[k][1] =  kxs[i]*fphi[k][0];
+        //assert(!isnan(fft[k][0]));
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    alpha1_bar.resize(nx*ny);
+    
+    for( int j=0; j<ny; j++ ){
+      for( int i=0; i<nx; i++ ){
+        alpha1_bar[i+nx*j] = -1*float(realsp[i+nx*j]/nx/ny);
+      }
+    }
+  }
+  
+  // alpha2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int j=0; j<ny; j++ ){
+      for( int i=0; i<Nkx; i++ ){
+        size_t k = i+(Nkx)*j;
+        
+        // alpha
+        fft[k][0] = -kys[j]*fphi[k][1];
+        fft[k][1] =  kys[j]*fphi[k][0];
+        
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    alpha2_bar.resize(nx*ny);
+    
+    for( int j=0; j<ny; j++ ){
+      for( int i=0; i<nx; i++ ){
+        alpha2_bar[i+nx*j] = -1*float(realsp[i+nx*j]/nx/ny);
+      }
+    }
+  }
+  // gamma1
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nkx; i++ ){
+      for( int j=0; j<ny; j++ ){
+        
+        size_t k = i+(Nkx)*j;
+        // gamma
+        fft[k][0] = 0.5*(kxs[i]*kxs[i]-kys[j]*kys[j])*fphi[k][0];
+        fft[k][1] = 0.5*(kxs[i]*kxs[i]-kys[j]*kys[j])*fphi[k][1];
+      }
+    }
+    
+    fftw_execute( pp );
+
+    gamma1_bar.resize(nx*ny);
+    
+    for( int j=0; j<ny; j++ ){
+      for( int i=0; i<nx; i++ ){
+        gamma1_bar[i+nx*j] = float( realsp[i+nx*j]/nx/ny);
+      }
+    }
+  }
+  // gamma2
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nkx; i++ ){
+      for( int j=0; j<ny; j++ ){
+        
+        size_t k = i+(Nkx)*j;
+        
+        // gamma
+        fft[k][0] = kxs[i]*kys[j]*fphi[k][0];
+        fft[k][1] = kxs[i]*kys[j]*fphi[k][1];
+        
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    gamma2_bar.resize(nx*ny);
+    
+    for( int j=0; j<ny; j++ ){
+      for( int i=0; i<nx; i++ ){
+        gamma2_bar[i+nx*j] = float(-realsp[i+nx*j]/nx/ny);
+      }
+    }
+  }
+  
+  // kappa - this is done over because of the window in Fourier space
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nkx; i++ ){
+      for( int j=0; j<ny; j++ ){
+        
+        double k2 = -(kxs[i]*kxs[i] + kys[j]*kys[j])/2;
+        
+        size_t k = i+(Nkx)*j;
+        
+        // surface density
+        fft[k][0] = k2*fphi[k][0];
+        fft[k][1] = k2*fphi[k][1];
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    for( int j=0; j<ny; j++ ){
+      for( int i=0; i<nx; i++ ){
+        surface_density[i+nx*j] = float(realsp[i+nx*j]/nx/ny);
+      }
+    }
+  }
+  
   // std:: cout << " remapping the map in the original size " << std:: endl;
   delete[] fft;
   delete[] fphi;
