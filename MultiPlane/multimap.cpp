@@ -22,9 +22,7 @@ LensHaloMultiMap::LensHaloMultiMap(
 LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fitsfile)
 ,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
 {
-  
-  *** need to pad long range field
-  
+
   zerosize = 1;
   rscale = 1.0;
   
@@ -203,6 +201,7 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
       p /= area;
       ave += p;
     }
+    
     if(subtract_ave){
       ave /= long_range_map.surface_density.size();
       for(auto &p : long_range_map.surface_density){
@@ -210,7 +209,10 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
       }
     }
     
-    long_range_map.PreProcessFFTWMap<WLR>(1.0,wlr);
+    double padd = 1 + 2 * border_width * resolution / long_range_map.x_range();
+    padd = MAX(padd,2);
+    
+    long_range_map.PreProcessFFTWMap<WLR>(padd,wlr);
     long_range_map.write("!" + lr_file);
  
   }
@@ -381,7 +383,7 @@ void LensHaloMultiMap::submap(
     p /= area;
   }
   
-  ***
+  //***   ???
   //map.PreProcessFFTWMap(1.0,wsr);
   map.PreProcessFFTWMap(wsr);
   //map.PreProcessFFTWMap(1.0,unit);

@@ -576,7 +576,6 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k){
   //std::vector<double> extended_map( Nnx*Nny );
   fftw_complex *fphi   = new fftw_complex[ny*Nkx];
   
-  ****
   //float *fp = &(surface_density[0]);
   fftw_plan p = fftw_plan_dft_r2c_2d(ny,nx,&(surface_density[0])
                                      ,fphi,FFTW_ESTIMATE);
