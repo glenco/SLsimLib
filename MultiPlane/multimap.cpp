@@ -20,7 +20,7 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,std::string dir_scratch
                  ):
 LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fitsfile)
-,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
+,ave_ang_sd(0),mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
 {
 
   zerosize = 1;
@@ -70,8 +70,13 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
   
   if( long_range_file_exists && !single_grid ){
   
-    std::cout << " reading file " << fitsfile + "_lr.fits .. " << std::endl;
+    std::cout << " reading file " << lr_file << " .. " << std::endl;
     long_range_map.Myread(lr_file);
+    CPFITS_READ cpfits(lr_file);
+    if(cpfits.readKey("ave_ang_sd", ave_ang_sd)){
+      std::cerr << "need ave_ang_sd in " << lr_file << std::endl;
+      throw std::invalid_argument("need ave_ang_sd in ");
+    }
 
   }else if(single_grid){
     std::vector<long> first = {1,1};
@@ -89,20 +94,20 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
     //long_range_map.boxlMpc = submap.boxlMpc;
     
     double area = long_range_map.x_resolution()
-    *long_range_map.y_resolution()/mass_unit; //*** units  ???
+    *long_range_map.y_resolution()/mass_unit;
     
     //double area = 1.0/mass_unit;
     
     // convert to
-    double ave = 0;
+    ave_ang_sd = 0;
     for(auto &p : long_range_map.surface_density){
       p /= area;
-      ave += p;
+      ave_ang_sd += p;
     }
-    if(subtract_ave){
-      ave /= long_range_map.surface_density.size();
-      for(auto &p : long_range_map.surface_density){
-        p -= ave;
+    ave_ang_sd /= long_range_map.surface_density.size();
+   if(subtract_ave){
+       for(auto &p : long_range_map.surface_density){
+        p -= ave_ang_sd;
       }
     }
 
@@ -124,7 +129,7 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
     // get the ny that makes the pixels clossest to square
     double Ly = submap.y_range();
     long_range_map.ny = (int)( Ly/lr_res_x );
-    //long_range_map.ny = (int)( Ly/res_x );    // ????
+  
     if(Ly - long_range_map.ny*lr_res_x > lr_res_x/2) long_range_map.ny += 1;
 
     size_t nx = long_range_map.nx;
@@ -180,6 +185,7 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
         //size_t ii = i / desample;
         
         if( ii >= nx) break;
+        
         tmp = long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
 
         max_pix = MAX(max_pix,tmp);
@@ -188,24 +194,21 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
     }
     assert(jj == ny-1);
  
-    //  double area = pow(long_range_map.boxlMpc/long_range_map.nx,2)/mass_unit; //*** units  ???
-    //double area = long_range_map.x_resolution()
-    //*long_range_map.y_resolution()/mass_unit/resolution/resolution; //*** units  ???
     double area = long_range_map.x_resolution()
-    *long_range_map.y_resolution()/mass_unit; //*** units  ???
-    //double area = 1.0/mass_unit;
-
-    // convert to
-    double ave = 0;
+    *long_range_map.y_resolution()/mass_unit;
+    
+    // convert to surface density
+    ave_ang_sd = 0;
     for(auto &p : long_range_map.surface_density){
       p /= area;
-      ave += p;
+      ave_ang_sd += p;
     }
-    
+
+    ave_ang_sd /= long_range_map.surface_density.size();
+
     if(subtract_ave){
-      ave /= long_range_map.surface_density.size();
       for(auto &p : long_range_map.surface_density){
-        p -= ave;
+        p -= ave_ang_sd;
       }
     }
     
@@ -215,6 +218,8 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
     long_range_map.PreProcessFFTWMap<WLR>(padd,wlr);
     long_range_map.write("!" + lr_file);
  
+    CPFITS_WRITE tmp_cpfits(lr_file,true);
+    tmp_cpfits.writeKey("ave_ang_sd", ave_ang_sd,"average angulare density");
   }
 };
 
@@ -288,26 +293,35 @@ void LensHaloMultiMap::submap(
   last[1] = upper_right[1] + border_width + 1;
   
   LensMap map;
+  double area = resolution*resolution/mass_unit;
 
   if( (first[0] > 1)*(first[1] > 1)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
     //map.read_sub(fitsfilename,first,last,getDist());
     //map.read_sub(ff,first,last,getDist());
     map.read_sub(cpfits,first,last,getDist());
+    
+    // convert to relative surface angular surface density
+    for(auto &p : map.surface_density){
+      p /= area;
+      p -= ave_ang_sd;
+    }
+
 
   }else{
     
+    // case where subfield overlaps edge
+ 
     size_t nx_big = map.nx = last[0] - first[0] + 1;
     size_t ny_big = map.ny = last[1] - first[1] + 1;
     
-    // case where subfield overlaps edge
     std::vector<long> first_sub(2);
     std::vector<long> last_sub(2);
 
-    map.surface_density.resize(nx_big*ny_big,0);
+    map.surface_density.resize(nx_big * ny_big,0);
 
     //////////////////////////////////////////////////////////////
-    std::valarray<float> v;
     {
+      std::valarray<float> v;
       first_sub[0] = MAX(first[0],1);
       first_sub[1] = MAX(first[1],1);
       last_sub[0] = MIN(last[0],Noriginal[0]);
@@ -323,7 +337,7 @@ void LensHaloMultiMap::submap(
         long ii = i - first[0] + 1;
         for(long j = 0; j < ny ; ++j){
           long jj = j - first[1] + 1;
-          map.surface_density[jj + ii*ny_big] = v[j+i*ny];
+          map.surface_density[jj + ii*ny_big] = v[j + i*ny] / area - ave_ang_sd;;
         }
       }
     }
@@ -373,23 +387,16 @@ void LensHaloMultiMap::submap(
     // need to do overlap region
     map.boxlMpc = map.nx*resolution;
   }
-
-
-  double area = resolution*resolution/mass_unit; //*** units  ???
-  // convert to
-  //double area = 1.0/mass_unit; //*** units  ???
-  // convert to
-  for(auto &p : map.surface_density){
-    p /= area;
-  }
+ 
   
-  //***   ???
+  std::cout << "density (0,0) " << map.surface_density[0] << std::endl;
   //map.PreProcessFFTWMap(1.0,wsr);
   map.PreProcessFFTWMap(wsr);
   //map.PreProcessFFTWMap(1.0,unit);
-  
+  std::cout << "density (0,0) " << map.surface_density[0] << std::endl;
+
   map.write("test_field.fits");
-  // cut off bourders
+  // cut off bounders
   
   size_t nx = short_range_map.nx = upper_right[0] - lower_left[0] + 1;
   size_t ny = short_range_map.ny = upper_right[1] - lower_left[1] + 1;
@@ -464,7 +471,7 @@ bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) 
     + c * alpha2_bar[index+1+nx] + d * alpha2_bar[index+nx];
 
     gamma[0] = a * gamma1_bar[index] + b * gamma1_bar[index+1]
-    + c * alpha1_bar[index+1+nx] + d * alpha1_bar[index+nx];
+    + c * gamma1_bar[index+1+nx] + d * gamma1_bar[index+nx];
     gamma[1] = a * gamma2_bar[index] + b * gamma2_bar[index+1]
     + c * gamma2_bar[index+1+nx] + d * gamma2_bar[index+nx];
     gamma[2] = 0.0;

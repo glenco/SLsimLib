@@ -104,7 +104,7 @@ public:
     return fits_get_hdrspace(fptr,&keysexist,NULL,&status);
   }
   
-  /// read a key value for the current table / image
+  /// read a key value for the current table / image, returns 0 if the key word does not exit
   int readKey(std::string keyname,double &value){
     return fits_read_key(fptr,TDOUBLE,keyname.c_str(),
                          &value,NULL,&status);
