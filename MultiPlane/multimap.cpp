@@ -389,13 +389,13 @@ void LensHaloMultiMap::submap(
   }
  
   
-  std::cout << "density (0,0) " << map.surface_density[0] << std::endl;
+  //std::cout << "density (0,0) " << map.surface_density[0] << std::endl;
   //map.PreProcessFFTWMap(1.0,wsr);
   map.PreProcessFFTWMap(wsr);
   //map.PreProcessFFTWMap(1.0,unit);
-  std::cout << "density (0,0) " << map.surface_density[0] << std::endl;
+  //std::cout << "density (0,0) " << map.surface_density[0] << std::endl;
 
-  map.write("test_field.fits");
+  //map.write("test_field.fits");
   // cut off bounders
   
   size_t nx = short_range_map.nx = upper_right[0] - lower_left[0] + 1;
