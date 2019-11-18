@@ -66,7 +66,7 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
   }
   bool long_range_file_exists = Utilities::IO::file_exists(lr_file);
   
-  //long_range_file_exists = false; // ?????
+  ///long_range_file_exists = false;
   
   if( long_range_file_exists && !single_grid ){
   
@@ -310,7 +310,6 @@ void LensHaloMultiMap::submap(
   }else{
     
     // case where subfield overlaps edge
- 
     size_t nx_big = map.nx = last[0] - first[0] + 1;
     size_t ny_big = map.ny = last[1] - first[1] + 1;
     
@@ -326,18 +325,20 @@ void LensHaloMultiMap::submap(
       first_sub[1] = MAX(first[1],1);
       last_sub[0] = MIN(last[0],Noriginal[0]);
       last_sub[1] = MIN(last[1],Noriginal[1]);
+      
+      Point_2d offset(first_sub[0] - first[0] , first_sub[1] - first[1] );
  
-      long nx = (last_sub[0]-first_sub[0]+1);
-      long ny = (last_sub[1]-first_sub[1]+1);
+      long nx = last_sub[0] - first_sub[0] + 1;
+      long ny = last_sub[1] - first_sub[1] + 1;
       
       v.resize(nx*ny);
       cpfits.read_subset(&v[0], first_sub.data(), last_sub.data() );
       
-      for(long i = 0; i < nx ; ++i){
-        long ii = i - first[0] + 1;
-        for(long j = 0; j < ny ; ++j){
-          long jj = j - first[1] + 1;
-          map.surface_density[jj + ii*ny_big] = v[j + i*ny] / area - ave_ang_sd;;
+      long jj =  offset[1];
+      for(long j = 0; j < ny ; ++j,++jj){
+        long ii =  offset[0];
+        for(long i = 0; i < nx ; ++i,++ii){
+          map.surface_density[ii + jj*nx_big] = v[i + j*nx] / area - ave_ang_sd;;
         }
       }
     }
@@ -431,6 +432,7 @@ void LensHaloMultiMap::submap(
   short_range_map.center = (short_range_map.lowerleft + short_range_map.upperright)/2;
   short_range_map.boxlMpc = short_range_map.nx*resolution;
  
+  for(auto g : short_range_map.gamma2_bar) assert( !isnan(g) ); // ?????
   //if(!single_grid) short_range_map.write("!" + fitsfilename + "_sr.fits");
 }
 
@@ -461,6 +463,8 @@ bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) 
     double c = fx*fy;
     double d = (1-fx)*fy;
     
+    //for(auto g : gamma2_bar ) assert(!isnan(g));  // ?????
+    
     // bilinear interpolation
     sigma = a * surface_density[index] + b * surface_density[index+1]
     + c * surface_density[index+1+nx] + d * surface_density[index+nx];
@@ -476,6 +480,18 @@ bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) 
     + c * gamma2_bar[index+1+nx] + d * gamma2_bar[index+nx];
     gamma[2] = 0.0;
     
+    // ???
+    if(isnan(gamma[1])){
+      std::cerr << index+1+nx << " < " << gamma2_bar.size() << std::endl;
+      std::cerr << alpha[0] << " " << alpha[1] << std::endl;
+      std::cerr << gamma[0] << " " << gamma[1] << " " << gamma[2] << std::endl;
+      
+       std::cerr << gamma2_bar[index] << " " << gamma2_bar[index+1]
+      << " " << gamma2_bar[index+1+nx] << " " << gamma2_bar[index+nx] << std::endl;
+
+      
+      assert(!isnan(gamma[1]));
+    }
     return false;
   }
   
@@ -510,9 +526,13 @@ void LensHaloMultiMap::force_halo(double *alpha
     
     long_range_map.evaluate(xx,*kappa,gamma,alpha);
     
+    assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);  /// ????
+    
     float t_kappa,t_gamma[3];
     double t_alpha[2];
     short_range_map.evaluate(xx,t_kappa,t_gamma,t_alpha);
+
+    assert(t_gamma[0] == t_gamma[0] && t_gamma[1] == t_gamma[1]);  /// ????
 
     alpha[0] += t_alpha[0];
     alpha[1] += t_alpha[1];

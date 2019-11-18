@@ -176,8 +176,14 @@ PixelMap::PixelMap(
   
   int err = 0;
   
+  err += cpfits.readKey("RA", center[0]);
+  err += cpfits.readKey("DEC", center[1]);
+
+  if(err != 0){
+    err = 0;
     err += cpfits.readKey("CRVAL1", center[0]);
     err += cpfits.readKey("CRVAL2", center[1]);
+  }
 
   if(err != 0)
   {
@@ -876,8 +882,8 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", center[0], "radians");
-  cpfits.writeKey("DEC", center[1], "radians");
+  cpfits.writeKey("RA", center[0], "radians, center");
+  cpfits.writeKey("DEC", center[1], "radians, center");
   
 }
 
@@ -2147,8 +2153,9 @@ void PixelMap::copy_in(
 }
 void PixelMap::paste(const PixelMap& pmap){
   
-  if(resolution < pmap.resolution){
+  if(resolution < pmap.resolution * 0.9){  // ?????
     std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
+    std::cerr << resolution << " " << pmap.resolution << " dres/res " << (pmap.resolution-pmap.resolution)/pmap.resolution << std::endl;
     throw std::invalid_argument("low resolution");
   }
   

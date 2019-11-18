@@ -182,7 +182,8 @@ public:
   
   double getMax() const {return max_pix;}
   double getMin() const {return min_pix;}
-
+  double getResolutionMpc() const {return resolution;}
+  
   void operator =(LensHaloMultiMap &&m){
     LensHalo::operator=(std::move(m));
     cosmo = m.cosmo;
@@ -251,7 +252,7 @@ private:
   double mass_unit;
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
-  double resolution;   // resolution of original image and short rnage image in Mpc
+  double resolution;   // resolution of original image and short range image in Mpc
   long border_width;   // width of short range maps padding
   std::string fitsfilename;
 
@@ -336,10 +337,10 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
         assert(i+Nnx*j < extended_map.size());
         extended_map[i+Nnx*j] = surface_density[ii+nx*jj];
         //float tmp = extended_map[i+Nnx*j];
-        //assert(!isnan(extended_map[i+Nnx*j]));
-        //if(isinf(extended_map[i+Nnx*j])){
-        //  extended_map[i+Nnx*j] = 0;
-        //}
+        assert(!isnan(extended_map[i+Nnx*j]));
+        if(isinf(extended_map[i+Nnx*j])){
+          extended_map[i+Nnx*j] = 0;
+        }
     }else{
         extended_map[i+Nnx*j] = 0;
       }
@@ -414,7 +415,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
     
     fftw_execute( pp );
     
-    alpha1_bar.resize(nx*ny);
+    alpha1_bar.resize(nx*ny,0);
     
     for( int j=jmin; j<jmax; j++ ){
       int jj = j-jmin;
@@ -443,7 +444,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
     
     fftw_execute( pp );
     
-    alpha2_bar.resize(nx*ny);
+    alpha2_bar.resize(nx*ny,0);
     
     for( int j=jmin; j<jmax; j++ ){
       int jj = j-jmin;
@@ -470,7 +471,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
     
     fftw_execute( pp );
     
-    gamma1_bar.resize(nx*ny);
+    gamma1_bar.resize(nx*ny,0);
     
     for( int j=jmin; j<jmax; j++ ){
       int jj = j-jmin;
@@ -501,14 +502,15 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
     
     gamma2_bar.resize(nx*ny);
     
-    for( int j=jmin; j<jmax; j++ ){
-      int jj = j-jmin;
-      for( int i=imin; i<imax; i++ ){
-        int ii = i-imin;
+    for( int j=0; j<ny; j++ ){
+      int jj = j+jmin;
+      for( int i=0; i<nx; i++ ){
+        int ii = i+imin;
         
-        gamma2_bar[ii+nx*jj] = float(-realsp[i+Nnx*j]/NN);
+        gamma2_bar[i+nx*j] = float(-realsp[ii+Nnx*jj]/NN);
       }
     }
+    for(auto &a : gamma2_bar) assert(!isnan(a)); // ???
   }
 
   // kappa - this is done over because of the window in Fourier space
