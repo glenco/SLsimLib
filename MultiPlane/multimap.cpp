@@ -50,6 +50,8 @@ LensHalo(redshift,c),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fi
   wlr.rs2 = wsr.rs2 = rs2;
   
   resolution = submap.x_resolution();
+  angular_resolution = submap.angular_pixel_size;
+  
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width = ffactor * sqrt(rs2) / resolution + 1;
  
@@ -565,6 +567,7 @@ LensMap::LensMap(LensMap &&m){
   center = m.center;
   lowerleft = m.lowerleft;
   upperright = m.upperright;
+  angular_pixel_size = m.angular_pixel_size;
 }
 
 LensMap& LensMap::operator=(LensMap &&m){
@@ -583,6 +586,8 @@ LensMap& LensMap::operator=(LensMap &&m){
   center = m.center;
   lowerleft = m.lowerleft;
   upperright = m.upperright;
+  angular_pixel_size = m.angular_pixel_size;
+
   
   return *this;
 }
@@ -602,15 +607,14 @@ void LensMap::read_header(std::string fits_input_file
 
   double phys_res;
   
-  if(cpfits.readKey("CD1_1",phys_res)){
+  if(cpfits.readKey("CD1_1",angular_pixel_size)){
     std::cerr << "LensMap fits map must have header keywords:" << std::endl
-    << " CD1_1 - length on other side in Mpc/h" << std::endl;
-    //<< " WLOW - closest radial distance in cMpc/h" << std::endl
-    //<< " WUP - furthest radial distance in cMpc/h" << std::endl;
+    << " CD1_1 - angular resolution must exit" << std::endl;
     
     exit(1);
   }
-  phys_res *= degreesTOradians*angDist;
+  angular_pixel_size *= degreesTOradians;
+  phys_res = angular_pixel_size*angDist;
   boxlMpc = phys_res*nx;
 
   center *= 0;
@@ -662,9 +666,10 @@ void LensMap::read(std::string fits_input_file,double angDist){
   {
     /* these are always present in ea*/
     float res;
-    err += cpfits.readKey ("CD1_1",res);  // angular resolution degrees
+    err += cpfits.readKey ("CD1_1",angular_pixel_size);  // angular resolution degrees
   
-    res *= degreesTOradians*angDist;
+    angular_pixel_size *= degreesTOradians;
+    res = angular_pixel_size*angDist;
     boxlMpc = res * nx;
   }
   if(err != 0){

@@ -28,7 +28,7 @@
  */
 struct LensMap{
   
-  LensMap():nx(0),ny(0),boxlMpc(0){};
+  LensMap():nx(0),ny(0),boxlMpc(0),angular_pixel_size(0){};
   
   // move operators
   LensMap(LensMap &&m);
@@ -43,13 +43,16 @@ struct LensMap{
   std::valarray<float> phi_bar;
   int nx,ny;
   double boxlMpc;
+  double angular_pixel_size;  // in radians
 	Point_2d center;
-  Point_2d lowerleft;
-  Point_2d upperright;
+  Point_2d lowerleft;  /// boundery with centred grid
+  Point_2d upperright; ///
   
   double x_resolution(){return boxlMpc / nx ;}
   double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}
+  // # of pixels times resolution
   double x_range(){return boxlMpc;}
+  // # of pixels times resolution
   double y_range(){return (upperright[1]-lowerleft[1]);}
 
   bool evaluate(const double *x,float &sigma,float *gamma,double *alpha);
@@ -183,7 +186,8 @@ public:
   double getMax() const {return max_pix;}
   double getMin() const {return min_pix;}
   double getResolutionMpc() const {return resolution;}
-  
+  double getResolutionAngular() const {return angular_resolution;}
+
   void operator =(LensHaloMultiMap &&m){
     LensHalo::operator=(std::move(m));
     cosmo = m.cosmo;
@@ -198,6 +202,7 @@ public:
     Noriginal[0] = m.Noriginal[0];
     Noriginal[1] = m.Noriginal[1];
     resolution = m.resolution;
+    angular_resolution = m.angular_resolution;
     border_width = m.border_width;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
@@ -223,6 +228,7 @@ public:
     Noriginal[0] = m.Noriginal[0];
     Noriginal[1] = m.Noriginal[1];
     resolution = m.resolution;
+    angular_resolution = m.angular_resolution;
     border_width = m.border_width;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
@@ -253,6 +259,7 @@ private:
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
   double resolution;   // resolution of original image and short range image in Mpc
+  double angular_resolution;  // angular resolution of original image
   long border_width;   // width of short range maps padding
   std::string fitsfilename;
 

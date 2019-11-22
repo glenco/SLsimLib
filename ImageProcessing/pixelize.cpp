@@ -2153,7 +2153,7 @@ void PixelMap::copy_in(
 }
 void PixelMap::paste(const PixelMap& pmap){
   
-  if(resolution < pmap.resolution * 0.9){  // ?????
+  if(resolution < pmap.resolution){
     std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
     std::cerr << resolution << " " << pmap.resolution << " dres/res " << (pmap.resolution-pmap.resolution)/pmap.resolution << std::endl;
     throw std::invalid_argument("low resolution");
