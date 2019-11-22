@@ -1194,6 +1194,15 @@ namespace Utilities
                        ,std::vector<double> &Pl      /// output binned power spectrum
                        ,double zeropaddingfactor = 4  
   );
+  void powerspectrum2d(
+                       std::valarray<double> &aa      /// first realspace map to be
+                       ,int nx                       /// number of pixels in x direction
+                       ,int ny                       /// number of pixels in y direction
+                       ,double boxlx                 /// range of image in x direction
+                       ,double boxly                 /// range of image in y direction
+                       ,std::vector<double> &ll      /// output multiplot number of bins
+                       ,std::vector<double> &Pl      /// output binned power spectrum
+                       );
 #endif
   
   
@@ -1668,7 +1677,7 @@ namespace Utilities
    data.push_back(&v1);
    data.push_back(&v2);
    data.push_back(&v3);
-   printCSV(std::cout,header,data);
+   writeCSV(filename,header,data);
    </p>
    **/
   

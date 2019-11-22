@@ -235,10 +235,10 @@ public:
     
     if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
     
-    if(overwrite) Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    if(overwrite) Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
     else{
       std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
       for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
     }
   }
