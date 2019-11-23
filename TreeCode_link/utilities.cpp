@@ -492,6 +492,7 @@ unsigned long prevpower(unsigned long k){
     
     //double *ks=new double[Nny*(Nnx/2+1)];
     std::vector<double> ks(Nny*(Nnx/2+1));
+    double tmp = Nboxlx*Nboxly * pow(1.0/Nnx/Nny,2);
     
     // fb and fa are then used to compute the power spectrum
     // build modes
@@ -505,9 +506,9 @@ unsigned long prevpower(unsigned long k){
         // rescale respect to the box size
         ks[i+(Nnx/2+1)*j] = sqrt(kx*kx/Nboxlx/Nboxlx + ky*ky/Nboxly/Nboxly)*2.*M_PI;
         Nfcc[i+(Nnx/2+1)*j][0] =  (fNa[i+(Nnx/2+1)*j][0]*fNb[i+(Nnx/2+1)*j][0] +
-                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][1])*pow(1./2/M_PI/Nnx/Nny,2)*Nboxlx*Nboxly;
+                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][1]) * tmp;
         Nfcc[i+(Nnx/2+1)*j][1] = -(fNa[i+(Nnx/2+1)*j][0]*fNb[i+(Nnx/2+1)*j][1] -
-                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][0])*pow(1./2/M_PI/Nnx/Nny,2)*Nboxlx*Nboxly;
+                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][0]) * tmp;
       }
     }
     std::vector<size_t> ik(Nny*(Nnx/2+1));
@@ -570,23 +571,7 @@ unsigned long prevpower(unsigned long k){
     int nl = ll.size();
     Pl.resize(nl);
     
-    // size of the new map in x and y directions, factor by which each size is increased
-    //size_t Nnx=int(zerosize*nx);
-    //size_t Nny=int(zerosize*ny);
-    //double Nboxlx = boxlx*zerosize;
-    //double Nboxly = boxly*zerosize;
-    
-    
-    // estimate the fourier transform
-    // now we go in the Fourier Space
-    //double *dNa=new double[nx*ny];
-    //double *dNb=new double[nx*ny];
-    
     fftw_complex *fNa=new fftw_complex[ny*(nx/2+1)];
-    //fftw_complex *fNb=new fftw_complex[ny*(nx/2+1)];
-    //fftw_complex *Nfcc=new fftw_complex[ny*(nx/2+1)];
-    //size_t *ik=new size_t[];
-    //fftw_complex *output=new fftw_complex[ny*(nx/2+1)];
     
     fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa,FFTW_ESTIMATE);
     fftw_execute( p1 );
@@ -595,13 +580,16 @@ unsigned long prevpower(unsigned long k){
     //double *ks=new double[ny*(nx/2+1)];
     std::vector<double> ks(ny*(nx/2+1));
     
+    //double tmp = pow(1./2/M_PI/nx/ny,2)*boxlx*boxly;
+    double tmp = boxlx*boxly * pow(1.0/nx/ny,2);
+    
+    
     // fb and fa are then used to compute the power spectrum
     // build modes
     for( int i=0; i<nx/2+1; i++ ){
       // kx = i if i<n/2 else i-n
       // double kx=(i<nx/2)?double(i):double(i-nx);
       double kx=double(i);
-      double tmp = pow(1./2/M_PI/nx/ny,2)*boxlx*boxly;
       for( int j=0; j<ny; j++ ){
         size_t kk = i+(nx/2+1)*j;
 
@@ -611,7 +599,7 @@ unsigned long prevpower(unsigned long k){
         
         fNa[kk][0] = (fNa[kk][0]*fNa[kk][0] +
                       fNa[kk][1]*fNa[kk][1])*tmp;
-        fNa[kk][0] = 0;
+        fNa[kk][1] = 0;
       }
     }
     std::vector<size_t> ik(ny*(nx/2+1));
@@ -652,19 +640,14 @@ unsigned long prevpower(unsigned long k){
         ll[i]=ll[i]/double(nin);
       }
     }
-    //delete [] dNa;
-    //delete [] dNb;
-    //delete [] output;
     delete [] fNa;
-    //delete [] fNb;
-    //delete [] Nfcc;
     delete [] nk;
     delete [] nc;
   }
 
 #endif
   
-  std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
+std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
     
     std::valarray<double> map_out(map_in.size());
     long r,area;
