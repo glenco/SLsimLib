@@ -121,10 +121,11 @@ public:
                    ,double redshift
                    ,double mass_unit               /// should include h factors
                    ,COSMOLOGY &c
-                   ,bool subtract_ave = true       /// subtract the average of the full field
-                   ,bool single_grid_mode = false
+                   ,bool write_subfields = false   /// write subfields to be read if they already exist
                    ,std::string dir_scratch = ""   /// directory for saving long rang force if different than directory where fitsfile is
-                   );
+                   ,bool subtract_ave = true       /// subtract the average of the full field
+                   ,bool single_grid_mode = false  /// don't do the short & long range decomposition
+                    );
 
   ~LensHaloMultiMap(){
   };
@@ -211,6 +212,8 @@ public:
     wsr = m.wsr;
     wlr = m.wlr;
     ave_ang_sd = m.ave_ang_sd;
+    subfield_filename = m.subfield_filename;
+    write_shorts = m.write_shorts;
   }
   
   LensHaloMultiMap(LensHaloMultiMap &&m):
@@ -237,7 +240,8 @@ public:
     wsr = m.wsr;
     wlr = m.wlr;
     ave_ang_sd = m.ave_ang_sd;
-    
+    subfield_filename = m.subfield_filename;
+    write_shorts = m.write_shorts;
   }
 
 public:
@@ -246,6 +250,7 @@ public:
 
 private:
   
+  bool write_shorts;
   bool single_grid;
   COSMOLOGY &cosmo;
   CPFITS_READ cpfits;
@@ -262,7 +267,8 @@ private:
   double angular_resolution;  // angular resolution of original image
   long border_width;   // width of short range maps padding
   std::string fitsfilename;
-
+  std::string subfield_filename;
+  
   double rs2;
   
 	//const COSMOLOGY& cosmo;
