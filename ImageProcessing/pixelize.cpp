@@ -165,11 +165,11 @@ PixelMap::PixelMap(
         throw std::invalid_argument("bad file");
     }
 
-  CPFITS_READ cpfits(fitsfilename);
-
   std::vector<long> cpsize;
-  int bitpix;
-  cpfits.imageInfo(bitpix, cpsize);
+  
+  CPFITS_READ cpfits(fitsfilename);
+  //int bitpix;
+  cpfits.imageDimensions(cpsize);
   
   Nx = cpsize[0];
   Ny = cpsize[1];
@@ -179,13 +179,13 @@ PixelMap::PixelMap(
   err += cpfits.readKey("RA", center[0]);
   err += cpfits.readKey("DEC", center[1]);
 
-  if(err != 0){
+  if(err){
     err = 0;
     err += cpfits.readKey("CRVAL1", center[0]);
     err += cpfits.readKey("CRVAL2", center[1]);
   }
 
-  if(err != 0)
+  if(err)
   {
     center[0] = 0.0;
     center[1] = 0.0;
@@ -242,6 +242,7 @@ PixelMap::PixelMap(
   map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
   
   cpfits.read(map,cpsize);
+  //std::cout << "map size : " << map[0] << std::endl;
   //std::cout << "map size : " << map.size() << std::endl;
 }
 
@@ -412,6 +413,7 @@ PixelMap& PixelMap::operator+=(const PixelMap& rhs)
   // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
+ 
   for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
   return *this;
 }

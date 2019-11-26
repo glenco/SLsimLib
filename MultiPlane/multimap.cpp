@@ -582,8 +582,8 @@ void LensMap::read_header(std::string fits_input_file
   CPFITS_READ cpfits(fits_input_file);
   
   std::vector<long> size;
-  int bitpix;
-  cpfits.imageInfo(bitpix,size);
+  //int bitpix;
+  cpfits.imageDimensions(size);
   
   assert(size.size() ==2);
  
@@ -787,9 +787,9 @@ void LensMap::read_sub(CPFITS_READ &cpfits
                        ,double angDist
                        ){
 
-  int bitpix;
+  //int bitpix;
   std::vector<long> sizes;
-  cpfits.imageInfo(bitpix,sizes);
+  cpfits.imageDimensions(sizes);
   
   //long nx_orig = h0.axis(0);
   //long ny_orig = h0.axis(1);

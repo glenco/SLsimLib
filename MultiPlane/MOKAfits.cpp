@@ -65,8 +65,8 @@ void LensHaloMassMap::getDims(){
   
   CPFITS_READ cpfits(MOKA_input_file);
   std::vector<long> size;
-  int bitpix;
-  cpfits.imageInfo(bitpix,size);
+  //int bitpix;
+  cpfits.imageDimensions(size);
  
   map.nx = size[0];
   map.ny = size[1];
