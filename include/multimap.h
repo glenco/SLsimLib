@@ -36,11 +36,12 @@ struct LensMap{
   
 	/// values for the map
 	std::valarray<double> surface_density;  // Msun / Mpc^2
-	std::valarray<float> alpha1_bar;
-	std::valarray<float> alpha2_bar;
-	std::valarray<float> gamma1_bar;
-	std::valarray<float> gamma2_bar;
-  std::valarray<float> phi_bar;
+	std::valarray<float> alpha1_bar;  // Msun / Mpc
+	std::valarray<float> alpha2_bar;  // Msun / Mpc
+	std::valarray<float> gamma1_bar;  // Msun / Mpc^2
+	std::valarray<float> gamma2_bar;  // Msun / Mpc^2
+  std::valarray<float> phi_bar;     // Msun
+  
   int nx,ny;
   double boxlMpc;
   double angular_pixel_size;  // in radians
@@ -328,8 +329,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
     kys[j] *= tmp;
   }
 
-
-   std::vector<double> extended_map( NN );
+  std::vector<double> extended_map( NN );
   
   // assume locate in a rectangular map and build up the new one
   for( int j=0; j<Nny; j++ ){
@@ -414,7 +414,6 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
   
   // alpha1
   {
-    
     // build modes for each pixel in the fourier space
     for( int i=0; i<Nkx; i++ ){
       for( int j=0; j<Nny; j++ ){
@@ -442,7 +441,6 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
 
   // alpha2
   {
-    
     // build modes for each pixel in the fourier space
     for( int j=0; j<Nny; j++ ){
       for( int i=0; i<Nkx; i++ ){
@@ -470,7 +468,6 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
   }
   // gamma1
   {
-    
     // build modes for each pixel in the fourier space
     for( int i=0; i<Nkx; i++ ){
        for( int j=0; j<Nny; j++ ){
@@ -497,7 +494,6 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
   }
   // gamma2
   {
-    
     // build modes for each pixel in the fourier space
     for( int i=0; i<Nkx; i++ ){
        for( int j=0; j<Nny; j++ ){

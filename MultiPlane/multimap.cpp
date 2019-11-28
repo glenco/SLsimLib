@@ -649,18 +649,18 @@ void LensMap::read(std::string fits_input_file,double angDist){
   
   int err = 0;
   {
-    /* these are always present in ea*/
+    /* these are always present in each*/
     float res;
-    err += cpfits.readKey ("CD1_1",angular_pixel_size);  // angular resolution degrees
+    err = cpfits.readKey ("CD1_1",angular_pixel_size);  // angular resolution degrees
   
     angular_pixel_size *= degreesTOradians;
     res = angular_pixel_size*angDist;
     boxlMpc = res * nx;
   }
-  if(err != 0){
+  if(err){
     
     std::cerr << "LensMap fits map must have header keywords:" << std::endl
-    << " CD1_1 - length on other side in Mpc/h" << std::endl;
+    << " CD1_1 - angular resolution" << std::endl;
     //<< " REDSHIFT - redshift of lens" << std::endl
     //<< " WLOW - closest radial distance in cMpc/h" << std::endl
     //<< " WUP - furthest radial distance in cMpc/h" << std::endl;
@@ -681,7 +681,8 @@ void LensMap::read(std::string fits_input_file,double angDist){
 
 void LensMap::Myread(std::string fits_input_file){
   
-  std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
+  std:: cout << " reading lens density map file: "
+      << fits_input_file << std:: endl;
   CPFITS_READ cpfits(fits_input_file);
   
   assert(cpfits.get_num_hdus() == 5);

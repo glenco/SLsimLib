@@ -246,8 +246,8 @@ public:
   int read(std::valarray<double> &output,std::vector<long> &sizes){
     //std::cout << sizes.size() << std::endl;
     imageDimensions(sizes);
-    std::cout << sizes.size() << std::endl;
-    std::cout << sizes[0] << " " << sizes[1] << std::endl;
+    //std::cout << sizes.size() << std::endl;
+    //std::cout << sizes[0] << " " << sizes[1] << std::endl;
     long long nelements=1;
     for(long n : sizes) nelements *= n;
     std::vector<long> start(sizes.size(),1);
@@ -372,7 +372,7 @@ public:
                           im.size(),&im[0],&status);
     check_status(status);
   }
-  int write_image(std::valarray<float> &im,std::vector<long> &size){
+  void write_image(std::valarray<float> &im,std::vector<long> &size){
     size_t n=1;
     for(size_t i : size) n *= i;
     assert(im.size() == n);
