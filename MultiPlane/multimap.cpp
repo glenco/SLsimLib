@@ -843,23 +843,7 @@ void LensMap::read_sub(CPFITS_READ &cpfits
  */
 void LensMap::write(std::string filename
                     ){
-//#ifdef ENABLE_FITS
-  //long naxis=2;
-  //long naxes[2]={nx,ny};
-  
   CPFITS_WRITE cpfits(filename,false);
-  
-  /*
-  std::auto_ptr<FITS> fout(0);
-  try{
-    fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
-  }
-  catch(FITS::CantCreate){
-    std::cout << "Unable to open fits file " << filename << std::endl;
-    ERROR_MESSAGE();
-    exit(1);
-  }
-  */
   
   std::vector<long> naxex(2);
   naxex[0]=nx;
@@ -876,22 +860,48 @@ void LensMap::write(std::string filename
   cpfits.write_image(alpha2_bar,naxex);
   cpfits.write_image(gamma1_bar,naxex);
   cpfits.write_image(gamma2_bar,naxex);
-  //cpfits.write_image(phi_bar,naxex);
+}
 
-  //ExtHDU *eh1=fout->addImage("alpah1", FLOAT_IMG, naxex);
-  //eh1->write(1,nx*ny,alpha1_bar);
-  //ExtHDU *eh2=fout->addImage("alpha2", FLOAT_IMG, naxex);
-  //eh2->write(1,nx*ny,alpha2_bar);
+void LensMap::write(std::string filename
+                    ,LensingVariable quant){
 
-  //ExtHDU *eh3=fout->addImage("gamma1", FLOAT_IMG, naxex);
-  //eh3->write(1,nx*ny,gamma1_bar);
-  //ExtHDU *eh4=fout->addImage("gamma2", FLOAT_IMG, naxex);
-  //eh4->write(1,nx*ny,gamma2_bar);
+  if( boxlMpc != angular_pixel_size*nx){
+    ERROR_MESSAGE();
+    std::cerr << " This function is meant for and angular map and not a physical unit map " << std::endl;
+    throw std::invalid_argument("");
+  }
+
+  CPFITS_WRITE cpfits(filename,false);
   
-  //std::cout << *phout << std::endl;
-//#else
-//  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-//  exit(1);
-//#endif
+  std::vector<long> naxex(2);
+  naxex[0]=nx;
+  naxex[1]=ny;
+  
+  //PHDU *phout=&fout->pHDU();
+  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
+  cpfits.writeKey("SIDEL1",boxlMpc,"x range in radians");
+  cpfits.writeKey("SIDEL2",y_range(),"y range in radians");
+  cpfits.writeKey("CENTER_X",center[0],"center of field x");
+  cpfits.writeKey("CENTER_Y",center[1],"center of field y");
+  
+  switch (quant) {
+    case KAPPA:
+      cpfits.write_image(surface_density,naxex);
+      break;
+    case GAMMA1:
+      cpfits.write_image(gamma1_bar,naxex);
+      break;
+    case GAMMA2:
+      cpfits.write_image(gamma2_bar,naxex);
+      break;
+    case ALPHA1:
+      cpfits.write_image(alpha1_bar,naxex);
+      break;
+    case ALPHA2:
+      cpfits.write_image(alpha2_bar,naxex);
+      break;
+    default:
+      break;
+  }
 }
 

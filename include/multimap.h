@@ -87,6 +87,8 @@ struct LensMap{
                 );
 
   void write(std::string filename);
+  /// meant to output directly in angulare units and lensing quantities
+  void write(std::string filename,LensingVariable quant);
 
 #endif
 
