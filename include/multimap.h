@@ -41,7 +41,7 @@ struct LensMap{
 	std::valarray<float> gamma1_bar;
 	std::valarray<float> gamma2_bar;
   std::valarray<float> phi_bar;
-  int nx,ny;
+  size_t nx,ny;
   double boxlMpc;
   double angular_pixel_size;  // in radians
 	Point_2d center;
