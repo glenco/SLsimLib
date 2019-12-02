@@ -855,11 +855,21 @@ void LensMap::write(std::string filename
   cpfits.writeKey("SIDEL2",y_range(),"y range in physical Mpc");
   cpfits.writeKey("CENTER_X",center[0],"center of field x");
   cpfits.writeKey("CENTER_Y",center[1],"center of field y");
-  
+  cpfits.writeKey("QUANTITY","KAPPA","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-2","units of values");
+
   cpfits.write_image(alpha1_bar,naxex);
+  cpfits.writeKey("QUANTITY","ALPHA1","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-1","units of values");
   cpfits.write_image(alpha2_bar,naxex);
+  cpfits.writeKey("QUANTITY","ALPHA2","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-1","units of values");
   cpfits.write_image(gamma1_bar,naxex);
+  cpfits.writeKey("QUANTITY","GAMMA1","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-2","units of values");
   cpfits.write_image(gamma2_bar,naxex);
+  cpfits.writeKey("QUANTITY","GAMMA2","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-2","units of values");
 }
 
 void LensMap::write(std::string filename
@@ -877,13 +887,6 @@ void LensMap::write(std::string filename
   naxex[0]=nx;
   naxex[1]=ny;
   
-  //PHDU *phout=&fout->pHDU();
-  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
-  cpfits.writeKey("SIDEL1",boxlMpc,"x range in radians");
-  cpfits.writeKey("SIDEL2",y_range(),"y range in radians");
-  cpfits.writeKey("CENTER_X",center[0],"center of field x");
-  cpfits.writeKey("CENTER_Y",center[1],"center of field y");
-  
   switch (quant) {
     case KAPPA:
       cpfits.write_image(surface_density,naxex);
@@ -894,14 +897,29 @@ void LensMap::write(std::string filename
     case GAMMA2:
       cpfits.write_image(gamma2_bar,naxex);
       break;
+    case GAMMA:
+    {
+      std::valarray<float>  gamma =  sqrt( gamma1_bar*gamma1_bar + gamma2_bar*gamma2_bar );
+      cpfits.write_image(gamma,naxex);
+    }
+      break;
     case ALPHA1:
       cpfits.write_image(alpha1_bar,naxex);
-      break;
+      cpfits.writeKey("UNITS","radians","units of values");
+     break;
     case ALPHA2:
       cpfits.write_image(alpha2_bar,naxex);
+      cpfits.writeKey("UNITS","radians","units of values");
       break;
     default:
       break;
   }
+  
+  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
+  cpfits.writeKey("SIDEL1",boxlMpc,"x range in radians");
+  cpfits.writeKey("SIDEL2",y_range(),"y range in radians");
+  cpfits.writeKey("CENTER_X",center[0],"center of field x");
+  cpfits.writeKey("CENTER_Y",center[1],"center of field y");
+
 }
 
