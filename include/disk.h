@@ -61,9 +61,9 @@ public:
     inclination = my_inclination;
     zpa = my_PA;
     
-    Quaternion R = Quaternion::q_z_rotation(zpa)*Quaternion::q_x_rotation(inclination)*qrot_invers;
+    Quaternion<> R = Quaternion<>::q_z_rotation(zpa)*Quaternion<>::q_x_rotation(inclination)*qrot_invers;
     rotate_all(R);
-    qrot_invers = Quaternion::q_x_rotation(-inclination)*Quaternion::q_z_rotation(-zpa);
+    qrot_invers = Quaternion<>::q_x_rotation(-inclination)*Quaternion<>::q_z_rotation(-zpa);
     
     // reconstruct LensHaloParticles base class
     delete LensHaloParticles<ParticleType<T> >::qtree;
@@ -78,8 +78,8 @@ private:
   
   std::vector<ParticleType<T> > &particles;
   
-  void rotate_all(Quaternion &R){
-    Quaternion q(1,0,0,0);
+  void rotate_all(Quaternion<T> &R){
+    Quaternion<T> q(1,0,0,0);
     for(auto &p : particles){
       q[0] = 0; q[1] = p[0]; q[2] = p[1]; q[3] = p[2];
       q.RotInplace(R);
@@ -87,7 +87,7 @@ private:
     }
   }
   
-  Utilities::Geometry::Quaternion qrot_invers;  // rotation that brings the disk back to face on
+  Utilities::Geometry::Quaternion<T> qrot_invers;  // rotation that brings the disk back to face on
   double Rscale;
   double Rhight;
   double zpa;
@@ -159,7 +159,7 @@ inclination(my_inclination)
   LensHaloParticles<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
   
   // rotate particles to required inclination and position angle
-  Quaternion R = Quaternion::q_z_rotation(zpa)*Quaternion::q_x_rotation(inclination);
+  Quaternion<T> R = Quaternion<T>::q_z_rotation(zpa) * Quaternion<T>::q_x_rotation(inclination);
   rotate_all(R);
   qrot_invers = R.conj();
   
