@@ -181,7 +181,7 @@ public:
   ~CPFITS_READ(){
     int status = 0;
     fits_close_file(fptr, &status);
-    check_status(status,"Problem closing fits file!");
+    //check_status(status,"Problem closing fits file!");
   }
   
   CPFITS_READ(CPFITS_READ &&ff):CPFITS_BASE(std::move(ff)){};
