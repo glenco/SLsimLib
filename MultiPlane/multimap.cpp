@@ -259,7 +259,7 @@ void LensHaloMultiMap::submapPhys(Point_2d ll,Point_2d ur){
   
   ur = (ur - long_range_map.lowerleft)/resolution;
   
-  std::cout << "ur = " << ur << std::endl;
+  //std::cout << "ur = " << ur << std::endl;
   std::cout << "dim. original " << Noriginal[0]
   << " " << Noriginal[1] << std::endl;
   assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
@@ -316,67 +316,70 @@ void LensHaloMultiMap::submap(
     
   }else{
   
-  std::vector<long> first(2);
-  std::vector<long> last(2);
+    std::vector<long> first(2);
+    std::vector<long> last(2);
   
-  first[0] = lower_left[0] - border_width + 1;
-  first[1] = lower_left[1] - border_width + 1;
+    first[0] = lower_left[0] - border_width + 1;
+    first[1] = lower_left[1] - border_width + 1;
 
-  last[0] = upper_right[0] + border_width + 1;
-  last[1] = upper_right[1] + border_width + 1;
+    last[0] = upper_right[0] + border_width + 1;
+    last[1] = upper_right[1] + border_width + 1;
   
-  double area = resolution*resolution/mass_unit;
-  LensMap map;
+    double area = resolution*resolution/mass_unit;
+    LensMap map;
 
-  
-  if( (first[0] > 1)*(first[1] > 1)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
-    //map.read_sub(fitsfilename,first,last,getDist());
-    //map.read_sub(ff,first,last,getDist());
-    map.read_sub(cpfits,first,last,getDist());
-    
-    // convert to relative surface angular surface density
-    for(auto &p : map.surface_density){
-      p /= area;
-      p -= ave_ang_sd;
-    }
-
-
-  }else{
-    
-    // case where subfield overlaps edge
-    size_t nx_big = map.nx = last[0] - first[0] + 1;
-    size_t ny_big = map.ny = last[1] - first[1] + 1;
-    
-    std::vector<long> first_sub(2);
-    std::vector<long> last_sub(2);
-
-    map.surface_density.resize(nx_big * ny_big,0);
-    
-    std::valarray<float> v;
-    first_sub[0] = MAX(first[0],1);
-    first_sub[1] = MAX(first[1],1);
-    last_sub[0] = MIN(last[0],Noriginal[0]);
-    last_sub[1] = MIN(last[1],Noriginal[1]);
-      
-    Point_2d offset(first_sub[0] - first[0] , first_sub[1] - first[1] );
+    if( (first[0] > 1)*(first[1] > 1)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
  
-    long nx = last_sub[0] - first_sub[0] + 1;
-    long ny = last_sub[1] - first_sub[1] + 1;
+      map.nx = last[0] - first[0] + 1;
+      map.ny = last[1] - first[1] + 1;
+
+      map.surface_density.resize( map.nx * map.ny );
+      cpfits.read_subset(&map.surface_density[0],first.data(),last.data() );
       
-    v.resize(nx*ny);
-    cpfits.read_subset(&v[0], first_sub.data(), last_sub.data() );
-      
-    long jj =  offset[1];
-    for(long j = 0; j < ny ; ++j,++jj){
-      long ii =  offset[0];
-      for(long i = 0; i < nx ; ++i,++ii){
-        map.surface_density[ii + jj*nx_big] = v[i + j*nx] / area - ave_ang_sd;;
+      // convert to relative surface angular surface density
+      for(auto &p : map.surface_density){
+        p /= area;
+        p -= ave_ang_sd;
       }
-    }
+      
+      map.boxlMpc = map.nx*resolution;
+
+    }else{
     
-    // need to do overlap region
-    map.boxlMpc = map.nx*resolution;
-  }
+      // case where subfield overlaps edge
+      size_t nx_big = map.nx = last[0] - first[0] + 1;
+      size_t ny_big = map.ny = last[1] - first[1] + 1;
+    
+      std::vector<long> first_sub(2);
+      std::vector<long> last_sub(2);
+
+      map.surface_density.resize(nx_big * ny_big,0);
+    
+      std::valarray<float> v;
+      first_sub[0] = MAX(first[0],1);
+      first_sub[1] = MAX(first[1],1);
+      last_sub[0] = MIN(last[0],Noriginal[0]);
+      last_sub[1] = MIN(last[1],Noriginal[1]);
+      
+      Point_2d offset(first_sub[0] - first[0] , first_sub[1] - first[1] );
+ 
+      long nx = last_sub[0] - first_sub[0] + 1;
+      long ny = last_sub[1] - first_sub[1] + 1;
+      
+      v.resize(nx*ny);
+      cpfits.read_subset(&v[0], first_sub.data(), last_sub.data() );
+      
+      long jj =  offset[1];
+      for(long j = 0; j < ny ; ++j,++jj){
+        long ii =  offset[0];
+        for(long i = 0; i < nx ; ++i,++ii){
+          map.surface_density[ii + jj*nx_big] = v[i + j*nx] / area - ave_ang_sd;;
+        }
+      }
+    
+      // need to do overlap region
+      map.boxlMpc = map.nx*resolution;
+    }
  
   //map.PreProcessFFTWMap(1.0,wsr);
   map.PreProcessFFTWMap(wsr);
@@ -788,7 +791,7 @@ void LensMap::read_sub(CPFITS_READ &cpfits
                        ){
 
   //int bitpix;
-  std::vector<long> sizes;
+  std::vector<long> sizes(2);
   cpfits.imageDimensions(sizes);
   
   //long nx_orig = h0.axis(0);
