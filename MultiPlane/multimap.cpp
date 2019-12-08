@@ -260,8 +260,8 @@ void LensHaloMultiMap::submapPhys(Point_2d ll,Point_2d ur){
   ur = (ur - long_range_map.lowerleft)/resolution;
   
   //std::cout << "ur = " << ur << std::endl;
-  std::cout << "dim. original " << Noriginal[0]
-  << " " << Noriginal[1] << std::endl;
+  //std::cout << "dim. original " << Noriginal[0]
+  //<< " " << Noriginal[1] << std::endl;
   assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
   assert(ur[1] < long_range_map.y_range()/resolution + 0.1);
   
