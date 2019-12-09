@@ -70,7 +70,7 @@ struct Grid{
                  ,std::string filename    /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                  );
   
-  void writePixeFits(size_t Nx           /// number of pixels in image in x dimension
+  void writePixelFits(size_t Nx           /// number of pixels in image in x dimension
                     ,LensingVariable lensvar  /// which quantity is to be displayed
                     ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                     );
