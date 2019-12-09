@@ -536,7 +536,7 @@ namespace LightCones{
   
   struct DkappaDz{
     DkappaDz(const COSMOLOGY &cos,double zsource):cosmo(cos),zs(zsource){
-      rho = cosmo.getOmega_matter()*cosmo.rho_crit(0);
+      rho = cosmo.getOmega_matter()*cosmo.rho_crit_comoving(0);
     };
     
     double operator()(double z){

@@ -142,7 +142,7 @@ Lens::Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verb
     }
     else {
       if(field_buffer == 0.0){
-        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
+        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit_comoving(0),1.0/3.);
         std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
       }
       // Compute the distribution variables :
@@ -214,7 +214,7 @@ Lens::Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmoset, bool v
     }
     else {
       if(field_buffer == 0.0){
-        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit(0),1.0/3.);
+        field_buffer = pow(3.0e14/800/pi/cosmo.rho_crit_comoving(0),1.0/3.);
         std::cout << "    Resetting field buffer to " << field_buffer << " Mpc." << std::endl;
       }
       // Compute the distribution variables :
@@ -982,7 +982,7 @@ void Lens::insertSubstructures(PosType Rregion,           // in radians
   PosType Rsize;
   PosType AveMassTh;
   
-  PosType rho = density_contrast*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  PosType rho = density_contrast*cosmo.rho_crit_comoving(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   // rho in 1 * (M_sun/Mpc^3) * 1 * (1+z)^3 = M_sun / PhysMpc^3,
   // where Mpc \equiv comoving Mpc.
   
@@ -1189,7 +1189,7 @@ void Lens::resetSubstructure(bool verbose){
   
   PosType Rsize;
 
-  PosType rho = substructure.rho_tidal*cosmo.rho_crit(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
+  PosType rho = substructure.rho_tidal*cosmo.rho_crit_comoving(0)*cosmo.getOmega_matter()*(1+redshift)*(1+redshift)*(1+redshift);
   
   Utilities::delete_container(substructure.halos);
   
