@@ -207,13 +207,13 @@ PixelMap::PixelMap(
       {
         double cd12, cd21, cd22;
         err += cpfits.readKey("CD1_1", my_res);
-        err += cpfits.readKey("CD1_2", cd12);
-        err += cpfits.readKey("CD2_1", cd21);
-        err += cpfits.readKey("CD2_2", cd22);
-        if(err ==0 && std::abs(my_res) - std::abs(cd22) > 1e-6)
-          throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-        if(cd12 || cd21)
-          throw std::runtime_error("pixels not aligned with coordinates in FITS file " + fitsfilename);
+        //err += cpfits.readKey("CD1_2", cd12);
+        //err += cpfits.readKey("CD2_1", cd21);
+        //err += cpfits.readKey("CD2_2", cd22);
+        //if(err==0 && std::abs(my_res) - std::abs(cd22) > 1e-6)
+        //  throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+        //if(cd12 || cd21)
+        //  throw std::runtime_error("pixels not aligned with coordinates in FITS file " + fitsfilename);
       }
       if(err != 0){
         double ps;

@@ -259,7 +259,7 @@ void LensHaloMultiMap::submapPhys(Point_2d ll,Point_2d ur){
   
   ur = (ur - long_range_map.lowerleft)/resolution;
   
-  std::cout << "ur = " << ur << std::endl;
+  //std::cout << "ur = " << ur << std::endl;
   std::cout << "dim. original " << Noriginal[0]
   << " " << Noriginal[1] << std::endl;
   assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
@@ -316,67 +316,70 @@ void LensHaloMultiMap::submap(
     
   }else{
   
-  std::vector<long> first(2);
-  std::vector<long> last(2);
+    std::vector<long> first(2);
+    std::vector<long> last(2);
   
-  first[0] = lower_left[0] - border_width + 1;
-  first[1] = lower_left[1] - border_width + 1;
+    first[0] = lower_left[0] - border_width + 1;
+    first[1] = lower_left[1] - border_width + 1;
 
-  last[0] = upper_right[0] + border_width + 1;
-  last[1] = upper_right[1] + border_width + 1;
+    last[0] = upper_right[0] + border_width + 1;
+    last[1] = upper_right[1] + border_width + 1;
   
-  double area = resolution*resolution/mass_unit;
-  LensMap map;
+    double area = resolution*resolution/mass_unit;
+    LensMap map;
 
-  
-  if( (first[0] > 1)*(first[1] > 1)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
-    //map.read_sub(fitsfilename,first,last,getDist());
-    //map.read_sub(ff,first,last,getDist());
-    map.read_sub(cpfits,first,last,getDist());
-    
-    // convert to relative surface angular surface density
-    for(auto &p : map.surface_density){
-      p /= area;
-      p -= ave_ang_sd;
-    }
-
-
-  }else{
-    
-    // case where subfield overlaps edge
-    size_t nx_big = map.nx = last[0] - first[0] + 1;
-    size_t ny_big = map.ny = last[1] - first[1] + 1;
-    
-    std::vector<long> first_sub(2);
-    std::vector<long> last_sub(2);
-
-    map.surface_density.resize(nx_big * ny_big,0);
-    
-    std::valarray<float> v;
-    first_sub[0] = MAX(first[0],1);
-    first_sub[1] = MAX(first[1],1);
-    last_sub[0] = MIN(last[0],Noriginal[0]);
-    last_sub[1] = MIN(last[1],Noriginal[1]);
-      
-    Point_2d offset(first_sub[0] - first[0] , first_sub[1] - first[1] );
+    if( (first[0] > 1)*(first[1] > 1)*(last[0] <= Noriginal[0])*(last[1] <= Noriginal[1]) ){
  
-    long nx = last_sub[0] - first_sub[0] + 1;
-    long ny = last_sub[1] - first_sub[1] + 1;
+      map.nx = last[0] - first[0] + 1;
+      map.ny = last[1] - first[1] + 1;
+
+      map.surface_density.resize( map.nx * map.ny );
+      cpfits.read_subset(&map.surface_density[0],first.data(),last.data() );
       
-    v.resize(nx*ny);
-    cpfits.read_subset(&v[0], first_sub.data(), last_sub.data() );
-      
-    long jj =  offset[1];
-    for(long j = 0; j < ny ; ++j,++jj){
-      long ii =  offset[0];
-      for(long i = 0; i < nx ; ++i,++ii){
-        map.surface_density[ii + jj*nx_big] = v[i + j*nx] / area - ave_ang_sd;;
+      // convert to relative surface angular surface density
+      for(auto &p : map.surface_density){
+        p /= area;
+        p -= ave_ang_sd;
       }
-    }
+      
+      map.boxlMpc = map.nx*resolution;
+
+    }else{
     
-    // need to do overlap region
-    map.boxlMpc = map.nx*resolution;
-  }
+      // case where subfield overlaps edge
+      size_t nx_big = map.nx = last[0] - first[0] + 1;
+      size_t ny_big = map.ny = last[1] - first[1] + 1;
+    
+      std::vector<long> first_sub(2);
+      std::vector<long> last_sub(2);
+
+      map.surface_density.resize(nx_big * ny_big,0);
+    
+      std::valarray<float> v;
+      first_sub[0] = MAX(first[0],1);
+      first_sub[1] = MAX(first[1],1);
+      last_sub[0] = MIN(last[0],Noriginal[0]);
+      last_sub[1] = MIN(last[1],Noriginal[1]);
+      
+      Point_2d offset(first_sub[0] - first[0] , first_sub[1] - first[1] );
+ 
+      long nx = last_sub[0] - first_sub[0] + 1;
+      long ny = last_sub[1] - first_sub[1] + 1;
+      
+      v.resize(nx*ny);
+      cpfits.read_subset(&v[0], first_sub.data(), last_sub.data() );
+      
+      long jj =  offset[1];
+      for(long j = 0; j < ny ; ++j,++jj){
+        long ii =  offset[0];
+        for(long i = 0; i < nx ; ++i,++ii){
+          map.surface_density[ii + jj*nx_big] = v[i + j*nx] / area - ave_ang_sd;;
+        }
+      }
+    
+      // need to do overlap region
+      map.boxlMpc = map.nx*resolution;
+    }
  
   //map.PreProcessFFTWMap(1.0,wsr);
   map.PreProcessFFTWMap(wsr);
@@ -789,7 +792,7 @@ void LensMap::read_sub(CPFITS_READ &cpfits
                        ){
 
   //int bitpix;
-  std::vector<long> sizes;
+  std::vector<long> sizes(2);
   cpfits.imageDimensions(sizes);
   
   //long nx_orig = h0.axis(0);
@@ -844,23 +847,7 @@ void LensMap::read_sub(CPFITS_READ &cpfits
  */
 void LensMap::write(std::string filename
                     ){
-//#ifdef ENABLE_FITS
-  //long naxis=2;
-  //long naxes[2]={nx,ny};
-  
   CPFITS_WRITE cpfits(filename,false);
-  
-  /*
-  std::auto_ptr<FITS> fout(0);
-  try{
-    fout.reset(new FITS(filename,FLOAT_IMG,naxis,naxes));
-  }
-  catch(FITS::CantCreate){
-    std::cout << "Unable to open fits file " << filename << std::endl;
-    ERROR_MESSAGE();
-    exit(1);
-  }
-  */
   
   std::vector<long> naxex(2);
   naxex[0]=nx;
@@ -872,27 +859,72 @@ void LensMap::write(std::string filename
   cpfits.writeKey("SIDEL2",y_range(),"y range in physical Mpc");
   cpfits.writeKey("CENTER_X",center[0],"center of field x");
   cpfits.writeKey("CENTER_Y",center[1],"center of field y");
-  
+  cpfits.writeKey("QUANTITY","KAPPA","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-2","units of values");
+
   cpfits.write_image(alpha1_bar,naxex);
+  cpfits.writeKey("QUANTITY","ALPHA1","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-1","units of values");
   cpfits.write_image(alpha2_bar,naxex);
+  cpfits.writeKey("QUANTITY","ALPHA2","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-1","units of values");
   cpfits.write_image(gamma1_bar,naxex);
+  cpfits.writeKey("QUANTITY","GAMMA1","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-2","units of values");
   cpfits.write_image(gamma2_bar,naxex);
-  //cpfits.write_image(phi_bar,naxex);
+  cpfits.writeKey("QUANTITY","GAMMA2","lensing quantity");
+  cpfits.writeKey("UNITS"," Mpc^-2","units of values");
+}
 
-  //ExtHDU *eh1=fout->addImage("alpah1", FLOAT_IMG, naxex);
-  //eh1->write(1,nx*ny,alpha1_bar);
-  //ExtHDU *eh2=fout->addImage("alpha2", FLOAT_IMG, naxex);
-  //eh2->write(1,nx*ny,alpha2_bar);
+void LensMap::write(std::string filename
+                    ,LensingVariable quant){
 
-  //ExtHDU *eh3=fout->addImage("gamma1", FLOAT_IMG, naxex);
-  //eh3->write(1,nx*ny,gamma1_bar);
-  //ExtHDU *eh4=fout->addImage("gamma2", FLOAT_IMG, naxex);
-  //eh4->write(1,nx*ny,gamma2_bar);
+  if( boxlMpc != angular_pixel_size*nx){
+    ERROR_MESSAGE();
+    std::cerr << " This function is meant for and angular map and not a physical unit map " << std::endl;
+    throw std::invalid_argument("");
+  }
+
+  CPFITS_WRITE cpfits(filename,false);
   
-  //std::cout << *phout << std::endl;
-//#else
-//  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-//  exit(1);
-//#endif
+  std::vector<long> naxex(2);
+  naxex[0]=nx;
+  naxex[1]=ny;
+  
+  switch (quant) {
+    case KAPPA:
+      cpfits.write_image(surface_density,naxex);
+      break;
+    case GAMMA1:
+      cpfits.write_image(gamma1_bar,naxex);
+      break;
+    case GAMMA2:
+      cpfits.write_image(gamma2_bar,naxex);
+      break;
+    case GAMMA:
+    {
+      std::valarray<float>  gamma =  sqrt( gamma1_bar*gamma1_bar + gamma2_bar*gamma2_bar );
+      cpfits.write_image(gamma,naxex);
+    }
+      break;
+    case ALPHA1:
+      cpfits.write_image(alpha1_bar,naxex);
+      cpfits.writeKey("UNITS","radians","units of values");
+     break;
+    case ALPHA2:
+      cpfits.write_image(alpha2_bar,naxex);
+      cpfits.writeKey("UNITS","radians","units of values");
+      break;
+    default:
+      break;
+  }
+  
+  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
+  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
+  cpfits.writeKey("SIDEL1",boxlMpc,"x range in radians");
+  cpfits.writeKey("SIDEL2",y_range(),"y range in radians");
+  cpfits.writeKey("CENTER_X",center[0],"center of field x");
+  cpfits.writeKey("CENTER_Y",center[1],"center of field y");
+
 }
 

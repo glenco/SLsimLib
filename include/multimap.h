@@ -36,13 +36,14 @@ struct LensMap{
   
 	/// values for the map
 	std::valarray<double> surface_density;  // Msun / Mpc^2
+
 	std::valarray<float> alpha1_bar;  // Msun / Mpc
 	std::valarray<float> alpha2_bar;  // Msun / Mpc
 	std::valarray<float> gamma1_bar;  // Msun / Mpc^2
 	std::valarray<float> gamma2_bar;  // Msun / Mpc^2
-  std::valarray<float> phi_bar;     // Msun
-  
+  std::valarray<float> phi_bar;     // Msun  
   int nx,ny;
+
   double boxlMpc;
   double angular_pixel_size;  // in radians
 	Point_2d center;
@@ -88,6 +89,8 @@ struct LensMap{
                 );
 
   void write(std::string filename);
+  /// meant to output directly in angulare units and lensing quantities
+  void write(std::string filename,LensingVariable quant);
 
 #endif
 
@@ -98,9 +101,9 @@ struct LensMap{
   //static double identity(double x){return 1;}
   
   template <class T>
-  void PreProcessFFTWMap(float zerosize,T Wphi_of_k);
+  void PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha = true);
   template <class T>
-  void PreProcessFFTWMap(T Wphi_of_k);
+  void PreProcessFFTWMap(T Wphi_of_k,bool do_alpha = true);
   //void PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k = identity);
 #endif
   
@@ -300,7 +303,7 @@ private:
 
 //void LensMap::PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k){
 template <typename T>
-void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
+void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
   
   assert(surface_density.size() == nx*ny);
 
@@ -412,6 +415,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
 
    fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp.data(),FFTW_MEASURE);
   
+  if(do_alpha){
   // alpha1
   {
     // build modes for each pixel in the fourier space
@@ -465,6 +469,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
         alpha2_bar[ii+nx*jj] = -1*float(realsp[i+Nnx*j]/NN);
       }
     }
+  }
   }
   // gamma1
   {
@@ -557,12 +562,12 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k){
   delete[] fft;
   delete[] fphi;
   
-  phi_bar.resize(nx*ny,0);  // ??? this needs to be calculated in the future
+  //phi_bar.resize(nx*ny,0);  // ??? this needs to be calculated in the future
 }
 
 /// no padding
 template <typename T>
-void LensMap::PreProcessFFTWMap(T Wphi_of_k){
+void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
   
   assert(surface_density.size() == nx*ny);
   
@@ -642,6 +647,7 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k){
   
   fftw_plan pp = fftw_plan_dft_c2r_2d(ny,nx,fft,realsp.data(),FFTW_MEASURE);
   
+  if(do_alpha){
   // alpha1
   {
     
@@ -681,6 +687,7 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k){
     
     alpha2_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) alpha2_bar[i] = -1*float(realsp[i]/NN);
+  }
   }
   // gamma1
   {
@@ -750,7 +757,7 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k){
   delete[] fft;
   delete[] fphi;
   
-  phi_bar.resize(NN,0);  // ??? this needs to be calculated in the future
+  //phi_bar.resize(NN,0);  // ??? this needs to be calculated in the future
 }
 
 #endif

@@ -181,7 +181,7 @@ public:
   ~CPFITS_READ(){
     int status = 0;
     fits_close_file(fptr, &status);
-    check_status(status,"Problem closing fits file!");
+    //check_status(status,"Problem closing fits file!");
   }
   
   CPFITS_READ(CPFITS_READ &&ff):CPFITS_BASE(std::move(ff)){};
@@ -329,7 +329,7 @@ public:
     int status = 0;
     fits_close_file(fptr, &status);
     check_status(status);
-   }
+    }
 
   /// add a new image or cube to the file
   void write_image(std::vector<double> &im,std::vector<long> &size){
@@ -367,6 +367,7 @@ public:
                     size.data(), &status);
     check_status(status);
 
+    status = 0;
     std::vector<long> fpixel(size.size(),1);
     fits_write_pix(fptr,TDOUBLE,fpixel.data(),
                           im.size(),&im[0],&status);
@@ -387,6 +388,14 @@ public:
   }
 
   /// add or replace a key value in the header of the current table / image
+  int writeKey(std::string key,std::string value,std::string comment ){
+    int status = 0;
+    char *s = strdup(value.c_str());
+    int error = fits_write_key(fptr,TSTRING,key.c_str(),
+                           s,comment.c_str(),&status);
+    delete[] s;
+    return error;
+  }
   int writeKey(std::string key,double value,std::string comment ){
     int status = 0;
     return fits_update_key(fptr,TDOUBLE,key.c_str(),
