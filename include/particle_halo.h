@@ -58,7 +58,7 @@ public:
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
                     ,bool verbose=false
-  ):min_size(MinPSize),multimass(true)
+  ):LensHalo(redshift,cosmo), min_size(MinPSize),multimass(true)
   {
     std::swap(pvector,trash_collector);
     pp = trash_collector.data();
@@ -148,7 +148,7 @@ protected:
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
                     ,bool verbose
-  ):pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
+  ):LensHalo(redshift,cosmo),pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
   {
     set_up(redshift,cosmo,theta_rotate,recenter,verbose);
   }
@@ -187,7 +187,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
                                             ,PosType MinPSize
                                             ,bool verbose
                                             )
-:min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
+:LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
   LensHalo::setZlens(redshift);
@@ -276,8 +276,8 @@ void LensHaloParticles<PType>::set_up(
                                  ,bool verbose
 ){
 
-  LensHalo::setZlens(redshift);
-  LensHalo::setCosmology(cosmo);
+  //LensHalo::setZlens(redshift);
+  //LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
   stars_N = 0;
