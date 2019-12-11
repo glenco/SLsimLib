@@ -57,6 +57,10 @@
 #define inv_hplanck 1.50919e26 // in 1/(erg*sec)
 #endif
 
+#ifndef kmpersecTOmpcperday
+#define kmpersecTOmpcperday 2.80003e-15
+#endif
+
 #ifndef error_message
 #define error_message
 #define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;

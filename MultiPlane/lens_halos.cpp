@@ -219,7 +219,6 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   return *this;
 };
 
-
 void LensHalo::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale
                                 , PosType my_slope, long *seed){
   mass = my_mass;
