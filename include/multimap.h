@@ -96,16 +96,12 @@ struct LensMap{
 
 #ifdef ENABLE_FFTW
   // this calculates the other lensing quantities from the density map
-  //void PreProcessFFTWMap(float zerosize);
-
-  //static double identity(double x){return 1;}
   
   template <class T>
   void PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha = true);
   template <class T>
   void PreProcessFFTWMap(T Wphi_of_k,bool do_alpha = true);
-  //void PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k = identity);
-#endif
+ #endif
   
 };
 
@@ -301,7 +297,6 @@ private:
  *  generalized to work with rectangular maps
  */
 
-//void LensMap::PreProcessFFTWMap(float zerosize,std::function<double(double)> Wphi_of_k){
 template <typename T>
 void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
   
@@ -326,6 +321,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
   for( int i=0; i<Nkx; i++ ){
     kxs[i] = i*tmp;
   }
+  tmp = 2.*M_PI/boxly;
   std::vector<double> kys(Nny);
   for( int j=0; j<Nny; j++ ){
     kys[j]=(j<Nny/2)?double(j):double(j-Nny);
@@ -572,15 +568,6 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
   assert(surface_density.size() == nx*ny);
   
   // size of the new map in x and y directions, factor by which each size is increased
-  //int Nnx=int(zerosize*nx);
-  //int Nny=int(zerosize*ny);
-  //double boxlx = boxlMpc*zerosize;
-  //double boxly = ny*boxlMpc*zerosize/nx;
-  
-  //int imin = (Nnx-nx)/2;
-  //int imax = (Nnx+nx)/2;
-  //int jmin = (Nny-ny)/2;
-  //int jmax = (Nny+ny)/2;
   
   size_t Nkx = (nx/2+1);
   size_t NN = nx*ny;
@@ -591,12 +578,12 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
   for( int i=0; i<Nkx; i++ ){
     kxs[i] = i*tmp;
   }
+  tmp = 2.*M_PI * nx /boxlMpc / ny;
   std::vector<double> kys(ny);
   for( int j=0; j<ny; j++ ){
     kys[j]=(j<ny/2)?double(j):double(j-ny);
     kys[j] *= tmp;
   }
-  
   
   //std::vector<double> extended_map( Nnx*Nny );
   fftw_complex *fphi   = new fftw_complex[ny*Nkx];

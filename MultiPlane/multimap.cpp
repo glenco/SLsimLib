@@ -70,7 +70,6 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
   bool long_range_file_exists = Utilities::IO::file_exists(lr_file);
   
   ///long_range_file_exists = false;
-  
   if( long_range_file_exists && !single_grid ){
   
     std::cout << " reading file " << lr_file << " .. " << std::endl;
@@ -129,7 +128,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
     long_range_map.nx = submap.nx/desample;
     double lr_res_x = long_range_map.boxlMpc / long_range_map.nx;
 
-    // get the ny that makes the pixels clossest to square
+    // get the ny that makes the pixels closest to square
     double Ly = submap.y_range();
     long_range_map.ny = (int)( Ly/lr_res_x );
   
@@ -215,10 +214,10 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
       }
     }
     
-    double padd = 1 + 2 * border_width * resolution / long_range_map.x_range();
-    padd = MAX(padd,2);
+    double padd_lr = 1 + 2 * border_width * resolution / long_range_map.x_range();
+    padd_lr = MAX(padd_lr,2);
     
-    long_range_map.PreProcessFFTWMap<WLR>(padd,wlr);
+    long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr);
     long_range_map.write("!" + lr_file);
  
     CPFITS_WRITE tmp_cpfits(lr_file,true);
@@ -470,7 +469,7 @@ bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) 
     + c * gamma2_bar[index+1+nx] + d * gamma2_bar[index+nx];
     gamma[2] = 0.0;
     
-    // ???
+    /*
     if(isnan(gamma[1])){
       std::cerr << index+1+nx << " < " << gamma2_bar.size() << std::endl;
       std::cerr << alpha[0] << " " << alpha[1] << std::endl;
@@ -481,7 +480,7 @@ bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) 
 
       
       assert(!isnan(gamma[1]));
-    }
+    }*/
     return false;
   }
   
@@ -505,24 +504,19 @@ void LensHaloMultiMap::force_halo(double *alpha
   // interpolate from the maps
 
   if(single_grid){
-    
     long_range_map.evaluate(xx,*kappa,gamma,alpha);
     return;
   }
   
   if( (xx[0] >= short_range_map.lowerleft[0])*(xx[0] <= short_range_map.upperright[0])
      *(xx[1] >= short_range_map.lowerleft[1])*(xx[1] <= short_range_map.upperright[1])
-     ){
+  ){
     
     long_range_map.evaluate(xx,*kappa,gamma,alpha);
-    
-    assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);  /// ????
     
     float t_kappa,t_gamma[3];
     double t_alpha[2];
     short_range_map.evaluate(xx,t_kappa,t_gamma,t_alpha);
-
-    assert(t_gamma[0] == t_gamma[0] && t_gamma[1] == t_gamma[1]);  /// ????
 
     alpha[0] += t_alpha[0];
     alpha[1] += t_alpha[1];
