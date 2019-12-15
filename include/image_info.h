@@ -73,6 +73,8 @@ struct ImageInfo{
   KappaType aveInvMag();
   /// finds the ray in the image that is closest to the point y on the source plane
   RAY closestRay(const Point_2d &y);
+  /// finds the ray in the image that has the highest surface brightness
+  RAY highestSurfaceBrightnessRay();
   /// Print information about the image
   void PrintImageInfo();
   void copy(const ImageInfo & image,bool copykists = true);
