@@ -13,7 +13,7 @@
 #include "InputParams.h"
 #include "lens_halos.h"
 
-/**
+/*
  * \brief An "analytic" model to represent a lens on a single plane.
  *
  * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion
@@ -142,6 +142,10 @@ public:
   
 protected:
 
+  // make it uncopyable
+  void operator=(const LensHaloBaseNSIE &h){};
+  LensHaloBaseNSIE(const LensHaloBaseNSIE &h){};
+  
   /// critical surface density
   PosType Sigma_crit;
    /// the time delay scale in days/Mpc^2

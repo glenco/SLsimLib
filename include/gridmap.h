@@ -16,14 +16,12 @@
 #include "source.h"
 #include <mutex>
 
-/** \ingroup ImageFinding
+/** 
  * \brief A simplified version of the Grid structure for making non-adaptive maps of the lensing quantities (kappa, gamma, etc...)
  *
  *  GripMap is faster and uses less memory than Grid.  It does not construct the tree structures for the points 
  *  and thus cannot be used for adaptive mapping or image finding.
  */
-
-//class PixelMap;
 
 struct GridMap{
   
@@ -31,9 +29,26 @@ struct GridMap{
   GridMap(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
 	~GridMap();
   
-  /// reshoot the rays for example when the source plane has been changed
+    /// reshoot the rays for example when the source plane has been changed
   void ReInitializeGrid(LensHndl lens);
-	double RefreshSurfaceBrightnesses(SourceHndl source);
+  /**
+   * \brief Recalculate surface brightness at every point without changing the positions of the gridmap or any lens properties.
+   *
+   *  Recalculate the surface brightness at all points on the gridmap.
+   * This is useful when changing the source model while preserving changes in the grid.
+   * Both i_tree and s_tree are both changed although only s_tree shows up here.
+   *
+   * returns the sum of the surface brightnesses
+   */
+  double RefreshSurfaceBrightnesses(SourceHndl source);
+  /**
+   * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
+   * the new source is added to any sources that were already there.
+   *
+   * returns the sum of the surface brightnesses from the new source
+   */
+  double AddSurfaceBrightnesses(SourceHndl source);
+
   void ClearSurfaceBrightnesses();
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
@@ -42,7 +57,7 @@ struct GridMap{
 	/// return initial range of gridded region.  This is the distance from the first ray in a row to the last (unlike PixelMap)
 	double getXRange(){return x_range;}
 	double getYRange(){return x_range*axisratio;}
-  // resolution in radians
+  /// resolution in radians, this is range / (N-1)
   double getResolution(){return x_range/(Ngrid_init-1);}
   
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
@@ -68,12 +83,33 @@ struct GridMap{
   
   Point * operator[](size_t i){return i_points + i;};
   
+  GridMap(GridMap &&grid){
+    *this = std::move(grid);
+  }
+  
+  GridMap & operator=(GridMap &&grid){
+    Ngrid_init = grid.Ngrid_init;
+    Ngrid_init2 = grid.Ngrid_init2;
+    pointID = grid.pointID;
+    axisratio = grid.axisratio;
+    x_range = grid.x_range;
+    
+    i_points = grid.i_points;
+    grid.i_points = nullptr;
+    s_points = grid.s_points;
+    grid.s_points = nullptr;
+    
+    center = grid.center;
+
+    return *this;
+  }
+
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   
 	/// one dimensional size of initial grid
-	const int Ngrid_init;
+	int Ngrid_init;
   int Ngrid_init2;
   
   unsigned long pointID;
@@ -88,4 +124,4 @@ private:
   static std::mutex grid_mutex;
 };
 
-#endif /* defined(__GLAMER__gridmap__) */
+#endif // defined(__GLAMER__gridmap__)

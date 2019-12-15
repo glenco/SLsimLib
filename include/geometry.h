@@ -30,17 +30,28 @@ namespace Utilities {
     public:
       SphericalPoint(PosType r,PosType theta,PosType phi):r(r),theta(theta),phi(phi){};
       SphericalPoint():r(0),theta(0),phi(0){};
+      SphericalPoint(Point_3d &x){
+        r = sqrt( x[0]*x[0] + x[1]*x[1] +x[2]*x[2]);
+        theta = asin(x[2]/r);
+        phi = atan2(x[1],x[0]);
+      }
       
       PosType r;
       PosType theta;
       PosType phi;
       
       /// output Cartesian coordinates of the point
-      void sphericalTOcartisian(PosType x[]) const;
+      void TOcartisian(PosType x[]) const;
+      Point_3d TOcartisian() const;
+      
       void cartisianTOspherical(PosType const x[]);
       void StereographicProjection(const SphericalPoint &central,PosType x[]) const;
+      void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
+      Point_2d StereographicProjection(const SphericalPoint &central) const;
       void OrthographicProjection(const SphericalPoint &central,PosType x[]) const;
+      Point_2d OrthographicProjection(const SphericalPoint &central) const;
       void InverseOrthographicProjection(const SphericalPoint &central,PosType const x[]);
+      void InverseOrthographicProjection(const SphericalPoint &central,const Point_2d &x);
     };
     /** \brief Quaternion class that is especially useful for rotations.
      
@@ -52,7 +63,7 @@ namespace Utilities {
      
      
      #include "geometry.h"
-     {
+     { 
      using Utilities::Geometry::SphericalPoint;
      using Utilities::Geometry::Quaternion;
      
@@ -74,6 +85,9 @@ namespace Utilities {
      // apply the rotation
      q = q.Rotate(R);
      
+     // rotate in place, same as above but with one less copy
+     q.RotInplace(R);
+     
      // convert to a Point_3d
      Point_3d p = q.to_point_3d();
      
@@ -88,13 +102,16 @@ namespace Utilities {
     
     class Quaternion{
     public:
+      Quaternion(){
+        v[0] = v[1] = v[2] = v[3] = 0;
+      }
       Quaternion(double s,double x,double y,double z){
         v[0] = s;
         v[1] = x;
         v[2] = y;
         v[3] = z;
       }
-      Quaternion(const Quaternion &q){
+     Quaternion(const Quaternion &q){
         v[0] = q.v[0];
         v[1] = q.v[1];
         v[2] = q.v[2];
@@ -107,7 +124,7 @@ namespace Utilities {
         v[3] = p[2];
       }
       Quaternion(SphericalPoint sp){
-        sp.sphericalTOcartisian(v+1);
+        sp.TOcartisian(v+1);
         v[0] = 0;
       }
       
@@ -176,18 +193,24 @@ namespace Utilities {
         return R*(*this)*R.conj();
       }
       
+      /** returns the Quaternion rotated with the rotation Quaternion R.
+       It is assumed that R has norm = 1, ie ||R|| = 1 */
+      void RotInplace(const Quaternion &R){
+        *this = R*(*this)*R.conj();
+      }
+      
       
       /// rotate a Point_3d using a rotation Quaternion
       static Point_3d Rotate(const Point_3d &p,const Quaternion &R){
         Quaternion q(p);
-        q.Rotate(R);
+        q.RotInplace(R);
         return q.to_point_3d();
       }
 
       /// rotate a SpericalPoint using a rotation Quaternion
       static SphericalPoint Rotate(const SphericalPoint &p,const Quaternion &R){
         Quaternion q(p);
-        q.Rotate(R);
+        q.RotInplace(R);
         return q.to_SpericalPoint();
       }
       
@@ -246,6 +269,8 @@ namespace Utilities {
       
       /// the components of the Quaternion
       double v[4];
+      /// components, 0,1,2,3
+      double & operator[](int i){return v[i];}
 
       /// returns the rotation Quaternion for a rotation around the x-axis
       static Quaternion q_x_rotation(double theta){

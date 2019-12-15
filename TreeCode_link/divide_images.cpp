@@ -6,7 +6,7 @@
  */
 #include "slsimlib.h"
 
-/** \ingroup ImageFindingL2
+/** 
  * \brief finds the points that are within the circular source and divides
  * the images.
  *
@@ -35,7 +35,7 @@ void find_divide_images(TreeHndl i_tree,TreeHndl s_tree
 	return;
 }
 
-/** \ingroup functions
+/** s
  *
  *	Returns the genus of an image by counting the number of disconnected outer borders.
  *	The in_image flag must be set to NO for all points on the grid and are returned to
@@ -104,7 +104,7 @@ int ImageGenus(TreeHndl i_tree,ImageInfo *imageinfo){
 }
 
 
-/* \ingroup ImageFindingL2
+/* 
  *  divide_images
  *
  * \brief `Reorders the image points up into separate images that are linked by cell
@@ -213,7 +213,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 	return;
 }*/
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *  divide_images_kist
  *
@@ -391,7 +391,7 @@ void divide_images_kist(
 	return;
 }
 
-/** \ingroup ImageFindingL2
+/** 
  *
  * \brief recursive function that un-marks all the points that are attached
  * to point by cell neighbors that were previously marked in_image==YES
@@ -436,7 +436,7 @@ void partition_images(Point *point,unsigned long *N_in_image,TreeHndl i_tree){
 	return;
 }
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *  finds all the points in i_tree with in_image = YES that are connected to point
  *    by cell neighbors of cell neighbors.  The resulting kist of points

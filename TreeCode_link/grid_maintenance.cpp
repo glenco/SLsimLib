@@ -12,7 +12,7 @@
 
 std::mutex Grid::grid_mutex;
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing square grid.
  *
  * Note: Deflection solver must be specified before creating a Grid.
@@ -53,7 +53,7 @@ Grid::Grid(
   
 }
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing rectangular grid.
  *
  * Cells of grid will always be square with initial resolution rangeX/(Nx-1).
@@ -127,7 +127,7 @@ Grid::Grid(
     
 }
 
-/** \ingroup Constructor
+/** 
  * \brief Destructor for a Grid.  Frees all memory.
  */
 Grid::~Grid(){
@@ -140,7 +140,7 @@ Grid::~Grid(){
   return;
 }
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Reinitializes the grid so that it is back to the original coarse grid, but if
  *  the lens has changed the source positions will be updated.
  */
@@ -227,7 +227,7 @@ void Grid::ReInitializeGrid(LensHndl lens){
 }
 
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Reshoot the rays with the same image postions.
  *
  *  The source positions and source tree are updated to the current lens model.
@@ -279,7 +279,7 @@ void Grid::ReShoot(LensHndl lens){
 }
 
 
-/** \ingroup ImageFinding
+/** Finding
  * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.
  *
  *  Recalculate the surface brightness at all points on the grid.
@@ -290,22 +290,73 @@ void Grid::ReShoot(LensHndl lens){
  * returns the sum of the surface brightnesses
  */
 PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
-	PosType total=0,tmp;
+  PosType total=0,tmp;
   
   PointList::iterator s_tree_pointlist_it;
   s_tree_pointlist_it.current = (s_tree->pointlist->Top());
-	for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
-		tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
-		(*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
+  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+    tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
+    (*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
     = tmp;
-		total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
-		assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
-		(*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
+    total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+    assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
+    (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
     = NO;
-	}
+  }
   
-	return total;
+  return total;
 }
+/**
+ * \brief Recalculate surface brightness just like Grid::RefreshSurfaceBrightness but
+ * the new source is added to any sources that were already there.  
+ *
+ * returns the sum of the surface brightnesses from the new source
+ */
+PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
+  PosType total=0,tmp;
+  
+  PointList::iterator s_tree_pointlist_it;
+  s_tree_pointlist_it.current = (s_tree->pointlist->Top());
+  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+    tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
+    (*s_tree_pointlist_it)->surface_brightness += tmp;
+    (*s_tree_pointlist_it)->image->surface_brightness += tmp;
+    total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+    assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
+    (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
+    = NO;
+  }
+  
+  return total;
+}
+
+PosType Grid::EinsteinArea() const {
+  PosType total=0;
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    if( (*it)->invmag < 0) total += (*it)->gridsize * (*it)->gridsize;
+  }
+  
+  return total;
+}
+
+PosType Grid::magnification() const{
+  double mag = 0,flux = 0;
+  
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    double area = (*it)->gridsize*(*it)->gridsize;
+    mag += (*it)->surface_brightness*fabs((*it)->invmag)*area;
+    flux += (*it)->surface_brightness*area;
+  }
+
+  return flux/mag;
+}
+
 /**
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */
@@ -324,7 +375,7 @@ PosType Grid::ClearSurfaceBrightnesses(){
 	return total;
 }
 
-/** \ingroup ImageFinding
+/** Finding
  * \brief Returns number of points on image plane.
  */
 unsigned long Grid::getNumberOfPoints() const{
@@ -335,7 +386,7 @@ unsigned long Grid::getNumberOfPoints() const{
 	return i_tree->getTop()->npoints;
 }
 
-/**  \ingroup ImageFindingL2
+/**  
  *
  * \brief Fundamental function used to divide a leaf in the tree into nine subcells.
  *
@@ -1057,15 +1108,39 @@ PixelMap Grid::writePixelMap(
                              ,size_t Ny           /// number of pixels in image in on dimension
                              ,PosType resolution        /// resolution of image in radians
                              ,LensingVariable lensvar  /// which quantity is to be displayed
-                             ){
+){
   PixelMap map(center, Nx, Ny, resolution);
   map.AddGrid(*this,lensvar);
+  
+  return map;
+}
+/// Outputs a PixelMap of the lensing quantities of a fixed grid
+PixelMap Grid::writePixelMap(
+                             LensingVariable lensvar  /// which quantity is to be displayed
+){
+  
+  Branch *branch = i_tree->getTop();
+  double resolution = (branch->boundary_p2[0] - branch->boundary_p1[0])/Ngrid_init;
+  PixelMap map(branch->center, Ngrid_init, Ngrid_init2, resolution);
+  map.AddGrid(*this,lensvar);
+  
+  return map;
+}
+
+PixelMap  Grid::MapSurfaceBrightness(double resolution){
+  Branch *branch = i_tree->getTop();
+  int Nx = (int)( (branch->boundary_p2[0] - branch->boundary_p1[0])/resolution );
+  int Ny = (int)( (branch->boundary_p2[1] - branch->boundary_p1[1])/resolution );
+  
+  PixelMap map(branch->center,Nx,Ny,resolution);
+  map.AddGridBrightness(*this);
 
   return map;
 }
+
 /** \brief Make a fits map that is automatically centered on the grid and has approximately the same range as the grid.  Nx can be used to change the resolution.  Nx = grid.getInitNgrid() will give the initial grid resolution
  */
-void Grid::writePixeFits(
+void Grid::writePixelFits(
                          size_t Nx           /// number of pixels in image in x dimension
                          ,LensingVariable lensvar  /// which quantity is to be displayed
                          ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
@@ -1086,7 +1161,6 @@ void Grid::writePixeFits(
  *  grid pixels in one pixelmap pixel it uses one at random.  This is meant
  *  for uniform maps to make equal sized PixelMaps.
  */
-
 void Grid::writeFitsUniform(
                                 const PosType center[]  /// center of image
                                 ,size_t Nx       /// number of pixels in image in on dimension
@@ -1179,6 +1253,7 @@ PixelMap Grid::writePixelMapUniform(
   
   return map;
 }
+
 void Grid::writePixelMapUniform(
                                     PixelMap &map
                                     ,LensingVariable lensvar  /// which quantity is to be displayed

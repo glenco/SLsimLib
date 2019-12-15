@@ -60,8 +60,8 @@ struct ParticleTypeSimple{
 /// Atomic data class for stars with different masses
 struct StarType{
   double &operator[](int i){return x[i];}
-  double *operator*(){return x;}
-  double x[3];
+  Point_3d operator*(){return x;}
+  Point_3d x;
   float Mass;
   
   float mass() const {return Mass;}

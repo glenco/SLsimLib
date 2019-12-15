@@ -17,7 +17,7 @@ using namespace std;
 
 namespace ImageFinding{
 
-/** \ingroup ImageFinding
+/** Finding
  *
  *  \brief Refines the grid based on the convergence so that high density regions have high resolution.
  *

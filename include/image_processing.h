@@ -19,14 +19,14 @@
 // forward declaration
 struct Grid;
 struct GridMap;
+class Source;
 
-/** \ingroup Image
+
+/**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
  * can be exported as a fits file, smoothed, etc. like an image.
  *
  */
-class Source;
-
 class PixelMap
 {
 public:
@@ -42,7 +42,8 @@ public:
     map.resize(0);
   };
 	
-	PixelMap& operator=(PixelMap other);
+  PixelMap& operator=(const PixelMap &other);
+  PixelMap& operator=(PixelMap &&other);
   
 	inline bool valid() const { return map.size(); };
 	inline std::size_t size() const { return map.size(); };
@@ -136,7 +137,8 @@ public:
 	void smooth(double sigma);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
-	inline double & operator[](std::size_t i) { return map[i]; };
+  inline double & operator[](std::size_t i) { return map[i]; };
+  const double & operator[](std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
 	
@@ -151,8 +153,10 @@ public:
 	friend PixelMap operator*(const PixelMap&, const PixelMap&);
 
 	PixelMap& operator*=(PosType b);
-	friend PixelMap operator*(const PixelMap&, PosType b);
-	
+ 	friend PixelMap operator*(const PixelMap&, PosType b);
+  /// eliment wise multiplictioan
+  PixelMap operator*=(const PixelMap &m) const;
+
 	std::valarray<double>& data() { return map; }
 	
   /// Check whether two PixelMaps agree in their physical dimensions.
@@ -281,15 +285,16 @@ public:
   void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
   
 private:
-  std::valarray<double> map;
-  void AddGrid_(const PointList &list,LensingVariable val);
 
+  std::valarray<double> map;
 	std::size_t Nx;
 	std::size_t Ny;
 	double resolution,rangeX,rangeY,center[2];
 	double map_boundary_p1[2],map_boundary_p2[2];
   
-	double LeafPixelArea(IndexType i,Branch * branch1);
+  void AddGrid_(const PointList &list,LensingVariable val);
+
+  double LeafPixelArea(IndexType i,Branch * branch1);
 	void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
 	bool inMapBox(Branch * branch1) const;
 	bool inMapBox(double * branch1) const;
@@ -338,7 +343,7 @@ typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,
 
 typedef enum {counts_x_sec, flux} unitType;
 
-/** \ingroup Image
+/** 
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.

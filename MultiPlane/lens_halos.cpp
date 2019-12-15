@@ -20,7 +20,7 @@ LensHalo::LensHalo(){
   zlens = 0.0;
 }
 
-LensHalo::LensHalo(PosType z,COSMOLOGY &cosmo){
+LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
   rscale = 1.0;
   mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
   stars_implanted = false;
@@ -45,6 +45,179 @@ LensHalo::LensHalo(InputParams& params,bool needRsize){
   posHalo[0] = posHalo[1] = 0.0;
   elliptical_flag = false;
 }
+
+LensHalo::LensHalo(const LensHalo &h){
+  
+  idnumber = h.idnumber; /// Identification number of halo.  It is not always used.
+  Dist = h.Dist;
+  posHalo[0] = h.posHalo[0]; posHalo[1] = h.posHalo[1];
+  zlens = h. zlens;
+  mass = h.mass;
+  Rsize = h.Rsize;
+  mnorm = h.mnorm;
+  Rmax = h.Rmax;
+  
+  stars_index = stars_index;
+  stars_xp = h.stars_xp;
+  
+  stars_N = h.stars_N;
+  star_theta_force = h.star_theta_force;
+  
+  if(stars_N > 1){
+    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
+                                              ,false,false,0,4,star_theta_force);
+  }else{
+    star_tree = nullptr;
+  }
+  star_massscale = h.star_massscale;
+  star_fstars = h.star_fstars;
+  
+  star_Nregions = h.star_Nregions;
+  star_region = star_region;
+  
+  beta = h.beta;
+  
+  Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
+  rscale = h.rscale;
+  
+  stars_implanted = h.stars_implanted;
+  main_stars_imf_type = h.main_stars_imf_type;
+  main_stars_min_mass = h. main_stars_min_mass;
+  main_stars_max_mass = h.main_stars_max_mass;
+  main_ellip_method = h.main_ellip_method;
+  bend_mstar =h.bend_mstar;
+  lo_mass_slope = h.lo_mass_slope;
+  hi_mass_slope = h.hi_mass_slope;
+  
+  star_Sigma = h.star_Sigma;
+  star_xdisk = h.star_xdisk;
+  
+  xmax = h.xmax;
+  mass_norm_factor = h.mass_norm_factor;
+  pa = h.pa;
+  fratio = h.fratio;
+  elliptical_flag = h.elliptical_flag;
+  switch_flag = h.switch_flag;
+  //Nmod = h.Nmod;
+};
+
+LensHalo & LensHalo::operator=(LensHalo &&h){
+  
+  if (this != &h){
+  
+    idnumber = h.idnumber; /// Identification number of halo.  It is not always used.
+    Dist = h.Dist;
+    posHalo[0] = h.posHalo[0]; posHalo[1] = h.posHalo[1];
+    zlens = h. zlens;
+    mass = h.mass;
+    Rsize = h.Rsize;
+    mnorm = h.mnorm;
+    Rmax = h.Rmax;
+  
+    stars_index = stars_index;
+    stars_xp = h.stars_xp;
+  
+    stars_N = h.stars_N;
+    star_theta_force = h.star_theta_force;
+  
+    delete star_tree;
+    star_tree = h.star_tree;
+    h.star_tree = nullptr;
+  
+    star_massscale = h.star_massscale;
+    star_fstars = h.star_fstars;
+  
+    star_Nregions = h.star_Nregions;
+    star_region = star_region;
+  
+    beta = h.beta;
+  
+    Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
+    rscale = h.rscale;
+  
+    stars_implanted = h.stars_implanted;
+    main_stars_imf_type = h.main_stars_imf_type;
+    main_stars_min_mass = h. main_stars_min_mass;
+    main_stars_max_mass = h.main_stars_max_mass;
+    main_ellip_method = h.main_ellip_method;
+    bend_mstar =h.bend_mstar;
+    lo_mass_slope = h.lo_mass_slope;
+    hi_mass_slope = h.hi_mass_slope;
+  
+    star_Sigma = h.star_Sigma;
+    star_xdisk = h.star_xdisk;
+  
+    xmax = h.xmax;
+    mass_norm_factor = h.mass_norm_factor;
+    pa = h.pa;
+    fratio = h.fratio;
+    elliptical_flag = h.elliptical_flag;
+    switch_flag = h.switch_flag;
+    //Nmod = h.Nmod;
+    
+  }
+  return *this;
+};
+
+
+LensHalo & LensHalo::operator=(const LensHalo &h){
+  
+  if(this == &h) return *this;
+  
+  idnumber = h.idnumber; /// Identification number of halo.  It is not always used.
+  Dist = h.Dist;
+  posHalo[0] = h.posHalo[0]; posHalo[1] = h.posHalo[1];
+  zlens = h. zlens;
+  mass = h.mass;
+  Rsize = h.Rsize;
+  mnorm = h.mnorm;
+  Rmax = h.Rmax;
+  
+  stars_index = stars_index;
+  stars_xp = h.stars_xp;
+  
+  stars_N = h.stars_N;
+  star_theta_force = h.star_theta_force;
+  
+  if(stars_N > 1){
+    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
+                                              ,false,false,0,4,star_theta_force);
+  }else{
+    star_tree = nullptr;
+  }
+  star_massscale = h.star_massscale;
+  star_fstars = h.star_fstars;
+  
+  star_Nregions = h.star_Nregions;
+  star_region = star_region;
+  
+  beta = h.beta;
+  
+  Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
+  rscale = h.rscale;
+  
+  stars_implanted = h.stars_implanted;
+  main_stars_imf_type = h.main_stars_imf_type;
+  main_stars_min_mass = h. main_stars_min_mass;
+  main_stars_max_mass = h.main_stars_max_mass;
+  main_ellip_method = h.main_ellip_method;
+  bend_mstar =h.bend_mstar;
+  lo_mass_slope = h.lo_mass_slope;
+  hi_mass_slope = h.hi_mass_slope;
+  
+  star_Sigma = h.star_Sigma;
+  star_xdisk = h.star_xdisk;
+  
+  xmax = h.xmax;
+  mass_norm_factor = h.mass_norm_factor;
+  pa = h.pa;
+  fratio = h.fratio;
+  elliptical_flag = h.elliptical_flag;
+  switch_flag = h.switch_flag;
+  //Nmod = h.Nmod;
+  
+  return *this;
+};
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale
                                 , PosType my_slope, long *seed){
@@ -713,12 +886,12 @@ std::vector<double> LensHaloRealNSIE::q_table;
 std::vector<double> LensHaloRealNSIE::Fofq_table;
 
 LensHaloRealNSIE::LensHaloRealNSIE(
-                                   float my_mass
-                                   ,PosType my_zlens
+                                   float my_mass     /// mass, sets truncation radius
+                                   ,PosType my_zlens /// redshift
                                    ,float my_sigma   /// in km/s
                                    ,float my_rcore   /// in units of R_einstein
-                                   ,float my_fratio
-                                   ,float my_pa
+                                   ,float my_fratio  /// axis ratio
+                                   ,float my_pa      /// postion angle
                                    ,int my_stars_N)
 :LensHalo(){
   rscale=1.0;
@@ -727,7 +900,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(
 
 
   sigma=my_sigma, rcore=my_rcore;
-  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
+  fratio=my_fratio, pa = PI/2 - my_pa, stars_N=my_stars_N;
   stars_implanted = false;
   
   if(fratio  != 1.0) elliptical_flag = true;
@@ -746,6 +919,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(
     LensHalo::setMass(MassBy1DIntegation(LensHalo::getRsize()));
   }
   
+  units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical);
 }
 
 LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params):LensHalo(params,false){
@@ -773,6 +947,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(InputParams& params):LensHalo(params,false){
     LensHalo::setMass(MassBy1DIntegation(LensHalo::getRsize()) );
   }
 
+   units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
 }
 
 void LensHaloRealNSIE::assignParams(InputParams& params){
@@ -1243,7 +1418,6 @@ void LensHaloRealNSIE::force_halo(
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
     //PosType ellipR = ellipticRadiusNSIE(xcm,fratio,pa);
-    float units = pow(sigma/lightspeed,2)/Grav;///sqrt(fratio); // mass/distance(physical)
    // std::cout << "rsize , rmax,  mass_norm =" << LensHalo::getRsize() << " , " << Rmax << " , " << mass_norm_factor << std::endl;
     if(rcm2 > LensHalo::getRsize()*LensHalo::getRsize())
       //if(ellipR > LensHalo::getRsize()*LensHalo::getRsize())

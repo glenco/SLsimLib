@@ -43,7 +43,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.8;
       ron = 5.;
       seeing = 0.18;
-      pix_size = .1/60./60./180.*PI;
+      pix_size = .1*arcsecTOradians;
       break;
    case Euclid_Y:
       diameter = 119.;
@@ -53,7 +53,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.57;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*PI;
+      pix_size = .3*arcsecTOradians;
       break;
     case Euclid_J:
       diameter = 119.;
@@ -63,7 +63,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       back_mag = 22.53;
       ron = 5.;
       seeing = 0.3;
-      pix_size = .3/60./60./180.*PI;
+      pix_size = .3*arcsecTOradians;
       break;
     case Euclid_H:
       diameter = 119.;
@@ -196,7 +196,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
  * \param seeing FWHM in arcsecs of the image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
-diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), seeing(seeing),Npix_x(Npix_x),Npix_y(Npix_y)
+diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron)
+,Npix_x(Npix_x),Npix_y(Npix_y),seeing(seeing)
 		{
 			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 			telescope = false;
@@ -214,7 +215,8 @@ diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_
  * \param oversample Oversampling rate of the PSF image
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
-diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), ron(ron), oversample(oversample),Npix_x(Npix_x),Npix_y(Npix_y)
+diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),Npix_x(Npix_x),Npix_y(Npix_y)
+ , ron(ron), oversample(oversample)
 		{
 	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
 
@@ -532,6 +534,9 @@ void Observation::ApplyPSF(PixelMap &pmap)
  */
 void Observation::CorrelateNoise(PixelMap &pmap)
 {
+  
+  if(sqrt_noise_power.size()==0)return;
+  
   if(pmap.getNx() != pmap.getNy()){
     std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
