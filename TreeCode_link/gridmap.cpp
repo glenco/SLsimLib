@@ -297,7 +297,7 @@ PixelMap GridMap::writePixelMapUniform(
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].invmag;
       break;
-    case DT:
+    case DELAYT:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].dt;
       break;
@@ -375,7 +375,7 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,Lens
       case INVMAG:
         tmp = points[i].invmag;
         break;
-      case DT:
+      case DELAYT:
         tmp = points[i].dt;
         break;
       default:
@@ -400,7 +400,7 @@ void GridMap::writeFitsUniform(
   std::string tag;
   
   switch (lensvar) {
-    case DT:
+    case DELAYT:
       tag = ".dt.fits";
       break;
     case ALPHA1:

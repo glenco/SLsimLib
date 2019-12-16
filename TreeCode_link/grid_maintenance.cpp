@@ -1051,7 +1051,7 @@ void Grid::writeFits(
   std::string tag;
   
   switch (lensvar) {
-    case DT:
+    case DELAYT:
       tag = ".dt.fits";
       break;
     case ALPHA1:
@@ -1171,7 +1171,7 @@ void Grid::writeFitsUniform(
   std::string tag;
   
   switch (lensvar) {
-    case DT:
+    case DELAYT:
       tag = ".dt.fits";
       break;
     case ALPHA1:
@@ -1331,7 +1331,7 @@ void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVari
       case INVMAG:
         tmp = (*list_it)->invmag;
         break;
-      case DT:
+      case DELAYT:
         tmp = (*list_it)->dt;
         break;
       default:

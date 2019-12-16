@@ -1772,7 +1772,7 @@ void ImageFinding::find_contour(
                                 ,bool ordercurve          /// Order the curve so that it can be drawn or used to find the winding number.
                                 ,bool dividecurves        /// Divide the critical curves into seporate curves by whether they are attached
                                 ,double contour_value    /// value at which the contour is wanted
-                                ,LensingVariable contour_type  /// KAPPA, INVMAG or DT
+                                ,LensingVariable contour_type  /// KAPPA, INVMAG or DELAYT
                                 ,bool verbose
                                 ){
   
@@ -1803,7 +1803,7 @@ void ImageFinding::find_contour(
         value = (*i_tree_pointlist_it)->invmag;
         maxval = minpoint->invmag;
         break;
-      case DT:
+      case DELAYT:
         value = (*i_tree_pointlist_it)->dt;
         maxval = minpoint->dt;
         break;
@@ -1864,7 +1864,7 @@ void ImageFinding::find_contour(
           case INVMAG:
             value = newpoint_kist.getCurrent()->invmag;
             break;
-          case DT:
+          case DELAYT:
             value = newpoint_kist.getCurrent()->dt;
             break;
           default:

@@ -1414,7 +1414,7 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
       case INVMAG:
         tmp = (*pl_it)->invmag/resolution/resolution;
         break;
-      case DT:
+      case DELAYT:
         tmp = (*pl_it)->dt/resolution/resolution;
         break;
       default:
