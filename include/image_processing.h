@@ -14,6 +14,7 @@
 #endif
 
 #include "utilities_slsim.h"
+#include "image_processing.h"
 #include "source.h"
 
 // forward declaration

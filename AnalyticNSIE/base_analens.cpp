@@ -15,9 +15,9 @@ using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
                                   PosType *alpha       /// mass/PhysMpc
-                                  ,KappaType *kappa    /// surface mass density
-                                  ,KappaType *gamma
-                                  ,KappaType *phi
+                                  ,KappaType *kappa    /// surface mass density , mass / /PhysMpc/PhysMpc
+                                  ,KappaType *gamma    /// mass / /PhysMpc/PhysMpc
+                                  ,KappaType *phi      /// mass
                                   ,PosType const *xcm  /// Position in PhysMpc
                                   ,bool subtract_point /// if true contribution from a point mass is subtracted
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction

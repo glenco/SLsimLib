@@ -52,6 +52,7 @@ struct TmpParams{
   PosType* plane_redshifts;
   PosType* Dl;
   PosType* dDl;
+  PosType* dTl;
   bool verbose;
 };
 
@@ -105,7 +106,7 @@ void Lens::rayshooterInternal(
   
   
   int NLastPlane;
-  PosType tmpDs,tmpdDs,tmpZs;
+  PosType tmpDs,tmpdDs,tmpdTs,tmpZs;
   
   // If there are no points to shoot, then we quit.
   if(Npoints == 0) return;
@@ -118,10 +119,12 @@ void Lens::rayshooterInternal(
     assert(NLastPlane <= lensing_planes.size());
     tmpDs = Dl[index_of_new_sourceplane];
     tmpdDs = dDl[index_of_new_sourceplane];
+    tmpdTs = dTl[index_of_new_sourceplane];
     tmpZs = plane_redshifts[index_of_new_sourceplane];
     
     Dl[index_of_new_sourceplane] = Ds_implant;
     dDl[index_of_new_sourceplane] = dDs_implant;
+    dTl[index_of_new_sourceplane] = dTs_implant;
     plane_redshifts[index_of_new_sourceplane] = zs_implant;
   }
   else{ NLastPlane = lensing_planes.size(); }
@@ -156,6 +159,7 @@ void Lens::rayshooterInternal(
     thread_params[i].plane_redshifts = &plane_redshifts[0];
     thread_params[i].Dl = &Dl[0];
     thread_params[i].dDl = &dDl[0];
+    thread_params[i].dTl = &dTl[0];
     thread_params[i].NPlanes = NLastPlane;
     thread_params[i].verbose = RSIVerbose;
     rc = pthread_create(&threads[i], NULL, compute_rays_parallel, (void*) &thread_params[i]);
@@ -175,6 +179,7 @@ void Lens::rayshooterInternal(
     // The initial values for the plane are reset here
     Dl[index_of_new_sourceplane] = tmpDs;
     dDl[index_of_new_sourceplane] = tmpdDs;
+    dTl[index_of_new_sourceplane] = tmpdTs;
     plane_redshifts[index_of_new_sourceplane] = tmpZs;
   }
   
@@ -257,7 +262,9 @@ void *compute_rays_parallel(void *_p)
     
     
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
-    p->i_points[i].dt = 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
+    p->i_points[i].dt = 0;
+    
+    //0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
     
     
     // TEST : showing initial quantities
@@ -366,7 +373,7 @@ void *compute_rays_parallel(void *_p)
 
       
       // Geometric time delay with added potential
-      p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) )/p->dDl[j+1] - (1 + p->plane_redshifts[j]) * phi * p->charge ; /// in Mpc
+      p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) ) * p->dTl[j+1] /p->dDl[j+1] /p->dDl[j+1] - phi * p->charge ; /// in Mpc  ???
       
       
       // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
@@ -382,7 +389,7 @@ void *compute_rays_parallel(void *_p)
     
     
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
-    p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
+    //p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[p->NPlanes];
     
     
     // Convert units back to angles.
@@ -421,8 +428,6 @@ void *compute_rays_parallel(void *_p)
     // TEST : showing final quantities
     // ===============================
     if(verbose) std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
-    
-    
     
   } // End of the main loop.
   
@@ -777,7 +782,7 @@ void Lens::info_rayshooter(
   
   int NLastPlane = lensing_planes.size() ;
   
-  PosType tmpDs,tmpdDs,tmpZs;
+  PosType tmpDs,tmpdDs,tmpdTs,tmpZs;
   
   // If there are no points to shoot, then we quit.
   
@@ -789,10 +794,12 @@ void Lens::info_rayshooter(
     assert(NLastPlane <= lensing_planes.size());
     tmpDs = Dl[index_of_new_sourceplane];
     tmpdDs = dDl[index_of_new_sourceplane];
+    tmpdTs = dTl[index_of_new_sourceplane];
     tmpZs = plane_redshifts[index_of_new_sourceplane];
     
     Dl[index_of_new_sourceplane] = Ds_implant;
     dDl[index_of_new_sourceplane] = dDs_implant;
+    dTl[index_of_new_sourceplane] = dTs_implant;
     plane_redshifts[index_of_new_sourceplane] = zs_implant;
   }
   else
@@ -801,6 +808,7 @@ void Lens::info_rayshooter(
     tmpDs = cosmo.angDist(zsource);
     assert(plane_redshifts[NLastPlane] == zsource);
     tmpdDs = cosmo.angDist(plane_redshifts[NLastPlane-1], zsource);
+    tmpdTs = cosmo.radDist(plane_redshifts[NLastPlane-1], zsource);
     tmpZs = zsource ;
   }
   
@@ -910,6 +918,7 @@ void Lens::info_rayshooter(
     // The initial values for the plane are reset here
     Dl[index_of_new_sourceplane] = tmpDs;
     dDl[index_of_new_sourceplane] = tmpdDs;
+    dTl[index_of_new_sourceplane] = tmpdTs;
     plane_redshifts[index_of_new_sourceplane] = tmpZs;
   }
 

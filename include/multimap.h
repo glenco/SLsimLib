@@ -554,11 +554,39 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
     }
   }
 
+  // phi - this is done over because of the window in Fourier space
+  {
+    
+    // build modes for each pixel in the fourier space
+    for( int i=0; i<Nkx; i++ ){
+      for( int j=0; j<Nny; j++ ){
+        size_t k = i+(Nkx)*j;
+        
+        // surface density
+        fft[k][0] = fphi[k][0];
+        fft[k][1] = fphi[k][1];
+        
+      }
+    }
+    
+    fftw_execute( pp );
+    
+    
+    phi_bar.resize(nx*ny);
+    for( int j=jmin; j<jmax; j++ ){
+      int jj = j-jmin;
+      for( int i=imin; i<imax; i++ ){
+        int ii = i-imin;
+        
+        phi_bar[ii+nx*jj] = float(realsp[i+Nnx*j]/NN);
+        
+      }
+    }
+  }
+
   // std:: cout << " remapping the map in the original size " << std:: endl;
   delete[] fft;
   delete[] fphi;
-  
-  //phi_bar.resize(nx*ny,0);  // ??? this needs to be calculated in the future
 }
 
 /// no padding
@@ -675,6 +703,24 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
     alpha2_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) alpha2_bar[i] = -1*float(realsp[i]/NN);
   }
+    
+    // phi - this is done over because of the window in Fourier space
+    {
+      
+      // build modes for each pixel in the fourier space
+      for( int i=0; i<Nkx; i++ ){
+        for( int j=0; j<ny; j++ ){
+          size_t k = i+(Nkx)*j;
+          fft[k][0] = fphi[k][0];
+          fft[k][1] = fphi[k][1];
+        }
+      }
+      
+      fftw_execute( pp );
+      
+      phi_bar.resize(NN);
+      for( size_t i=0; i<NN; i++ ) phi_bar[i] = float(realsp[i]/NN);
+    }
   }
   // gamma1
   {
@@ -743,8 +789,6 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
   // std:: cout << " remapping the map in the original size " << std:: endl;
   delete[] fft;
   delete[] fphi;
-  
-  //phi_bar.resize(NN,0);  // ??? this needs to be calculated in the future
 }
 
 #endif

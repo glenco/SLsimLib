@@ -396,6 +396,7 @@ public:
     cosmo = lens.cosmo;
     toggle_source_plane = lens.toggle_source_plane;
     dDs_implant = lens.dDs_implant;
+    dTs_implant = lens.dTs_implant;
     zs_implant = lens.zs_implant;
     Ds_implant = lens.Ds_implant;
     index_of_new_sourceplane = lens.index_of_new_sourceplane;
@@ -415,6 +416,7 @@ public:
     
     Dl = lens.Dl;
     dDl = lens.dDl;
+    dTl = lens.dTl;
     plane_redshifts = lens.plane_redshifts;
     charge = lens.charge;
     flag_switch_field_off = lens.flag_switch_field_off;
@@ -507,8 +509,10 @@ private:
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;
-	/// the distance from the source to the next plane
-	PosType dDs_implant;
+  /// the distance from the source to the next plane
+  PosType dDs_implant;
+  /// the distance from the source to the next plane
+  PosType dTs_implant;
 	PosType zs_implant,Ds_implant;
 	/// This is the index of the plane at one larger distance than the new source distance
 	int index_of_new_sourceplane;
@@ -603,8 +607,10 @@ private: /* force calculation */
 	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
 	std::vector<PosType> Dl;
-	/// dDl[j] is the distance between plane j-1 and j plane, comoving
-	std::vector<PosType> dDl;
+  /// dDl[j] is the distance between plane j-1 and j plane, comoving
+  std::vector<PosType> dDl;
+  /// dTl[j] is the lookback-time between plane j-1 and j plane, comoving
+  std::vector<PosType> dTl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	std::vector<PosType> plane_redshifts;
 	/// charge for the tree force solver (4*pi*G)

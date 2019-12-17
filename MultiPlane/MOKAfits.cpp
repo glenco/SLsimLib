@@ -753,14 +753,37 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
       }
     }
   }
-  
+  // phi - this is done over because of the window in Fourier space
+  {
+    
+    for( int i=0; i<Nnx/2+1; i++ ){
+      for( int j=0; j<Nny; j++ ){
+
+        fft[i+(Nnx/2+1)*j][0] = fphi[i+(Nnx/2+1)*j][0];
+        fft[i+(Nnx/2+1)*j][1] = fphi[i+(Nnx/2+1)*j][1];
+        
+      }
+    }
+
+    fftw_execute( pp );
+    
+    phi_bar.resize(nx*ny);
+    for( int j=Nny/2-ny/2; j<Nny/2+ny/2; j++ ){
+      for( int i=Nnx/2-nx/2; i<Nnx/2+nx/2; i++ ){
+        int ii = i-int(Nnx/2-nx/2);
+        int jj = j-int(Nny/2-ny/2);
+        
+        phi_bar[ii+nx*jj] = float(-realsp[i+Nnx*j]/Nnx/Nny);
+      }
+    }
+    
+  }
+
  
   // std:: cout << " remapping the map in the original size " << std:: endl;
   delete[] fft;
   delete[] realsp;
   delete[] fphi;
-  
-   phi_bar.resize(nx*ny);  // ??? this needs to be calculated in the future
 }
 
 

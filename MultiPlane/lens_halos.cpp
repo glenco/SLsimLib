@@ -259,6 +259,50 @@ void LensHalo::PrintStars(bool show_stars)
   }
 }
 
+PixelMap LensHalo::map_variables(
+                       LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
+                       ,size_t Nx
+                       ,size_t Ny
+                       ,double res             /// resolution in physical Mpc on the lens plane
+){
+  
+  Point_2d center;
+  PixelMap map(center.data(),Nx,Ny,res);
+  Point_2d x,alpha;
+  size_t N = Nx*Ny;
+  KappaType kappa,phi,gamma[3];
+  for(size_t i = 0 ; i < N ; ++i){
+    map.find_position(x.data(),i);
+    force_halo(alpha.data(),&kappa,gamma,&phi,x.data());
+    
+    switch (lensvar) {
+      case ALPHA1:
+        map[i] = alpha[0];
+        break;
+      case ALPHA2:
+        map[i] = alpha[1];
+        break;
+      case GAMMA1:
+        map[i] = gamma[0];
+        break;
+      case GAMMA2:
+        map[i] = gamma[1];
+        break;
+      case KAPPA:
+        map[i] = kappa;
+        break;
+      case PHI:
+        map[i] = phi;
+        break;
+        
+      default:
+        break;
+    }
+  }
+  return map;
+}
+
+
 /// calculates the deflection etc. caused by stars alone
 void LensHalo::force_stars(
                            PosType *alpha     /// mass/Mpc

@@ -112,6 +112,7 @@ protected:
 };
 
 typedef Source *SourceHndl;
+class PixelMap;
 
 /** \brief Class for sources described by an array of pixels
  *
