@@ -1140,7 +1140,7 @@ PixelMap  Grid::MapSurfaceBrightness(double resolution){
 
 /** \brief Make a fits map that is automatically centered on the grid and has approximately the same range as the grid.  Nx can be used to change the resolution.  Nx = grid.getInitNgrid() will give the initial grid resolution
  */
-void Grid::writePixeFits(
+void Grid::writePixelFits(
                          size_t Nx           /// number of pixels in image in x dimension
                          ,LensingVariable lensvar  /// which quantity is to be displayed
                          ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended

@@ -11,24 +11,23 @@
 
 using namespace std;
 
-SourceUniform::SourceUniform(InputParams& params) : Source(){
-  assignParams(params);
-}
+//SourceUniform::SourceUniform(InputParams& params) : Source(){
+//  assignParams(params);
+//}
 
-SourceUniform::SourceUniform(PosType *position,PosType z,PosType radius_in_radians):
+SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radians):
   Source()
 {
   source_r = radius_in_radians;
-  source_x[0] = position[0];
-  source_x[1] = position[1];
+  source_x = position;
   setSBlimit_magarcsec(100.);
   zsource = z;
 }
 
 
-SourceGaussian::SourceGaussian(InputParams& params) : Source(){
-  assignParams(params);
-}
+//SourceGaussian::SourceGaussian(InputParams& params) : Source(){
+//  assignParams(params);
+//}
 
 SourceBLR::SourceBLR(InputParams& params) : Source(){
   assignParams(params);

@@ -229,8 +229,8 @@ private:
 /// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
-  SourceUniform(InputParams& params);
-  SourceUniform(PosType *position   /// postion on the sky in radians
+  //SourceUniform(InputParams& params);
+  SourceUniform(Point_2d position   /// postion on the sky in radians
                 ,PosType z          /// redshift of source
                 ,PosType radius_in_radians  /// radius of source in radians
                 );
@@ -242,10 +242,25 @@ public:
 	PosType getTotalFlux() const {return PI*source_r*source_r;}
 };
 
-/// A source with a Gaussian surface brightness profile
+/*** \brief A source with a Gaussian surface brightness profile
+ 
+ This is normalized so that it is equal to 1 at the center
+ */
 class SourceGaussian : public Source{
 public:
-	SourceGaussian(InputParams& params);
+	//SourceGaussian(InputParams& params);
+  SourceGaussian(
+                 Point_2d position  /// postion of source (radians)
+                 ,double r_size  /// angular scale size (radians)
+                 ,double z):    /// redshift
+  Source(),source_gauss_r2(r_size*r_size)
+  {
+    zsource = z;
+    source_r = 5*sqrt(source_gauss_r2);
+    source_x = position;
+    setSBlimit_magarcsec(100.);
+  }
+
 	~SourceGaussian();
 	
 	/// internal scale parameter

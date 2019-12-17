@@ -246,8 +246,8 @@ public:
   int read(std::valarray<double> &output,std::vector<long> &sizes){
     //std::cout << sizes.size() << std::endl;
     imageDimensions(sizes);
-    std::cout << sizes.size() << std::endl;
-    std::cout << sizes[0] << " " << sizes[1] << std::endl;
+    //std::cout << sizes.size() << std::endl;
+    //std::cout << sizes[0] << " " << sizes[1] << std::endl;
     long long nelements=1;
     for(long n : sizes) nelements *= n;
     std::vector<long> start(sizes.size(),1);

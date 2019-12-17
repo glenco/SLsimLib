@@ -52,14 +52,13 @@ public:
   );
  
   LensHaloParticles(std::vector<PType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
-                    ,size_t Npoints        /// redshift of origin
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
                     ,bool verbose=false
-  ):min_size(MinPSize),multimass(true)
+  ):LensHalo(redshift,cosmo), min_size(MinPSize),multimass(true)
   {
     std::swap(pvector,trash_collector);
     pp = trash_collector.data();
@@ -149,7 +148,7 @@ protected:
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize        /// minimum particle size
                     ,bool verbose
-  ):pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
+  ):LensHalo(redshift,cosmo),pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
   {
     set_up(redshift,cosmo,theta_rotate,recenter,verbose);
   }
@@ -188,7 +187,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
                                             ,PosType MinPSize
                                             ,bool verbose
                                             )
-:min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
+:LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
   LensHalo::setZlens(redshift);
@@ -277,8 +276,8 @@ void LensHaloParticles<PType>::set_up(
                                  ,bool verbose
 ){
 
-  LensHalo::setZlens(redshift);
-  LensHalo::setCosmology(cosmo);
+  //LensHalo::setZlens(redshift);
+  //LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
   stars_N = 0;
@@ -325,7 +324,7 @@ void LensHaloParticles<PType>::set_up(
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
-  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,0,20);
 }
 
 
