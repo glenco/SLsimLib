@@ -259,8 +259,8 @@ void LensHaloMultiMap::submapPhys(Point_2d ll,Point_2d ur){
   ur = (ur - long_range_map.lowerleft)/resolution;
   
   //std::cout << "ur = " << ur << std::endl;
-  std::cout << "dim. original " << Noriginal[0]
-  << " " << Noriginal[1] << std::endl;
+  //std::cout << "dim. original " << Noriginal[0]
+  //<< " " << Noriginal[1] << std::endl;
   assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
   assert(ur[1] < long_range_map.y_range()/resolution + 0.1);
   
@@ -279,7 +279,6 @@ void LensHaloMultiMap::submap(
                               ){
   
   // check range
-  
   if(single_grid) return;
 
   if( (upper_right[0] < 0) || (upper_right[1] < 0) || (lower_left[0] >= Noriginal[0] )
@@ -380,12 +379,9 @@ void LensHaloMultiMap::submap(
       map.boxlMpc = map.nx*resolution;
     }
  
-  //map.PreProcessFFTWMap(1.0,wsr);
   map.PreProcessFFTWMap(wsr);
-  //map.PreProcessFFTWMap(1.0,unit);
 
-  //map.write("test_field.fits");
-  // cut off bounders
+    // cut off bounders
   
   size_t nx = short_range_map.nx = upper_right[0] - lower_left[0] + 1;
   size_t ny = short_range_map.ny = upper_right[1] - lower_left[1] + 1;
@@ -428,10 +424,6 @@ void LensHaloMultiMap::submap(
 
 bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) {
   
-  //double fx = ((x[0] - center[0])/range + 0.5)*(nx-1);
-  //double fy = ((x[1] - center[1])/range_y + 0.5)*(ny-1);
-  //std::cout << "(  " << fx << " " << fy << "   ";
-  
   double fx = (x[0] - lowerleft[0]) / x_resolution();
   double fy = (x[1] - lowerleft[1]) / y_resolution();
   
@@ -451,8 +443,6 @@ bool LensMap::evaluate(const double *x,float &sigma,float *gamma,double *alpha) 
     double b = fx*(1-fy);
     double c = fx*fy;
     double d = (1-fx)*fy;
-    
-    //for(auto g : gamma2_bar ) assert(!isnan(g));  // ?????
     
     // bilinear interpolation
     sigma = a * surface_density[index] + b * surface_density[index+1]
@@ -719,9 +709,9 @@ void LensMap::Myread(std::string fits_input_file){
 
 /*
 void LensMap::read_sub(std::string fits_input_file
-                       ,const std::vector<long> &first   /// 2d vector for pixel of lower left, (1,1) offset
-                       ,const std::vector<long> &last    /// 2d vector for pixel of upper right, (1,1) offset
-                       ,double angDist
+      ,const std::vector<long> &first   /// 2d vector for pixel of lower left, (1,1) offset
+      ,const std::vector<long> &last    /// 2d vector for pixel of upper right, (1,1) offset
+      ,double angDist
 ){
   
   //std:: cout << " reading lens density map file: " << fits_input_file << std:: endl;
