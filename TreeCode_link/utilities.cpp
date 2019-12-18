@@ -583,7 +583,6 @@ unsigned long prevpower(unsigned long k){
     //double tmp = pow(1./2/M_PI/nx/ny,2)*boxlx*boxly;
     double tmp = boxlx*boxly * pow(1.0/nx/ny,2);
     
-    
     // fb and fa are then used to compute the power spectrum
     // build modes
     for( int i=0; i<nx/2+1; i++ ){
