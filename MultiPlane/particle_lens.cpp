@@ -12,11 +12,6 @@
 #include "H5Cpp.h"
 #endif
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-using namespace CCfits;
-#endif
-
 // *************************************************************************************
 // ******************** methods for MakeParticleLenses *********************************
 // *************************************************************************************
@@ -197,17 +192,7 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
                                                                   ,false
                                                                   ,0,false)
                       );
-  
-      /*/
-       /*LensHaloParticles<ParticleType<float> > halo(pp
-       ,nparticles[i]
-       ,z_original
-       ,cosmo
-       ,theta_rotate
-       ,false
-       ,0);
-       */
-    }
+     }
     skip += nparticles[i];
   }
 };
@@ -222,7 +207,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   size_t ntot = 0;
   while (getline(file, line) && line[0] == '#');
   std::vector<std::string> vec;
-    Utilities::IO::splitstring(line,vec,delimiter);
+    Utilities::splitstring(line,vec,delimiter);
   const int ncolumns = vec.size();
   
   if(ncolumns < columns_used){
@@ -250,7 +235,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   if(columns_used == 3){
     do{
       std::vector<std::string> vec;
-        Utilities::IO::splitstring(line,vec,delimiter);
+        Utilities::splitstring(line,vec,delimiter);
     
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -263,7 +248,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
   }else if(columns_used == 4){
     do{
       std::vector<std::string> vec;
-        Utilities::IO::splitstring(line,vec,delimiter);
+        Utilities::splitstring(line,vec,delimiter);
       
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -278,7 +263,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
     std::cout << "Using the particle sizes from " << filename << std::endl;
     do{
       std::vector<std::string> vec;
-        Utilities::IO::splitstring(line,vec,delimiter);
+        Utilities::splitstring(line,vec,delimiter);
     
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);
@@ -296,7 +281,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
 
     do{
       std::vector<std::string> vec;
-        Utilities::IO::splitstring(line,vec,delimiter);
+      Utilities::splitstring(line,vec,delimiter);
       
       data[ntot][0] =  stof(vec[0]);
       data[ntot][1] =  stof(vec[1]);

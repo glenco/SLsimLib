@@ -71,8 +71,33 @@ Point::Point():Point_2d(0,0){
   gamma[0] = gamma[1] = gamma[2] = 0;
   invmag = 1;
   flag = false;
-}
+};
 
+Point::Point(const Point_2d &p):Point_2d(p){
+  head = 0;
+  in_image = NO;
+  surface_brightness = 0;
+  leaf = nullptr;
+  image = nullptr;
+  next = prev = nullptr;
+  kappa = dt = gridsize = 0;
+  gamma[0] = gamma[1] = gamma[2] = 0;
+  invmag = 1;
+  flag = false;
+};
+
+Point::Point(PosType x,PosType y):Point_2d(x,y){
+  head = 0;
+  in_image = NO;
+  surface_brightness = 0;
+  leaf = nullptr;
+  image = nullptr;
+  next = prev = nullptr;
+  kappa = dt = gridsize = 0;
+  gamma[0] = gamma[1] = gamma[2] = 0;
+  invmag = 1;
+  flag = false;
+};
 
 /// print out all member data for testing purposes
 void Point::Print(){
@@ -974,7 +999,8 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
                                          ,int Nx) {
   
   int i_max = 0,i=0;
-  double area = critcurves[0].critical_area;//,rmax,rmin,rave;
+  double area = critcurves[0].critical_area;
+
   Point_2d p1,p2,p_min,p_max;
   p1 = p2 = p_min = p_max = critcurves[0].critical_center;
   

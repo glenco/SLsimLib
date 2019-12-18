@@ -3,6 +3,7 @@
  *      Author: D. Leier
  */
 
+#include "image_processing.h"
 #include "lens_halos.h"
 
 

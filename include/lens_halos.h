@@ -13,6 +13,8 @@
 //#include "point.h"
 #include "quadTree.h"
 #include "particle_types.h"
+#include "image_processing.h"
+
 
 /**
  * \brief A base class for all types of lensing "halos" which are any mass distribution that cause lensing.
@@ -142,7 +144,16 @@ public:
   /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
-	/// calculate the lensing properties -- deflection, convergence, and shear
+	/* calculate the lensing properties -- deflection, convergence, and shear
+   if not overwritten by derived class it uses alpha_h(), gamma_h(), etc. of the
+   derived case or for a point source in this class
+   
+  Units :
+  ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
+  KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
+  GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
+  PHI      -    mass - PHI / Sig_crit is the lensing potential
+   */
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
   
 	/// force tree calculation for stars
@@ -206,7 +217,23 @@ public:
   
   PosType renormalization(PosType r_max);
  
-
+  /** \brief Map a PixelMap of the surface, density, potential and potential gradient
+   
+   Units :
+   ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
+   KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
+   GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
+   PHI      -    mass - PHI / Sig_crit is the lensing potential
+ 
+   centred on (0,0) in LenHalo coordinates
+   */
+  PixelMap map_variables(
+                         LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
+                         ,size_t Nx
+                         ,size_t Ny
+                         ,double res             /// resolution in physical Mpc on the lens plane
+  );
+  
 private:
   size_t idnumber; /// Identification number of halo.  It is not always used.
   PosType Dist;

@@ -1226,7 +1226,8 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 		main_plane_redshifts.push_back(halo_z);
 		main_Dl.push_back(halo_Dl);
     //halo->setDist(halo_Dl/(1+halo_z));
-    halo->setZlensDist(halo_z,cosmo);
+    if(halo_z != halo->getZlens())
+      halo->setZlensDist(halo_z,cosmo);
 	}
 	else if((main_Dl[i] - halo_Dl) < MIN_PLANE_DIST)
 	{
@@ -2851,6 +2852,7 @@ void Lens::combinePlanes(bool verbose)
   plane_redshifts.clear();
   Dl.clear();
   dDl.clear();
+  dTl.clear();
 
   // copy main and field planes into master Dl
   Dl.resize(field_Dl.size() + main_Dl.size());
@@ -2920,11 +2922,15 @@ void Lens::combinePlanes(bool verbose)
   // calculate deltas
   dDl.push_back(Dl[0]);
   for(std::size_t i = 1; i < Dl.size(); ++i)
-  dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
+    dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
+  
+  // calculate lookback times between planes
+  dTl.push_back(cosmo.radDist(0,plane_redshifts[1]));
+  for(std::size_t i = 1; i < Dl.size(); ++i)
+   dTl.push_back(cosmo.radDist(plane_redshifts[i],plane_redshifts[i-1]));
   
   // output resulting setup
   if(verbose)
-
   {
     std::cout << "\ncombinePlanes()" << "\n---------------" << std::endl;
     std::cout << "\nz:";
@@ -3076,14 +3082,21 @@ short Lens::ResetSourcePlane(
 	if(nearest && (j < lensing_planes.size()) ){
 		zs_implant = plane_redshifts[j];
 		Ds_implant = Dl[j];
-		if(j > 0) dDs_implant = dDl[j];
-		else  dDs_implant = Ds_implant;
+    if(j > 0) dDs_implant = dDl[j];
+    else  dDs_implant = Ds_implant;
+
+    if(j > 0) dTs_implant = dTl[j];
+    else  dTs_implant = cosmo.radDist(0,z);
 	}else{
 		// if nearest==false or the source is at higher redshift than the last plane use the real redshift
 		Ds_implant = Ds;
 		zs_implant = z;
+    
 		if(j > 0) dDs_implant = cosmo.coorDist(plane_redshifts[j-1],z); //Ds - Dl[j-1];
 		else  dDs_implant = Ds;
+    
+    if(j > 0) dTs_implant = cosmo.radDist(plane_redshifts[j-1],z); //Ds - Dl[j-1];
+    else  dTs_implant = cosmo.radDist(0,z);
 	}
   
 	if(verbose) std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;

@@ -51,5 +51,7 @@ add_sources(
 	gaussian.h
 	gadget.hh
 	particle_types.h
+	multimap.h
 	disk.h
+	cpfits.h
 )

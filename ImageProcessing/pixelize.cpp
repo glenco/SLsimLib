@@ -7,10 +7,7 @@
 
 #include "slsimlib.h"
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-//#include <CCfits>
-#endif
+#include "cpfits.h"
 
 #include <fstream>
 #include <algorithm>
@@ -87,7 +84,7 @@ Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), 
 
 // move constructor
 PixelMap::PixelMap(PixelMap&& other)
-:Nx(0),Ny(0),map(std::move(other.map)),resolution(0), rangeX(0), rangeY(0),units(other.units){
+:map(std::move(other.map)),Nx(0),Ny(0),resolution(0), rangeX(0), rangeY(0){
  
   Nx = other.Nx;
   Ny = other.Ny;
@@ -161,8 +158,7 @@ PixelMap::PixelMap(
                    ,PixelMapUnits u
 ):units(u)
 {
-    
-#ifdef ENABLE_FITS
+  
   if(fitsfilename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
 
@@ -171,33 +167,28 @@ PixelMap::PixelMap(
         std::cerr << "Problem with inputfile " << fitsfilename << std::endl;
         throw std::invalid_argument("bad file");
     }
-  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
+
+  std::vector<long> cpsize;
   
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS (fitsfilename, CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << fitsfilename << std::endl;
-    throw std::invalid_argument("bad file");
+  CPFITS_READ cpfits(fitsfilename);
+  //int bitpix;
+  cpfits.imageDimensions(cpsize);
+  
+  Nx = cpsize[0];
+  Ny = cpsize[1];
+  
+  int err = 0;
+  
+  err += cpfits.readKey("RA", center[0]);
+  err += cpfits.readKey("DEC", center[1]);
+
+  if(err){
+    err = 0;
+    err += cpfits.readKey("CRVAL1", center[0]);
+    err += cpfits.readKey("CRVAL2", center[1]);
   }
 
-  
-  CCfits::PHDU& h0 = fp->pHDU();
-  
-  //const CCfits::ExtMap *h1=&fp->extension();
-  
-  Nx = h0.axis(0);
-  Ny = h0.axis(1);
-  
-  try
-  {
-    h0.readKey("CRVAL1", center[0]);
-    h0.readKey("CRVAL2", center[1]);
-  }
-  catch(CCfits::HDU::NoSuchKeyword)
+  if(err)
   {
     center[0] = 0.0;
     center[1] = 0.0;
@@ -205,33 +196,34 @@ PixelMap::PixelMap(
   
   if(my_res == -1){
     // read the resolution
-    try
+    err = 0;
     {
       double cdelt2;
-      h0.readKey("CDELT1", my_res);
-      h0.readKey("CDELT2", cdelt2);
-      if(std::abs(my_res) - std::abs(cdelt2) > 1e-6)
+      err += cpfits.readKey("CDELT1", my_res);
+      err += cpfits.readKey("CDELT2", cdelt2);
+      if(err == 0 && std::abs(my_res) - std::abs(cdelt2) > 1e-6)
         throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
     }
-    catch(CCfits::HDU::NoSuchKeyword)
+    if(err != 0)
     {
-      try{
+      err = 0;
+      {
         double cd12, cd21, cd22;
-        h0.readKey("CD1_1", my_res);
-        h0.readKey("CD1_2", cd12);
-        h0.readKey("CD2_1", cd21);
-        h0.readKey("CD2_2", cd22);
-        if(std::abs(my_res) - std::abs(cd22) > 1e-6)
-          throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-        if(cd12 || cd21)
-          throw std::runtime_error("pixels not aligned with coordinates in FITS file " + fitsfilename);
+        err += cpfits.readKey("CD1_1", my_res);
+        //err += cpfits.readKey("CD1_2", cd12);
+        //err += cpfits.readKey("CD2_1", cd21);
+        //err += cpfits.readKey("CD2_2", cd22);
+        //if(err==0 && std::abs(my_res) - std::abs(cd22) > 1e-6)
+        //  throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+        //if(cd12 || cd21)
+        //  throw std::runtime_error("pixels not aligned with coordinates in FITS file " + fitsfilename);
       }
-      catch(CCfits::HDU::NoSuchKeyword){
+      if(err != 0){
         double ps;
-        try{
-          h0.readKey("PHYSICALSIZE",ps);
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
+        
+        err = cpfits.readKey("PHYSICALSIZE",ps);
+        
+        if(err != 0){
           std::cerr << "PixelMap input fits field must have header keywords:" << std::endl
           << " PHYSICALSIZE - size of map in degrees" <<std::endl
           << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
@@ -252,13 +244,9 @@ PixelMap::PixelMap(
   map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
   map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
   
-  map.resize(Nx*Ny);
-  h0.read(map);
+  cpfits.read(map,cpsize);
+  //std::cout << "map size : " << map[0] << std::endl;
   //std::cout << "map size : " << map.size() << std::endl;
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
 }
 
 /** \brief Creates a new PixelMap from a square region of a PixelMap.
@@ -397,12 +385,6 @@ void PixelMap::swap(PixelMap &map1,PixelMap &map2)
   return;
 }
 
-/// Zero the whole map
-void PixelMap::Clean()
-{
-  map *= 0;
-}
-
 /// Multiplies the whole map by a scalar factor
 void PixelMap::Renormalize(PosType factor)
 {
@@ -440,6 +422,7 @@ PixelMap& PixelMap::operator+=(const PixelMap& rhs)
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
     throw std::runtime_error("Units of maps are not compatible");
+
   for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
   return *this;
 }
@@ -877,133 +860,87 @@ void PixelMap::printASCIItoFile(std::string filename) const
   return;
 }
 /// Output the pixel map as a fits file.
-void PixelMap::printFITS(std::string filename, bool verbose) const
+void PixelMap::printFITS(std::string filename, bool verbose)
 {
-#ifdef ENABLE_FITS
+
   if(filename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file output");
   
-  long naxis = 2;
-  long naxes[2] = {(long)Nx, (long)Ny};
+  CPFITS_WRITE cpfits(filename,false);
   
-  // might throw CCfits::FITS::CantCreate
-  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
-
-  std::auto_ptr<CCfits::FITS> fout(0);
-  try
-  {
-    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << filename << std::endl;
-    exit(1);
-  }
-
   std::vector<long> naxex(2);
   naxex[0] = Nx;
   naxex[1] = Ny;
+
+  cpfits.write_image(map,naxex);  // write the map
+
+  cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
+  cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
+  cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
+  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
+  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  cpfits.writeKey("CROTA2", 0.0, "");
+  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+  cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
-  CCfits::PHDU& phout = fout->pHDU();
+  cpfits.writeKey("Nx", Nx, "");
+  cpfits.writeKey("Ny", Ny, "");
+  cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+  cpfits.writeKey("RA", center[0], "radians, center");
+  cpfits.writeKey("DEC", center[1], "radians, center");
   
-  phout.write(1, map.size(), map);
-  
-  phout.addKey("WCSAXES", 2, "number of World Coordinate System axes");
-  phout.addKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
-  phout.addKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  phout.addKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  phout.addKey("CRVAL2", 0.0, "second axis value at reference pixel");
-  phout.addKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
-  phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
-  phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
-  phout.addKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
-  
-  phout.addKey("Nx", Nx, "");
-  phout.addKey("Ny", Ny, "");
-  phout.addKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  phout.addKey("RA", center[0], "radians");
-  phout.addKey("DEC", center[1], "radians");
-  
-  if(verbose)
-    std::cout << phout << std::endl;
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
 }
 
-void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const
+void PixelMap::printFITS(std::string filename
+                         ,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose)
 {
-#ifdef ENABLE_FITS
+
   if(filename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file output");
   
-  long naxis = 2;
-  long naxes[2] = {(long)Nx, (long)Ny};
-
-  // might throw CCfits::FITS::CantCreate
-  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  CPFITS_WRITE cpfits(filename,false);
   
-  std::auto_ptr<CCfits::FITS> fout(0);
-  try
-  {
-    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << filename << std::endl;
-    exit(1);
-  }
 
-  
   std::vector<long> naxex(2);
   naxex[0] = Nx;
   naxex[1] = Ny;
+
+  cpfits.write_image(map,naxex);
+
+  cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
+  cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
+  cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
+  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
+  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  cpfits.writeKey("CROTA2", 0.0, "");
+  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+  cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
-  CCfits::PHDU& phout = fout->pHDU();
-  
-  phout.write(1, map.size(), map);
-  
-  phout.addKey("WCSAXES", 2, "number of World Coordinate System axes");
-  phout.addKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
-  phout.addKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  phout.addKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  phout.addKey("CRVAL2", 0.0, "second axis value at reference pixel");
-  phout.addKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
-  phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
-  phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
-  phout.addKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
-  
-  phout.addKey("Nx", Nx, "");
-  phout.addKey("Ny", Ny, "");
-  phout.addKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  phout.addKey("RA", center[0], "radians");
-  phout.addKey("DEC", center[1], "radians");
+  cpfits.writeKey("Nx", Nx, "");
+  cpfits.writeKey("Ny", Ny, "");
+  cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+  cpfits.writeKey("RA", center[0], "radians");
+  cpfits.writeKey("DEC", center[1], "radians");
   
   for(auto hp : extra_header_info){
-    phout.addKey<double>(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
+    cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }
-  
-  if(verbose)
-    std::cout << phout << std::endl;
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
 }
 
 /** 
@@ -1487,7 +1424,7 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
       case INVMAG:
         tmp = (*pl_it)->invmag/resolution/resolution;
         break;
-      case DT:
+      case DELAYT:
         tmp = (*pl_it)->dt/resolution/resolution;
         break;
       default:
@@ -2225,6 +2162,41 @@ void PixelMap::copy_in(
       for(size_t i = imin ; i <= imax ; ++i ){
         double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
         map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
+      }
+    }
+  }
+}
+void PixelMap::paste(const PixelMap& pmap){
+  
+  if(resolution < pmap.resolution){
+    std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
+    std::cerr << resolution << " " << pmap.resolution << " dres/res " << (pmap.resolution-pmap.resolution)/pmap.resolution << std::endl;
+    throw std::invalid_argument("low resolution");
+  }
+  
+  // case where the maps do not overlap
+  if( (map_boundary_p1[0] > pmap.map_boundary_p2[0]) || (pmap.map_boundary_p1[0] > map_boundary_p2[0])
+     || (map_boundary_p1[1] > pmap.map_boundary_p2[1]) || (pmap.map_boundary_p1[1] > map_boundary_p2[1])
+     ){
+    return;
+  }
+  
+  double x[2];
+  
+  if(map.size() < pmap.map.size() ){
+    for(size_t i=0 ; i < map.size() ; ++i ){
+      find_position(x,i);
+      long j = pmap.find_index(x[0], x[1]);
+      if(j >= 0 ){
+        map[i] = pmap(j);
+      }
+    }
+  }else{
+    for(size_t j=0 ; j < pmap.map.size() ; ++j ){
+      pmap.find_position(x,j);
+      long i = find_index(x[0], x[1]);
+      if(i >= 0 ){
+        map[i] = pmap(j);
       }
     }
   }

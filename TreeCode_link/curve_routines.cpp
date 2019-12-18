@@ -1769,7 +1769,7 @@ namespace Utilities{
       }
       
       *area = fabs(*area)*0.5;
-      delete points;
+      delete[] points;
       
       return wn;
     }
@@ -1831,7 +1831,7 @@ namespace Utilities{
       }
       
       *area = fabs(*area)*0.5;
-      delete points;
+      delete[] points;
       
       return wn;
     }

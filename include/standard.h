@@ -57,6 +57,10 @@
 #define inv_hplanck 1.50919e26 // in 1/(erg*sec)
 #endif
 
+#ifndef kmpersecTOmpcperday
+#define kmpersecTOmpcperday 2.80003e-15
+#endif
+
 #ifndef error_message
 #define error_message
 #define ERROR_MESSAGE() std::cout << "ERROR: file: " << __FILE__ << " line: " << __LINE__ << std::endl;
@@ -74,7 +78,7 @@ typedef enum {NO, YES, MAYBE} Boo;
 
 #ifndef lensquant_declare
 #define lensquant_declare
-enum LensingVariable {DT,ALPHA,ALPHA1,ALPHA2,KAPPA,GAMMA,GAMMA1,GAMMA2,GAMMA3,INVMAG} ;
+enum LensingVariable {DELAYT,ALPHA,ALPHA1,ALPHA2,KAPPA,GAMMA,GAMMA1,GAMMA2,GAMMA3,INVMAG,PHI} ;
 #endif
 
 #ifndef PosType_declare

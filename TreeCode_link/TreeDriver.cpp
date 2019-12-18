@@ -1474,10 +1474,10 @@ KappaType ImageInfo::aveTimeDelay()
   return tmp_dt;
 }
 
-/// Computes the time delay averaged over the image
+/// Find the losest ray within the image to the source point y
 RAY ImageInfo::closestRay(const Point_2d &y){
   
-  Point *p;
+  RAY p;
   
   double r2min = HUGE_VALL;
   for(Kist<Point>::iterator it = imagekist->begin()
@@ -1488,13 +1488,32 @@ RAY ImageInfo::closestRay(const Point_2d &y){
     + pow( (*it).image->x[1] - y[1],2 );
   
     if(r2min > dy2){
-      p = &(*it);
+      p = *it;
       r2min = dy2;
     }
   }
   
-  return RAY(p);
+  return p;
 }
+
+RAY ImageInfo::highestSurfaceBrightnessRay(){
+  Point *p;
+  
+  double sb = -1;
+  for(Kist<Point>::iterator it = imagekist->begin()
+      ; it != imagekist->end()
+      ; ++it){
+    
+    double tsb = (*it).surface_brightness;
+    if(tsb > sb){
+      p = &(*it);
+      sb = tsb;
+    }
+  }
+  
+  return RAY(*p);
+}
+
 ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){
   
   if(!(uniform_mag && rhs.uniform_mag

@@ -57,7 +57,7 @@ LensHalo::LensHalo(const LensHalo &h){
   mnorm = h.mnorm;
   Rmax = h.Rmax;
   
-  stars_index = stars_index;
+  stars_index = h.stars_index;
   stars_xp = h.stars_xp;
   
   stars_N = h.stars_N;
@@ -73,7 +73,7 @@ LensHalo::LensHalo(const LensHalo &h){
   star_fstars = h.star_fstars;
   
   star_Nregions = h.star_Nregions;
-  star_region = star_region;
+  star_region = h.star_region;
   
   beta = h.beta;
   
@@ -114,7 +114,7 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     mnorm = h.mnorm;
     Rmax = h.Rmax;
   
-    stars_index = stars_index;
+    stars_index = h.stars_index;
     stars_xp = h.stars_xp;
   
     stars_N = h.stars_N;
@@ -128,7 +128,7 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     star_fstars = h.star_fstars;
   
     star_Nregions = h.star_Nregions;
-    star_region = star_region;
+    star_region = h.star_region;
   
     beta = h.beta;
   
@@ -173,7 +173,7 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   mnorm = h.mnorm;
   Rmax = h.Rmax;
   
-  stars_index = stars_index;
+  stars_index = h.stars_index;
   stars_xp = h.stars_xp;
   
   stars_N = h.stars_N;
@@ -189,7 +189,7 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   star_fstars = h.star_fstars;
   
   star_Nregions = h.star_Nregions;
-  star_region = star_region;
+  star_region = h.star_region;
   
   beta = h.beta;
   
@@ -218,7 +218,6 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   
   return *this;
 };
-
 
 void LensHalo::initFromMassFunc(float my_mass, float my_Rsize, float my_rscale
                                 , PosType my_slope, long *seed){
@@ -259,6 +258,50 @@ void LensHalo::PrintStars(bool show_stars)
     }
   }
 }
+
+PixelMap LensHalo::map_variables(
+                       LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
+                       ,size_t Nx
+                       ,size_t Ny
+                       ,double res             /// resolution in physical Mpc on the lens plane
+){
+  
+  Point_2d center;
+  PixelMap map(center.data(),Nx,Ny,res);
+  Point_2d x,alpha;
+  size_t N = Nx*Ny;
+  KappaType kappa,phi,gamma[3];
+  for(size_t i = 0 ; i < N ; ++i){
+    map.find_position(x.data(),i);
+    force_halo(alpha.data(),&kappa,gamma,&phi,x.data());
+    
+    switch (lensvar) {
+      case ALPHA1:
+        map[i] = alpha[0];
+        break;
+      case ALPHA2:
+        map[i] = alpha[1];
+        break;
+      case GAMMA1:
+        map[i] = gamma[0];
+        break;
+      case GAMMA2:
+        map[i] = gamma[1];
+        break;
+      case KAPPA:
+        map[i] = kappa;
+        break;
+      case PHI:
+        map[i] = phi;
+        break;
+        
+      default:
+        break;
+    }
+  }
+  return map;
+}
+
 
 /// calculates the deflection etc. caused by stars alone
 void LensHalo::force_stars(
@@ -1100,9 +1143,7 @@ void LensHalo::force_halo_sym(
     tmp = (gamma_h(x) + 2.0*subtract_point) * prefac / rcm2; // ;
     gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
     gamma[1] += xcm[0]*xcm[1]*tmp;
-    /*if (rcm2 < 1E-6){
-      std::cout << kappa_h(x)*prefac << " " << 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*gamma_h(x)*prefac/rcm2 << " "  << xcm[0]*xcm[1]*gamma_h(x)*prefac/rcm2 << " " <<rcm2 << " " << alpha_h(x)*prefac*xcm[0] << " " <<  alpha_h(x)*prefac*xcm[1] <<  std::endl;
-    }*/
+ 
     *phi += phi_h(x) * mass / PI ;
     if(subtract_point) *phi -= 0.5 * log(rcm2) * mass / PI;
   }

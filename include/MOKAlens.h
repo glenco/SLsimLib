@@ -1,8 +1,6 @@
 /*
  * MOKAlens.h
  *
- *  Created on: Jun 8, 2012
- *      Author: mpetkova
  */
 
 
@@ -29,16 +27,14 @@
  */
 struct MOKAmap{
 	/// values for the map
-	std::valarray<double> convergence;
-	std::valarray<double> alpha1;
-	std::valarray<double> alpha2;
-	std::valarray<double> gamma1;
-	std::valarray<double> gamma2;
-	std::valarray<double> gamma3;
-  std::valarray<double> phi;
-	std::valarray<double> Signlambdar;
-	std::valarray<double> Signlambdat;
-	std::vector<double> x;
+	std::valarray<double> surface_density;  // Msun / Mpc^2
+	std::valarray<double> alpha1_bar;
+	std::valarray<double> alpha2_bar;
+	std::valarray<double> gamma1_bar;
+	std::valarray<double> gamma2_bar;
+	//std::valarray<double> gamma3_bar;
+  std::valarray<double> phi_bar;
+	//std::vector<double> x;
   int nx,ny;
   // boxlMpc is Mpc/h for MOKA
 	/// lens and source properties
@@ -48,21 +44,29 @@ struct MOKAmap{
   /// cosmology
   double omegam,omegal,h,wq;
 	double inarcsec;
+  
+  MOKAmap(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &cosmo){
+    read(MOKA_input_file,zeromean,cosmo);
+  }
+  
+  void read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &cosmo);
+  void write(std::string filename);
+
 	Point_2d center;
   
   
   MOKAmap(){}
   MOKAmap(const MOKAmap &map){
-      convergence = map.convergence;
-      alpha1 = map.alpha1;
-      alpha2 = map.alpha2;
-      gamma1 = map.gamma1;
-      gamma2 = map.gamma2;
-      gamma3 = map.gamma3;
-      phi = map.phi;
-      Signlambdar = map.Signlambdar;
-      Signlambdat = map.Signlambdat;
-      x = map.x;
+      surface_density = map.surface_density;
+      alpha1_bar = map.alpha1_bar;
+      alpha2_bar = map.alpha2_bar;
+      gamma1_bar = map.gamma1_bar;
+      gamma2_bar = map.gamma2_bar;
+      //gamma3_bar = map.gamma3;
+      phi_bar = map.phi_bar;
+      //Signlambdar = map.Signlambdar;
+      //Signlambdat = map.Signlambdat;
+      //x = map.x;
       nx = map.nx;
       ny = map.ny;
       zlens = map.zlens;
@@ -93,16 +97,16 @@ struct MOKAmap{
   
   MOKAmap & operator=(MOKAmap &&map){
     if(this != &map){
-      convergence = std::move(map.convergence);
-      alpha1 = std::move(map.alpha1);
-      alpha2 = std::move(map.alpha2);
-      gamma1 = std::move(map.gamma1);
-      gamma2 = std::move(map.gamma2);
-      gamma3 = std::move(map.gamma3);
-      phi = std::move(map.phi);
-      Signlambdar = std::move(map.Signlambdar);
-      Signlambdat = std::move(map.Signlambdat);
-      x = std::move(map.x);
+      surface_density = std::move(map.surface_density);
+      alpha1_bar = std::move(map.alpha1_bar);
+      alpha2_bar = std::move(map.alpha2_bar);
+      gamma1_bar = std::move(map.gamma1_bar);
+      gamma2_bar = std::move(map.gamma2_bar);
+      //gamma3_bar = std::move(map.gamma3_bar);
+      phi_bar = std::move(map.phi_bar);
+      //Signlambdar = std::move(map.Signlambdar);
+      //Signlambdat = std::move(map.Signlambdat);
+      //x = std::move(map.x);
       nx = map.nx;
       ny = map.ny;
       zlens = map.zlens;
@@ -131,16 +135,16 @@ struct MOKAmap{
   }
   MOKAmap & operator=(const MOKAmap &map){
     if(this != &map){
-      convergence = map.convergence;
-      alpha1 = map.alpha1;
-      alpha2 = map.alpha2;
-      gamma1 = map.gamma1;
-      gamma2 = map.gamma2;
-      gamma3 = map.gamma3;
-      phi = map.phi;
-      Signlambdar = map.Signlambdar;
-      Signlambdat = map.Signlambdat;
-      x = map.x;
+      surface_density = map.surface_density;
+      alpha1_bar = map.alpha1_bar;
+      alpha2_bar = map.alpha2_bar;
+      gamma1_bar = map.gamma1_bar;
+      gamma2_bar = map.gamma2_bar;
+      //gamma3_bar = map.gamma3_bar;
+      phi_bar = map.phi_bar;
+      //Signlambdar = map.Signlambdar;
+      //Signlambdat = map.Signlambdat;
+      //x = map.x;
       nx = map.nx;
       ny = map.ny;
       zlens = map.zlens;
@@ -167,6 +171,8 @@ struct MOKAmap{
     
     return *this;
   }
+  
+  void PreProcessFFTWMap(float zerosize);
 
 };
 
@@ -250,16 +256,16 @@ public:
 	void checkCosmology();
 	
 	void saveImage(bool saveprofile=true);
-	void saveKappaProfile();
-	void saveGammaProfile();
-	void saveProfiles(double &RE3, double &xxc, double &yyc);
+	//void saveKappaProfile();
+	//void saveGammaProfile();
+	//void saveProfiles(double &RE3, double &xxc, double &yyc);
     
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
     
-	void saveImage(GridHndl grid,bool saveprofiles);
+	//void saveImage(GridHndl grid,bool saveprofiles);
 	
-	void estSignLambdas();
-	void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
+	//void estSignLambdas();
+	//void EinsteinRadii(double &RE1, double &RE2, double &xxc, double &yyc);
 	
 	void getDims();
 	void readMap();
@@ -270,6 +276,7 @@ public:
   
 	/// return center in physical Mpc
 	Point_2d getCenter() const { return map.center; }
+
 	/// return range of input map in rad
 	double getRangeRad() const { return map.boxlrad; }
 	/// return range of input map in physical Mpc
@@ -289,20 +296,19 @@ public:
 private:
 	PixelMapType maptype;
 	void initMap();
-	void convertmap(MOKAmap *map,PixelMapType maptype);
+
+	void convertmap(MOKAmap &map,PixelMapType maptype);
 	MOKAmap map;
-	COSMOLOGY& cosmo;
-	void PreProcessFFTWMap();
+	const COSMOLOGY& cosmo;
   int zerosize;
   bool zeromean;
 };
-  
-
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);
 
 int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vector<int> &groupid);
-#endif /* MOKALENS_H_ */
+#endif
+/* MOKALENS_H_ */
 
 
 

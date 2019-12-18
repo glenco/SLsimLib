@@ -70,8 +70,8 @@ GLAMER_TEST_USES(LensTest)
 
 class Lens{
 public:
-  Lens(long* seed, PosType z_source,CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
-  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
+  Lens(long* seed, PosType z_source,CosmoParamSet cosmoset, bool verbose = false);
+  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose = false);
   Lens(long* seed, PosType z_source,const COSMOLOGY &cosmo, bool verbose = false);
   Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmo, bool verbose = false);
   
@@ -225,7 +225,7 @@ public:
    *  The halos are copied so the input halos can be destoyed without affecting the Lens.
    */
   template <typename T>
-  void insertMainHalos(std::vector<T> &my_halos,bool addplanes, bool verbose)
+  void insertMainHalos(std::vector<T> &my_halos,bool addplanes, bool verbose=false)
   {
     T* ptr;
     //for(std::size_t i = 0; i < my_halos.size() ; ++i)
@@ -315,7 +315,15 @@ public:
 	/// get single main halo of given type
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
-  
+
+  /**\brief Using to shoot a single ray
+   
+   ray.x should be set to the image position.
+   The kappa,gamma,deflection, time-delay and
+   source position will be calculated at that
+   image point.
+   */
+  void rayshooter(RAY &ray);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
                       ,std::vector<Point_2d> & ang_positions
@@ -388,6 +396,7 @@ public:
     cosmo = lens.cosmo;
     toggle_source_plane = lens.toggle_source_plane;
     dDs_implant = lens.dDs_implant;
+    dTs_implant = lens.dTs_implant;
     zs_implant = lens.zs_implant;
     Ds_implant = lens.Ds_implant;
     index_of_new_sourceplane = lens.index_of_new_sourceplane;
@@ -407,6 +416,7 @@ public:
     
     Dl = lens.Dl;
     dDl = lens.dDl;
+    dTl = lens.dTl;
     plane_redshifts = lens.plane_redshifts;
     charge = lens.charge;
     flag_switch_field_off = lens.flag_switch_field_off;
@@ -499,8 +509,10 @@ private:
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;
-	/// the distance from the source to the next plane
-	PosType dDs_implant;
+  /// the distance from the source to the next plane
+  PosType dDs_implant;
+  /// the distance from the source to the next plane
+  PosType dTs_implant;
 	PosType zs_implant,Ds_implant;
 	/// This is the index of the plane at one larger distance than the new source distance
 	int index_of_new_sourceplane;
@@ -595,8 +607,10 @@ private: /* force calculation */
 	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
 	std::vector<PosType> Dl;
-	/// dDl[j] is the distance between plane j-1 and j plane, comoving
-	std::vector<PosType> dDl;
+  /// dDl[j] is the distance between plane j-1 and j plane, comoving
+  std::vector<PosType> dDl;
+  /// dTl[j] is the lookback-time between plane j-1 and j plane, comoving
+  std::vector<PosType> dTl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	std::vector<PosType> plane_redshifts;
 	/// charge for the tree force solver (4*pi*G)

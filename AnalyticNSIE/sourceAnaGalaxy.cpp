@@ -219,13 +219,13 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
     << "  " << H_band_Bulge << "  " << Ks_band_Bulge << "  " << i1_Bulge << "  " << i2_Bulge
     << std::endl;
 
-    // converting from Millennium conventions
-    theta[0] = -ra*PI/180;
-    theta[1] = dec*PI/180;
-    pa = (90 - pa)*PI/180;
-    inclination *= PI/180;
-    if(cos(inclination)< 0.5) inclination = acos(0.5);
-      
+      // converting from Millennium conventions
+			theta[0] = -ra*PI/180;
+			theta[1] = dec*PI/180;
+      pa = (90 - pa)*PI/180;
+      inclination *= PI/180;
+      if(cos(inclination)< 0.5) inclination = acos(0.5);
+    
       //std::cout << "did inclination" << std::endl;
     if(j == 0){
       rangex[0] = rangex[1] = theta[0];
@@ -280,8 +280,8 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
       galaxies.push_back(galaxy);
       assert(galaxies.back().getMag(band) == galaxies.back().getMag() );
       //std::cout << " j in SourceMultiAnaGalaxy : " << j << std::endl;
-      ++j;
-    }
+			++j;
+		}
 	}
 
   std::cout << " closing file in SourceMultiAnaGalaxy : " << std::endl;

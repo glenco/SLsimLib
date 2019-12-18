@@ -14,6 +14,7 @@
 #endif
 
 #include "utilities_slsim.h"
+#include "image_processing.h"
 #include "source.h"
 #include <complex>
 
@@ -67,7 +68,8 @@ public:
   }
 	inline double getResolution() const { return resolution; }
 	
-	void Clean();
+  // Zero the whole map
+  void Clean(){map *= 0;}
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
@@ -87,6 +89,17 @@ public:
    of the map within the area of overlaping pixels.
    **/
   void copy_in(const PixelMap& pmap);
+  
+  /** \brief Replace overlaping pixel values with those of the input map.
+   
+   No attempt is made to interpolate or average the pixels of pmap.  No integration
+   is done.  If the resolution of input map is higher than the reslution of the map then
+   the pixels values will just be that of the last pixel visited while going through them.
+   
+   This can be used to sew tiles together into a larger map.
+   **/
+  void paste(const PixelMap& pmap);
+  
   /** \brief copy a PixelMap that must be the same without creating a new one..
    
    This avoids calling a any constructor or destructor.
@@ -139,13 +152,14 @@ public:
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
-	void printFITS(std::string filename, bool verbose = false) const;
-  void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const;
+	void printFITS(std::string filename, bool verbose = false);
+  void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
 
 	void smooth(double sigma);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
-	inline double & operator[](std::size_t i) { return map[i]; };
+  inline double & operator[](std::size_t i) { return map[i]; };
+  const double & operator[](std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
   inline double & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
@@ -163,8 +177,11 @@ public:
   PixelMap operator*(const PixelMap& a) const;
 
 	PixelMap& operator*=(PosType b);
-	//friend PixelMap operator*(const PixelMap&, PosType b);
-	
+
+ 	//friend PixelMap operator*(const PixelMap&, PosType b);
+  /// element wise multiplictioan
+  PixelMap operator*=(const PixelMap &m) const;
+
 	std::valarray<double>& data() { return map; }
 	
   /// Check whether two PixelMaps agree in their physical dimensions.
@@ -231,10 +248,10 @@ public:
     
     if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
     
-    if(overwrite) Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    if(overwrite) Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
     else{
       std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2d(map,map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
       for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
     }
   }
@@ -450,7 +467,7 @@ void _SplitFluxIntoPixels(TreeHndl ptree,Branch *leaf,double *leaf_sb);
 
 namespace Utilities{
     void LoadFitsImages(std::string dir,const std::string& filespec,std::vector<PixelMap> & images,int maxN,double resolution = -1,bool verbose = false);
-  void LoadFitsImages(std::string dir,std::vector<std::string> filespecs,std::vector<std::string> file_non_specs                                  ,std::vector<PixelMap> & images,std::vector<std::string> & names,int maxN,double resolution = -1,bool verbose = false);
+    void LoadFitsImages(std::string dir,std::vector<std::string> filespecs,std::vector<std::string> file_non_specs                                  ,std::vector<PixelMap> & images,std::vector<std::string> & names,int maxN,double resolution = -1,bool verbose = false);
     void ReadFileNames(std::string dir,const std::string filespec
                        ,std::vector<std::string> & filenames
                        ,const std::string file_non_spec = " "

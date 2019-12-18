@@ -431,15 +431,15 @@ unsigned long prevpower(unsigned long k){
                        ,double zeropaddingfactor
                        )
   {
-    // go in the fourir space doing the zero padding
+    // go in the fourier space doing the zero padding
     int zerosize = 4;
     
     int nl = ll.size();
     Pl.resize(nl);
     
     // size of the new map in x and y directions, factor by which each size is increased
-    int Nnx=int(zerosize*nx);
-    int Nny=int(zerosize*ny);
+    size_t Nnx=int(zerosize*nx);
+    size_t Nny=int(zerosize*ny);
     double Nboxlx = boxlx*zerosize;
     double Nboxly = boxly*zerosize;
     
@@ -477,7 +477,7 @@ unsigned long prevpower(unsigned long k){
     fftw_complex *fNb=new fftw_complex[Nny*(Nnx/2+1)];
     fftw_complex *Nfcc=new fftw_complex[Nny*(Nnx/2+1)];
     //size_t *ik=new size_t[];
-    fftw_complex *output=new fftw_complex[Nny*(Nnx/2+1)];
+    //fftw_complex *output=new fftw_complex[Nny*(Nnx/2+1)];
     for(int i=0;i<Nnx;i++) for(int j=0;j<Nny; j++){
       dNa[i+Nnx*j] = double(Na[i+Nnx*j]);
       dNb[i+Nnx*j] = double(Nb[i+Nnx*j]);
@@ -492,6 +492,7 @@ unsigned long prevpower(unsigned long k){
     
     //double *ks=new double[Nny*(Nnx/2+1)];
     std::vector<double> ks(Nny*(Nnx/2+1));
+    double tmp = Nboxlx*Nboxly * pow(1.0/Nnx/Nny,2);
     
     // fb and fa are then used to compute the power spectrum
     // build modes
@@ -505,9 +506,9 @@ unsigned long prevpower(unsigned long k){
         // rescale respect to the box size
         ks[i+(Nnx/2+1)*j] = sqrt(kx*kx/Nboxlx/Nboxlx + ky*ky/Nboxly/Nboxly)*2.*M_PI;
         Nfcc[i+(Nnx/2+1)*j][0] =  (fNa[i+(Nnx/2+1)*j][0]*fNb[i+(Nnx/2+1)*j][0] +
-                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][1])*pow(1./2/M_PI/Nnx/Nny,2)*Nboxlx*Nboxly;
+                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][1]) * tmp;
         Nfcc[i+(Nnx/2+1)*j][1] = -(fNa[i+(Nnx/2+1)*j][0]*fNb[i+(Nnx/2+1)*j][1] -
-                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][0])*pow(1./2/M_PI/Nnx/Nny,2)*Nboxlx*Nboxly;
+                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][0]) * tmp;
       }
     }
     std::vector<size_t> ik(Nny*(Nnx/2+1));
@@ -549,7 +550,7 @@ unsigned long prevpower(unsigned long k){
     }
     delete [] dNa;
     delete [] dNb;
-    delete [] output;
+    //delete [] output;
     delete [] fNa;
     delete [] fNb;
     delete [] Nfcc;
@@ -557,9 +558,95 @@ unsigned long prevpower(unsigned long k){
     delete [] nc;
   }
   
+  void powerspectrum2d(
+                       std::valarray<double> &aa
+                       ,int nx
+                       ,int ny
+                       ,double boxlx
+                       ,double boxly
+                       ,std::vector<double> &ll
+                       ,std::vector<double> &Pl
+                       )
+  {
+    int nl = ll.size();
+    Pl.resize(nl);
+    
+    fftw_complex *fNa=new fftw_complex[ny*(nx/2+1)];
+    
+    fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa,FFTW_ESTIMATE);
+    fftw_execute( p1 );
+    fftw_destroy_plan(p1);
+   
+    //double *ks=new double[ny*(nx/2+1)];
+    std::vector<double> ks(ny*(nx/2+1));
+    
+    //double tmp = pow(1./2/M_PI/nx/ny,2)*boxlx*boxly;
+    double tmp = boxlx*boxly * pow(1.0/nx/ny,2);
+    
+    // fb and fa are then used to compute the power spectrum
+    // build modes
+    for( int i=0; i<nx/2+1; i++ ){
+      // kx = i if i<n/2 else i-n
+      // double kx=(i<nx/2)?double(i):double(i-nx);
+      double kx=double(i);
+      for( int j=0; j<ny; j++ ){
+        size_t kk = i+(nx/2+1)*j;
+
+        double ky=(j<ny/2)?double(j):double(j-ny);
+        // rescale respect to the box size
+        ks[kk] = sqrt(kx*kx/boxlx/boxlx + ky*ky/boxly/boxly)*2.*M_PI;
+        
+        fNa[kk][0] = (fNa[kk][0]*fNa[kk][0] +
+                      fNa[kk][1]*fNa[kk][1])*tmp;
+        fNa[kk][1] = 0;
+      }
+    }
+    std::vector<size_t> ik(ny*(nx/2+1));
+    Utilities::sort_indexes<double>(ks,ik);
+    
+    double *nk=new double[ny*(nx/2+1)];
+    double *nc=new double[ny*(nx/2+1)];
+    // sorted vectors
+    for(int i=0; i<nx/2+1; i++)
+      for(int j=0; j<ny;j++){
+        size_t kk = i+(nx/2+1)*j;
+
+        nk[kk] = ks[ik[kk]];
+        nc[kk] = fNa[ik[kk]][0];
+      }
+    std:: vector<double> bink(nl);
+    // build the binned power spectrum
+    Utilities::fill_linear(bink,nl,log10(nk[1]),log10(nk[ny*(nx/2+1)-1]));
+    double lk1,lk2;
+    for(int i=0;i<nl;i++){
+      if(i==0) lk1=bink[i];
+      else lk1=bink[i]-0.5*(bink[i]-bink[i-1]);
+      if(i==nl-1) lk2=bink[i];
+      else lk2=bink[i]+0.5*(bink[i+1]-bink[i]);
+      Pl[i]=0.;
+      ll[i]=0.;
+      int nin=0;
+      // start from 1 because the first is 0
+      for(int j=1;j<ny*(nx/2+1)-1;j++){
+        if(log10(nk[j])>=lk1 && log10(nk[j])<lk2){
+          Pl[i]=Pl[i]+nc[j];
+          ll[i]=ll[i]+nk[j];
+          nin=nin+1;
+        }
+      }
+      if(nin>0){
+        Pl[i]=Pl[i]/double(nin);
+        ll[i]=ll[i]/double(nin);
+      }
+    }
+    delete [] fNa;
+    delete [] nk;
+    delete [] nc;
+  }
+
 #endif
   
-  std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
+std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
     
     std::valarray<double> map_out(map_in.size());
     long r,area;
@@ -644,6 +731,15 @@ unsigned long prevpower(unsigned long k){
   }
 
   int GetNThreads(){return N_THREADS;}
+}
+
+/// throws a runtime error if the directory does not exist
+bool Utilities::IO::check_directory(std::string dir){
+  struct stat sb;
+  if (stat(dir.c_str(), &sb) != 0 || !S_ISDIR(sb.st_mode)){
+    return false;
+  }
+  return true;
 }
 
 void Utilities::IO::ReadFileNames(
@@ -800,7 +896,7 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
 }
 
 Utilities::IO::XYcsvLookUp::XYcsvLookUp(
-                                    std::string datafile   /// input catalog file in csv format
+                                std::string datafile   /// input catalog file in csv format
                                     ,std::string Xlabel
                                     ,std::string Ylabel
                                     ,std::vector<double> Xbins
@@ -900,7 +996,7 @@ double Utilities::IO::XYcsvLookUp::operator[](std::string label) const{
   throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
 }
 
-void Utilities::IO::splitstring(std::string &line,std::vector<std::string> &vec
+void Utilities::splitstring(std::string &line,std::vector<std::string> &vec
                             ,const std::string &delimiter){
   size_t pos = 0;
   

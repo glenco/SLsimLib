@@ -15,9 +15,9 @@ using namespace std;
 
 void LensHaloBaseNSIE::force_halo(
                                   PosType *alpha       /// mass/PhysMpc
-                                  ,KappaType *kappa    /// surface mass density
-                                  ,KappaType *gamma
-                                  ,KappaType *phi
+                                  ,KappaType *kappa    /// surface mass density , mass / /PhysMpc/PhysMpc
+                                  ,KappaType *gamma    /// mass / /PhysMpc/PhysMpc
+                                  ,KappaType *phi      /// mass
                                   ,PosType const *xcm  /// Position in PhysMpc
                                   ,bool subtract_point /// if true contribution from a point mass is subtracted
                                   ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
@@ -1238,57 +1238,6 @@ PosType LensHalo::kappa_asym(PosType x,PosType theta){
  
     return kappa;
 }
-*/
-
-
-
-// The following lines are based on Ansatz IIIb and work according to the quality of the approximation
-
-/*PosType LensHalo::kappa_asym(PosType x,PosType theta){
-	PosType F, f[3],g[3], kappa;
-    PosType phi=phi_int(x);
-    
-     //calcModesB(0.01*i, fratio, pa, mod1);
-    //std::cout << 0.01*i << " " << dhfunction(0.01*i) << " " << mod1[4] << " " << mod1[8] << " " << mod1[12] << " " << mod1[16] << " " << fratio << std::endl;
-
-     faxial(x,theta,f); // for this to work calculate modes in faxial with calcModesB !!
-     gradial(x,g);
-     F=f[0]-1;
-     //beta=get_slope(); // only for fixed beta, i.e. PowerLaw
-     beta=bfunction(x); // only for NFW
-     double fac=1.0/(beta*beta/(2.-beta)/(2.-beta));
-     kappa=f[0]*kappa_h(x)-0.5*f[2]*fac*phi;//  w/o damping
-     //kappa=(1+F*g[0])*kappa_h(x)-0.5*phi*fac*(F*g[1]/x+F*g[2]+f[2]*g[0]/x/x)*x*x-F*g[1]*alpha_h(x)*x*x; /// with damping
-
-    return kappa;
-}
-
- 
- 
- void LensHalo::alpha_asym(PosType x,PosType theta, PosType alpha[]){
-     PosType F,f[3],g[3],alpha_r,alpha_theta;
-     PosType phi=phi_int(x);
-     
-     faxial0(theta,f);
-     
-     F=f[0]-1;
-     gradial(x,g);
-     beta=get_slope();
-     double fac=1.0/(beta*beta/(2-beta)/(2-beta));
-     
-     //alpha_r=alpha_h(x)*f[0]; // w/o damping
-     //alpha_theta=f[1]*phi/x; //  w/o damping
-     
-     alpha_r=alpha_h(x)*(1+F*g[0])+phi*fac*F*g[1]; // with damping
-     alpha_theta=f[1]*g[0]*phi*fac/x; //  with damping
-     
-     //std::cout << "in alpha_asym: " << beta << " " << alpha_theta << std::endl;
-     
-     alpha[0] = (alpha_r*cos(theta) - alpha_theta*sin(theta))/cos(theta);
-     alpha[1] = (alpha_r*sin(theta) + alpha_theta*cos(theta))/sin(theta);
-     return;
-     }
- 
 */
 
 
