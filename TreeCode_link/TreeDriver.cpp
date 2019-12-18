@@ -1511,7 +1511,7 @@ RAY ImageInfo::highestSurfaceBrightnessRay(){
     }
   }
   
-  return RAY(p);
+  return RAY(*p);
 }
 
 ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){
