@@ -70,8 +70,10 @@ GLAMER_TEST_USES(LensTest)
 
 class Lens{
 public:
+  /// Creats an empty lens.  `LensHalo`'s need to be added later.
   Lens(long* seed, PosType z_source,CosmoParamSet cosmoset, bool verbose = false);
   Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose = false);
+  /// Creats an empty lens.  `LensHalo`'s need to be added later.
   Lens(long* seed, PosType z_source,const COSMOLOGY &cosmo, bool verbose = false);
   Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmo, bool verbose = false);
   
@@ -462,10 +464,10 @@ public:
     main_halo_type = lens.main_halo_type;
     main_galaxy_halo_type = lens.main_galaxy_halo_type;
 
-    pixel_map_input_file = lens.pixel_map_input_file;
-    pixel_map_on = lens.pixel_map_on;
-    pixel_map_zeropad = lens.pixel_map_zeropad;
-    pixel_map_zeromean = lens.pixel_map_zeromean;
+    //pixel_map_input_file = lens.pixel_map_input_file;
+    //pixel_map_on = lens.pixel_map_on;
+    //pixel_map_zeropad = lens.pixel_map_zeropad;
+    //pixel_map_zeromean = lens.pixel_map_zeromean;
     
     central_point_sphere = lens.central_point_sphere;
     sim_angular_radius = lens.sim_angular_radius;
@@ -552,7 +554,7 @@ private:
 	void createFieldPlanes(bool verbose);
 	
 	/// generate main halo from the parameter file
-	void createMainHalos(InputParams& params);
+	//void createMainHalos(InputParams& params);
 	/// generate main halo from the parameter file
 	void createMainPlanes();
 	/// add a main halo to an existing plane, or create a new one plane if it is not close enough
@@ -720,14 +722,14 @@ private: /* main */
 	
 private: /* input */
 	/// file for multiple main halo input
-	std::string pixel_map_input_file;
+	//std::string pixel_map_input_file;
 	
  	/// read main halos from a pixelized density map
-  short pixel_map_on;
+  //short pixel_map_on;
   /// zero padding for FFTs with pixelized density maps
-  int pixel_map_zeropad;
-  bool pixel_map_zeromean;
-	void readPixelizedDensity();
+  //int pixel_map_zeropad;
+  //bool pixel_map_zeromean;
+	//void readPixelizedDensity();
   
   /// the center of the lens in spherical coordinates
   Utilities::Geometry::SphericalPoint central_point_sphere;

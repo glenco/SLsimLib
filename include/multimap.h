@@ -13,97 +13,11 @@
 #include "lens_halos.h"
 #include "grid_maintenance.h"
 #include "cpfits.h"
+#include "lensmap.h"
+#include "fftw3.h"
 
 #include <stdexcept>
 
-/**
- * \brief The MOKA map structure, containing all quantities that define it
- *
- * The MOKA map, that is read in from the fits file. Its components include the
- * lensing properties, as well as the cosmology, the size of the field of view,
- * the redshifts of the lens and source, the properties of the cluster, etc.
- *
- * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
- * the cfits library.
- */
-struct LensMap{
-  
-  LensMap():nx(0),ny(0),boxlMpc(0),angular_pixel_size(0){};
-  
-  // move operators
-  LensMap(LensMap &&m);
-  LensMap& operator=(LensMap &&m);
-  
-	/// values for the map
-	std::valarray<double> surface_density;  // Msun / Mpc^2
-
-	std::valarray<float> alpha1_bar;  // Msun / Mpc
-	std::valarray<float> alpha2_bar;  // Msun / Mpc
-	std::valarray<float> gamma1_bar;  // Msun / Mpc^2
-	std::valarray<float> gamma2_bar;  // Msun / Mpc^2
-  std::valarray<float> phi_bar;     // Msun  
-  int nx,ny;
-
-  double boxlMpc;
-  double angular_pixel_size;  // in radians
-	Point_2d center;
-  Point_2d lowerleft;  /// boundery with centred grid
-  Point_2d upperright; ///
-  
-  double x_resolution(){return boxlMpc / nx ;}
-  double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}
-  // # of pixels times resolution
-  double x_range(){return boxlMpc;}
-  // # of pixels times resolution
-  double y_range(){return (upperright[1]-lowerleft[1]);}
-
-  bool evaluate(const double *x,float &sigma,float *gamma,double *alpha);
-  
-#ifdef ENABLE_FITS
-
-  LensMap(std::string fits_input_file,double angDist){
-    read(fits_input_file,angDist);
-  }
-  
-  /// read an entire map
-  void read(std::string input_fits,double angDist);//,float h,float z);
-  /// read from a file that has been generated with LensMap::write()
-  void Myread(std::string fits_input_file);
-
-  
-  /// read only header information
-  //void read_header(std::string input_fits,float h,float z);
-  void read_header(std::string input_fits,double angDist);
-
-  /// read a subsection of the fits map
-//  void read_sub(std::string input_fits
-//                ,const std::vector<long> &first
-//                ,const std::vector<long> &last
-//                ,double Dist
-//                );
-  
-    void read_sub(CPFITS_READ &cpfits
-                ,std::vector<long> &first
-                ,std::vector<long> &last
-                ,double Dist
-                );
-
-  void write(std::string filename);
-  /// meant to output directly in angulare units and lensing quantities
-  void write(std::string filename,LensingVariable quant);
-
-#endif
-
-#ifdef ENABLE_FFTW
-  // this calculates the other lensing quantities from the density map
-  
-  template <class T>
-  void PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha = true);
-  template <class T>
-  void PreProcessFFTWMap(T Wphi_of_k,bool do_alpha = true);
- #endif
-  
-};
 
 /** \brief A lens halo that calculates all lensing qunatities on two grids - a low res long range grid
  *   and a high res short range grid.  This is done to reduce the required memory required.
@@ -273,22 +187,10 @@ private:
   
 	//const COSMOLOGY& cosmo;
   int zerosize;
-
-  struct UNIT{
-    int operator()(float k2){return 1;}
-  };
-  struct WLR{
-    float rs2;
-    float operator()(float k2){return exp(-k2*rs2);}
-  };
-  struct WSR{
-    float rs2;
-    float operator()(float k2){return 1 - exp(-k2*rs2);}
-  };
   
-  UNIT unit;
-  WSR wsr;
-  WLR wlr;
+  LensMap::UNIT unit;
+  LensMap::WSR wsr;
+  LensMap::WLR wlr;
 };
 
 
