@@ -62,7 +62,6 @@ The *GLAMER* library requires some libraries by default and others are optional.
 Library   | Required by   || Description
 ----------|---------------||-----------------------------------------------------
 [CFITSIO] | `ENABLE_FITS` |required| Library for reading and writing files in the FITS format.
-[CCfits]¹ | `ENABLE_FITS` |required| C++ wrapper for *CFITSIO*.
 [FFTW]    | `ENABLE_FFTW` |required| Library for Fast Fourier Transform algorithms.
 [GSL]     | `ENABLE_GSL`  |optional| Library for scientific computation
 [HDF5 C++]    | `ENABLE_HDF5` |optional| I/O in hdf5 format
