@@ -133,17 +133,26 @@ public:
   const double ffactor = 5,gfactor = 5;
   //const double ffactor = 10,gfactor = 10;
 
-  /// Set highres map be specifying the corners in pixel values
-  void submap(
+  /// Add highres map be specifying the corners in pixel values
+  void push_back_submap(
               const std::vector<long> &lower_left
               ,const std::vector<long> &upper_right
               );
-  /// Sets the highres smaller map in physical coordinates relative to the center of the original map, periodic boundary conditions apply
-  void submapPhys(Point_2d ll,Point_2d ur);
+  void resetsubmap(int i,
+              const std::vector<long> &lower_left
+              ,const std::vector<long> &upper_right
+              );
+  /// Sets the least highres smaller map in physical coordinates relative to the center of the original map, periodic boundary conditions apply
+  void push_back_submapPhys(Point_2d ll,Point_2d ur);
+  void resetsubmapPhys(int i,Point_2d ll,Point_2d ur);
   
-  void submapAngular(Point_2d ll,Point_2d ur){
+  void push_back_submapAngular(Point_2d ll,Point_2d ur){
     double D = getDist();
-    submapPhys(ll*D,ur*D);
+    push_back_submapPhys(ll*D,ur*D);
+  }
+  void resetsubmapAngular(int i,Point_2d ll,Point_2d ur){
+    double D = getDist();
+    resetsubmapPhys(i,ll*D,ur*D);
   }
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
@@ -158,16 +167,19 @@ public:
   Point_2d getCenter_lr() const { return long_range_map.center; }
 
   /// lower left of short range map in physical Mpc
-  Point_2d getLowerLeft_sr() const { return short_range_map.lowerleft; }
+  Point_2d getLowerLeft_sr(int i) const { return short_range_maps[i].lowerleft; }
   /// upper right of short range map in physical Mpc
-  Point_2d getUpperRight_sr() const { return short_range_map.upperright; }
+  Point_2d getUpperRight_sr(int i) const { return short_range_maps[i].upperright; }
   /// center of short range map in physical Mpc
-  Point_2d getCenter_sr() const { return short_range_map.center; }
+  Point_2d getCenter_sr(int i) const { return short_range_maps[i].center; }
+  
+  /// the number of short range grids
+  int NumberOfShortRangeMaps(){return short_range_maps.size();}
   
   /// return range of long range map in physical Mpc
   double getRangeMpc_lr() const { return long_range_map.boxlMpc; }
   /// return range of long range map in physical Mpc
-  double getRangeMpc_sr() const { return short_range_map.boxlMpc; }
+  double getRangeMpc_sr() const { return short_range_maps[0].boxlMpc; }
 
   /// return number of pixels on a x-axis side in original map
 	size_t getNx_lr() const { return long_range_map.nx; }
@@ -175,9 +187,9 @@ public:
 	size_t getNy_lr() const { return long_range_map.ny; }
 	
   /// return number of pixels on a x-axis side in short range map
-  size_t getNx_sr() const { return short_range_map.nx; }
+  size_t getNx_sr() const { return short_range_maps[0].nx; }
   /// return number of pixels on a y-axis side in short range map
-  size_t getNy_sr() const { return short_range_map.ny; }
+  size_t getNy_sr() const { return short_range_maps[0].ny; }
 
   /// return number of pixels on a x-axis side in original map
   size_t getNx() const { return Noriginal[0]; }
@@ -193,7 +205,7 @@ public:
     LensHalo::operator=(std::move(m));
     cosmo = m.cosmo;
     long_range_map = std::move(m.long_range_map);
-    short_range_map = std::move(m.short_range_map);
+    short_range_maps = std::move(m.short_range_maps);
     single_grid = m.single_grid;
     cpfits = std::move(m.cpfits);
     //m.cpfits = nullptr;
@@ -220,7 +232,7 @@ public:
   LensHalo(std::move(m)),cosmo(m.cosmo),cpfits(std::move(m.cpfits))
   {
     long_range_map = std::move(m.long_range_map);
-    short_range_map = std::move(m.short_range_map);
+    short_range_maps = std::move(m.short_range_maps);
     single_grid = m.single_grid;
     //cpfits = std::move(m.cpfits);
     //cpfits = m.cpfits;
@@ -246,7 +258,7 @@ public:
 
 public:
   LensMap long_range_map;
-  LensMap short_range_map;
+  std::vector<LensMap> short_range_maps;
 
 private:
   
@@ -274,6 +286,11 @@ private:
 	//const COSMOLOGY& cosmo;
   int zerosize;
 
+  // setsup everything for the given short range map.
+  void setsubmap(LensMap &short_range_map
+          ,const std::vector<long> &lower_left
+          ,const std::vector<long> &upper_right
+                                   );
   struct UNIT{
     int operator()(float k2){return 1;}
   };

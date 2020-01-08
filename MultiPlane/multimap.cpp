@@ -235,19 +235,11 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
   }
 };
 
-void LensHaloMultiMap::submapPhys(Point_2d ll,Point_2d ur){
+void LensHaloMultiMap::push_back_submapPhys(Point_2d ll,Point_2d ur){
   if(single_grid) return;
   
   std::vector<long> lower_left(2);
   std::vector<long> upper_right(2);
-
-  //Point_2d range = long_range_map.upperright - long_range_map.lowerleft;
-  
-  //std::cout << "ang res = " << resolution/getDist()/arcsecTOradians
-  //<< " arcsec" << std::endl;
-  //std::cout << "lower left angle " << ll/getDist() << std::endl;
-  //std::cout << "lower left angle " << long_range_map.lowerleft/getDist() << std::endl;
-  
   
   ll = (ll - long_range_map.lowerleft)/resolution;
   //std::cout << "lower left pixels = " << ll << std::endl;
@@ -270,14 +262,65 @@ void LensHaloMultiMap::submapPhys(Point_2d ll,Point_2d ur){
   upper_right[0] = floor(ur[0]) + 1 ;
   upper_right[1] = floor(ur[1]) + 1 ;
 
-  submap(lower_left,upper_right);
+  push_back_submap(lower_left,upper_right);
 }
 
-void LensHaloMultiMap::submap(
+void LensHaloMultiMap::resetsubmapPhys(int i,Point_2d ll,Point_2d ur){
+  if(single_grid) return;
+  
+  std::vector<long> lower_left(2);
+  std::vector<long> upper_right(2);
+  
+  ll = (ll - long_range_map.lowerleft)/resolution;
+  //std::cout << "lower left pixels = " << ll << std::endl;
+  assert(ll[0] > -0.1 );
+  assert(ll[1] > -0.1 );
+  if(ll[0] < 0) ll[0] = 0;
+  if(ll[1] < 0) ll[1] = 0;
+  
+  ur = (ur - long_range_map.lowerleft)/resolution;
+  
+  //std::cout << "ur = " << ur << std::endl;
+  //std::cout << "dim. original " << Noriginal[0]
+  //<< " " << Noriginal[1] << std::endl;
+  assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
+  assert(ur[1] < long_range_map.y_range()/resolution + 0.1);
+  
+  lower_left[0] = floor(ll[0]);
+  lower_left[1] = floor(ll[1]);
+  
+  upper_right[0] = floor(ur[0]) + 1 ;
+  upper_right[1] = floor(ur[1]) + 1 ;
+  
+  resetsubmap(i,lower_left,upper_right);
+}
+
+void LensHaloMultiMap::push_back_submap(
                               const std::vector<long> &lower_left
                               ,const std::vector<long> &upper_right
                               ){
-  
+
+  short_range_maps.push_back(LensMap());
+  setsubmap(short_range_maps.back(),lower_left,upper_right);
+}
+
+void LensHaloMultiMap::resetsubmap(
+                              int i
+                              ,const std::vector<long> &lower_left
+                              ,const std::vector<long> &upper_right
+                                        ){
+  if(i >= short_range_maps.size()){
+    std::cerr << "Short range map has not been created yet." << std::endl;
+    throw std::invalid_argument("out of range");
+  }
+  setsubmap(short_range_maps[i],lower_left,upper_right);
+}
+
+void LensHaloMultiMap::setsubmap(LensMap &short_range_map
+                              ,const std::vector<long> &lower_left
+                              ,const std::vector<long> &upper_right
+                              ){
+
   // check range
   if(single_grid) return;
 
@@ -497,30 +540,35 @@ void LensHaloMultiMap::force_halo(double *alpha
     long_range_map.evaluate(xx,*kappa,gamma,alpha);
     return;
   }
-  
-  if( (xx[0] >= short_range_map.lowerleft[0])*(xx[0] <= short_range_map.upperright[0])
-     *(xx[1] >= short_range_map.lowerleft[1])*(xx[1] <= short_range_map.upperright[1])
-  ){
-    
-    long_range_map.evaluate(xx,*kappa,gamma,alpha);
-    
-    float t_kappa,t_gamma[3];
-    double t_alpha[2];
-    short_range_map.evaluate(xx,t_kappa,t_gamma,t_alpha);
 
-    alpha[0] += t_alpha[0];
-    alpha[1] += t_alpha[1];
-    gamma[0] += t_gamma[0];
-    gamma[1] += t_gamma[1];
-    *kappa += t_kappa;
+  for(auto &smap : short_range_maps){
+
+    if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
+      *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
+       ){
+  
+      long_range_map.evaluate(xx,*kappa,gamma,alpha);
     
-  }else{
+      float t_kappa,t_gamma[3];
+      double t_alpha[2];
+
+      smap.evaluate(xx,t_kappa,t_gamma,t_alpha);
+    
+      alpha[0] += t_alpha[0];
+      alpha[1] += t_alpha[1];
+      gamma[0] += t_gamma[0];
+      gamma[1] += t_gamma[1];
+      *kappa += t_kappa;
+    
+    }
+    /*else{
     
     alpha[0] = 0;
     alpha[1] = 0;
     gamma[0] = 0;
     gamma[1] = 0;
     *kappa = 0;
+  }*/
   }
   return;
 }
