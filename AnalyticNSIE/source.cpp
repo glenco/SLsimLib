@@ -767,7 +767,7 @@ void SourceMultiShapelets::readCatalog()
   
   //sort by id number
   std::sort(viz_cat.begin(),viz_cat.end()
-            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+            ,[](const std::vector<float> &a,const std::vector<float> &b){return a[1] < b[1]; } );
   int ii=0;
   for(auto &a : viz_cat){
     if(a[1] >= 0) break;
@@ -784,7 +784,7 @@ void SourceMultiShapelets::readCatalog()
                                           ,' '
                                           ,false);
   std::sort(h_cat.begin(),h_cat.end()
-            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+            ,[](const std::vector<float> &a,const std::vector<float> &b){return a[1] < b[1]; } );
 
   std::vector<std::vector<float> > y_cat;
   Utilities::IO::ReadCSVnumerical2<float>(
@@ -796,7 +796,7 @@ void SourceMultiShapelets::readCatalog()
                                           ,' '
                                           ,false);
   std::sort(y_cat.begin(),y_cat.end()
-            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+            ,[](const std::vector<float> &a,const std::vector<float> &b){return a[1] < b[1]; } );
 
   std::vector<std::vector<float> > j_cat;
   Utilities::IO::ReadCSVnumerical2<float>(
@@ -808,7 +808,7 @@ void SourceMultiShapelets::readCatalog()
                                           ,' '
                                           ,false);
   std::sort(j_cat.begin(),j_cat.end()
-            ,[](std::vector<float> &a,std::vector<float> &b){return a[1] < b[1]; } );
+            ,[](const std::vector<float> &a,const std::vector<float> &b){return a[1] < b[1]; } );
   
   
   int j=ii;
