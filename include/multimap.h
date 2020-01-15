@@ -59,7 +59,6 @@ struct LensMap{
 
   bool evaluate(const double *x,float &sigma,float *gamma,double *alpha);
   
-#ifdef ENABLE_FITS
 
   LensMap(std::string fits_input_file,double angDist){
     read(fits_input_file,angDist);
@@ -92,16 +91,15 @@ struct LensMap{
   /// meant to output directly in angulare units and lensing quantities
   void write(std::string filename,LensingVariable quant);
 
-#endif
-
-#ifdef ENABLE_FFTW
   // this calculates the other lensing quantities from the density map
   
+  //std::mutex mutex_lensmap;
+
   template <class T>
-  void PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha = true);
+  void PreProcessFFTWMap(float zerosize,T Wphi_of_k,std::mutex &mu
+                         ,bool do_alpha = true);
   template <class T>
-  void PreProcessFFTWMap(T Wphi_of_k,bool do_alpha = true);
- #endif
+  void PreProcessFFTWMap(T Wphi_of_k,std::mutex &mu,bool do_alpha = true);
   
 };
 
@@ -133,28 +131,34 @@ public:
   const double ffactor = 5,gfactor = 5;
   //const double ffactor = 10,gfactor = 10;
 
-  /// Add highres map be specifying the corners in pixel values
-  void push_back_submap(
-              const std::vector<long> &lower_left
-              ,const std::vector<long> &upper_right
-              );
+  // Add highres map be specifying the corners in pixel values
+  //void push_back_submap(
+  //            const std::vector<long> &lower_left
+  //            ,const std::vector<long> &upper_right
+  //);
+  
   void resetsubmap(int i,
               const std::vector<long> &lower_left
               ,const std::vector<long> &upper_right
               );
   /// Sets the least highres smaller map in physical coordinates relative to the center of the original map, periodic boundary conditions apply
-  void push_back_submapPhys(Point_2d ll,Point_2d ur);
+  //void push_back_submapPhys(Point_2d ll,Point_2d ur);
   void resetsubmapPhys(int i,Point_2d ll,Point_2d ur);
   
-  void push_back_submapAngular(Point_2d ll,Point_2d ur){
-    double D = getDist();
-    push_back_submapPhys(ll*D,ur*D);
-  }
+  //void push_back_submapAngular(Point_2d ll,Point_2d ur){
+  //  double D = getDist();
+  //  push_back_submapPhys(ll*D,ur*D);
+  //}
   void resetsubmapAngular(int i,Point_2d ll,Point_2d ur){
+    if(i >= short_range_maps.size()) throw std::invalid_argument("");
     double D = getDist();
     resetsubmapPhys(i,ll*D,ur*D);
   }
 
+  void resize_submaps(int N){
+    short_range_maps.resize(N);
+  }
+  
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
 	void writeImage(std::string fn);
@@ -306,6 +310,8 @@ private:
   UNIT unit;
   WSR wsr;
   WLR wlr;
+  
+  std::mutex mutex_multimap;
 };
 
 
@@ -315,7 +321,7 @@ private:
  */
 
 template <typename T>
-void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
+void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,std::mutex &mu,bool do_alpha){
   
   assert(surface_density.size() == nx*ny);
 
@@ -381,9 +387,14 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
   //std::vector<fftw_complex> fphi( Nny*(Nnx/2+1) );
   fftw_complex *fphi   = new fftw_complex[Nny*Nkx];
 
-  fftw_plan p = fftw_plan_dft_r2c_2d(Nny,Nnx,extended_map.data(),fphi,FFTW_ESTIMATE);
-  
-  fftw_execute( p );
+  fftw_plan p;
+  {
+    std::lock_guard<std::mutex> hold(mu);
+    p = fftw_plan_dft_r2c_2d(Nny,Nnx,extended_map.data(),fphi,FFTW_ESTIMATE);
+  }
+  //fftw_execute( p );
+  fftw_execute_dft_r2c(p,extended_map.data(),fphi);
+
  
   // fourier space
   // std:: cout << " allocating fourier space maps " << std:: endl;
@@ -426,7 +437,11 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
   //std::vector<fftw_complex> fft( Nny*(Nkx) );
   std::vector<double> realsp(Nnx*Nny);
 
-   fftw_plan pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp.data(),FFTW_MEASURE);
+  fftw_plan pp;
+  {
+    std::lock_guard<std::mutex> hold(mu);
+    pp = fftw_plan_dft_c2r_2d(Nny,Nnx,fft,realsp.data(),FFTW_MEASURE);
+  }
   
   if(do_alpha){
   // alpha1
@@ -442,7 +457,8 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
     
     alpha1_bar.resize(nx*ny,0);
     
@@ -470,8 +486,9 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     alpha2_bar.resize(nx*ny,0);
     
     for( int j=jmin; j<jmax; j++ ){
@@ -497,8 +514,9 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     gamma1_bar.resize(nx*ny,0);
     
     for( int j=jmin; j<jmax; j++ ){
@@ -525,8 +543,9 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     gamma2_bar.resize(nx*ny);
     
     for( int j=0; j<ny; j++ ){
@@ -558,7 +577,8 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
 
     for( int j=jmin; j<jmax; j++ ){
       int jj = j-jmin;
@@ -586,8 +606,8 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
     
     phi_bar.resize(nx*ny);
     for( int j=jmin; j<jmax; j++ ){
@@ -608,7 +628,7 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
 
 /// no padding
 template <typename T>
-void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
+void LensMap::PreProcessFFTWMap(T Wphi_of_k,std::mutex &mu,bool do_alpha){
   
   assert(surface_density.size() == nx*ny);
   
@@ -634,10 +654,14 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
   fftw_complex *fphi   = new fftw_complex[ny*Nkx];
   
   //float *fp = &(surface_density[0]);
-  fftw_plan p = fftw_plan_dft_r2c_2d(ny,nx,&(surface_density[0])
+  fftw_plan p;
+  {
+    std::lock_guard<std::mutex> hold(mu);
+    p = fftw_plan_dft_r2c_2d(ny,nx,&(surface_density[0])
                                      ,fphi,FFTW_ESTIMATE);
-  
-  fftw_execute( p );
+  }
+  //fftw_execute( p );
+  fftw_execute_dft_r2c(p,&(surface_density[0]),fphi);
   
   // fourier space
   // std:: cout << " allocating fourier space maps " << std:: endl;
@@ -677,7 +701,11 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
   fftw_complex *fft= new fftw_complex[ny*(Nkx)];
   std::vector<double> realsp(NN);
   
-  fftw_plan pp = fftw_plan_dft_c2r_2d(ny,nx,fft,realsp.data(),FFTW_MEASURE);
+  fftw_plan pp;
+  {
+    std::lock_guard<std::mutex> hold(mu);
+    pp = fftw_plan_dft_c2r_2d(ny,nx,fft,realsp.data(),FFTW_MEASURE);
+  }
   
   if(do_alpha){
   // alpha1
@@ -694,8 +722,9 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     alpha1_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) alpha1_bar[i] = -1*float(realsp[i]/NN);
   }
@@ -715,8 +744,9 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     alpha2_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) alpha2_bar[i] = -1*float(realsp[i]/NN);
   }
@@ -733,8 +763,9 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
         }
       }
       
-      fftw_execute( pp );
-      
+      //fftw_execute( pp );
+      fftw_execute_dft_c2r(pp,fft,realsp.data());
+
       phi_bar.resize(NN);
       for( size_t i=0; i<NN; i++ ) phi_bar[i] = float(realsp[i]/NN);
     }
@@ -754,7 +785,8 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
 
     gamma1_bar.resize(NN);
     for(size_t i=0; i<NN; i++ ) gamma1_bar[i] = float( realsp[i]/NN);
@@ -775,8 +807,9 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     gamma2_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) gamma2_bar[i] = float(-realsp[i]/NN);
   }
@@ -798,8 +831,9 @@ void LensMap::PreProcessFFTWMap(T Wphi_of_k,bool do_alpha){
       }
     }
     
-    fftw_execute( pp );
-    
+    //fftw_execute( pp );
+    fftw_execute_dft_c2r(pp,fft,realsp.data());
+
     for( size_t i=0; i<NN; i++ ) surface_density[i] = (realsp[i]/NN);
   }
   

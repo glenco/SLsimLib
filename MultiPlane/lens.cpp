@@ -2925,7 +2925,7 @@ void Lens::combinePlanes(bool verbose)
     dDl.push_back(Dl[i] - Dl[i-1]); // distance from plane i-1 to plane i
   
   // calculate lookback times between planes
-  dTl.push_back(cosmo.radDist(0,plane_redshifts[1]));
+  dTl.push_back(cosmo.radDist(0,plane_redshifts[0]));
   for(std::size_t i = 1; i < Dl.size(); ++i)
    dTl.push_back(cosmo.radDist(plane_redshifts[i],plane_redshifts[i-1]));
   

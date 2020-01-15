@@ -113,7 +113,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
       }
     }
 
-    long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit);
+    long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit,mutex_multimap);
 
   }else{
 
@@ -217,7 +217,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
     double padd_lr = 1 + 2 * border_width * resolution / long_range_map.x_range();
     padd_lr = MAX(padd_lr,2);
     
-    long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr);
+    long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr,mutex_multimap);
     long_range_map.write("!" + lr_file);
  
     CPFITS_WRITE tmp_cpfits(lr_file,true);
@@ -235,6 +235,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
   }
 };
 
+/*
 void LensHaloMultiMap::push_back_submapPhys(Point_2d ll,Point_2d ur){
   if(single_grid) return;
   
@@ -264,7 +265,7 @@ void LensHaloMultiMap::push_back_submapPhys(Point_2d ll,Point_2d ur){
 
   push_back_submap(lower_left,upper_right);
 }
-
+*/
 void LensHaloMultiMap::resetsubmapPhys(int i,Point_2d ll,Point_2d ur){
   if(single_grid) return;
   
@@ -294,7 +295,7 @@ void LensHaloMultiMap::resetsubmapPhys(int i,Point_2d ll,Point_2d ur){
   
   resetsubmap(i,lower_left,upper_right);
 }
-
+/*
 void LensHaloMultiMap::push_back_submap(
                               const std::vector<long> &lower_left
                               ,const std::vector<long> &upper_right
@@ -303,7 +304,7 @@ void LensHaloMultiMap::push_back_submap(
   short_range_maps.push_back(LensMap());
   setsubmap(short_range_maps.back(),lower_left,upper_right);
 }
-
+*/
 void LensHaloMultiMap::resetsubmap(
                               int i
                               ,const std::vector<long> &lower_left
@@ -422,7 +423,7 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
       map.boxlMpc = map.nx*resolution;
     }
  
-  map.PreProcessFFTWMap(wsr);
+  map.PreProcessFFTWMap(wsr,mutex_multimap);
 
     // cut off bounders
   
@@ -541,14 +542,16 @@ void LensHaloMultiMap::force_halo(double *alpha
     return;
   }
 
+  
+  long_range_map.evaluate(xx,*kappa,gamma,alpha);
+  
   for(auto &smap : short_range_maps){
 
     if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
       *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
        ){
   
-      long_range_map.evaluate(xx,*kappa,gamma,alpha);
-    
+   
       float t_kappa,t_gamma[3];
       double t_alpha[2];
 
