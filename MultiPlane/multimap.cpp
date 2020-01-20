@@ -9,19 +9,29 @@
 
 using namespace std;
 
+fftw_plan LensHaloMultiMap::plan_r2c_short_range;
+fftw_plan LensHaloMultiMap::plan_c2r_short_range;
+fftw_plan LensHaloMultiMap::plan_r2c_long_range;
+fftw_plan LensHaloMultiMap::plan_c2r_long_range;
+std::mutex LensHaloMultiMap::mutex_multimap;
+bool LensHaloMultiMap::plans_set_up = false;
+
+
 LensHaloMultiMap::LensHaloMultiMap(
                  std::string fitsfile  /// Original fits map of the density
                  ,std::string dir_data
                  ,double redshift
                  ,double mass_unit
+                 ,size_t nx_submap
+                 ,size_t ny_submap
+                 ,int number_of_subfields
                  ,COSMOLOGY &c
                  ,bool write_subfields
                  ,std::string dir_scratch
                  ,bool subtract_ave
-                 ,bool single_grid_mode
                  ):
-LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode),cosmo(c),cpfits(dir_data + fitsfile)
-,ave_ang_sd(0),mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
+LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode),cosmo(c)
+,cpfits(dir_data + fitsfile),ave_ang_sd(0),mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
 {
 
   zerosize = 1;
@@ -39,27 +49,32 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
 
   double D = LensHalo::getDist();
   
-  LensMap submap;
-  submap.read_header(fitsfilename,D);
-  
-  //long_range_map.boxlMpc = submap.boxlMpc;
-  
+  LensMap tmp_map;
+  tmp_map.read_header(fitsfilename,D);
+   
   //std::size_t size = bigmap.nx*bigmap.ny;
   //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  rs2 = submap.boxlMpc*submap.boxlMpc/( 2*submap.nx )*gfactor/ffactor;
+  rs2 = tmp_map.boxlMpc*tmp_map.boxlMpc/( 2*tmp_map.nx )*gfactor/ffactor;
   wlr.rs2 = wsr.rs2 = rs2;
   
-  resolution = submap.x_resolution();
-  angular_resolution = submap.angular_pixel_size;
+  resolution = tmp_map.x_resolution();
+  angular_resolution = tmp_map.angular_pixel_size;
   
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width = ffactor * sqrt(rs2) / resolution + 1;
  
-  int desample = sqrt(0.5*submap.nx) / sqrt(ffactor * gfactor);
+  int desample = sqrt(0.5*tmp_map.nx) / sqrt(ffactor * gfactor);
 
-  Noriginal[0] = submap.nx;
-  Noriginal[1] = submap.ny;
+  Noriginal[0] = tmp_map.nx;
+  Noriginal[1] = tmp_map.ny;
+  
+  if( nx_submap > Noriginal[0]
+   || ny_submap > Noriginal[1] ){
+    std::cerr << "LensHaloMap : sub map is too large" << std::endl;
+    throw std::invalid_argument("out of bounds");
+  }
+
 
   string lr_file = fitsfile + "_lr.fits";
   if(dir_scratch == ""){
@@ -68,9 +83,9 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
     lr_file = dir_scratch + lr_file;
   }
   bool long_range_file_exists = Utilities::IO::file_exists(lr_file);
-  
+  double padd_lr = 0;
   ///long_range_file_exists = false;
-  if( long_range_file_exists && !single_grid ){
+  if( long_range_file_exists ){
   
     std::cout << " reading file " << lr_file << " .. " << std::endl;
     long_range_map.Myread(lr_file);
@@ -80,21 +95,13 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
       throw std::invalid_argument("need ave_ang_sd in ");
     }
 
-  }else if(single_grid){
+ /* }else if(single_grid){
     std::vector<long> first = {1,1};
     std::vector<long> last = {(long)Noriginal[0],(long)Noriginal[1]};
     
     //long_range_map.read_sub(ff,first,last,getDist());
     long_range_map.read_sub(cpfits,first,last,getDist());
 
-    //double res = submap.boxlMpc/submap.nx;
-    //Point_2d dmap = {submap.boxlMpc,submap.ny*resolution};
-    //dmap /= 2;
-    //long_range_map.center = {0,0};
-    //long_range_map.upperright = long_range_map.center + dmap;
-    //long_range_map.lowerleft = long_range_map.center - dmap;
-    //long_range_map.boxlMpc = submap.boxlMpc;
-    
     double area = long_range_map.x_resolution()
     *long_range_map.y_resolution()/mass_unit;
     
@@ -113,23 +120,25 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
       }
     }
 
-    long_range_map.PreProcessFFTWMap<UNIT>(1.0,unit,mutex_multimap);
-
+    long_range_map.ProcessFFTs<UNIT>(unit,plan_r2c_long_range
+                                         ,plan_c2r_long_range);
+    //long_range_map.PreProcessFFTWMap<UNIT>(unit,mutex_multimap);
+*/
   }else{
 
-    long_range_map.lowerleft = submap.lowerleft;
-    long_range_map.upperright = submap.upperright;
-    long_range_map.boxlMpc = submap.boxlMpc;
+    long_range_map.lowerleft = tmp_map.lowerleft;
+    long_range_map.upperright = tmp_map.upperright;
+    long_range_map.boxlMpc = tmp_map.boxlMpc;
     
     long_range_map.center = (long_range_map.upperright + long_range_map.lowerleft)/2;
 
     Point_2d range = long_range_map.upperright - long_range_map.lowerleft;
     
-    long_range_map.nx = submap.nx/desample;
+    long_range_map.nx = tmp_map.nx/desample;
     double lr_res_x = long_range_map.boxlMpc / long_range_map.nx;
 
     // get the ny that makes the pixels closest to square
-    double Ly = submap.y_range();
+    double Ly = tmp_map.y_range();
     long_range_map.ny = (int)( Ly/lr_res_x );
   
     if(Ly - long_range_map.ny*lr_res_x > lr_res_x/2) long_range_map.ny += 1;
@@ -137,7 +146,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
     size_t nx = long_range_map.nx;
     size_t ny = long_range_map.ny;
     
-    double lr_res_y = submap.y_range()/ny;
+    double lr_res_y = tmp_map.y_range()/ny;
     
     std::cout << "ratio of low resolution pixel dimensions "
     << lr_res_x/lr_res_y << std::endl;
@@ -173,11 +182,11 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
         first[1] = j+1;
         last[1] = MIN(j + chunk,Noriginal[1]);
         //submap.read_sub(ff,first,last,getDist());
-        submap.read_sub(cpfits,first,last,getDist());
+        tmp_map.read_sub(cpfits,first,last,getDist());
 
         kj = 0;
       }else{
-        kj += submap.nx;
+        kj += tmp_map.nx;
         //assert(kj < submap.nx*submap.ny);
       }
     
@@ -188,7 +197,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
         
         if( ii >= nx) break;
         
-        tmp = long_range_map.surface_density[ ii + kjj ] += submap.surface_density[ i + kj ];
+        tmp = long_range_map.surface_density[ ii + kjj ] += tmp_map.surface_density[ i + kj ];
 
         max_pix = MAX(max_pix,tmp);
         min_pix = MIN(min_pix,tmp);
@@ -214,14 +223,8 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
       }
     }
     
-    double padd_lr = 1 + 2 * border_width * resolution / long_range_map.x_range();
+    padd_lr = 1 + 2 * border_width * resolution / long_range_map.x_range();
     padd_lr = MAX(padd_lr,2);
-    
-    long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr,mutex_multimap);
-    long_range_map.write("!" + lr_file);
- 
-    CPFITS_WRITE tmp_cpfits(lr_file,true);
-    tmp_cpfits.writeKey("ave_ang_sd", ave_ang_sd,"average angulare density");
   }
 
   /// set prefix to subfield maps
@@ -233,7 +236,37 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
   }else{
     subfield_filename = dir_scratch + subfield_filename;
   }
+  
+  short_range_maps.resize(number_of_subfields);
+
+  
+   for(LensMap &map : short_range_maps){
+     map.nx = nx_submap + 2*border_width;
+     map.ny = ny_submap + 2*border_width;
+   }
+   
+   { /// set up fftw plans for short range maps
+     std::lock_guard<std::mutex> lock(mutex_multimap);
+     if(!plans_set_up){
+       short_range_maps[0].make_fftw_plans(plan_r2c_short_range,plan_c2r_short_range,1.0);
+       long_range_map.make_fftw_plans(plan_r2c_long_range,plan_c2r_long_range,padd_lr);
+       plans_set_up = true;
+     }
+   }
+  
+  if(!long_range_file_exists){
+    long_range_map.ProcessFFTs<UNIT>(padd_lr,unit
+                                          ,plan_r2c_long_range
+                                          ,plan_c2r_long_range);
+
+    //long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr,mutex_multimap);
+    long_range_map.write("!" + lr_file);
+      
+    CPFITS_WRITE tmp_cpfits(lr_file,true);
+    tmp_cpfits.writeKey("ave_ang_sd", ave_ang_sd,"average angulare density");
+  }
 };
+
 
 /*
 void LensHaloMultiMap::push_back_submapPhys(Point_2d ll,Point_2d ur){
@@ -266,8 +299,10 @@ void LensHaloMultiMap::push_back_submapPhys(Point_2d ll,Point_2d ur){
   push_back_submap(lower_left,upper_right);
 }
 */
-void LensHaloMultiMap::resetsubmapPhys(int i,Point_2d ll,Point_2d ur){
-  if(single_grid) return;
+void LensHaloMultiMap::resetsubmapPhys(int i
+                                       ,Point_2d ll
+                                       //,Point_2d ur
+                                       ){
   
   std::vector<long> lower_left(2);
   std::vector<long> upper_right(2);
@@ -279,52 +314,42 @@ void LensHaloMultiMap::resetsubmapPhys(int i,Point_2d ll,Point_2d ur){
   if(ll[0] < 0) ll[0] = 0;
   if(ll[1] < 0) ll[1] = 0;
   
-  ur = (ur - long_range_map.lowerleft)/resolution;
+  //ur = (ur - long_range_map.lowerleft)/resolution;
   
   //std::cout << "ur = " << ur << std::endl;
   //std::cout << "dim. original " << Noriginal[0]
   //<< " " << Noriginal[1] << std::endl;
-  assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
-  assert(ur[1] < long_range_map.y_range()/resolution + 0.1);
+  //assert(ur[0] < long_range_map.x_range()/resolution + 0.1);
+  //assert(ur[1] < long_range_map.y_range()/resolution + 0.1);
   
   lower_left[0] = floor(ll[0]);
   lower_left[1] = floor(ll[1]);
   
-  upper_right[0] = floor(ur[0]) + 1 ;
-  upper_right[1] = floor(ur[1]) + 1 ;
+  //upper_right[0] = floor(ur[0]) + 1 ;
+  //upper_right[1] = floor(ur[1]) + 1 ;
   
-  resetsubmap(i,lower_left,upper_right);
+  resetsubmap(i,lower_left);//,upper_right);
 }
-/*
-void LensHaloMultiMap::push_back_submap(
-                              const std::vector<long> &lower_left
-                              ,const std::vector<long> &upper_right
-                              ){
 
-  short_range_maps.push_back(LensMap());
-  setsubmap(short_range_maps.back(),lower_left,upper_right);
-}
-*/
 void LensHaloMultiMap::resetsubmap(
                               int i
                               ,const std::vector<long> &lower_left
-                              ,const std::vector<long> &upper_right
+                              //,const std::vector<long> &upper_right
                                         ){
   if(i >= short_range_maps.size()){
     std::cerr << "Short range map has not been created yet." << std::endl;
     throw std::invalid_argument("out of range");
   }
-  setsubmap(short_range_maps[i],lower_left,upper_right);
+                                          
+  setsubmap(short_range_maps[i],lower_left);//,upper_right);
 }
 
 void LensHaloMultiMap::setsubmap(LensMap &short_range_map
-                              ,const std::vector<long> &lower_left
-                              ,const std::vector<long> &upper_right
-                              ){
+                                   ,const std::vector<long> &lower_left
+                                   //,const std::vector<long> &upper_right
+  ){
 
-  // check range
-  if(single_grid) return;
-
+  need to make sure size matches fftw plan
   if( (upper_right[0] < 0) || (upper_right[1] < 0) || (lower_left[0] >= Noriginal[0] )
       || (lower_left[1] >= Noriginal[1])  ){
     
@@ -332,15 +357,11 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
     
     throw std::invalid_argument("out of bounds");
   }
-  if( (upper_right[0] - lower_left[0]) > Noriginal[0]
-     || (upper_right[1] - lower_left[1]) > Noriginal[1] ){
-    std::cerr << "LensHaloMap : sub map is too large" << std::endl;
-    throw std::invalid_argument("out of bounds");
-  }
   
   /// construct file name and have it printed
-  std::string sr_file = subfield_filename + to_string(lower_left[0]) + "-" + to_string(lower_left[1]) + "-" +
-  to_string(upper_right[0]) + "-" + to_string(upper_right[1]) + "_sr.fits";
+  std::string sr_file = subfield_filename + to_string(lower_left[0]) + "-"
+    + to_string(lower_left[1]) + "-" + to_string(upper_right[0]) + "-"
+    + to_string(upper_right[1]) + "_sr.fits";
   bool short_range_file_exists = Utilities::IO::file_exists(sr_file);
 
   if(short_range_file_exists && write_shorts){
@@ -422,47 +443,47 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
       // need to do overlap region
       map.boxlMpc = map.nx*resolution;
     }
- 
-  map.PreProcessFFTWMap(wsr,mutex_multimap);
+
+    map.ProcessFFTs(wsr,plan_r2c_short_range,plan_c2r_short_range);
+    //map.PreProcessFFTWMap(wsr,mutex_multimap);
 
     // cut off bounders
   
-  size_t nx = short_range_map.nx = upper_right[0] - lower_left[0] + 1;
-  size_t ny = short_range_map.ny = upper_right[1] - lower_left[1] + 1;
+    size_t nx = short_range_map.nx = upper_right[0] - lower_left[0] + 1;
+    size_t ny = short_range_map.ny = upper_right[1] - lower_left[1] + 1;
   
-  short_range_map.surface_density.resize(nx*ny);
-  short_range_map.alpha1_bar.resize(nx*ny);
-  short_range_map.alpha2_bar.resize(nx*ny);
-  short_range_map.gamma1_bar.resize(nx*ny);
-  short_range_map.gamma2_bar.resize(nx*ny);
+    short_range_map.surface_density.resize(nx*ny);
+    short_range_map.alpha1_bar.resize(nx*ny);
+    short_range_map.alpha2_bar.resize(nx*ny);
+    short_range_map.gamma1_bar.resize(nx*ny);
+    short_range_map.gamma2_bar.resize(nx*ny);
 
-  long jj = border_width;
-  for(long j=0 ; j < ny ; ++j,++jj){
-    long kjj = jj*map.nx;
-    long kj = nx*j;
-    long ii = border_width;
-    for(long i=0 ; i < nx ; ++i,++ii){
-      short_range_map.surface_density[i + kj] = map.surface_density[ii + kjj];
-      short_range_map.alpha1_bar[i + kj] = map.alpha1_bar[ii + kjj];
-      short_range_map.alpha2_bar[i + kj] = map.alpha2_bar[ii + kjj];
-      short_range_map.gamma1_bar[i + kj] = map.gamma1_bar[ii + kjj];
-      short_range_map.gamma2_bar[i + kj] = map.gamma2_bar[ii + kjj];
+    long jj = border_width;
+    for(long j=0 ; j < ny ; ++j,++jj){
+      long kjj = jj*map.nx;
+      long kj = nx*j;
+      long ii = border_width;
+      for(long i=0 ; i < nx ; ++i,++ii){
+        short_range_map.surface_density[i + kj] = map.surface_density[ii + kjj];
+        short_range_map.alpha1_bar[i + kj] = map.alpha1_bar[ii + kjj];
+        short_range_map.alpha2_bar[i + kj] = map.alpha2_bar[ii + kjj];
+        short_range_map.gamma1_bar[i + kj] = map.gamma1_bar[ii + kjj];
+        short_range_map.gamma2_bar[i + kj] = map.gamma2_bar[ii + kjj];
+      }
     }
-  }
 
-  short_range_map.lowerleft = short_range_map.upperright = long_range_map.lowerleft;
-  short_range_map.lowerleft[0] += lower_left[0]*resolution;
-  short_range_map.lowerleft[1] += lower_left[1]*resolution;
+    short_range_map.lowerleft = short_range_map.upperright = long_range_map.lowerleft;
+    short_range_map.lowerleft[0] += lower_left[0]*resolution;
+    short_range_map.lowerleft[1] += lower_left[1]*resolution;
   
-  short_range_map.upperright[0] += (upper_right[0] + 1)*resolution;
-  short_range_map.upperright[1] += (upper_right[1] + 1)*resolution;
+    short_range_map.upperright[0] += (upper_right[0] + 1)*resolution;
+    short_range_map.upperright[1] += (upper_right[1] + 1)*resolution;
   
-  short_range_map.center = (short_range_map.lowerleft + short_range_map.upperright)/2;
-  short_range_map.boxlMpc = short_range_map.nx*resolution;
+    short_range_map.center = (short_range_map.lowerleft + short_range_map.upperright)/2;
+    short_range_map.boxlMpc = short_range_map.nx*resolution;
  
-  if(write_shorts) short_range_map.write("!" + sr_file);
-}
-
+    if(write_shorts) short_range_map.write("!" + sr_file);
+  }
 }
 
 
@@ -536,12 +557,6 @@ void LensHaloMultiMap::force_halo(double *alpha
 {
   
   // interpolate from the maps
-
-  if(single_grid){
-    long_range_map.evaluate(xx,*kappa,gamma,alpha);
-    return;
-  }
-
   
   long_range_map.evaluate(xx,*kappa,gamma,alpha);
   
@@ -610,7 +625,6 @@ LensMap& LensMap::operator=(LensMap &&m){
   lowerleft = m.lowerleft;
   upperright = m.upperright;
   angular_pixel_size = m.angular_pixel_size;
-
   
   return *this;
 }
