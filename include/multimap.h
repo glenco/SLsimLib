@@ -3,7 +3,6 @@
  *
  */
 
-
 #ifndef MultiLENS_H_
 #define MultiLENS_H_
 
@@ -15,6 +14,34 @@
 #include "cpfits.h"
 
 #include <stdexcept>
+
+// this is just to make sure no plan is executed with the wrong dimensions
+struct my_fftw_plan{
+  fftw_plan plan_r2c;
+  fftw_plan plan_c2r;
+  size_t nx;
+  size_t ny;
+  
+  void initialize(size_t _nx_,size_t _ny_){
+    nx = _nx_;
+    ny = _ny_;
+    
+    std::vector<double> rdummy(nx*ny);
+    size_t Nkx = (nx/2+1);
+    fftw_complex *cdummy = new fftw_complex[ny*Nkx];
+    
+    plan_r2c = fftw_plan_dft_r2c_2d(ny,nx,rdummy.data(),cdummy
+                                          ,FFTW_ESTIMATE);
+    plan_c2r = fftw_plan_dft_c2r_2d(ny,nx,cdummy,rdummy.data()
+                                          ,FFTW_MEASURE);
+    delete[] cdummy;
+  }
+  
+  ~my_fftw_plan(){
+    fftw_destroy_plan(plan_r2c);
+    fftw_destroy_plan(plan_c2r);
+  }
+};
 
 /**
  * \brief The MOKA map structure, containing all quantities that define it
@@ -98,14 +125,12 @@ struct LensMap{
   template <class T>
   void ProcessFFTs(float zerosize
                    ,T Wphi_of_k
-                   ,fftw_plan &plan_r2c_padded // the plan must be initialized with thr right size arrays
-                   ,fftw_plan &plan_c2r_padded
+                   ,my_fftw_plan &plan_padded // the plan must be initialized with thr right size arrays
                    ,bool do_alpha = true);
   
   template <class T>
   void ProcessFFTs(T Wphi_of_k
-                   ,fftw_plan &plan_r2c   // the plan must be initialized with thr right size arrays
-                   ,fftw_plan &plan_c2r
+                   ,my_fftw_plan &plan   // the plan must be initialized with thr right size arrays
                    ,bool do_alpha = true);
 
   
@@ -119,25 +144,27 @@ struct LensMap{
                      ,bool do_alpha = true);
 
   void make_fftw_plans(
-                       fftw_plan &plan_r2c
-                       ,fftw_plan &plan_c2r
+                       my_fftw_plan &plans
                        ,double zerosize
                        ){
-    fftw_complex cdummy;
-    double rdummy;
-    
-    if(zerosize == 1.0){
-      plan_r2c = fftw_plan_dft_r2c_2d(ny,nx,&rdummy,&cdummy,FFTW_ESTIMATE);
-      plan_c2r = fftw_plan_dft_c2r_2d(ny,nx,&cdummy,&rdummy,FFTW_MEASURE);
-    }else{
-      int Nnx=int(zerosize*nx);
-      int Nny=int(zerosize*ny);
-
-      plan_r2c = fftw_plan_dft_r2c_2d(Nny,Nnx,&rdummy,&cdummy,FFTW_ESTIMATE);
-      plan_c2r = fftw_plan_dft_c2r_2d(Nny,Nnx,&cdummy,&rdummy,FFTW_MEASURE);
-    }
-  }
   
+    size_t Nnx=int(zerosize*nx);
+    size_t Nny=int(zerosize*ny);
+
+    plans.nx = Nnx;
+    plans.ny = Nny;
+    
+    std::vector<double> rdummy(Nnx*Nny);
+    size_t Nkx = (Nnx/2+1);
+    fftw_complex *cdummy = new fftw_complex[Nny*Nkx];
+
+    plans.plan_r2c = fftw_plan_dft_r2c_2d(Nny,Nnx,rdummy.data(),cdummy
+                                    ,FFTW_ESTIMATE);
+    plans.plan_c2r = fftw_plan_dft_c2r_2d(Nny,Nnx,cdummy,rdummy.data()
+                                    ,FFTW_MEASURE);
+    
+    delete[] cdummy;
+  }
 };
 
 /** \brief A lens halo that calculates all lensing qunatities on two grids - a low res long range grid
@@ -151,33 +178,41 @@ class LensHaloMultiMap : public LensHalo
 public:
 
   LensHaloMultiMap(
-                   std::string fitsfile            /// Original fits map of the density
+                   std::string fitsfile       /// Original fits map of the density
                    ,std::string dir_data
                    ,double redshift
-                   ,double mass_unit               /// should include h factors
-                   ,int number_of_subfields        /// number of subfields
+                   ,double mass_unit      /// should include h factors
+                   ,double npane          /// number of submaps in full map
+                   ,int number_of_subfields   /// number of subfields
                    ,COSMOLOGY &c
                    ,bool write_subfields = false   /// write subfields to be read if they already exist
                    ,std::string dir_scratch = ""   /// directory for saving long rang force if different than directory where fitsfile is
                    ,bool subtract_ave = true       /// subtract the average of the full field
-                   ,bool single_grid_mode = false  /// don't do the short & long range decomposition
-                    );
+                   );
 
   ~LensHaloMultiMap(){
-    fftw_destroy_plan(plan_r2c_short_range);
-    fftw_destroy_plan(plan_c2r_short_range);
-    fftw_destroy_plan(plan_r2c_long_range);
-    fftw_destroy_plan(plan_c2r_long_range);
+    --count;
+    if(count == 0){
+      plans_set_up = false;
+    }
   };
 	
   /// these plans will be shared between all instances of LensHaloMultiMap
   
-  static fftw_plan plan_r2c_short_range;
-  static fftw_plan plan_c2r_short_range;
-  static fftw_plan plan_r2c_long_range;
-  static fftw_plan plan_c2r_long_range;
+  static my_fftw_plan plan_short_range;
+  //static fftw_plan plan_c2r_short_range;
+  static my_fftw_plan plan_long_range;
+  //static fftw_plan plan_c2r_long_range;
   static std::mutex mutex_multimap;
   static bool plans_set_up;
+  static size_t nx_sub;  // size of used highres field
+  static size_t ny_sub;
+  static size_t nx_long;  // size of used highres field
+  static size_t ny_long;
+  static size_t nx_sub_extended; // size of highres field with borders
+  static size_t ny_sub_extended;
+  static int count;
+
 
   const double ffactor = 5,gfactor = 5;
   //const double ffactor = 10,gfactor = 10;
@@ -230,7 +265,7 @@ public:
   /// return range of long range map in physical Mpc
   double getRangeMpc_lr() const { return long_range_map.boxlMpc; }
   /// return range of long range map in physical Mpc
-  double getRangeMpc_sr() const { return short_range_maps[0].boxlMpc; }
+  double getRangeMpc_sr() const { return nx_sub*resolution; }
 
   /// return number of pixels on a x-axis side in original map
 	size_t getNx_lr() const { return long_range_map.nx; }
@@ -238,9 +273,9 @@ public:
 	size_t getNy_lr() const { return long_range_map.ny; }
 	
   /// return number of pixels on a x-axis side in short range map
-  size_t getNx_sr() const { return short_range_maps[0].nx; }
+  size_t getNx_sr() const { return nx_sub; }
   /// return number of pixels on a y-axis side in short range map
-  size_t getNy_sr() const { return short_range_maps[0].ny; }
+  size_t getNy_sr() const { return ny_sub; }
 
   /// return number of pixels on a x-axis side in original map
   size_t getNx() const { return Noriginal[0]; }
@@ -369,15 +404,11 @@ void LensMap::ProcessFFTs(
                           float zerosize
                           ,T Wphi_of_k
                            ,bool do_alpha){
-  fftw_plan plan_r2c_padded;
-  fftw_plan plan_c2r_padded;
+  my_fftw_plan plan_padded;
   
-  make_fftw_plans(plan_r2c_padded, plan_c2r_padded, zerosize);
+  make_fftw_plans(plan_padded,zerosize);
 
-  ProcessFFTs<T>(zerosize,Wphi_of_k,plan_r2c_padded,plan_c2r_padded,do_alpha);
-
-  fftw_destroy_plan(plan_c2r_padded);
-  fftw_destroy_plan(plan_r2c_padded);
+  ProcessFFTs<T>(zerosize,Wphi_of_k,plan_padded,do_alpha);
 }
 
 /// a thread safe version of ProcessFFTs
@@ -385,8 +416,7 @@ template <typename T>
 void LensMap::ProcessFFTs(
                           float zerosize
                           ,T Wphi_of_k
-                          ,fftw_plan &plan_r2c_padded // the plan must be initialized with thr right size arrays
-                          ,fftw_plan &plan_c2r_padded
+                          ,my_fftw_plan &plan_padded // the plan must be initialized with thr right size arrays
                           ,bool do_alpha){
   
   assert(surface_density.size() == nx*ny);
@@ -398,6 +428,8 @@ void LensMap::ProcessFFTs(
   double boxlx = boxlMpc*zerosize;
   double boxly = ny*boxlMpc*zerosize/nx;
   
+  assert( (plan_padded.nx == Nnx)*(plan_padded.ny == Nny) );
+
   int imin = (Nnx-nx)/2;
   int imax = (Nnx+nx)/2;
   int jmin = (Nny-ny)/2;
@@ -453,7 +485,8 @@ void LensMap::ProcessFFTs(
   //std::vector<fftw_complex> fphi( Nny*(Nnx/2+1) );
   fftw_complex *fphi = new fftw_complex[Nny*Nkx];
 
-  fftw_execute_dft_r2c(plan_r2c_padded,extended_map.data(),fphi);
+  fftw_execute_dft_r2c(plan_padded.plan_r2c
+                       ,extended_map.data(),fphi);
 
  
   // fourier space
@@ -511,7 +544,7 @@ void LensMap::ProcessFFTs(
       }
     }
     
-    fftw_execute_dft_c2r(plan_c2r_padded,fft,realsp.data());
+    fftw_execute_dft_c2r(plan_padded.plan_c2r,fft,realsp.data());
     
     alpha1_bar.resize(nx*ny,0);
     
@@ -539,7 +572,7 @@ void LensMap::ProcessFFTs(
       }
     }
     
-    fftw_execute_dft_c2r(plan_c2r_padded,fft,realsp.data());
+    fftw_execute_dft_c2r(plan_padded.plan_c2r,fft,realsp.data());
 
     alpha2_bar.resize(nx*ny,0);
     
@@ -566,7 +599,7 @@ void LensMap::ProcessFFTs(
       }
     }
     
-    fftw_execute_dft_c2r(plan_c2r_padded,fft,realsp.data());
+    fftw_execute_dft_c2r(plan_padded.plan_c2r,fft,realsp.data());
 
     gamma1_bar.resize(nx*ny,0);
     
@@ -594,7 +627,7 @@ void LensMap::ProcessFFTs(
       }
     }
     
-    fftw_execute_dft_c2r(plan_c2r_padded,fft,realsp.data());
+    fftw_execute_dft_c2r(plan_padded.plan_c2r,fft,realsp.data());
 
     gamma2_bar.resize(nx*ny);
     
@@ -627,7 +660,8 @@ void LensMap::ProcessFFTs(
       }
     }
     
-    fftw_execute_dft_c2r(plan_c2r_padded,fft,realsp.data());
+    assert( (plan_padded.nx == Nnx)*(plan_padded.ny == Nny) );
+    fftw_execute_dft_c2r(plan_padded.plan_c2r,fft,realsp.data());
 
     for( int j=jmin; j<jmax; j++ ){
       int jj = j-jmin;
@@ -655,8 +689,8 @@ void LensMap::ProcessFFTs(
       }
     }
     
-    //fftw_execute( pp );
-    fftw_execute_dft_c2r(plan_c2r_padded,fft,realsp.data());
+    assert( (plan_padded.nx == Nnx)*(plan_padded.ny == Nny) );
+    fftw_execute_dft_c2r(plan_padded.plan_c2r,fft,realsp.data());
     
     phi_bar.resize(nx*ny);
     for( int j=jmin; j<jmax; j++ ){
@@ -679,25 +713,21 @@ void LensMap::ProcessFFTs(
 template <class T>
  void LensMap::ProcessFFTs(T Wphi_of_k
                   ,bool do_alpha){
-   fftw_plan plan_r2c;
-   fftw_plan plan_c2r;
+   my_fftw_plan plan;
   
-   make_fftw_plans(plan_r2c, plan_c2r,1.0);
-   ProcessFFTs<T>(Wphi_of_k,plan_r2c,plan_c2r,do_alpha);
-
-   fftw_destroy_plan(plan_c2r);
-   fftw_destroy_plan(plan_r2c);
+   make_fftw_plans(plan,1.0);
+   ProcessFFTs<T>(Wphi_of_k,plan,do_alpha);
  }
 
 template <class T>
 void LensMap::ProcessFFTs(T Wphi_of_k
-                    ,fftw_plan &plan_r2c   // the plan must be initialized with thr right size arrays
-                    ,fftw_plan &plan_c2r
+                    ,my_fftw_plan &plan   // the plan must be initialized with thr right size arrays
                     ,bool do_alpha){
 
   
   assert(surface_density.size() == nx*ny);
-  
+  assert( (plan.nx == nx)*(plan.ny == ny) );
+
   // size of the new map in x and y directions, factor by which each size is increased
   
   size_t Nkx = (nx/2+1);
@@ -731,7 +761,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
   }
 */
   
-  fftw_execute_dft_r2c(plan_r2c,&(surface_density[0]),fphi);
+  fftw_execute_dft_r2c(plan.plan_r2c,&(surface_density[0]),fphi);
   
   // fourier space
   // std:: cout << " allocating fourier space maps " << std:: endl;
@@ -783,8 +813,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
       }
     }
     
-    //fftw_execute( pp );
-    fftw_execute_dft_c2r(plan_c2r,fft,realsp.data());
+    fftw_execute_dft_c2r(plan.plan_c2r,fft,realsp.data());
 
     alpha1_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) alpha1_bar[i] = -1*float(realsp[i]/NN);
@@ -805,8 +834,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
       }
     }
     
-    //fftw_execute( pp );
-    fftw_execute_dft_c2r(plan_c2r,fft,realsp.data());
+    fftw_execute_dft_c2r(plan.plan_c2r,fft,realsp.data());
 
     alpha2_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) alpha2_bar[i] = -1*float(realsp[i]/NN);
@@ -824,8 +852,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
         }
       }
       
-      //fftw_execute( pp );
-      fftw_execute_dft_c2r(plan_c2r,fft,realsp.data());
+      fftw_execute_dft_c2r(plan.plan_c2r,fft,realsp.data());
 
       phi_bar.resize(NN);
       for( size_t i=0; i<NN; i++ ) phi_bar[i] = float(realsp[i]/NN);
@@ -846,8 +873,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
       }
     }
     
-    //fftw_execute( pp );
-    fftw_execute_dft_c2r(plan_c2r,fft,realsp.data());
+    fftw_execute_dft_c2r(plan.plan_c2r,fft,realsp.data());
 
     gamma1_bar.resize(NN);
     for(size_t i=0; i<NN; i++ ) gamma1_bar[i] = float( realsp[i]/NN);
@@ -868,8 +894,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
       }
     }
     
-    //fftw_execute( pp );
-    fftw_execute_dft_c2r(plan_c2r,fft,realsp.data());
+    fftw_execute_dft_c2r(plan.plan_c2r,fft,realsp.data());
 
     gamma2_bar.resize(NN);
     for( size_t i=0; i<NN; i++ ) gamma2_bar[i] = float(-realsp[i]/NN);
@@ -892,8 +917,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
       }
     }
     
-    //fftw_execute( pp );
-    fftw_execute_dft_c2r(plan_c2r,fft,realsp.data());
+    fftw_execute_dft_c2r(plan.plan_c2r,fft,realsp.data());
 
     for( size_t i=0; i<NN; i++ ) surface_density[i] = (realsp[i]/NN);
   }
