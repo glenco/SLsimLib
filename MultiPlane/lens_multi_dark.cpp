@@ -9,7 +9,7 @@ namespace
 	const char* char_comment = "#";
 	const char* char_whitespace = " \t";
 }
-
+/*
 void Lens::readPixelizedDensity()
 {
 	std::ifstream list(pixel_map_input_file.c_str());
@@ -21,8 +21,11 @@ void Lens::readPixelizedDensity()
 	
   if(pixel_map_input_file.find(".fits") != pixel_map_input_file.npos){
     std::cout << "inputing PixelDensityMap file: " << pixel_map_input_file << std::endl;
-    main_halos.push_back(new LensHaloMassMap(pixel_map_input_file, pix_map, pixel_map_zeropad
-                                             ,pixel_map_zeromean,cosmo));
+    main_halos.push_back(new LensHaloMassMap(pixel_map_input_file
+                                            ,
+                                             ,pixel_map_zeropad
+       ,pixel_map_zeromean,cosmo));
+    
   }else{
     
     std::cout << "reading PixelDMap files: " << pixel_map_input_file << std::endl;
@@ -52,8 +55,8 @@ void Lens::readPixelizedDensity()
       
       std::cout << "- " << mokafile << std::endl;
       
-      // create the MOKA halo
-      main_halos.push_back(new LensHaloMassMap(mokafile, pix_map,pixel_map_zeropad,pixel_map_zeromean, cosmo));
+      // create the pixel map halo
+      main_halos.push_back(new LensHaloMassMap(mokafile, pixel_map_zeropad,pixel_map_zeromean, cosmo));
     }
   }
   
@@ -66,3 +69,4 @@ void Lens::readPixelizedDensity()
   }
   fieldofview = tmp_fov*tmp_fov/degreesTOradians/degreesTOradians;
 }
+*/

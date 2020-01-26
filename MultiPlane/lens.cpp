@@ -432,7 +432,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 	}
 	
 	// read Pixeliz parameters if necessary
-  if(!params.get("pixelmaps_on",pixel_map_on)) pixel_map_on = 0;
+ /* if(!params.get("pixelmaps_on",pixel_map_on)) pixel_map_on = 0;
 	if(pixel_map_on)
 	{
 		if(!params.get("pixelmaps_input_file", pixel_map_input_file))
@@ -451,7 +451,8 @@ void Lens::assignParams(InputParams& params,bool verbose)
       pixel_map_zeromean = true;
     }
 	}
-	
+	*/
+  
 	if(!params.get("z_source",zsource))
 	{
 		ERROR_MESSAGE();
@@ -473,7 +474,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
 		exit(1);
 	}
 	
-	if(flag_switch_main_halo_on == false && flag_switch_field_off == true && !pixel_map_on)
+	if(flag_switch_main_halo_on == false && flag_switch_field_off == true)
 	{
 		ERROR_MESSAGE();
 		std::cout << "Do you want an empty simulation? Set main_halo_on to true for a main lens, or field_off to false for field lenses." << endl;
@@ -566,13 +567,13 @@ void Lens::defaultParams(PosType z_source,bool verbose)
   central_point_sphere.theta = 0.0;
   sim_angular_radius = 0.0;
 
+  /*
   // read Pixelized map parameters
-  
   pixel_map_on = 0;
   pixel_map_input_file = "";
   pixel_map_zeropad = 0;
   pixel_map_zeromean = false;
-
+*/
   zsource = z_source;
   
   if(verbose) printMultiLens();
@@ -667,7 +668,7 @@ void Lens::printMultiLens(){
       break;
 	}
   
-  if(pixel_map_on) std::cout << "PixelDMap lens" << endl;
+  //if(pixel_map_on) std::cout << "PixelDMap lens" << endl;
     
 	std::cout << endl << "Main galaxies profile type:" << endl;
 	switch(main_galaxy_halo_type){
@@ -753,7 +754,7 @@ void Lens::printMultiLens(){
 				break;
 		}
     
-    if(pixel_map_on) std::cout << "PixelDMap lens" << endl;
+    //if(pixel_map_on) std::cout << "PixelDMap lens" << endl;
 
 		std::cout << endl << "Field galaxies profile type:" << endl;
 		switch(field_int_prof_gal_type){
@@ -1384,7 +1385,7 @@ void Lens::setFieldDistFromFile()
 /**
  * \brief Creates main lens halo as set up in the parmeter file.
  *
- */
+ *
 void Lens::createMainHalos(InputParams& params)
 {
 	switch(main_halo_type)
@@ -1452,7 +1453,7 @@ void Lens::createMainHalos(InputParams& params)
 		main_halos[i]->setCosmology(cosmo);
     main_halos[i]->setDist(cosmo);
   }
-}
+}*/
 
 void Lens::clearMainHalos(bool verbose)
 {
@@ -2968,14 +2969,14 @@ void Lens::buildPlanes(InputParams& params, bool verbose)
 	}
   
 	// build main
-	if(flag_switch_main_halo_on || pixel_map_on)
+	/*if(flag_switch_main_halo_on || pixel_map_on)
 	{
 		// create the main halos
 		createMainHalos(params);
 		
 		// create the main planes for the halos
 		createMainPlanes();
-	}
+	}*/
 	
 	// combine the different planes
 	combinePlanes(verbose);

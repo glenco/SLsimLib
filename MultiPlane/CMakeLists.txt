@@ -8,4 +8,5 @@ add_sources(
 	profile.cpp
 	particle_lens.cpp
 	multimap.cpp
+	lensmap.cpp
 )

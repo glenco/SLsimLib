@@ -54,4 +54,5 @@ add_sources(
 	multimap.h
 	disk.h
 	cpfits.h
+	lensmap.h
 )

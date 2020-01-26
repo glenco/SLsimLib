@@ -7,6 +7,7 @@
 
 
 #include "slsimlib.h"
+#include "Tree.h"
 
 using namespace std;
 
@@ -63,15 +64,21 @@ void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm
  * \brief loads a mass map from a given filename
  */
 
-LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad,bool my_zeromean, COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(const std::string& filename
+                                 ,double redshift
+                                 ,double mass_units
+                                 ,int pixel_map_zeropad
+                                 ,bool my_zeromean
+                                 ,COSMOLOGY& lenscosmo)
 : LensHalo(),
-MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
-maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
+MOKA_input_file(filename),mass_unit(mass_units)
+,cosmo(lenscosmo),zerosize(pixel_map_zeropad)
+,zeromean(my_zeromean)
 {
-  initMap();
- 	
   // set redshift to value from map
-  setZlens(map.zlens);
+  LensHalo::setZlens(redshift);
+  LensHalo::setDist(cosmo);
+  initMap();
 }
 
 /** \brief Create a LensHalo from a PixelMap representing the mass.
@@ -88,8 +95,8 @@ LensHaloMassMap::LensHaloMassMap(
                                  ,bool my_zeromean         /// if true, subtracts average density
                                  ,COSMOLOGY& lenscosmo  /// cosmology
 )
-:LensHalo()
-, flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
+:LensHalo(),cosmo(lenscosmo),zerosize(pixel_map_zeropad)
+,zeromean(my_zeromean)
 {
   rscale = 1.0;
 
@@ -97,11 +104,7 @@ LensHaloMassMap::LensHaloMassMap(
   
   LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
   
-  setZlensDist(map.zlens,cosmo);
-  //setZlens(redshift);
-  // set redshift to value from map
-  //setZlens(map.zlens);
-  
+  setZlensDist(redshift,cosmo);
 }
 /*
 LensHaloMassMap::LensHaloMassMap(
@@ -176,17 +179,13 @@ LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_
  *  In the future this could be used to read in individual PixelDMaps or other types of maps if the type were specified in the paramfile.
  */
 LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
-: LensHalo(), maptype(moka), cosmo(lenscosmo)
+: LensHalo(),cosmo(lenscosmo)
 {
   // read in parameters
   assignParams(params);
   
   // initialize MOKA map
   initMap();
-  
-  // set redshift if necessary
-  if(LensHalo::getZlens() == -1)
-    setZlens(map.zlens);
 }
 
 LensHaloMassMap::~LensHaloMassMap()
@@ -196,61 +195,27 @@ LensHaloMassMap::~LensHaloMassMap()
 void LensHaloMassMap::initMap()
 {
   
-  if(!(maptype == pix_map || maptype == moka)){
-    ERROR_MESSAGE();
-    throw runtime_error("Does not recognize input lens map type");
-  }
-  
-#ifndef ENABLE_FITS
-  std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
+  //if(!(maptype == pix_map || maptype == moka)){
+  //  ERROR_MESSAGE();
+  //  throw runtime_error("Does not recognize input lens map type");
+  //}
   
   if(std::numeric_limits<float>::has_infinity)
     Rmax = std::numeric_limits<float>::infinity();
   else
     Rmax = std::numeric_limits<float>::max();
-  
-  getDims();
-  
-  readMap();
-  
-  if(flag_background_field == 1)
-  {
-    map.surface_density = 0;
-    map.alpha1_bar = 0;
-    map.alpha2_bar = 0;
-    map.gamma1_bar = 0;
-    map.gamma2_bar = 0;
-    map.phi_bar = 0;
+
+  map.read(MOKA_input_file, getDist() );
+  std:: cout << "nx           ny " << std:: endl;
+  std:: cout << map.nx << "   " << map.ny << std:: endl;
+
+  if(map.alpha1_bar.size() == 0){
+    map.surface_density *= mass_unit;
+    LensMap::UNIT w;
+    map.PreProcessFFTWMap(zerosize,w);
   }
   
   map.center[0] = map.center[1] = 0.0;
-  map.boxlrad = map.boxlarcsec*PI/180/3600.;
-  
-  if(maptype == moka){
-    
-    /// converts to the code units
-    std::cout << "converting the units of the MOKA map" << std::endl;
-    
-    double fac = map.DS/map.DLS/map.Dlens*map.h/(4*PI*Grav);
-    
-    map.surface_density *= fac;
-    map.gamma1_bar *= fac;
-    map.gamma2_bar *= fac;
-    map.phi_bar *= fac;
-
-    fac = 1/(4*PI*Grav);
-    
-    map.alpha1_bar *= fac;
-    map.alpha2_bar *= fac;
-   
-    checkCosmology();
-  }else{
-    // simulation case
-    // not needed for now does all in MOKAfits.cpp
-    // convertmap(map,maptype);
-  }
 }
 
 /**
@@ -276,26 +241,17 @@ void LensHaloMassMap::setMap(
   std::size_t size = map.nx*map.ny;
   
   map.surface_density.resize(size);
- // map.alpha1_bar.resize(size);
- // map.alpha2_bar.resize(size);
- // map.gamma1_bar.resize(size);
- // map.gamma2_bar.resize(size);
- //map.gamma3_bar.resize(size);
- // map.phi_bar.resize(size);
-  
-  map.zlens = z;
-  
   assert(map.nx !=0);
   // keep it like it is, even if is a rectangle
-  
+  /*
+  map.zlens = z;
   map.Dlens = cosmo.angDist(0.,map.zlens);  // physical
   map.boxlrad = inputmap.getRangeX();
   map.boxlarcsec = inputmap.getRangeX()/arcsecTOradians;
   map.boxlMpc = inputmap.getRangeX()/map.Dlens;
+  */
   
-  double pixelarea = inputmap.getResolution()*map.Dlens;
-  pixelarea *= pixelarea;
-  
+  double pixelarea = map.y_resolution()*map.x_resolution();
   for(size_t i=0;i<size;++i){
     //assert(!isnan(inputmap(i)));
     map.surface_density[i] = massconvertion*inputmap(i)/pixelarea;
@@ -320,11 +276,12 @@ void LensHaloMassMap::setMap(
   // valid only to force the map to be square map.nx = map.ny = npixels;
   
   //std:: cout << "  preProcessing Map " << std:: endl;
-  map.PreProcessFFTWMap(zerosize);
+  LensMap::UNIT w;
+  map.PreProcessFFTWMap(zerosize,w);
 }
 
 /** \brief checks the cosmology against the MOKA map parameters
- */
+ *
 /// checks that cosmology in the header of the input fits map is the same as the one set
 void LensHaloMassMap::checkCosmology()
 {
@@ -334,7 +291,7 @@ void LensHaloMassMap::checkCosmology()
     std::cerr << "LensHaloMassMap: Omega_lambda " << cosmo.getOmega_lambda() << " (cosmology) != " << map.omegal << " (MOKA)" << std::endl;
   if(cosmo.gethubble() == map.h)
     std::cerr << "LensHaloMassMap: hubble " << cosmo.gethubble() << " (cosmology) != " << map.h << " (MOKA)" << std::endl;
-}
+}*/
 
 /**
  * Sets many parameters within the MOKA lens model
@@ -344,7 +301,9 @@ void LensHaloMassMap::assignParams(InputParams& params)
 {
   PosType tmp;
   if(!params.get("z_lens", tmp)){
-    LensHalo::setZlens(-1); // set to -1 so that it will be set to the MOKA map value
+    ERROR_MESSAGE();
+    std::cout << "parameter z_lens needs to be set in parameter file " << params.filename() << std::endl;
+    exit(0);
   }else{
     LensHalo::setZlens(tmp);
   }
@@ -355,15 +314,9 @@ void LensHaloMassMap::assignParams(InputParams& params)
     exit(0);
   }
   
-  if(!params.get("MOKA_background_field", flag_background_field))
-    flag_background_field = 0;
-  
-  if(!params.get("MOKA_analyze",flag_MOKA_analyze))
-    flag_MOKA_analyze = 0;
-  
   zeromean = true;
   zerosize = 4;  /// not really used
-  maptype = moka;
+  //maptype = moka;
 }
 
 /** 
@@ -384,18 +337,20 @@ void LensHaloMassMap::force_halo(double *alpha
   // interpolate from the maps
   
   Utilities::Interpolator<valarray<double> > interp(xx,map.nx,map.boxlMpc,map.ny
-          ,map.ny*map.boxlMpc/map.nx,map.center.x);
+            ,map.ny*map.boxlMpc/map.nx,map.center.x);
+  Utilities::Interpolator<valarray<float> > interpf(xx,map.nx,map.boxlMpc,map.ny
+            ,map.ny*map.boxlMpc/map.nx,map.center.x);
 
     assert(map.nx == map.ny);
   
-  alpha[0] = interp.interpolate(map.alpha1_bar);
-  alpha[1] = interp.interpolate(map.alpha2_bar);
-  gamma[0] = interp.interpolate(map.gamma1_bar);
-  gamma[1] = interp.interpolate(map.gamma2_bar);
+  alpha[0] = interpf.interpolate(map.alpha1_bar);
+  alpha[1] = interpf.interpolate(map.alpha2_bar);
+  gamma[0] = interpf.interpolate(map.gamma1_bar);
+  gamma[1] = interpf.interpolate(map.gamma2_bar);
   gamma[2] = 0.0;
 
   *kappa = interp.interpolate(map.surface_density);
-  *phi = interp.interpolate(map.phi_bar);
+  *phi = interpf.interpolate(map.phi_bar);
   
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
