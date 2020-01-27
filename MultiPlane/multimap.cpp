@@ -286,8 +286,9 @@ LensHalo(redshift,c),write_shorts(write_subfields)
   if(!long_range_file_exists){
     long_range_map.ProcessFFTs<UNIT>(padd_lr,unit
                                           ,plan_long_range);
-
     //long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr,mutex_multimap);
+    
+    std::lock_guard<std::mutex> lock(mutex_multimap);
     long_range_map.write("!" + lr_file);
       
     CPFITS_WRITE tmp_cpfits(lr_file,true);
