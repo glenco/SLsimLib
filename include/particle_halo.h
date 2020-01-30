@@ -19,6 +19,8 @@
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
  
+   You can create a LensHaloParticles<> directly from a file, but it is recommended that you use the MakeParticleLenses class to create them and then move them to a Lens object.
+ 
    Smoothing is done according to the density of particles in 3D.  Smoothing sizes are
    either read in from a file (names simulation_filename + "." + Nsmooth + "sizes") or calculated
    if the file does not exist (in which case the file is created).  This can be
@@ -37,7 +39,6 @@ template<typename PType>
 class LensHaloParticles : public LensHalo
 {
 public:
-  
   
   LensHaloParticles(const std::string& simulation_filename /// name of data files
                     ,SimFileFormat format   /// format of data file
@@ -837,8 +838,7 @@ public:
     for(auto p : halos) delete p;
   }
   
-  /// recenter the particles to 3d point in physical Mpc/h units
-  /// If the halos have already been created they will be destroyed.
+  /// recenter the particles to 3d point in physical Mpc/h units  If the halos have already been created they will be destroyed.
   void Recenter(Point_3d<> x);
 
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);
