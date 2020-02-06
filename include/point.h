@@ -16,8 +16,8 @@
 #include <standard.h>
 #include "Kist.h"
 
-#ifndef pi
-#define pi  3.141593
+#ifndef PI
+#define PI  3.141593
 #endif
 
 #ifndef error_message
@@ -92,16 +92,21 @@ struct Point_2d{
     x[1]/=value;
     return *this;
   }
-  Point_2d & operator/(PosType value){
-    x[0]/=value;
-    x[1]/=value;
-    return *this;
+  Point_2d operator/(PosType value) const{
+    Point_2d tmp;
+    tmp[0] = x[0]/value;
+    tmp[1] = x[1]/value;
+    return tmp;
   }
   Point_2d & operator*=(PosType value){
     x[0]*=value;
     x[1]*=value;
     return *this;
   }
+  Point_2d operator*(PosType value) const{
+    return Point_2d(x[0]*value,x[1]*value);
+  }
+
   /// scalar product
   PosType operator*(const Point_2d &p){
     return x[0]*p.x[0] + x[1]*p.x[1];
@@ -121,11 +126,22 @@ struct Point_2d{
     return x[0]*x[0] + x[1]*x[1];
   }
   
+  // rotates the point
   void rotate(PosType theta){
     PosType c = cos(theta),s = sin(theta);
     PosType tmp = x[0];
     x[0] = c*tmp - s*x[1];
     x[1] = c*x[1] + s*tmp;
+  }
+  
+  /// returns a copy of the point that it rotated
+  Point_2d rotated(PosType theta) const{
+    Point_2d p;
+    PosType c = cos(theta),s = sin(theta);
+    p[0] = c*x[0] - s*x[1];
+    p[1] = c*x[1] + s*x[0];
+    
+    return p;
   }
   
   /// rescale to make a unit length vector
@@ -135,8 +151,11 @@ struct Point_2d{
     x[1] /= s;
   }
   
+  PosType* data(){return x;}
+  
   PosType x[2];
   PosType & operator[](size_t i){return x[i];}
+  PosType operator[](size_t i) const {return x[i];}
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
@@ -151,6 +170,8 @@ struct Branch;
 struct Point: public Point_2d{
     
   Point();
+  Point(const Point_2d &p);
+  Point(PosType x,PosType y);
   Point *next;    // pointer to next point in linked list
   Point *prev;
   Point *image;  // pointer to point on image or source plane
@@ -196,6 +217,83 @@ private:
   //Point(const Point &p);
   //Point &operator=(Point &p);
   //Point &operator=(const Point &p);
+};
+
+/** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
+*/
+struct RAY{
+  RAY(){
+    kappa = dt = 0.0;
+    gamma[0] = gamma[1] = gamma[2] = 0.0;
+  };
+  
+  RAY(const Point &p){
+    x = p.x;
+    y = p.image->x;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+  };
+  RAY(const RAY &p){
+    x = p.x;
+    y = p.y;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+  };
+
+  RAY & operator=(const Point &p){
+    x = p.x;
+    y = p.image->x;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+    
+    return *this;
+  };
+  
+  RAY & operator=(const RAY &p){
+    x = p.x;
+    y = p.y;
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+    
+    return *this;
+  };
+  
+  ~RAY(){};
+  
+  /// image position
+  Point_2d x;
+  /// source position
+  Point_2d y;
+  
+  /// convergence
+  KappaType kappa;
+  /// shear
+  KappaType gamma[3];
+  /// time-delay
+  KappaType dt;
+  
+  /// inverse of the magnification
+  KappaType invmag(){return (1-kappa)*(1-kappa) - gamma[0]*gamma[0]
+    - gamma[1]*gamma[1] + gamma[2]*gamma[2];}
+  
+  /// deflection angle
+  Point_2d alpha(){return x - y;}
 };
 
 std::ostream &operator<<(std::ostream &os, Point const &p);
@@ -249,36 +347,37 @@ struct PointList{
   }
   ~PointList(){EmptyList();}
   
-  class iterator{
-  private:
+  struct iterator{
+
     Point *current;
-  public:
     
-    iterator(){
-      current = NULL;
-    }
-    iterator(PointList &list){
+    iterator():current(NULL){ }
+    
+/*    iterator(PointList &list){
       current = list.top;
     }
     iterator(iterator &it){
       current = *it;
     }
+ */
     iterator(Point *p){
       current = p;
     }
     
-    Point *operator*(){return current;}
-    PointList::iterator &operator=(PointList::iterator &p){
-      if(&p == this) return *this;
-      current = p.current;
-      return *this;
-    }
-    
+ /*
     PointList::iterator &operator=(Point *point){
       current = point;
       return *this;
     }
+*/
+    Point *operator*(){return current;}
     
+    /*iterator &operator=(iterator &p){
+      if(&p == this) return *this;
+      current = p.current;
+      return *this;
+    }*/
+
     bool operator++(){
       assert(current);
       if(current->prev == NULL) return false;
@@ -337,6 +436,21 @@ struct PointList{
     return *it == bottom;
   };
   
+  /* Many changes need to be made to implement this correctly
+  PointList::iterator begin() const{
+    PointList::iterator it;
+    it.current = bottom;
+    return it;
+  }
+
+  PointList::iterator end() const{
+    PointList::iterator it;
+    it.current = top->prev;
+    return it;
+  }
+  */
+  
+  
   Point *Top() const {return top;}
   Point *Bottom() const {return bottom;}
   
@@ -365,10 +479,8 @@ struct PointList{
 private:
   Point *top;
   Point *bottom;
-  //Point *current;
   unsigned long Npoints;
   
-private:
   // make a point uncopyable
   //PointList(const PointList &p);
   PointList &operator=(const PointList &p);
@@ -392,6 +504,11 @@ struct Point_3d{
   Point_3d(){
     x[0]=x[1]=x[2]=0.0;
   }
+  Point_3d(PosType xx,PosType yy,PosType zz){
+    x[0]=xx;
+    x[1]=yy;
+    x[2]=zz;
+  }
   ~Point_3d(){};
   
   Point_3d(const Point_3d &p){
@@ -399,6 +516,7 @@ struct Point_3d{
     x[1]=p.x[1];
     x[2]=p.x[2];
   }
+  
   Point_3d & operator=(const Point_3d &p){
     if(this == &p) return *this;
     x[0]=p.x[0];
@@ -426,20 +544,25 @@ struct Point_3d{
     x[2]+=p.x[2];
     return *this;
   }
+  Point_3d & operator-=(const Point_3d &p){
+    x[0]-=p.x[0];
+    x[1]-=p.x[1];
+    x[2]-=p.x[2];
+    return *this;
+  }
   Point_3d & operator/=(PosType value){
     x[0]/=value;
     x[1]/=value;
     x[2]/=value;
     return *this;
   }
-  Point_3d & operator/(PosType value){
+  Point_3d operator/(PosType value) const{
     Point_3d tmp;
-    
     tmp[0] = x[0]/value;
     tmp[1] = x[1]/value;
     tmp[2] = x[2]/value;
     
-    return *this;
+    return tmp;
   }
   Point_3d & operator*=(PosType value){
     x[0] *=value;
@@ -447,11 +570,24 @@ struct Point_3d{
     x[2] *=value;
     return *this;
   }
+  Point_3d operator*(PosType value) const{
+    Point_3d tmp;
+    tmp[0] = x[0]*value;
+    tmp[1] = x[1]*value;
+    tmp[2] = x[2]*value;
+    
+    return tmp;
+  }
+  
   /// scalar product
   PosType operator*(const Point_3d &p){
     return x[0]*p.x[0] + x[1]*p.x[1] + x[2]*p.x[2];
   }
-  
+
+  Point_3d operator*(PosType f){
+    return Point_3d(x[0]*f,x[1]*f,x[2]*f);
+  }
+
   /// length
   PosType length(){
     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
@@ -480,6 +616,8 @@ struct Point_3d{
     x[1] /= s;
     x[2] /= s;
   }
+  
+  PosType* data(){return x;}
   
   PosType x[3];
   PosType & operator[](size_t i){return x[i];}

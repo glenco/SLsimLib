@@ -142,7 +142,7 @@ TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,PosTy
 
   //return tree;
 }
-/** \ingroup  ImageFindingL2
+/**
  * \brief Fill a tree with points.  The previous tree structure will be destroyed.  Used for refilling.
  */
 void TreeStruct::FillTree(Point *xp,unsigned long Npoints){
@@ -171,7 +171,7 @@ void TreeStruct::FillTree(Point *xp,unsigned long Npoints){
   return ;
 }
 
-/** \ingroup  ImageFindingL2
+/**
  * \brief Rebuilds the tree from the points that are already in the tree->pointlist
  *
  * This is not the best function because it copies all the points
@@ -250,7 +250,7 @@ TreeStruct * TreeStruct::spawn(TreeStruct::iterator &current){
   return newTree;
 }
 
-/** \ingroup  ImageFindingL2
+/**
 * \brief Empty tree of all point leaving a tree with an empty root.
 *
 * The points are freed, but the list structure is not destroyed.
@@ -269,7 +269,7 @@ short TreeStruct::emptyTree(){
 
   assert(Nbranches == 1);
 
-  PointList::iterator pointlist_current(*pointlist);
+  PointList::iterator pointlist_current(pointlist->Top());
   for(i=0,j=0,count=0;i<pointlist->size();++i){
 	  if((*pointlist_current)->head){
 		  heads[j] = *pointlist_current;
@@ -294,7 +294,7 @@ short TreeStruct::emptyTree(){
   return 1;
 }
 
-/** \ingroup LowLevel
+/** 
 * \brief Recursively free branches
 */
 void TreeStruct::_freeBranches(TreeStruct::iterator &current,short child){
@@ -331,7 +331,7 @@ void TreeStruct::_freeBranches(TreeStruct::iterator &current,short child){
 
     return;
 }
-/** \ingroup LowLevel
+/** 
 * \brief Iteratively free branches
 *
 * Frees all the branches of the tree so there is only the stump.
@@ -365,14 +365,14 @@ void TreeStruct::_freeBranches_iter(){
 	}
 
 	// re-assign the leaf pointers in the particles to the root
-  PointList::iterator pointlist_current(*pointlist);
+  PointList::iterator pointlist_current(pointlist->Top());
 	 do{ (*pointlist_current)->leaf = top; }while(--pointlist_current);
 
     return;
 }
 
 
-/** \ingroup LowLevel
+/** 
 * \brief Recursively build tree from points in its linked list.
 */
 void TreeStruct::_BuildTree(TreeStruct::iterator &current){
@@ -539,7 +539,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   return;
 }
 
-/** \ingroup  ImageFindingL2
+/**
  *  \brief Expands tree by adding points
 */
 int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
@@ -886,10 +886,10 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 
 			locateD(x-1,(*current)->npoints,xcut,&cut);
 		}
-    assert(branch1->boundary_p1[0] < branch1->boundary_p2[0]);
-    assert(branch1->boundary_p1[1] < branch1->boundary_p2[1]);
-    assert(branch2->boundary_p1[0] < branch2->boundary_p2[0]);
-    assert(branch2->boundary_p1[1] < branch2->boundary_p2[1]);
+    assert(branch1->boundary_p1[0] <= branch1->boundary_p2[0]);
+    assert(branch1->boundary_p1[1] <= branch1->boundary_p2[1]);
+    assert(branch2->boundary_p1[0] <= branch2->boundary_p2[0]);
+    assert(branch2->boundary_p1[1] <= branch2->boundary_p2[1]);
     assert((*current)->boundary_p1[0] < (*current)->boundary_p2[0]);
     assert((*current)->boundary_p1[1] < (*current)->boundary_p2[1]);
 		delete[] x;
@@ -1040,7 +1040,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 	}
 }
 
-/** \ingroup  ImageFinding
+/**
  *  \brief THIS DOES NOT WORK YET!!!
  *
  *  Reduces the size of the tree by removing points and branches that are no longer needed.
@@ -1128,7 +1128,7 @@ unsigned long Grid::PruneTrees(
 
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *   \brief Prune off points that are below a resolution and in an annulus on the
  *  source plane.
@@ -1428,7 +1428,7 @@ unsigned long Grid::PrunePointsOutside(
 	return count;
 }
 
-/** \ingroup ImageFindingL2
+/** 
  *  \brief Empty trash points.
  *
  *  Frees point arrays whose heads are stored in trashlist.
@@ -1473,7 +1473,7 @@ void CollectTrash(Kist<Point> * trashkist,bool check){
 	 return;
 }
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *  Frees all branches of the tree below the current branch in i_tree
  * if that branch is square and i_tree->current->refined == true.
@@ -1664,7 +1664,7 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
     return count;
 }
 
-/** \ingroup LowLevel
+/** 
  * Removes current from a tree if it is a leaf.
  *   Will not remove root of tree.
  *

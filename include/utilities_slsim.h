@@ -23,6 +23,29 @@
 
 namespace Utilities
 {
+  /// convert a string to a numerical value of various types
+  template<class T>
+  T to_numeric(const std::string &str) {
+    return std::stoi(str);
+  };
+  template<>
+  inline long to_numeric<long>(const std::string &str) {
+    return std::stol(str);
+  };
+  template<>
+  inline int to_numeric<int>(const std::string &str) {
+    return std::stoi(str);
+  };
+  template<>
+  inline float to_numeric<float>(const std::string &str) {
+    return std::stof(str);
+  };
+  template<>
+  inline double to_numeric<double>(const std::string &str) {
+    return std::stod(str);
+  };
+  //********************************************************
+  
   // this is not for the user
   namespace detail
   {
@@ -190,7 +213,9 @@ namespace Utilities
     public:
       typedef ValueT value_type;
       typedef ValueT* pointer;
+      typedef const ValueT* const_pointer;
       typedef ValueT& reference;
+      typedef const ValueT& const_reference;
       typedef typename base_iterator::difference_type difference_type;
       typedef typename base_iterator::iterator_category iterator_category;
       
@@ -201,10 +226,11 @@ namespace Utilities
       iterator& operator=(const iterator& rhs) { it = rhs.it; return *this; }
       
       reference operator*() { return (reference)(**it); }
-      const reference operator*() const { return (const reference)(**it); }
+
+      //const reference operator*() const { return (const reference)(**it); }
       
       pointer operator->() { return (pointer)(*it); }
-      const pointer operator->() const { return (const pointer)(*it); }
+      const_pointer operator->() const { return (const_pointer)(*it); }
       
       iterator& operator++() { ++it; return *this; }
       iterator operator++(int) { iterator tmp(*this); ++it; return tmp; }
@@ -218,7 +244,8 @@ namespace Utilities
       iterator& operator-=(difference_type n) { it -= n; return *this; }
       
       reference operator[](difference_type n) { return (reference)*it[n]; }
-      const reference operator[](difference_type n) const { return (const reference)*it[n]; }
+
+      //const reference operator[](difference_type n) const { return (const reference)*it[n]; }
       
       friend iterator operator+(const iterator& i, difference_type n) { return iterator(i.it + n); }
       friend iterator operator+(difference_type n, const iterator& i) { return iterator(i.it + n); }
@@ -393,7 +420,7 @@ namespace Utilities
     {
       return *items[i];
     }
-    
+
     /// indexed access for type SubclassT
     template<typename SubclassT>
     SubclassT& get(std::size_t i)
@@ -621,6 +648,18 @@ namespace Utilities
       return *this;
     }
     
+    /// back of list
+    BaseT& back()
+    {
+      return items.back();
+    }
+    
+    /// back of list
+    const BaseT& back() const
+    {
+      return items.back();
+    }
+
     /// add an object of type SubclassT to the vector
     void push_back(BaseT* obj)
     {
@@ -954,6 +993,7 @@ namespace Utilities
     PosType operator()(void);
     /// generates a Gaussian distributed number with unit variance by polar Box-Muller transform
     PosType gauss(){
+      ++calls;
       if(count){
         do{
           u = 2*ran2() - 1;
@@ -970,6 +1010,9 @@ namespace Utilities
       }
     };
     
+    size_t calls = 0;  /// total number of calls
+    
+    long getseed(){return firstseed;}
   private:
     long idum;
     PosType ran2(void);
@@ -993,6 +1036,7 @@ namespace Utilities
     long iv[32];
     bool count;
     PosType u,v,s;
+    long firstseed;
     
   };
   
@@ -1000,7 +1044,7 @@ namespace Utilities
   template <typename T, typename R>
   void shuffle(
                std::vector<T> &vec   /// The vector to be shuffled
-               ,R ran               /// a random number generator so that ran() gives a number between 0 and 1
+               ,R &ran               /// a random number generator so that ran() gives a number between 0 and 1
   ){
     T tmp;
     size_t ran_t;
@@ -1057,6 +1101,56 @@ namespace Utilities
     std::sort(index.begin(), index.end(),
               [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
   }
+  
+  /** \brief Gives a randomized sequence of numbers from 0 to N-1.
+   
+   If the sequence is exhausted then it is reshuffled and numbers will 
+   repeat in randomized order.
+   **/
+  template <typename R>
+  class ShuffledIndex{
+  public:
+    ShuffledIndex(size_t N,R &ran){
+      if(N == 0) throw std::invalid_argument("N=0");
+      
+      for(size_t i=0 ; i<N ; ++i) index[i] = i;
+      index.resize(N);
+      Utilities::shuffle(index,ran);
+      index_internal = 0;
+    }
+    
+    /// return the index number
+    size_t operator*(){return index[index_internal];}
+    /// goto the next number
+    size_t operator++(int){
+      size_t tmp = index[index_internal];
+      if(index_internal == index.size()){
+        index_internal = 0;
+      }else{
+        ++index_internal;
+      }
+      return tmp;
+    }
+    /// goto the next number
+    size_t operator++(){
+      if(index_internal == index.size()){
+        index_internal = 0;
+      }else{
+        ++index_internal;
+      }
+      return index[index_internal];
+    }
+    
+    /// get a new random order
+    void reshuffle(R &ran){
+      Utilities::shuffle(index,ran);
+      index_internal = 0;
+    }
+    
+  private:
+    std::vector<size_t> index;
+    size_t index_internal;
+  };
 
   
   // reorders vec according to index p
@@ -1100,6 +1194,15 @@ namespace Utilities
                        ,std::vector<double> &Pl      /// output binned power spectrum
                        ,double zeropaddingfactor = 4  
   );
+  void powerspectrum2d(
+                       std::valarray<double> &aa      /// first realspace map to be
+                       ,int nx                       /// number of pixels in x direction
+                       ,int ny                       /// number of pixels in y direction
+                       ,double boxlx                 /// range of image in x direction
+                       ,double boxly                 /// range of image in y direction
+                       ,std::vector<double> &ll      /// output multiplot number of bins
+                       ,std::vector<double> &Pl      /// output binned power spectrum
+                       );
 #endif
   
   
@@ -1118,188 +1221,647 @@ namespace Utilities
 
   /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
   int GetNThreads();
+
+  /// namespace for input/output utilities
+  namespace IO{  ///
+      
+      inline bool file_exists (const std::string& name) {
+          struct stat buffer;
+          return (stat (name.c_str(), &buffer) == 0);
+      }
+
+    /** \brief Read in data from an ASCII file with two columns
+     */
+    template <class T1,class T2>
+    void read2columnfile(
+                         std::string filename    /// input file name
+                         ,std::vector<T1> &x     /// vector that will contain the first column
+                         ,std::vector<T2> &y     /// vector that will contain the second column
+                         ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                         ,int skiplines = 0
+                         ,bool verbose = false
+                         
+                         ){
+      
+      x.clear();
+      y.clear();
+      
+      std::ifstream file_in(filename.c_str());
+      std::string myline;
+      std::string space = " ";
+      T1 myt1;
+      T2 myt2;
+      
+      std::string strg;
+      std::stringstream buffer;
+      
+      if(!file_in){
+        std::cout << "Can't open file " << filename << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+      }
+      
+      std::cout << "Reading caustic information from " << filename << std::endl;
+      size_t i=0;
+      while(i < skiplines){
+        getline(file_in,myline);
+        ++i;
+      }
+      while(file_in.peek() == '#'){
+        file_in.ignore(10000,'\n');
+        ++i;
+      }
+      std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+      
+      size_t pos;
+      // read in data
+      while(getline(file_in,myline)){
+        
+        if(myline[0] == '#'){
+          std::cout << "skipped line " << i << std::endl;
+          continue;
+        }
+        
+        pos= myline.find_first_not_of(space);
+        myline.erase(0,pos);
+        
+        
+        pos = myline.find(delineator);
+        strg.assign(myline,0,pos);
+        buffer << strg;
+        buffer >> myt1;
+        if(verbose) std::cout << myt1 << " ";
+        x.push_back(myt1);
+        
+        myline.erase(0,pos+1);
+        pos= myline.find_first_not_of(space);
+        myline.erase(0,pos);
+        
+        strg.clear();
+        buffer.clear();
+        
+        pos = myline.find(space);
+        strg.assign(myline,0,pos);
+        buffer << strg;
+        buffer >> myt2;
+        if(verbose)  std::cout << myt2 << std::endl;
+        y.push_back(myt2);
+        
+        strg.clear();
+        buffer.clear();
+        myline.clear();
+        
+      }
+      std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+    }
+    /** \brief Read in data from an ASCII file with three columns
+     */
+    template <class T1,class T2,class T3>
+    void read3columnfile(
+                         std::string filename    /// input file name
+                         ,std::vector<T1> &x     /// vector that will contain the first column
+                         ,std::vector<T2> &y     /// vector that will contain the second column
+                         ,std::vector<T3> &z     /// vector that will contain the third column
+                         ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
+                         ,bool verbose = false
+                         
+                         ){
+      
+      
+      assert(0); // Untested!!!!
+      x.clear();
+      y.clear();
+      z.clear();
+      
+      std::ifstream file_in(filename.c_str());
+      std::string myline;
+      std::string space = " ";
+      T1 myt1;
+      T2 myt2;
+      T3 myt3;
+      
+      std::string strg;
+      std::stringstream buffer;
+      
+      if(!file_in){
+        std::cout << "Can't open file " << filename << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+      }
+      
+      std::cout << "Reading caustic information from " << filename << std::endl;
+      size_t i=0;
+      while(file_in.peek() == '#'){
+        file_in.ignore(10000,'\n');
+        ++i;
+      }
+      std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+      
+      size_t pos;
+      // read in data
+      while(getline(file_in,myline)){
+        
+        if(myline[0] == '#'){
+          std::cout << "skipped line " << i << std::endl;
+          continue;
+        }
+        
+        pos= myline.find_first_not_of(space);
+        myline.erase(0,pos);
+        
+        
+        pos = myline.find(delineator);
+        strg.assign(myline,0,pos);
+        buffer << strg;
+        buffer >> myt1;
+        if(verbose) std::cout << myt1 << " ";
+        x.push_back(myt1);
+        
+        myline.erase(0,pos+1);
+        pos= myline.find_first_not_of(space);
+        myline.erase(0,pos);
+        
+        strg.clear();
+        buffer.clear();
+        
+        // ******************
+        
+        
+        pos = myline.find(space);
+        strg.assign(myline,0,pos);
+        buffer << strg;
+        buffer >> myt2;
+        if(verbose)  std::cout << myt2 << std::endl;
+        y.push_back(myt2);
+        
+        myline.erase(0,pos+1);
+        pos= myline.find_first_not_of(space);
+        myline.erase(0,pos);
+        
+        strg.clear();
+        buffer.clear();
+        
+        // ******************
+        pos = myline.find(space);
+        strg.assign(myline,0,pos);
+        buffer << strg;
+        buffer >> myt3;
+        if(verbose)  std::cout << myt3 << std::endl;
+        y.push_back(myt3);
+        
+        strg.clear();
+        buffer.clear();
+        myline.clear();
+        
+      }
+      std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+    }
+    
+    int NumberOfEntries(const std::string &string,char deliniator);
+    
+    /// Count the number of columns in a ASCII data file.
+    int CountColumns(std::string filename  /// name of file
+                     ,char comment_char = '#'  /// comment charactor
+                     ,char deliniator = ' '    /// deliniator between columns
+    );
+    
+    /** \brief Reads the file names in a directory that contain a specific sub string.
+     
+     */
+    void ReadFileNames(
+                                  std::string dir              /// path to directory containing fits files
+                                  ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
+                                  ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                       ,bool verbose);
+    
+    /// check if the directory does not exist
+    bool check_directory(std::string dir);
+
+    
+    /** \brief This function will read in all the numbers from a multi-column
+     ,space seporated ASCII data file.
+     
+     It will skip the comment lines if they are at the head of the file.  The 
+     number of columns and rows are returned.  The entry at row r and column c will be stored at data[c + column*r].
+     
+     This function is not particularly fast for large amounts of data.  If the 
+     number of roaws is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
+     */
+    template <typename T>
+    void ReadASCII(std::vector<T> &data
+                   ,std::string filename
+                   ,int &columns
+                   ,int &rows
+                   ,char comment_char = '#'
+                   ,int skiplines = 0
+                   ,size_t MaxNrows = std::numeric_limits<size_t>::max()
+                   ,bool verbose = true){
+      
+      std::ifstream file(filename);
+      // find number of particles
+      if (!file.is_open()){
+        std::cerr << "file " << filename << " cann't be opened." << std::endl;
+        throw std::runtime_error("no file");
+      }
+      
+      
+      data.empty();
+      
+      std::string line;
+      columns = 0;
+      rows = 0;
+      size_t first_data_line;
+      
+      // skip over first lines
+      int i=0;
+      while(i < skiplines){
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+        ++i;
+      }
+      
+      // read comment lines and first data line
+      do{
+        first_data_line = file.tellg();
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+      }while(line[0] == comment_char);
+      
+      columns =  NumberOfEntries(line,' ');
+      
+      file.seekg(first_data_line);   // move back to first data line
+      
+      std::copy(std::istream_iterator<T>(file),
+                  std::istream_iterator<T>(),
+                  std::back_inserter(data));
+      
+      rows = data.size()/columns;
+      if(verbose){
+        std::cout << "Read " << rows << " rows of " << columns << " columns from file " << filename << std::endl;
+      }
+    }
   
-  /** \brief Read in data from an ASCII file with two columns
-   */
-  template <class T1,class T2>
-  void read2columnfile(
-                       std::string filename    /// input file name
-                       ,std::vector<T1> &x     /// vector that will contain the first column
-                       ,std::vector<T2> &y     /// vector that will contain the first column
-                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
-                       ,bool verbose = false
-                       
-                       ){
+    /** \brief Read numerical data from a csv file with a header
+     
+     It will skip the comment lines if they are at the head of the file.  The
+     number of columns and rows are returned.  The entries will be stored at data[column][row].
+     
+     Comments must only be before the data.  There must be a line with the
+     column lines after the comments and before the data.
+     
+     This function is not particularly fast for large amounts of data.  If the
+     number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
+     */
+
+    template <typename T>
+    int ReadCSVnumerical1(std::string filename   /// file name to be read
+                ,std::vector<std::vector<T> > &data  /// output data
+                ,std::vector<std::string> &column_names /// list of column names
+                ,char comment_char = '#'  /// comment charactor for header
+                ,char deliniator = ','    /// deliniator between values
+                         ){
     
-    x.clear();
-    y.clear();
+      std::ifstream file(filename);
+      // find number of particles
+      if (!file.is_open()){
+        std::cerr << "file " << filename << " cann't be opened." << std::endl;
+        throw std::runtime_error("no file");
+      }
+      std::string line;
+      // read comment lines and first data line
+      do{
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+      }while(line[0] == comment_char);
     
-    std::ifstream file_in(filename.c_str());
-    std::string myline;
-    std::string space = " ";
-    T1 myt1;
-    T2 myt2;
-    
-    std::string strg;
-    std::stringstream buffer;
-    
-    if(!file_in){
-      std::cout << "Can't open file " << filename << std::endl;
-      ERROR_MESSAGE();
-      throw std::runtime_error(" Cannot open file.");
+      // read the names
+      std::stringstream          lineStream(line);
+      std::string                cell;
+      column_names.empty();
+      while(std::getline(lineStream,cell, ','))
+      {
+        column_names.push_back(cell);
+      }
+      // This checks for a trailing comma with no data after it.
+      if (!lineStream && cell.empty())
+      {
+         column_names.push_back("");
+      }
+
+      int columns = NumberOfEntries(line,deliniator);
+      //int i = 0;
+      data.resize(columns);
+      for(auto &v : data ) v.empty();
+      while(std::getline(file,line)){
+        // read the names
+        std::stringstream          lineStream(line);
+        std::string                cell;
+        
+        int i=0;
+        while(std::getline(lineStream,cell, deliniator))
+        {
+          data[i].push_back(to_numeric<T>(cell));
+          i = (i+1)%columns;
+        }
+      }
+                           return 1;
     }
     
-    std::cout << "Reading caustic information from " << filename << std::endl;
-    size_t i=0;
-    while(file_in.peek() == '#'){
-      file_in.ignore(10000,'\n');
-      ++i;
-    }
-    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+    /** \brief Read numerical data from a csv file with a header
+     
+     Same as ReadCSVnumerical1 except the order of the data storage is
+     reversed data[row][column].
+     
+     It will skip the comment lines if they are at the head of the file.  The
+     number of columns and rows are returned.
+     
+     Comments must only be before the data.  Then if header==true there
+     should be a line of column names.  If header!=true there are non column names.
+     
+     This function is not particularly fast for large amounts of data.  If the
+     number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
+     */
     
-    size_t pos;
-    // read in data
-    while(getline(file_in,myline)){
+    template <typename T>
+    int ReadCSVnumerical2(std::string filename   /// file name to be read
+                         ,std::vector<std::vector<T> > &data  /// output data
+                         ,std::vector<std::string> &column_names /// list of column names
+                          ,size_t Nmax = 1000000
+                          ,char comment_char = '#'  /// comment charactor for header
+                          ,char deliniator = ','    /// deliniator between values
+                          ,bool header = true    /// false if there are no column names
+    ){
       
-      if(myline[0] == '#'){
-        std::cout << "skipped line " << i << std::endl;
-        continue;
+      
+      std::ifstream file(filename);
+      
+      if (!file.is_open()){
+        std::cerr << "file " << filename << " cann't be opened." << std::endl;
+        throw std::runtime_error("no file");
+      }
+      std::string line;
+      // read comment lines and first data line
+      do{
+        std::getline(file,line);
+        if(!file) break;  // probably EOF
+      }while(line[0] == comment_char);
+      
+      // read the names
+      std::stringstream          lineStream(line);
+      std::string                cell;
+      column_names.empty();
+      size_t ii = 0;
+      
+      if(header){
+        while(std::getline(lineStream,cell,deliniator))
+        {
+            column_names.push_back(cell);
+        }
+        
+        // This checks for a trailing comma with no data after it.
+        if (!lineStream && cell.empty())
+        {
+            column_names.push_back("");
+        }
+      }else{
+        
+        while(std::getline(lineStream,cell,deliniator))
+        {
+          column_names.push_back(cell);
+        }
+        
+        data.emplace_back(column_names.size());
+        int i=0;
+        for(auto a : column_names){
+          data.back()[i++] = to_numeric<T>(a);
+        }
+        ++ii;
       }
       
-      pos= myline.find_first_not_of(space);
-      myline.erase(0,pos);
+      int columns = NumberOfEntries(line,deliniator);
       
+      for(auto &v : data ) v.empty();
       
-      pos = myline.find(delineator);
-      strg.assign(myline,0,pos);
-      buffer << strg;
-      buffer >> myt1;
-      if(verbose) std::cout << myt1 << " ";
-      x.push_back(myt1);
-      
-      myline.erase(0,pos+1);
-      pos= myline.find_first_not_of(space);
-      myline.erase(0,pos);
-      
-      strg.clear();
-      buffer.clear();
-      
-      pos = myline.find(space);
-      strg.assign(myline,0,pos);
-      buffer << strg;
-      buffer >> myt2;
-      if(verbose)  std::cout << myt2 << std::endl;
-      y.push_back(myt2);
-      
-      strg.clear();
-      buffer.clear();
-      myline.clear();
-      
-    }
-    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
-  }
-  /** \brief Read in data from an ASCII file with three columns
-   */
-  template <class T1,class T2,class T3>
-  void read3columnfile(
-                       std::string filename    /// input file name
-                       ,std::vector<T1> &x     /// vector that will contain the first column
-                       ,std::vector<T2> &y     /// vector that will contain the first column
-                       ,std::vector<T3> &z     /// vector that will contain the first column
-                       ,std::string delineator = " "  /// specific string the seporates columns, ex. ",", "|", etc.
-                       ,bool verbose = false
-                       
-                       ){
-    
-    
-    assert(0); // Untested!!!!
-    x.clear();
-    y.clear();
-    z.clear();
-    
-    std::ifstream file_in(filename.c_str());
-    std::string myline;
-    std::string space = " ";
-    T1 myt1;
-    T2 myt2;
-    T3 myt3;
-    
-    std::string strg;
-    std::stringstream buffer;
-    
-    if(!file_in){
-      std::cout << "Can't open file " << filename << std::endl;
-      ERROR_MESSAGE();
-      throw std::runtime_error(" Cannot open file.");
-    }
-    
-    std::cout << "Reading caustic information from " << filename << std::endl;
-    size_t i=0;
-    while(file_in.peek() == '#'){
-      file_in.ignore(10000,'\n');
-      ++i;
-    }
-    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
-    
-    size_t pos;
-    // read in data
-    while(getline(file_in,myline)){
-      
-      if(myline[0] == '#'){
-        std::cout << "skipped line " << i << std::endl;
-        continue;
+      while(std::getline(file,line) && ii < Nmax){
+        
+        data.emplace_back(columns);
+        
+        // read the numbers
+        std::stringstream          lineStream(line);
+        std::string                cell;
+        
+        int i=0;
+        while(std::getline(lineStream,cell, deliniator))
+        {
+          assert(i < columns);
+          data.back()[i] = to_numeric<T>(cell);
+          ++i;
+        }
+        ++ii;
       }
       
-      pos= myline.find_first_not_of(space);
-      myline.erase(0,pos);
-      
-      
-      pos = myline.find(delineator);
-      strg.assign(myline,0,pos);
-      buffer << strg;
-      buffer >> myt1;
-      if(verbose) std::cout << myt1 << " ";
-      x.push_back(myt1);
-      
-      myline.erase(0,pos+1);
-      pos= myline.find_first_not_of(space);
-      myline.erase(0,pos);
-      
-      strg.clear();
-      buffer.clear();
-
-      // ******************
-      
-      
-      pos = myline.find(space);
-      strg.assign(myline,0,pos);
-      buffer << strg;
-      buffer >> myt2;
-      if(verbose)  std::cout << myt2 << std::endl;
-      y.push_back(myt2);
-
-      myline.erase(0,pos+1);
-      pos= myline.find_first_not_of(space);
-      myline.erase(0,pos);
-      
-      strg.clear();
-      buffer.clear();
-      
-      // ******************
-      pos = myline.find(space);
-      strg.assign(myline,0,pos);
-      buffer << strg;
-      buffer >> myt3;
-      if(verbose)  std::cout << myt3 << std::endl;
-      y.push_back(myt3);
-
-      strg.clear();
-      buffer.clear();
-      myline.clear();
-      
+      return 1;
     }
-    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+  
+  /** \brief write a CSV data file for some data vectors
+   
+   example:
+   <p>
+   std::vector<std::string> header = {"alpha","kappa","gamma"};
+   
+   std::vector<double> v1 = {1,2,3};
+   std::vector<double> v2 = {1.1,2.1,3.1};
+   std::vector<double> v3 = {3,4,5};
+   
+   std::vector<std::vector<double> *> data;
+   data.push_back(&v1);
+   data.push_back(&v2);
+   data.push_back(&v3);
+   writeCSV(filename,header,data);
+   </p>
+   **/
+  
+  template<typename T>
+  void writeCSV(const std::string filename              /// output file path/name
+                ,const std::vector<std::string> header  /// column labels
+                ,std::vector<T *> &data                 /// objects must have operator []
+  ){
+    
+    std::ofstream s(filename + ".csv");
+    
+    int ncol = header.size();
+    assert(ncol == data.size() );
+    for(int i = 0 ; i < header.size()-1 ; ++i){
+      s << header[i] << ",";
+    }
+    s << header.back() << std::endl;
+    
+    size_t nrow = data[0]->size();
+    for(auto v : data) assert(nrow == v->size() );
+    
+    for(size_t j = 0 ; j < nrow ; ++j){
+      for(int i = 0 ; i < ncol-1 ; ++i){
+        s << data[i]->operator[](j) << ",";
+      }
+      s << data.back()->operator[](j) << "\n";
+    }
   }
 
-}
+  /*** \brief A class for reading and then looking up objects from a CSV catalog.
+   
+   The constructor will read in the whole catalog and sort it into Nxbins X-bins.  Each
+   X-bin is then sorted by Y.
+   
+   The find(x,y) function will set the current value to a galaxy with a x within the
+   x-bin of x and a y close to y.  The other information in the row of the csv file for
+   this entry can then be read.
+   
+   */
+  class XYcsvLookUp{
+  public:
+    XYcsvLookUp(std::string datafile   /// input catalog file in csv format
+                ,std::string Xlabel    /// label in catalog for X variable
+                ,std::string Ylabel    /// label in catalog for Y variable
+                ,int Nxbins            /// number of X bins
+                ,size_t MaxNumber = 1000000 /// maximum number of entries read
+                ,bool verbose = false);
+    XYcsvLookUp(
+                std::string datafile   /// input catalog file in csv format
+                ,std::string Xlabel    /// label in catalog for X variable
+                ,std::string Ylabel    /// label in catalog for Y variable
+                ,std::vector<double> Xbins  /// minimum X value in each bin
+                ,size_t MaxNumber = 1000000 /// maximum number of entries read
+                ,bool verbose = false);
+    
+    /// find a galaxy with a redshift and log(halo mass) near x and logm, return a vector of its properties
+    std::vector<double> find(double x,double y);
+    
+    /// returns the current galxay's property by label
+    double operator[](std::string label) const;
+    
+    /// returns the ith entry for the current galaxy
+    double operator[](int i) const{
+      return (*current)[i];
+    }
+    /// returns the redshift of the current galaxy
+    double getX() const {
+      return (*current)[Xindex];
+    }
+    /// returns the log(mass) of the current halo
+    double getY() const {
+      return (*current)[Yindex];
+    }
+    /// returns a vector of the entries for the current galaxy
+    std::vector<double> record() const{
+      return *current;
+    }
+    /// returns a vector of the entries for the current galaxy
+    std::vector<double> operator*() const {
+      return *current;
+    }
+
+    void operator++(){
+      if(current != data.end() ) ++current;
+    }
+    void operator--(){
+      if(current != data.begin() ) --current;
+    }
+    /// returns labels of the columns from the data file
+    std::vector<std::string> labels() const{
+      return column_names;
+    }
+    
+    double Xmin() const {return xmin;}
+    double Xmax() const {return xmax;}
+    /// returns minimum Y value in x-bin
+    double Ymin(double x) const;
+    /// returns maximum Y value in x-bin
+    double Ymax(double x) const;
+    
+    void printcurrent(){
+      int i = 0;
+      for(auto label : column_names){
+        std::cout << label << " : " << (*current)[i++] << std::endl;
+      }
+    }
+    
+  private:
+    int Xindex;
+    int Yindex;
+    double xmax;
+    double xmin;
+    std::vector<std::vector<double> >::iterator current;
+    std::vector<std::vector<std::vector<double> >::iterator> borders;
+    std::vector<std::vector<double> > data;
+    std::vector<std::string> column_names;
+    std::vector<double> Xborders;
+    size_t NinXbins;
+    std::string filename;
+  };
+  } // Utilities::IO
+
+  /// split string into vector of seporate strings that were seporated by
+  void splitstring(std::string &line,std::vector<std::string> &vec,const std::string &delimiter);
+
+/** \brief class for impoting data from a csv file and allowing label string lookup like a data frame.
+ *
+ *
+*/
+template< typename T>
+class DataFrame{
+public:
+    DataFrame(std::string datafile   /// input catalog file in csv format
+          ,size_t MaxNumber = 1000000 /// maximum number of entries read
+          ,char comment_char = '#'  /// comment charactor for header
+          ,char deliniator = ','    /// deliniator between values
+    ):filename(datafile){
+      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names);
+      for(int i=0 ; i<column_names.size() ; ++i){
+        datamap[column_names[i]] = i;
+      }
+    };
+    
+    /// returns column by name
+    std::vector<T>& operator[](const std::string &label){
+      if(datamap.find(label) == datamap.end()){
+        throw std::invalid_argument("no label");
+      }
+      return data[datamap[label]];
+      for(auto c : column_names ) std::cout << c << " ";
+      std::cout << std::endl;
+      throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    };
+
+  /// add a column to the data frame.  This does a copy.
+  void add_column(const std::string &name,const std::vector<T> &vec){
+    if(vec.size() != data[0].size()){
+      std::cerr << "Added column to DataFrame needs to have the same size." << std::endl;
+      throw std::invalid_argument("wrong size");
+    }
+    column_names.push_back(name);
+    data.push_back(vec);
+    data[name] = data.size()-1;
+  };
+
+    /// returns column by number
+    std::vector<T>& operator[](int i){
+        return data[i];
+    };
+
+    /// returns labels of the columns from the data file
+    std::vector<std::string> labels() const{
+        return column_names;
+    };
+    
+    size_t number_of_rows(){return data[0].size();}
+    size_t number_of_columns(){return data.size();}
+private:
+  std::map<std::string,int> datamap;
+  std::vector<std::vector<T> > data;
+  std::vector<std::string> column_names;
+  std::string filename;
+};
+  
+}  // Utilities
+
 #endif

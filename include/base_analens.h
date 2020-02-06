@@ -11,8 +11,9 @@
 #include "quadTree.h"
 #include "source.h"
 #include "InputParams.h"
+#include "lens_halos.h"
 
-/**
+/*
  * \brief An "analytic" model to represent a lens on a single plane.
  *
  * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion
@@ -54,6 +55,8 @@ class LensHaloBaseNSIE : public LensHalo{
 public:
 	LensHaloBaseNSIE(InputParams& params);
   LensHaloBaseNSIE();
+  
+  virtual void abstractfunction() = 0; // pure virtual
 
   virtual ~LensHaloBaseNSIE();
 
@@ -71,7 +74,7 @@ public:
 	/// get the velocity dispersion
 	virtual PosType get_sigma(){return sigma;};
 	/// get the NSIE radius
-	//PosType get_Rsize(){return Rsize;};
+	//PosType getRsize(){return Rsize;};
 	/// get the axis ratio
 	virtual PosType get_fratio(){return fratio;};
 	/// get the position angle
@@ -96,7 +99,7 @@ public:
   PosType sub_Mmin;
   PosType sub_theta_force;
   LensHalo *subs;
-  TreeQuad *sub_tree;
+  TreeQuadHalos *sub_tree;
   IndexType *sub_substructures;
   ClumpInternal main_sub_type;
 
@@ -130,17 +133,6 @@ public:
 	PosType setParam(std::size_t p, PosType value);
 	
 	void printCSV(std::ostream& out, bool header = false) const;
-
-  /// set the velocity dispersion of NSIE
-	//void set_sigma(float my_sigma){sigma = my_sigma;}
-  /// set the NSIE radius
-	//void set_Rsize(float my_Rsize){Rsize = my_Rsize;}
-	/// set the axis ratio
-	//void set_fratio(float my_fratio){fratio = my_fratio;}
-	/// set the position angle
-	//void set_pa(float my_pa){pa = my_pa;}
-	/// set the core radius
-	//void set_rcore(float my_rcore){rcore = my_rcore;}
   
   /// computes phi for NSIE
   KappaType phiNSIE(PosType const *xt,PosType f,PosType bc,PosType theta);
@@ -150,6 +142,10 @@ public:
   
 protected:
 
+  // make it uncopyable
+  void operator=(const LensHaloBaseNSIE &h){};
+  LensHaloBaseNSIE(const LensHaloBaseNSIE &h){};
+  
   /// critical surface density
   PosType Sigma_crit;
    /// the time delay scale in days/Mpc^2

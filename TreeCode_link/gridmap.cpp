@@ -12,7 +12,7 @@
 
 std::mutex GridMap::grid_mutex;
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing rectangular grid.
  *
  * Cells of grid will always be square with initial resolution rangeX/(Nx-1).
@@ -77,7 +77,7 @@ GridMap::GridMap(
   }
 }
 
-/** \ingroup Constructor
+/** 
  * \brief Constructor for initializing square grid.
  *
  * Note: Deflection solver must be specified before creating a GridMap.
@@ -124,7 +124,8 @@ void GridMap::ReInitializeGrid(LensHndl lens){
   ClearSurfaceBrightnesses();
 }
 
-PixelMap GridMap::getPixelMap(int resf){
+/// Output a PixelMap of the surface brightness with same res as the GridMap
+PixelMap GridMap::getPixelMap(int resf) const{
   
   if(resf <=0){
     ERROR_MESSAGE();
@@ -150,7 +151,8 @@ PixelMap GridMap::getPixelMap(int resf){
   return map;
 }
 
-void GridMap::getPixelMap(PixelMap &map){
+/// surface brightness map
+void GridMap::getPixelMap(PixelMap &map) const{
   
   int resf = (Ngrid_init-1)/(map.getNx()-1);
   
@@ -158,8 +160,6 @@ void GridMap::getPixelMap(PixelMap &map){
   if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
   
-  size_t N = Ngrid_init*Ngrid_init2;
-
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
   
@@ -167,7 +167,7 @@ void GridMap::getPixelMap(PixelMap &map){
     ERROR_MESSAGE();
     throw std::invalid_argument("resf must be > 0");
   }
-
+  
   map.Clean();
   
   int factor = resf*resf;
@@ -188,6 +188,19 @@ double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
     tmp = source->SurfaceBrightness(s_points[i].x);
     s_points[i].surface_brightness = s_points[i].image->surface_brightness
     = tmp;
+    total += tmp;
+    s_points[i].in_image = s_points[i].image->in_image = NO;
+  }
+  
+  return total;
+}
+double GridMap::AddSurfaceBrightnesses(SourceHndl source){
+  PosType total=0,tmp;
+  
+  for(size_t i=0;i <s_points[0].head;++i){
+    tmp = source->SurfaceBrightness(s_points[i].x);
+    s_points[i].surface_brightness += tmp;
+    s_points[i].image->surface_brightness += tmp;
     total += tmp;
     s_points[i].in_image = s_points[i].image->in_image = NO;
   }
@@ -221,11 +234,79 @@ PixelMap GridMap::writePixelMapUniform(
   
   if(getNumberOfPoints() == 0 ) return PixelMap();
   PixelMap map(center, Nx, Ny,x_range/(Nx-1));
-
+  
   map.Clean();
   
   writePixelMapUniform(map,lensvar);
   
+  return map;
+}
+
+PixelMap GridMap::writePixelMapUniform(
+              LensingVariable lensvar  /// which quantity is to be displayed
+){
+  size_t Nx =  Ngrid_init;
+  size_t Ny = Ngrid_init2;
+  
+  PixelMap map( center.x, Nx, Ny,x_range/(Nx-1) );
+  
+  size_t N = map.size();
+  assert(N == Nx*Ny);
+  
+  double tmp2[2];
+  switch (lensvar) {
+    case ALPHA:
+      for(size_t i=0 ; i<N ; ++i){
+        tmp2[0] = i_points[i].x[0] - i_points[i].image->x[0];
+        tmp2[1] = i_points[i].x[1] - i_points[i].image->x[1];
+        map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+      }
+      break;
+    case ALPHA1:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = (i_points[i].x[0] - i_points[i].image->x[0]);
+      break;
+    case ALPHA2:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = (i_points[i].x[1] - i_points[i].image->x[1]);
+      break;
+    case KAPPA:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].kappa;
+      break;
+    case GAMMA:
+       for(size_t i=0 ; i<N ; ++i){
+         tmp2[0] = i_points[i].gamma[0];
+         tmp2[1] = i_points[i].gamma[1];
+         map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+      }
+      break;
+    case GAMMA1:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma[0];
+      break;
+    case GAMMA2:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma[1];
+      break;
+    case GAMMA3:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma[2];
+      break;
+    case INVMAG:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].invmag;
+      break;
+    case DELAYT:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].dt;
+      break;
+    default:
+      std::cerr << "GridMap::writePixelMapUniform() does not work for the input LensingVariable" << std::endl;
+      throw std::runtime_error("GridMap::writePixelMapUniform() does not work for the input LensingVariable");
+      break;
+      // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+  }
   return map;
 }
 void GridMap::writePixelMapUniform(
@@ -294,7 +375,7 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,Lens
       case INVMAG:
         tmp = points[i].invmag;
         break;
-      case DT:
+      case DELAYT:
         tmp = points[i].dt;
         break;
       default:
@@ -319,7 +400,7 @@ void GridMap::writeFitsUniform(
   std::string tag;
   
   switch (lensvar) {
-    case DT:
+    case DELAYT:
       tag = ".dt.fits";
       break;
     case ALPHA1:
@@ -389,7 +470,7 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
   return;
 }
 
-PosType GridMap::EisnsteinArea() const{
+PosType GridMap::EinsteinArea() const{
   size_t count = 0;
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){
@@ -397,5 +478,15 @@ PosType GridMap::EisnsteinArea() const{
   }
   
   return count*x_range*x_range/Ngrid_init/Ngrid_init;
+}
+
+PosType GridMap::magnification() const{
+  double mag = 0,flux = 0;
+  size_t N = Ngrid_init*Ngrid_init2;
+  for(size_t i=0;i<N;++i){
+    mag += i_points[i].surface_brightness*fabs(i_points[i].invmag);
+    flux += i_points[i].surface_brightness;
+  }
+  return flux/mag;
 }
 

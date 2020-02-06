@@ -7,9 +7,7 @@
 #include "slsimlib.h"
 #include <iomanip>
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-#endif
+#include "cpfits.h"
 
 namespace
 {
@@ -215,7 +213,23 @@ void InputParams::print_unused() const
 
 std::ostream &operator<<(std::ostream &os, InputParams const &p) {
   std::size_t n = 0;
+  os << "Used :" << std::endl;
   for(InputParams::const_iterator it = p.params.begin(); it != p.params.end(); ++it)
+  {
+    if(p.use_counter.is_used(it->first))
+    {
+      InputParams::const_iterator comment = p.comments.find(it->first);
+      if(comment != p.comments.end())
+        printrow(os, it->first, it->second, comment->second);
+      else
+        printrow(os, it->first, it->second);
+      ++n;
+    }
+  }
+
+
+  os << "Unused :" << std::endl;
+ for(InputParams::const_iterator it = p.params.begin(); it != p.params.end(); ++it)
   {
     if(!p.use_counter.is_used(it->first))
     {
@@ -227,7 +241,6 @@ std::ostream &operator<<(std::ostream &os, InputParams const &p) {
       ++n;
     }
   }
-  
   return os;
 }
 
@@ -263,31 +276,14 @@ void InputParams::PrintToFile(std::string filename, bool strip_unused) const
  */
 void InputParams::readMOKA()
 {
-#ifdef ENABLE_FITS
 	std::cout << "Reading MOKA FITS parameters...\n" << std::endl;
 	
 	std::string MOKA_input_file;
 	if(!get("MOKA_input_file", MOKA_input_file))
 		throw new std::runtime_error("Parameter MOKA_input_file must be set for MOKA_input_params to work!");
 	
-	try
-	{
-		//std::auto_ptr<CCfits::FITS> ff(new CCfits::FITS(MOKA_input_file, CCfits::Read));
-    
-    std::auto_ptr<CCfits::FITS> ff(0);
-    try
-    {
-      ff.reset( new CCfits::FITS(MOKA_input_file, CCfits::Read) );
-    }
-    catch (CCfits::FITS::CantOpen)
-    {
-      std::cerr << "Cannot open " << MOKA_input_file << std::endl;
-      exit(1);
-    }
-
-		
-		CCfits::PHDU* h0 = &ff->pHDU();
-		
+  CPFITS_READ cpfits("MOKA_input_file");
+  
 		double sidel; // box side length in arc seconds
 		double zlens; // redshift of lens
 		double zsource; // redshift of source
@@ -295,15 +291,17 @@ void InputParams::readMOKA()
 		double omega_l; // omega_lambda
 		double hubble; // hubble constant H/100
 		
-    try{
-      h0->readKey("SIDEL", sidel);
-      h0->readKey("ZLENS", zlens);
-      h0->readKey("ZSOURCE", zsource);
-      h0->readKey("OMEGA", omega_m);
-      h0->readKey("LAMBDA", omega_l);
-      h0->readKey("H", hubble);
-    }
-    catch(CCfits::HDU::NoSuchKeyword){
+    
+    int error = 0;
+    
+    error += cpfits.readKey("SIDEL", sidel);
+    error += cpfits.readKey("ZLENS", zlens);
+    error += cpfits.readKey("ZSOURCE", zsource);
+    error += cpfits.readKey("OMEGA", omega_m);
+    error += cpfits.readKey("LAMBDA", omega_l);
+    error += cpfits.readKey("H", hubble);
+    
+    if(error != 0){
       std::cerr << "MOKA fits file must have header keywords:" << std::endl
       << " SIDEL - length on a side" << std::endl
       << " ZLENS - redshift of lens" << std::endl
@@ -339,16 +337,6 @@ void InputParams::readMOKA()
 		params["hubble"] = to_str(hubble);
 		comments["hubble"] = "# [MOKA]";
 		std::cout << std::left << std::setw(24) << "hubble" << std::setw(12) << hubble << "# [MOKA]" << std::endl;
-	}
-	catch(CCfits::FITS::CantOpen)
-	{
-		std::cout << "can not open " << MOKA_input_file << std::endl;
-		exit(1);
-	}
-#else
-	std::cout << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-	exit(1);
-#endif
 }
 
 /** \brief Assigns to "value" the value of the parameter called "label".
@@ -399,17 +387,17 @@ bool InputParams::get(std::string label, MassFuncType& value) const
 	
 	if(!it->second.compare("0") || !it->second.compare("PS"))
 	{
-		value = PS;
+		value = PressSchechter;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("ST"))
 	{
-		value = ST;
+		value = ShethTormen;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
 	{
-		value = PL;
+		value = PowerLaw;
 		return true;
 	}
 

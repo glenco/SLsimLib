@@ -1,4 +1,4 @@
-/** \ingroup FitLensL2
+/** 
  * lens_expand.c
  *
  *  Created on: Feb 22, 2010

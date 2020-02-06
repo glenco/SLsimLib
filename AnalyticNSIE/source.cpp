@@ -7,21 +7,27 @@
 
 #include "slsimlib.h"
 #include <typeinfo>
-
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-//#include <CCfits>
-#endif
+#include "cpfits.h"
 
 using namespace std;
 
-SourceUniform::SourceUniform(InputParams& params) : Source(){
-  assignParams(params);
+//SourceUniform::SourceUniform(InputParams& params) : Source(){
+//  assignParams(params);
+//}
+
+SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radians):
+  Source()
+{
+  source_r = radius_in_radians;
+  source_x = position;
+  setSBlimit_magarcsec(100.);
+  zsource = z;
 }
 
-SourceGaussian::SourceGaussian(InputParams& params) : Source(){
-  assignParams(params);
-}
+
+//SourceGaussian::SourceGaussian(InputParams& params) : Source(){
+//  assignParams(params);
+//}
 
 SourceBLR::SourceBLR(InputParams& params) : Source(){
   assignParams(params);
@@ -143,8 +149,8 @@ void SourceBLR::assignParams(InputParams& params){
   
   if(fail) exit(1);
   
-  source_inclination *= pi/180;
-  source_opening_angle *= pi/180;
+  source_inclination *= PI/180;
+  source_opening_angle *= PI/180;
   source_monocrome = false;
   
   printSource();
@@ -169,8 +175,8 @@ void SourceBLR::printSource(){
   cout << "z_source " << zsource << endl;
   cout << "BHmass " << source_BHmass << endl;
   cout << "gamma " << source_gamma << endl;
-  cout << "incl " << source_inclination*180/pi << endl;
-  cout << "opening angl " << source_opening_angle*180/pi << endl;
+  cout << "incl " << source_inclination*180/PI << endl;
+  cout << "opening angl " << source_opening_angle*180/PI << endl;
   cout << "r_in " << source_r_in << endl;
   cout << "r_out " << source_r_out << endl;
   cout << "nuo " << source_nuo << endl;
@@ -178,23 +184,23 @@ void SourceBLR::printSource(){
 }
 
 PosType SourceUniform::SurfaceBrightness(PosType *y){
-  return (PosType)( (pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2)) < source_r*source_r );
+  return (PosType)( (pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2)) < source_r*source_r );
 }
 
 PosType SourceGaussian::SurfaceBrightness(PosType *y){
-  return exp( -(pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))/source_gauss_r2 );
+  return exp( -(pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))/source_gauss_r2 );
 }
 // surface brightness for models of the Broad Line Region
 PosType SourceBLRDisk::SurfaceBrightness(PosType *y){
-  PosType x[2] = {y[0]-getX()[0],y[1]-getX()[1]};
+  PosType x[2] = {y[0]-getTheta()[0],y[1]-getTheta()[1]};
   return blr_surface_brightness_disk(x,this);
 }
 
 PosType SourceBLRSph1::SurfaceBrightness(PosType *y){
-  return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
+  return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
 PosType SourceBLRSph2::SurfaceBrightness(PosType *y){
-  return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getX()[0],2) + pow(y[1]-getX()[1],2))),this);
+  return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
 
 //void in_source(PosType *y_source,ListHndl sourcelist){
@@ -251,8 +257,10 @@ SourcePixelled::SourcePixelled(
   source_x[1] = gal_map.getCenter()[1];
   source_r =  range/sqrt(2.);
   values.resize(Npixels*Npixels);
+  
+  double convertion = 1.0/resolution/resolution*factor;
   for (int i = 0; i < Npixels*Npixels; i++)
-    values[i] = gal_map(i)/resolution/resolution*factor;
+    values[i] = gal_map(i)*convertion;
   
   calcTotalFlux();
   calcCentroid();
@@ -346,9 +354,9 @@ void SourcePixelled::assignParams(InputParams& params){}
  *
  */
 PosType Source::changeFilter(
-                             std::string filter_in  				/// file with the old observing filter
-                             , std::string filter_out			/// file with the new observing filter
-                             , std::string sed					/// file with the galaxy spectral energy distribution
+                             std::string filter_in  /// file with the old observing filter
+                             , std::string filter_out	/// file with the new observing filter
+                             , std::string sed			/// file with the galaxy spectral energy distribution
 )
 {
   
@@ -480,26 +488,19 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
  zsource=0;
  }
  */
-Band SourceShapelets::shape_band[10] = {F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I};
 
 void SourceShapelets::setActiveBand(Band band)
 {
-  if(band == EUC_VIS) band = SDSS_I;
-  if(band == EUC_Y) band = F110W;
-  if(band == EUC_J) band = F110W;
-  if(band == EUC_H) band = F160W;
-  for (int i = 0; i < 10; i++)
-  {
-    if (shape_band[i] == band)
-    {
-      mag = mags[i];
-      flux = fluxes[i];
-      return;
-    }
-  }
   
-  std::cout << "The band is not available! Available bands are F435W,F606W,F775W,F850LP,F110W,F160W,SDSS_U,SDSS_G,SDSS_R,SDSS_I" << std::endl;
-  throw std::invalid_argument("band not supported");
+  mag = mag_map.at(band);
+  if (mag < 0.)
+      flux = std::numeric_limits<PosType>::epsilon();
+    else
+      flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  
+  assert(flux > 0);
+  current_band = band;
+  return;
 }
 
 SourceShapelets::SourceShapelets(
@@ -515,9 +516,9 @@ SourceShapelets::SourceShapelets(
   zsource = my_z;
   mag = my_mag;
   if(my_center != NULL)
-    setX(my_center[0], my_center[1]);
+    setTheta(my_center[0], my_center[1]);
   else
-    setX(0, 0);
+    setTheta(0, 0);
   ang = my_ang;
   n1 = sqrt(my_coeff.size());
   n2 = n1;
@@ -525,6 +526,7 @@ SourceShapelets::SourceShapelets(
   source_r = my_scale;
   
   flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  assert(flux > 0.0);
   
   NormalizeFlux();
 }
@@ -541,45 +543,30 @@ SourceShapelets::SourceShapelets(
   zsource = my_z;
   mag = my_mag;
   if(my_center != NULL)
-    setX(my_center[0], my_center[1]);
+    setTheta(my_center[0], my_center[1]);
   else
-    setX(0, 0);
+    setTheta(0, 0);
   ang = my_ang;
   
-#ifdef ENABLE_FITS
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
   
-  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
- 
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << shap_file << std::endl;
-    exit(1);
-  }
-
-  CCfits::PHDU& h0 = fp->pHDU();
+  CPFITS_READ cpfits(shap_file.c_str());
   
-  h0.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*pi;
-  h0.readKey("DIM", n1);
-  h0.readKey("ID", id);
+  cpfits.readKey("BETA", source_r);
+  source_r *= 0.03/180./60./60.*PI;
+  cpfits.readKey("DIM", n1);
+  cpfits.readKey("ID", id);
   n2 = n1;
-  h0.read(coeff);
-  
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
-  
+  vector<long> size;
+  cpfits.read(coeff,size);
+
   flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  assert(flux > 0);
   
   NormalizeFlux();
+  
+  current_band = NoBand;
 }
 
 SourceShapelets::SourceShapelets(
@@ -590,67 +577,51 @@ SourceShapelets::SourceShapelets(
 :Source()
 {
   if(my_center != NULL)
-    setX(my_center[0], my_center[1]);
+    setTheta(my_center[0], my_center[1]);
   else
-    setX(0, 0);
+    setTheta(0, 0);
   ang = my_ang;
   
-#ifdef ENABLE_FITS
+  
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
+ 
+  CPFITS_READ cpfits(shap_file.c_str());
   
-  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(shap_file.c_str(), CCfits::Read));
+  cpfits.readKey("BETA", source_r);
+  source_r *= 0.03/180./60./60.*PI;
+  cpfits.readKey("SED_TYPE",sed_type);
   
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS(shap_file.c_str(), CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << shap_file << std::endl;
-    exit(1);
-  }
+  cpfits.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude
+  cpfits.readKey("MAG_V",mag_map[F606W]); // ACS F606W band magnitude
+  cpfits.readKey("MAG_I",mag_map[F775W]); // ACS F775W band magnitude
+  cpfits.readKey("MAG_Z",mag_map[F850LP]);// ACS F850LP band magnitude
+  cpfits.readKey("MAG_J",mag_map[F110W]); // NIC3 F110W band magnitude
+  cpfits.readKey("MAG_H",mag_map[F160W]);  // NIC3 F160W band magnitude
+  cpfits.readKey("MAG_u_KIDS",mag_map[KiDS_U]); // u band obtained from SED fitting
+  cpfits.readKey("MAG_g_KIDS",mag_map[KiDS_G]); // g band obtained from SED fitting
+  cpfits.readKey("MAG_r_KIDS",mag_map[KiDS_R]); // r band obtained from SED fitting
+  cpfits.readKey("MAG_i_KIDS",mag_map[KiDS_I]); // i band obtained from SED fitting
 
-  
-  CCfits::PHDU& h0 = fp->pHDU();
-  
-  h0.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*pi;
-
-  h0.readKey("MAG_B", mags[0]);
-  h0.readKey("MAG_V", mags[1]);
-  h0.readKey("MAG_I", mags[2]);
-  h0.readKey("MAG_Z", mags[3]);
-  h0.readKey("MAG_J", mags[4]);
-  h0.readKey("MAG_H", mags[5]);
-  h0.readKey("MAG_u_KIDS", mags[6]);
-  h0.readKey("MAG_g_KIDS", mags[7]);
-  h0.readKey("MAG_r_KIDS", mags[8]);
-  h0.readKey("MAG_i_KIDS", mags[9]);
-  
-  for (int i = 0; i < 10; i++)
-  {
-    if (mags[i] < 0.)
-      fluxes[i] = std::numeric_limits<PosType>::epsilon();
-    else
-      fluxes[i] = pow(10,-0.4*(mags[i]+48.6))*inv_hplanck;
-  }
   
   // by default, the magnitude is the one in the i band,
   // whose image has been used for shapelets decomposition
-  mag = mags[2];
-  flux = fluxes[2];
+  setActiveBand(KiDS_I);
   
-  h0.readKey("REDSHIFT", zsource);
-  h0.readKey("ID", id);
-  h0.readKey("DIM", n1);
+  cpfits.readKey("REDSHIFT", zsource);
+  cpfits.readKey("ID", id);
+  cpfits.readKey("DIM", n1);
+  
   n2 = n1;
-  h0.read(coeff);
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
+  std::vector<long> size;
+  cpfits.read(coeff,size);
+
+  
+  // ??? kluge
+  mag_map[EUC_VIS] = mag_map.at(KiDS_I);
+  //mag_map[EUC_Y] = mag_map.at(F110W);
+  mag_map[EUC_J] = mag_map.at(F110W);
+  mag_map[EUC_H] = mag_map.at(F160W);
   
   NormalizeFlux();
 }
@@ -673,7 +644,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   
   for (int i = 0; i < n1; i++,coei *= 2,coej=1 )
   {
-    tmp = factrl(i)*pi;
+    tmp = factrl(i)*PI;
     for (int j = 0; j < n2; j++,coej *= 2 )
     {
       
@@ -683,6 +654,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   }
   sb *= exp(-0.5*(y_norm[0]*y_norm[0]+y_norm[1]*y_norm[1]) )/source_r;
   sb *= flux/coeff_flux;
+  assert(flux > 0);
   
   return max(sb,std::numeric_limits<PosType>::epsilon());
 }
@@ -724,8 +696,7 @@ void SourceShapelets::NormalizeFlux()
       coeff_flux += pow(2,0.5*(2-i-j))*sqrt(factrl(i))/factrl(i/2.)*sqrt(factrl(j))/factrl(j/2.)*coeff[j*n1+i];
     }
   }
-  coeff_flux *= sqrt(pi)*source_r;
-  
+  coeff_flux *= sqrt(PI)*source_r;
 }
 
 /// Default constructor. Reads in sources from the default catalog. No magnitude limit.
@@ -736,6 +707,17 @@ SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
   readCatalog();
 }
 
+SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
+: Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)
+{
+  
+  if(sb_limit == -1)
+    setSBlimit_magarcsec(30.);
+  else
+    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+  
+  readCatalog();
+}
 SourceMultiShapelets::~SourceMultiShapelets()
 {
 }
@@ -751,21 +733,24 @@ void SourceMultiShapelets::readCatalog()
     if (shap_input)
     {
       SourceShapelets s(shap_file.c_str());
-      s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag() < mag_limit)
+      //s.setActiveBand(band);
+      if (s.getMag() > 0. && s.getMag() < mag_limit
+          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0 ){
         galaxies.push_back(s);
-      shap_input.close();
+        shap_input.close();
+      }
+      /*else if (i == 1)
+      {
+        std::cout << "Can't open file " << shap_file << std::endl;
+        ERROR_MESSAGE();
+        throw std::runtime_error(" Cannot open file.");
+        exit(1);
+      }*/
     }
-    else if (i == 1)
-    {
-      std::cout << "Can't open file " << shap_file << std::endl;
-      ERROR_MESSAGE();
-      throw std::runtime_error(" Cannot open file.");
-      exit(1);
-    }
-    
   }
-  
+  std::cout << galaxies.size() << " shapelet sources out of " << max_num
+  << " passed selection." << std::endl;
+  band = galaxies[0].getBand();
 }
 
 
@@ -775,11 +760,10 @@ void SourceMultiShapelets::assignParams(InputParams& params){
     exit(1);
   }
   
-  
   if(!params.get("source_sb_limit",sb_limit))
     setSBlimit_magarcsec(30.);
   else
-    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
+    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
   
   if(!params.get("shapelets_folder",shapelets_folder)){
     std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;

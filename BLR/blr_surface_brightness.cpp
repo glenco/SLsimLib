@@ -105,7 +105,7 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 	float vr = sqrt(4.7788e-20*source->source_BHmass/R);
 	float v_shift_yprime;         // in units of the speed of light
 
-	if(source->source_opening_angle < 0.9999*pi/2){
+	if(source->source_opening_angle < 0.9999*PI/2){
 
 		//double v_shift_xprime,v_shift_yprime,v_shift_zprime;
 		//v_shift_xprime = - vr * yy_prime/sqrt(xx_prime*xx_prime + yy_prime*yy_prime);

@@ -12,7 +12,7 @@
 const bool verbose = false;
 const PosType FracResTarget = 3.0e-5;
 
-/** \ingroup ImageFinding
+/** Finding
  *  \brief Find images and refine them based on their surface brightness distribution.
  *
  *  Uses ImageFinding::find_images_kist() to initially find and refine images and then using 
@@ -30,7 +30,7 @@ void ImageFinding::map_imagesISOP(
 		,int *Nimages           /// number of images found
     ,std::vector<ImageInfo> &imageinfo   /// information on each image
 		,PosType rmax            /// Maximum size of source on souce plane.  The entire source must be within this distance from
-		                        ///  source->getX()[]
+		                        ///  source->getTheta()[]
 		,PosType res_min        /// requred resolution of image, typically the pixel size of the final image
 		,PosType initial_size    /// Initial size of source for telescoping, 0 to start from the initial grid size.
 		                        /// If < 0 no telescoping is used and only the already existing points are used to
@@ -66,7 +66,7 @@ void ImageFinding::map_imagesISOP(
   if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "
     << grid->getNumberOfPoints() << std::endl;
     
-  ImageFinding::find_images_kist(lens,source->getX(),source->getRadius(),grid,Nimages
+  ImageFinding::find_images_kist(lens,source->getTheta().x,source->getRadius(),grid,Nimages
                                  ,imageinfo,&Nimagepoints,0.0,true,0,verbose);
   
   //assert(*Nimages == 1);

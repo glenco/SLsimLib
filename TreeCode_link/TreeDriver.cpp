@@ -10,7 +10,7 @@
 //static PosType realray[2];
 //Point *point_global;
 
-/** \ingroup ImageFundingL2
+/** 
  *
  * \brief Finds nearest neighbor points to ray.
  *
@@ -126,7 +126,7 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
   int i,incell2=1;
   unsigned long index[Nneighbors+Nbucket];
   PosType dx,dy;
-  PointList::iterator pointlist_current;
+  PointList::iterator pl_it;
   
   //std::printf("**************************************\nlevel %i\n",(*current)->level);
   //for(i=0;i<(*current)->npoints;++i) std::printf("   %i\n",(*current)->points[i]);
@@ -145,11 +145,11 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
     		globs.ray[1] = globs.realray[1];
 
     		/* calculate the distance to all the points in cell */
-    		if((*current)->points != NULL ) pointlist_current = (*current)->points;
+    		if((*current)->points != NULL ) pl_it.current = (*current)->points;
     		for(i=0;i<(*current)->npoints;++i){
 
-    			dx = (*pointlist_current)->x[0] - globs.ray[0];
-    			dy = (*pointlist_current)->x[1] - globs.ray[1];
+    			dx = (*pl_it)->x[0] - globs.ray[0];
+    			dy = (*pl_it)->x[1] - globs.ray[1];
 
     			switch(*direction){
     			case 0: /* distance */
@@ -175,8 +175,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 
      			index[i]=i;
     			//temp_points[i]=pointlist->current;
-          globs.tmp_point[i] = (*pointlist_current);
-          --pointlist_current;
+          globs.tmp_point[i] = (*pl_it);
+          --pl_it;
     		}
 
     		if((*current)->npoints > 0){
@@ -221,7 +221,7 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 		  if( current.atLeaf() ){  /* leaf case */
 
 			  /* combine found neighbors with points in box and resort */
-			  if((*current)->points != NULL) pointlist_current=(*current)->points;
+			  if((*current)->points != NULL) pl_it.current=(*current)->points;
 
 			  for(i=0;i<Nneighbors;++i){
 				  index[i]=i;
@@ -231,8 +231,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 
 			  for(i=Nneighbors;i<((*current)->npoints+Nneighbors);++i){
 
-				  dx=(*pointlist_current)->x[0] - globs.ray[0];
-				  dy=(*pointlist_current)->x[1] - globs.ray[1];
+				  dx=(*pl_it)->x[0] - globs.ray[0];
+				  dy=(*pl_it)->x[1] - globs.ray[1];
 
 				  switch(*direction){
 				  case 0: /* distance */
@@ -257,8 +257,8 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 				  }
 
 				  index[i]=i;
-				  globs.tmp_point[i] = *pointlist_current;
-          --pointlist_current;
+				  globs.tmp_point[i] = *pl_it;
+          --pl_it;
 			  }
 
 			  // sort the points found so far
@@ -482,7 +482,7 @@ Point *sortList(long n, PosType *arr,ListHndl list,Point *firstpointin){
   long i,j;
   PosType a;
   Point *point,*firstpoint;
-  PointList::iterator list_current;
+  PointList::iterator pl_it;
 
   if(n <= 1) return firstpointin;
 
@@ -491,21 +491,21 @@ Point *sortList(long n, PosType *arr,ListHndl list,Point *firstpointin){
   for(j=1;j<n;j++){
     a=arr[j];
 
-    list_current=firstpoint;
-    list_current.JumpDownList(j);
+    pl_it.current = firstpoint;
+    pl_it.JumpDownList(j);
 
-    point=list->TakeOutCurrent(list_current);
+    point=list->TakeOutCurrent(pl_it);
 
     i=j-1;
     while(i>-1 && arr[i] > a){
       arr[i+1]=arr[i];
       i--;
-      ++list_current;
+      ++pl_it;
     }
     arr[i+1]=a;
 
-    if( *list_current==list->Top() && i==-1) list->InsertPointBeforeCurrent(list_current,point);
-    else list->InsertPointAfterCurrent(list_current,point);
+    if( *pl_it==list->Top() && i==-1) list->InsertPointBeforeCurrent(pl_it,point);
+    else list->InsertPointAfterCurrent(pl_it,point);
 
     if(i == -1) firstpoint=point;
   }
@@ -830,23 +830,25 @@ void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist){
 
 	if(neighbors->size() < 1 || wholelist->size() < 1) return;
 
-  PointList::iterator wholelist_current(*wholelist);
-  PointList::iterator neighbors_current(*neighbors);
+  PointList::iterator wholelist_it;
+  wholelist_it.current = wholelist->Top();
+  PointList::iterator neighbors_it;
+  neighbors_it.current = neighbors->Top();
   
 	do{
-    wholelist_current = wholelist->Top();
+    wholelist_it.current = wholelist->Top();
 		do{
 			if(check==1){
-        ++wholelist_current;
+        ++wholelist_it;
 				check=0;
 			}
-			if(AreBoxNeighbors(*neighbors_current,*wholelist_current) ){
-				if( wholelist->Top() == *wholelist_current ) check=1;
-				point = wholelist->TakeOutCurrent(wholelist_current);
-				neighbors->InsertPointAfterCurrent(neighbors_current,point);
+			if(AreBoxNeighbors(*neighbors_it,*wholelist_it) ){
+				if( wholelist->Top() == *wholelist_it ) check=1;
+				point = wholelist->TakeOutCurrent(wholelist_it);
+				neighbors->InsertPointAfterCurrent(neighbors_it,point);
 			}
-		}while(--wholelist_current);
-	}while((--neighbors_current) && wholelist->size() > 0);
+		}while(--wholelist_it);
+	}while((--neighbors_it) && wholelist->size() > 0);
 
 	return ;
 }
@@ -1156,12 +1158,14 @@ void TransformPoints(ListHndl listout,ListHndl listin){
   unsigned long i;
 
   listout->EmptyList();
-  PointList::iterator listin_current(listin->Top());
-  PointList::iterator listout_current(listout->Top());
+  PointList::iterator listin_it;
+  listin_it.current = listin->Top();
+  PointList::iterator listout_it;
+  listout_it.current = listout->Top();
   for(i=0;i<listin->size();++i){
-    listout->InsertAfterCurrent(listout_current,(*listin_current)->image->x
-                                ,(*listin_current)->image->id,*listin_current);
-    --listin_current;
+    listout->InsertAfterCurrent(listout_it,(*listin_it)->image->x
+                                ,(*listin_it)->image->id,*listin_it);
+    --listin_it;
   }
   
 }
@@ -1468,6 +1472,46 @@ KappaType ImageInfo::aveTimeDelay()
   tmp_dt /= imagekist->Nunits() ;
   
   return tmp_dt;
+}
+
+/// Find the losest ray within the image to the source point y
+RAY ImageInfo::closestRay(const Point_2d &y){
+  
+  RAY p;
+  
+  double r2min = HUGE_VALL;
+  for(Kist<Point>::iterator it = imagekist->begin()
+      ; it != imagekist->end()
+      ; ++it){
+  
+    double dy2 = pow( (*it).image->x[0] - y[0],2 )
+    + pow( (*it).image->x[1] - y[1],2 );
+  
+    if(r2min > dy2){
+      p = *it;
+      r2min = dy2;
+    }
+  }
+  
+  return p;
+}
+
+RAY ImageInfo::highestSurfaceBrightnessRay(){
+  Point *p;
+  
+  double sb = -1;
+  for(Kist<Point>::iterator it = imagekist->begin()
+      ; it != imagekist->end()
+      ; ++it){
+    
+    double tsb = (*it).surface_brightness;
+    if(tsb > sb){
+      p = &(*it);
+      sb = tsb;
+    }
+  }
+  
+  return RAY(*p);
 }
 
 ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){

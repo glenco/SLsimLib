@@ -18,7 +18,7 @@
  * Returns pointer to new Branch struct.  Initializes children pointers to NULL,
  * and sets data field to input.  Private.
  ************************************************************************/
-/** \ingroup ConstructorL2
+/** 
  *
  * Gives each branch a unique number even if branches are destroed.
  */
@@ -71,8 +71,33 @@ Point::Point():Point_2d(0,0){
   gamma[0] = gamma[1] = gamma[2] = 0;
   invmag = 1;
   flag = false;
-}
+};
 
+Point::Point(const Point_2d &p):Point_2d(p){
+  head = 0;
+  in_image = NO;
+  surface_brightness = 0;
+  leaf = nullptr;
+  image = nullptr;
+  next = prev = nullptr;
+  kappa = dt = gridsize = 0;
+  gamma[0] = gamma[1] = gamma[2] = 0;
+  invmag = 1;
+  flag = false;
+};
+
+Point::Point(PosType x,PosType y):Point_2d(x,y){
+  head = 0;
+  in_image = NO;
+  surface_brightness = 0;
+  leaf = nullptr;
+  image = nullptr;
+  next = prev = nullptr;
+  kappa = dt = gridsize = 0;
+  gamma[0] = gamma[1] = gamma[2] = 0;
+  invmag = 1;
+  flag = false;
+};
 
 /// print out all member data for testing purposes
 void Point::Print(){
@@ -146,7 +171,7 @@ void Branch::print(){
 	 std::cout << "  refined " << refined << std::endl;
 }
 
-/** \ingroup ConstructorL2
+/** 
 *
 void FreeBranch(Branch *branch){
 
@@ -156,7 +181,7 @@ void FreeBranch(Branch *branch){
     return;
 }*/
 
-  /** \ingroup ConstructorL2
+  /** 
  **/
 Point *NewPointArray(
 		unsigned long N  /// number of points in array
@@ -173,7 +198,7 @@ Point *NewPointArray(
   return points;
 }
 
-/** \ingroup ConstructorL2
+/** 
  *
  */
 void FreePointArray(Point *array,bool NewXs){
@@ -230,10 +255,10 @@ void TreeStruct::construct_root(
       //pointlist=NewList();
       pointlist= new PointList;
    //EmptyList(pointlist);
-      PointList::iterator pointlist_current;
+      PointList::iterator pl_it;
   for(i=0;i<npoints;++i){
-    pointlist->InsertPointAfterCurrent(pointlist_current,&xp[i]);
-    --pointlist_current;
+    pointlist->InsertPointAfterCurrent(pl_it,&xp[i]);
+    --pl_it;
   }
 
   top = new Branch(pointlist->Top(),npoints,boundary_p1,boundary_p2
@@ -246,7 +271,7 @@ void TreeStruct::construct_root(
   //return(tree);
 }
 
-/** \ingroup ConstructorL2
+/** 
  * \brief Free tree and the linked list of points in it.
  */
 TreeStruct::~TreeStruct(){
@@ -450,10 +475,12 @@ void TreeStruct::insertChildToCurrent(Branch *current,Branch *branch,int child){
     }
 
     if(branch->npoints > 0){
-      PointList::iterator pointlist_current(branch->points);
+      PointList::iterator pl_it;
+      pl_it.current = branch->points;
+      
     	for(unsigned long i=0;i<branch->npoints;++i){
-    		(*pointlist_current)->leaf = branch;
-        --pointlist_current;
+    		(*pl_it)->leaf = branch;
+        --pl_it;
     	}
     }
 
@@ -523,11 +550,14 @@ void TreeStruct::printTree(TreeStruct::iterator &current){
   int i;
 
     printBranch(*current);
-  PointList::iterator pointlist_current((*current)->points);
+  PointList::iterator pl_it;
+  pl_it.current = ((*current)->points);
+  
+  
     for(i=0;i<(*current)->npoints;++i){
-      std::cout << (*pointlist_current)->id << " " << (*pointlist_current)->x[0] <<
-      " " << (*pointlist_current)->x[1] << std::endl;
-      --pointlist_current;
+      std::cout << (*pl_it)->id << " " << (*pl_it)->x[0] <<
+      " " << (*pl_it)->x[1] << std::endl;
+      --pl_it;
     }
     if((*current)->child1 == NULL) return;
 
@@ -753,7 +783,7 @@ void PrintPoint(Point *point){
   std::cout << " gamma = " << point->gamma[0] << " " << point->gamma[1];
   std::cout << " invmag " << point->in_image << std::endl;
 }
-/** \ingroup Constructor
+/** 
  * Make an array of imageinfo types.
  */
 ImageInfo::ImageInfo(){
@@ -788,7 +818,7 @@ ImageInfo::ImageInfo(){
   return imageinfo;
 }*/
 
-/** \ingroup Constructor
+/** 
  * Destructor of imageinfo types.
  */
 ImageInfo::~ImageInfo(){
@@ -861,7 +891,7 @@ OldImageInfo::~OldImageInfo(){
     delete outerborder;
 }
 
-/** \ingroup LowLevel
+/** 
  *  step for walking tree by iteration instead of recursion
  *
 bool TreeStruct::TreeWalkStep(bool allowDescent){
@@ -944,6 +974,98 @@ void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
   }
 }
 
+void ImageFinding::printCriticalCurves(std::string filename
+                                  ,const std::vector<ImageFinding::CriticalCurve> &critcurves){
+  
+  filename = filename + ".csv";
+  std::ofstream myfile(filename);
+  myfile << "caustic_center_x,caustic_center_y,caustic_area,critical_center_x,critical_center_y,critical_area,z_source,type"
+  << std::endl;
+  for(auto cr : critcurves){
+    myfile << cr << std::endl;
+  }
+}
 
+std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p) {
+  
+  // caustic_center,caustic_area,critical_center,critical_area,z_source,type
+  os << p.caustic_center[0] << "," << p.caustic_center[1] << "," << p.caustic_area
+  << "," << p.critical_center[0] << "," << p.critical_center[1] << ","
+  << p.critical_area << "," << p.z_source << "," << p.type;
+  
+  return os;
+}
 
+PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+                                         ,int Nx) {
+  
+  int i_max = 0,i=0;
+  double area = critcurves[0].critical_area;
+
+  Point_2d p1,p2,p_min,p_max;
+  p1 = p2 = p_min = p_max = critcurves[0].critical_center;
+  
+  for(auto c : critcurves){
+    if(c.critical_area > area){
+      i_max = i;
+      area = c.critical_area;
+    }
+    c.CritRange(p1,p2);
+    
+    if(p1[0] < p_min[0]) p_min[0] = p1[0];
+    if(p1[1] < p_min[1]) p_min[1] = p1[1];
+ 
+    if(p2[0] > p_max[0]) p_max[0] = p2[0];
+    if(p2[1] > p_max[1]) p_max[1] = p2[1];
+
+    ++i;
+  }
+  
+  Point_2d center = (p_max + p_min)/2;
+  double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
+  
+  PixelMap map(center.x,Nx,range/Nx);
+  
+  for(auto c : critcurves){
+    map.AddCurve(c.critical_curve, c.type + 1);
+  }
+  
+  return map;
+}
+
+PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+                                         ,int Nx) {
+  
+  int i_max = 0,i=0;
+  double area = critcurves[0].caustic_area;
+  Point_2d p1,p2,p_min,p_max;
+  p1 = p2 = p_min = p_max = critcurves[0].caustic_center;
+  
+  for(auto c : critcurves){
+    if(c.caustic_area > area){
+      i_max = i;
+      area = c.caustic_area;
+    }
+    c.CausticRange(p1,p2);
+    
+    if(p1[0] < p_min[0]) p_min[0] = p1[0];
+    if(p1[1] < p_min[1]) p_min[1] = p1[1];
+    
+    if(p2[0] > p_max[0]) p_max[0] = p2[0];
+    if(p2[1] > p_max[1]) p_max[1] = p2[1];
+    
+    ++i;
+  }
+  
+  Point_2d center = (p_max + p_min)/2;
+  double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
+  
+  PixelMap map(center.x,Nx,range/Nx);
+  
+  for(auto c : critcurves){
+    map.AddCurve(c.caustic_curve_intersecting, c.type + 1);
+  }
+  
+  return map;
+}
 

@@ -105,12 +105,12 @@ public:
     std::vector<Point *> tmp_point;
   };
   
-  iterator begin() const{
+  TreeStruct::iterator begin() const{
     iterator it(top);
     return it;
   };
   
-  iterator end() const{
+  TreeStruct::iterator end() const{
     iterator it(top->brother);
     return it;
   };
@@ -195,8 +195,6 @@ private:
   void _FindBox(TreeStruct::iterator &current,const PosType* ray) const;
   
   void _NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,Point **neighborpoints,PosType *rneighbors,short *direction,TreeStruct::Globals &glabs) const;
-
-
 };
 
 typedef struct TreeStruct *TreeHndl;
@@ -293,7 +291,7 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 
-/// \ingroup Util
+///
 namespace Utilities{
     ///Separation squared between two positions in 2 dimensions.
 	inline PosType sepSQR(PosType *xx,PosType *yy){
@@ -305,6 +303,7 @@ namespace Utilities{
 	void quicksortPoints(Point *pointarray,PosType *arr,unsigned long N);
   void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
   
+  // sort particles and arr according to order of arr
   void quicksort(unsigned long *particles,PosType *arr,unsigned long N);
 	void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
 		,PosType *arr,unsigned long N);
@@ -312,7 +311,6 @@ namespace Utilities{
 		,Point *pointsarray,PosType *arr,unsigned long N);
   void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
                             ,Point *pointarray,PosType (*func)(Point &p),unsigned long N);
-	int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax);
 	void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,long Ngrid);
 	void findarea(ImageInfo *imageinfo);
 	void writeCurves(int m, ImageInfo *critical, int Ncrit, int index);
@@ -342,6 +340,45 @@ namespace Utilities{
   PosType TwoDInterpolator(PosType *x,int Npixels,PosType range,PosType *center,PosType *map,bool init=true);
   PosType TwoDInterpolator(PosType *map);
 
+  // return 1 (0) if box is (not) within rmax of ray
+  template<typename T>
+  int cutbox(const T* center,PosType *p1,PosType *p2,float rmax){
+    /*  returns:  0 if whole box is outside rmax from ray[]
+     *            1 if whole box is inside circle but ray is not in the box
+     *            2 if ray[] is inside box
+     *            3 if box intersects circle but ray[] is not inside box
+     */
+    short i,tick=0;
+    PosType close[2],rtmp;
+    PosType tmp1,tmp2;
+    
+    // find closest point on box borders to ray[]
+    for(i=0;i<2;++i){
+      if( center[i] < p1[i] ){
+        close[i]=p1[i];
+      }else if(center[i] > p2[i]){
+        close[i]=p2[i];
+      }else{
+        close[i]=center[i];
+        ++tick;
+      }
+    }
+    
+    if(tick==2) return 2;  // ray is inside box
+    
+    for(i=0,rtmp=0;i<2;++i) rtmp += pow(center[i] - close[i],2);
+    
+    if(rtmp>rmax*rmax) return 0;  // box is all outside circle
+    
+    // find farthest point on box border from ray[]
+    for(i=0,rtmp=0;i<2;++i) rtmp += ((tmp1 = pow(center[i]-p1[i],2)) > (tmp2=pow(center[i]-p2[i],2))) ? tmp1 : tmp2;
+    //for(i=0,rtmp=0;i<2;++i) rtmp += DMAX(pow(ray[i]-p1[i],2),pow(ray[i]-p2[i],2));
+    
+    if(rtmp<rmax*rmax) return 1;  // box is all inside circle
+    
+    return 3;  // box intersects circle
+  }
+
   /// Multi-threaded quicksort.  The maximum number of threads used is 2^lev.  The last parameter should be left out when calling so that it takes the default value
   template<int lev>
   void quicksortPoints_multithread(Point *pointarray,PosType *arr,unsigned long N,int level=0){
@@ -360,6 +397,7 @@ namespace Utilities{
     
     // move pivot to end of array
     std::swap(arr[pivotindex],arr[N-1]);
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
@@ -407,12 +445,14 @@ namespace Utilities{
     pivotvalue=func(pointarray[pivotindex]);
     
     // move pivot to end of array
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
     // partition list and array
     for(i=0;i<N;++i){
       if(func(pointarray[i]) <= pivotvalue){
+        assert(newpivotindex < N);
         SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
         ++newpivotindex;
       }
@@ -422,12 +462,14 @@ namespace Utilities{
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
         return quicksortPoints_multithread<lev>(pointarray,func,newpivotindex,level + 1); });
-      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func
+                                       ,N-newpivotindex-1,level + 1);
       
       //thread1.wait();
     }else{
       quicksortPoints_multithread<lev>(pointarray,func,newpivotindex,level + 1);
-      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      quicksortPoints_multithread<lev>(&pointarray[newpivotindex+1],func
+                                       ,N-newpivotindex-1,level + 1);
     }
     return ;
   }
@@ -450,6 +492,7 @@ namespace Utilities{
     pivotvalue=func(array[pivotindex]);
     
     // move pivot to end of array
+    assert(pivotindex < N);
     SwapPointsInArray(&array[pivotindex],&array[N-1]);
     newpivotindex=0;
     
@@ -464,19 +507,21 @@ namespace Utilities{
     
     if(level < lev && N > 500){
       auto thread1 = std::async(std::launch::async, [&] {
-        return quicksortPoints_multithread<lev>(array,func,newpivotindex,level + 1); });
-      quicksort_multithread<lev>(&array[newpivotindex+1],func,N-newpivotindex-1,level + 1);
-      
+        return quicksortPoints_multithread<lev>(array,func
+                                                ,newpivotindex,level + 1); });
+      quicksort_multithread<lev>(&array[newpivotindex+1],func
+                                 ,N-newpivotindex-1,level + 1);
       //thread1.wait();
     }else{
       quicksort_multithread<lev>(array,func,newpivotindex,level + 1);
-      quicksort_multithread<lev>(&array[newpivotindex+1],func,N-newpivotindex-1,level + 1);
+      quicksort_multithread<lev>(&array[newpivotindex+1],func
+                                 ,N-newpivotindex-1,level + 1);
     }
     return ;
   }
 
 
-  /** \ingroup Utill
+  /** 
    * \brief Bilinear interpolation class for interpolating from a 2D uniform grid.
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
@@ -514,7 +559,7 @@ namespace Utilities{
                  ,PosType my_range_y   /// Range of map in y in same units as x[]
                  ,PosType *my_center /// Center of map in same units as x[]
                  ):
-    N(my_Nx),range(my_range_x),map_p(NULL),range_y(my_range_y),Ny(my_Ny)
+    range(my_range_x),range_y(my_range_y),map_p(NULL),N(my_Nx),Ny(my_Ny)
     {
       center[0] = my_center[0];
       center[1] = my_center[1];
@@ -589,7 +634,7 @@ namespace Utilities{
       map.resize(N*N);
       
       for(int i=0;i<N;++i){
-        tmp = cos( 6.*i*2.*pi/(N-1) );
+        tmp = cos( 6.*i*2.*PI/(N-1) );
         for(int j=0;j<N;++j){
             map[i+N*j] = tmp;
         }

@@ -22,7 +22,7 @@ struct KistUnit{
 
 //typedef struct Point Data;  // change this to make a kist of other objects
 
-/** \ingroup ImageFindingL2
+/** 
  * \brief A Kist is a class template for a linked list of any data type (default is Point).
  *
  * Multiple Kists of the same data can be made without copying data.  Memory is allocated in
@@ -173,6 +173,8 @@ public:
           unit = unit->prev;
           return *this;
        }
+      
+      Data * operator->(){return unit->data;}
 
         iterator operator++(int){
           

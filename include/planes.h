@@ -9,6 +9,7 @@
 #define PLANES_H_
 
 #include "quadTree.h"
+#include "lens_halos.h"
 
 /// Base class representing a plane in redshift onto which lenses are placed.
 class LensPlane{
@@ -30,13 +31,17 @@ public:
 class LensPlaneTree : public LensPlane{
 public:
 	LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
+  LensPlaneTree(const LensPlaneTree &p);
+  LensPlaneTree(LensPlaneTree &&p){
+    std::swap(*this,p);
+  }
+
 	~LensPlaneTree();
 
+  LensPlaneTree & operator=(const LensPlaneTree &p);
+  LensPlaneTree & operator=(LensPlaneTree &&p);
+  
 	void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
-  void closestHalos(PosType *xx,std::list<LensHalo *> neighbors){
-    
-  };
-
 	void addHalo(LensHalo* halo);
 	void removeHalo(LensHalo* halo);
 	
@@ -47,8 +52,7 @@ public:
 	
 private:
 	std::vector<LensHalo*> halos;
-	
-	TreeQuad* halo_tree;
+	TreeQuadHalos * halo_tree;
 };
 
 /** \brief A LensPlane with a list of LensHalo's in it.  
@@ -59,7 +63,26 @@ private:
 class LensPlaneSingular : public LensPlane{
 public:
 	LensPlaneSingular(LensHaloHndl *my_halos, IndexType Nhalos);
-	~LensPlaneSingular();
+  LensPlaneSingular(const LensPlaneSingular &p){
+    halos = p.halos;
+  }
+  LensPlaneSingular(LensPlaneSingular &&p){
+    std::swap(halos,p.halos);
+  }
+  ~LensPlaneSingular();
+
+  LensPlaneSingular & operator=(const LensPlaneSingular &p){
+    if(&p != this){
+      halos = p.halos;
+    }
+    return *this;
+  }
+  LensPlaneSingular & operator=(LensPlaneSingular &&p){
+    if(&p != this){
+      std::swap(halos,p.halos);
+    }
+    return *this;
+  }
 
   void force(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType *xx);
     

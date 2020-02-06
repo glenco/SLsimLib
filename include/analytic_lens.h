@@ -18,6 +18,9 @@
  */
 // TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloFit : public LensHaloBaseNSIE{
+  
+  void abstractfunction(){}; // pure virtual
+  
 public:
   //LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
@@ -82,7 +85,7 @@ private:
 };
 
 /**
- * \brief An "analytic" model to represent a lens on a single plane.
+ * \brief A NSIE lens with distortions in shape, substructures and stars included.
  *
  * The lens consists of a "host" lens which is a non-singular isothermal ellipsoid (NSIE) plus axial distortion
  * modes, substructures and stars.  LensHaloAnaNSIE differs from a LensHaloBaseNSIE in that there are additional
@@ -128,6 +131,9 @@ private:
  */
 // TODO: BEN finish this documentation for perturbation parameters.
 class LensHaloAnaNSIE : public LensHaloBaseNSIE{
+  
+  void abstractfunction(){}; // pure virtual
+
 public:
   LensHaloAnaNSIE(InputParams& params,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
@@ -152,7 +158,7 @@ public:
   /// get the velocity dispersion
   virtual PosType get_sigma(){return sigma;};
   /// get the NSIE radius
-  //PosType get_Rsize(){return Rsize;};
+  //PosType getRsize(){return Rsize;};
   /// get the axis ratio
   virtual PosType get_fratio(){return fratio;};
   /// get the position angle

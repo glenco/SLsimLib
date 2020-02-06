@@ -28,13 +28,15 @@
 #include <mutex>
 #endif
 
+/// Type of mass function
 enum MassFuncType
 {
-	PS,
-	ST,
-	PL
+	PressSchechter,  /// Press & Schechter mass function
+	ShethTormen,  /// Sheth & Tormen mass function
+	PowerLaw      /// Power law mass function
 };
 
+/// Type of halo profile
 enum LensHaloType
 {
 	null_lens,
@@ -49,6 +51,8 @@ enum LensHaloType
 	hern_lens,
 	jaffe_lens
 };
+
+/// format of mass map file
 enum PixelMapType
 {
   moka,
@@ -59,20 +63,22 @@ enum GalaxyLensHaloType
 {
 	null_gal,
 	nsie_gal,
-  pl_gal,
-  hern_gal,
-  jaffe_gal
+  pl_gal,    /// power law profile
+  hern_gal,  /// Hernquist profile
+  jaffe_gal  /// Jaffe profile
 };
 
 /// names of clump and sb models
-typedef enum {nfw,powerlaw,pointmass} ClumpInternal;
+enum ClumpInternal {nfw,powerlaw,pointmass};
 /// Initial mass function type
 enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 /// Photometric bands
-enum Band {EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
+enum Band {NoBand,EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z
+  ,KiDS_U,KiDS_G,KiDS_R,KiDS_I,DES_R,DES_G,DES_I,DES_Z
+  ,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
 std::ostream &operator<<(std::ostream &os, Band const &p);
 
-enum HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData};
+enum HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData,null_cat};
 /// Methods to make a previously isotropic halo elliptical
 enum EllipMethod {Fourier,Pseudo,Schramm,Keeton};
 

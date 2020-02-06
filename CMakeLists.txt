@@ -57,7 +57,7 @@ add_subdirectory(MultiPlane)
 add_subdirectory(Source)
 add_subdirectory(TreeCode)
 add_subdirectory(TreeCode_link)
-
+add_subdirectory(Miscellaneous)
 
 ####
 # dependencies
@@ -77,6 +77,11 @@ endif()
 
 if(ENABLE_HEALPIX)
 	include_directories(${HEALPIX_INCLUDE_DIRS})
+endif()
+
+if(ENABLE_HDF5)
+	include_directories(${HDF5_INCLUDE_DIRS})
+	add_definitions(${HDF5_DEFINITIONS})
 endif()
 
 include_directories(

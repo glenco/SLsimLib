@@ -165,6 +165,14 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
     throw std::runtime_error(" Cannot open file.");
   }
   
+  size_t count = 0;
+  while(getline(file_in,myline)){
+    if(myline[0] != '#') ++count;
+  }
+  file_in.clear();
+  file_in.seekg(0);
+  data.reserve(count);
+  
   if(verbose) std::cout << "Reading caustic information from " << filename << std::endl;
   size_t i=0;
   while(file_in.peek() == '#'){
@@ -172,6 +180,7 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
     ++i;
   }
   if(verbose) std::cout << "   skipped "<< i << " comment lines in " << filename << std::endl;
+  
   
   size_t pos;
   CausticStructure tmp_data;
@@ -417,7 +426,7 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
   catalog_caustic << "# column 14 caustic type" << std::endl;
   catalog_caustic << "# parameter file: " << paramfile << std::endl;
   
-  catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/pi << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
+  catalog_caustic << "# " << " all critical lines above a scale of " << 180*60*60*minscale/PI << " arcsec,  field of view: " << fieldofview << " square degrees" << std::endl;
   catalog_caustic << "# " << " number of caustics found: " << data.size() << std::endl;
 
 

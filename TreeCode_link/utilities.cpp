@@ -1,4 +1,4 @@
-/**
+ /**
  * utilities.c
  *
  *  Created on: Sep 8, 2009
@@ -74,7 +74,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
   static long id=0;
 
   for(i=0;i<Ngrid*Ngrid;++i){
-	  theta= 2*pi*(i % Ngrid)/Ngrid;
+	  theta= 2*PI*(i % Ngrid)/Ngrid;
 	  r= rmin*exp( (i/Ngrid)*1.0/(Ngrid-1) * log(rmax/rmin) );
 	  i_points[i].id=id;
       ++id;
@@ -87,7 +87,7 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
   return;
 }
 
-/** \ingroup Utill
+/** 
  *
  * The two functions below are inverses of each other for converting
  *   between a 1d array index and a square grid of positions
@@ -177,13 +177,13 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
 	  return -1;
 }
 
-  /** \ingroup Utill
+  /** 
    * \brief bilinear interpolation from a map.
    *
    *  Out of bounds points return 0.  map is a i dimensional array representing a 2 dimensional map.
    *  Don't use init.
    *  After it is used once, later calls can use TwoDInterpolator(PosType *map) for the same point 
-   *  in the same coordinate system to save time in calculating the idndexes.
+   *  in the same coordinate system to save time in calculating the indexes.
    */
   PosType TwoDInterpolator(
                           PosType *x
@@ -236,7 +236,7 @@ long IndexFromPosition(PosType x,long Npixels,PosType range,PosType center){
   }
 
 
-/** \ingroup Utill
+/** 
  * This function finds the largest power of 2 that is < k
  */
 unsigned long prevpower(unsigned long k){
@@ -363,9 +363,9 @@ unsigned long prevpower(unsigned long k){
 #endif
   
   RandomNumbers_NR::RandomNumbers_NR(long seed):
-  IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
+  calls(0),IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
   IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
-    count(true)
+    count(true),firstseed(seed)
   {
     
     AM = (1.0/IM1);
@@ -388,11 +388,11 @@ unsigned long prevpower(unsigned long k){
       if (j < 32) iv[j] = idum;
     }
     iy=iv[0];
-    
   }
   
   /// return a uniform random number between 0 and 1
   PosType RandomNumbers_NR::operator()(void){
+    ++calls;
     return ran2();
   }
   
@@ -431,15 +431,15 @@ unsigned long prevpower(unsigned long k){
                        ,double zeropaddingfactor
                        )
   {
-    // go in the fourir space doing the zero padding
+    // go in the fourier space doing the zero padding
     int zerosize = 4;
     
     int nl = ll.size();
     Pl.resize(nl);
     
     // size of the new map in x and y directions, factor by which each size is increased
-    int Nnx=int(zerosize*nx);
-    int Nny=int(zerosize*ny);
+    size_t Nnx=int(zerosize*nx);
+    size_t Nny=int(zerosize*ny);
     double Nboxlx = boxlx*zerosize;
     double Nboxly = boxly*zerosize;
     
@@ -477,7 +477,7 @@ unsigned long prevpower(unsigned long k){
     fftw_complex *fNb=new fftw_complex[Nny*(Nnx/2+1)];
     fftw_complex *Nfcc=new fftw_complex[Nny*(Nnx/2+1)];
     //size_t *ik=new size_t[];
-    fftw_complex *output=new fftw_complex[Nny*(Nnx/2+1)];
+    //fftw_complex *output=new fftw_complex[Nny*(Nnx/2+1)];
     for(int i=0;i<Nnx;i++) for(int j=0;j<Nny; j++){
       dNa[i+Nnx*j] = double(Na[i+Nnx*j]);
       dNb[i+Nnx*j] = double(Nb[i+Nnx*j]);
@@ -492,6 +492,7 @@ unsigned long prevpower(unsigned long k){
     
     //double *ks=new double[Nny*(Nnx/2+1)];
     std::vector<double> ks(Nny*(Nnx/2+1));
+    double tmp = Nboxlx*Nboxly * pow(1.0/Nnx/Nny,2);
     
     // fb and fa are then used to compute the power spectrum
     // build modes
@@ -505,9 +506,9 @@ unsigned long prevpower(unsigned long k){
         // rescale respect to the box size
         ks[i+(Nnx/2+1)*j] = sqrt(kx*kx/Nboxlx/Nboxlx + ky*ky/Nboxly/Nboxly)*2.*M_PI;
         Nfcc[i+(Nnx/2+1)*j][0] =  (fNa[i+(Nnx/2+1)*j][0]*fNb[i+(Nnx/2+1)*j][0] +
-                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][1])*pow(1./2/M_PI/Nnx/Nny,2)*Nboxlx*Nboxly;
+                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][1]) * tmp;
         Nfcc[i+(Nnx/2+1)*j][1] = -(fNa[i+(Nnx/2+1)*j][0]*fNb[i+(Nnx/2+1)*j][1] -
-                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][0])*pow(1./2/M_PI/Nnx/Nny,2)*Nboxlx*Nboxly;
+                                   fNa[i+(Nnx/2+1)*j][1]*fNb[i+(Nnx/2+1)*j][0]) * tmp;
       }
     }
     std::vector<size_t> ik(Nny*(Nnx/2+1));
@@ -549,7 +550,7 @@ unsigned long prevpower(unsigned long k){
     }
     delete [] dNa;
     delete [] dNb;
-    delete [] output;
+    //delete [] output;
     delete [] fNa;
     delete [] fNb;
     delete [] Nfcc;
@@ -557,9 +558,95 @@ unsigned long prevpower(unsigned long k){
     delete [] nc;
   }
   
+  void powerspectrum2d(
+                       std::valarray<double> &aa
+                       ,int nx
+                       ,int ny
+                       ,double boxlx
+                       ,double boxly
+                       ,std::vector<double> &ll
+                       ,std::vector<double> &Pl
+                       )
+  {
+    int nl = ll.size();
+    Pl.resize(nl);
+    
+    fftw_complex *fNa=new fftw_complex[ny*(nx/2+1)];
+    
+    fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa,FFTW_ESTIMATE);
+    fftw_execute( p1 );
+    fftw_destroy_plan(p1);
+   
+    //double *ks=new double[ny*(nx/2+1)];
+    std::vector<double> ks(ny*(nx/2+1));
+    
+    //double tmp = pow(1./2/M_PI/nx/ny,2)*boxlx*boxly;
+    double tmp = boxlx*boxly * pow(1.0/nx/ny,2);
+    
+    // fb and fa are then used to compute the power spectrum
+    // build modes
+    for( int i=0; i<nx/2+1; i++ ){
+      // kx = i if i<n/2 else i-n
+      // double kx=(i<nx/2)?double(i):double(i-nx);
+      double kx=double(i);
+      for( int j=0; j<ny; j++ ){
+        size_t kk = i+(nx/2+1)*j;
+
+        double ky=(j<ny/2)?double(j):double(j-ny);
+        // rescale respect to the box size
+        ks[kk] = sqrt(kx*kx/boxlx/boxlx + ky*ky/boxly/boxly)*2.*M_PI;
+        
+        fNa[kk][0] = (fNa[kk][0]*fNa[kk][0] +
+                      fNa[kk][1]*fNa[kk][1])*tmp;
+        fNa[kk][1] = 0;
+      }
+    }
+    std::vector<size_t> ik(ny*(nx/2+1));
+    Utilities::sort_indexes<double>(ks,ik);
+    
+    double *nk=new double[ny*(nx/2+1)];
+    double *nc=new double[ny*(nx/2+1)];
+    // sorted vectors
+    for(int i=0; i<nx/2+1; i++)
+      for(int j=0; j<ny;j++){
+        size_t kk = i+(nx/2+1)*j;
+
+        nk[kk] = ks[ik[kk]];
+        nc[kk] = fNa[ik[kk]][0];
+      }
+    std:: vector<double> bink(nl);
+    // build the binned power spectrum
+    Utilities::fill_linear(bink,nl,log10(nk[1]),log10(nk[ny*(nx/2+1)-1]));
+    double lk1,lk2;
+    for(int i=0;i<nl;i++){
+      if(i==0) lk1=bink[i];
+      else lk1=bink[i]-0.5*(bink[i]-bink[i-1]);
+      if(i==nl-1) lk2=bink[i];
+      else lk2=bink[i]+0.5*(bink[i+1]-bink[i]);
+      Pl[i]=0.;
+      ll[i]=0.;
+      int nin=0;
+      // start from 1 because the first is 0
+      for(int j=1;j<ny*(nx/2+1)-1;j++){
+        if(log10(nk[j])>=lk1 && log10(nk[j])<lk2){
+          Pl[i]=Pl[i]+nc[j];
+          ll[i]=ll[i]+nk[j];
+          nin=nin+1;
+        }
+      }
+      if(nin>0){
+        Pl[i]=Pl[i]/double(nin);
+        ll[i]=ll[i]/double(nin);
+      }
+    }
+    delete [] fNa;
+    delete [] nk;
+    delete [] nc;
+  }
+
 #endif
   
-  std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
+std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
     
     std::valarray<double> map_out(map_in.size());
     long r,area;
@@ -646,3 +733,276 @@ unsigned long prevpower(unsigned long k){
   int GetNThreads(){return N_THREADS;}
 }
 
+/// throws a runtime error if the directory does not exist
+bool Utilities::IO::check_directory(std::string dir){
+  struct stat sb;
+  if (stat(dir.c_str(), &sb) != 0 || !S_ISDIR(sb.st_mode)){
+    return false;
+  }
+  return true;
+}
+
+void Utilities::IO::ReadFileNames(
+                   std::string dir              /// path to directory containing fits files
+                   ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
+                   ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                   ,bool verbose){
+  
+  DIR *dp = opendir( dir.c_str() );
+  struct dirent *dirp;
+  struct stat filestat;
+  std::string filepath,filename;
+  
+  if (dp == NULL)
+  {
+    std::cerr << "Cannot find directory" << std::endl;
+    throw std::runtime_error("error opening directory");
+    return;
+  }
+  
+  while ((dirp = readdir( dp )) )
+  {
+    filepath = dir + "/" + dirp->d_name;
+    
+    // If the file is a directory (or is in some way invalid) we'll skip it
+    if (stat( filepath.c_str(), &filestat )) continue;
+    if (S_ISDIR( filestat.st_mode ))         continue;
+    
+    filename = dirp->d_name;
+    if(filename.find(filespec) !=  std::string::npos){
+      if(verbose) std::cout << "adding " << filepath << std::endl;
+      filenames.push_back(filename);
+    }
+  }
+  
+  closedir( dp );
+  
+  std::cout << filenames.size() << " file names." << std::endl;
+  return ;
+}
+
+/// Count the number of columns in a ASCII data file
+int Utilities::IO::CountColumns(std::string filename,char comment_char
+                                ,char deliniator
+){
+  
+  std::ifstream file(filename);
+  // find number of particles
+  if (!file.is_open()){
+    std::cerr << "file " << filename << " cann't be opened." << std::endl;
+    throw std::runtime_error("no file");
+  }
+  
+  std::string line;
+  // read comment lines and first data line
+  do{
+    std::getline(file,line);
+    if(!file) break;  // probably EOF
+  }while(line[0] == comment_char);
+  
+  return  NumberOfEntries(line,deliniator);
+}
+
+int Utilities::IO::NumberOfEntries(const std::string &string,char deliniator){
+  size_t number = 0;
+  auto it = string.begin();
+  while(it != string.end()){
+    while( it != string.end() && (*it == ' ' || *it == deliniator)) ++it;
+    if(it != string.end()) ++number;
+    while(it != string.end() && *it != deliniator) ++it;
+  }
+  return number;
+}
+
+Utilities::IO::XYcsvLookUp::XYcsvLookUp(
+                                    std::string datafile   /// input catalog file in csv format
+                                    ,std::string Xlabel
+                                    ,std::string Ylabel
+                                    ,int Nxbins  /// number of X bins
+                                    ,size_t MaxNumber
+                                    ,bool verbose)
+:filename(datafile)
+{
+  Utilities::IO::ReadCSVnumerical2<double>(datafile,data,column_names,MaxNumber);
+  if(verbose){
+    for(auto name : column_names){ std::cout << name << " " ;}
+    std::cout << std::endl;
+    for(int i=0 ; i < 1 ; ++i){
+      for(auto v : data[i] ) std::cout << v << " " ;
+      std::cout << std::endl;
+    }
+    std::cout << data.size() << " rows with " << column_names.size() << " columns read." << std::endl;
+  }
+  
+  int i=0;
+  Xindex = Yindex = -1;
+  for(auto name : column_names){
+    if(name == Xlabel) Xindex = i;
+    if(name == Ylabel) Yindex = i;
+    ++i;
+  }
+  if(Xindex == -1){
+    std::cerr << filename << " needs a column named " << Xlabel << std::endl;
+    throw std::invalid_argument("No column named: " + Xlabel);
+  }
+  if(Yindex == -1){
+    std::cerr << filename << " needs a column named " << Ylabel << std::endl
+    << " They are :" << std::endl;
+    for(auto c : column_names ) std::cout << c << " ";
+    std::cout << std::endl;
+    throw std::invalid_argument("No column named: " + Ylabel);
+  }
+  
+  //************* test ********************
+  //xmin = 100;
+  //xmax = -1;
+  //for(auto d : data){
+  //  if(d[Xindex] < xmin) xmin = d[Xindex];
+  //  if(d[Xindex] > xmax) xmax = d[Xindex];
+  //}
+  //**********************************
+  
+  // sort by redshift
+  std::sort(data.begin(),data.end(), [this](const std::vector<double> &v1,const std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+  //&v1,std::vector<double> &v2){return v1[1] < v2[1];});
+  NinXbins = data.size()/Nxbins;
+  Xborders.resize(Nxbins);
+  Xborders[0]=0.0;
+  xmin =  data[0][Xindex];
+  xmax =  data.back()[Xindex];
+  if(verbose){
+    std::cout << "min X : "<< data[0][Xindex] << " max X : "
+    << data.back()[Xindex] << std::endl;
+    std::cout << column_names[Xindex] << " Bins " << std::endl;
+  }
+  for(int i=1 ; i<Nxbins ; ++i){
+    Xborders[i] = data[i*NinXbins][Xindex];
+    if(verbose) std::cout << i << " " << Xborders[i] << std::endl;
+  }
+  
+  // set up iterators to boundaries of x bins
+  borders.resize(Nxbins + 1);
+  borders[0] = data.begin();
+  borders.back() = data.end();
+  for(int i=1 ; i < Nxbins ; ++i) borders[i] = borders[i-1] + NinXbins;
+  
+  // sort by mass within x bins
+  for(int i=0 ; i < Nxbins ; ++i){
+    std::sort(borders[i],borders[i+1], [this](const std::vector<double> &v1
+                                              ,const std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+  }
+  
+  current = data.begin();
+}
+
+Utilities::IO::XYcsvLookUp::XYcsvLookUp(
+                                std::string datafile   /// input catalog file in csv format
+                                    ,std::string Xlabel
+                                    ,std::string Ylabel
+                                    ,std::vector<double> Xbins
+                                    ,size_t MaxNumber
+                                    ,bool verbose)
+:Xborders(Xbins),filename(datafile)
+{
+  
+  Utilities::IO::ReadCSVnumerical2<double>(datafile,data,column_names,MaxNumber);
+  if(verbose){
+    for(auto name : column_names){ std::cout << name << " " ;}
+    std::cout << std::endl;
+    for(int i=0 ; i < 1 ; ++i){
+      for(auto v : data[i] ) std::cout << v << " " ;
+      std::cout << std::endl;
+    }
+    std::cout << data.size() << " rows with " << column_names.size() << " columns read." << std::endl;
+  }
+  
+  int i=0;
+  Xindex = Yindex = -1;
+  for(auto name : column_names){
+    if(name == Xlabel) Xindex = i;
+    if(name == Ylabel) Yindex = i;
+    ++i;
+  }
+  if(Xindex == -1){
+    std::cerr << filename << " needs a column named " << Xlabel << std::endl;
+    throw std::invalid_argument("No column named: " + Xlabel);
+  }
+  if(Yindex == -1){
+    std::cerr << filename << " needs a column named " << Ylabel << std::endl
+    << " They are :" << std::endl;
+    for(auto c : column_names ) std::cout << c << " ";
+    std::cout << std::endl;
+    throw std::invalid_argument("No column named: " + Ylabel);
+  }
+  
+  // sort by redshift
+  std::sort(data.begin(),data.end(), [this](const std::vector<double> &v1
+                                            ,const std::vector<double> &v2){return v1[Xindex] < v2[Xindex];});
+
+  size_t Nxbins = Xborders.size();
+  NinXbins = data.size()/Nxbins;
+  xmin =  data[0][Xindex];
+  xmax =  data.back()[Xindex];
+  if(verbose){
+    std::cout << "min X : "<< data[0][Xindex] << " max X"
+    << data.back()[Xindex] << std::endl;
+    std::cout << "redshift bins " << std::endl;
+  }
+  
+  // set up iterators to boundaries of x bins
+  borders.resize(Nxbins + 1);
+  borders[0] = data.begin();
+  borders.back() = data.end();
+  for(int i=1 ; i < Nxbins ; ++i) borders[i] = borders[i-1] + NinXbins;
+  
+  // sort by mass within x bins
+  for(int i=0 ; i < Nxbins ; ++i){
+    std::sort(borders[i],borders[i+1], [this](const std::vector<double> &v1
+                                              ,const std::vector<double> &v2){return v1[Yindex] < v2[Yindex];});
+  }
+  
+  current = data.begin();
+}
+
+std::vector<double> Utilities::IO::XYcsvLookUp::find(double x,double y){
+  long xbin = Utilities::locate(Xborders, x);
+  current = std::upper_bound(borders[xbin],borders[xbin+1],y
+                             , [this](double y,const std::vector<double> &v1){return y < v1[Yindex];});
+  
+  if(current == borders[xbin+1]) current = borders[xbin+1] - 1;
+  //std::cout << "XYcsvLookUp boundaries :" << (*borders[xbin])[Yindex] << " " << (*borders[xbin+1])[Yindex] << std::endl;
+  //assert(fabs(y-(*current)[Yindex]) < 1);
+  return *current;
+}
+double Utilities::IO::XYcsvLookUp::Ymin(double x) const{
+  long xbin = Utilities::locate(Xborders, x);
+  return (*borders[xbin])[Yindex];
+}
+double Utilities::IO::XYcsvLookUp::Ymax(double x) const{
+  long xbin = Utilities::locate(Xborders, x);
+  return (*(borders[xbin+1]-1))[Yindex];
+}
+
+double Utilities::IO::XYcsvLookUp::operator[](std::string label) const{
+  int i = 0;
+  for(auto name : column_names){
+    if(name == label){
+      return (*current)[i];
+    }
+    ++i;
+  }
+  for(auto c : column_names ) std::cout << c << " ";
+  std::cout << std::endl;
+  throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+}
+
+void Utilities::splitstring(std::string &line,std::vector<std::string> &vec
+                            ,const std::string &delimiter){
+  size_t pos = 0;
+  
+  while ((pos = line.find(delimiter)) != std::string::npos) {
+    vec.push_back(line.substr(0, pos));
+    line.erase(0, pos + delimiter.length());
+  }
+  vec.push_back(line.substr(0, pos));
+}

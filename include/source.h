@@ -45,8 +45,6 @@ public:
     return *this;
   }
 
-
-	
 	// in lens.cpp
 	// TODO: make SurfaceBrightness take a const double*
 	/// Surface brightness of source in grid coordinates not source centered coordinates.
@@ -57,7 +55,7 @@ public:
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
 	/// Gets sb_limit in mag/arcsec^2
-	PosType getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/pi),2))-48.6;}
+	PosType getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/PI),2))-48.6;}
 	
 	// accessor functions that will sometimes be over ridden in class derivatives
 	/// Redshift of source
@@ -68,16 +66,17 @@ public:
   /// Reset the radius of the source in radians
 	virtual void setRadius(PosType my_radius){source_r = my_radius;}
   /// position of source in radians
-  virtual inline PosType* getX(){return source_x.x;}
+  virtual inline Point_2d getTheta(){return source_x;}
   /// position of source in radians
-  virtual inline void getX(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
+  virtual inline void getTheta(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
   /// position of source in radians
-  virtual inline void getX(Point_2d &x) const {x = source_x;}
+  virtual inline void getTheta(Point_2d &x) const {x = source_x;}
   
   /// Reset the position of the source in radians
-	virtual inline void setX(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
-	virtual void setX(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
-  
+	virtual void setTheta(PosType *xx){source_x[0] = xx[0]; source_x[1] = xx[1];}
+  virtual void setTheta(PosType my_x,PosType my_y){source_x[0] = my_x; source_x[1] = my_y;}
+  virtual void setTheta(const Point_2d &p){source_x = p;}
+
 	/// In the case of a single plane lens, the ratio of angular size distances
 	virtual inline PosType getDlDs(){return DlDs;}
 	//TODO: BEN I think this need only be in the BLR source models
@@ -86,13 +85,13 @@ public:
 	/// Sets sb_limit in erg/cm^2/sec/rad^2/Hz
 	void setSBlimit(float limit) {sb_limit = limit;}
 	/// Sets sb_limit in mag/arcsec^2
-	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/pi,2)/hplanck;}
+	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/PI,2)/hplanck;}
 
 	PosType changeFilter(std::string filter_in, std::string filter_out, std::string sed);
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
 	PosType integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
 
-  static PosType *getx(Source &source){return source.getX();}
+  static PosType *getx(Source &source){return source.source_x.x;}
   
 protected:
 	virtual void assignParams(InputParams& params) = 0;
@@ -113,6 +112,7 @@ protected:
 };
 
 typedef Source *SourceHndl;
+class PixelMap;
 
 /** \brief Class for sources described by an array of pixels
  *
@@ -124,6 +124,7 @@ public:
 	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val);
 	SourcePixelled(const PixelMap& gal_map, PosType z, PosType factor = 1.);
 	SourcePixelled(InputParams& params);
+  
 	~SourcePixelled();
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
@@ -174,9 +175,10 @@ public:
     flux = s.flux;
     mag = s.mag;
     ang = s.ang;
-    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
-    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    mag_map = s.mag_map;
     coeff_flux = s.coeff_flux;
+    current_band = s.current_band;
+    sed_type = s.sed_type;
   }
 
   SourceShapelets & operator= (const SourceShapelets &s){
@@ -190,9 +192,10 @@ public:
     flux = s.flux;
     mag = s.mag;
     ang = s.ang;
-    for(int i=0; i<10 ; ++i) mags[i] = s.mags[i];
-    for(int i=0; i<10 ; ++i) fluxes[i] = s.fluxes[i];
+    mag_map = s.mag_map;
     coeff_flux = s.coeff_flux;
+    current_band = s.current_band;
+    sed_type = s.sed_type;
 
     return *this;
   }
@@ -201,12 +204,16 @@ public:
 	void printSource();
 	inline PosType getTotalFlux() const {return flux;}
 	inline PosType getRadius() const {return source_r*10.;}
-	inline PosType getMag() const {return mag;}
-	inline PosType getMag(Band band) const {return mags[band];}
-  inline PosType getID() const {return id;}
+  inline PosType getMag() const { assert(current_band != NoBand); return mag;}
+	inline PosType getMag(Band band) const {return mag_map.at(band);}
+  inline Band getBand() const{return current_band;}
+  inline long getID() const {return id;}
+  inline float getSEDtype() const {return sed_type;}
   void setActiveBand(Band band);
 
 private:
+  Band current_band;
+  float sed_type = -1;
 	void assignParams(InputParams& params);
   void Hermite(std::vector<PosType> &hg,int N, PosType x);
 
@@ -216,28 +223,45 @@ private:
   int id;
 	PosType flux, mag;
 	PosType ang;
-  PosType mags[10];
-  PosType fluxes[10];
+  std::map<Band,PosType> mag_map;
   PosType coeff_flux;
-  static Band shape_band[10];
 };
 
 /// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
-	SourceUniform(InputParams& params);
+  //SourceUniform(InputParams& params);
+  SourceUniform(Point_2d position   /// postion on the sky in radians
+                ,PosType z          /// redshift of source
+                ,PosType radius_in_radians  /// radius of source in radians
+                );
 	~SourceUniform();
 
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux() const {return pi*source_r*source_r;}
+	PosType getTotalFlux() const {return PI*source_r*source_r;}
 };
 
-/// A source with a Gaussian surface brightness profile
+/*** \brief A source with a Gaussian surface brightness profile
+ 
+ This is normalized so that it is equal to 1 at the center
+ */
 class SourceGaussian : public Source{
 public:
-	SourceGaussian(InputParams& params);
+	//SourceGaussian(InputParams& params);
+  SourceGaussian(
+                 Point_2d position  /// postion of source (radians)
+                 ,double r_size  /// angular scale size (radians)
+                 ,double z):    /// redshift
+  Source(),source_gauss_r2(r_size*r_size)
+  {
+    zsource = z;
+    source_r = 5*sqrt(source_gauss_r2);
+    source_x = position;
+    setSBlimit_magarcsec(100.);
+  }
+
 	~SourceGaussian();
 	
 	/// internal scale parameter
@@ -246,7 +270,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	void assignParams(InputParams& params);
 	void printSource();
-	PosType getTotalFlux() const {return 2*pi*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
+	PosType getTotalFlux() const {return 2*PI*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
 };
 
 /// Base class for all sources representing the Broad Line Region (BLR) of a AGN/QSO

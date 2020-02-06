@@ -7,10 +7,7 @@
 
 #include "slsimlib.h"
 
-#ifdef ENABLE_FITS
-#include <CCfits/CCfits>
-//#include <CCfits>
-#endif
+#include "cpfits.h"
 
 #include <fstream>
 #include <algorithm>
@@ -22,7 +19,13 @@
 #include "source.h"
 #include "gridmap.h"
 
-#if __cplusplus < 201103L
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
+/*#if __cplusplus < 201103L
 template<typename T>
 void swap(std::valarray<T>& x, std::valarray<T>& y)
 {
@@ -34,7 +37,8 @@ void swap(std::valarray<T>& x, std::valarray<T>& y)
   y.resize(z.size());
   y = z;
 }
-#endif
+//#endif
+*/
 
 void swap(PixelMap& x, PixelMap& y)
 {
@@ -74,9 +78,33 @@ PixelMap::PixelMap(const PixelMap& other)
 Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY)
 {
   std::copy(other.center, other.center + 2, center);
-  
   std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
   std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+}
+
+// move constructor
+PixelMap::PixelMap(PixelMap&& other)
+:map(std::move(other.map)),Nx(0),Ny(0),resolution(0), rangeX(0), rangeY(0){
+ 
+  Nx = other.Nx;
+  Ny = other.Ny;
+  resolution = other.resolution;
+  rangeX = other.rangeX;
+  rangeY = other.rangeY;
+  std::copy(other.center, other.center + 2, center);
+  std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
+  std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+  
+  other.Nx = 0;
+  other.Ny = 0;
+  other.resolution = 0;
+  other.center[0] = 0;
+  other.center[1] = 0;
+  
+  other.map_boundary_p1[0] = 0;
+  other.map_boundary_p1[1] = 0;
+  other.map_boundary_p2[0] = 0;
+  other.map_boundary_p2[1] = 0;
 }
 
 /// make square PixelMap
@@ -127,37 +155,37 @@ PixelMap::PixelMap(
                    ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
 )
 {
-#ifdef ENABLE_FITS
+  
   if(fitsfilename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
+
+        
+    if(!Utilities::IO::file_exists(fitsfilename)){
+        std::cerr << "Problem with inputfile " << fitsfilename << std::endl;
+        throw std::invalid_argument("bad file");
+    }
+
+  std::vector<long> cpsize;
   
-  //std::auto_ptr<CCfits::FITS> fp(new CCfits::FITS(fitsfilename, CCfits::Read));
+  CPFITS_READ cpfits(fitsfilename);
+  //int bitpix;
+  cpfits.imageDimensions(cpsize);
   
-  std::auto_ptr<CCfits::FITS> fp(0);
-  try
-  {
-    fp.reset( new CCfits::FITS (fitsfilename, CCfits::Read) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << fitsfilename << std::endl;
-    exit(1);
+  Nx = cpsize[0];
+  Ny = cpsize[1];
+  
+  int err = 0;
+  
+  err += cpfits.readKey("RA", center[0]);
+  err += cpfits.readKey("DEC", center[1]);
+
+  if(err){
+    err = 0;
+    err += cpfits.readKey("CRVAL1", center[0]);
+    err += cpfits.readKey("CRVAL2", center[1]);
   }
 
-  
-  CCfits::PHDU& h0 = fp->pHDU();
-  
-  //const CCfits::ExtMap *h1=&fp->extension();
-  
-  Nx = h0.axis(0);
-  Ny = h0.axis(1);
-  
-  try
-  {
-    h0.readKey("CRVAL1", center[0]);
-    h0.readKey("CRVAL2", center[1]);
-  }
-  catch(CCfits::HDU::NoSuchKeyword)
+  if(err)
   {
     center[0] = 0.0;
     center[1] = 0.0;
@@ -165,34 +193,35 @@ PixelMap::PixelMap(
   
   if(my_res == -1){
     // read the resolution
-    try
+    err = 0;
     {
       double cdelt2;
-      h0.readKey("CDELT1", my_res);
-      h0.readKey("CDELT2", cdelt2);
-      if(std::abs(my_res) - std::abs(cdelt2) > 1e-6)
+      err += cpfits.readKey("CDELT1", my_res);
+      err += cpfits.readKey("CDELT2", cdelt2);
+      if(err == 0 && std::abs(my_res) - std::abs(cdelt2) > 1e-6)
         throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
     }
-    catch(CCfits::HDU::NoSuchKeyword)
+    if(err != 0)
     {
-      try{
+      err = 0;
+      {
         double cd12, cd21, cd22;
-        h0.readKey("CD1_1", my_res);
-        h0.readKey("CD1_2", cd12);
-        h0.readKey("CD2_1", cd21);
-        h0.readKey("CD2_2", cd22);
-        if(std::abs(my_res) - std::abs(cd22) > 1e-6)
-          throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
-        if(cd12 || cd21)
-          throw std::runtime_error("pixels not aligned with coordingate in FITS file " + fitsfilename);
+        err += cpfits.readKey("CD1_1", my_res);
+        //err += cpfits.readKey("CD1_2", cd12);
+        //err += cpfits.readKey("CD2_1", cd21);
+        //err += cpfits.readKey("CD2_2", cd22);
+        //if(err==0 && std::abs(my_res) - std::abs(cd22) > 1e-6)
+        //  throw std::runtime_error("non-square pixels in FITS file " + fitsfilename);
+        //if(cd12 || cd21)
+        //  throw std::runtime_error("pixels not aligned with coordinates in FITS file " + fitsfilename);
       }
-      catch(CCfits::HDU::NoSuchKeyword){
+      if(err != 0){
         double ps;
-        try{
-          h0.readKey("PHYSICALSIZE",ps);
-        }
-        catch(CCfits::HDU::NoSuchKeyword){
-          std::cerr << "PixelMap input fits fiel must have header keywords:" << std::endl
+        
+        err = cpfits.readKey("PHYSICALSIZE",ps);
+        
+        if(err != 0){
+          std::cerr << "PixelMap input fits field must have header keywords:" << std::endl
           << " PHYSICALSIZE - size of map in degrees" <<std::endl
           << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
           exit(1);
@@ -200,7 +229,9 @@ PixelMap::PixelMap(
         my_res = ps/Nx;
       }
     }
-    resolution = fabs(my_res)*pi/180.;
+    resolution = fabs(my_res)*PI/180.;
+  }else{
+    resolution = my_res;
   }
   
   rangeX = resolution*Nx;
@@ -210,11 +241,9 @@ PixelMap::PixelMap(
   map_boundary_p2[0] = center[0] + (Nx*resolution)/2.;
   map_boundary_p2[1] = center[1] + (Ny*resolution)/2.;
   
-  h0.read(map);
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
+  cpfits.read(map,cpsize);
+  //std::cout << "map size : " << map[0] << std::endl;
+  //std::cout << "map size : " << map.size() << std::endl;
 }
 
 /** \brief Creates a new PixelMap from a square region of a PixelMap.
@@ -277,9 +306,9 @@ PixelMap::PixelMap(
   
   map.resize(Nx*Ny);
   
-  int old_Nx = pmap.Nx;
-  int old_Ny = pmap.Ny;
-  int ix, iy;
+  long old_Nx = pmap.Nx;
+  long old_Ny = pmap.Ny;
+  long ix, iy;
   PosType area;
   PosType old_p1[2];
   PosType old_p2[2];
@@ -292,8 +321,8 @@ PixelMap::PixelMap(
     old_p1[0] = std::max(0,int(ix*res_ratio));
     old_p1[1] = std::max(0,int(iy*res_ratio));
     
-    old_p2[0] = std::min(old_Nx-1,int((ix+1.)*res_ratio));
-    old_p2[1] = std::min(old_Ny-1,int((iy+1.)*res_ratio));
+    old_p2[0] = MIN(old_Nx-1,int((ix+1.)*res_ratio));
+    old_p2[1] = MIN(old_Ny-1,int((iy+1.)*res_ratio));
     
     for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
     {
@@ -304,25 +333,37 @@ PixelMap::PixelMap(
         map[ix+Nx*iy] += area*pmap.map[old_ix+old_Nx*old_iy];
       }
     }
-		}
+  }
 }
 
-PixelMap::~PixelMap()
-{
-  map.resize(0);
-}
+//PixelMap::~PixelMap(){}
+//{
+//  map.resize(0);
+//}
 
-PixelMap& PixelMap::operator=(PixelMap other)
+PixelMap& PixelMap::operator=(const PixelMap &other)
 {
-  PixelMap::swap(*this, other);
+  if(this != &other){
+    PixelMap copy(other);
+    PixelMap::swap(*this, copy);
+  }
   return *this;
 }
+PixelMap& PixelMap::operator=(PixelMap &&other)
+{
+  if(this != &other){
+    PixelMap::swap(*this, other);
+  }
+  return *this;
+}
+
 
 void PixelMap::swap(PixelMap &map1,PixelMap &map2)
 {
 
   std::swap(map1.map,map2.map);
-  std::swap(map1.Nx,map2.Ny);
+  std::swap(map1.Nx,map2.Nx);
+  std::swap(map1.Ny,map2.Ny);
   std::swap(map1.resolution,map2.resolution);
   std::swap(map1.rangeX,map2.rangeX);
   std::swap(map1.rangeY,map2.rangeY);
@@ -336,12 +377,6 @@ void PixelMap::swap(PixelMap &map1,PixelMap &map2)
   std::swap(map1.map_boundary_p2[1],map2.map_boundary_p2[1]);
 
   return;
-}
-
-/// Zero the whole map
-void PixelMap::Clean()
-{
-  map *= 0;
 }
 
 /// Multiplies the whole map by a scalar factor
@@ -362,7 +397,6 @@ void PixelMap::AssignValue(std::size_t i, PosType value)
   map[i] = value;
 }
 
-/// Check whether two PixelMaps agree in their physical dimensions.
 bool PixelMap::agrees(const PixelMap& other) const
 {
   return
@@ -379,6 +413,7 @@ PixelMap& PixelMap::operator+=(const PixelMap& rhs)
   // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
+ 
   for(size_t i=0;i<map.size();++i) map[i] += rhs.map[i];
   return *this;
 }
@@ -443,11 +478,14 @@ PixelMap operator*(const PixelMap& a, PosType b)
 }
 
 PosType PixelMap::ave() const{
+  return sum()/map.size();
+}
+PosType PixelMap::sum() const{
   PosType tmp=0;
   for(size_t i=0;i<map.size();++i){
     tmp += map[i];
   }
-  return tmp/map.size();
+  return tmp;
 }
 
 
@@ -496,6 +534,50 @@ void PixelMap::AddImages(
     for(size_t i=0; i< Nx*Ny ;++i) map[i] /= resolution*resolution;
   }
   
+  return;
+}
+
+void PixelMap::AddGridBrightness(Grid &grid){
+  
+  PointList *plist = grid.i_tree->pointlist;
+  
+  if(plist->size() == 0) return;
+  
+  PointList::iterator listit= plist->Top();// = plist->begin();
+  
+  PosType sb = 1;
+  float area = 1;
+  
+  std::list <unsigned long> neighborlist;
+  std::list<unsigned long>::iterator it;
+  //for(long ii=0;ii<Nimages;++ii){
+  
+  do{
+    //for(listit = plist->begin() ; listit != plist->end() ; ++listit ){
+    sb = (*listit)->surface_brightness;
+    
+    if (sb != 0.0 && (inMapBox((*listit)->leaf)) == true){
+      PointsWithinLeaf((*listit)->leaf,neighborlist);
+      for(it = neighborlist.begin();it != neighborlist.end();it++){
+        area = LeafPixelArea(*it,(*listit)->leaf);
+        map[*it] += sb*area;
+      }
+    }
+  }while(--listit);
+  
+  return;
+}
+
+void PixelMap::AddGridMapBrightness(const GridMap &grid){
+  
+  try {
+    // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
+    grid.getPixelMap(*this);
+  } catch (const std::invalid_argument& ia) {
+    // dimensions and/or alignment do not match
+    PixelMap newmap = grid.getPixelMap(1);
+    copy_in(newmap);
+  }
   return;
 }
 
@@ -605,6 +687,48 @@ bool PixelMap::pixels_are_neighbors(size_t i,size_t j) const{
   return true;
 }
 
+int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
+  
+  if(pixel_index.size() == 0) return 0;
+  if(pixel_index.size() == 1) return 1;
+  
+  size_t *end = pixel_index.data() + pixel_index.size();
+  size_t *current = pixel_index.data();
+  int Ngroups = 1;
+  size_t *group_boundary = current + 1;
+  
+  while(group_boundary != end){
+    long ic = *current%Nx;
+    long jc = *current/Nx;
+    
+    int Neighbors = 0;
+    for(size_t *test = group_boundary
+        ; test != end && Neighbors < 8 && group_boundary != end
+        ; ++test
+        ){
+      long it = *test%Nx;
+      long jt = *test/Nx;
+
+      if( abs(it - ic) <= 1 && abs(jt - jc) <= 1  ){
+        ++Neighbors;
+        // swap test for group boundary
+        size_t tmp = *group_boundary;
+        *group_boundary = *test;
+        *test = tmp;
+        ++group_boundary;
+        //--test;
+      }
+    }
+    ++current;
+    if(current == group_boundary && group_boundary != end ){
+      ++group_boundary;
+      ++Ngroups;
+    }
+  }
+  return Ngroups;
+}
+
+  /*
 int PixelMap::count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const{
   
   heads.clear();
@@ -641,7 +765,8 @@ int PixelMap::count_islands(std::list<size_t> &pixel_index,std::vector<std::list
   
   return ngroups;
 }
-
+*/
+  
 void PixelMap::_count_islands_(size_t current,std::list<size_t> &reservoir
                      ,std::list<size_t>::iterator &group) const{
   
@@ -725,136 +850,90 @@ void PixelMap::printASCIItoFile(std::string filename) const
   return;
 }
 /// Output the pixel map as a fits file.
-void PixelMap::printFITS(std::string filename, bool verbose) const
+void PixelMap::printFITS(std::string filename, bool verbose)
 {
-#ifdef ENABLE_FITS
+
   if(filename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file output");
   
-  long naxis = 2;
-  long naxes[2] = {(long)Nx, (long)Ny};
+  CPFITS_WRITE cpfits(filename,false);
   
-  // might throw CCfits::FITS::CantCreate
-  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
-
-  std::auto_ptr<CCfits::FITS> fout(0);
-  try
-  {
-    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << filename << std::endl;
-    exit(1);
-  }
-
   std::vector<long> naxex(2);
   naxex[0] = Nx;
   naxex[1] = Ny;
+
+  cpfits.write_image(map,naxex);  // write the map
+
+  cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
+  cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
+  cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
+  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
+  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  cpfits.writeKey("CROTA2", 0.0, "");
+  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+  cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
-  CCfits::PHDU& phout = fout->pHDU();
+  cpfits.writeKey("Nx", Nx, "");
+  cpfits.writeKey("Ny", Ny, "");
+  cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+  cpfits.writeKey("RA", center[0], "radians, center");
+  cpfits.writeKey("DEC", center[1], "radians, center");
   
-  phout.write(1, map.size(), map);
-  
-  phout.addKey("WCSAXES", 2, "number of World Coordinate System axes");
-  phout.addKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
-  phout.addKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  phout.addKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  phout.addKey("CRVAL2", 0.0, "second axis value at reference pixel");
-  phout.addKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CDELT2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
-  phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
-  phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
-  phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
-  
-  phout.addKey("Nx", Nx, "");
-  phout.addKey("Ny", Ny, "");
-  phout.addKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  phout.addKey("RA", center[0], "radians");
-  phout.addKey("DEC", center[1], "radians");
-  
-  if(verbose)
-    std::cout << phout << std::endl;
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
 }
 
-void PixelMap::printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose) const
+void PixelMap::printFITS(std::string filename
+                         ,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose)
 {
-#ifdef ENABLE_FITS
+
   if(filename.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file output");
   
-  long naxis = 2;
-  long naxes[2] = {(long)Nx, (long)Ny};
-
-  // might throw CCfits::FITS::CantCreate
-  //std::auto_ptr<CCfits::FITS> fout(new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes));
+  CPFITS_WRITE cpfits(filename,false);
   
-  std::auto_ptr<CCfits::FITS> fout(0);
-  try
-  {
-    fout.reset( new CCfits::FITS(filename, FLOAT_IMG, naxis, naxes) );
-  }
-  catch (CCfits::FITS::CantOpen)
-  {
-    std::cerr << "Cannot open " << filename << std::endl;
-    exit(1);
-  }
 
-  
   std::vector<long> naxex(2);
   naxex[0] = Nx;
   naxex[1] = Ny;
+
+  cpfits.write_image(map,naxex);
+
+  cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
+  cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
+  cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
+  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
+  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  cpfits.writeKey("CROTA2", 0.0, "");
+  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+  cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
-  CCfits::PHDU& phout = fout->pHDU();
-  
-  phout.write(1, map.size(), map);
-  
-  phout.addKey("WCSAXES", 2, "number of World Coordinate System axes");
-  phout.addKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
-  phout.addKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  phout.addKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  phout.addKey("CRVAL2", 0.0, "second axis value at reference pixel");
-  phout.addKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  phout.addKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  phout.addKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  phout.addKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  phout.addKey("CDELT1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CDELT2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
-  phout.addKey("CROTA2", 0.0, "");
-  phout.addKey("CD1_1", -180*resolution/pi, "partial of first axis coordinate w.r.t. x");
-  phout.addKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
-  phout.addKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
-  phout.addKey("CD2_2", 180*resolution/pi, "partial of second axis coordinate w.r.t. y");
-  
-  phout.addKey("Nx", Nx, "");
-  phout.addKey("Ny", Ny, "");
-  phout.addKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  phout.addKey("RA", center[0], "radians");
-  phout.addKey("DEC", center[1], "radians");
+  cpfits.writeKey("Nx", Nx, "");
+  cpfits.writeKey("Ny", Ny, "");
+  cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
+  cpfits.writeKey("RA", center[0], "radians");
+  cpfits.writeKey("DEC", center[1], "radians");
   
   for(auto hp : extra_header_info){
-    phout.addKey<double>(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
+    cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }
-  
-  if(verbose)
-    std::cout << phout << std::endl;
-#else
-  std::cerr << "Please enable the preprocessor flag ENABLE_FITS !" << std::endl;
-  exit(1);
-#endif
 }
 
-/** \ingroup Image
+/** 
  *
  * \brief Smoothes a map with a Gaussian kernel of width sigma (in arcseconds)
  */
@@ -864,7 +943,7 @@ void PixelMap::smooth(PosType sigma){
   int Nmask,Nmask_half;
   int j_cen, k_cen;
   
-  sigma /= 3600.*180/pi;
+  sigma /= 3600.*180/PI;
   Nmask=2*(int)(3*sigma/resolution + 1);
   std::cout << Nmask << std::endl;
   if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
@@ -976,7 +1055,7 @@ void PixelMap::drawcircle(
   PosType x1[2],x2[2];
   PosType dtheta = resolution/fabs(radius);
   
-  for(float theta = 0; theta < 2*pi; theta += dtheta){
+  for(float theta = 0; theta < 2*PI; theta += dtheta){
     x1[0] = r_center[0] + radius*cos(theta);
     x1[1] = r_center[1] + radius*sin(theta);
     x2[0] = r_center[0] + radius*cos(theta+dtheta);
@@ -1000,13 +1079,13 @@ void PixelMap::drawdisk(
   PosType x1[2],x2[2];
   
   // To do the circle (easy) :
-  // ========================
+  // group=====================
   drawcircle(r_center,radius,value);
   
   // To fill the circle :
   // ====================
   
-/*  for(float theta = 0; theta < 2*pi; theta += pi/N){
+/*  for(float theta = 0; theta < 2*PI; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
     x2[0] = r_center[0] + radius*cos(theta);
     x1[1] = x2[1] = r_center[1] + radius*sin(theta);
@@ -1043,7 +1122,48 @@ void PixelMap::drawgrid(int N,PosType value){
     drawline(x1,x2,value);
   }
 }
-
+void PixelMap::drawPoints(std::vector<Point *> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i]->x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i]->x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i]->x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawPoints(std::vector<Point> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i].x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i].x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+  
+}
+void PixelMap::drawPoints(std::vector<Point_2d> points,PosType size,PosType value){
+  if(size < resolution*3){
+    size_t index;
+    for(int i=0;i<points.size();++i){
+      if(inMapBox(points[i].x)){
+        //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+        index = find_index(points[i].x);
+        map[index] = value;
+      }
+    }
+  }else
+    for(int i=0;i<points.size();++i) drawcircle(points[i].x,0.01*rangeX,value);
+  
+}
 /**
  * \brief Draws a square
  */
@@ -1176,13 +1296,17 @@ void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
 
 
 /**
- *  \brief Fills in pixels where the image plane points in the grid are located with the value given
+ *  \brief Fills in pixels where the image plane points in the grid are located with the value given.
+ 
+ This is for lensing quantities and not surface brightness.  If you want surface brightness use PixelMap::AddGridBrightness()
  */
 void PixelMap::AddGrid(const Grid &grid,PosType value){
+  if(grid.getNumberOfPoints() == 0) return;
+
   PointList* list = grid.i_tree->pointlist;
   size_t index;
   
-  PointList::iterator list_current(list->Top());
+  PointList::iterator list_current = list->Top();
   do{
     if(inMapBox((*list_current)->x)){
       index = find_index((*list_current)->x);
@@ -1197,6 +1321,8 @@ void PixelMap::AddGrid(const Grid &grid,PosType value){
  *  The grid and PixelMap do not need to be related in any way.
  *  Using this function multiple grids can be added to the same image.
  *
+ * This is for lensing quantities and not surface brightness.  If you want surface brightness use PixelMap::AddGridBrightness()
+
  *
  *  Warning: When adding a new grid it should not overlap with any of the previously added grids.
  */
@@ -1225,7 +1351,7 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
       
       lists[i].setTop((*treeit)->points);
       lists[i].setN((*treeit)->npoints);
-      list_current = lists[i].Top();
+      list_current.current = lists[i].Top();
       list_current.JumpDownList( (*treeit)->npoints -1);
       lists[i].setBottom(*list_current);
 
@@ -1251,8 +1377,10 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
   double tmp,area;
   PosType tmp2[2];
   
-  PointList::iterator pl_it(list.Top());
-  for(size_t i = 0; i< list.size(); ++i){
+  PointList::iterator pl_it = list.Top();
+  do{
+  //for(PointList::iterator pl_it = list.begin() ; pl_it != list.end() ; ++pl_it){
+  //for(size_t i = 0; i< list.size(); ++i){
     
     switch (val) {
       case ALPHA:
@@ -1286,7 +1414,7 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
       case INVMAG:
         tmp = (*pl_it)->invmag/resolution/resolution;
         break;
-      case DT:
+      case DELAYT:
         tmp = (*pl_it)->dt/resolution/resolution;
         break;
       default:
@@ -1308,9 +1436,8 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
         }
       }
     }
-    --pl_it;
     
-  }
+  }while(--pl_it);
 }
 
 
@@ -1568,13 +1695,14 @@ void Utilities::LoadFitsImages(
   return ;
 }
 
-/** \brief Reads the file names in a directory that contain a specific sub string.
+/*** \brief Reads the file names in a directory that contain a specific sub string.
  
  */
 void Utilities::ReadFileNames(
                               std::string dir              /// path to directory containing fits files
                               ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
                               ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                              ,const std::string file_non_spec /// string of charactors in file name that file must not have. 
                               ,bool verbose){
   
   DIR *dp = opendir( dir.c_str() );
@@ -1598,7 +1726,8 @@ void Utilities::ReadFileNames(
     if (S_ISDIR( filestat.st_mode ))         continue;
     
     filename = dirp->d_name;
-    if(filename.find(filespec) !=  std::string::npos){
+    if(filename.find(filespec) !=  std::string::npos &&
+       filename.find(file_non_spec) ==  std::string::npos ){
       if(verbose) std::cout << "adding " << filepath << std::endl;
       filenames.push_back(filename);
     }
@@ -1633,7 +1762,7 @@ void Utilities::ReadFileNames(
  */
 
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x[],long &ix,long &iy){
+long PixelMap::find_index(PosType const x[],long &ix,long &iy) const{
   
   ix = (long)((x[0] - map_boundary_p1[0])/resolution);
   iy = (long)((x[1] - map_boundary_p1[1])/resolution);
@@ -1650,7 +1779,7 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy){
   return ix + Nx*iy;
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
+long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy) const{
   
   //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
   //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
@@ -1670,17 +1799,17 @@ long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy){
   return ix + Nx*iy;
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x[]){
+long PixelMap::find_index(PosType const x[]) const{
   long ix,iy;
   return find_index(x,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y){
+long PixelMap::find_index(PosType const x,PosType const y) const{
   long ix,iy;
   return find_index(x,y,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
-void PixelMap::find_position(PosType x[],std::size_t const index){
+void PixelMap::find_position(PosType x[],std::size_t const index) const{
   if(Nx == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -1691,7 +1820,7 @@ void PixelMap::find_position(PosType x[],std::size_t const index){
   return;
 }
 /// get the index for a position, returns -1 if out of map
-void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const iy){
+void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const iy) const{
   if(Nx == 1){
     x[0] = center[0];
     x[1] = center[1];
@@ -1906,7 +2035,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 
 PosType PixelMap::AddSource(Source &source){
   Point_2d s_center;
-  source.getX(s_center);
+  source.getTheta(s_center);
   
   if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
@@ -1929,7 +2058,7 @@ PosType PixelMap::AddSource(Source &source){
 
 PosType PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
-  source.getX(s_center);
+  source.getTheta(s_center);
   
   if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
@@ -1959,10 +2088,128 @@ PosType PixelMap::AddSource(Source &source,int oversample){
   return total;
 }
 
+void PixelMap::duplicate(
+                       const PixelMap& pmap
+  ){
+  
+  if(!agrees(pmap)){
+    throw std::invalid_argument("Maps not the same");
+  }
+  
+  for(size_t i=0;i<map.size();++i) map[i] = pmap.map[i];
+  return;
+}
+
+void PixelMap::copy_in(
+                   const PixelMap& pmap
+)
+{
+  
+  if(agrees(pmap)){  // maps are the same dimensions and position
+    for(size_t i=0;i<map.size();++i) map[i] += pmap.map[i];
+    return;
+  }
+  double res_ratio = resolution / pmap.resolution;
+  double res_ratio2 = res_ratio*res_ratio;
+  
+  // check is maps overlap
+  if(map_boundary_p1[0] > pmap.map_boundary_p2[0] ) return;
+  if(map_boundary_p2[0] < pmap.map_boundary_p1[0] ) return;
+  if(map_boundary_p1[1] > pmap.map_boundary_p2[1] ) return;
+  if(map_boundary_p2[1] < pmap.map_boundary_p1[1] ) return;
+
+  
+  double halfpixel = res_ratio/2;
+  PosType x[2];
+  size_t NNx = pmap.getNx(),NNy = pmap.getNy();
+
+  for(size_t ii=0 ; ii < map.size() ; ++ii){
+    
+    find_position(x,ii);
+      // find range if this pixel in pmap's pixel space
+    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
+    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
+    
+    double xmin = MAX(0,ix - halfpixel);
+    double xmax = MIN(NNx,ix + halfpixel);
+    if(xmin >= xmax) continue;
+
+    double ymin = MAX(0,iy - halfpixel);
+    double ymax = MIN(NNy,iy + halfpixel);
+    if(ymin >= ymax) continue;
+    
+    long imin = (long)(xmin);
+    long imax = (long)(xmax);
+    long jmin = (long)(ymin);
+    long jmax = (long)(ymax);
+
+    for(size_t j = jmin ; j <= jmax ; ++j ){
+      double area1 = MIN(ymax,j+1) -  MAX(ymin,j);
+      if(area1 <= 0.0) continue;
+      for(size_t i = imin ; i <= imax ; ++i ){
+        double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
+        map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
+      }
+    }
+  }
+}
+void PixelMap::paste(const PixelMap& pmap){
+  
+  if(resolution < pmap.resolution){
+    std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
+    std::cerr << resolution << " " << pmap.resolution << " dres/res " << (pmap.resolution-pmap.resolution)/pmap.resolution << std::endl;
+    throw std::invalid_argument("low resolution");
+  }
+  
+  // case where the maps do not overlap
+  if( (map_boundary_p1[0] > pmap.map_boundary_p2[0]) || (pmap.map_boundary_p1[0] > map_boundary_p2[0])
+     || (map_boundary_p1[1] > pmap.map_boundary_p2[1]) || (pmap.map_boundary_p1[1] > map_boundary_p2[1])
+     ){
+    return;
+  }
+  
+  double x[2];
+  
+  if(map.size() < pmap.map.size() ){
+    for(size_t i=0 ; i < map.size() ; ++i ){
+      find_position(x,i);
+      long j = pmap.find_index(x[0], x[1]);
+      if(j >= 0 ){
+        map[i] = pmap(j);
+      }
+    }
+  }else{
+    for(size_t j=0 ; j < pmap.map.size() ; ++j ){
+      pmap.find_position(x,j);
+      long i = find_index(x[0], x[1]);
+      if(i >= 0 ){
+        map[i] = pmap(j);
+      }
+    }
+  }
+}
+
+void PixelMap::recenter(PosType c[2] /// new center
+){
+  double dc[2];
+  dc[0] = c[0] - center[0];
+  dc[1] = c[1] - center[1];
+  
+  map_boundary_p1[0] = map_boundary_p1[0] + dc[0];
+  map_boundary_p1[1] = map_boundary_p1[1] + dc[1];
+  map_boundary_p2[0] = map_boundary_p2[0] + dc[0];
+  map_boundary_p2[1] = map_boundary_p2[1] + dc[1];
+  
+  center[0] = c[0];
+  center[1] = c[1];
+  
+  return;
+}
+
 /*
 void PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
-  source.getX(s_center);
+  source.getTheta(s_center);
   
   if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return;
   if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return;
@@ -2008,6 +2255,53 @@ void PixelMap::AddSource(Source &source,int oversample){
 }
 */
 
+/** \brief convolve the image with a kernel.
+ 
+ It is assumed that the size of the kernel is much smaller than the image and
+ that the kernal has the same pixel size as the image.
+ **/
+void PixelMap::convolve(PixelMap &kernel,long center_x,long center_y){
+  std::valarray<double> output(Nx*Ny);
+  
+  //std::cout << output.size() << " " << map.size() << std::endl;
+  
+  if( center_x == 0 ){
+    center_x = kernel.getNx()/2;
+    center_y = kernel.getNy()/2;
+  }
+  
+  size_t Nxk = kernel.getNx();
+  size_t Nyk = kernel.getNy();
+  
+  //std::cout << "sum of map : " << sum() << std::endl;
+  //std::cout << "sum of kernel : " << kernel.sum() << std::endl;
+  //double total=0;
+  for(size_t k1 = 0 ; k1 < Nx ; ++k1){
+    long bl1 = k1 - center_x;
+    
+    for(size_t k2 = 0 ; k2 < Ny ; ++k2){
+      long bl2 = k2 - center_y;
+      
+      long k = k1 + Nx * k2;
+      output[k] = 0;
+      
+      for(size_t j = 0 ; j < Nyk ; ++j){
+        long kk2 = bl2 + j;
+        if(kk2 < 0 || kk2 >= Ny) continue;
+        
+        for(size_t i = 0; i < Nxk ; ++i){
+          long kk1 = bl1 + i;
+          if(kk1 < 0 || kk1 >= Nx) continue;
+          
+          output[k] += map[ kk1 + Nx * kk2 ] * kernel[i + Nxk * j];
+        }
+      }
+      //total += output[k];
+    }
+  }
+  
+  std::swap(map,output);
+}
 
 
 

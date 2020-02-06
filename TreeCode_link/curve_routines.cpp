@@ -139,7 +139,7 @@ void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
 }
 namespace Utilities{
 
-  /** \ingroup Utill
+  /** 
    *
    * \brief Orders points on a closed curve.
    *
@@ -464,7 +464,7 @@ namespace Utilities{
  
 	return true;
  }*/
-/* \ingroup Utill
+/* 
  *
  * \brief Finds area within a curve by summing every cell.
  *
@@ -989,7 +989,10 @@ void walkcurve(Point *points,long Npoints,long *j,long *end){
     
     if(delta){
       if(i==(*end)) *end=(*j)+1;
-      for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+      for(k=i;k>(*j)+1;--k){
+        assert(k < Npoints);
+        SwapPointsInArray( &(points[k]) , &(points[k-1]) );
+      }
       ++(*j);
       i=(*j);
       step=1;
@@ -1073,7 +1076,10 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
           // add neighbor to end of curve and restart
           if(i==*end) *end=*j+1;
           // move point to position after last one
-          for(k=i;k>(*j)+1;--k) SwapPointsInArray( &(points[k]),&(points[k-1]) );
+          for(k=i;k>(*j)+1;--k){
+            assert(k < Npoints);
+            SwapPointsInArray( &(points[k]),&(points[k-1]) );
+          }
           //SwapPointsInArray(&(points[(*j)+1]),&(points[i]) );
           ++(*j);
           return 1;
@@ -1472,9 +1478,10 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   
   NpointsTotal = images[0].Npoints;
   
-  PointList::iterator imagelist_current(imagelist->Bottom());
+  PointList::iterator imagelist_it;
+  imagelist_it.current = imagelist->Bottom();
   // copy image points into a list
-  for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_current,&(images[0].points[i]));
+  for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
   
   assert(imagelist->size() == images[0].Npoints);
   //std::printf("imagelist = %il\n",imagelist->Npoints);
@@ -1487,17 +1494,17 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   point = images[0].points;
   newpointarray = NewPointArray(NpointsTotal);
   
-  imagelist_current = imagelist->Top();
+  imagelist_it.current = imagelist->Top();
   m=0;
   i=0;
   do{
-    if(i < *Nimages && images[i].points == *imagelist_current){
+    if(i < *Nimages && images[i].points == *imagelist_it){
       images[i].points=&(newpointarray[m]);
       ++i;
     }
-    PointCopyData(&(newpointarray[m]),*imagelist_current);
+    PointCopyData(&(newpointarray[m]),*imagelist_it);
     ++m;
-  }while(--imagelist_current);
+  }while(--imagelist_it);
   
   assert(m == NpointsTotal);
   
@@ -1537,14 +1544,16 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
   //std::printf("imagelist = %li\n",imagelist->Npoints);
   // divide images into disconnected curves using neighbors-of-neighbors
   
-  PointList::iterator imagelist_current(*imagelist);
-  PointList::iterator orderedlist_current;
+  PointList::iterator imagelist_it;
+  imagelist_it.current = imagelist->Top();
+  
+  PointList::iterator orderedlist_it;
   
   while(imagelist->size() > 0 && i < Maximages){
-    images[i].points = imagelist->TakeOutCurrent(imagelist_current);
-    orderedlist_current = orderedlist->Bottom();
-    orderedlist->InsertPointAfterCurrent(orderedlist_current,images[i].points);
-    --orderedlist_current;
+    images[i].points = imagelist->TakeOutCurrent(imagelist_it);
+    orderedlist_it.current = orderedlist->Bottom();
+    orderedlist->InsertPointAfterCurrent(orderedlist_it,images[i].points);
+    --orderedlist_it;
     NeighborsOfNeighbors(orderedlist,imagelist);
     images[i].Npoints = orderedlist->size() - m;
     m += images[i].Npoints;
@@ -1556,11 +1565,11 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
   if(i == Maximages && imagelist->size() > 0){
     Point *point;
     do{
-      point = imagelist->TakeOutCurrent(imagelist_current);
+      point = imagelist->TakeOutCurrent(imagelist_it);
       //MoveToBottomList(orderedlist);
-      orderedlist_current = orderedlist->Bottom();
-      orderedlist->InsertPointAfterCurrent(orderedlist_current,point);
-      --orderedlist_current;
+      orderedlist_it.current = orderedlist->Bottom();
+      orderedlist->InsertPointAfterCurrent(orderedlist_it,point);
+      --orderedlist_it;
       ++(images[Maximages-1].Npoints);
     }while(imagelist->size() > 0);
   }
@@ -1588,7 +1597,7 @@ void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximage
  *  perform generic tasks.
  */
 namespace Utilities{
-  /** \ingroup Utill
+  /** 
    * \brief windings(): winding number test for a point in a polygon
    * Returns: Number of times a curves winds around the point x.
    *
@@ -1760,12 +1769,12 @@ namespace Utilities{
       }
       
       *area = fabs(*area)*0.5;
-      delete points;
+      delete[] points;
       
       return wn;
     }
   
-  /** \ingroup Utill
+  /** 
    *
    *  \brief determines whether a point is inside a curve, that has been stretched 1.2 times
    *  returns the area of the stretched curve
@@ -1822,7 +1831,7 @@ namespace Utilities{
       }
       
       *area = fabs(*area)*0.5;
-      delete points;
+      delete[] points;
       
       return wn;
     }
@@ -1854,8 +1863,11 @@ namespace Utilities{
     return number == 0 ? 0 : 1;
   }
   int incurve(PosType x[],std::vector<Point_2d> curve){
+
+    if(curve.size() == 0) return 0;
+
     int number = 0;
-    size_t i;
+    size_t i;    
     
     // The reason this does not return the winding number is because horizontal
     //  sections of the curve can be overcounted if they are colinear with x
@@ -1907,8 +1919,8 @@ namespace Utilities{
       
       for(ii=0;ii<Ncrit;++ii){
         for(critical[ii].imagekist->MoveToTop(),l=0;l<critical[ii].imagekist->Nunits();l++,critical[ii].imagekist->Down()){
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->image->x[0] << " ";
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->image->x[1] << std::endl;
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->image->x[0] << " ";
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->image->x[1] << std::endl;
         }
       }
       
@@ -1928,8 +1940,8 @@ namespace Utilities{
       
       for(ii=0;ii<Ncrit;++ii){
         for(critical[ii].imagekist->MoveToTop(),l=0;l<critical[ii].imagekist->Nunits();l++,critical[ii].imagekist->Down()){
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->x[0] << " ";
-          file_crit << 180/pi*3600.*critical[ii].imagekist->getCurrent()->x[1] << std::endl;
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->x[0] << " ";
+          file_crit << 180/PI*3600.*critical[ii].imagekist->getCurrent()->x[1] << std::endl;
         }
       }
       file_crit.close();
@@ -1947,8 +1959,8 @@ namespace Utilities{
       }
       
       for(critical[ind_caustic].imagekist->MoveToTop(),l=0;l<critical[ind_caustic].imagekist->Nunits();l++,critical[ind_caustic].imagekist->Down()){
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[0] << " ";
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[1] << std::endl;
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[0] << " ";
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->image->x[1] << std::endl;
       }
       
       file_crit.close();
@@ -1966,8 +1978,8 @@ namespace Utilities{
       }
       
       for(critical[ind_caustic].imagekist->MoveToTop(),l=0;l<critical[ind_caustic].imagekist->Nunits();l++,critical[ind_caustic].imagekist->Down()){
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->x[0] << " ";
-        file_crit << 180/pi*3600.*critical[ind_caustic].imagekist->getCurrent()->x[1] << std::endl;
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->x[0] << " ";
+        file_crit << 180/PI*3600.*critical[ind_caustic].imagekist->getCurrent()->x[1] << std::endl;
       }
       
       file_crit.close();
@@ -2433,7 +2445,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
               intersects = true;
               
               if(test){
-                std::cout << "smin/pi = " << smin/pi << std::endl;
+                std::cout << "smin/pi = " << smin/PI << std::endl;
                 std::cout << "intersecting line segments ii = " << ii << std::endl;
                 std::cout << hull.back()->x[0] << " " << hull.back()->x[1] << " -- "
                 << Res[imin]->x[0] << " " << Res[imin]->x[1] << std::endl;
@@ -2575,13 +2587,13 @@ void Utilities::contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsig
     if (mostdistant_contour_pnt<tmp_dist){mostdistant_contour_pnt=tmp_dist;farpoint[0]=P[jj].x[0];farpoint[1]=P[jj].x[1];}
   }
   *ellipticity=nearest_contour_pnt/mostdistant_contour_pnt;
-  *ellipse_area=nearest_contour_pnt*mostdistant_contour_pnt*pi;
+  *ellipse_area=nearest_contour_pnt*mostdistant_contour_pnt*PI;
   pa=atan2f(farpoint[1]-center.x[1],farpoint[0]-center.x[0]);
   
   C.resize(Npoints);
   
   for(size_t jj=0;jj<Npoints;++jj){
-      t=jj*2.*pi/Npoints;
+      t=jj*2.*PI/Npoints;
       C[jj].x[0]=cos(pa)*mostdistant_contour_pnt*cos(t)-sin(pa)*nearest_contour_pnt*sin(t);
       C[jj].x[1]=sin(pa)*mostdistant_contour_pnt*cos(t)+cos(pa)*nearest_contour_pnt*sin(t);
   }

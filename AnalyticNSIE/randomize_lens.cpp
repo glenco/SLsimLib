@@ -82,7 +82,7 @@ void LensHaloAnaNSIE::RandomizeHost(long *seed,bool tables){
 	// aligned hexopole and octopole
 	if(perturb_Nmodes > 0){
 		for(n=3;n<6;++n) AlignedRandomlyDistortLens(seed
-			,pa+3*pi*gasdev(seed)/180,n);
+			,pa+3*PI*gasdev(seed)/180,n);
 	}
 
 	delete[] axisTable;
@@ -110,7 +110,7 @@ void LensHaloAnaNSIE::RandomlyDistortLens(long *seed, int Nmodes){
 		// lognormal shear and kappa distribution
 		perturb_modes[0]=0.015*pow(10,gasdev(seed)*perturb_rms[0]);
 		tmp=0.015*pow(10,gasdev(seed)*perturb_rms[1]);
-		theta=2*pi*ran2(seed);
+		theta=2*PI*ran2(seed);
 		perturb_modes[1] = tmp*cos(theta);
 		perturb_modes[2] = tmp*sin(theta);
 
@@ -202,12 +202,12 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 
 	if(Einstein_ro > 0.0){
 		Rm = Einstein_ro*rangeInRei + sub_Rsize*pow(scale,1./3.)
-	          + pow(2*sub_Mmax*scale*Einstein_ro/pi/Sigma_crit/sheartol,1./3.);
+	          + pow(2*sub_Mmax*scale*Einstein_ro/PI/Sigma_crit/sheartol,1./3.);
 		Einstein_ro_save = Einstein_ro;
 	}
 
 	if(!(substruct_implanted) && ndensity > 0){
-		NsubMax=(unsigned long)(ndensity*pi*Rm*Rm + 5*sqrt(ndensity*pi*Rm*Rm) );
+		NsubMax=(unsigned long)(ndensity*PI*Rm*Rm + 5*sqrt(ndensity*PI*Rm*Rm) );
 		if(NsubMax > 0){
 			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
 			switch(main_sub_type){
@@ -229,9 +229,9 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 		substruct_implanted=true;
 	}
 	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
-	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rm*Rm,seed),ndensity*pi*Rm*Rm);
+	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*PI*Rm*Rm,seed),ndensity*PI*Rm*Rm);
 
-	unsigned int Nsub=(int)(poidev(ndensity*pi*Rm*Rm,seed));
+	unsigned int Nsub=(int)(poidev(ndensity*PI*Rm*Rm,seed));
 	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
 
 	//std::cout << "scale = %e\n",scale);
@@ -253,21 +253,21 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		subs[k].set_Rsize(sub_Rsize*pow(scale,1./3.)
+		subs[k].set_RsizeRmax(sub_Rsize*pow(scale,1./3.)
 				*pow(subs[k].get_mass()/sub_Mmax/scale,1/3.));
 
 		subs[k].set_slope(sub_beta);
 
-		subs[k].set_rscale(0.1*subs[k].get_Rsize());
+		subs[k].set_rscale(0.1*subs[k].getRsize());
 
 		// maximum radius for a substructure of this mass
-		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rsize()
-		     + pow(2*subs[k].get_mass()*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.) );
+		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
+		     + pow(2*subs[k].get_mass()*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.) );
 
 		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
 		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
 		if( r < rmax){
-			theta=2*pi*ran2(seed);
+			theta=2*PI*ran2(seed);
 			sub_x[k][0]=r*cos(theta);
 			sub_x[k][1]=r*sin(theta);
 			assert(k<NsubMax);
@@ -275,7 +275,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
 			rav[0] += sub_x[k][0];
 			rav[1] += sub_x[k][1];
 			r2av += r*r;
-			area_av += pow(subs[k].get_Rsize(),2);
+			area_av += pow(subs[k].getRsize(),2);
 			++k;
 		}
 	}
@@ -334,12 +334,12 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 
 	Rm = Einstein_ro_save*rangeInRei;
 	Rm +=  sub_Rsize
-          + pow(2*sub_Mmax*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.);
+          + pow(2*sub_Mmax*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.);
 
 	assert(Rm > 0.0);
 
 	if(!substruct_implanted){
-		NsubMax=(unsigned long)(sub_Ndensity*pi*Rm*Rm*(1+5/sqrt(sub_Ndensity*pi*Rm*Rm)) );
+		NsubMax=(unsigned long)(sub_Ndensity*PI*Rm*Rm*(1+5/sqrt(sub_Ndensity*PI*Rm*Rm)) );
 		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
 		switch(main_sub_type){
 		case pointmass:
@@ -359,9 +359,9 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 		sub_substructures = new IndexType[NsubMax];
 	}
 	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
-	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*pi*Rm*Rm,seed),ndensity*pi*Rm*Rm);
+	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*PI*Rm*Rm,seed),ndensity*PI*Rm*Rm);
 
-	unsigned int Nsub=(int)(poidev(sub_Ndensity*pi*Rm*Rm,seed));
+	unsigned int Nsub=(int)(poidev(sub_Ndensity*PI*Rm*Rm,seed));
 
 	assert(Nsub < NsubMax);
 
@@ -384,16 +384,16 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
 
 		// average density of a substructure does not scale with host
-		subs[k].set_Rsize(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
+		subs[k].set_RsizeRmax(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
 
 		// maximum radius for a substructure of this mass
-		rmax = (Einstein_ro_save*rangeInRei + subs[k].get_Rsize()
-		     + pow(2*subs[k].get_mass()*Einstein_ro_save/pi/Sigma_crit/sheartol,1./3.) );
+		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
+		     + pow(2*subs[k].get_mass()*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.) );
 
 		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
 		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
 		if( r < rmax){
-			theta=2*pi*ran2(seed);
+			theta=2*PI*ran2(seed);
 			sub_x[k][0]=r*cos(theta);
 			sub_x[k][1]=r*sin(theta);
 			assert(k<NsubMax);
@@ -401,7 +401,7 @@ void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
 			rav[0] += sub_x[k][0];
 			rav[1] += sub_x[k][1];
 			r2av += r*r;
-			area_av += pow(subs[k].get_Rsize(),2);
+			area_av += pow(subs[k].getRsize(),2);
 			++k;
 		}
 	}
@@ -456,7 +456,7 @@ PosType LensHaloAnaNSIE::FractionWithinRe(PosType rangeInRei){
 	PosType B;
 
 	B = (sub_Rsize/pow(sub_Mmax,1./3.)
-			+ pow(2*Einstein_ro/pi/Sigma_crit/1.e-3,1./3.) );
+			+ pow(2*Einstein_ro/PI/Sigma_crit/1.e-3,1./3.) );
 
 	return 1+(1+sub_alpha)*(
 		2*rangeInRei*Einstein_ro*B*(

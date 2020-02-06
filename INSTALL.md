@@ -26,7 +26,7 @@ binary installation packages available on the *CMake* website.
 
 For Linux, *CMake* can be found in most package managers natively.
 
-For Mac OS X, *CMake* is available from both [Homebrew] and [MacPorts].
+For Mac OS X, *CMake* is available from both [Homebrew], [MacPorts] or [conda].
 
 
 ### Using CMake
@@ -47,27 +47,25 @@ the following:
 4.  Build using your usual method of choice.
 
 
-Requirements
+Dependancies
 ------------
 
 Before starting to configure and build *GLAMER*, it is advisable to resolve all
 necessary dependencies, since the cmake configuration will automatically detect
 settings based on the libraries it can find.
 
-The *GLAMER* library does not need any external libraries for a setup with
-reduced functionality. However, most configuration options introduce further
-dependencies, which are listed below.
+All the dependancies should be available through the package managment system [conda].  It is recommended that you use this to install and update the dependencies.
 
-Library   | Required by   | Description
-----------|---------------|-----------------------------------------------------
-[CFITSIO] | `ENABLE_FITS` | Library for reading and writing files in the FITS format.
-[CCfits]¹ | `ENABLE_FITS` | C++ wrapper for *CFITSIO*.
-[FFTW]    | `ENABLE_FFTW` | Library for Fast Fourier Transform algorithms.
-[GSL]     | `ENABLE_GSL`  | Library for scientific computation.
+The *GLAMER* library requires some libraries by default and others are optional. 
 
-¹ Special care has to be taken when using CCfits with newer versions of the
-clang compiler (which is the default in Xcode starting from Mavericks). Please
-see the *CCfits* [documentation page][ccfitsdoc] for details.
+
+Library   | Required by   || Description
+----------|---------------||-----------------------------------------------------
+[CFITSIO] | `ENABLE_FITS` |required| Library for reading and writing files in the FITS format.
+[FFTW]    | `ENABLE_FFTW` |required| Library for Fast Fourier Transform algorithms.
+[GSL]     | `ENABLE_GSL`  |optional| Library for   scientific computation
+[HDF5 C++]    | `ENABLE_HDF5` |optional| I/O in hdf5 format
+[HealPix] |  ENABLE_HEALPIX |optional| C++ Healpix interface
 
 
 Building the library
@@ -89,7 +87,7 @@ In order to build *GLAMER* using cmake, the following steps are necessary:
     maybe some of the *GLAMER*-specific options. Here we generate Unix Makefiles
     and enable *FITS* and *FFTW* functions.
     
-        $ cmake .. -G "Unix Makefiles" -DENABLE_FITS=ON -DENABLE_FFTW=ON
+        $ cmake .. -G "Unix Makefiles" [-DENABLE_GSL=ON]
     
 3.  At this point, you are presented with a Makefile or project inside the
     `build` directory which you can use to build the library.
@@ -170,7 +168,10 @@ where to find the libraries.
 ### Creating new projects
 
 The easiest way to start a project is to copy the sample project from the
-`examples/project` folder. In the enclosed `CMakeLists.txt` file, all instances
+`examples/project` folder or clone one of the example projects from the [Glenco Github page]("https://github.com/glenco"), specifically [Example1]("https://github.com/glenco/Example1"), [ExampleImage]("https://github.com/glenco/ExampleImage") and [ParticleExample]("https://github.com/glenco/ParticleExample").  The new project should be in its own directory outside of the *GLAMER* directory tree.
+
+
+In the enclosed `CMakeLists.txt` file, all instances
 of the "sample" name have to be replaced with the actual name of the project.
 Sources and headers can be added to the appropriate lists.
 
@@ -207,6 +208,16 @@ subsequently be used with the build tool of choice.
     $ mkdir build
     $ cmake .. -G Xcode
     $ open myproject.xcodeproj
+or
+
+    $ cd myproject
+    $ ls
+    CMakeLists.txt  main.cpp
+    $ mkdir build
+    $ cmake .. 
+    $ make
+If you are not using Xcode.
+
 
 **Note:**
 Building the project will not build the GLAMER libraries automatically!
@@ -220,3 +231,6 @@ Building the project will not build the GLAMER libraries automatically!
 [ccfitsdoc]: https://heasarc.gsfc.nasa.gov/fitsio/CCfits/html/index.html "CCfits documentation"
 [fftw]: http://www.fftw.org "FFTW Home Page"
 [gsl]: http://www.gnu.org/software/gsl/ "GNU Scientific Library"
+[HDF5 C++]: https://support.hdfgroup.org/HDF5/doc/cpplus_RM/ "HDF5 C++"
+[HealPix]: https://healpix.jpl.nasa.gov/html/Healpix_cxx/ "HealPix"
+[conda]: https://docs.conda.io/projects/conda/en/latest/ "conda"

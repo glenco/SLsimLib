@@ -17,7 +17,7 @@
   double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
   
   //return m*isohalo->kappa(x)/(ap*ap*ap*bp*p2);
-  PosType alpha[2]={0,0},tmp[2] = {m*(isohalo->get_Rsize()),0};
+  PosType alpha[2]={0,0},tmp[2] = {m*(isohalo->getRsize()),0};
   KappaType kappa=0,gamma[2]={0,0},phi;
   
   isohalo->force_halo(alpha,&kappa,gamma,&phi,tmp);
@@ -34,8 +34,8 @@ PosType Elliptic::DALPHAYDM::operator()(PosType m){
   double ap = m*m*a2 + lambda,bp = m*m*b2 + lambda;
   double p2 = x[0]*x[0]/ap/ap/ap/ap + x[1]*x[1]/bp/bp/bp/bp;  // actually the inverse of equation (5) in Schramm 1990
   
-  PosType alpha[2]={0,0},tmp[2] = {m*(isohalo->get_Rsize()),0};
-  KappaType kappa=0,gamma[2]={0,0},phi;
+  PosType alpha[2]={0,0},tmp[2] = {m*(isohalo->getRsize()),0};
+  KappaType kappa=0,gamma[2]={0,0},phi=0;
   
   isohalo->force_halo(alpha,&kappa,gamma,&phi,tmp); // here we need an elliptical kappa but in forcehalo the only elliptical kappas implemented are based on Ansatz I+II
   
@@ -67,12 +67,12 @@ void Elliptic::alpha(PosType x[],PosType alpha[]){
   std::cout << "mo = " << mo << "a2 = " << a2 << "b2 = " << b2 << "x1 " << xtmp[0] << "x2 " << xtmp[1] << std::endl;
 
   Elliptic::DALPHAXDM funcX(lambda,a2,b2,xtmp,isohalo);
-  //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/pi;
-  alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/pi;
+  //alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/PI;
+  alpha[0] = -8*a*b*xtmp[0]*Utilities::nintegrate<Elliptic::DALPHAXDM,PosType>(funcX,0,MIN(mo,1.0),1.0e-6)/PI;
   
   
   Elliptic::DALPHAYDM funcY(lambda,a2,b2,xtmp,isohalo);
-  alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<Elliptic::DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-6)/pi;
+  alpha[1] = -8*a*b*xtmp[1]*Utilities::nintegrate<Elliptic::DALPHAYDM,PosType>(funcY,0,MIN(mo,1.0),1.0e-6)/PI;
   
   //std::cout << "alpha = " << alpha[0] << " " << alpha[1] << std::endl;
 

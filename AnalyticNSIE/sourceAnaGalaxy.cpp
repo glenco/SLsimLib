@@ -14,7 +14,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		PosType mag              /// Total magnitude
 		,PosType mag_bulge        /// magnitude of Bulge
 		,PosType Reff            /// Bulge half light radius (arcs)
-		,PosType Rh              /// disk scale hight (arcs)
+		,PosType Rdisk              /// disk scale hight (arcs)
 		,PosType PA              /// Position angle (radians)
 		,PosType inclination     /// inclination of disk (radians)
 		,PosType my_z               /// redshift of source
@@ -22,7 +22,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
     ,Utilities::RandomNumbers_NR &ran
 		): Source(),index(0){
 	
-	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rh,PA,inclination,0,my_z,my_theta,ran));
+	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rdisk,PA,inclination,0,my_z,my_theta,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -48,7 +48,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 
 	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
 
-	readDataFile(ran);
+	readDataFileMillenn(ran);
 	index = 0;
   searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
   //searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,3,true);
@@ -60,7 +60,7 @@ SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 }
 
 /// read in galaxies from a Millennium simulation file
-void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
+void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran){
 
 	//int type;
 	//long galid,haloid;
@@ -71,8 +71,9 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 	unsigned long i,j;
 
 	unsigned long GalID,HaloID;
-	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rh,Ref,SDSS_u,SDSS_g,SDSS_r,SDSS_i,SDSS_z
-	,J_band,H_band,Ks_band,i1,i2,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
+	PosType ra,dec,z_cosm,z_app,Dlum,inclination,pa,Rdisk,Ref,SDSS_u,SDSS_g
+  ,SDSS_r,SDSS_i,SDSS_z,J_band,H_band,Ks_band,i1,i2
+  ,SDSS_u_Bulge,SDSS_g_Bulge,SDSS_r_Bulge,SDSS_i_Bulge,SDSS_z_Bulge
 	,J_band_Bulge,H_band_Bulge,Ks_band_Bulge,i1_Bulge,i2_Bulge;
 
   std::ofstream color_cat;
@@ -108,6 +109,15 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
     throw std::runtime_error(" Cannot open file.");
 		exit(1);
 	}
+  
+  std::string myline;
+  size_t count = 0;
+  while(getline(file_in,myline)){
+    if(myline[0] != '#') ++count;
+  }
+  file_in.clear();
+  file_in.seekg(0);
+  galaxies.reserve(count);
 
 	std::cout << "Reading from galaxy data file " << input_gal_file.c_str() << std::endl;
 	//file_in >> Ngalaxies;
@@ -120,6 +130,8 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 		++i;
 	}
 	std::cout << "   skipped "<< i << " comment lines in " << input_gal_file << std::endl;
+  getline(file_in,myline); // skip title line
+
 
 	PosType theta[2] = {0.0,0.0};
 
@@ -135,8 +147,9 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 	addr[6] = &Dlum;
 	addr[7] = &inclination;
 	addr[8] = &pa;
-	addr[9] = &Rh;
+	addr[9] = &Rdisk;
 	addr[10] = &Ref;
+  
 	addr[11] = &SDSS_u;
 	addr[12] = &SDSS_g;
 	addr[13] = &SDSS_r;
@@ -161,12 +174,11 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 
 	unsigned long myint;
 	PosType myPosType;
-	std::string myline;
 	std::string strg;
 	std::string f=",";
 	std::stringstream buffer;
 
-	PosType mag,mag_bulge;
+	//PosType mag,mag_bulge;
 
 	// read in data
 	for(i=0,j=0 ; ; ++i){
@@ -176,15 +188,20 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 		if(myline[0] == '#')
 			break;
 
+    //std::cout << "myline " << myline << std::endl ;
+
+    //std::cout << "read columns" << std::endl;
 		for(int l=0;l<ncolumns; l++){
-			int pos = myline.find(f);
+			long pos = myline.find(f);
 			strg.assign(myline,0,pos);
 			buffer << strg;
 			if(l == 0 || l == 1 ){
+        //std::cout << "myint " << myint ;
 				buffer >> myint;
 				*((unsigned long *)addr[l]) = myint;
 			}
 			else{
+        //std::cout << "myPosType " << myPosType ;
 				buffer >> myPosType;
 				*((PosType *)addr[l]) = myPosType;
 			}
@@ -194,87 +211,7 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
 			buffer.str(std::string());
 		}
 
-		// read a line of data
-		/*file_in >> galid >> c >> haloid >> c >> cx >> c >> cy >> c >> cz >> c >> ra >> c >> dec >> c >> z_geo >> c >> z_app
-		>> c >> dlum >> c >> vlos >> c >> incl
-		>> c >> acs435 >> c >> acs606 >> c >> acs775 >> c >> acs850
-		>> c >> acs435_bulge >> c >> acs606_bulge >> c >> acs775_bulge >> c >> acs850_bulge
-		>> c >> type >> c >> mvir >> c >> rvir >> c >> vmax >> c >> stellarmass >> c >> bulgemass
-		>> c >> stellardiskradius >> c >> bulgesize
-		>> c >> inclination >> c >> pa >> c >> angdist >> c >> diskradius_arcsec >> c >> bulgesize_arcsec >> c;
-		*/
-		/*file_in >> GalID  >> HaloID  >> ra  >> dec  >> z_cosm  >> z_app  >> Dlum  >> inclination
-				 >> pa  >> Rh  >> Ref  >> SDSS_u  >> SDSS_g  >> SDSS_r  >> SDSS_i  >> SDSS_z
-				 >> J_band  >> H_band  >> Ks_band  >> i1  >> i2  >> SDSS_u_Bulge  >> SDSS_g_Bulge  >> SDSS_r_Bulge
-				 >> SDSS_i_Bulge  >> SDSS_z_Bulge  >> J_band_Bulge  >> H_band_Bulge  >> Ks_band_Bulge  >> i1_Bulge
-				 >> i2_Bulge ;
-
-		file_in >> GalID >> c >> HaloID >> c >> ra >> c >> dec >> c >> z_cosm >> c >> z_app >> c >> Dlum >> c >> inclination
-		>> c >> pa >> c >> Rh >> c >> Ref >> c >> SDSS_u >> c >> SDSS_g >> c >> SDSS_r >> c >> SDSS_i >> c >> SDSS_z
-		>> c >> J_band >> c >> H_band >> c >> Ks_band >> c >> i1 >> c >> i2 >> c >> SDSS_u_Bulge >> c >> SDSS_g_Bulge >> c >> SDSS_r_Bulge
-		>> c >> SDSS_i_Bulge >> c >> SDSS_z_Bulge >> c >> J_band_Bulge >> c >> H_band_Bulge >> c >> Ks_band_Bulge >> c >> i1_Bulge
-		>> c >> i2_Bulge >> c;
-*/
-
-		addr[11] = &SDSS_u;
-		addr[12] = &SDSS_g;
-		addr[13] = &SDSS_r;
-		addr[14] = &SDSS_i;
-		addr[15] = &SDSS_z;
-		addr[16] = &J_band;
-		addr[17] = &H_band;
-		addr[18] = &Ks_band;
-		addr[19] = &i1;
-		addr[20] = &i2;
-
-		switch (band){
-		case SDSS_U:
-			mag = SDSS_u;
-			mag_bulge = SDSS_u_Bulge;
-			break;
-		case SDSS_G:
-			mag = SDSS_g;
-			mag_bulge = SDSS_g_Bulge;
-			break;
-		case SDSS_R:
-			mag = SDSS_r;
-			mag_bulge = SDSS_r_Bulge;
-			break;
-		case SDSS_I:
-			mag = SDSS_i;
-			mag_bulge = SDSS_i_Bulge;
-			break;
-		case SDSS_Z:
-			mag = SDSS_z;
-			mag_bulge = SDSS_z_Bulge;
-			break;
-		case J:
-			mag = J_band;
-			mag_bulge = J_band_Bulge;
-			break;
-		case H:
-			mag = H_band;
-			mag_bulge = H_band_Bulge;
-			break;
-		case Ks:
-			mag = Ks_band;
-			mag_bulge = Ks_band_Bulge;
-			break;
-		/*case i1:
-			mag = i1;
-			mag_bulge = i1_Bulge;
-			break;
-		case i2:
-			mag = i2;
-			mag_bulge = i2_Bulge;
-			break;*/
-		default:
-			std::cout << "Requested band is not an available option." << std::endl;
-			ERROR_MESSAGE();
-      throw std::invalid_argument("band not supported");
-
-		}
-    
+  
     color_cat << GalID << "  " << z_app << "  " << SDSS_u << "  " <<SDSS_g << "  " <<SDSS_r << "  " <<
     SDSS_i << "  " << SDSS_z << "  " << J_band << "  " << H_band << "  " << Ks_band <<
     "  " << i1 << "  " << i2 << "  " << SDSS_u_Bulge << "  " << SDSS_g_Bulge << "  " <<
@@ -282,66 +219,72 @@ void SourceMultiAnaGalaxy::readDataFile(Utilities::RandomNumbers_NR &ran){
     << "  " << H_band_Bulge << "  " << Ks_band_Bulge << "  " << i1_Bulge << "  " << i2_Bulge
     << std::endl;
 
-		if(mag < mag_limit){
-			/*
-			std::cout << galid << c << haloid << c << cx << c << cy << c << cz << c << ra << c << dec << c << z_geo << c << z_app
-			<< c << dlum << c << vlos << c << incl
-			<< c << acs435 << c << acs606 << c << acs775 << c << acs850
-			<< c << acs435_bulge << c << acs606_bulge << c << acs775_bulge << c << acs850_bulge
-			<< c << type << c << mvir << c << rvir << c << vmax << c << stellarmass << c << bulgemass
-			<< c << stellardiskradius << c << bulgesize
-			<< c << inclination << c << pa << c << angdist << c << diskradius_arcsec << c << bulgesize_arcsec << std::endl;
-			 */
-
       // converting from Millennium conventions
-			theta[0] = -ra*pi/180;
-			theta[1] = dec*pi/180;
-      pa = (90 - pa)*pi/180;
-      inclination *= pi/180;
-      if(cos(inclination)< 0.1) inclination = acos(0.1);
+			theta[0] = -ra*PI/180;
+			theta[1] = dec*PI/180;
+      pa = (90 - pa)*PI/180;
+      inclination *= PI/180;
+      if(cos(inclination)< 0.5) inclination = acos(0.5);
+    
+      //std::cout << "did inclination" << std::endl;
+    if(j == 0){
+      rangex[0] = rangex[1] = theta[0];
+      rangey[0] = rangey[1] = theta[1];
+    }else{
+      //std::cout << "rang" << std::endl;
+
+      if(theta[0] < rangex[0]) rangex[0] = theta[0];
+      if(theta[0] > rangex[1]) rangex[1] = theta[0];
+      if(theta[1] < rangey[0]) rangey[0] = theta[1];
+      if(theta[1] > rangey[1]) rangey[1] = theta[1];
+    }
       
-      if(j == 0){
-        rangex[0] = rangex[1] = theta[0];
-        rangey[0] = rangey[1] = theta[1];
-      }else{
-        if(theta[0] < rangex[0]) rangex[0] = theta[0];
-        if(theta[0] > rangex[1]) rangex[1] = theta[0];
-        if(theta[1] < rangey[0]) rangey[0] = theta[1];
-        if(theta[1] > rangey[1]) rangey[1] = theta[1];
-      }
-      
+      //std::cout << "adding to galaxies" << std::endl;
 			/***************************/
-			galaxies.push_back(
-                         SourceOverzierPlus(mag,mag_bulge,Ref,Rh
-                                            ,pa,inclination,HaloID,z_cosm,theta,ran)
-			);
+    
+    SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge,Ref,Rdisk
+                                ,pa,inclination,HaloID,z_cosm,theta,ran);
+     //std::cout << "filling last galaxy" << std::endl;
 
-			galaxies.back().setUMag(SDSS_u);
-      galaxies.back().setMagBulge(SDSS_U,SDSS_u_Bulge);
-			galaxies.back().setGMag(SDSS_g);
-      galaxies.back().setMagBulge(SDSS_G,SDSS_g_Bulge);
-			galaxies.back().setRMag(SDSS_r);
-      galaxies.back().setMagBulge(SDSS_R,SDSS_r_Bulge);
-			galaxies.back().setIMag(SDSS_i);
-      galaxies.back().setMagBulge(SDSS_I,SDSS_i_Bulge);
-			galaxies.back().setZMag(SDSS_z);
-      galaxies.back().setMagBulge(SDSS_Z,SDSS_z_Bulge);
-			galaxies.back().setJMag(J_band);
-      galaxies.back().setMagBulge(J,J_band_Bulge);
-			galaxies.back().setHMag(H_band);
-      galaxies.back().setMagBulge(H,H_band_Bulge);
-			galaxies.back().setKMag(Ks_band);
-      galaxies.back().setMagBulge(Ks,Ks_band_Bulge);
+    galaxy.setMag(SDSS_U,SDSS_u);
+    galaxy.setMagBulge(SDSS_U,SDSS_u_Bulge);
+    galaxy.setMag(SDSS_G,SDSS_g);
+    galaxy.setMagBulge(SDSS_G,SDSS_g_Bulge);
+    galaxy.setMag(SDSS_R,SDSS_r);
+    galaxy.setMagBulge(SDSS_R,SDSS_r_Bulge);
+    galaxy.setMag(SDSS_I,SDSS_i);
+    galaxy.setMagBulge(SDSS_I,SDSS_i_Bulge);
+    galaxy.setMag(SDSS_Z,SDSS_z);
+    galaxy.setMagBulge(SDSS_Z,SDSS_z_Bulge);
+    galaxy.setMag(J,J_band);
+    galaxy.setMagBulge(J,J_band_Bulge);
+    galaxy.setMag(H,H_band);
+    galaxy.setMagBulge(H,H_band_Bulge);
+    galaxy.setMag(Ks,Ks_band);
+    galaxy.setMagBulge(Ks,Ks_band_Bulge);
 
-			//std::cout << "z:" << z_cosm << " mag " << SDSS_u << " Bulge to total " << pow(10,-(SDSS_u_Bulge-SDSS_u)/2.5)
-			//		<< " bulge size arcsec " << Ref  << " disk size arcsec " << pa << " position angle " << pa << " inclination " << inclination
-			//		<< " theta = " << theta[0] << " " << theta[1] << std::endl;
+    galaxy.setMag(Ks,Ks_band);
+    galaxy.setMagBulge(Ks,Ks_band_Bulge);
 
+      // The Euclid bands are not actually read in
+    galaxy.setMag(EUC_VIS,SDSS_i);
+    galaxy.setMagBulge(EUC_VIS,SDSS_i_Bulge);
+    galaxy.setMag(EUC_H,H_band);
+    galaxy.setMagBulge(EUC_H,H_band_Bulge);
+    galaxy.setMag(EUC_J,J_band);
+    galaxy.setMagBulge(EUC_J,J_band_Bulge);
+
+    galaxy.changeBand(band);
+      
+    if(galaxy.getMag() < mag_limit ){
+      galaxies.push_back(galaxy);
       assert(galaxies.back().getMag(band) == galaxies.back().getMag() );
+      //std::cout << " j in SourceMultiAnaGalaxy : " << j << std::endl;
 			++j;
 		}
 	}
 
+  std::cout << " closing file in SourceMultiAnaGalaxy : " << std::endl;
   color_cat.close();
 	file_in.close();
 
@@ -372,7 +315,7 @@ void SourceMultiAnaGalaxy::assignParams(InputParams& params){
 	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
 	else
-		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/pi,2)/hplanck;
+		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
 		/*{
 		std::cout << "ERROR: Must assign source_sb_limit in parameter file " << params.filename() << std::endl;
 		exit(1);*/
@@ -393,10 +336,10 @@ void SourceMultiAnaGalaxy::multiplier(
 	PosType x1[2],x2[2],theta[2];
 
 	for(unsigned long i=0;i<Nold;++i){
-		if(galaxies[i].getX()[0] < x1[0]) x1[0] = galaxies[i].getX()[0];
-		if(galaxies[i].getX()[0] > x2[0]) x2[0] = galaxies[i].getX()[0];
-		if(galaxies[i].getX()[1] < x1[1]) x1[1] = galaxies[i].getX()[1];
-		if(galaxies[i].getX()[1] > x2[1]) x2[1] = galaxies[i].getX()[1];
+		if(galaxies[i].getTheta()[0] < x1[0]) x1[0] = galaxies[i].getTheta()[0];
+		if(galaxies[i].getTheta()[0] > x2[0]) x2[0] = galaxies[i].getTheta()[0];
+		if(galaxies[i].getTheta()[1] < x1[1]) x1[1] = galaxies[i].getTheta()[1];
+		if(galaxies[i].getTheta()[1] > x2[1]) x2[1] = galaxies[i].getTheta()[1];
 
 		if(galaxies[i].getZ() > z && galaxies[i].getMag() < mag_cut) ++NtoAdd;
 	}
@@ -410,7 +353,7 @@ void SourceMultiAnaGalaxy::multiplier(
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
 				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getMagBulge()
-                ,galaxies[i].getReff(),galaxies[i].getRh(),ran()*pi,ran()*2*pi
+                ,galaxies[i].getReff(),galaxies[i].getRdisk(),ran()*PI,ran()*2*PI
 					,Nold+NtoAdd,galaxies[i].getZ(),theta,ran));
 
 				++NtoAdd;

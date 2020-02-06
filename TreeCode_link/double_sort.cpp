@@ -130,16 +130,23 @@ namespace Utilities{
       } else {
         k=(l+ir) >> 1;
         std::swap(arr[k],arr[l+1]);
+        assert(k < n + 1);
+        assert(l < n);
         SwapPointsInArray(&brr[k-1],&brr[l]);
         if (arr[l] > arr[ir]) {
           std::swap(arr[l],arr[ir]);
+          assert(l < n + 1);
+          assert(ir < n + 1);
           SwapPointsInArray(&brr[l-1],&brr[ir-1]);
         }
         if (arr[l+1] > arr[ir]) {
+          assert(l < n);
+          assert(ir < n+1);
           std::swap(arr[l+1],arr[ir]);
           SwapPointsInArray(&brr[l],&brr[ir-1]);
         }
         if (arr[l] > arr[l+1]) {
+          assert(l < n);
           std::swap(arr[l],arr[l+1]);
           SwapPointsInArray(&brr[l-1],&brr[l]);
         }
@@ -153,6 +160,8 @@ namespace Utilities{
           do j--; while (arr[j] > a);
           if (j < i) break;
           std::swap(arr[i],arr[j]);
+          assert(l < n + 1);
+          assert(j < n + 1);
           SwapPointsInArray(&brr[i-1],&brr[j-1]);
         }
         arr[l+1]=arr[j];
@@ -180,7 +189,7 @@ namespace Utilities{
 #undef NSTACK
 #undef NRANSI
   
-  /** \ingroup Utill
+  /** 
    * \brief Sorts points from smallest to largest according to the value of arr[].
    * Sorts arr[] and pointarray[] simultaneously.
    */
@@ -201,6 +210,7 @@ namespace Utilities{
     
     // move pivot to end of array
     std::swap(arr[pivotindex],arr[N-1]);
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
@@ -208,6 +218,7 @@ namespace Utilities{
     for(i=0;i<N;++i){
       if(arr[i] <= pivotvalue){
         std::swap(arr[newpivotindex],arr[i]);
+        assert(newpivotindex < N);
         SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
         ++newpivotindex;
       }
@@ -235,12 +246,14 @@ namespace Utilities{
     pivotvalue=func(pointarray[pivotindex]);
     
     // move pivot to end of array
+    assert(pivotindex < N);
     SwapPointsInArray(&pointarray[pivotindex],&pointarray[N-1]);
     newpivotindex=0;
     
     // partition list and array
     for(i=0;i<N;++i){
       if(func(pointarray[i]) <= pivotvalue){
+        assert(newpivotindex < N);
         SwapPointsInArray(&pointarray[newpivotindex],&pointarray[i]);
         ++newpivotindex;
       }
@@ -330,6 +343,7 @@ namespace Utilities{
     for(i=0;i<N;++i){
       if(arr[i] <= pivotvalue){
         std::swap(arr[*pivotindex],arr[i]);
+        assert(*pivotindex < N);
         SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
         ++(*pivotindex);
       }
@@ -345,6 +359,7 @@ namespace Utilities{
     
     for(i=0;i<N;++i){
       if(func(pointarray[i]) <= pivotvalue){
+        assert(*pivotindex < N);
         SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
         ++(*pivotindex);
       }
@@ -353,41 +368,4 @@ namespace Utilities{
     return ;
   }
  
-  // return 1 (0) if box is (not) within rmax of ray
-  int cutbox(const PosType* center,PosType *p1,PosType *p2,float rmax){
-    /*  returns:  0 if whole box is outside rmax from ray[]
-     *            1 if whole box is inside circle but ray is not in the box
-     *            2 if ray[] is inside box
-     *            3 if box intersects circle but ray[] is not inside box
-     */
-    short i,tick=0;
-    PosType close[2],rtmp;
-    PosType tmp1,tmp2;
-    
-    // find closest point on box borders to ray[]
-    for(i=0;i<2;++i){
-      if( center[i] < p1[i] ){
-        close[i]=p1[i];
-      }else if(center[i] > p2[i]){
-        close[i]=p2[i];
-      }else{
-        close[i]=center[i];
-        ++tick;
-      }
-    }
-    
-    if(tick==2) return 2;  // ray is inside box
-    
-    for(i=0,rtmp=0;i<2;++i) rtmp += pow(center[i] - close[i],2);
-    
-    if(rtmp>rmax*rmax) return 0;  // box is all outside circle
-    
-    // find farthest point on box border from ray[]
-    for(i=0,rtmp=0;i<2;++i) rtmp += ((tmp1 = pow(center[i]-p1[i],2)) > (tmp2=pow(center[i]-p2[i],2))) ? tmp1 : tmp2;
-    //for(i=0,rtmp=0;i<2;++i) rtmp += DMAX(pow(ray[i]-p1[i],2),pow(ray[i]-p2[i],2));
-    
-    if(rtmp<rmax*rmax) return 1;  // box is all inside circle
-    
-    return 3;  // box intersects circle
-  }
 }

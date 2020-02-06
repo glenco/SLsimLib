@@ -8,7 +8,7 @@ static double betaT,*modT,**xobT,**dx_subT,sigGT,*modTT,*modoT,**vT,x_centerT[2]
 static int NmodT,NsourcesT,NimagesT,*pairingT,degenT,Nmin;
 static double oldsm;//,tang[2],length,yot[2],radsourceT;
 
-/** \ingroup FitLens
+/** 
  *
  *  \brief Wrapper that allows simple lens to be found with a single
  * lens with a single source and translates result into data structures used in the other code.
@@ -42,7 +42,7 @@ void LensHaloFit::FindLensSimple(
 
 
 
-/** \ingroup FitLens
+/** 
  *
  *  \brief Same as FindLensSimple but with some tests in it.
  *
@@ -213,8 +213,8 @@ bool LensHaloFit::SafeFindLensSimple(
     alphaTMP[1] *= -1. ;
     
     // Applying the extra factors of RayShooter :
-    alphaTMP[0] *= -4*pi*Grav ;
-    alphaTMP[1] *= -4*pi*Grav ;
+    alphaTMP[0] *= -4*PI*Grav ;
+    alphaTMP[1] *= -4*PI*Grav ;
     alphaTMP[0] *= Dls / Ds ;
     alphaTMP[1] *= Dls / Ds ;
     
@@ -276,7 +276,7 @@ bool LensHaloFit::SafeFindLensSimple(
 }
 
 
-/** \ingroup FitLens
+/** 
  *
  *  \brief Wrapper that allows simple lens to be found with a single
  * lens with a single source and translates result into data structures used in the other code.
@@ -372,7 +372,7 @@ void LensHaloFit::FindLensSimple(
   std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
   // For convenience :
-  PosType zl = zlens ;
+  PosType zl = LensHalo::getZlens() ;
   PosType zs = zsource_reference ;
     
   // Converting source position to physical angle :
@@ -408,7 +408,7 @@ void LensHaloFit::FindLensSimple(
   assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
   // std::cout << "Dl (1+zl) + Dls (1+zs) = " << Dl*(1+zl) + Dls*(1+zs) << " , Ds (1+zs) = " << Ds*(1+zs) << std::endl ;
   
-  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * Dl / Ds) ;
+  for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*PI*Grav * Dls * Dl / Ds) ;
   // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
   // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
     
@@ -439,7 +439,7 @@ void LensHaloFit::FindLensSimple(
 // OPERATIONS ON THE MODES BEFORE I DISCOVER THE PROBLEM :
 // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ;
 // for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= Dl ;
-// for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*pi*Grav * Dls * (1+zs)) ;
+// for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*PI*Grav * Dls * (1+zs)) ;
 
 
 
@@ -482,7 +482,7 @@ void LensHaloFit::FindLensSimple(
 
 
 
-/** \ingroup FitLensL2
+/** L2
  * \brief Find most elliptical lens
  *
  ******
@@ -667,16 +667,16 @@ double minEllip(double *par){
   E = K - (1-1./q/q)*rdD(0,1./q/q,1)/3;
   
   // fill in modes with their values for an elliptical lens
-  modoT[3]=4*K/pi;
+  modoT[3]=4*K/PI;
   if(q != 1.0){
-    if(NmodT>3) modoT[4] =4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/pi/(1-4);
+    if(NmodT>3) modoT[4] =4*( (1+q*q)*K-2*q*q*E )/(1-q*q)/PI/(1-4);
     if(NmodT>7) modoT[8] =4*( (3*q*q+1)*(q*q+3)*K-8*q*q*(1+q*q)*E )
-      /( 3*pi*pow(1-q*q,2) )/(1-16);
+      /( 3*PI*pow(1-q*q,2) )/(1-16);
     if(NmodT>11) modoT[12] =4*( (1+q*q)*(15+98*q*q+15*q*q*q*q)*K-2*q*q*(23+82*q*q+23*q*q*q*q)*E )
-      /( 15*pi*pow(1-q*q,3) )/(1-36);
+      /( 15*PI*pow(1-q*q,3) )/(1-36);
     if(NmodT>15) modoT[16]=4*( -32*q*q*(1+q*q)*(11+74*q*q+11*q*q*q*q)*E
                               +(105+1436*q*q+3062*q*q*q*q+1436*pow(q,6)+105*pow(q,8))*K )
-      /(105*pi*pow(1-q*q,4))/(1-64);
+      /(105*PI*pow(1-q*q,4))/(1-64);
   }
   
   // rotate model
@@ -720,13 +720,13 @@ double minEllip(double *par){
     oldsm=sm;
     for(i=1;i<=NmodT+2*NsourcesT+1;++i) modTT[i]=modT[i];
   }
-  //std::printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/pi,modT[1],modT[2]);
+  //std::printf("q=%e   theta=%e gamma=%e %e\n",q,theta*180/PI,modT[1],modT[2]);
   //std::printf("%e %e %e %e %e %e\n",modoT[3],modoT[4],modoT[5],modoT[6],modoT[7],modoT[8]);
   //std::printf("%e %e %e %e %e %e\n\n",modT[3],modT[4],modT[5],modT[6],modT[7],modT[8]);
   
   // keep orientation within range
-  if(theta > pi/2) sm *= exp( (theta - pi/2)/1.0e-5 );
-  if(theta < -pi/2 ) sm *= exp( -(theta - pi/2)/1.0e-5 );
+  if(theta > PI/2) sm *= exp( (theta - PI/2)/1.0e-5 );
+  if(theta < -PI/2 ) sm *= exp( -(theta - PI/2)/1.0e-5 );
   // keep center of lens within sigG
   if(Nmin == 4 || Nmin == 5){
     r=pow(x_center[0]-x_centerT[0],2) + pow(x_center[1]-x_centerT[1],2);
@@ -738,7 +738,7 @@ double minEllip(double *par){
   return sm;
 }
 
-/** \ingroup FitLensL2
+/** L2
  *
  * \brief Calculates a lens that fits the image positions
  *
@@ -918,7 +918,7 @@ void LensHaloFit::get_perturbmodes(std::vector<PosType> & ListModes)
 
 
 
-/** \ingroup FitLensL2
+/** L2
  *
  * \brief  calculate the sources position, surface density and magnification at x
  * given lens model
@@ -1031,7 +1031,7 @@ double LensHaloAnaNSIE::deflect_translated(double beta,double *mod,double *x,dou
   
   return kappa;
 }
-/** \ingroup FitLensL2
+/** L2
  * \brief find degenerate model most like modo modulo a normalization
  */
 double regularize(int Nmax,int Nmin,int N,int Nsources,int degen
@@ -1165,7 +1165,7 @@ double LensHaloAnaNSIE::find_axis(double *mod,int Nmod){
   
   NmodT=Nmod;
   for(i=1;i<=NmodT;++i) modT[i] = mod[i];
-  theta = zriddrD(minaxis,0,pi/4.,1.0e-9);
+  theta = zriddrD(minaxis,0,PI/4.,1.0e-9);
   
   /* calc 2nd deriv */
   for(i=4,ans=0.0;i<=5;i+=2){
@@ -1175,7 +1175,7 @@ double LensHaloAnaNSIE::find_axis(double *mod,int Nmod){
     - 2*k*k*(modT[i]*modT[i] - modT[i+1]*modT[i+1])*cos(2*k*theta);
   }
   
-  if(ans < 0) theta += pi/4;  /* make answer a minimum */
+  if(ans < 0) theta += PI/4;  /* make answer a minimum */
   return theta;
 }
 

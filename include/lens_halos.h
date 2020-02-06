@@ -2,23 +2,22 @@
  * lens_halos.h
  *
  *  Created on: 06.05.2013
- *      Author: mpetkova
  */
 
 #ifndef LENS_HALOS_H_
 #define LENS_HALOS_H_
 
-#include "standard.h"
+//#include "standard.h"
 #include "InputParams.h"
-#include "source.h"
-#include "point.h"
+//#include "source.h"
+//#include "point.h"
+#include "quadTree.h"
+#include "particle_types.h"
+#include "image_processing.h"
 
-//#include "quadTree.h"
-
-class TreeQuad;
 
 /**
- * \brief A base class for all types of lensing halos.
+ * \brief A base class for all types of lensing "halos" which are any mass distribution that cause lensing.
  *
  * It contains the mass, maximum radius (Rsize), and scale radius (rscale) of the halo,
  * as well as the redshift (zlens).
@@ -46,21 +45,33 @@ class TreeQuad;
 class LensHalo{
 public:
 	LensHalo();
-	LensHalo(InputParams& params);
+  LensHalo(PosType z,const COSMOLOGY &cosmo);
+  LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
+  LensHalo(InputParams& params,bool needRsize = true);
+  LensHalo(const LensHalo &h);
+  
+  LensHalo(LensHalo &&h):star_tree(nullptr){
+    *this = std::move(h);
+  }
+
 	virtual ~LensHalo();
+  
+  LensHalo & operator=(const LensHalo &h);
+  LensHalo & operator=(LensHalo &&h);
+
   
   /** get the Rmax which is larger than Rsize in Mpc.  This is the region exterior to which the
    halo will be considered a point mass.  Between Rsize and Rmax the deflection and shear are interpolated.
    */
-  float get_Rmax() const { return Rmax; }
+  inline float get_Rmax() const { return Rmax; }
   /// get the Rsize which is the size of the halo in Mpc
-  float get_Rsize() const { return Rsize; }
+  inline float getRsize() const { return Rsize; }
 	/// get the mass solar units
-	float get_mass() const { return mass; }
-	/// get the scale radius in Mpc
-	float get_rscale() const { return rscale; }
+  inline float get_mass() const { return mass; }
+  /// get the scale radius in Mpc
+	inline float get_rscale() const { return rscale; }
 	/// get the redshift
-	PosType getZlens() const { return zlens; }
+	inline PosType getZlens() const { return zlens; }
     
   // set the position of the Halo in physical Mpc on the lens plane
   //void setX(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
@@ -68,18 +79,26 @@ public:
   //void setX(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
   
   /// get the position of the Halo in physical Mpc on the lens plane
-  void getX(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0]*Dist ;
-    MyPosHalo[1] = posHalo[1]*Dist; }
+  void getX(PosType * MyPosHalo) const {
+    assert(Dist != -1);
+    MyPosHalo[0] = posHalo[0]*Dist;
+    MyPosHalo[1] = posHalo[1]*Dist;
+  }
 
+  /// returns position of the Halo in physical Mpc on the lens plane
+  PosType operator[](int i) const{return posHalo[0]*Dist;}
+  
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
   /// set the position of the Halo in radians
   void setTheta(PosType *PosXY) { posHalo[0] = PosXY[0] ; posHalo[1] = PosXY[1] ; }
+  /// set the position of the Halo in radians
+  void setTheta(const Point_2d &p) { posHalo[0] = p[0] ; posHalo[1] = p[1] ; }
   /// get the position of the Halo in radians
   void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
   
   /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
-  void setDist(PosType my_Dist){Dist = my_Dist;}
+  void setDist(COSMOLOGY &co){Dist = co.angDist(zlens);}
   /// return current angular size distance, ie conversion between angular and special coordinates.  This may not agree with
   /// the getZ() value because of the projection onto the lens plane.
   PosType getDist() const {return Dist;}
@@ -94,13 +113,23 @@ public:
 	virtual void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
   
   /// set Rsize (in Mpc) and reset Rmax
-  virtual void set_Rsize(float my_Rsize){Rmax = Rmax*my_Rsize/Rsize; Rsize = my_Rsize; xmax = Rsize/rscale;};
+  virtual void set_RsizeRmax(float my_Rsize){Rmax = Rmax*my_Rsize/Rsize; Rsize = my_Rsize; xmax = Rsize/rscale;};
 	/// set mass (in solar masses)
 	void set_mass(float my_mass){mass=my_mass;};
 	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale;};
 	/// set redshift
-	void setZlens(PosType my_zlens){ zlens=my_zlens; };
+  void setZlens(PosType my_zlens){zlens=my_zlens; Dist=-1;}
+  void setRsize(PosType R){Rsize = R;}
+  
+  // ste redshift and distance
+  void setZlensDist(PosType my_zlens,const COSMOLOGY &cos){
+    zlens=my_zlens;
+    Dist = cos.angDist(zlens);
+  }
+  void setMass(PosType m){mass = m;}
+  
+  
   /// set slope
 	virtual void set_slope(PosType my_slope){beta=my_slope;};
   /// get slope
@@ -115,7 +144,16 @@ public:
   /// set cosmology for halo
 	virtual void setCosmology(const COSMOLOGY& cosmo) {}
 	
-	/// calculate the lensing properties -- deflection, convergence, and shear
+	/* calculate the lensing properties -- deflection, convergence, and shear
+   if not overwritten by derived class it uses alpha_h(), gamma_h(), etc. of the
+   derived case or for a point source in this class
+   
+  Units :
+  ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
+  KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
+  GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
+  PHI      -    mass - PHI / Sig_crit is the lensing potential
+   */
 	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
   
 	/// force tree calculation for stars
@@ -134,7 +172,7 @@ public:
   /// Fraction of surface density in stars
   PosType getFstars() const {return star_fstars;}
   /// The mass of the stars if they are all the same mass
-  PosType getStarMass() const {if(stars_implanted)return star_masses[0]; else return 0.0;}
+  PosType getStarMass() const {if(stars_implanted)return stars_xp[0].mass(); else return 0.0;}
   
   /// the method used to ellipticize a halo if fratio!=1 and halo is not NSIE
   EllipMethod getEllipMethod() const {return main_ellip_method;}
@@ -154,7 +192,7 @@ public:
 	virtual void printCSV(std::ostream&, bool header = false) const;
   
 	/// Prints star parameters; if show_stars is true, prints data for single stars
-	void PrintStars(bool show_stars) const;
+	void PrintStars(bool show_stars);
   
   PosType MassBy2DIntegation(PosType R);
   PosType MassBy1DIntegation(PosType R);
@@ -178,27 +216,49 @@ public:
   void setID(size_t id){idnumber = id;}
   
   PosType renormalization(PosType r_max);
-  PosType mnorm;
+ 
+  /** \brief Map a PixelMap of the surface, density, potential and potential gradient
+   
+   Units :
+   ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
+   KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
+   GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
+   PHI      -    mass - PHI / Sig_crit is the lensing potential
+ 
+   centred on (0,0) in LenHalo coordinates
+   */
+  PixelMap map_variables(
+                         LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
+                         ,size_t Nx
+                         ,size_t Ny
+                         ,double res             /// resolution in physical Mpc on the lens plane
+  );
   
-  
-protected:
-
-  // make LensHalo uncopyable
-  void operator=(LensHalo &){};
-  LensHalo(LensHalo &){};
-
+private:
   size_t idnumber; /// Identification number of halo.  It is not always used.
   PosType Dist;
-  
+  /// Position of the Halo in angle
+  PosType posHalo[2];
+  PosType zlens;
+  float mass;
+  // This is the size of the halo beyond which it does not have the expected profile.
+  float Rsize = 0;
+
+protected:
+
+  PosType mnorm;
+
+  // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
+  // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
+  float Rmax;
+
+ 
   PosType alpha_int(PosType x) const;
   PosType norm_int(PosType r_max);
 
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
-
-  // This is the size of the halo beyond which it does not have the profile expected profile.
-  float Rsize = 0;
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
@@ -220,41 +280,36 @@ protected:
     PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
   };
   
-  IndexType *stars;
-  PosType **stars_xp;
-  TreeQuad *star_tree;
+  std::vector<IndexType> stars_index;
+  std::vector<StarType> stars_xp;
+  TreeQuadParticles<StarType> *star_tree;
+  
   int stars_N;
   PosType star_massscale;
   /// star masses relative to star_massscles
-  float *star_masses;
+  //float *star_masses;
   PosType star_fstars;
   PosType star_theta_force;
   int star_Nregions;
-  PosType *star_region;
+  std::vector<PosType> star_region;
   PosType beta;
   void substract_stars_disks(PosType const *ray,PosType *alpha
                              ,KappaType *kappa,KappaType *gamma);
-  float* stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
+  std::vector<float> stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
                                ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
   
   
   /// read in parameters from a parameterfile in InputParams params
-  void assignParams(InputParams& params);
+  void assignParams(InputParams& params,bool needRsize);
   /// read in star parameters. This is valid for all halos and not overloaded.
   void assignParams_stars(InputParams& params);
   
   /// error message printout
   void error_message1(std::string name,std::string filename);
   
-  float mass;
-  
-  // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
-  // and shear are interpolated.  For circularly symmetric lenses Rmax should be equal to Rsize
-  float Rmax;
-  float Rmax_halo;
   
   /// The factor by which Rmax is larger than Rsize
-  const float Rmax_to_Rsize_ratio = 1.2;
+  float Rmax_to_Rsize_ratio = 1.2;
   
   /// scale length or core size.  Different meaning in different cases.  Not used in NSIE case.
   float rscale;
@@ -271,8 +326,8 @@ protected:
   PosType lo_mass_slope;
   PosType hi_mass_slope;
   /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
-  PosType *star_Sigma;
-  PosType **star_xdisk;
+  std::vector<PosType> star_Sigma;
+  std::vector<Point_2d> star_xdisk;
   
   
   /// point mass case
@@ -363,7 +418,7 @@ protected:
       PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
       
       if(xisq*xisq < 1e-20) xisq = 1.0e-10;
-      KappaType kappa=halo->kappa_h(xisq)/pi/xisq/xisq;
+      KappaType kappa=halo->kappa_h(xisq)/PI/xisq/xisq;
       //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
       return kappa*halo->mass/pow((1.-(1.-halo->fratio*halo->fratio)*u),n+0.5);
     }
@@ -384,7 +439,7 @@ protected:
       PosType km1=halo->kappa_h(xisq-h)/((xisq-h)*(xisq-h));
       PosType kp2=halo->kappa_h(xisq+2*h)/((xisq+2*h)*(xisq+2*h));
       PosType km2=halo->kappa_h(xisq-2*h)/((xisq-2*h)*(xisq-2*h));
-      PosType dkdxi=(8*kp1-8*km1-kp2+km2)/12/h/pi;
+      PosType dkdxi=(8*kp1-8*km1-kp2+km2)/12/h/PI;
       
 
 
@@ -405,7 +460,7 @@ protected:
       PosType xisq=sqrt((x[0]*x[0]+x[1]*x[1]/(1-u*(1-halo->fratio*halo->fratio))));
       
       if(xisq*xisq < 1e-20) xisq = 1.0e-10;
-      PosType alpha=halo->alpha_h(xisq)/pi/xisq;
+      PosType alpha=halo->alpha_h(xisq)/PI/xisq;
       //std::cout << "Schramm: n=" << n << " " << u << " " << xisq << " " << halo->fratio << " " << rmx << " " << halo->Rmax << " " << halo->rscale << std::endl;
       return xisq*alpha*halo->mass/pow((1.-(1.-halo->fratio*halo->fratio)*u),0.5);
     }
@@ -423,10 +478,10 @@ protected:
       PosType tmp = m*rmx;
       if(tmp*tmp < 1e-20) tmp = 1.0e-10;
       PosType xiso=tmp/halo->rscale;
-      KappaType kappa=halo->kappa_h(xiso)/pi/xiso/xiso;
+      KappaType kappa=halo->kappa_h(xiso)/PI/xiso/xiso;
       
       PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
-      KappaType kappam=0,gamma[2]={0,0},phi;
+      KappaType kappam=0,gamma[2]={0,0},phi=0;
       halo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
       
       
@@ -454,10 +509,10 @@ protected:
       PosType tmp = m*rmx;
       if(tmp*tmp < 1e-20) tmp = 1.0e-10;
       PosType xiso=tmp/halo->rscale;
-      KappaType kappa=halo->kappa_h(xiso)/pi/xiso/xiso;
+      KappaType kappa=halo->kappa_h(xiso)/PI/xiso/xiso;
       
       PosType alpha[2]={0,0},tm[2] = {m*rmx,0};
-      KappaType kappam=0,gamma[2]={0,0},phi;
+      KappaType kappam=0,gamma[2]={0,0},phi=0;
       halo->force_halo_sym(alpha,&kappam,gamma,&phi,tm);
       
       double integrandA=m*kappa/(ap*ap*ap*bp*p2)*halo->mass;
@@ -481,12 +536,6 @@ protected:
   PosType mod1[Nmod];
   PosType mod2[Nmod];
   PosType r_eps;
-  
-  
-  PosType zlens;
-  
-  /// Position of the Halo in angle
-  PosType posHalo[2];
   
   
   // These are stucts used in doing tests
@@ -527,7 +576,7 @@ protected:
     PosType r;
     PosType a[2] = {0,0},x[2] = {0,0};
     KappaType k = 0,g[3] = {0,0,0} ,p=0;
-    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x);return 2*pi*k*r*r; }
+    double operator ()(PosType t) {x[0]=r*cos(t); x[1]=r*sin(t);  halo.force_halo(a,&k,g,&p,x);return 2*PI*k*r*r; }
   };
 */
   
@@ -596,7 +645,7 @@ protected:
         //std::cout << " R = " << exp(logR) << std::endl;
         
         if(exp(2*logR) == 0.0) return 0.0;
-         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*pi,1.0e-7)
+         return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*PI,1.0e-7)
          *exp(2*logR);
       }else{
         PosType alpha[2] = {0,0},x[2] = {0,0};
@@ -606,7 +655,7 @@ protected:
         x[1] = 0;
         
         halo->force_halo(alpha,&kappa,gamma,&phi,x);
-        return 2*pi*kappa*exp(2*logR);
+        return 2*PI*kappa*exp(2*logR);
       }
     }
   protected:
@@ -638,10 +687,6 @@ protected:
     PosType *x;
     LensHalo* isohalo;
   };
-
-  
-  
-  
 };
 
 /**
@@ -657,7 +702,7 @@ protected:
  */
 class LensHaloNFW: public LensHalo{
 public:
-  /// Shell constructor that should be avoided
+  /// Shell constructor.  Sets the halo to zero mass
 	LensHaloNFW();
   LensHaloNFW(float my_mass   /// in solar masses
               ,float my_Rsize  /// in Mpc
@@ -668,6 +713,30 @@ public:
               ,int my_stars_N
               ,EllipMethod my_ellip_method=Pseudo);
 	LensHaloNFW(InputParams& params);
+  LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
+    ++count;
+    gmax = h.gmax;
+  }
+  LensHaloNFW(const LensHaloNFW &&h):LensHalo(std::move(h)){
+    ++count;
+    gmax = h.gmax;
+  }
+
+  LensHaloNFW & operator=(const LensHaloNFW &h){
+    if(this != &h){
+      LensHalo::operator=(h);
+      gmax = h.gmax;
+    }
+    return *this;
+  }
+  LensHaloNFW & operator=(const LensHaloNFW &&h){
+    if(this != &h){
+      LensHalo::operator=(std::move(h));
+      gmax = h.gmax;
+    }
+    return *this;
+  }
+  
 	virtual ~LensHaloNFW();
   
 	PosType ffunction(PosType x) const;
@@ -700,10 +769,11 @@ public:
   
 	void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
 	void initFromMassFunc(float my_mass, float my_Rsize, float my_rscale, PosType my_slope, long *seed);
-  /// set Rsize
-  void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  /// set Rsize, xmax and gmax
+  void set_RsizeXmax(float my_Rsize){LensHalo::setRsize(my_Rsize); xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   /// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  /// set rscale, xmax and gmax
+	void set_rscaleXmax(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
 protected:
 	/// table size
@@ -725,7 +795,7 @@ protected:
 	void assignParams(InputParams& params);
   
 	// Override internal structure of halos
-  /// r |alpha(r = x*rscale)| pi Sigma_crit / Mass
+  /// r |alpha(r = x*rscale)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
 		//return -1.0*InterpolateFromTable(gtable,x)/InterpolateFromTable(gtable,xmax);
 		return -1.0*InterpolateFromTable(gtable,x)/gmax;
@@ -739,7 +809,7 @@ protected:
 		return -0.5*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
-    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,Rsize/rscale))/gmax + log(Rsize) ;
+    return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,LensHalo::getRsize()/rscale))/gmax + log(LensHalo::getRsize()) ;
     // The constant contribution is made to match with the point mass at x = Rsize/rscale.
 	}
   inline KappaType phi_int(PosType x) const{
@@ -748,8 +818,6 @@ protected:
   
 private:
   PosType gmax;
-  
-  
 };
 // ********************
 
@@ -808,7 +876,7 @@ private:
 	PosType beta;
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
 		return -1.0*InterpolateFromTable(x)/InterpolateFromTable(xmax);
 	}
@@ -832,12 +900,7 @@ private:
 };
 
 
-
-
-
-/** \ingroup DeflectionL2
- *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
+/** \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
  *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
@@ -869,14 +932,14 @@ private:
 	// PosType beta;
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(
                          PosType x  /// r/rscale
                          ) const{
 		if(x==0) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
-  /// this is kappa Sigma_crit pi (r/rscale)^2 / mass
+  /// this is kappa Sigma_crit PI (r/rscale)^2 / mass
 	inline KappaType kappa_h(
                            PosType x   /// r/rscale
                            ) const {
@@ -884,19 +947,19 @@ private:
     double tmp = x/xmax;
 		return 0.5*(-beta+2)*pow(tmp,2-beta);
 	}
-  /// this is |gamma| Sigma_crit pi (r/rscale)^2 / mass
+  /// this is |gamma| Sigma_crit PI (r/rscale)^2 / mass
 	inline KappaType gamma_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
     return -beta*pow(x/xmax,-beta+2);
 	}
-  /// this is phi Sigma_crit pi / mass, the constants are added so that it is continous over the bourder at Rsize
+  /// this is phi Sigma_crit PI / mass, the constants are added so that it is continous over the bourder at Rsize
  	inline KappaType phi_h(PosType x) const {
 		if(x==0) x=1e-6*xmax;
-    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(Rsize) ;
+    return ( pow(x/xmax,2-beta) - 1 )/(2-beta) + log(LensHalo::getRsize()) ;
 	}
   inline KappaType phi_int(PosType x) const{
 		//return alpha_int(x);
-    return -1.0*pow(x/xmax,-beta+2)/(-beta+2);
+    return -1.0*pow(x/xmax,-beta+2)/(2-beta);
   }
 };
 
@@ -904,21 +967,42 @@ private:
 
 
 
+/** \brief Represents a non-singular isothermal elliptical lens
 
+This is a true NSIE lens rather than an expansion that approximates one.
+*/
 class LensHaloRealNSIE : public LensHalo{
 public:
-  /*LensHaloRealNSIE(){
-   sigma = zlens = fratio = pa = rcore = 0.;
-   }*/
-  
-  //LensHaloRealNSIE(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_sigma, float my_rcore,float my_fratio,float my_pa,int my_stars_N);
-  
+
   /// explicit constructor, Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
                    ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
   
   /// Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
 	LensHaloRealNSIE(InputParams& params);
+  
+  LensHaloRealNSIE(const LensHaloRealNSIE &h):
+  LensHalo(h)
+  {
+    ++objectCount;
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    units = h.units;
+  }
+  
+  LensHaloRealNSIE &operator=(const LensHaloRealNSIE &h){
+    if(&h == this) return *this;
+    LensHalo::operator=(h);
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    units = h.units;
+    return *this;
+  }
+  
 	~LensHaloRealNSIE();
   
 	/// overridden function to calculate the lensing properties
@@ -927,8 +1011,8 @@ public:
   
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
-	/// get the NSIE radius
-	float get_Rsize(){return Rsize;};
+	// get the NSIE radius
+	//float get_Rsize(){return Rsize;};
 	/// get the axis ratio
 	float get_fratio(){return fratio;};
 	/// get the position angle
@@ -938,16 +1022,24 @@ public:
   
 	/// set the velocity dispersion
 	void set_sigma(float my_sigma){sigma=my_sigma;};
-	/// set the NSIE radius
-	void set_Rsize(float my_Rsize){Rsize=my_Rsize;};
+	// set the NSIE radius
+	//void set_Rsize(float my_Rsize){Rsize=my_Rsize;};
 	///set the axis ratio
 	void set_fratio(float my_fratio){fratio=my_fratio;};
 	/// set the position angle
 	void set_pa(float my_pa){pa=my_pa;};
-	/// set the core radius
+	/// set the core radius Einstein radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
   
+  void setZlens(PosType my_zlens){
+    LensHalo::setZlens(my_zlens);
+    
+  }
+
+  
 protected:
+  
+  float units;
   
   static size_t objectCount;
   static std::vector<double> q_table;
@@ -991,7 +1083,7 @@ protected:
 
 
 
-/** \ingroup DeflectionL2
+/**
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Hernquist mass profiles.
@@ -1023,10 +1115,8 @@ public:
    */
 	//void initFromFile(float my_mass, long *seed, float vmax, float r_halfmass);
   
-	/// set Rsize
-	//void set_Rsize(float my_Rsize){Rsize=my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   // friend struct Ialpha_func;
   
 protected:
@@ -1048,7 +1138,7 @@ protected:
 	void assignParams(InputParams& params);
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const {
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}
@@ -1071,7 +1161,7 @@ private:
   PosType gmax;
 };
 
-/** \ingroup DeflectionL2
+/** 
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Jaffe mass profiles.
@@ -1088,10 +1178,8 @@ public:
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
-	/// set Rsize
-	//void set_Rsize(float my_Rsize){Rsize = my_Rsize; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
 	/// set scale radius
-	void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale; gmax = InterpolateFromTable(gtable,xmax);};
+  void set_rscale(float my_rscale){rscale=my_rscale; xmax = LensHalo::getRsize()/rscale; gmax = InterpolateFromTable(gtable,xmax);};
   
   PosType ffunction(PosType x) const;
 	PosType gfunction(PosType x) const;
@@ -1121,7 +1209,7 @@ protected:
 	void assignParams(InputParams& params);
   
 	// Override internal structure of halos
-  /// r |alpha(r)| pi Sigma_crit / Mass
+  /// r |alpha(r)| PI Sigma_crit / Mass
 	inline PosType alpha_h(PosType x) const{
 		return -0.25*InterpolateFromTable(gtable,x)/gmax;
 	}

@@ -7,7 +7,7 @@
 
 PosType LensHaloJaffe::gfunction(PosType x) const{
 	PosType ans;
-	ans=pi;
+	ans=PI;
 	if(x==0) x=1e-5;
 	if(x==1.0) return (ans-2.)*x;
 	if(x<1.0){ ans -= 2.*x*acosh(1./x)/sqrt(1.-x*x) ; return ans*x;}
@@ -18,7 +18,7 @@ PosType LensHaloJaffe::gfunction(PosType x) const{
 PosType LensHaloJaffe::ffunction(PosType x) const{
 	PosType ans;
 	if(x==0) x=1e-5;
-	ans=pi/x;
+	ans=PI/x;
 	if(x==1.0){ return ans-(2.+2./3.);}
 	if(x>1.0){  ans += 2./(1.-x*x)*(1.-(2.-x*x)*acos(1./x)/sqrt(x*x-1.)); return ans;}
 	if(x<1.0){  ans += 2./(1.-x*x)*(1.-(2.-x*x)*acosh(1./x)/sqrt(1.-x*x)); return ans;}
@@ -29,7 +29,7 @@ PosType LensHaloJaffe::ffunction(PosType x) const{
 PosType LensHaloJaffe::g2function(PosType x) const{
 	PosType ans;
 	if(x==0) x=1e-5;
-	ans=pi/x;
+	ans=PI/x;
 	if(x==1.0){ ans -=4./3. ; return ans*x/3.;}
 	if(x>1.0){  ans += 2./x/x*(-1.0*(2.*x*x*acos(1./x))/sqrt(x*x-1.)+(sqrt(1.-1./x)*sqrt(1.+1./x)*x*(log(x-1.0)+log(1.+x)))/sqrt(x*x-1.)-log(x*x-1.))-(2./(1.-x*x)*(1.-(2.-x*x)*acos(1./x)/sqrt(x*x-1.))); return ans*x/3.;}
 	if(x<1.0){  ans += 2./x/x*(-(2.*x*x*acosh(1./x))/sqrt(1.-x*x)+(sqrt(-1.+1./x)*sqrt(1.+1./x)*x*(log(1.-x)+log(1.+x)))/sqrt(1.-x*x)-log(1.-x*x))-(2./(1.-x*x)*(1.-(2.-x*x)*acosh(1./x)/sqrt(1.-x*x))); return ans*x/3.;}
@@ -50,8 +50,8 @@ PosType LensHaloJaffe::bfunction(PosType fx){
     if(x==0) x=1e-5;
     if(x==1){return -2.1231*fac;} // (x/ffunction(x))*(2.+2./15.)
     PosType aux=sqrt(1.-x*x);
-    if(x<1){ans=x*((-(pi/x/x)+(2.*(((2.-x*x))/(sqrt(-1+1./x)*sqrt(1+1./x) *x*x* aux)+(2*x*acosh(1./x))/aux-(x*(2.-x*x)*acosh(1./x))/pow(aux,3)))/(1.-x*x)+(4.*x*(1.-((2.-x*x)*acosh(1./x))/aux))/(1.-x*x)/(1.-x*x))/(pi/x+(2.*(1.-((2.-x*x)*acosh(1./x))/aux))/(1.-x*x))); return fac*ans;}
-    if(x>1){ans=(x*(-1.0*(pi/x/x)+(2.*(-(((2.-x*x))/(sqrt(1-1./x/x)*x*x*sqrt(-1.+x*x)))+(x*(2.-x*x)*acos(1./x))/(pow(-1.+x*x,3./2.))+(2.*x*acos(1./x))/sqrt(-1.+x*x)))/(1.-x*x)+(4.*x*(1.-((2.-x*x)*acos(1./x))/sqrt(-1.+x*x)))/(1.-x*x)/(1.-x*x)))/(pi/x+(2.*(1.-((2.-x*x)*acos(1./x))/sqrt(-1.+x*x)))/(1.-x*x)); return fac*ans;}
+    if(x<1){ans=x*((-(PI/x/x)+(2.*(((2.-x*x))/(sqrt(-1+1./x)*sqrt(1+1./x) *x*x* aux)+(2*x*acosh(1./x))/aux-(x*(2.-x*x)*acosh(1./x))/pow(aux,3)))/(1.-x*x)+(4.*x*(1.-((2.-x*x)*acosh(1./x))/aux))/(1.-x*x)/(1.-x*x))/(PI/x+(2.*(1.-((2.-x*x)*acosh(1./x))/aux))/(1.-x*x))); return fac*ans;}
+    if(x>1){ans=(x*(-1.0*(PI/x/x)+(2.*(-(((2.-x*x))/(sqrt(1-1./x/x)*x*x*sqrt(-1.+x*x)))+(x*(2.-x*x)*acos(1./x))/(pow(-1.+x*x,3./2.))+(2.*x*acos(1./x))/sqrt(-1.+x*x)))/(1.-x*x)+(4.*x*(1.-((2.-x*x)*acos(1./x))/sqrt(-1.+x*x)))/(1.-x*x)/(1.-x*x)))/(PI/x+(2.*(1.-((2.-x*x)*acos(1./x))/sqrt(-1.+x*x)))/(1.-x*x)); return fac*ans;}
 //if(x>1.0){  ans =(x/ffunction(x))*((4.-6.*x*x+2.*pow(x,4)+2.*aux/x*pow(x,5)*acos(1./x))/(aux*x*(1.-x*x)*pow(aux,3))+(4.*x*(1.+((-2.+x*x)*acos(1/x))/aux))/(1.-x*x)/(1.-x*x)) ; return fac*ans;}
 //	if(x<1.0){  ans = (x/ffunction(x))*(((4.-6.*x*x+2.*pow(x,4)-2.*sqrt(-1+1./x)*pow(x,5)*sqrt((1.+x)/x)*acosh(1./x))/(sqrt(-1+1./x)*x*x*sqrt((1.+x)/x)*sqrt(1.-x*x))+4.*x*(1.+((-2.+x*x)*acosh(1./x))/sqrt(1. -x*x)))/(1. -x*x)/(1. -x*x))
 //        ; return fac*ans;}

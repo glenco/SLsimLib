@@ -6,6 +6,7 @@
  */
 
 #include "planes.h"
+#include "quadTree.h"
 
 #include <iterator>
 
@@ -13,13 +14,53 @@ LensPlaneTree::LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos
                              ,PosType my_sigma_background,PosType inv_screening_scale)
 : LensPlane(), halos(my_halos, my_halos + Nhalos)
 {
-	if(inv_screening_scale != 0) halo_tree = new TreeQuad(my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
-	else halo_tree = new TreeQuad(my_halos,Nhalos,my_sigma_background);
+	if(inv_screening_scale != 0) halo_tree = new TreeQuadHalos(my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
+	else halo_tree = new TreeQuadHalos(my_halos,Nhalos,my_sigma_background);
+}
+LensPlaneTree::LensPlaneTree(const LensPlaneTree &p)
+: LensPlane()
+{
+  halos = p.halos;
+  
+  if(p.halo_tree->inv_screening_scale2 != 0){
+    halo_tree = new TreeQuadHalos(halos.data(),halos.size()
+                                  ,p.halo_tree->sigma_background
+                                  ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
+  }else{
+    halo_tree = new TreeQuadHalos(halos.data(),halos.size(),p.halo_tree->sigma_background);
+  }
 }
 
 LensPlaneTree::~LensPlaneTree(){
 	delete halo_tree;
 }
+
+LensPlaneTree & LensPlaneTree::operator=(const LensPlaneTree &p){
+  if(&p != this){
+    halos = p.halos;
+    
+    if(p.halo_tree->inv_screening_scale2 != 0){
+      halo_tree = new TreeQuadHalos(halos.data(),halos.size()
+                                    ,p.halo_tree->sigma_background
+                                    ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
+    }else{
+      halo_tree = new TreeQuadHalos(halos.data(),halos.size(),p.halo_tree->sigma_background);
+    }
+  }
+  
+  return *this;
+}
+
+LensPlaneTree & LensPlaneTree::operator=(LensPlaneTree &&p){
+  if(&p != this){
+    std::swap(halos,p.halos);
+    std::swap(halo_tree,p.halo_tree);
+  }
+  
+  return *this;
+}
+
+
 
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma
                           ,KappaType *phi,PosType *xx){
@@ -83,10 +124,10 @@ void LensPlaneSingular::force(PosType *alpha
     KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
-    x_tmp[0] = x_tmp[1] = 0.0;
+  x_tmp[0] = x_tmp[1] = 0.0;
 	*kappa = 0.0;
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
-    *phi = 0.0;
+  *phi = 0.0;
   
     // Loop over the different halos present in a given lens plane.
 	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
@@ -113,6 +154,8 @@ void LensPlaneSingular::force(PosType *alpha
         gamma[1] += gamma_tmp[1];
         gamma[2] += gamma_tmp[2];
         *phi += phi_tmp;
+    
+    //(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 	}
 }
 

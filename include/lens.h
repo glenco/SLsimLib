@@ -1,8 +1,6 @@
 /*
  * multiplane.h
  *
- *  Created on: Jan 12, 2012
- *      Author: mpetkova
  */
 
 #ifndef MULTIPLANE_H_
@@ -70,14 +68,12 @@ GLAMER_TEST_USES(LensTest)
  * </pre>
  */
 
-class Lens
-{
+class Lens{
 public:
-  Lens(long* seed, PosType z_source,CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
-  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset = WMAP5yr, bool verbose = false);
+  Lens(long* seed, PosType z_source,CosmoParamSet cosmoset, bool verbose = false);
+  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose = false);
   Lens(long* seed, PosType z_source,const COSMOLOGY &cosmo, bool verbose = false);
   Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmo, bool verbose = false);
-  //Lens(Lens &lens);
   
 	~Lens();
 
@@ -85,10 +81,10 @@ public:
 	bool set;
 
 	/// the total number of lens planes
-	int getNplanes(){return lensing_planes.size();}
+	int getNplanes() const {return lensing_planes.size();}
   
 	/// field of view in square degrees
-	PosType getfov(){return fieldofview;};
+	PosType getfov() const {return fieldofview;};
 	void setfov(PosType fov){fieldofview=fov;};
 
 	/// reset the number of planes, but keep the field halos and main lens
@@ -105,7 +101,7 @@ public:
 
   
   /// Redshift of first main lens plane
-	PosType getZlens(){
+	PosType getZlens() const{
 		if(flag_switch_main_halo_on)
 			return main_halos[0]->getZlens();
 		else{
@@ -115,7 +111,7 @@ public:
 		}
 	}
   /// Angular size distance (Mpc) to first main lens plane
-	PosType getAngDistLens(){
+	PosType getAngDistLens() const{
 		if(flag_switch_main_halo_on)
 			return cosmo.angDist( main_halos[0]->getZlens());
 		else{
@@ -124,6 +120,8 @@ public:
 			exit(1);
 		}
 	}
+  
+  Utilities::Geometry::SphericalPoint getCenter() const {return central_point_sphere;}
 
 	/// remove all main halos
 	void clearMainHalos(bool verbose=false);
@@ -133,15 +131,152 @@ public:
 
 
 	/// inserts a single main lens halo and adds it to the existing ones
-	void insertMainHalo(LensHalo* halo,bool addplanes,bool verbose = false);
+  //void insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
+  
+/*  void insertMainHalo(LensHalo *halo, bool addplanes,bool verbose)
+  {
+//    LensHaloNFW * halo = new LensHaloNFW(halo_in);
+    halo->setCosmology(cosmo);
+    main_halos.push_back(halo);
+    
+    flag_switch_main_halo_on = true;
+    
+    if(addplanes) addMainHaloToPlane(halo);
+    else addMainHaloToNearestPlane(halo);
+    
+    combinePlanes(verbose);
+  }
+*/
+  
+  template <typename T>
+  void insertMainHalo(const T &halo_in, bool addplanes,bool verbose=false)
+  {
+    
+    T * halo = new T(halo_in);
+    halo->setCosmology(cosmo);
+    main_halos.push_back(halo);
+    
+    flag_switch_main_halo_on = true;
+    
+    if(addplanes) addMainHaloToPlane(halo);
+    else addMainHaloToNearestPlane(halo);
+    
+    combinePlanes(verbose);
+  }
+  
+  /** \brief This has the same effect as insertMainHalo(), but the halo is not
+   copied, it is moved.
+  
+   The Lens will take possession of the halo and will destroy it when it is destroyed.
+   This is to avoid copying halos that take up a lot of memory and require
+   a lot of time to copy like LensHaloParticles().
+  **/
+  template <typename T>
+  void moveinMainHalo(T &halo_in, bool addplanes,bool verbose=false)
+  {
+    T * halo = new T(std::move(halo_in));
+    halo->setCosmology(cosmo);
+    main_halos.push_back(halo);
+    
+    flag_switch_main_halo_on = true;
+    
+    if(addplanes) addMainHaloToPlane(halo);
+    else addMainHaloToNearestPlane(halo);
+    
+    combinePlanes(verbose);
+  }
+  
+  /**
+   * \brief Inserts a single main lens halo and deletes all previous ones.
+   * Then all lensing planes are updated accordingly.
+   *
+   * Note that this does delete all the halos that were there.
+   */
+  template <typename T>
+  void replaceMainHalo(const T &halo_in,bool addplanes,bool verbose=false)
+  {
+    //Utilities::delete_container(main_halos);   // ????
+    /*while(main_halos.size() > 0){
+      delete main_halos.back();
+      main_halos.pop_back();
+    }*/
+    
+    main_halos.clear();  // ???? is this a memory leak ????
+    
+    T * halo = new T(halo_in);
+    halo->setCosmology(cosmo);
+    main_halos.push_back(halo);
+    
+    flag_switch_main_halo_on = true;
+    
+    Utilities::delete_container(main_planes);
+    createMainPlanes();
+    combinePlanes(verbose);
+  }
+
+  /**
+   * \brief Inserts a sequense of main lens halos and adds them to the existing ones.
+   * Then all lensing planes are updated accordingly.
+   * If addplanes is true new planes will be added otherwise
+   * the halo is added to the nearest plane and a plane is added only
+   * if none exited on entry.
+   *
+   *  The angular position of the halo should be preserved, but the x coordinates may change
+   *  The halos are copied so the input halos can be destoyed without affecting the Lens.
+   */
+  template <typename T>
+  void insertMainHalos(std::vector<T> &my_halos,bool addplanes, bool verbose=false)
+  {
+    T* ptr;
+    //for(std::size_t i = 0; i < my_halos.size() ; ++i)
+    for(T &h : my_halos){
+      ptr = new T(h);
+      ptr->setCosmology(cosmo);
+      ptr->setDist(cosmo);
+      main_halos.push_back( ptr );
+      if(addplanes) addMainHaloToPlane( ptr );
+      else addMainHaloToNearestPlane( ptr );
+    }
+    
+    flag_switch_main_halo_on = true;
+    
+    combinePlanes(verbose);
+  }
+  /**
+   * \brief Inserts a sequense of main lens halos and remove all previous ones.
+   *
+   * Note that this does delete the halos that were there.
+   * Then all lensing planes are updated accordingly.
+   */
+  template <typename T>
+  void replaceMainHalos(std::vector<T> &my_halos,bool verbose)
+  {
+    Utilities::delete_container(main_halos);   // ????
+
+    T* ptr;
+    //for(std::size_t i = 0; i < my_halos.size() ; ++i)
+    for(T &h : my_halos){
+      ptr = new T(h);
+      ptr->setCosmology(cosmo);
+      ptr->setDist(cosmo);
+      main_halos.push_back( ptr );
+    }
+    
+    flag_switch_main_halo_on = true;
+    
+    Utilities::delete_container(main_planes);
+    createMainPlanes();
+    combinePlanes(verbose);
+  }
 
 	/// inserts a sequence of main lens halos and adds them to the existing ones
-	void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
+	//void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
 
 	/// replaces existing main halos with a single main halo
-	void replaceMainHalos(LensHalo* halo,bool verbose = false);
+  //void replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
+
 	/// replaces existing main halos with a sequence of main halos
-	void replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
+	// replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
   /** \brief Add substructures to the lens.
    
@@ -176,13 +311,19 @@ public:
 	
 	/// get single main halo
 	LensHalo* getMainHalo(std::size_t i);
+  
 	/// get single main halo of given type
 	template<typename HaloType>
 	HaloType* getMainHalo(std::size_t i);
-  
-  
-  
-	
+
+  /**\brief Using to shoot a single ray
+   
+   ray.x should be set to the image position.
+   The kappa,gamma,deflection, time-delay and
+   source position will be calculated at that
+   image point.
+   */
+  void rayshooter(RAY &ray);
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
                       ,std::vector<Point_2d> & ang_positions
@@ -197,7 +338,8 @@ public:
 
 	// methods used for use with implanted sources
 
-	short ResetSourcePlane(PosType z,bool nearest, unsigned long GalID=0, PosType *xx=NULL,bool verbose = false);
+  ///  reset the redshift of the source plane
+	short ResetSourcePlane(PosType z,bool nearest=false, unsigned long GalID=0, PosType *xx=NULL,bool verbose = false);
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
@@ -210,13 +352,13 @@ public:
 		}
 	}
 
-	PosType getZmax(){return plane_redshifts.back();}
+	PosType getZmax() const{return plane_redshifts.back();}
 
 	/// print the cosmological parameters
 	void PrintCosmology() { cosmo.PrintCosmology(); }
 	
 	/// returns the critical density at the main lens in Msun/ Mpc^2 for a source at zsource
-	PosType getSigmaCrit(PosType zsource) { return cosmo.SigmaCrit(getZlens(), zsource); }
+	PosType getSigmaCrit(PosType zsource) const{ return cosmo.SigmaCrit(getZlens(), zsource); }
 	
 
   /// returns a const reference to the cosmology so that constant functions can be used, but the cosmological parameters cannot be changed.
@@ -227,10 +369,122 @@ public:
   void TurnFieldOn() { flag_switch_field_off = false ; }
   
   /// get the field min mass :
-  PosType getFieldMinMass() { return field_min_mass ; }
+  PosType getFieldMinMass() const { return field_min_mass ; }
  
   // get the field_Off value :
-  bool getfieldOff() {return flag_switch_field_off ;}
+  bool getfieldOff() const {return flag_switch_field_off ;}
+  
+  /** \brief Add random halos to the light cone according to standard structure formation theory.  A new realization of the light-cone can be made with Lens::resetFieldHalos() after this function is called once.
+   
+   The cone is filled up until the redshift of the current zsource that is stored in the Lens class.  The field is a circular on the sky.  There is no clustering of the halos.
+   */
+  void GenerateFieldHalos(double min_mass /// minimum mass of halos
+                          ,MassFuncType mass_function /// type of mass function
+                          ,double field_of_view  /// in square degrees
+                          ,int Nplanes           /// number of lens planes
+                          ,LensHaloType halo_type = nfw_lens  /// type of halo
+                          ,GalaxyLensHaloType galaxy_type = null_gal  /// type of galaxy, if null_gal no galaxy
+                          ,double buffer = 1.0 /// buffer in Mpc for cone
+                          ,bool verbose = false
+                );
+  
+  Lens & operator=(Lens &&lens){
+    
+    fieldofview = lens.fieldofview;
+    seed = lens.seed;
+    init_seed = lens.init_seed;
+    cosmo = lens.cosmo;
+    toggle_source_plane = lens.toggle_source_plane;
+    dDs_implant = lens.dDs_implant;
+    dTs_implant = lens.dTs_implant;
+    zs_implant = lens.zs_implant;
+    Ds_implant = lens.Ds_implant;
+    index_of_new_sourceplane = lens.index_of_new_sourceplane;
+    zsource = lens.zsource;
+
+    NZSamples = lens.NZSamples;
+    zbins = lens.zbins;
+    NhalosbinZ = lens.NhalosbinZ;
+    Nhaloestot_Tab = lens.Nhaloestot_Tab;
+    aveNhalosField = lens.aveNhalosField;
+    Logm = lens.Logm;
+    NhalosbinMass = lens.NhalosbinMass;
+    sigma_back_Tab = lens.sigma_back_Tab;
+    
+    flag_switch_deflection_off = lens.flag_switch_deflection_off;
+    flag_switch_lensing_off = lens.flag_switch_lensing_off;
+    
+    Dl = lens.Dl;
+    dDl = lens.dDl;
+    dTl = lens.dTl;
+    plane_redshifts = lens.plane_redshifts;
+    charge = lens.charge;
+    flag_switch_field_off = lens.flag_switch_field_off;
+    
+    field_halos = lens.field_halos;
+
+    field_Nplanes_original = lens.field_Nplanes_original;
+    field_Nplanes_current = lens.field_Nplanes_current;
+    
+    field_plane_redshifts = lens.field_plane_redshifts;
+    field_plane_redshifts_original = lens.field_plane_redshifts_original;
+    field_Dl = lens.field_Dl;
+    field_Dl_original = lens.field_Dl_original;
+    
+    substructure = lens.substructure;
+    
+    WasInsertSubStructuresCalled = lens.WasInsertSubStructuresCalled;
+    field_mass_func_type = lens.field_mass_func_type;
+    mass_func_PL_slope = lens.mass_func_PL_slope;
+    field_min_mass = lens.field_min_mass;
+    field_int_prof_type = lens.field_int_prof_type;
+    field_prof_internal_slope = lens.field_prof_internal_slope;
+    
+    flag_field_gal_on = lens.flag_field_gal_on;
+    field_int_prof_gal_type = lens.field_int_prof_gal_type;
+    field_int_prof_gal_slope = lens.field_int_prof_gal_slope;
+    
+    redshift_planes_file = lens.redshift_planes_file;
+    read_redshift_planes = lens.read_redshift_planes;
+    
+    field_input_sim_file = lens.field_input_sim_file;
+    field_input_sim_format = lens.field_input_sim_format;
+    
+    sim_input_flag = lens.sim_input_flag;
+    read_sim_file = lens.read_sim_file;
+    field_buffer = lens.field_buffer;
+    
+    flag_switch_main_halo_on = lens.flag_switch_main_halo_on;
+    
+    main_plane_redshifts = lens.main_plane_redshifts;
+    main_Dl = lens.main_Dl;
+    
+    main_halo_type = lens.main_halo_type;
+    main_galaxy_halo_type = lens.main_galaxy_halo_type;
+
+    pixel_map_input_file = lens.pixel_map_input_file;
+    pixel_map_on = lens.pixel_map_on;
+    pixel_map_zeropad = lens.pixel_map_zeropad;
+    pixel_map_zeromean = lens.pixel_map_zeromean;
+    
+    central_point_sphere = lens.central_point_sphere;
+    sim_angular_radius = lens.sim_angular_radius;
+    inv_ang_screening_scale = lens.inv_ang_screening_scale;
+    
+    std::swap(lensing_planes,lens.lensing_planes);
+    std::swap(field_planes,lens.field_planes);
+    swap(main_halos,lens.main_halos);  /// MixedVector cannot be copyed
+    std::swap(main_planes,lens.main_planes);
+    
+    return *this;
+  }
+  Lens(Lens &&lens){
+    *this = std::move(lens);
+  }
+  
+private:
+  Lens & operator=(const Lens &lens);   // block copy
+  Lens(const Lens &lens);
   
 protected:
   /// field of view in square degrees
@@ -251,11 +505,14 @@ private:
 	
 	void readCosmology(InputParams& params);
 	void assignParams(InputParams& params,bool verbose = false);
+  void defaultParams(PosType zsource,bool verbose = true);
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;
-	/// the distance from the source to the next plane
-	PosType dDs_implant;
+  /// the distance from the source to the next plane
+  PosType dDs_implant;
+  /// the distance from the source to the next plane
+  PosType dTs_implant;
 	PosType zs_implant,Ds_implant;
 	/// This is the index of the plane at one larger distance than the new source distance
 	int index_of_new_sourceplane;
@@ -265,7 +522,6 @@ private:
 	
 	void quicksort(LensHaloHndl *halo,PosType **pos,unsigned long N);
 	
-private: /* generation */
 	/// create the lens planes
 	void buildPlanes(InputParams& params, bool verbose);
 	
@@ -278,12 +534,17 @@ private: /* generation */
 	/// computes the distribution variables for field halos as specified in the parameter file
   /// this material was before computed in createFieldHalos
   void ComputeHalosDistributionVariables ();
-	void createFieldHalos(bool verbose);
+  
+  enum DM_Light_Division {All_DM,Moster};
+
+	void createFieldHalos(bool verbose,DM_Light_Division division = Moster);
   
 	/// read field halo data in from a file in Millennium output format
-	void readInputSimFileMillennium(bool verbose);
+	void readInputSimFileMillennium(bool verbose,DM_Light_Division division = Moster);
+  
 	/// read field halo data in from a file in MultiDarkHalos output format
-	void readInputSimFileMultiDarkHalos(bool verbose);
+	void readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division division = Moster);
+  
   /// read field halo data in from a file in Cabriel Caminha's input format 
   void readInputSimFileObservedGalaxies(bool verbose);
   
@@ -332,7 +593,9 @@ private: /* generation */
   // get the adress of field_plane_redshifts
   std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
   
+  /// Number of Field Halos
   size_t getNFieldHalos() const {return field_halos.size();}
+  /// Number of Sub Halos
   size_t getNSubHalos() const {return substructure.halos.size();}
   
 private: /* force calculation */
@@ -344,8 +607,10 @@ private: /* force calculation */
 	std::vector<LensPlane *> lensing_planes;
 	/// Dl[j = 0...] angular diameter distances, comoving
 	std::vector<PosType> Dl;
-	/// dDl[j] is the distance between plane j-1 and j plane, comoving
-	std::vector<PosType> dDl;
+  /// dDl[j] is the distance between plane j-1 and j plane, comoving
+  std::vector<PosType> dDl;
+  /// dTl[j] is the lookback-time between plane j-1 and j plane, comoving
+  std::vector<PosType> dTl;
 	/// Redshifts of lens planes, 0...Nplanes.  Last one is the source redshift.
 	std::vector<PosType> plane_redshifts;
 	/// charge for the tree force solver (4*pi*G)
@@ -492,9 +757,11 @@ inline LensHalo* Lens::getMainHalo(std::size_t i)
 template<typename HaloType>
 inline HaloType* Lens::getMainHalo(std::size_t i)
 {
+  if(main_halos.size<HaloType>() == 0 ) return nullptr;
 	return main_halos.at<HaloType>(i);
 }
 
 typedef Lens* LensHndl;
 
 #endif /* MULTIPLANE_H_ */
+

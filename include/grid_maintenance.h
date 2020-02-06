@@ -11,13 +11,14 @@
 #include "lens.h"
 #include "point.h"
 #include "Tree.h"
+#include "source.h"
 #include <mutex>
 #include <utilities_slsim.h>
 
 class LensHaloBaseNSIE;
 class LensHaloMassMap;
 
-/** \ingroup ImageFinding
+/** 
  * \brief Structure to contain both source and image trees.
  * It is not yet used, but may be useful.
  */
@@ -35,9 +36,12 @@ struct Grid{
   unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
   
   double RefreshSurfaceBrightnesses(SourceHndl source);
+  double AddSurfaceBrightnesses(SourceHndl source);
   double ClearSurfaceBrightnesses();
-  unsigned long getNumberOfPoints() const;
   
+  unsigned long getNumberOfPoints() const;
+  /// area of region with negative magnification
+  PosType EinsteinArea() const;
   
   /// tree on image plane
   TreeHndl i_tree;
@@ -66,7 +70,7 @@ struct Grid{
                  ,std::string filename    /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                  );
   
-  void writePixeFits(size_t Nx           /// number of pixels in image in x dimension
+  void writePixelFits(size_t Nx           /// number of pixels in image in x dimension
                     ,LensingVariable lensvar  /// which quantity is to be displayed
                     ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
                     );
@@ -74,20 +78,60 @@ struct Grid{
   PixelMap writePixelMap(const double center[],size_t Npixels,double resolution,LensingVariable lensvar);
   PixelMap writePixelMap(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar);
   
+  /// With the initial boundaries and resolution, ie no refinement
+  PixelMap writePixelMap(LensingVariable lensvar);
+  
+  /// make image of surface brightness
+  void MapSurfaceBrightness(PixelMap &map){
+    map.Clean();
+    map.AddGridBrightness(*this);
+  }
+  /// map a map of the whole gridded area with given resolution
+  PixelMap MapSurfaceBrightness(double resolution);
+
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
+  Grid(Grid &&grid){
+    *this = std::move(grid);
+  }
+  
+  Grid & operator=(Grid &&grid){
+    assert(&grid != this);
+    
+    i_tree = grid.i_tree;
+    grid.i_tree = nullptr;
+    s_tree = grid.s_tree;
+    grid.s_tree = nullptr;
+    neighbors = grid.neighbors;
+    grid.neighbors = nullptr;
+    trashkist = grid.trashkist;
+    grid.trashkist = nullptr;
+
+    Ngrid_init = grid.Ngrid_init;
+    Ngrid_init2 = grid.Ngrid_init2;
+    Ngrid_block = grid.Ngrid_block;
+    initialized = grid.initialized;
+    maglimit = grid.maglimit;
+    pointID = grid.pointID;
+    axisratio = grid.axisratio;
+    
+    return *this;
+  }
+  
+  /// flux weighted magnification
+  PosType magnification() const;
 private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   
   /// one dimensional size of initial grid
-  const int Ngrid_init;
+  int Ngrid_init;
   int Ngrid_init2;
   
   /// one dimensional number of cells a cell will be divided into on each refinement step
-  const int Ngrid_block;
+  int Ngrid_block;
   bool initialized;
   Kist<Point> * trashkist;
   
@@ -101,7 +145,6 @@ private:
   unsigned long pointID;
   PosType axisratio;
   void writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val);
-  
   static std::mutex grid_mutex;
 };
 
@@ -131,6 +174,7 @@ namespace ImageFinding{
       type = ND;
       caustic_intersections = -1;
     };
+    
     CriticalCurve(const CriticalCurve &p){
       //critical_curve.resize(p.critical_curve.size());
       critical_curve = p.critical_curve;
@@ -173,18 +217,25 @@ namespace ImageFinding{
     std::vector<Point_2d> ellipse_curve;
     
     PosType z_source;
+    /// type of caustic, 0 -not defined, 1 -radial, 2 - tangential,3 - pseudo
     CritType type;
-    int caustic_intersections;  /// estimated number of intersections of the caustic, -1 if not set
+      /// estimated number of intersections of the caustic, -1 if not set
+    int caustic_intersections;
 
-    Point_2d critical_center;      /// center of critical curve
-    Point_2d caustic_center;   /// center of caustic curve
+    /// center of critical curve
+    Point_2d critical_center;
+    /// center of caustic curve
+    Point_2d caustic_center;
     
-    PosType critical_area;        /// area of critical curve (radians^2)
-    PosType caustic_area;        /// area of caustic curve (radians^2)
+    /// area of critical curve (radians^2)
+    PosType critical_area;
+    /// area of caustic curve (radians^2)
+    PosType caustic_area;
     
-    
-    PosType contour_ell;  /// axis ratio of a contour defined by the ratio of the max to min distance between center (as given by hull alg) and contour
-    PosType ellipse_area;  /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
+      /// axis ratio of a contour defined by the ratio of the max to min distance between center (as given by hull alg) and contour
+    PosType contour_ell;
+      /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
+    PosType ellipse_area;
     
     /// return true if x is inside or on the border of the caustic curve
     bool inCausticCurve(Point_2d x){
@@ -374,8 +425,30 @@ namespace ImageFinding{
     void sort_out_points(Point *i_points,ImageInfo *imageinfo,double r_source,double y_source[]);
 
   }
+
+  void printCriticalCurves(std::string filename
+                           ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
+  
+  /** \breaf Makes an image of the critical curves.  The map will encompose all curves found.  The
+   pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
+   */
+  PixelMap mapCriticalCurves(
+                             /// list of critical curves
+                             const std::vector<ImageFinding::CriticalCurve> &critcurves,
+                             /// number of pixels to each size
+                             int Nx
+                             );
+  
+  /** \breaf Makes an image of the caustic curves.  The map will encompose all curves found.  The
+   pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
+   */
+  PixelMap mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves /// list of critical curves
+                            ,int Nx /// number of pixels to each size
+                            );
 }
 
+
+std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p);
 
 void saveImage(LensHaloMassMap *mokahalo, GridHndl grid, bool saveprofile=true);
 

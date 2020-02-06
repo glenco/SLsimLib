@@ -15,7 +15,7 @@ static const float FracResTarget = 4.0e-4;
 //static const float telescope_low = 0.01;
 //extern const PosType initialgridsize;
 
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief  Finds images given a source position and size.
  *
@@ -214,7 +214,7 @@ void ImageFinding::find_images_kist(
         printf("      refound images after refinement\n        Nimagepoints=%li  Nimages = %i\n"
                ,*Nimagepoints,*Nimages);
         for(int kk=0; kk < *Nimages; ++kk){
-          std::cout << "  area =  " << imageinfo[kk].area << " +/- " << imageinfo[kk].area_error << " mag = " << imageinfo[kk].area/pi/rtemp/rtemp
+          std::cout << "  area =  " << imageinfo[kk].area << " +/- " << imageinfo[kk].area_error << " mag = " << imageinfo[kk].area/PI/rtemp/rtemp
           << " " << imageinfo[kk].getNimagePoints() << std::endl;
           std::cout << pow(Ngrid_block/mumin,2) << " " << rtemp*mumin/Ngrid_block << std::endl;
           std::cout << " gridrange " << imageinfo[kk].gridrange[0] << " " << imageinfo[kk].gridrange[1]
@@ -501,7 +501,7 @@ PosType ImageFinding::Temporary::mindyfunc(PosType *x){
   + (y[1]-point->image->x[1])*(y[1]-point->image->x[1]);
 }
 
-/** \ingroup ImageFinding
+/** Finding
  *
  * \brief  Finds images given a source position and size.
  *
@@ -692,7 +692,7 @@ void ImageFinding::find_images_microlens(
       printf("\n   new source size = %e    Nimages = %i  telescoping rsource = %e\n",rtemp,*Nimages,r_source);
     /*
    		for(int k=0; k < *Nimages; ++k){
-     if( 5.0e-3 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+     if( 5.0e-3 > imageinfo[k].area/PI/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
      else imageinfo[k].ShouldNotRefine = false;
      }
      */
@@ -745,7 +745,7 @@ void ImageFinding::find_images_microlens(
        */
       NuniformMags = 0;
       for(int k=0; k < *Nimages; ++k){
-        if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+        if( 1.0e-4 > imageinfo[k].area/PI/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
         if(*Nimages > 10 && (imageinfo[k].imagekist->Nunits() > 10 && imageinfo[k].constant(INVMAG,1.0e-4)) ){
           imageinfo[k].ShouldNotRefine = true;
           ++NuniformMags;
@@ -773,8 +773,8 @@ void ImageFinding::find_images_microlens(
         printf("      refound images after refinement\n        Nimagepoints=%li  Nimages = %i\n"
                ,*Nimagepoints,*Nimages);
         for(int k=0; k < *Nimages; ++k){
-          std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
-    						<< " " << imageinfo[k].area/pi/r_source/r_source << " " << imageinfo[k].getNimagePoints() << std::endl;
+          std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/PI/rtemp/rtemp
+    						<< " " << imageinfo[k].area/PI/r_source/r_source << " " << imageinfo[k].getNimagePoints() << std::endl;
         }
       }
       
@@ -832,7 +832,7 @@ void ImageFinding::find_images_microlens(
     assert(*Nimages > 10);
     
     for(int i=0;i<*Nimages;++i){
-      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+      imageinfo[i].area = fabs(PI*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
       imageinfo[i].imagekist->Empty();
       imageinfo[i].ShouldNotRefine = false;
       
@@ -1074,7 +1074,7 @@ void ImageFinding::find_images_microlens(
     }
     
     if(imageinfo[i].constant(INVMAG,1.0e-3))
-      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+      imageinfo[i].area = fabs(PI*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
     
     // redefine error so that it is based on the smallest grid cell on the border of the image
     if(imageinfo[i].outerborder->Nunits() > 0 ) imageinfo[i].area_error = imageinfo[i].gridrange[2]/imageinfo[i].area;
@@ -1229,7 +1229,7 @@ void ImageFinding::find_images_microlens_exper(
       
       NuniformMags = 0;
       for(int k=0; k < *Nimages; ++k){
-        if( 1.0e-4 > imageinfo[k].area/pi/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
+        if( 1.0e-4 > imageinfo[k].area/PI/r_source/r_source ) imageinfo[k].ShouldNotRefine = true;
         if( (*Nimages > 10) * (imageinfo[k].imagekist->Nunits() > 20)
            * imageinfo[k].constant(INVMAG,1.0e-4) ){
           if(!(imageinfo[k].ShouldNotRefine)){
@@ -1275,8 +1275,8 @@ void ImageFinding::find_images_microlens_exper(
         printf("      refound images after refinement\n        Nimagepoints=%li  Nimages = %i\n"
                ,*Nimagepoints,*Nimages);
         for(int k=0; k < *Nimages; ++k){
-          std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/pi/rtemp/rtemp
-          << " " << imageinfo[k].area/pi/r_source/r_source << " " << imageinfo[k].getNimagePoints() << std::endl;
+          std::cout << "   " << imageinfo[k].area << " " << imageinfo[k].area_error << " " << imageinfo[k].area/PI/rtemp/rtemp
+          << " " << imageinfo[k].area/PI/r_source/r_source << " " << imageinfo[k].getNimagePoints() << std::endl;
         }
       }
       
@@ -1316,7 +1316,7 @@ void ImageFinding::find_images_microlens_exper(
     assert(*Nimages > 10);
     
     for(int i=0;i<*Nimages;++i){
-      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+      imageinfo[i].area = fabs(PI*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
       imageinfo[i].imagekist->Empty();
       imageinfo[i].ShouldNotRefine = false;
       
@@ -1558,7 +1558,7 @@ void ImageFinding::find_images_microlens_exper(
     }
     
     if(imageinfo[i].constant(INVMAG,1.0e-3))
-      imageinfo[i].area = fabs(pi*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
+      imageinfo[i].area = fabs(PI*r_source*r_source/imageinfo[i].imagekist->getCurrent()->invmag);
     
     // redefine error so that it is based on the smallest grid cell on the border of the image
     if(imageinfo[i].outerborder->Nunits() > 0 ) imageinfo[i].area_error = imageinfo[i].gridrange[2]/imageinfo[i].area;
@@ -1572,9 +1572,9 @@ void ImageFinding::find_images_microlens_exper(
 }
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
- * \brief Finds images for a given source position and size
+ * \brief Finds images for a given source position and size.  Not meant for high level user.
  *
  * image points are put into imageinfo[].imagekist
  *      imageinfo[].points and imageinfo[].Npoints are not changed
@@ -1770,7 +1770,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
 }
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
  *\brief Refines every point in the given image and its outer border that satisfies the refinement criterion.
  *
@@ -1957,7 +1957,7 @@ int ImageFinding::IF_routines::refine_grid_kist(
 }
 
 
-/** \ingroup ImageFindingL2
+/** 
  *
  * \brief Finds inner and outer borders of an image using bordering box method.
  *
