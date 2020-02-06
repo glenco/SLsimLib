@@ -217,6 +217,7 @@ namespace ImageFinding{
     std::vector<Point_2d> ellipse_curve;
     
     PosType z_source;
+    /// type of caustic, 0 -not defined, 1 -radial, 2 - tangential,3 - pseudo
     CritType type;
       /// estimated number of intersections of the caustic, -1 if not set
     int caustic_intersections;
@@ -427,7 +428,7 @@ namespace ImageFinding{
 
   void printCriticalCurves(std::string filename
                            ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
-
+  
   /** \breaf Makes an image of the critical curves.  The map will encompose all curves found.  The
    pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
    */
