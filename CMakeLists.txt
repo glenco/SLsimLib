@@ -64,7 +64,7 @@ add_subdirectory(Miscellaneous)
 ####
 
 if(ENABLE_FITS)
-	include_directories(${CCFITS_INCLUDE_DIRS})
+	include_directories(${CFITSIO_INCLUDE_DIRS})
 endif()
 
 if(ENABLE_FFTW)
