@@ -421,7 +421,7 @@ void Lens::assignParams(InputParams& params,bool verbose)
           sim_angular_radius *= degreesTOradians;
         }
 			}
-      if(!params.get("field_fov",fieldofview));
+      params.get("field_fov",fieldofview);
 		}
 		else
 		{
@@ -542,7 +542,7 @@ void Lens::defaultParams(PosType z_source,bool verbose)
   read_redshift_planes = false;
   flag_switch_field_off = false;
   
-  // perameters related to simulating field halos or reading in feild halo information
+  // perameters related to simulating field halos or reading in field halo information
 
   field_Nplanes_original = 0;
   field_Nplanes_current = field_Nplanes_original;
