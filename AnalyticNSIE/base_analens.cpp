@@ -160,12 +160,12 @@ void LensHaloBaseNSIE::force_halo(
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-void LensHaloBaseNSIE::assignParams(InputParams& params){
+void LensHaloBaseNSIE::assignParams(InputParams& params,const COSMOLOGY &cosmo){
   double tmp;
 	if(!params.get("main_mass",tmp)) error_message1("main_mass",params.filename());
   LensHalo::setMass(tmp);
 	if(!params.get("main_zlens",tmp)) error_message1("main_zlens",params.filename());
-  LensHalo::setZlens(tmp);
+  LensHalo::setZlens(tmp,cosmo);
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
 	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
@@ -264,11 +264,11 @@ void LensHaloFit::setCosmology(const COSMOLOGY& cosmo)
 }
 
 
-LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
+LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo) : LensHalo(){
 
   perturb_rms = new PosType[6];
 
-  assignParams(params);
+  assignParams(params,cosmo);
 
   // parameters for stars
   stars_implanted = false; // stars are implanted later

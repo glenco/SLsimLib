@@ -135,7 +135,7 @@ class LensHaloAnaNSIE : public LensHaloBaseNSIE{
   void abstractfunction(){}; // pure virtual
 
 public:
-  LensHaloAnaNSIE(InputParams& params,bool verbose = false);
+  LensHaloAnaNSIE(InputParams& params,const COSMOLOGY &cosmo,bool verbose = false);
   /// Creates a AnaLens which initially has no mass,  Use FindLensSimple() to give it mass
   //LensHaloAnaNSIE(const COSMOLOGY& cosmo);
   ~LensHaloAnaNSIE();

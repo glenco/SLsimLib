@@ -359,7 +359,8 @@ LensHaloNFW::LensHaloNFW()
   Rmax = LensHalo::getRsize();
 
   LensHalo::setMass(0.0);
-  LensHalo::setZlens(0);
+  LensHalo::setZlens(0,COSMOLOGY(Planck18));
+  LensHalo::Dist = -1;  // to be set later
   
   fratio=1;
   pa = stars_N = 0;
@@ -372,11 +373,14 @@ LensHaloNFW::LensHaloNFW()
   set_flag_elliptical(false);
 }
 
-LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration
+                         ,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo
+                         ,EllipMethod my_ellip_method
+                         ){
 
   LensHalo::setRsize(my_Rsize);
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
 
 
   fratio=my_fratio, pa=my_pa, stars_N=my_stars_N, main_ellip_method=my_ellip_method;
@@ -640,11 +644,12 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      ,float my_fratio          /// axis ratio
                                      ,float my_pa              /// position angle
                                      ,int my_stars_N           /// number of stars, not yet implanted
+                                     ,const COSMOLOGY &cosmo
                                      ,EllipMethod my_ellip_method /// ellipticizing method
 )
 {
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   beta = my_beta;
@@ -793,11 +798,12 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    ,float my_fratio    /// axis ratio in asymetric case
                                    ,float my_pa        /// position angle
                                    ,int my_stars_N     /// number of stars, not yet implanted
+                                   ,const COSMOLOGY &cosmo
                                    ,EllipMethod my_ellip_method /// ellipticizing method
 ){
 
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
   
   beta=my_beta;
@@ -936,11 +942,12 @@ LensHaloRealNSIE::LensHaloRealNSIE(
                                    ,float my_rcore   /// in units of R_einstein
                                    ,float my_fratio  /// axis ratio
                                    ,float my_pa      /// postion angle
-                                   ,int my_stars_N)
+                                   ,int my_stars_N
+                                   ,const COSMOLOGY &cosmo)
 :LensHalo(){
   rscale=1.0;
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
 
 
   sigma=my_sigma, rcore=my_rcore;
@@ -1590,10 +1597,10 @@ PosType* LensHaloHernquist::xgtable = NULL;
 	gmax = InterpolateFromTable(gtable,xmax);
  }
  */
-LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method){
   
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   rscale=my_rscale;
@@ -1742,10 +1749,10 @@ PosType* LensHaloJaffe::xgtable = NULL;
 	gmax = InterpolateFromTable(gtable,xmax);
  }
  */
-LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method){
+LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method){
   
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   rscale=my_rscale;
@@ -1877,9 +1884,9 @@ LensHaloDummy::LensHaloDummy()
   //	mass = 0.;
 }
 
-LensHaloDummy::LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N){
+LensHaloDummy::LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N,const COSMOLOGY &cosmo){
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens);
+  LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   rscale=my_rscale;

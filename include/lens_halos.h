@@ -119,7 +119,11 @@ public:
 	/// set scale radius (in Mpc)
 	virtual void set_rscale(float my_rscale){rscale=my_rscale; xmax = Rsize/rscale;};
 	/// set redshift
-  void setZlens(PosType my_zlens){zlens=my_zlens; Dist=-1;}
+  //void setZlens(PosType my_zlens){zlens=my_zlens; Dist=-1;}
+  void setZlens(PosType my_zlens,const COSMOLOGY &cosmo){
+    zlens=my_zlens;
+    Dist=cosmo.angDist(my_zlens);
+  }
   void setRsize(PosType R){Rsize = R;}
   
   // ste redshift and distance
@@ -236,7 +240,6 @@ public:
   
 private:
   size_t idnumber; /// Identification number of halo.  It is not always used.
-  PosType Dist;
   /// Position of the Halo in angle
   PosType posHalo[2];
   PosType zlens;
@@ -246,6 +249,7 @@ private:
 
 protected:
 
+  PosType Dist;
   PosType mnorm;
 
   // Beyond Rmax the halo will be treated as a point mass.  Between Rsize and Rmax the deflection
@@ -711,7 +715,9 @@ public:
               ,float my_fratio    /// axis ratio
               ,float my_pa
               ,int my_stars_N
-              ,EllipMethod my_ellip_method=Pseudo);
+              ,const COSMOLOGY &cosmo
+              ,EllipMethod my_ellip_method=Pseudo
+              );
 	LensHaloNFW(InputParams& params);
   LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
     ++count;
@@ -838,7 +844,7 @@ class LensHaloPseudoNFW: public LensHalo{
 public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
 	LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   
@@ -911,7 +917,9 @@ private:
 class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
-  LensHaloPowerLaw(float my_mass,float my_Rsize,PosType my_zlens,PosType my_beta,float my_fratio,float my_pa, int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloPowerLaw(float my_mass,float my_Rsize,PosType my_zlens,PosType my_beta
+                   ,float my_fratio,float my_pa, int my_stars_N,const COSMOLOGY &cosmo
+                   ,EllipMethod my_ellip_method=Pseudo);
 	LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
   
@@ -976,7 +984,7 @@ public:
 
   /// explicit constructor, Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
-                   ,float my_rcore,float my_fratio,float my_pa,int my_stars_N);
+                   ,float my_rcore,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo);
   
   /// Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
 	LensHaloRealNSIE(InputParams& params);
@@ -1031,9 +1039,8 @@ public:
 	/// set the core radius Einstein radius
 	void set_rcore(float my_rcore){rcore=my_rcore;};
   
-  void setZlens(PosType my_zlens){
-    LensHalo::setZlens(my_zlens);
-    
+  void setZlens(PosType my_zlens,const COSMOLOGY &cosmo){
+    LensHalo::setZlens(my_zlens,cosmo);
   }
 
   
@@ -1096,7 +1103,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
-  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
 	LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
@@ -1174,7 +1181,9 @@ private:
 class LensHaloJaffe: public LensHalo{
 public:
 	//LensHaloJaffe();
-  LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N, EllipMethod my_ellip_method=Pseudo);
+  LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio
+                ,float my_pa,int my_stars_N,const COSMOLOGY &cosmo
+                , EllipMethod my_ellip_method=Pseudo);
 	LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
@@ -1248,7 +1257,7 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
-  LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N);
+  LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N,const COSMOLOGY &cosmo);
 	LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
 	

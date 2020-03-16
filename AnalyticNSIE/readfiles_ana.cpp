@@ -92,7 +92,7 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params, bool verbose) : LensHaloBaseNSIE(params){
+LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params,const COSMOLOGY &cosmo, bool verbose) : LensHaloBaseNSIE(params,cosmo){
   
   assignParams(params);
   
@@ -114,7 +114,7 @@ LensHaloFit::LensHaloFit(const COSMOLOGY& cosmo, int MyNmodes, PosType beta,PosT
   
   // assignParams(params);
   
-  LensHalo::setZlens(zlensref);
+  LensHalo::setZlens(zlensref,cosmo);
   // zsource = zsourceref ;
   zsource_reference = zsourceref ;
   

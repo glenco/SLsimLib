@@ -71,7 +71,7 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
   initMap();
  	
   // set redshift to value from map
-  setZlens(map.zlens);
+  setZlens(map.zlens,lenscosmo);
 }
 
 /** \brief Create a LensHalo from a PixelMap representing the mass.
@@ -186,7 +186,7 @@ LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
   
   // set redshift if necessary
   if(LensHalo::getZlens() == -1)
-    setZlens(map.zlens);
+    setZlens(map.zlens,lenscosmo);
 }
 
 LensHaloMassMap::~LensHaloMassMap()
@@ -344,9 +344,9 @@ void LensHaloMassMap::assignParams(InputParams& params)
 {
   PosType tmp;
   if(!params.get("z_lens", tmp)){
-    LensHalo::setZlens(-1); // set to -1 so that it will be set to the MOKA map value
+    LensHalo::setZlens(-1,cosmo); // set to -1 so that it will be set to the MOKA map value
   }else{
-    LensHalo::setZlens(tmp);
+    LensHalo::setZlens(tmp,cosmo);
   }
   if(!params.get("MOKA_input_file", MOKA_input_file))
   {
