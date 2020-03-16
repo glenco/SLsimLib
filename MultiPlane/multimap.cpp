@@ -383,16 +383,16 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
     std::vector<long> upper_right = {lower_left[0] + (long)(nx_sub)-1
       ,lower_left[1] + (long)(ny_sub)-1};
     
-//   if( (upper_right[0] < 0) || (upper_right[1] < 0) || (lower_left[0] >= (long)(Noriginal[0]) )
-//      || (lower_left[1] >= (long)(Noriginal[1]))  ){
-//    
-//    std::cerr << "LensHaloMap : sub map is out of bounds" << std::endl;
-//    std::cerr << "  lower left " << lower_left[0] << " " << lower_left[1]
-//              << " upper_right " << upper_right[0] << " " << upper_right[1] << std::endl;
-//    std::cerr << " N " << Noriginal[0] << " " << Noriginal[1] << std::endl;
-//    
+   if( (upper_right[0] < 0) || (upper_right[1] < 0) || (lower_left[0] >= (long)(Noriginal[0]) )
+      || (lower_left[1] >= (long)(Noriginal[1]))  ){
+
+    std::cerr << "LensHaloMap : sub map is out of bounds" << std::endl;
+    std::cerr << "  lower left " << lower_left[0] << " " << lower_left[1]
+              << " upper_right " << upper_right[0] << " " << upper_right[1] << std::endl;
+    std::cerr << " N " << Noriginal[0] << " " << Noriginal[1] << std::endl;
+
 //    throw std::invalid_argument("out of bounds");
-//  }
+  }
   
   /// construct file name and have it printed
   std::string sr_file = subfield_filename + to_string(lower_left[0]) + "-"
