@@ -92,19 +92,19 @@ void LensHaloAnaNSIE::PrintLens(bool show_substruct,bool show_stars){
 }
 
 
-LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params,const COSMOLOGY &cosmo, bool verbose) : LensHaloBaseNSIE(params,cosmo){
-  
-  assignParams(params);
-  
-  if(perturb_Nmodes)
-  {
-    perturb_modes = new PosType[perturb_Nmodes+1];
-    // zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
-    for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
-  }
-  
-  if(verbose) PrintLens(false,false);
-}
+//LensHaloAnaNSIE::LensHaloAnaNSIE(InputParams& params,const COSMOLOGY &cosmo, bool verbose) : LensHaloBaseNSIE(params,cosmo){
+//  
+//  assignParams(params);
+//  
+//  if(perturb_Nmodes)
+//  {
+//    perturb_modes = new PosType[perturb_Nmodes+1];
+//    // zero perturbation modes until use LensHaloAnaNSIE::RandomlyDistortLens()
+//    for(int i=0;i< perturb_Nmodes+1 ;++i) perturb_modes[i] =  0;
+//  }
+//  
+//  if(verbose) PrintLens(false,false);
+//}
 
 LensHaloAnaNSIE::~LensHaloAnaNSIE(){
   if(perturb_Nmodes) delete [] perturb_modes;

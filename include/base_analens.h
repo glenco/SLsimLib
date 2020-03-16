@@ -53,7 +53,7 @@
  */
 class LensHaloBaseNSIE : public LensHalo{
 public:
-	LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo);
+	//LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo);
   LensHaloBaseNSIE();
   
   virtual void abstractfunction() = 0; // pure virtual

@@ -264,28 +264,28 @@ void LensHaloFit::setCosmology(const COSMOLOGY& cosmo)
 }
 
 
-LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo) : LensHalo(){
-
-  perturb_rms = new PosType[6];
-
-  assignParams(params,cosmo);
-
-  // parameters for stars
-  stars_implanted = false; // stars are implanted later
-  star_theta_force = 0.1;
-  sub_theta_force = 0.1;
-
-  perturb_Nmodes = 0;
-  //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
-
-  if(sub_Ndensity == 0)
-	  sub_N = 0;
-
-  Sigma_crit = 0;
-
-  substruct_implanted = false;
-
-}
+//LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo) : LensHalo(){
+//
+//  perturb_rms = new PosType[6];
+//
+//  assignParams(params,cosmo);
+//
+//  // parameters for stars
+//  stars_implanted = false; // stars are implanted later
+//  star_theta_force = 0.1;
+//  sub_theta_force = 0.1;
+//
+//  perturb_Nmodes = 0;
+//  //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
+//
+//  if(sub_Ndensity == 0)
+//	  sub_N = 0;
+//
+//  Sigma_crit = 0;
+//
+//  substruct_implanted = false;
+//
+//}
 LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
   
   perturb_rms = new PosType[6];

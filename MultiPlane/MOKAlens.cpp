@@ -170,24 +170,24 @@ LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_
   setZlens(zlens);
 }
 */
-/**
+/*
  * \brief allocates and reads the MOKA map in
  *
  *  In the future this could be used to read in individual PixelDMaps or other types of maps if the type were specified in the paramfile.
  */
-LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
-: LensHalo(), maptype(moka), cosmo(lenscosmo)
-{
-  // read in parameters
-  assignParams(params);
-  
-  // initialize MOKA map
-  initMap();
-  
-  // set redshift if necessary
-  if(LensHalo::getZlens() == -1)
-    setZlens(map.zlens,lenscosmo);
-}
+//LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
+//: LensHalo(), maptype(moka), cosmo(lenscosmo)
+//{
+//  // read in parameters
+//  assignParams(params);
+//  
+//  // initialize MOKA map
+//  initMap();
+//  
+//  // set redshift if necessary
+//  if(LensHalo::getZlens() == -1)
+//    setZlens(map.zlens,lenscosmo);
+//}
 
 LensHaloMassMap::~LensHaloMassMap()
 {

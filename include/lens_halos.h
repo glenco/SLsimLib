@@ -46,8 +46,8 @@ class LensHalo{
 public:
 	LensHalo();
   LensHalo(PosType z,const COSMOLOGY &cosmo);
-  LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
-  LensHalo(InputParams& params,bool needRsize = true);
+  //LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize = true);
+  //LensHalo(InputParams& params,bool needRsize = true);
   LensHalo(const LensHalo &h);
   
   LensHalo(LensHalo &&h):star_tree(nullptr){
@@ -718,7 +718,7 @@ public:
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=Pseudo
               );
-	LensHaloNFW(InputParams& params);
+	//LensHaloNFW(InputParams& params);
   LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
     ++count;
     gmax = h.gmax;
@@ -845,7 +845,7 @@ public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
   LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
-	LensHaloPseudoNFW(InputParams& params);
+	//LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   
 	PosType mhat(PosType y, PosType beta) const;
@@ -920,7 +920,7 @@ public:
   LensHaloPowerLaw(float my_mass,float my_Rsize,PosType my_zlens,PosType my_beta
                    ,float my_fratio,float my_pa, int my_stars_N,const COSMOLOGY &cosmo
                    ,EllipMethod my_ellip_method=Pseudo);
-	LensHaloPowerLaw(InputParams& params);
+	//LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
   
 	/// set the slope of the surface density profile
@@ -986,8 +986,8 @@ public:
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
                    ,float my_rcore,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo);
   
-  /// Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
-	LensHaloRealNSIE(InputParams& params);
+  // Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
+	//LensHaloRealNSIE(InputParams& params);
   
   LensHaloRealNSIE(const LensHaloRealNSIE &h):
   LensHalo(h)
@@ -1104,7 +1104,7 @@ class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
   LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
-	LensHaloHernquist(InputParams& params);
+	//LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
   PosType ffunction(PosType x) const;
@@ -1184,7 +1184,7 @@ public:
   LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio
                 ,float my_pa,int my_stars_N,const COSMOLOGY &cosmo
                 , EllipMethod my_ellip_method=Pseudo);
-	LensHaloJaffe(InputParams& params);
+	//LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   
 	/// set scale radius
@@ -1258,7 +1258,7 @@ class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
   LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N,const COSMOLOGY &cosmo);
-	LensHaloDummy(InputParams& params);
+	//LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
 	
 	/// overridden function to calculate the lensing properties
