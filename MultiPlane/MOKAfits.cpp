@@ -188,7 +188,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       << " DLS - " << std::endl
       << " DS - " << std::endl
       << " W - " << std::endl;
-      exit(1);
+      throw std::runtime_error("bad file");
     }
     
   }else{  // Pixelized mass map

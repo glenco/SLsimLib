@@ -147,7 +147,7 @@ void SourceBLR::assignParams(InputParams& params){
 		  fail = true;
   }
   
-  if(fail) exit(1);
+  if(fail) throw std::runtime_error("In SourceBLR");
   
   source_inclination *= PI/180;
   source_opening_angle *= PI/180;
@@ -756,7 +756,7 @@ void SourceMultiShapelets::readCatalog()
 
 void SourceMultiShapelets::assignParams(InputParams& params){
   if(!params.get("source_mag_limit",mag_limit)){
-    std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
+    std::cerr << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
     exit(1);
   }
   
@@ -766,12 +766,12 @@ void SourceMultiShapelets::assignParams(InputParams& params){
     sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
   
   if(!params.get("shapelets_folder",shapelets_folder)){
-    std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
+    std::cerr << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
     exit(1);
   }
   
   if(!params.get("shapelets_band",band)){
-    std::cout << "ERROR: Must assign shapelets_band in parameter file " << params.filename() << std::endl;
+    std::cerr << "ERROR: Must assign shapelets_band in parameter file " << params.filename() << std::endl;
     exit(1);
   }
   

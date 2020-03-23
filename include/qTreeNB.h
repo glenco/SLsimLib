@@ -297,7 +297,7 @@ const bool QTreeNB<PType>::atTop(){
   
   if( isEmpty() ){
     ERROR_MESSAGE();
-    std::cout << "QTreeNB Error: calling atTop() on empty tree" << std::endl;
+    std::cerr << "QTreeNB Error: calling atTop() on empty tree" << std::endl;
     exit(1);
   }
   return(current == top);
@@ -323,7 +323,7 @@ void QTreeNB<PType>::getCurrent(IndexType *particles,IndexType *nparticles){
   
   if( offEnd() ){
     ERROR_MESSAGE();
-    std::cout << "QTreeNB Error: calling getCurrent() when current is off end" << std::endl;
+    std::cerr << "QTreeNB Error: calling getCurrent() when current is off end" << std::endl;
     exit(1);
   }
   
@@ -358,7 +358,7 @@ void QTreeNB<PType>::moveTop(){
   
   if( isEmpty() ){
     ERROR_MESSAGE();
-    std::cout << "QTreeNB Error: calling moveTop() on empty tree" << std::endl;
+    std::cerr << "QTreeNB Error: calling moveTop() on empty tree" << std::endl;
     exit(1);
   }
   
@@ -378,12 +378,12 @@ void QTreeNB<PType>::moveUp(){
   
   if( offEnd() ){
     ERROR_MESSAGE();
-    std::cout << "QTreeNB Error: call to moveUp() when current is off end" << std::endl;
+    std::cerr << "QTreeNB Error: call to moveUp() when current is off end" << std::endl;
     exit(1);
   }
   if( current == top ){
     ERROR_MESSAGE();
-    std::cout << "QTreeNB Error: call to moveUp() tried to move off the top" << std::endl;
+    std::cerr << "QTreeNB Error: call to moveUp() tried to move off the top" << std::endl;
     exit(1);
   }
   

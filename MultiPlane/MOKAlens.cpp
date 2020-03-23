@@ -69,7 +69,9 @@ MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
 maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
   initMap();
- 	
+  if(zerosize < 1.0 ){
+    std::cerr << "pixel_map_zeropad in LensHaloMap cosntructor must be >= 1" << std::endl;
+  }
   // set redshift to value from map
   setZlens(map.zlens);
 }

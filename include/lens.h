@@ -106,7 +106,7 @@ public:
 			return main_halos[0]->getZlens();
 		else{
 			ERROR_MESSAGE();
-			std::cout << "error, no main lens present" << std::endl;
+			std::cerr << "error, no main lens present" << std::endl;
 			exit(1);
 		}
 	}
@@ -116,7 +116,7 @@ public:
 			return cosmo.angDist( main_halos[0]->getZlens());
 		else{
 			ERROR_MESSAGE();
-			std::cout << "error, no main lens present" << std::endl;
+			std::cerr << "error, no main lens present" << std::endl;
 			exit(1);
 		}
 	}

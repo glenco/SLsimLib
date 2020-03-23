@@ -483,7 +483,7 @@ void Observation::ApplyPSF(PixelMap &pmap)
     }
     return;
 #else
-		std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+		std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
 		exit(1);
 #endif
     
@@ -575,7 +575,7 @@ void Observation::CorrelateNoise(PixelMap &pmap)
     }
     return;
 #else
-    std::cout << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+    std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
     exit(1);
 #endif
 }

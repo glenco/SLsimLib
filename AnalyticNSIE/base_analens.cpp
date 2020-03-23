@@ -171,7 +171,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
 	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
   else if(fratio > 1){
     ERROR_MESSAGE();
-    std::cout << "parameter main_axis_ratio must be < 1 in file " << params.filename() << ". Use main_pos_angle to rotate the halo." << std::endl;
+    std::cerr << "parameter main_axis_ratio must be < 1 in file " << params.filename() << ". Use main_pos_angle to rotate the halo." << std::endl;
     exit(1);
   }
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
@@ -195,7 +195,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
     if(sub_Mmin < 1.0e3){
       ERROR_MESSAGE();
-      std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
+      std::cerr << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
       exit(1);
     }
     if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
@@ -340,7 +340,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 						break;
 					default:
 						ERROR_MESSAGE();
-						cout << "ERROR: no submass internal profile chosen" << endl;
+						cerr << "ERROR: no submass internal profile chosen" << endl;
 						exit(1);
 						break;
 					}

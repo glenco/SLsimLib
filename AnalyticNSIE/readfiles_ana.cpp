@@ -25,7 +25,7 @@ void LensHaloAnaNSIE::assignParams(InputParams& params){
 	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
   else if(fratio > 1){
     ERROR_MESSAGE();
-    std::cout << "parameter main_axis_ratio must be < 1 in file " << params.filename() << ". Use main_pos_angle to rotate the halo." << std::endl;
+    std::cerr << "parameter main_axis_ratio must be < 1 in file " << params.filename() << ". Use main_pos_angle to rotate the halo." << std::endl;
     exit(1);
   }
 
