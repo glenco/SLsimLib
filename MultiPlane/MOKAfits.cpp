@@ -104,11 +104,11 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
   // try to read MVIR, if it exists is a MOKA map
   bool moka;
   
-  if(cpfits.readKey ("MVIR",m)){
-    moka=true;
-  }else{
+//  if(cpfits.readKey ("MVIR",m)){
+//    moka=true;
+//  }else{
     moka=false;
-  }
+//  }
   int n_images = cpfits.get_num_hdus();
 
   if(moka){

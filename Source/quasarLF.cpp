@@ -7,111 +7,111 @@
 #include "source.h"
 #include "utilities_slsim.h"
 
-QuasarLF::QuasarLF
-	(double my_red                      // redshift
-	, double my_mag_limit				// magnitude limit
-	, InputParams &params               // input parameters (for kcorrection and colors)
-    ):
-		red(my_red), mag_limit(my_mag_limit){
-    if (red > 5.)
-    {
-        ERROR_MESSAGE();
-        std::cout << "The redshift is too high! The database for k-corrections and colors is valid for z <= 5." << std::endl;
-        exit(0);
-    }
-    
-    assignParams(params);
-   
-	// the one used in the paper(s)
-	COSMOLOGY cosmo(0.3,0.7,0.7,-1.);
-
-	// k-correction for i band and quasar SED in the redshift range [0,5.5]
-	// We should check that the input is in a desired range (see also fitting models for LF below)
-    std::ifstream kcorr_in(kcorr_file.c_str());
-    if (!kcorr_in)
-    {
-        std::cout << "Can't open file " << kcorr_file << std::endl;
-        ERROR_MESSAGE();
-        throw std::runtime_error(" Cannot open file.");
-        exit(1);
-    }
-    // mean colors in SDSS bands for quasars (u-g,g-r,r-i,i-z)
-    std::ifstream col_in(colors_file.c_str());
-    if (!col_in)
-    {
-        std::cout << "Can't open file " << colors_file << std::endl;
-        ERROR_MESSAGE();
-        throw std::runtime_error(" Cannot open file.");
-        exit(1);
-    }
-    
-	double red_arr[501];
-	double kcorr_arr[501];
-    double col_arr[501][4];
-    double colmax_arr[501][4];
-    double colmin_arr[501][4];
-    //double trash;
-	for (int i = 0; i < 501; i++)
-	{
-		kcorr_in >> red_arr[i] >> kcorr_arr[i];
-        col_in >> red_arr[i] >> col_arr[i][0] >> colmin_arr[i][0] >> colmax_arr[i][0] >> col_arr[i][1] >> colmin_arr[i][1] >> colmax_arr[i][1] >> col_arr[i][2] >> colmin_arr[i][2] >> colmax_arr[i][2] >> col_arr[i][3] >> colmin_arr[i][3] >> colmax_arr[i][3];
-        if (fabs(red_arr[i]-red)<=0.005+std::numeric_limits<double>::epsilon())
-        {
-            kcorr = kcorr_arr[i];
-            ave_colors[0] = colors[0] = col_arr[i][0];
-            ave_colors[1] = colors[1] = col_arr[i][1];
-            ave_colors[2] = colors[2] = col_arr[i][2];
-            ave_colors[3] = colors[3] = col_arr[i][3];
-            color_dev[0] = .5*(colmax_arr[i][0]-colmin_arr[i][0]);
-            color_dev[1] = .5*(colmax_arr[i][1]-colmin_arr[i][1]);
-            color_dev[2] = .5*(colmax_arr[i][2]-colmin_arr[i][2]);
-            color_dev[3] = .5*(colmax_arr[i][3]-colmin_arr[i][3]);
-        }
-	}
-
-	// QLF described as double power law
-
-	// PLE model: good fit at redshift 0.3 - 2.2
-	if (red < 2.2)
-	{
-		mstar = -22.85 - 2.5*(1.241*red -0.249*red*red);
-		log_phi = -5.96;
-		alpha = -1.16;
-		beta = -3.37;
-	}
-	// LEDE model: good fit at redshift 2.2 - 3.5
-	else
-	{
-		mstar = -26.57 - 0.809*(red-2.2);
-		log_phi = -5.93 - 0.689*(red-2.2);
-		alpha = -1.29;
-		beta = -3.51;
-	}
-	// limits of the integration in absolute magnitudes
-	double mag_min, mag_max;
-	// luminosity distance
-	dl = cosmo.lumDist(red);
-	// conversion to absolute magnitude
-	mag_max = mag_limit - 5*log10(dl*1.e+05) - kcorr;
-	mag_min = 10 - 5*log10(dl*1.e+05) - kcorr;
-
-	arr_nbin = 10000;
-	mag_arr = new double[arr_nbin];
-	lf_arr = new double[arr_nbin];
-
-    LF_kernel lf_kernel(alpha,beta,mstar);
-	// integrate the function to get normalisation for P(m)
-	norm = Utilities::nintegrate(lf_kernel, mag_min, mag_max, 0.001);
-    
-
-	// saves array of M_i, P(m_i) for future random extraction
-	for (int i = 0; i < arr_nbin; i++)
-	{
-		mag_arr[i] = mag_min + (mag_max-mag_min)/(arr_nbin-1)*i;
-		lf_arr[i] = Utilities::nintegrate(lf_kernel, mag_min, mag_arr[i], 0.001)/norm;
-	}
-
-}
+//QuasarLF::QuasarLF
+//	(double my_red                      // redshift
+//	, double my_mag_limit				// magnitude limit
+//	, InputParams &params               // input parameters (for kcorrection and colors)
+//    ):
+//		red(my_red), mag_limit(my_mag_limit){
+//    if (red > 5.)
+//    {
+//        ERROR_MESSAGE();
+//        std::cout << "The redshift is too high! The database for k-corrections and colors is valid for z <= 5." << std::endl;
+//        exit(0);
+//    }
+//    
+//    assignParams(params);
+//   
+//	// the one used in the paper(s)
+//	COSMOLOGY cosmo(0.3,0.7,0.7,-1.);
+//
+//	// k-correction for i band and quasar SED in the redshift range [0,5.5]
+//	// We should check that the input is in a desired range (see also fitting models for LF below)
+//    std::ifstream kcorr_in(kcorr_file.c_str());
+//    if (!kcorr_in)
+//    {
+//        std::cout << "Can't open file " << kcorr_file << std::endl;
+//        ERROR_MESSAGE();
+//        throw std::runtime_error(" Cannot open file.");
+//        exit(1);
+//    }
+//    // mean colors in SDSS bands for quasars (u-g,g-r,r-i,i-z)
+//    std::ifstream col_in(colors_file.c_str());
+//    if (!col_in)
+//    {
+//        std::cout << "Can't open file " << colors_file << std::endl;
+//        ERROR_MESSAGE();
+//        throw std::runtime_error(" Cannot open file.");
+//        exit(1);
+//    }
+//    
+//	double red_arr[501];
+//	double kcorr_arr[501];
+//    double col_arr[501][4];
+//    double colmax_arr[501][4];
+//    double colmin_arr[501][4];
+//    //double trash;
+//	for (int i = 0; i < 501; i++)
+//	{
+//		kcorr_in >> red_arr[i] >> kcorr_arr[i];
+//        col_in >> red_arr[i] >> col_arr[i][0] >> colmin_arr[i][0] >> colmax_arr[i][0] >> col_arr[i][1] >> colmin_arr[i][1] >> colmax_arr[i][1] >> col_arr[i][2] >> colmin_arr[i][2] >> colmax_arr[i][2] >> col_arr[i][3] >> colmin_arr[i][3] >> colmax_arr[i][3];
+//        if (fabs(red_arr[i]-red)<=0.005+std::numeric_limits<double>::epsilon())
+//        {
+//            kcorr = kcorr_arr[i];
+//            ave_colors[0] = colors[0] = col_arr[i][0];
+//            ave_colors[1] = colors[1] = col_arr[i][1];
+//            ave_colors[2] = colors[2] = col_arr[i][2];
+//            ave_colors[3] = colors[3] = col_arr[i][3];
+//            color_dev[0] = .5*(colmax_arr[i][0]-colmin_arr[i][0]);
+//            color_dev[1] = .5*(colmax_arr[i][1]-colmin_arr[i][1]);
+//            color_dev[2] = .5*(colmax_arr[i][2]-colmin_arr[i][2]);
+//            color_dev[3] = .5*(colmax_arr[i][3]-colmin_arr[i][3]);
+//        }
+//	}
+//
+//	// QLF described as double power law
+//
+//	// PLE model: good fit at redshift 0.3 - 2.2
+//	if (red < 2.2)
+//	{
+//		mstar = -22.85 - 2.5*(1.241*red -0.249*red*red);
+//		log_phi = -5.96;
+//		alpha = -1.16;
+//		beta = -3.37;
+//	}
+//	// LEDE model: good fit at redshift 2.2 - 3.5
+//	else
+//	{
+//		mstar = -26.57 - 0.809*(red-2.2);
+//		log_phi = -5.93 - 0.689*(red-2.2);
+//		alpha = -1.29;
+//		beta = -3.51;
+//	}
+//	// limits of the integration in absolute magnitudes
+//	double mag_min, mag_max;
+//	// luminosity distance
+//	dl = cosmo.lumDist(red);
+//	// conversion to absolute magnitude
+//	mag_max = mag_limit - 5*log10(dl*1.e+05) - kcorr;
+//	mag_min = 10 - 5*log10(dl*1.e+05) - kcorr;
+//
+//	arr_nbin = 10000;
+//	mag_arr = new double[arr_nbin];
+//	lf_arr = new double[arr_nbin];
+//
+//    LF_kernel lf_kernel(alpha,beta,mstar);
+//	// integrate the function to get normalisation for P(m)
+//	norm = Utilities::nintegrate(lf_kernel, mag_min, mag_max, 0.001);
+//    
+//
+//	// saves array of M_i, P(m_i) for future random extraction
+//	for (int i = 0; i < arr_nbin; i++)
+//	{
+//		mag_arr[i] = mag_min + (mag_max-mag_min)/(arr_nbin-1)*i;
+//		lf_arr[i] = Utilities::nintegrate(lf_kernel, mag_min, mag_arr[i], 0.001)/norm;
+//	}
+//
+//}
 
 QuasarLF::~QuasarLF(){
   delete [] mag_arr;

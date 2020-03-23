@@ -33,26 +33,26 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 	
 	galaxies.push_back(*my_galaxy);
 }
-/// Constructor for importing from data file.
-SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
-		InputParams& params   /// Input data file for galaxies
-    ,Utilities::RandomNumbers_NR &ran
-		): Source(),index(0){
-
-	if(!params.get("source_input_galaxy_file",input_gal_file)){
-		std::cout << "ERROR: source_input_galaxy_file not found in parameter file " << params.filename() << std::endl;
-		exit(1);
-	}
-
-	assignParams(params);
-
-	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
-
-	readDataFileMillenn(ran);
-	index = 0;
-  searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
-  //searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,3,true);
-}
+// Constructor for importing from data file.
+//SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
+//		InputParams& params   /// Input data file for galaxies
+//    ,Utilities::RandomNumbers_NR &ran
+//		): Source(),index(0){
+//
+//	if(!params.get("source_input_galaxy_file",input_gal_file)){
+//		std::cout << "ERROR: source_input_galaxy_file not found in parameter file " << params.filename() << std::endl;
+//		exit(1);
+//	}
+//
+//	assignParams(params);
+//
+//	std::cout << "Constructing SourceAnaGalaxy" << std::endl;
+//
+//	readDataFileMillenn(ran);
+//	index = 0;
+//  searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,2,true,SourceOverzierPlus::getx);
+//  //searchtree = new TreeSimpleVec<SourceOverzierPlus>(galaxies.data(),galaxies.size(),1,3,true);
+//}
 
 SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 {

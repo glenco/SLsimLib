@@ -123,7 +123,7 @@ class SourcePixelled: public Source{
 public:
 	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val);
 	SourcePixelled(const PixelMap& gal_map, PosType z, PosType factor = 1.);
-	SourcePixelled(InputParams& params);
+	//SourcePixelled(InputParams& params);
   
 	~SourcePixelled();
 	PosType SurfaceBrightness(PosType *y);
@@ -276,7 +276,7 @@ public:
 /// Base class for all sources representing the Broad Line Region (BLR) of a AGN/QSO
 class SourceBLR : public Source{
 public:
-	SourceBLR(InputParams& params);
+	//SourceBLR(InputParams& params);
 	~SourceBLR();
 	
 	void printSource();
@@ -312,7 +312,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
 	
-	SourceBLRDisk(InputParams&);
+	//SourceBLRDisk(InputParams&);
 	~SourceBLRDisk();
 };
 
@@ -322,7 +322,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
 	
-	SourceBLRSph1(InputParams&);
+	//SourceBLRSph1(InputParams&);
 	~SourceBLRSph1();
 };
 
@@ -332,7 +332,7 @@ public:
 	PosType SurfaceBrightness(PosType *y);
 	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
 
-	SourceBLRSph2(InputParams&);
+	//SourceBLRSph2(InputParams&);
 	~SourceBLRSph2();
 };
 
@@ -348,7 +348,7 @@ public:
  */
 class QuasarLF{
 	public:
-    QuasarLF(PosType red, PosType mag_limit, InputParams &params);
+    //QuasarLF(PosType red, PosType mag_limit, InputParams &params);
     ~QuasarLF();
     // returns the integral of the luminosity function at redshift red
     PosType getNorm() {return pow(10,log_phi)*norm;}; // in Mpc^(-3)

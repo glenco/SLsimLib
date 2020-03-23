@@ -29,21 +29,21 @@ SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radia
 //  assignParams(params);
 //}
 
-SourceBLR::SourceBLR(InputParams& params) : Source(){
-  assignParams(params);
-}
-
-SourceBLRDisk::SourceBLRDisk(InputParams& params) : SourceBLR(params){
-  
-}
-
-SourceBLRSph1::SourceBLRSph1(InputParams& params) : SourceBLR(params){
-  
-}
-
-SourceBLRSph2::SourceBLRSph2(InputParams& params) : SourceBLR(params){
-  
-}
+//SourceBLR::SourceBLR(InputParams& params) : Source(){
+//  assignParams(params);
+//}
+//
+//SourceBLRDisk::SourceBLRDisk(InputParams& params) : SourceBLR(params){
+//
+//}
+//
+//SourceBLRSph1::SourceBLRSph1(InputParams& params) : SourceBLR(params){
+//
+//}
+//
+//SourceBLRSph2::SourceBLRSph2(InputParams& params) : SourceBLR(params){
+//
+//}
 
 Source::~Source(){
 }
@@ -206,8 +206,8 @@ PosType SourceBLRSph2::SurfaceBrightness(PosType *y){
 //void in_source(PosType *y_source,ListHndl sourcelist){
 //  return;
 //}
-SourcePixelled::SourcePixelled(InputParams& params)
-{}
+//SourcePixelled::SourcePixelled(InputParams& params)
+//{}
 
 SourcePixelled::SourcePixelled(
                                PosType my_z            /// redshift of the source
@@ -699,13 +699,13 @@ void SourceShapelets::NormalizeFlux()
   coeff_flux *= sqrt(PI)*source_r;
 }
 
-/// Default constructor. Reads in sources from the default catalog. No magnitude limit.
-SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
-: Source(),index(0)
-{
-  assignParams(params);
-  readCatalog();
-}
+// Default constructor. Reads in sources from the default catalog. No magnitude limit.
+//SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
+//: Source(),index(0)
+//{
+//  assignParams(params);
+//  readCatalog();
+//}
 
 SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
 : Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)

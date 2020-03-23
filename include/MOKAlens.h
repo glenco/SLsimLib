@@ -198,7 +198,7 @@ public:
   
   //LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
   
-	LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
+	//LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
   LensHaloMassMap(
                   const PixelMap &MassMap   /// mass map in solar mass units
