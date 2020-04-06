@@ -39,7 +39,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
 ,cosmo(c),cpfits(dir_data + fitsfile),ave_ang_sd(0)
 ,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
 {
-
+  
   ++count;
   zerosize = 1;
   rscale = 1.0;
@@ -606,14 +606,13 @@ void LensHaloMultiMap::force_halo(double *alpha
   // interpolate from the maps
   
   long_range_map.evaluate(xx,*kappa,gamma,alpha);
-  
+
   for(auto &smap : short_range_maps){
 
     if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
       *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
        ){
   
-   
       float t_kappa,t_gamma[3];
       double t_alpha[2];
 
@@ -626,14 +625,6 @@ void LensHaloMultiMap::force_halo(double *alpha
       *kappa += t_kappa;
     
     }
-    /*else{
-    
-    alpha[0] = 0;
-    alpha[1] = 0;
-    gamma[0] = 0;
-    gamma[1] = 0;
-    *kappa = 0;
-  }*/
   }
   return;
 }
