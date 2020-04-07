@@ -605,7 +605,7 @@ void LensHaloMultiMap::force_halo(double *alpha
   
   // interpolate from the maps
   
-  long_range_map.evaluate(xx,*kappa,gamma,alpha);
+  //long_range_map.evaluate(xx,*kappa,gamma,alpha);  !!!
 
   for(auto &smap : short_range_maps){
 
