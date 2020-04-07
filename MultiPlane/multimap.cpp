@@ -608,9 +608,11 @@ void LensHaloMultiMap::force_halo(double *alpha
   //long_range_map.evaluate(xx,*kappa,gamma,alpha);  !!!
 
   *kappa = 0.0; // !!!
-
+  std::cerr << "# of maps = " << short_range_maps.size() << std::endl;
+  ERROR_MESSAGE();
+  exit(1);
+  
   for(auto &smap : short_range_maps){
-    *kappa += 1.0; // !!!
 
     if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
       *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
@@ -626,7 +628,6 @@ void LensHaloMultiMap::force_halo(double *alpha
       gamma[0] += t_gamma[0];
       gamma[1] += t_gamma[1];
       *kappa += t_kappa;
-      *kappa = 1.0; // !!!
     }
   }
   return;
