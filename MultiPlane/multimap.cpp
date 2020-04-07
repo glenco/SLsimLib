@@ -607,7 +607,10 @@ void LensHaloMultiMap::force_halo(double *alpha
   
   //long_range_map.evaluate(xx,*kappa,gamma,alpha);  !!!
 
+  *kappa = 0.0; // !!!
+
   for(auto &smap : short_range_maps){
+    *kappa += 1.0; // !!!
 
     if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
       *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
