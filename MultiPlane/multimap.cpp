@@ -623,7 +623,7 @@ void LensHaloMultiMap::force_halo(double *alpha
       gamma[0] += t_gamma[0];
       gamma[1] += t_gamma[1];
       *kappa += t_kappa;
-    
+      *kappa = 1.0; // !!!
     }
   }
   return;
