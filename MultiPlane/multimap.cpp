@@ -605,17 +605,13 @@ void LensHaloMultiMap::force_halo(double *alpha
   
   // interpolate from the maps
   
-  //long_range_map.evaluate(xx,*kappa,gamma,alpha);  !!!
+  long_range_map.evaluate(xx,*kappa,gamma,alpha);
   
   for(auto &smap : short_range_maps){
 
     if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
       *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
        ){
-
-      std:cerr << "It made it !" << std::endl; // !!!
-      ERROR_MESSAGE();
-      exit(1);
 
       float t_kappa,t_gamma[3];
       double t_alpha[2];

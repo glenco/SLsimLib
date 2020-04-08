@@ -499,7 +499,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
     std:: cout << " differes from the number of particles : " << np << std:: endl;
     std:: cout << " number of group found : " << ng << std:: endl;
     std:: cout << "     " << std:: endl;
-    std:: cout << " I will STOP here!!! " << std:: endl;
+    std:: cout << " I will STOP here! " << std:: endl;
     exit(1);
   }
   if(idgroup.size()>0){
