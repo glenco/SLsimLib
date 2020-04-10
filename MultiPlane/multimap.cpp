@@ -94,6 +94,25 @@ LensHalo(redshift,c),write_shorts(write_subfields)
       std::cerr << "need ave_ang_sd in " << lr_file << std::endl;
       throw std::invalid_argument("need ave_ang_sd in ");
     }
+    // *****************************************************
+
+    // check that the header information is what is expected
+    double tmp_double;
+    int tmp_int;
+    cpfits.readKey("redshift",tmp_double);
+    if(tmp_double != redshift) long_range_file_exists = false;
+    cpfits.readKey("mass_unit",tmp_double);
+    if(tmp_double != mass_unit) long_range_file_exists = false;
+
+    cpfits.readKey("cosmology",tmp_int);
+    if(tmp_int != c.ParamSet()) long_range_file_exists = false;
+
+    cpfits.readKey("rs2",tmp_double);
+    if(tmp_double != rs2) long_range_file_exists = false;
+    cpfits.readKey("border_width",tmp_double);
+    if(tmp_double != border_width) long_range_file_exists = false;
+
+    // *****************************************************
 
  /* }else if(single_grid){
     std::vector<long> first = {1,1};
@@ -124,7 +143,8 @@ LensHalo(redshift,c),write_shorts(write_subfields)
                                          ,plan_c2r_long_range);
     //long_range_map.PreProcessFFTWMap<UNIT>(unit,mutex_multimap);
 */
-  }else{
+  }
+  if( !long_range_file_exists ){
 
     long_range_map.lowerleft = tmp_map.lowerleft;
     long_range_map.upperright = tmp_map.upperright;
@@ -292,7 +312,17 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     long_range_map.write("!" + lr_file);
       
     CPFITS_WRITE tmp_cpfits(lr_file,true);
+ 
+    // log parameters so that they can be checked later
+    // *****************************************************
     tmp_cpfits.writeKey("ave_ang_sd", ave_ang_sd,"average angulare density");
+    tmp_cpfits.writeKey("redshift",redshift,"");
+    tmp_cpfits.writeKey("mass_unit",mass_unit,"");
+    tmp_cpfits.writeKey("cosmology",c.ParamSet(),"cosmology");
+    tmp_cpfits.writeKey("rs2",rs2,"");
+    tmp_cpfits.writeKey("border_width",border_width,"");
+    // *****************************************************
+                        
   }
 };
 
