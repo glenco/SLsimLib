@@ -144,9 +144,9 @@ void LensHaloBaseNSIE::force_halo(
   }
   
   // add stars for microlensing
-  if(stars_N > 0 && stars_implanted){
-    force_stars(alpha,kappa,gamma,xcm);
-  }
+//  if(stars_N > 0 && stars_implanted){
+//    force_stars(alpha,kappa,gamma,xcm);
+//  }
   
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
@@ -202,11 +202,11 @@ void LensHaloBaseNSIE::assignParams(InputParams& params,const COSMOLOGY &cosmo){
     
   }
   // Stars parameters
-  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+  //if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   
-  else if(stars_N){
-    assignParams_stars(params);
-  }
+//  else if(stars_N){
+ //   assignParams_stars(params);
+ // }
   
 }
 
@@ -291,8 +291,8 @@ LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
   perturb_rms = new PosType[6];
   
   // parameters for stars
-  stars_implanted = false; // stars are implanted later
-  star_theta_force = 0.1;
+  //stars_implanted = false; // stars are implanted later
+  //star_theta_force = 0.1;
   sub_theta_force = 0.1;
   
   perturb_Nmodes = 0;
@@ -352,7 +352,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 	if(Sigma_crit)
 		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
 
-	if (stars_implanted) PrintStars(show_stars);
+	//if (stars_implanted) PrintStars(show_stars);
 }
 
 std::size_t LensHaloBaseNSIE::Nparams() const
@@ -434,12 +434,12 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 		delete[] subs;
 		delete[] sub_substructures;
 	}
-	if(stars_N > 0 && stars_implanted){
-		// std::cout << "deleting stars" << endl;
-		//delete[] star_masses;
-		star_xdisk.clear();
-		delete star_tree;
-	}
+//	if(stars_N > 0 && stars_implanted){
+//		// std::cout << "deleting stars" << endl;
+//		//delete[] star_masses;
+//		star_xdisk.clear();
+//		delete star_tree;
+//	}
 }
 
 /******************************************************

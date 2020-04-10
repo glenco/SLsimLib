@@ -122,7 +122,7 @@ public:
   //PosType getEinstein_ro(){return Einstein_ro;}
 
   PosType getPerturb_beta(){return perturb_beta;}
-  IMFtype getIMF_type(){return main_stars_imf_type;}
+  //IMFtype getIMF_type(){return main_stars_imf_type;}
   EllipMethod getEllipMethod(){return main_ellip_method;}
   
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear
