@@ -112,6 +112,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     cpfits.readKey("border_width",tmp_double);
     if(tmp_double != border_width) long_range_file_exists = false;
 
+    if(!long_range_file_exists) std::cout << "Long range file not compatible. Recalculating .. " << std::endl;
     // *****************************************************
 
  /* }else if(single_grid){
