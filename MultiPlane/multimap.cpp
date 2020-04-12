@@ -114,7 +114,6 @@ LensHalo(redshift,c),write_shorts(write_subfields)
       std::cout << "missmatch cosmology " << tmp_int << " " << c.ParamSet() << std::endl;
       long_range_file_exists = false;
     }
-    
     cpfits.readKey("rs2",tmp_double);
     if( fabs((tmp_double-rs2)/rs2) > 1.0e-5 ){
       std::cout << "missmatch rs2 " << tmp_double << " " << rs2 << std::endl;
@@ -273,8 +272,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
   
   short_range_maps.resize(number_of_subfields);
 
-  
-  size_t nx_submap = (size_t)(Noriginal[0] / npanes + 0.5);
+  size_t nx_submap = (size_t)(Noriginal[0] * 1.0 / npanes + 0.5);
   size_t ny_submap = nx_submap;
 
   if( nx_submap > Noriginal[0]
@@ -318,9 +316,8 @@ LensHalo(redshift,c),write_shorts(write_subfields)
    }
   
   if(!long_range_file_exists){
-    long_range_map.ProcessFFTs<UNIT>(padd_lr,unit
-                                          ,plan_long_range);
-    //long_range_map.PreProcessFFTWMap<WLR>(padd_lr,wlr,mutex_multimap);
+    //long_range_map.ProcessFFTs<UNIT>(padd_lr,unit,plan_long_range);
+    long_range_map.ProcessFFTs<WLR>(padd_lr,wlr,plan_long_range);
     
     std::lock_guard<std::mutex> lock(mutex_multimap);
     long_range_map.write("!" + lr_file);
