@@ -100,7 +100,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     double tmp_double;
     int tmp_int;
     cpfits.readKey("redshift",tmp_double);
-    if(tmp_double != redshift){
+    if(fabs((tmp_double-redshift)/redshift) > 1.0e-5 ){
       std::cout << "missmatch z " << tmp_double << " " << redshift << std::endl;
       long_range_file_exists = false;
     }
