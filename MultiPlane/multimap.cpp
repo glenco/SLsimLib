@@ -100,18 +100,31 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     double tmp_double;
     int tmp_int;
     cpfits.readKey("redshift",tmp_double);
-    if(tmp_double != redshift) long_range_file_exists = false;
+    if(tmp_double != redshift){
+      std::cout << "missmatch z " << tmp_double << " " << redshift << std::endl;
+      long_range_file_exists = false;
+    }
     cpfits.readKey("mass_unit",tmp_double);
-    if(tmp_double != mass_unit) long_range_file_exists = false;
-
+    if(tmp_double != mass_unit){
+      std::cout << "missmatch mass_units " << tmp_double << " " << mass_unit << std::endl;
+      long_range_file_exists = false;
+    }
     cpfits.readKey("cosmology",tmp_int);
-    if(tmp_int != c.ParamSet()) long_range_file_exists = false;
-
+    if(tmp_int != c.ParamSet()){
+      std::cout << "missmatch cosmology " << tmp_int << " " << c.ParamSet() << std::endl;
+      long_range_file_exists = false;
+    }
+    
     cpfits.readKey("rs2",tmp_double);
-    if( fabs((tmp_double-rs2)/rs2) > 1.0e-5 ) long_range_file_exists = false;
+    if( fabs((tmp_double-rs2)/rs2) > 1.0e-5 ){
+      std::cout << "missmatch rs2 " << tmp_double << " " << rs2 << std::endl;
+      long_range_file_exists = false;
+    }
     cpfits.readKey("border_width",tmp_double);
-    if(fabs((tmp_double-border_width)/border_width) > 1.0e-5 ) long_range_file_exists = false;
-
+    if(fabs((tmp_double-border_width)/border_width) > 1.0e-5 ){
+      std::cout << "missmatch border_width " << tmp_double << " " << border_width << std::endl;
+      long_range_file_exists = false;
+    }
     if(!long_range_file_exists) std::cout << "Long range file not compatible. Recalculating .. " << std::endl;
     // *****************************************************
 
@@ -640,8 +653,8 @@ void LensHaloMultiMap::force_halo(double *alpha
   
   for(auto &smap : short_range_maps){
 
-    if((xx[0] >= smap.lowerleft[0])*(xx[0] <= smap.upperright[0])
-      *(xx[1] >= smap.lowerleft[1])*(xx[1] <= smap.upperright[1])
+    if(( xx[0] >= smap.lowerleft[0] )*( xx[0] <= smap.upperright[0] )
+      *( xx[1] >= smap.lowerleft[1] )*( xx[1] <= smap.upperright[1] )
        ){
 
       float t_kappa,t_gamma[3];
@@ -656,6 +669,7 @@ void LensHaloMultiMap::force_halo(double *alpha
       *kappa += t_kappa;
     }
   }
+  
   return;
 }
 
