@@ -108,9 +108,9 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     if(tmp_int != c.ParamSet()) long_range_file_exists = false;
 
     cpfits.readKey("rs2",tmp_double);
-    if(tmp_double != rs2) long_range_file_exists = false;
+    if( fabs((tmp_double-rs2)/rs2) > 1.0e-5 ) long_range_file_exists = false;
     cpfits.readKey("border_width",tmp_double);
-    if(tmp_double != border_width) long_range_file_exists = false;
+    if(fabs((tmp_double-border_width)/border_width) > 1.0e-5 ) long_range_file_exists = false;
 
     if(!long_range_file_exists) std::cout << "Long range file not compatible. Recalculating .. " << std::endl;
     // *****************************************************
