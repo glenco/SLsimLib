@@ -265,7 +265,7 @@ public:
   /// return range of long range map in physical Mpc
   double getRangeMpc_lr() const { return long_range_map.boxlMpc; }
   /// return range of long range map in physical Mpc
-  double getRangeMpc_sr() const { return nx_sub*resolution; }
+  double getRangeMpc_sr() const { return nx_sub*resolution_mpc; }
 
   /// return number of pixels on a x-axis side in original map
 	size_t getNx_lr() const { return long_range_map.nx; }
@@ -284,7 +284,7 @@ public:
   
   double getMax() const {return max_pix;}
   double getMin() const {return min_pix;}
-  double getResolutionMpc() const {return resolution;}
+  double getResolutionMpc() const {return resolution_mpc;}
   double getResolutionAngular() const {return angular_resolution;}
 
   void operator =(LensHaloMultiMap &&m){
@@ -300,9 +300,9 @@ public:
     mass_unit = m.mass_unit;
     Noriginal[0] = m.Noriginal[0];
     Noriginal[1] = m.Noriginal[1];
-    resolution = m.resolution;
+    resolution_mpc = m.resolution_mpc;
     angular_resolution = m.angular_resolution;
-    border_width = m.border_width;
+    border_width_pix = m.border_width_pix;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
     zerosize = m.zerosize;
@@ -328,9 +328,9 @@ public:
     mass_unit = m.mass_unit;
     Noriginal[0] = m.Noriginal[0];
     Noriginal[1] = m.Noriginal[1];
-    resolution = m.resolution;
+    resolution_mpc = m.resolution_mpc;
     angular_resolution = m.angular_resolution;
-    border_width = m.border_width;
+    border_width_pix = m.border_width_pix;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
     zerosize = m.zerosize;
@@ -361,9 +361,9 @@ private:
   double mass_unit;
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
-  double resolution;   // resolution of original image and short range image in Mpc
+  double resolution_mpc;   // resolution of original image and short range image in Mpc
   double angular_resolution;  // angular resolution of original image
-  long border_width;   // width of short range maps padding
+  long border_width_pix;   // width of short range maps padding
   std::string fitsfilename;
   std::string subfield_filename;
   
