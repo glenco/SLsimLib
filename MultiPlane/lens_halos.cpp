@@ -1060,20 +1060,7 @@ PosType LensHaloRealNSIE::rmax_calc(){
  }
  */
 
-/** \brief returns the lensing quantities of a ray in center of mass coordinates.
- *
- *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need
- *  to be zeroed out if the contribution of just this halo is wanted.
- */
-void LensHalo::force_halo(
-                          PosType *alpha          /// deflection solar mass/Mpc
-                          ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
-                          ,KappaType *gamma     /// three components of shear
-                          ,KappaType *phi       /// potential in solar masses
-                          ,PosType const *xcm   /// position relative to center (Mpc?)
-                          ,bool subtract_point /// if true contribution from a point mass is subtracted
-                          ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
-)
+void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening)
 {
   if (elliptical_flag){
     force_halo_asym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);

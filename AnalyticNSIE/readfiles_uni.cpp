@@ -87,6 +87,7 @@ void LensHaloUniform::force_halo(
   alpha[0] *= -1;
   alpha[1] *= -1;
   
+  
   //*phi += phi_tmp ;
   
   assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);

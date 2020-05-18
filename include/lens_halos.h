@@ -153,13 +153,29 @@ public:
    if not overwritten by derived class it uses alpha_h(), gamma_h(), etc. of the
    derived case or for a point source in this class
    
+   xcm - the physical position on the lens plane relative to the center of the LensHalo in Mpc
   Units :
+   
   ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
   KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
   GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
   PHI      -    mass - PHI / Sig_crit is the lensing potential
+   
+* returns the lensing quantities of a ray in center of mass coordinates.
+   *
+   *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need
+   *  to be zeroed out if the contribution of just this halo is wanted.
    */
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
+  virtual void force_halo(
+      PosType *alpha          /// deflection solar mass/Mpc
+      ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
+      ,KappaType *gamma     /// three components of shear
+      ,KappaType *phi       /// potential in solar masses
+      ,PosType const *xcm   /// position relative to center (Mpc?)
+      ,bool subtract_point=false /// if true contribution from a point mass is subtracted
+      ,PosType screening=1.0   /// the factor by which to scale the mass for screening of the point mass subtraction
+  );
+
   
 	/// force tree calculation for stars
 	//void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
@@ -244,12 +260,14 @@ private:
   /// Position of the Halo in angle
   PosType posHalo[2];
   PosType zlens;
-  float mass;
   // This is the size of the halo beyond which it does not have the expected profile.
   float Rsize = 0;
 
 protected:
 
+  // total mass in Msun
+  float mass;
+  // angular size distance to this lens
   PosType Dist;
   PosType mnorm;
 
