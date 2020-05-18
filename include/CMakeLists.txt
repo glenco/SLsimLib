@@ -54,4 +54,5 @@ add_sources(
 	multimap.h
 	disk.h
 	cpfits.h
+	slicer.h
 )
