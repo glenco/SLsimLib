@@ -459,11 +459,11 @@ void LensMap::ProcessFFTs(
         int jj = j-jmin;
         
         if(ii>=nx || jj>=ny){
-          std::cout << " 1 error mapping " << ii << "  " << jj << std::endl;
+          std::cerr << " 1 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
         if(ii<0 || jj<0){
-          std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
+          std::cerr << " 2 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
         assert(ii+nx*jj < surface_density.size());

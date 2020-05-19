@@ -280,7 +280,7 @@ std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long N
 
 	if(type==Mono){
 		if((minmass!=maxmass)){
-		    cout << "For IMF type Mono main_stars_min_mass and main_stars_max_mass must be defined in parameter file and they must be equal" << endl;
+		    cerr << "For IMF type Mono main_stars_min_mass and main_stars_max_mass must be defined in parameter file and they must be equal" << endl;
 		    exit(1);
 		}
 		for(i = 0; i < Nstars; i++){
@@ -290,7 +290,7 @@ std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long N
 
     if(type==Salpeter){
     	if(minmass==maxmass){
-    			    cout << "For IMF type Salpeter main_stars_min_mass and main_stars_max_mass must be defined in parameter file" << endl;
+    			    cerr << "For IMF type Salpeter main_stars_min_mass and main_stars_max_mass must be defined in parameter file" << endl;
     			    exit(1);
     	}
     	powerp1 = -1.35;
@@ -303,7 +303,7 @@ std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long N
 
     if(type==SinglePowerLaw){
        	if((minmass==maxmass) || (powerlo!=powerhi) || ((powerlo==0)&(powerhi==0))){
-       			    cout << "For IMF type SinglePowerLaw main_stars_min_mass, main_stars_max_mass and main_stars_lo_mass_slope must be defined in parameter file. main_stars_lo_mass_slope must be equal to main_stars_hi_mass_slope, main_stars_min_mass must be different from main_stars_max_mass!" << endl;
+       			    cerr << "For IMF type SinglePowerLaw main_stars_min_mass, main_stars_max_mass and main_stars_lo_mass_slope must be defined in parameter file. main_stars_lo_mass_slope must be equal to main_stars_hi_mass_slope, main_stars_min_mass must be different from main_stars_max_mass!" << endl;
        			    exit(1);
        	}
 
@@ -318,7 +318,7 @@ std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long N
 
     if(type==Chabrier){
 		if(minmass==maxmass){
-			cout << "For IMF type Chabrier main_stars_min_mass and main_stars_max_mass must be defined in parameter file!" << endl;
+			cerr << "For IMF type Chabrier main_stars_min_mass and main_stars_max_mass must be defined in parameter file!" << endl;
 			exit(1);
 		}
 		PosType chab_param[]={0.086,0.22,0.57};
@@ -342,11 +342,11 @@ std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long N
 
     if(type==BrokenPowerLaw){
     	if(powerlo==powerhi){
-    		cout << "For IMF type BrokenPowerLaw inner slope (main_stars_lo_mass_slope) and outer slope (main_stars_hi_mass_slope) must be defined in parameter file" << endl;
+    		cerr << "For IMF type BrokenPowerLaw inner slope (main_stars_lo_mass_slope) and outer slope (main_stars_hi_mass_slope) must be defined in parameter file" << endl;
     		exit(1);
     	}
     	if((powerlo==-1) || (powerhi==-1) ){
-    	    cout << "For IMF type BrokenPowerLaw no slope of -1 is allowed." << endl;
+    	    cerr << "For IMF type BrokenPowerLaw no slope of -1 is allowed." << endl;
     	    exit(1);
     	}
 
@@ -376,7 +376,7 @@ std::vector<float> LensHalo::stellar_mass_function(IMFtype type, unsigned long N
     	bendmass1=0.08;
     	bendmass2=0.5;
 		if((minmass>bendmass1)||(maxmass<bendmass2)){
-			cout << "For IMF type Kroupa main_stars_min_mass<0.08 and main_stars_max_mass>0.5 must be defined in parameter file!" << endl;
+			cerr << "For IMF type Kroupa main_stars_min_mass<0.08 and main_stars_max_mass>0.5 must be defined in parameter file!" << endl;
 			exit(1);
 		}
 		else{
