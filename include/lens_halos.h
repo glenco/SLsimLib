@@ -239,15 +239,15 @@ public:
   PosType renormalization(PosType r_max);
  
   /** \brief Map a PixelMap of the surface, density, potential and potential gradient
-   
+   centred on (0,0) in LenHalo coordinates
+
    Units :
    ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
    KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
    GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
-   PHI      -    mass - PHI / Sig_crit is the lensing potential
- 
-   centred on (0,0) in LenHalo coordinates
-   */
+   PHI      -    mass - PHI / Sig_crit / Dl / Dl  is the lensing potential whose angular gradient is the deflection and angular Laplacian is the convergence
+   
+    */
   PixelMap map_variables(
                          LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
                          ,size_t Nx
