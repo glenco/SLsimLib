@@ -284,7 +284,7 @@ void LensHaloParticles<PType>::set_up(
   stars_N = 0;
   stars_implanted = false;
   
-  Rmax = 1.0e3;
+  Rmax = 1.0e100;
   LensHalo::setRsize(Rmax);
   
   // convert from comoving to physical coordinates

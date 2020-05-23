@@ -228,7 +228,7 @@ public:
    ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
    KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
    GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
-   PHI      -    mass - PHI / Sig_crit is the lensing potential
+   PHI      -    mass - PHI / Sig_crit / Dl / Dl  is the lensing potential whose angular gradient is the deflection and angular Laplacian is the convergence
  
    centred on (0,0) in LenHalo coordinates
    */
@@ -236,7 +236,7 @@ public:
                          LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
                          ,size_t Nx
                          ,size_t Ny
-                         ,double res             /// resolution in physical Mpc on the lens plane
+                         ,double res   /// resolution in physical Mpc on the lens plane
   );
   
 private:

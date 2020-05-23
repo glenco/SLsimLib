@@ -263,7 +263,7 @@ PixelMap LensHalo::map_variables(
                        LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
                        ,size_t Nx
                        ,size_t Ny
-                       ,double res             /// resolution in physical Mpc on the lens plane
+                       ,double res /// resolution in physical Mpc on the lens plane
 ){
   
   Point_2d center;

@@ -8,8 +8,6 @@
 /*
  * quadTree.cpp
  *
- *  Created on: Sep 4, 2012
- *      Author: mpetkova
  */
 
 /*
@@ -852,14 +850,14 @@ void TreeQuadParticles<PType>::walkTree_iter(
             xcm[1] = tree->xp[tmp_index][1] - ray[1];
             
             rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-         
-              if(rcm2 < 1e-20) rcm2 = 1e-20;
+           
+            if(rcm2 < 1e-20) rcm2 = 1e-20;
  
-              //PosType size = sizes[tmp_index*MultiRadius];
-              PosType size = xxp[tmp_index*MultiRadius].size();
+            //PosType size = sizes[tmp_index*MultiRadius];
+            PosType size = xxp[tmp_index*MultiRadius].size();
 
-              // intersecting, subtract the point particle
-              if(rcm2 < 4*size*size)
+            // intersecting, subtract the point particle
+            if(rcm2 < 4*size*size)
               {
                 b_spline_profile(xcm,sqrt(rcm2),xxp[MultiMass*tmp_index].Mass(),size,alpha,kappa,gamma,phi);
               }

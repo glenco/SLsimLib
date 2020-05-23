@@ -753,7 +753,7 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
       }
     }
   }
-  // phi - this is done over because of the window in Fourier space
+  // phi 
   {
     
     for( int i=0; i<Nnx/2+1; i++ ){

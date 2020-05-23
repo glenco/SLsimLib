@@ -371,7 +371,7 @@ void LensHaloMassMap::assignParams(InputParams& params)
 /** 
  *
  * \brief Routine for obtaining the deflection and other lensing quantities for
- * a MOKA map (MOKALensHalo), for just one ray!!
+ * a LensHaloMassMap for just one ray!!
  *
  */
 void LensHaloMassMap::force_halo(double *alpha
@@ -399,8 +399,6 @@ void LensHaloMassMap::force_halo(double *alpha
   *kappa = interp.interpolate(map.surface_density);
   *phi = interp.interpolate(map.phi_bar);
   
-  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-
   return;
 }
 

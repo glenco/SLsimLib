@@ -674,7 +674,7 @@ void LensMap::ProcessFFTs(
     }
   }
 
-  // phi - this is done over because of the window in Fourier space
+  // phi
   {
     
     // build modes for each pixel in the fourier space
@@ -840,7 +840,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
     for( size_t i=0; i<NN; i++ ) alpha2_bar[i] = -1*float(realsp[i]/NN);
   }
     
-    // phi - this is done over because of the window in Fourier space
+    // phi 
     {
       
       // build modes for each pixel in the fourier space

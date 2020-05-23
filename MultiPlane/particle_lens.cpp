@@ -16,6 +16,8 @@
 // ******************** methods for MakeParticleLenses *********************************
 // *************************************************************************************
 // *************************************************************************************
+float ParticleTypeSimple::Size = 0;
+float ParticleTypeSimple::Mass = 0;
 
 MakeParticleLenses::MakeParticleLenses(
                     const std::string &filename  /// path / root name of gadget-2 snapshot
