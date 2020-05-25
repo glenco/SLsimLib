@@ -880,10 +880,7 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
   cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
   cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
-  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+ 
   cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
@@ -897,7 +894,6 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
   cpfits.writeKey("RA", center[0], "radians, center");
   cpfits.writeKey("DEC", center[1], "radians, center");
-  
 }
 
 void PixelMap::printFITS(std::string filename

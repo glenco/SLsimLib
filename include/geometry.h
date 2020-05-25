@@ -350,7 +350,8 @@ void SphericalPoint<T>::TOcartisian(T x[]) const{
 /// output cartisian coordinates of the point
 template <typename T>
 Point_3d<T> SphericalPoint<T>::TOcartisian() const{
-  return Point_3d<T>(r*cos(theta)*cos(phi),r*cos(theta)*sin(phi),r*sin(theta) );
+  return Point_3d<T>(r*cos(theta)*cos(phi)
+                     ,r*cos(theta)*sin(phi),r*sin(theta) );
 }
 
 /// set the spherical coordinates of the point from the cartisian coordinates
@@ -420,17 +421,18 @@ void SphericalPoint<T>::OrthographicProjection(
     const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
     ,T x[]             /// 2D output coordinate on projection
 ) const{
-  x[0] = cos(theta)*sin(phi - central.phi);
-  x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi);
+  double c = cos(theta);
+  x[0] = c*sin(phi - central.phi);
+  x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*c*cos(phi - central.phi);
 }
 
 template <typename T>
 Point_2d SphericalPoint<T>::OrthographicProjection(
       const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
 ) const{
-  
-  return Point_2d( cos(theta)*sin(phi - central.phi),
-                  cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi) );
+  double c = cos(theta);
+  return Point_2d( c*sin(phi - central.phi),
+                  cos(central.theta)*sin(theta) - sin(central.theta)*c*cos(phi - central.phi) );
 }
 
 /** \brief Convert from an orthographic projection of the plane onto the unit sphere
@@ -443,9 +445,9 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
   PosType c = asin(rho);
   r=1.0;
-  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
-  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
-                            - x[1]*sin(central.theta)*sin(c) );
+  theta = asin( cos(c)*sin(central.theta) + x[1]*cos(central.theta) );
+  phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
+                            - x[1]*sin(central.theta) );
 }
     template <typename T>
 void SphericalPoint<T>::InverseOrthographicProjection(
@@ -455,9 +457,9 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
   PosType c = asin(rho);
   r=1.0;
-  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
-  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
-                            - x[1]*sin(central.theta)*sin(c) );
+  theta = asin( cos(c)*sin(central.theta) + x[1]*cos(central.theta) );
+  phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
+                             - x[1]*sin(central.theta) );
 }
 
 ///  3 dimensional distance between points

@@ -261,12 +261,7 @@ xxp(xpt)
   
   for(ii=0;ii<Npoints;++ii) index[ii] = ii;
   
-  //haloON = false; // don't use internal halo parameters
-  //halos = NULL;
-  
-  //tree = BuildQTreeNB(xxp,Npoints,index);
   if(Npoints > 0){
-    //tree = BuildQTreeNB(xxp,Npoints,index);
     BuildQTreeNB(xxp,Npoints);
     CalcMoments();
   }
@@ -558,6 +553,7 @@ void TreeQuadParticles<PType>::CalcMoments(){
   PosType rcom,xcm[2],xcut;
   QBranchNB *cbranch;
   PosType tmp;
+  double absmass; // absolute magnitude of mass
   
   tree->moveTop();
   do{
@@ -567,27 +563,18 @@ void TreeQuadParticles<PType>::CalcMoments(){
                          + pow(cbranch->boundary_p2[1]-cbranch->boundary_p1[1],2) );
     
     // calculate mass
-    for(i=0,cbranch->mass=0;i<cbranch->nparticles;++i)
-      //if(haloON ){
-      //  cbranch->mass +=  halos[cbranch->particles[i]]->get_mass();
-      //}else{
-      //  cbranch->mass += masses[cbranch->particles[i]*MultiMass];
-      //}
+    for(i=0,cbranch->mass=0,absmass=0;i<cbranch->nparticles;++i){
       cbranch->mass += xxp[cbranch->particles[i]*MultiMass].mass();
-    
+      absmass += fabs(xxp[cbranch->particles[i]*MultiMass].mass());
+    }
     // calculate center of mass
     cbranch->center[0]=cbranch->center[1]=0;
     for(i=0;i<cbranch->nparticles;++i){
-      //if(haloON ){
-      //  tmp = halos[cbranch->particles[i]]->get_mass();
-      //}else{
-      //  tmp = masses[cbranch->particles[i]*MultiMass];
-      //}
-      tmp = xxp[cbranch->particles[i]*MultiMass].mass();
+      tmp = fabs(xxp[cbranch->particles[i]*MultiMass].mass());
 
       //tmp = haloON ? halos[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
-      cbranch->center[0] += tmp*tree->xxp[cbranch->particles[i]][0]/cbranch->mass;
-      cbranch->center[1] += tmp*tree->xxp[cbranch->particles[i]][1]/cbranch->mass;
+      cbranch->center[0] += tmp*tree->xxp[cbranch->particles[i]][0]/absmass;
+      cbranch->center[1] += tmp*tree->xxp[cbranch->particles[i]][1]/absmass;
     }
     //////////////////////////////////////////////
     // calculate quadropole moment of branch
@@ -597,11 +584,6 @@ void TreeQuadParticles<PType>::CalcMoments(){
       xcm[0]=tree->xxp[cbranch->particles[i]][0]-cbranch->center[0];
       xcm[1]=tree->xxp[cbranch->particles[i]][1]-cbranch->center[1];
       xcut = pow(xcm[0],2) + pow(xcm[1],2);
-      //if(haloON ){
-      //  tmp = halos[cbranch->particles[i]]->get_mass();
-      //}else{
-      //  tmp = masses[cbranch->particles[i]*MultiMass];
-      //}
       tmp = xxp[cbranch->particles[i]*MultiMass].mass();
 
       cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
@@ -617,24 +599,6 @@ void TreeQuadParticles<PType>::CalcMoments(){
     
     if(force_theta > 0.0) cbranch->rcrit_angle = 1.15470*rcom/(force_theta);
     else  cbranch->rcrit_angle=1.0e100;
-    
-    /*if(MultiRadius){
-     
-     for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-     tmp = haloON ? halos[cbranch->particles[i]].Rmax : sizes[cbranch->particles[i]];
-     if(cbranch->maxrsph <= tmp ){
-     cbranch->maxrsph = tmp;
-     }
-     }
-     
-     cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
-     
-     }else{
-     // single size case
-     cbranch->maxrsph = haloON ? halos[0].Rmax : sizes[0];
-     cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
-     }*/
-    //cbranch->rcrit_angle += cbranch->rcrit_part;
     
   }while(tree->WalkStep(true));
   

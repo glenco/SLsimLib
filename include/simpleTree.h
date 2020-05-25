@@ -33,11 +33,8 @@ struct BranchNB{
   IndexType nparticles;
   /// the number of particles that aren't in children
   IndexType big_particle;
-  /// Size of largest particle in branch
-  //PosType maxrsph;
   /// center of mass
   PosType *center;
-  //PosType mass;
   /// level in tree
   int level;
   unsigned long number;
@@ -52,17 +49,6 @@ struct BranchNB{
   /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
   /// Used for iterative tree walk.
   BranchNB *brother;
-
-  /* projected quantities */
-  /// quadropole moment of branch
-  //PosType quad[3];
-  /// largest dimension of box
-  //PosType rmax;
-  /// the critical distance below which a branch is opened in the
-  //PosType rcrit_angle;
-                /* force calculation */
-  //PosType rcrit_part;
-  //PosType cm[2]; /* projected center of mass */
 };
 
 /** \brief

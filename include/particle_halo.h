@@ -162,7 +162,7 @@ protected:
   PType *pp;
   std::vector<PType> trash_collector;
   
-  PosType min_size;
+  PosType min_size;  // minimum allowed size
   bool multimass;
   
   Utilities::Geometry::SphericalPoint<> center;
