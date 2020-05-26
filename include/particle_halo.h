@@ -47,7 +47,7 @@ public:
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,bool my_multimass       /// set to true is particles have different sizes
-                    ,PosType MinPSize        /// minimum particle size
+                    ,PosType MinPSize=0        /// minimum particle size in Mpc, overrides nearest neighbors aor input sizes for small particle sizes
                     ,bool verbose=false
   );
  
