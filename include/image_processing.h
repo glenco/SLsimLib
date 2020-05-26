@@ -68,6 +68,17 @@ public:
   }
 	inline double getResolution() const { return resolution; }
 	
+  /// returns right accention of center
+  double getRA(){return RA;}
+  /// returns declination of center
+  double getDEC(){return DEC;}
+  
+  /// set the coordinates of center
+  void setRAandDec(double RAin,double DECin){
+    RA = RAin;
+    DEC = DECin;
+  }
+  
   // Zero the whole map
   void Clean(){map *= 0;}
 
@@ -314,7 +325,8 @@ private:
   std::valarray<double> map;
 	std::size_t Nx;
 	std::size_t Ny;
-	double resolution,rangeX,rangeY,center[2];
+  double resolution,rangeX,rangeY,center[2];
+  double RA=0,DEC=0; // optional coordinates of center
 	double map_boundary_p1[2],map_boundary_p2[2];
   PixelMapUnits units=ndef;
   

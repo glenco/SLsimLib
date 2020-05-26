@@ -892,8 +892,10 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", center[0], "radians, center");
-  cpfits.writeKey("DEC", center[1], "radians, center");
+  cpfits.writeKey("RA", RA, "radians, center");
+  cpfits.writeKey("DEC",DEC, "radians, center");
+  cpfits.writeKey("center_x", center[0], "radians, center");
+  cpfits.writeKey("center_y", center[1], "radians, center");
 }
 
 void PixelMap::printFITS(std::string filename
@@ -932,9 +934,11 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", center[0], "radians");
-  cpfits.writeKey("DEC", center[1], "radians");
-  
+  cpfits.writeKey("RA", RA, "radians, center");
+  cpfits.writeKey("DEC",DEC, "radians, center");
+  cpfits.writeKey("center_x", center[0], "radians, center");
+  cpfits.writeKey("center_y", center[1], "radians, center");
+
   for(auto hp : extra_header_info){
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }
