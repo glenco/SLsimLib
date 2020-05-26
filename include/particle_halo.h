@@ -57,14 +57,19 @@ public:
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
-                    ,float MinPSize        /// minimum particle size
+                    ,float MinPSize = 0        /// minimum particle size
+                    ,bool keep_particles = false /// if true the LensHalo will not take ownership of the particles and will not distroy them when it  is destroyed
                     ,bool verbose=false
   ):LensHalo(redshift,cosmo), min_size(MinPSize),multimass(true)
   {
-    std::swap(pvector,trash_collector);
-    pp = trash_collector.data();
-    Npoints = trash_collector.size();
-    set_up(redshift,cosmo,theta_rotate,recenter,verbose);
+    Npoints = pvector.size();
+    if(keep_particles){
+      pp = pvector.data();
+    }else{
+      std::swap(pvector,trash_collector);
+      pp = trash_collector.data();
+    }
+     set_up(redshift,cosmo,theta_rotate,recenter,verbose);
   }
   ~LensHaloParticles();
   
