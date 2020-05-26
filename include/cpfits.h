@@ -356,6 +356,31 @@ public:
     check_status(status);
     }
 
+   /// add a new array to the file
+   void write_array(std::vector<double> &array){
+     long n = array.size();
+     int status=0;
+     std::lock_guard<std::mutex> hold(mutex_lock);
+     fits_create_img(fptr,DOUBLE_IMG,1,&n, &status);
+     check_status(status);
+     std::vector<long> fpixel(1,1);
+     fits_write_pix(fptr,TDOUBLE,fpixel.data(),
+                           n,array.data(),&status);
+     check_status(status);
+   }
+   /// add a new array to the file
+   void write_array(std::vector<float> &array){
+     long n = array.size();
+     int status=0;
+     std::lock_guard<std::mutex> hold(mutex_lock);
+     fits_create_img(fptr,FLOAT_IMG,1,&n, &status);
+     check_status(status);
+     std::vector<long> fpixel(1,1);
+     fits_write_pix(fptr,TFLOAT,fpixel.data(),
+                           n,array.data(),&status);
+     check_status(status);
+   }
+  
   /// add a new image or cube to the file
   void write_image(std::vector<double> &im,std::vector<long> &size){
     size_t n=1;

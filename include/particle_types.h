@@ -55,8 +55,19 @@ struct ParticleTypeSimple{
   float size(){return ParticleTypeSimple::Size;}
   float mass(){return ParticleTypeSimple::Mass;}
 };
-//float ParticleTypeSimple::Size = 0;
-//float ParticleTypeSimple::Mass = 0;
+
+/// Atomic data class for simulation particles of the same size and mass
+struct ParticleType2D{
+  float &operator[](int i){return x[i];}
+  float *operator*(){return x;}
+  float x[2];
+  
+  float Mass;
+  float Size;
+  
+  float size(){return Size;}
+  float mass(){return Mass;}
+};
 
 /// Atomic data class for stars with different masses
 struct StarType{

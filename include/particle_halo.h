@@ -19,6 +19,8 @@
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
  
+   You can create a LensHaloParticles<> directly from a file, but it is recommended that you use the MakeParticleLenses class to create them and then move them to a Lens object.
+ 
    Smoothing is done according to the density of particles in 3D.  Smoothing sizes are
    either read in from a file (names simulation_filename + "." + Nsmooth + "sizes") or calculated
    if the file does not exist (in which case the file is created).  This can be
@@ -38,7 +40,6 @@ class LensHaloParticles : public LensHalo
 {
 public:
   
-  
   LensHaloParticles(const std::string& simulation_filename /// name of data files
                     ,SimFileFormat format   /// format of data file
                     ,PosType redshift        /// redshift of origin
@@ -56,14 +57,19 @@ public:
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
-                    ,float MinPSize        /// minimum particle size
+                    ,float MinPSize = 0        /// minimum particle size
+                    ,bool keep_particles = false /// if true the LensHalo will not take ownership of the particles and will not distroy them when it  is destroyed
                     ,bool verbose=false
   ):LensHalo(redshift,cosmo), min_size(MinPSize),multimass(true)
   {
-    std::swap(pvector,trash_collector);
-    pp = trash_collector.data();
-    Npoints = trash_collector.size();
-    set_up(redshift,cosmo,theta_rotate,recenter,verbose);
+    Npoints = pvector.size();
+    if(keep_particles){
+      pp = pvector.data();
+    }else{
+      std::swap(pvector,trash_collector);
+      pp = trash_collector.data();
+    }
+     set_up(redshift,cosmo,theta_rotate,recenter,verbose);
   }
   ~LensHaloParticles();
   
@@ -161,7 +167,7 @@ protected:
   PType *pp;
   std::vector<PType> trash_collector;
   
-  PosType min_size;
+  PosType min_size;  // minimum allowed size
   bool multimass;
   
   Utilities::Geometry::SphericalPoint<> center;
@@ -283,7 +289,7 @@ void LensHaloParticles<PType>::set_up(
   stars_N = 0;
   stars_implanted = false;
   
-  Rmax = 1.0e3;
+  Rmax = 1.0e100;
   LensHalo::setRsize(Rmax);
   
   // convert from comoving to physical coordinates
@@ -837,8 +843,7 @@ public:
     for(auto p : halos) delete p;
   }
   
-  /// recenter the particles to 3d point in physical Mpc/h units
-  /// If the halos have already been created they will be destroyed.
+  /// recenter the particles to 3d point in physical Mpc/h units  If the halos have already been created they will be destroyed.
   void Recenter(Point_3d<> x);
 
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);

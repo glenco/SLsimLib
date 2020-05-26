@@ -10,7 +10,7 @@
 
 using namespace std;
 
-/**
+/*
  * \brief Reads in a parameter file and sets up an uniform lens.
  *
  * Sets many parameters within the lens model, source model and
@@ -36,21 +36,21 @@ LensHaloUniform::LensHaloUniform(InputParams& params, const COSMOLOGY& cosmo, bo
 }
 */
 
-/*LensHaloUniform::LensHaloUniform(InputParams& params, bool verbose): LensHalo(){
-  
-  assignParams(params);
-  
-  if(std::numeric_limits<float>::has_infinity){
-    Rmax = std::numeric_limits<float>::infinity();
-  }else{
-    Rmax = std::numeric_limits<float>::max();
-  }
-  perturb_Nmodes=3;
-  perturb_modes = new PosType[3];
-  
-  if(verbose) PrintLens(false,false);
-}
-*/
+//LensHaloUniform::LensHaloUniform(InputParams& params, bool verbose): LensHalo(){
+//  
+//  assignParams(params);
+//  
+//  if(std::numeric_limits<float>::has_infinity){
+//    Rmax = std::numeric_limits<float>::infinity();
+//  }else{
+//    Rmax = std::numeric_limits<float>::max();
+//  }
+//  perturb_Nmodes=3;
+//  perturb_modes = new PosType[3];
+//  
+//  if(verbose) PrintLens(false,false);
+//}
+
 
 LensHaloUniform::LensHaloUniform(double zlens,double Sigma,Point_2d &Shear,COSMOLOGY &cosmo): LensHalo(zlens,cosmo){
   

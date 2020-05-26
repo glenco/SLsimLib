@@ -71,9 +71,9 @@ GLAMER_TEST_USES(LensTest)
 class Lens{
 public:
   Lens(long* seed, PosType z_source,CosmoParamSet cosmoset, bool verbose = false);
-  Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose = false);
+  //Lens(InputParams& params, long* my_seed, CosmoParamSet cosmoset, bool verbose = false);
   Lens(long* seed, PosType z_source,const COSMOLOGY &cosmo, bool verbose = false);
-  Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmo, bool verbose = false);
+  //Lens(InputParams& params, long* my_seed, const COSMOLOGY &cosmo, bool verbose = false);
   
 	~Lens();
 
@@ -106,7 +106,7 @@ public:
 			return main_halos[0]->getZlens();
 		else{
 			ERROR_MESSAGE();
-			std::cout << "error, no main lens present" << std::endl;
+			std::cerr << "error, no main lens present" << std::endl;
 			exit(1);
 		}
 	}
@@ -116,7 +116,7 @@ public:
 			return cosmo.angDist( main_halos[0]->getZlens());
 		else{
 			ERROR_MESSAGE();
-			std::cout << "error, no main lens present" << std::endl;
+			std::cerr << "error, no main lens present" << std::endl;
 			exit(1);
 		}
 	}
@@ -503,8 +503,8 @@ private:
 	COSMOLOGY cosmo;
 
 	
-	void readCosmology(InputParams& params);
-	void assignParams(InputParams& params,bool verbose = false);
+	//void readCosmology(InputParams& params);
+	//void assignParams(InputParams& params,bool verbose = false);
   void defaultParams(PosType zsource,bool verbose = true);
 	
 	/// turns source plane on and off
@@ -522,8 +522,8 @@ private:
 	
 	void quicksort(LensHaloHndl *halo,PosType **pos,unsigned long N);
 	
-	/// create the lens planes
-	void buildPlanes(InputParams& params, bool verbose);
+	// create the lens planes
+	//void buildPlanes(InputParams& params, bool verbose);
 	
 	/// sets the distances and redshifts of the field planes equidistant
 	void setFieldDist();
@@ -551,8 +551,8 @@ private:
 	/// build the field planes and sort halos onto them
 	void createFieldPlanes(bool verbose);
 	
-	/// generate main halo from the parameter file
-	void createMainHalos(InputParams& params);
+	// generate main halo from the parameter file
+	//void createMainHalos(InputParams& params);
 	/// generate main halo from the parameter file
 	void createMainPlanes();
 	/// add a main halo to an existing plane, or create a new one plane if it is not close enough

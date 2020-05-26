@@ -38,7 +38,7 @@ PosType LensHaloJaffe::g2function(PosType x) const{
 
 PosType LensHaloJaffe::hfunction(PosType x) const{
 	ERROR_MESSAGE();
-	std::cout << "there is yet no analytic expression" << std::endl;
+  std::cerr << "there is yet no analytic expression" << std::endl;
 	exit(1);
 }
 

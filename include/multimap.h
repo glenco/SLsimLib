@@ -265,7 +265,7 @@ public:
   /// return range of long range map in physical Mpc
   double getRangeMpc_lr() const { return long_range_map.boxlMpc; }
   /// return range of long range map in physical Mpc
-  double getRangeMpc_sr() const { return nx_sub*resolution; }
+  double getRangeMpc_sr() const { return nx_sub*resolution_mpc; }
 
   /// return number of pixels on a x-axis side in original map
 	size_t getNx_lr() const { return long_range_map.nx; }
@@ -284,7 +284,7 @@ public:
   
   double getMax() const {return max_pix;}
   double getMin() const {return min_pix;}
-  double getResolutionMpc() const {return resolution;}
+  double getResolutionMpc() const {return resolution_mpc;}
   double getResolutionAngular() const {return angular_resolution;}
 
   void operator =(LensHaloMultiMap &&m){
@@ -300,9 +300,9 @@ public:
     mass_unit = m.mass_unit;
     Noriginal[0] = m.Noriginal[0];
     Noriginal[1] = m.Noriginal[1];
-    resolution = m.resolution;
+    resolution_mpc = m.resolution_mpc;
     angular_resolution = m.angular_resolution;
-    border_width = m.border_width;
+    border_width_pix = m.border_width_pix;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
     zerosize = m.zerosize;
@@ -328,9 +328,9 @@ public:
     mass_unit = m.mass_unit;
     Noriginal[0] = m.Noriginal[0];
     Noriginal[1] = m.Noriginal[1];
-    resolution = m.resolution;
+    resolution_mpc = m.resolution_mpc;
     angular_resolution = m.angular_resolution;
-    border_width = m.border_width;
+    border_width_pix = m.border_width_pix;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
     zerosize = m.zerosize;
@@ -361,9 +361,9 @@ private:
   double mass_unit;
   
   size_t Noriginal[2]; // number of pixels in each dimension in original image
-  double resolution;   // resolution of original image and short range image in Mpc
+  double resolution_mpc;   // resolution of original image and short range image in Mpc
   double angular_resolution;  // angular resolution of original image
-  long border_width;   // width of short range maps padding
+  long border_width_pix;   // width of short range maps padding
   std::string fitsfilename;
   std::string subfield_filename;
   
@@ -459,11 +459,11 @@ void LensMap::ProcessFFTs(
         int jj = j-jmin;
         
         if(ii>=nx || jj>=ny){
-          std::cout << " 1 error mapping " << ii << "  " << jj << std::endl;
+          std::cerr << " 1 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
         if(ii<0 || jj<0){
-          std::cout << " 2 error mapping " << ii << "  " << jj << std::endl;
+          std::cerr << " 2 error mapping " << ii << "  " << jj << std::endl;
           exit(1);
         }
         assert(ii+nx*jj < surface_density.size());
@@ -674,7 +674,7 @@ void LensMap::ProcessFFTs(
     }
   }
 
-  // phi - this is done over because of the window in Fourier space
+  // phi
   {
     
     // build modes for each pixel in the fourier space
@@ -840,7 +840,7 @@ void LensMap::ProcessFFTs(T Wphi_of_k
     for( size_t i=0; i<NN; i++ ) alpha2_bar[i] = -1*float(realsp[i]/NN);
   }
     
-    // phi - this is done over because of the window in Fourier space
+    // phi 
     {
       
       // build modes for each pixel in the fourier space

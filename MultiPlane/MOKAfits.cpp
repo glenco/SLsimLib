@@ -104,11 +104,11 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
   // try to read MVIR, if it exists is a MOKA map
   bool moka;
   
-  if(cpfits.readKey ("MVIR",m)){
-    moka=true;
-  }else{
+//  if(cpfits.readKey ("MVIR",m)){
+//    moka=true;
+//  }else{
     moka=false;
-  }
+//  }
   int n_images = cpfits.get_num_hdus();
 
   if(moka){
@@ -188,7 +188,7 @@ void MOKAmap::read(std::string MOKA_input_file,bool zeromean,const COSMOLOGY &co
       << " DLS - " << std::endl
       << " DS - " << std::endl
       << " W - " << std::endl;
-      exit(1);
+      throw std::runtime_error("bad file");
     }
     
   }else{  // Pixelized mass map
@@ -499,7 +499,7 @@ int fof(double l,std:: vector<double> xci, std:: vector<double> yci, std:: vecto
     std:: cout << " differes from the number of particles : " << np << std:: endl;
     std:: cout << " number of group found : " << ng << std:: endl;
     std:: cout << "     " << std:: endl;
-    std:: cout << " I will STOP here!!! " << std:: endl;
+    std:: cout << " I will STOP here! " << std:: endl;
     exit(1);
   }
   if(idgroup.size()>0){
@@ -753,7 +753,7 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
       }
     }
   }
-  // phi - this is done over because of the window in Fourier space
+  // phi 
   {
     
     for( int i=0; i<Nnx/2+1; i++ ){

@@ -24,7 +24,7 @@ namespace Utilities {
   /// Namespace for geometrical functions mostly having to do with spherical coordinates
   namespace Geometry{
     
-    /// represents a point in spherical coordinates theta = 0 is equator
+    /// represents a point in spherical coordinates, theta = 0 is equator
     template <typename T = double>
     class SphericalPoint{
       
@@ -66,10 +66,12 @@ namespace Utilities {
 
       void cartisianTOspherical(T const x[]);
       void TOspherical(Point_3d<T> &x);
+      
       void StereographicProjection(const SphericalPoint &central
                                    ,T x[]) const;
       void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
       Point_2d StereographicProjection(const SphericalPoint &central) const;
+      
       void OrthographicProjection(const SphericalPoint &central
                                   ,T x[]) const;
       Point_2d OrthographicProjection(const SphericalPoint &central) const;
@@ -107,8 +109,10 @@ namespace Utilities {
      Quaternion q(sp);
      
      // apply the rotation
-     q = q.Rotate(R);
-     
+     p = q.Rotate(R);
+     // this could also be written as
+     p = R*q*R.conj();
+
      // rotate in place, same as above but with one less copy
      q.RotInplace(R);
      
@@ -243,24 +247,11 @@ namespace Utilities {
       }
       
       Quaternion operator+(const Quaternion &q) const{
-        Quaternion p = q;
-        
-        p.v[0] += v[0];
-        p.v[1] += v[1];
-        p.v[2] += v[2];
-        p.v[3] += v[3];
-        
-        return p;
+        return Quaternion(v[0] + q.v[0] , v[1] + q.v[1] , v[2] + q.v[2] , v[3] + q.v[3] );
+
       }
       Quaternion operator-(const Quaternion &q) const{
-        Quaternion p = *this;
-        
-        p.v[0] -= q.v[0];
-        p.v[1] -= q.v[1];
-        p.v[2] -= q.v[2];
-        p.v[3] -= q.v[3];
-        
-        return p;
+        return Quaternion(v[0] - q.v[0] , v[1] - q.v[1] , v[2] - q.v[2] , v[3] - q.v[3] );
       }
       
       /// division by a scaler
@@ -359,7 +350,8 @@ void SphericalPoint<T>::TOcartisian(T x[]) const{
 /// output cartisian coordinates of the point
 template <typename T>
 Point_3d<T> SphericalPoint<T>::TOcartisian() const{
-  return Point_3d<T>(r*cos(theta)*cos(phi),r*cos(theta)*sin(phi),r*sin(theta) );
+  return Point_3d<T>(r*cos(theta)*cos(phi)
+                     ,r*cos(theta)*sin(phi),r*sin(theta) );
 }
 
 /// set the spherical coordinates of the point from the cartisian coordinates
@@ -429,17 +421,18 @@ void SphericalPoint<T>::OrthographicProjection(
     const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
     ,T x[]             /// 2D output coordinate on projection
 ) const{
-  x[0] = cos(theta)*sin(phi - central.phi);
-  x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi);
+  double c = cos(theta);
+  x[0] = c*sin(phi - central.phi);
+  x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*c*cos(phi - central.phi);
 }
 
 template <typename T>
 Point_2d SphericalPoint<T>::OrthographicProjection(
       const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
 ) const{
-  
-  return Point_2d( cos(theta)*sin(phi - central.phi),
-                  cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi) );
+  double c = cos(theta);
+  return Point_2d( c*sin(phi - central.phi),
+                  cos(central.theta)*sin(theta) - sin(central.theta)*c*cos(phi - central.phi) );
 }
 
 /** \brief Convert from an orthographic projection of the plane onto the unit sphere
@@ -452,9 +445,9 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
   PosType c = asin(rho);
   r=1.0;
-  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
-  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
-                            - x[1]*sin(central.theta)*sin(c) );
+  theta = asin( cos(c)*sin(central.theta) + x[1]*cos(central.theta) );
+  phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
+                            - x[1]*sin(central.theta) );
 }
     template <typename T>
 void SphericalPoint<T>::InverseOrthographicProjection(
@@ -464,9 +457,9 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
   PosType c = asin(rho);
   r=1.0;
-  theta = asin( cos(c)*sin(central.theta) + x[1]*sin(c)*cos(central.theta)/rho );
-  phi = central.phi + atan2(x[0]*sin(c),rho*cos(central.theta)*cos(c)
-                            - x[1]*sin(central.theta)*sin(c) );
+  theta = asin( cos(c)*sin(central.theta) + x[1]*cos(central.theta) );
+  phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
+                             - x[1]*sin(central.theta) );
 }
 
 ///  3 dimensional distance between points

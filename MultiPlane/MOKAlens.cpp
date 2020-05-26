@@ -69,9 +69,11 @@ MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
 maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
   initMap();
- 	
+  if(zerosize < 1.0 ){
+    std::cerr << "pixel_map_zeropad in LensHaloMap cosntructor must be >= 1" << std::endl;
+  }
   // set redshift to value from map
-  setZlens(map.zlens);
+  setZlens(map.zlens,lenscosmo);
 }
 
 /** \brief Create a LensHalo from a PixelMap representing the mass.
@@ -170,24 +172,24 @@ LensHalo(),MOKA_input_file(""),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_
   setZlens(zlens);
 }
 */
-/**
+/*
  * \brief allocates and reads the MOKA map in
  *
  *  In the future this could be used to read in individual PixelDMaps or other types of maps if the type were specified in the paramfile.
  */
-LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
-: LensHalo(), maptype(moka), cosmo(lenscosmo)
-{
-  // read in parameters
-  assignParams(params);
-  
-  // initialize MOKA map
-  initMap();
-  
-  // set redshift if necessary
-  if(LensHalo::getZlens() == -1)
-    setZlens(map.zlens);
-}
+//LensHaloMassMap::LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo)
+//: LensHalo(), maptype(moka), cosmo(lenscosmo)
+//{
+//  // read in parameters
+//  assignParams(params);
+//  
+//  // initialize MOKA map
+//  initMap();
+//  
+//  // set redshift if necessary
+//  if(LensHalo::getZlens() == -1)
+//    setZlens(map.zlens,lenscosmo);
+//}
 
 LensHaloMassMap::~LensHaloMassMap()
 {
@@ -344,9 +346,9 @@ void LensHaloMassMap::assignParams(InputParams& params)
 {
   PosType tmp;
   if(!params.get("z_lens", tmp)){
-    LensHalo::setZlens(-1); // set to -1 so that it will be set to the MOKA map value
+    LensHalo::setZlens(-1,cosmo); // set to -1 so that it will be set to the MOKA map value
   }else{
-    LensHalo::setZlens(tmp);
+    LensHalo::setZlens(tmp,cosmo);
   }
   if(!params.get("MOKA_input_file", MOKA_input_file))
   {
@@ -369,7 +371,7 @@ void LensHaloMassMap::assignParams(InputParams& params)
 /** 
  *
  * \brief Routine for obtaining the deflection and other lensing quantities for
- * a MOKA map (MOKALensHalo), for just one ray!!
+ * a LensHaloMassMap for just one ray!!
  *
  */
 void LensHaloMassMap::force_halo(double *alpha
@@ -397,8 +399,6 @@ void LensHaloMassMap::force_halo(double *alpha
   *kappa = interp.interpolate(map.surface_density);
   *phi = interp.interpolate(map.phi_bar);
   
-  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-
   return;
 }
 

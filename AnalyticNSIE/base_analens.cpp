@@ -160,18 +160,18 @@ void LensHaloBaseNSIE::force_halo(
  * Sets many parameters within the lens model, source model and
  * force calculation.
  */
-void LensHaloBaseNSIE::assignParams(InputParams& params){
+void LensHaloBaseNSIE::assignParams(InputParams& params,const COSMOLOGY &cosmo){
   double tmp;
 	if(!params.get("main_mass",tmp)) error_message1("main_mass",params.filename());
   LensHalo::setMass(tmp);
 	if(!params.get("main_zlens",tmp)) error_message1("main_zlens",params.filename());
-  LensHalo::setZlens(tmp);
+  LensHalo::setZlens(tmp,cosmo);
 	if(!params.get("main_sigma",sigma)) error_message1("main_sigma",params.filename());
 	if(!params.get("main_core",rcore)) error_message1("main_core",params.filename());
 	if(!params.get("main_axis_ratio",fratio)) error_message1("main_axis_ratio",params.filename());
   else if(fratio > 1){
     ERROR_MESSAGE();
-    std::cout << "parameter main_axis_ratio must be < 1 in file " << params.filename() << ". Use main_pos_angle to rotate the halo." << std::endl;
+    std::cerr << "parameter main_axis_ratio must be < 1 in file " << params.filename() << ". Use main_pos_angle to rotate the halo." << std::endl;
     exit(1);
   }
 	if(!params.get("main_pos_angle",pa)) error_message1("main_pos_angle",params.filename());
@@ -195,7 +195,7 @@ void LensHaloBaseNSIE::assignParams(InputParams& params){
     if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
     if(sub_Mmin < 1.0e3){
       ERROR_MESSAGE();
-      std::cout << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
+      std::cerr << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
       exit(1);
     }
     if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
@@ -264,28 +264,28 @@ void LensHaloFit::setCosmology(const COSMOLOGY& cosmo)
 }
 
 
-LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params) : LensHalo(){
-
-  perturb_rms = new PosType[6];
-
-  assignParams(params);
-
-  // parameters for stars
-  stars_implanted = false; // stars are implanted later
-  star_theta_force = 0.1;
-  sub_theta_force = 0.1;
-
-  perturb_Nmodes = 0;
-  //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
-
-  if(sub_Ndensity == 0)
-	  sub_N = 0;
-
-  Sigma_crit = 0;
-
-  substruct_implanted = false;
-
-}
+//LensHaloBaseNSIE::LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo) : LensHalo(){
+//
+//  perturb_rms = new PosType[6];
+//
+//  assignParams(params,cosmo);
+//
+//  // parameters for stars
+//  stars_implanted = false; // stars are implanted later
+//  star_theta_force = 0.1;
+//  sub_theta_force = 0.1;
+//
+//  perturb_Nmodes = 0;
+//  //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
+//
+//  if(sub_Ndensity == 0)
+//	  sub_N = 0;
+//
+//  Sigma_crit = 0;
+//
+//  substruct_implanted = false;
+//
+//}
 LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
   
   perturb_rms = new PosType[6];
@@ -340,7 +340,7 @@ void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
 						break;
 					default:
 						ERROR_MESSAGE();
-						cout << "ERROR: no submass internal profile chosen" << endl;
+						cerr << "ERROR: no submass internal profile chosen" << endl;
 						exit(1);
 						break;
 					}
