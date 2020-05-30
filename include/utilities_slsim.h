@@ -1989,11 +1989,7 @@ public:
             ,std::string replace = "\\N"    /// replace this string with zeros
             ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
   ):filename(datafile){
-    Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',replace,accept);
-    
-    for(int i=0 ; i<column_names.size() ; ++i){
-      datamap[column_names[i]] = i;
-    }
+    input(datafile,MaxNumber,comment_char,deliniator,replace,accept);
   };
  
   DataFrame(){};
@@ -2006,7 +2002,7 @@ public:
             ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
   ){
     filename = datafile;
-    Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',replace,accept);
+    Utilities::IO::ReadCSVnumerical1(datafile,data,column_names,MaxNumber,'#',',',replace,accept);
     
     for(int i=0 ; i<column_names.size() ; ++i){
       datamap[column_names[i]] = i;
@@ -2072,6 +2068,7 @@ private:
   std::vector<std::string> column_names;
   std::string filename;
 };
+
 
 }  // Utilities
 

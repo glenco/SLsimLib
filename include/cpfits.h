@@ -56,6 +56,7 @@ public:
     fits_get_num_hdus(fptr, &hdunum, &status);
     check_status(status);
     return hdunum;
+
   }
   /// returns the current image / table number, starts with 1 not 0
   int get_current_hdu_num(){
@@ -79,10 +80,28 @@ public:
     return hdutype;
   }
   
-  int get_current_hdu_type(){
+  int get_current_hdu_type(bool verbose=false){
     int hdutype,status = 0;
     fits_get_hdu_type(fptr,&hdutype,&status);
     check_status(status);
+    
+    if(verbose){
+      std::cout << "type: " ;
+      switch (hdutype) {
+        case 0:
+          std::cout << "Image" << std::endl;
+          break;
+        case 1:
+          std::cout << "ASCII table" << std::endl;
+          break;
+        case 2:
+          std::cout << "Binary table" << std::endl;
+          break;
+
+        default:
+          break;
+      }
+    }
     
     return hdutype;
   }
@@ -166,8 +185,9 @@ private:
 public:
   CPFITS_READ(std::string filename,bool verbose = false) {
     int status = 0;
-    fits_open_file(&fptr,filename.c_str(), READONLY, &status);
-    //    print any error messages
+    //fits_open_file(&fptr,filename.c_str(), READONLY, &status);
+    fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+       //    print any error messages
     check_status(status,"Problem with input fits file.");
     reset_imageInfo();
 
@@ -288,7 +308,6 @@ public:
     return fits_read_subset(fptr,TFLOAT,lowerleft,upperright,inc
                             ,NULL,output,NULL,&status);
   }
-
 };
 
 class CPFITS_WRITE : public CPFITS_BASE {
@@ -424,4 +443,419 @@ public:
 
 };
 
+/// read only fits file interface
+class CPFITS_READ_TABLES : public CPFITS_BASE {
+private:
+  // make it uncopyable
+  //CPFITS_READ(CPFITS_READ &);
+  //CPFITS_READ operator=(CPFITS_READ );
+  
+  long Nrow;  // current number of rows
+  int Ncol;  // current number of columns
+  
+  void reset_tableInfo(){
+    int status = 0;
+    fits_get_num_rows(fptr, &Nrow, &status);
+    fits_get_num_cols(fptr, &Ncol, &status);
+  }
+  std::vector<std::string> col_names;
+  
+  int get_colnames(std::vector<std::string> &names){
+    
+    int status=0;
+    char colname[20];
+    std::string c = "*";
+    names.resize(Ncol);
+    int colnum;
+    
+    for(int i=0;i<Ncol;++i){
+      fits_get_colname(fptr,CASESEN,(char*)(c.c_str()),colname, &colnum, &status);
+      names[i] = colname;
+    }
+    
+    return status;
+  }
+public:
+  
+  CPFITS_READ_TABLES(std::string filename,bool verbose = false) {
+
+    int status = 0;
+    fits_open_table(&fptr,filename.c_str(), READONLY, &status);
+    check_status(status,"Problem with input fits file.");
+    
+    reset_tableInfo();
+    get_colnames(col_names);
+    
+    if(Nrow <= 0){
+      std::cerr << "No data was found in file " << filename << std::endl;
+    }
+    
+    if(verbose){
+      std::cout << "Opening file : " << filename << std::endl;
+      std::cout << Ncol << " columns" << std::endl;
+      std::cout << Nrow << " rows" << std::endl;
+     }
+  }
+  
+  ~CPFITS_READ_TABLES(){
+    int status = 0;
+    fits_close_file(fptr, &status);
+  }
+  
+  CPFITS_READ_TABLES(CPFITS_READ &&ff):CPFITS_BASE(std::move(ff)){};
+  
+  void operator=(CPFITS_READ_TABLES &&ff){
+     CPFITS_BASE::operator=(std::move(ff));
+  }
+  
+  long rows(){return Nrow;}
+  long ncol(){return Ncol;}
+  
+  int column_index(std::string &colname){
+    int col, status=0;
+    
+    fits_get_colnum(fptr, CASEINSEN,(char*)(colname.c_str())
+    , &col, &status);
+    check_status(status,"Column does not exist.");
+    
+    return col;
+  }
+
+  std::vector<std::string> get_colnames(){return col_names;}
+  
+  int read_column(std::string &colname,std::vector<float> &vecf){
+   
+    int col, status=0;
+    col = column_index(colname);
+
+    if(vecf.size() < Nrow ) vecf.resize(Nrow);
+    
+    fits_read_col_flt(fptr, col, 1, 1,Nrow,0,
+                      vecf.data(), 0, &status);
+
+    return status;
+  }
+  int read_column(std::string &colname,long firstsrow,long nelements,std::vector<float> &vecf,float nulval = -100){
+   
+    int status=0;
+    int colnum = column_index(colname);
+    
+    if(vecf.size() < nelements ) vecf.resize(nelements);
+    fits_read_col(fptr,TFLOAT,colnum, firstsrow, 1,nelements,&nulval,
+                      vecf.data(), 0, &status);
+    check_status(status);
+
+    return status;
+  }
+  int read_column(int colnum,long firstsrow,long nelements,std::vector<float> &vecf,float nulval = -100){
+   
+    int status=0;
+    
+    if(vecf.size() < nelements ) vecf.resize(nelements);
+    
+    fits_read_col(fptr,TFLOAT,colnum, firstsrow, 1,nelements,&nulval,
+                      vecf.data(), 0, &status);
+
+    check_status(status);
+
+    return status;
+  }
+  
+  int read_column(std::string &colname,long firstsrow,long nelements,std::vector<double> &vecf,double nulval = -100){
+   
+    int status=0;
+    int colnum = column_index(colname);
+    
+    if(vecf.size() < nelements ) vecf.resize(nelements);
+    fits_read_col(fptr,TDOUBLE,colnum, firstsrow, 1,nelements,&nulval,
+                      vecf.data(), 0, &status);
+    check_status(status);
+
+    return status;
+  }
+  int read_column(int colnum,long firstsrow,long nelements,std::vector<double> &vecf,double nulval = -100){
+   
+    int status=0;
+    
+    if(vecf.size() < nelements ) vecf.resize(nelements);
+    fits_read_col(fptr,TDOUBLE,colnum, firstsrow, 1,nelements,&nulval,
+                      vecf.data(), 0, &status);
+    check_status(status);
+
+    return status;
+  }
+  int read_column(std::string &colname,long firstsrow,long nelements,std::vector<long> &vecf,int nulval = -100){
+   
+    int status=0;
+    int colnum = column_index(colname);
+    
+    if(vecf.size() < nelements ) vecf.resize(nelements);
+    fits_read_col(fptr,TLONG,colnum, firstsrow, 1,nelements,&nulval,
+                      vecf.data(), 0, &status);
+    check_status(status);
+
+    return status;
+  }
+  int read_column(int colnum,long firstsrow,long nelements,std::vector<long> &vecf,int nulval = -100){
+   
+    int status=0;
+    
+    if(vecf.size() < nelements ) vecf.resize(nelements);
+    fits_read_col(fptr,TLONG,colnum, firstsrow, 1,nelements,&nulval,
+                      vecf.data(), 0, &status);
+    check_status(status);
+
+    return status;
+  }
+
+
+  /// get data type of column
+  int gettype(int colnum){
+    int typecode,status=0;
+    long repeat,width;
+    fits_get_coltype(fptr,colnum,&typecode,
+                     &repeat,&width,&status);
+    check_status(status);
+    
+    return typecode;
+  }
+  
+  int read_column(int column_index,std::vector<float> &vecf){
+   
+    int status=0;
+
+    if(column_index < 1){
+      std::cerr << "CPFITS: column number must be > 0" << std::endl;
+      throw std::invalid_argument("Error in CPFITS");
+    }
+    if(column_index > Ncol){
+      std::cerr << "CPFITS: there are only " << Ncol << " columns." << std::endl;
+      throw std::invalid_argument("Error in CPFITS");
+    }
+    if(vecf.size() < Nrow ) vecf.resize(Nrow);
+    
+    fits_read_col_flt(fptr, column_index, 1, 1,Nrow,0,
+                      vecf.data(), 0, &status);
+
+    return status;
+  }
+
+  
+  template <typename T>
+  void read(std::vector<T> data,int ncol){
+    
+      int status = 0;
+    long i, n, nread, ntodo, nrest;
+    int buffer_size = 20000;
+    std::vector<float> fitscol(buffer_size);
+    
+    for(int col = 1 ; col != ncol ; ++col){
+      nread = 0;
+      nrest = n;
+      while (nrest) {
+       ntodo = MIN(nrest,buffer_size);
+       fits_read_col_flt(fptr, col, nread + 1, 1, ntodo, 0,
+                             fitscol.data(),0, &status);
+       for (i = 0; i < ntodo; i++) data[i + nread][col-1] = fitscol[i];
+       nread += ntodo;
+       nrest -= ntodo;
+      }
+    }
+  }
+};
+
+  template< typename T>
+  class DataFrameFits{
+ 
+  private:
+    std::map<std::string,int> datamap;
+    std::vector<std::string> all_column_names;
+    std::vector<std::string> used_column_names;
+    std::string filename;
+    CPFITS_READ_TABLES cpfits;
+    std::vector<std::vector<T> > data;
+    long n0;
+    std::vector<int> column_index;
+  
+  public:
+    DataFrameFits(
+                  std::string datafile   /// input catalog file in csv format
+                  ,std::vector<std::string> &columns
+    ):filename(datafile),cpfits(filename,true),n0(1){
+   
+      all_column_names = cpfits.get_colnames();
+      
+      if(columns.size() == 0){
+        used_column_names = all_column_names;
+      }else{
+        used_column_names = columns;
+      }
+      
+      
+      for(std::string a : used_column_names){
+        column_index.push_back(cpfits.column_index(a));
+      }
+      
+      for(int i=0 ; i<used_column_names.size() ; ++i){
+        datamap[used_column_names[i]] = i;
+      }
+ 
+      data.resize(column_index.size());
+    };
+   
+    /// returns all the column names in the fits table
+    std::vector<std::string> get_all_columnnames(){return all_column_names;}
+    std::vector<std::string> get_used_columnnames(){return all_column_names;}
+    
+    void reset(){
+      n0=1;
+      int ncol=data.size();
+      for(int i=0; i<ncol ; ++i){
+        data[i].clear();
+      }
+    }
+ 
+    /// reads in only the rows that meet the criterion given by accept
+    int read(std::vector<std::function<bool(T &)> > &accept,long maxsize = -1){
+      long chunksize = 10000;
+      int ncol = column_index.size();
+      long nrow = cpfits.rows();
+      int requirements = accept.size();
+      
+      if(maxsize > 0) nrow = MIN(maxsize + n0,nrow);
+      
+      if(requirements > ncol){
+        throw std::invalid_argument("Too many requirments");
+      }
+ 
+      for(int i=0; i<ncol ; ++i){
+        data[i].clear();
+      }
+
+      std::vector<std::vector<T> > tdata(ncol);
+      while(n0 < nrow){
+        chunksize = MIN(nrow-n0+1,chunksize);
+        
+        if(data[0].capacity() - data[0].size() < chunksize ){
+          for(int i=0; i<ncol ; ++i){
+            data[i].reserve(chunksize + data[i].capacity());
+          }
+        }
+      
+        for(int i=0 ; i< ncol ; ++i){
+          cpfits.read_column(column_index[i],n0,chunksize,tdata[i]);
+        }
+        n0 += chunksize;
+      
+        for(long j = 0 ; j < chunksize ; ++j){
+          bool accpt = true;
+          for(int i=0; i<requirements; ++i){
+            accpt *= accept[i](tdata[i][j]);
+          }
+          
+          if(accpt){
+            for(int i=0; i<ncol ; ++i){
+              data[i].push_back( tdata[i][j] ) ;
+            }
+          }
+  
+        }
+      }
+      
+    }
+    
+    /// read the next maxsize rows.  This will errase the rows already read
+    int read(long maxsize){
+      int ncol = column_index.size();
+      long nrow = cpfits.rows();
+      
+      long chunksize = nrow-n0+1;
+      chunksize = MIN(maxsize,chunksize);
+      
+      for(int i=0 ; i< ncol ; ++i){
+        cpfits.read_column(column_index[i],n0,chunksize,data[i]);
+      }
+      n0 += chunksize;
+    }
+
+    /// Find the ranges for each used column
+    std::vector<std::vector<T> > ranges(bool verbose){
+      std::vector<std::vector<T> > ranges;
+      int ncol = column_index.size();
+      long nrow = cpfits.rows();
+      long chunksize = 100000;
+      
+      ranges.resize(ncol);
+      for(auto &v : ranges) v.resize(2);
+    
+      std::vector<T> tdata;
+      for(int i=0 ; i< ncol ; ++i){
+        cpfits.read_column(column_index[i],1,1,tdata);
+        for(T a : tdata){
+          ranges[i][0] = a;
+          ranges[i][1] = a;
+        }
+      }
+
+      
+      long n=2;
+      while(n < nrow){
+        chunksize = MIN(nrow-n+1,chunksize);
+      
+        for(int i=0 ; i< ncol ; ++i){
+          cpfits.read_column(column_index[i],n,chunksize,tdata);
+          for(T a : tdata){
+            ranges[i][0] = MIN(a,ranges[i][0]);
+            ranges[i][1] = MAX(a,ranges[i][1]);
+          }
+        }
+        n += chunksize;
+      }
+      
+      if(verbose){
+        for(int i=0 ; i< ncol ; ++i){
+          std::cout << ranges[i][0] << " <= " << used_column_names[i] << " <= " << ranges[i][1] << std::endl;
+        }
+      }
+      
+      return ranges;
+    }
+    
+    /// returns column by name
+    std::vector<T>& operator[](const std::string &label){
+      if(datamap.find(label) == datamap.end()){
+        throw std::invalid_argument("no label");
+      }
+      return data[datamap[label]];
+      for(auto c : all_column_names ) std::cout << c << " ";
+      std::cout << std::endl;
+      throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    };
+    
+    /// returns column by number in order of input column names or the original table in not provided
+    std::vector<T>& operator[](int i){
+      return data[i];
+    };
+    
+    // sort by one of the columns
+    void sortby(std::string name){
+      std::vector<size_t> index(data[0].size());
+      size_t N = index.size();
+      for(size_t i=0 ; i<N ; ++i) index[i] = i;
+      
+      sort_indexes(data[datamap[name]],index);
+      std::vector<T> tmp_v(N);
+      
+      for(size_t j=0 ; j<data.size() ; ++j){
+        for(size_t i=0 ; i<N ; ++i){
+          tmp_v[i] = data[j][index[i]];
+        }
+        swap(data[j],tmp_v);
+      }
+    }
+    
+    size_t number_of_rows(){return data[0].size();}
+    size_t number_of_columns(){return data.size();}
+
+};
 #endif /* cpfits_h */
