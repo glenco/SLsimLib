@@ -278,31 +278,31 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	// replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
-  /** \brief Add substructures to the lens.
-   
-   This method is meant for inserting substructure to a main lens.  All the substructure will be at 
-   one redshift.  The mass function follows a power law.  The density of substructures is constant within 
-   a circular region.  The tidal truncation is controlled through the parameter density_contrast which is
-   the average density within the substructures orbit in units of the average density to the universe at 
-   the redshift where they are places.  For example density_contrast=200 would give them the truncation radius appropriate at R_200. 
-   */
-  void insertSubstructures(
-        PosType Rregion            /// radius of region in which substructures are inserted (radians)
-        ,PosType center[]          /// center of region in which the substructures are inserted (radians)
-        ,PosType NumberDensity     /// number density per radian^2 of all substructures
-        ,PosType Mass_min          /// minimum mass of substructures
-        ,PosType Mass_max          /// maximum mass of substructures
-        ,PosType redshift          /// redshift of substructures
-        ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
-        ,PosType density_contrast  ///
-        ,bool verbose
-  );
-  /** \brief This function will randomize the substructure without changing the region, mass function, etc.
-   
-   The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
-   */
-  void resetSubstructure(bool verbose = false);
-  
+//  /* \brief Add substructures to the lens.
+//
+//   This method is meant for inserting substructure to a main lens.  All the substructure will be at
+//   one redshift.  The mass function follows a power law.  The density of substructures is constant within
+//   a circular region.  The tidal truncation is controlled through the parameter density_contrast which is
+//   the average density within the substructures orbit in units of the average density to the universe at
+//   the redshift where they are places.  For example density_contrast=200 would give them the truncation radius appropriate at R_200.
+//   */
+//  void insertSubstructures(
+//        PosType Rregion            /// radius of region in which substructures are inserted (radians)
+//        ,PosType center[]          /// center of region in which the substructures are inserted (radians)
+//        ,PosType NumberDensity     /// number density per radian^2 of all substructures
+//        ,PosType Mass_min          /// minimum mass of substructures
+//        ,PosType Mass_max          /// maximum mass of substructures
+//        ,PosType redshift          /// redshift of substructures
+//        ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
+//        ,PosType density_contrast  ///
+//        ,bool verbose
+//  );
+//  /** \brief This function will randomize the substructure without changing the region, mass function, etc.
+//
+//   The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
+//   */
+//  void resetSubstructure(bool verbose = false);
+//
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
 	/// get number of main halos of given type
