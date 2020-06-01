@@ -60,6 +60,14 @@ namespace Utilities {
       T theta;
       T phi;
       
+      /// angle between points.  This uses the haversine formula that is more stable for small angles than the more commin formula
+      T angular_separation(SphericalPoint &p){
+        double s1 = sin((theta - p.theta)/2);
+        double s2 = sin((phi - p.phi)/2);
+        
+        return 2*asin(sqrt( s1*s1 + cos(theta)*cos(p.theta)*s2*s2 ) );
+      }
+      
       /// output Cartesian coordinates of the point
       void TOcartisian(T x[]) const;
       Point_3d<T> TOcartisian() const;
@@ -415,15 +423,26 @@ Point_2d SphericalPoint<T>::StereographicProjection(
  *
  * The result is in radian units.  Near the central point this is a rectolinear projection
  * onto a tangent plane.
+ * Points in the oposite hemosphere are maped to points on the border at |x| = 1
  */
 template <typename T>
 void SphericalPoint<T>::OrthographicProjection(
     const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
     ,T x[]             /// 2D output coordinate on projection
 ) const{
-  double c = cos(theta);
-  x[0] = c*sin(phi - central.phi);
-  x[1] = cos(central.theta)*sin(theta) - sin(central.theta)*c*cos(phi - central.phi);
+  double ct = cos(theta),st = sin(theta);
+  double cosphi = cos(phi - central.phi);
+  double so = sin(central.theta);
+  double co = cos(central.theta);
+  
+  x[0] = ct*sin(phi - central.phi);
+  x[1] = co*st - so*ct*cosphi;
+  
+  if(st*so + ct*co*cosphi < 0 ){  // point is on the other hemosphere
+    double s = sqrt( x[0]*x[0] + x[1]*x[0] );
+    x[0] /=s;
+    x[1] /=s;
+  }
 }
 
 template <typename T>
