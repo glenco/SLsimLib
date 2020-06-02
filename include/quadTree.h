@@ -52,6 +52,7 @@ public:
       ,PosType theta_force = 0.1
       ,bool my_periodic_buffer = false
       ,PosType my_inv_screening_scale = 0
+      ,PosType maximum_range = -1
       );
  
 	~TreeQuadParticles();
@@ -83,6 +84,7 @@ protected:
   int Nbucket;
   
   PosType force_theta;
+  PosType max_range;
   
   std::unique_ptr<QTreeNB<PType> > tree;
   std::vector<IndexType> index;
@@ -239,20 +241,26 @@ protected:
  */
 template<typename PType>
 TreeQuadParticles<PType>::TreeQuadParticles(
-                          PType *xpt
-                          ,IndexType Npoints
-                          ,float mass_fixed
-                          ,float size_fixed
-                          ,PosType my_sigma_background /// background kappa that is subtracted
-                          ,int bucket
-                          ,PosType theta_force
-                          ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadParticles::force2D() for details.  See note for TreeQuadParticles::force2D_recur().
-                          ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadParticles::force2D_recur().
+                    PType *xpt
+                   ,IndexType Npoints
+                   ,float mass_fixed
+                   ,float size_fixed
+                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,int bucket
+                   ,PosType theta_force
+                   ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadParticles::force2D() for details.  See note for TreeQuadParticles::force2D_recur().
+                   ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadParticles::force2D_recur().
+                   ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
+
 ):
 xxp(xpt)
-,Nparticles(Npoints),sigma_background(my_sigma_background)
-,Nbucket(bucket),force_theta(theta_force),periodic_buffer(my_periodic_buffer)
+,Nparticles(Npoints)
+,sigma_background(my_sigma_background)
+,Nbucket(bucket)
+,force_theta(theta_force)
+,periodic_buffer(my_periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
+,max_range(maximum_range)
 {
   index.resize(Npoints);
   IndexType ii;
@@ -353,10 +361,19 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
   cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
   cbranch->quad[0] = cbranch->quad[1]=cbranch->quad[2]=0;
   cbranch->mass = 0.0;
-  
-  
+    
+  double theta_range = 2*force_theta;
+  if(max_range > 0){
+    double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
+    theta_range = boxsize / MIN(sqrt(cbranch->center[0]*cbranch->center[0]
+           + cbranch->center[1]*cbranch->center[1] )
+           - max_range, boxsize );
+  }
+    
   // leaf case
-  if(cbranch->nparticles <= Nbucket){
+  if(cbranch->nparticles <= Nbucket
+     || force_theta > theta_range
+     ){
     PosType r;
     cbranch->Nbig_particles = 0;
     for(i=0;i<cbranch->nparticles;++i){
@@ -371,8 +388,7 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
         r = xxp[particles[i]*MultiRadius].size();
         if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
       }
-    }
-    else{
+    }else{
       cbranch->big_particles.reset(nullptr);
     }
     
@@ -405,7 +421,6 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
         cbranch->Nbig_particles = cut2;
       }
       
-      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
       cbranch->big_particles.reset(new IndexType[cbranch->Nbig_particles]);
       for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
     }
@@ -1165,6 +1180,7 @@ public:
            ,PosType theta_force = 0.1
            ,bool my_periodic_buffer = false
            ,PosType my_inv_screening_scale = 0
+           ,PosType maximum_range = -1  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
            );
   ~TreeQuadHalos();
   
@@ -1197,6 +1213,7 @@ protected:
   int Nbucket;
   
   PosType force_theta;
+  PosType max_range;
   
   QTreeNB<PosType *> * tree;
   IndexType *index;

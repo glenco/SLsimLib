@@ -59,8 +59,9 @@ public:
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize = 0        /// minimum particle size
                     ,bool keep_particles = false /// if true the LensHalo will not take ownership of the particles and will not distroy them when it  is destroyed
+                    ,double max_range = -1/// if set this will cause the tree not be fully construct down to the bucket size outside this range
                     ,bool verbose=false
-  ):LensHalo(redshift,cosmo), min_size(MinPSize),multimass(true)
+  ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true)
   {
     Npoints = pvector.size();
     if(keep_particles){
@@ -69,7 +70,7 @@ public:
       std::swap(pvector,trash_collector);
       pp = trash_collector.data();
     }
-     set_up(redshift,cosmo,theta_rotate,recenter,verbose);
+     set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
   }
   ~LensHaloParticles();
   
@@ -156,9 +157,8 @@ protected:
                     ,bool verbose
   ):LensHalo(redshift,cosmo),pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
   {
-    set_up(redshift,cosmo,theta_rotate,recenter,verbose);
+    set_up(redshift,cosmo,theta_rotate,-1,recenter,verbose);
   }
-
   void rotate_particles(PosType theta_x,PosType theta_y);
   static void smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth);
   void assignParams(InputParams& params);
@@ -178,7 +178,7 @@ protected:
   std::string sizefile;
   
   TreeQuadParticles<PType> * qtree;
-  void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,bool recenter,bool verbose);
+  void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,double max_range,bool recenter,bool verbose);
 };
 
 template<typename PType>
@@ -271,6 +271,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
   qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+  
 }
 
 template<typename PType>
@@ -278,6 +279,7 @@ void LensHaloParticles<PType>::set_up(
                                  float redshift        /// redshift of origin
                                  ,const COSMOLOGY& cosmo  /// cosmology
                                  ,Point_2d theta_rotate   /// rotation of particles around the origin
+                                 ,double max_range
                                  ,bool recenter           /// center on center of mass
                                  ,bool verbose
 ){
@@ -330,7 +332,7 @@ void LensHaloParticles<PType>::set_up(
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
-  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,0,20);
+  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,0,20,0.1,false,0,max_range);
 }
 
 

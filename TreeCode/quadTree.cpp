@@ -24,11 +24,13 @@ TreeQuadHalos::TreeQuadHalos(
                    ,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
                    ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadHalos::force2D() for details. See note for TreeQuadHalos::force2D_recur().
                    ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadHalos::force2D_recur().
+                   ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
 ):
 MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 ,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
 ,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
+,max_range(max_range)
 {
   index = new IndexType[Npoints];
   IndexType ii;
@@ -128,9 +130,25 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
   cbranch->mass = 0.0;
   
+  // smallest distance to box within range
+   double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
+   double rcm = MIN(sqrt(cbranch->center[0]*cbranch->center[0]
+            + cbranch->center[1]*cbranch->center[1] )
+            - max_range, boxsize );
   
-  // leaf case
-  if(cbranch->nparticles <= Nbucket){
+  double theta_range = 2*force_theta;
+  if(max_range > 0){
+      double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
+      theta_range = boxsize / MIN(sqrt(cbranch->center[0]*cbranch->center[0]
+             + cbranch->center[1]*cbranch->center[1] )
+             - max_range, boxsize );
+    }
+
+   // leaf case
+   if(cbranch->nparticles <= Nbucket
+      || force_theta > theta_range
+    ){
+     
     PosType r;
     cbranch->Nbig_particles = 0;
     for(i=0;i<cbranch->nparticles;++i){
