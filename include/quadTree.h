@@ -365,7 +365,7 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
   double theta_range = 2*force_theta;
   if(max_range > 0){
     double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
-    theta_range = boxsize / MIN(sqrt(cbranch->center[0]*cbranch->center[0]
+    theta_range = boxsize / MAX(sqrt(cbranch->center[0]*cbranch->center[0]
            + cbranch->center[1]*cbranch->center[1] )
            - max_range, boxsize );
   }

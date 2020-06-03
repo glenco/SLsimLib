@@ -130,19 +130,13 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
   cbranch->mass = 0.0;
   
-  // smallest distance to box within range
-   double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
-   double rcm = MIN(sqrt(cbranch->center[0]*cbranch->center[0]
-            + cbranch->center[1]*cbranch->center[1] )
-            - max_range, boxsize );
-  
   double theta_range = 2*force_theta;
   if(max_range > 0){
       double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
-      theta_range = boxsize / MIN(sqrt(cbranch->center[0]*cbranch->center[0]
+      theta_range = boxsize / MAX(sqrt(cbranch->center[0]*cbranch->center[0]
              + cbranch->center[1]*cbranch->center[1] )
-             - max_range, boxsize );
-    }
+             - max_range, boxsize );  
+  }
 
    // leaf case
    if(cbranch->nparticles <= Nbucket
