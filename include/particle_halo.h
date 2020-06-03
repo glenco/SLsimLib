@@ -357,7 +357,7 @@ template<typename PType>
 void LensHaloParticles<PType>::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
   delete qtree;
-  //qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,multimass,true,0,20);
+
   qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
 }
 

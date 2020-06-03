@@ -379,9 +379,8 @@ void TreeQuadHalos::CalcMoments(){
       xcm[1]=tree->xxp[cbranch->particles[i]][1]-cbranch->center[1];
       xcut = pow(xcm[0],2) + pow(xcm[1],2);
       
-        tmp = halos[cbranch->particles[i]]->get_mass();
-       //tmp = haloON ? halos[cbranch->particles[i]*MultiMass].mass : masses[cbranch->particles[i]*MultiMass];
-      
+      tmp = halos[cbranch->particles[i]]->get_mass();
+       
       cbranch->quad[0] += (xcut-2*xcm[0]*xcm[0])*tmp;
       cbranch->quad[1] += (xcut-2*xcm[1]*xcm[1])*tmp;
       cbranch->quad[2] += -2*xcm[0]*xcm[1]*tmp;
@@ -395,24 +394,6 @@ void TreeQuadHalos::CalcMoments(){
     
     if(force_theta > 0.0) cbranch->rcrit_angle = 1.15470*rcom/(force_theta);
     else  cbranch->rcrit_angle=1.0e100;
-    
-    /*if(MultiRadius){
-     
-     for(i=0,cbranch->maxrsph=0.0;i<cbranch->nparticles;++i){
-     tmp = haloON ? halos[cbranch->particles[i]].Rmax : sizes[cbranch->particles[i]];
-     if(cbranch->maxrsph <= tmp ){
-     cbranch->maxrsph = tmp;
-     }
-     }
-     
-     cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
-     
-     }else{
-     // single size case
-     cbranch->maxrsph = haloON ? halos[0].Rmax : sizes[0];
-     cbranch->rcrit_part = rcom + 2*cbranch->maxrsph;
-     }*/
-    //cbranch->rcrit_angle += cbranch->rcrit_part;
     
   }while(tree->WalkStep(true));
   
