@@ -291,6 +291,23 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
 Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
 
+/// structure to construct, hold and destruct image and source points
+struct PointPack{
+  /// for points without preset positions
+  PointPack(size_t N):n(N){
+    i_points=NewPointArray(N);
+    s_points=LinkToSourcePoints(i_points,N);
+  }
+ 
+  ~PointPack(){
+    delete [] i_points;
+    delete [] s_points;
+  }
+  size_t n;
+  Point *i_points;
+  Point *s_points;
+};
+
 ///
 namespace Utilities{
     ///Separation squared between two positions in 2 dimensions.

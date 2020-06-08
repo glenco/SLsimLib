@@ -42,6 +42,10 @@
 #endif
 
 #ifndef arcsecTOradians
+#define arcminTOradians  0.0002908882086657216  // convert arcesconds to radians
+#endif
+
+#ifndef arcsecTOradians
 #define arcsecTOradians  0.000004848136811  // convert arcesconds to radians
 #endif
 
