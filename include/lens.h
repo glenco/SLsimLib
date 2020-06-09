@@ -324,6 +324,9 @@ public:
    image point.
    */
   void rayshooter(RAY &ray);
+  void rayshooter(std::vector<RAY> &rays,bool RSIverbose = false);
+
+  
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
                       ,std::vector<Point_2d> & ang_positions
