@@ -91,6 +91,8 @@ void Lens::rayshooter(std::vector<RAY> &rays
                               , bool RSIVerbose         /// verbose option
 ){
   
+  float zs_temp = zsource;
+  ResetSourcePlane(2000);
   // To force the computation of convergence, shear... -----
   // -------------------------------------------------------
   
@@ -150,6 +152,8 @@ void Lens::rayshooter(std::vector<RAY> &rays
   for(int i = 0; i < nthreads; i++) threads[i].join();
   
   delete[] thread_params;
+  
+  ResetSourcePlane(zs_temp);
 }
 
 
@@ -550,16 +554,13 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
   {
     // ????find which plnaes to go through
     double zs = p->rays[i].zs;
-    unsigned long jmax;
+    long jmax = 0;
     // distance to new source plane
     PosType Ds = cosmo->coorDist(zs);
     {
-      double *it = std::lower_bound(p->Dl,p->Dl + p->NPlanes,Ds);
-      jmax = it - p->Dl;
+      jmax = 0;
+      while (jmax < p->NPlanes && p->Dl[jmax] < Ds) ++jmax;
     }
-    //locateD(p->Dl-1,p->NPlanes,Ds,&jmax);
-    // j is the index of the next plane at higher redshift
-    //if(jmax > 0 && p->Dl[jmax-1] == Ds) --jmax;
     
     // case of no lensing
     if(jmax==0 || p->flag_switch_lensing_off ){
