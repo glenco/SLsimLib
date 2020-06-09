@@ -580,7 +580,7 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
     PosType dDs = Ds;
     if(jmax > 0) dDs = cosmo->coorDist(p->plane_redshifts[jmax-1],zs);
     PosType dTs;
-    if(jmax > 0) dTs = cosmo->radDist(p->plane_redshifts[j-1],zs);
+    if(jmax > 0) dTs = cosmo->radDist(p->plane_redshifts[jmax-1],zs);
     else  dTs = cosmo->radDist(0,zs);
     
     // find position on first lens plane in comoving units
