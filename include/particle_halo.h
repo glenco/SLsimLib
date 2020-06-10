@@ -196,7 +196,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
 :LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
-  LensHalo::setZlens(redshift);
+  LensHalo::setZlens(redshift,cosmo);
   LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
