@@ -554,13 +554,11 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
   {
     // ????find which plnaes to go through
     double zs = p->rays[i].zs;
-    long jmax = 0;
     // distance to new source plane
     PosType Ds = cosmo->coorDist(zs);
-    {
-      jmax = 0;
-      while (jmax < p->NPlanes && p->Dl[jmax] < Ds) ++jmax;
-    }
+
+    long jmax = 0;
+    while (jmax < p->NPlanes && p->Dl[jmax] < Ds) ++jmax;
     
     // case of no lensing
     if(jmax==0 || p->flag_switch_lensing_off ){
@@ -577,12 +575,9 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
        continue;
     }
     
-    PosType dDs = Ds;
-    if(jmax > 0) dDs = cosmo->coorDist(p->plane_redshifts[jmax-1],zs);
-    PosType dTs;
-    if(jmax > 0) dTs = cosmo->radDist(p->plane_redshifts[jmax-1],zs);
-    else  dTs = cosmo->radDist(0,zs);
-    
+    PosType dDs = cosmo->coorDist(p->plane_redshifts[jmax-1],zs);
+    PosType dTs = cosmo->radDist(p->plane_redshifts[jmax-1],zs);
+   
     // find position on first lens plane in comoving units
     p->rays[i].y[0] = p->rays[i].x[0] * p->Dl[0]; // x^1 = Theta * D_1
     p->rays[i].y[1] = p->rays[i].x[1] * p->Dl[0];
@@ -608,7 +603,6 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
     p->rays[i].gamma[0] = 0;
     p->rays[i].gamma[1] = 0;
     p->rays[i].gamma[2] = 0;
-    p->rays[i].dt = 0;
     
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->rays[i].dt = 0;
@@ -624,7 +618,7 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
     for(j = 0; j < jmax ; ++j)
     {
       PosType dD,Dl;
-      if(j == jmax -1){
+      if(j == jmax-1){
         dD = dDs;
         Dl = Ds;
       }else{
