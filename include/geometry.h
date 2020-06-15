@@ -91,7 +91,27 @@ namespace Utilities {
        T OrthographicAngleTheta(const SphericalPoint &central);
       /// the angle between the orthographic x-axis  and the constant Phi curve
        T OrthographicAnglePhi(const SphericalPoint &central);
-    };
+      
+      // returns the unit theta vector
+      Point_3d<T> theta_hat(){
+        Point_3d<T> p;
+        p[0] = -sin(theta)*cos(phi);
+        p[1] = -sin(theta)*sin(phi);
+        p[2] = cos(theta);
+        
+        return p;
+      }
+
+      // returns the unit phi vector
+      Point_3d<T> phi_hat(){
+         Point_3d<T> p;
+         p[0] = -cos(theta)*sin(phi);
+         p[1] =  cos(theta)*cos(phi);
+         p[2] = 0;
+         
+         return p;
+       }
+};
     
     /** \brief Quaternion class that is especially useful for rotations.
      
