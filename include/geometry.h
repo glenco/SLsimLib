@@ -105,8 +105,8 @@ namespace Utilities {
       // returns the unit phi vector
       Point_3d<T> phi_hat(){
          Point_3d<T> p;
-         p[0] = -cos(theta)*sin(phi);
-         p[1] =  cos(theta)*cos(phi);
+         p[0] = -sin(phi);
+         p[1] =  cos(phi);
          p[2] = 0;
          
          return p;
@@ -512,7 +512,10 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
   PosType c = asin(rho);
   r=1.0;
-  theta = asin( cos(c)*sin(central.theta) + x[1]*cos(central.theta) );
+  double at=cos(c)*sin(central.theta) + x[1]*cos(central.theta);
+  at = (at > 1) ? 1 : at;
+  at = (at < -1) ? -1 : at;
+  theta = asin( at );
   phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
                              - x[1]*sin(central.theta) );
 }
