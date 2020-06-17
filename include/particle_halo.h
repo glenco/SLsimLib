@@ -121,7 +121,7 @@ public:
   /// get current center of mass in input coordinates
   Point_3d<> CenterOfMass(){return mcenter;}
   
-  /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
+  /** \brief This is a test static function that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
    
    This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
    */
@@ -134,6 +134,21 @@ public:
                       ,double q  /// axis ratio
                       ,Utilities::RandomNumbers_NR &ran
                       );
+  
+  /** \brief This is a test static function that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
+    
+    This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
+    */
+  static LensHaloParticles<ParticleTypeSimple> SIE(
+            PosType redshift     /// redshift of particles
+            ,double particle_mass /// particle mass
+            ,double total_mass  /// total mass of SIE
+            ,double sigma       /// velocity dispersion in km/s
+            ,double q  /// axis ratio
+            ,int Nneighbors  /// number of neighbor particles used in smoothing
+            ,COSMOLOGY &cosmo
+            ,Utilities::RandomNumbers_NR &ran);
+
   
   static void calculate_smoothing(int Nsmooth
                                   ,PType *pp
@@ -717,6 +732,51 @@ void LensHaloParticles<PType>::makeSIE(
   
   datafile.close();
 }
+
+  template<typename PType>
+  LensHaloParticles<ParticleTypeSimple> LensHaloParticles<PType>::SIE(
+           PosType redshift     /// redshift of particles
+           ,double particle_mass /// particle mass
+           ,double total_mass  /// total mass of SIE
+           ,double sigma       /// velocity dispersion in km/s
+           ,double q  /// axis ratio
+           ,int Nneighbors
+           ,COSMOLOGY &cosmo
+           ,Utilities::RandomNumbers_NR &ran
+                                         ){
+    
+    size_t Npoints = total_mass/particle_mass;
+    PosType Rmax = total_mass*Grav*lightspeed*lightspeed/sigma/sigma/2;
+    
+    double qq = sqrt(q);
+    
+    std::cout << "making SIE LensHaloParticles..." << std::endl;
+    std::cout << "# nparticles " << Npoints << std::endl;
+    std::cout << "# mass " << particle_mass << std::endl;
+
+    std::vector<ParticleTypeSimple> parts(Npoints);
+    // create particles
+    for(auto &p : parts){
+      p[0] = ran.gauss();
+      p[1] = ran.gauss();
+      p[2] = ran.gauss();
+      
+      double s = Rmax*ran()/sqrt(p[0]*p[0] + p[1]*p[1] + p[2]*p[2] );
+      p[0] *= s;
+      p[1] *= s;
+      p[2] *= s;
+
+      p[0] *= qq;
+      p[1] /= qq;
+      
+      p.Mass = particle_mass;
+    }
+    
+    LensHaloParticles<ParticleTypeSimple> ::calculate_smoothing(Nneighbors,parts.data(),Npoints);
+
+    return LensHaloParticles<ParticleTypeSimple>(parts,redshift
+                            ,cosmo,Point_2d(0,0),false);
+  }
 
 template<typename PType>
 LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles<PType> &&h){

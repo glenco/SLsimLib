@@ -878,7 +878,8 @@ void Lens::createFieldPlanes(bool verbose)
     PosType tmp = inv_ang_screening_scale*(1+field_plane_redshifts[i])/field_Dl[i];
     
     if(tmp > 1/2.) tmp = 1/2.;  // TODO: Try to remove this arbitrary minimum distance
-		field_planes.push_back(new LensPlaneTree(&field_halos[k1], k2-k1, sigma_back,tmp));
+		field_planes.push_back(new LensPlaneTree(field_plane_redshifts[i],
+                                             &field_halos[k1], k2-k1, sigma_back,tmp));
 		//field_planes.push_back(new LensPlaneTree(&halo_pos[k1], &field_halos[k1], k2-k1, sigma_back) );
 	}
   
@@ -1222,7 +1223,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	else if(i == main_Dl.size())
 	{
 		// add new plane at the end
-		main_planes.push_back(new LensPlaneSingular(&halo, 1));
+    main_planes.push_back(new LensPlaneSingular(halo_z,&halo, 1));
 		main_plane_redshifts.push_back(halo_z);
 		main_Dl.push_back(halo_Dl);
     //halo->setDist(halo_Dl/(1+halo_z));
@@ -1239,7 +1240,7 @@ void Lens::addMainHaloToPlane(LensHalo* halo)
 	else
 	{
 		// create new plane at position i
-		main_planes.insert(main_planes.begin() + i, new LensPlaneSingular(&halo, 1));
+		main_planes.insert(main_planes.begin() + i, new LensPlaneSingular(halo_z,&halo, 1));
 		main_plane_redshifts.insert(main_plane_redshifts.begin() + i, halo_z);
 		main_Dl.insert(main_Dl.begin() + i, halo_Dl);
     //halo->setDist(halo_Dl/(1+halo_z));
@@ -1259,7 +1260,7 @@ void Lens::addMainHaloToNearestPlane(LensHalo* halo)
   PosType halo_Dl = cosmo.coorDist(0, halo_z);
   
   if(main_Dl.size() == 0){
-      main_planes.push_back(new LensPlaneSingular(&halo, 1));
+      main_planes.push_back(new LensPlaneSingular(halo_z,&halo, 1));
       main_plane_redshifts.push_back(halo_z);
       main_Dl.push_back(halo_Dl);
   }
@@ -1293,7 +1294,8 @@ void Lens::createMainPlanes()
 		Utilities::MixedVector<LensHalo*>::iterator<> jt = std::upper_bound(it, main_halos.end(), *it, lens_halo_less(cosmo));
 		
 		// add halos until higher redshift to plane
-		main_planes.push_back(new LensPlaneSingular(&(*it), std::distance(it, jt)));
+		main_planes.push_back(new LensPlaneSingular(
+            (*it)->getZlens(),&(*it), std::distance(it, jt)));
 		
 		// add plane to arrays
 		main_plane_redshifts.push_back((*it)->getZlens());
