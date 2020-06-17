@@ -153,7 +153,7 @@ void Lens::rayshooter(std::vector<RAY> &rays
   
   delete[] thread_params;
   
-  ResetSourcePlane(zs_temp);
+  //ResetSourcePlane(zs_temp);
 }
 
 
