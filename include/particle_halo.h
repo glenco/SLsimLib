@@ -58,19 +58,36 @@ public:
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,float MinPSize = 0        /// minimum particle size
-                    ,bool keep_particles = false /// if true the LensHalo will not take ownership of the particles and will not distroy them when it  is destroyed
                     ,double max_range = -1/// if set this will cause the tree not be fully construct down to the bucket size outside this range
                     ,bool verbose=false
   ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true)
   {
     Npoints = pvector.size();
-    if(keep_particles){
-      pp = pvector.data();
-    }else{
+    //if(keep_particles){
+    //  pp = pvector.data();
+    //}else{
       std::swap(pvector,trash_collector);
       pp = trash_collector.data();
-    }
+    //}
      set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
+  }
+
+  /// this constructor does not take possession of the particles
+  LensHaloParticles(
+                    PType *begin /// pointer to first particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+                    ,size_t n
+                    ,float redshift        /// redshift of origin
+                    ,const COSMOLOGY& cosmo  /// cosmology
+                    ,Point_2d theta_rotate   /// rotation of particles around the origin
+                    ,bool recenter           /// center on center of mass
+                    ,float MinPSize = 0        /// minimum particle size
+                    ,double max_range = -1/// if set this will cause the tree not be fully construct down to the bucket size outside this range
+                    ,bool verbose=false
+  ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true)
+  {
+    Npoints = n;
+    pp = begin;
+    set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
   }
   ~LensHaloParticles();
   

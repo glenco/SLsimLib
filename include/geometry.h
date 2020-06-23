@@ -83,8 +83,14 @@ namespace Utilities {
       void OrthographicProjection(const SphericalPoint &central
                                   ,T x[]) const;
       Point_2d OrthographicProjection(const SphericalPoint &central) const;
-      void InverseOrthographicProjection(const SphericalPoint &central,T const x[]);
-      void InverseOrthographicProjection(const SphericalPoint &central,const Point_2d &x);
+      void InverseOrthographicProjection(
+          const SphericalPoint &central,T const x[]);
+      void InverseOrthographicProjection(
+          const SphericalPoint &central,const Point_2d &x);
+      /// the angle between the orthographic x-axis  and the constant theta curve
+       T OrthographicAngleTheta(const SphericalPoint &central);
+      /// the angle between the orthographic x-axis  and the constant Phi curve
+       T OrthographicAnglePhi(const SphericalPoint &central);
     };
     
     /** \brief Quaternion class that is especially useful for rotations.
@@ -388,34 +394,44 @@ void SphericalPoint<T>::StereographicProjection(
     const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
    ,T x[]             /// 2D output coordinate on projection
 ) const{
+  double ct = cos(theta),st = sin(theta);
+  double cosphi = cos(phi - central.phi);
+  double so = sin(central.theta);
+  double co = cos(central.theta);
+
+  PosType k = 2/( 1 + so*st + co*ct*cosphi );
   
-  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
-  
-  x[0] = k*(cos(theta)*sin(phi - central.phi));
-  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+  x[0] = k*(ct*sin(phi - central.phi));
+  x[1] = k*(co*st - so*ct*cosphi);
 }
 template <typename T>
 void SphericalPoint<T>::StereographicProjection(
   const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
   ,Point_2d &x  /// 2D output coordinate on projection
 ) const{
+  double ct = cos(theta),st = sin(theta);
+  double cosphi = cos(phi - central.phi);
+  double so = sin(central.theta);
+  double co = cos(central.theta);
+
+  PosType k = 2/( 1 + so*st + co*ct*cosphi );
   
-  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
-  
-  x[0] = k*(cos(theta)*sin(phi - central.phi));
-  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+  x[0] = k*(ct*sin(phi - central.phi));
+  x[1] = k*(co*st - so*ct*cosphi);
 }
 
 template <typename T>
 Point_2d SphericalPoint<T>::StereographicProjection(
   const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
 ) const{
+  double ct = cos(theta),st = sin(theta);
+  double cosphi = cos(phi - central.phi);
+  double so = sin(central.theta);
+  double co = cos(central.theta);
+
+  PosType k = 2/( 1 + so*st + co*ct*cosphi );
   
-  PosType k = 2/( 1 + sin(central.theta)*sin(theta) + cos(central.theta)*cos(theta)*cos(phi - central.phi) );
-  
-  return Point_2d(k*(cos(theta)*sin(phi - central.phi)),k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi)));
-  //  x[0] = k*(cos(theta)*sin(phi - central.phi));
-  //  x[1] = k*(cos(central.theta)*sin(theta) - sin(central.theta)*cos(theta)*cos(phi - central.phi));
+  return Point_2d(k*(ct*sin(phi - central.phi)),k*(co*st - so*ct*cosphi));
 }
 
 
@@ -480,6 +496,23 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
                              - x[1]*sin(central.theta) );
 }
+
+template <typename T>
+T SphericalPoint<T>::OrthographicAngleTheta(
+          const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+  ){
+    return atan2( sin(central.theta) * sin(phi - central.phi)
+                 , cos(phi - central.phi) );
+  }
+
+  template <typename T>
+  T SphericalPoint<T>::OrthographicAnglePhi(
+            const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+    ){
+      return atan2( cos(central.theta) * cos(theta) + sin(central.theta) * sin(central.theta)
+                   *cos(phi - central.phi)
+          , -sin(phi - central.phi) * sin(phi - central.phi) );
+    }
 
 ///  3 dimensional distance between points
     template <typename T>

@@ -226,6 +226,7 @@ struct RAY{
   RAY(){
     kappa = dt = 0.0;
     gamma[0] = gamma[1] = gamma[2] = 0.0;
+    zs = 0;
   };
   
   RAY(const Point &p){
@@ -237,6 +238,8 @@ struct RAY{
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = 0;
   };
   RAY(const RAY &p){
     x = p.x;
@@ -247,6 +250,8 @@ struct RAY{
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = p.zs;
   };
 
   RAY & operator=(const Point &p){
@@ -258,6 +263,8 @@ struct RAY{
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = 0;
     
     return *this;
   };
@@ -271,6 +278,8 @@ struct RAY{
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = p.zs;
     
     return *this;
   };
@@ -288,6 +297,8 @@ struct RAY{
   KappaType gamma[3];
   /// time-delay
   KappaType dt;
+  
+  KappaType zs;
   
   /// inverse of the magnification
   KappaType invmag(){return (1-kappa)*(1-kappa) - gamma[0]*gamma[0]
