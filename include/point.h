@@ -220,6 +220,8 @@ private:
   //Point &operator=(const Point &p);
 };
 
+std::ostream &operator<<(std::ostream &os, Point const &p);
+
 /** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
 struct RAY{
@@ -308,7 +310,7 @@ struct RAY{
   Point_2d alpha(){return x - y;}
 };
 
-std::ostream &operator<<(std::ostream &os, Point const &p);
+std::ostream &operator<<(std::ostream &os, RAY const &r);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
 struct Branch{
