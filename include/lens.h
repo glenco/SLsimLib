@@ -325,7 +325,7 @@ public:
    */
   void rayshooter(RAY &ray);
   void rayshooter(std::vector<RAY> &rays,bool RSIverbose = false);
-
+  void rayshooter(RAY *begin,RAY *end,bool RSIVerbose =false);
   
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point

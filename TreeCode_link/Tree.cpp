@@ -124,6 +124,11 @@ std::ostream &operator<<(std::ostream &os, Point const &p) {
   return os << p.x[0] << " " << p.x[1];
 }
 
+std::ostream &operator<<(std::ostream &os, RAY const &r) {
+  return os << r.x[0] << "," << r.x[1]<< "," << r.y[0] << "," << r.y[1]
+  << "," << r.zs << "," << r.kappa<< "," << r.gamma[0] << "," << r.gamma[1] << "," << r.gamma[2] << "," << r.dt;
+}
+
 
 unsigned long Branch::countID = 0;
 

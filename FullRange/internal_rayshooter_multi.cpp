@@ -90,21 +90,29 @@ void Lens::rayshooter(RAY &ray){
 void Lens::rayshooter(std::vector<RAY> &rays
                               , bool RSIVerbose         /// verbose option
 ){
+  rayshooter(rays.data(),rays.data() + rays.size(),RSIVerbose);
+}
+
+void Lens::rayshooter(RAY *begin,RAY *end
+                              ,bool RSIVerbose         /// verbose option
+){
   
-  float zs_temp = zsource;
   ResetSourcePlane(2000);
+  
+  size_t Nrays = end - begin;
   // To force the computation of convergence, shear... -----
   // -------------------------------------------------------
   
   // If there are no points to shoot, then we quit.
-  if(rays.size() == 0) return;
+  if(Nrays == 0) return;
 
+  
   if(plane_redshifts.size() == 1){  // case of no lens plane
-    for(RAY &ray : rays){
-      ray.gamma[0] = ray.gamma[1] = ray.gamma[2] = 0;
-      ray.kappa = ray.dt = 0;
-      ray.y[0] = ray.x[0];
-      ray.y[1] = ray.x[1];
+    for(RAY *ray = begin ; ray != end ; ++ray){
+      ray->gamma[0] = ray->gamma[1] = ray->gamma[2] = 0;
+      ray->kappa = ray->dt = 0;
+      ray->y[0] = ray->x[0];
+      ray->y[1] = ray->x[1];
     }
     return;
   }
@@ -114,11 +122,9 @@ void Lens::rayshooter(std::vector<RAY> &rays
   // For refining the grid and shoot new rays.
   int nthreads = Utilities::GetNThreads();
   
-  size_t Npoints = rays.size();
-  
   int chunk_size;
   do{
-    chunk_size = (int)Npoints/nthreads;
+    chunk_size = (int)Nrays/nthreads;
     if(chunk_size == 0) nthreads /= 2;
   }while(chunk_size == 0);
   
@@ -128,10 +134,10 @@ void Lens::rayshooter(std::vector<RAY> &rays
   // This is for multi-threading :
   for(int i=0; i<nthreads;i++)
   {
-    thread_params[i].rays = rays.data();
+    thread_params[i].rays = begin;
     thread_params[i].size = chunk_size;
     if(i == nthreads-1)
-      thread_params[i].size = (int)Npoints - (nthreads-1)*chunk_size;
+      thread_params[i].size = (int)Nrays - (nthreads-1)*chunk_size;
     thread_params[i].start = i*chunk_size;
     thread_params[i].tid = i;
     thread_params[i].flag_switch_deflection_off = flag_switch_deflection_off;
