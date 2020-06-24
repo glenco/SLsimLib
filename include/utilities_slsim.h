@@ -1046,14 +1046,11 @@ namespace Utilities
                std::vector<T> &vec   /// The vector to be shuffled
                ,R &ran               /// a random number generator so that ran() gives a number between 0 and 1
   ){
-    T tmp;
     size_t ran_t;
     if(vec.size() < 2) return;
     for (size_t i = vec.size()-1; i>0; --i) {
       ran_t = (size_t)(ran()*(i+1));
-      tmp = vec[ran_t];
-      vec[ran_t] = vec[i];
-      vec[i] = tmp;
+      std::swap(vec[ran_t],vec[i]);
     }
   }
   
@@ -1923,6 +1920,74 @@ private:
   std::string filename;
 };
   
+
+// this is a sumation algorithm that maintains percision for large sequences of numbers
+template <typename T>
+double KleinSum(std::vector<T> &input){
+  double s = 0.0,cs = 0.0,ccs = 0.0,c,cc;
+  size_t n = input.size();
+  for(size_t i = 0 ; i<n ; ++i){
+    double t = s + input[i];
+    if( abs(s) >= abs(input[i]) ){
+      c = (s - t) + input[i];
+    }else{
+      c = (input[i] - t) + s;
+    }
+    s = t;
+    t = cs + c;
+    if( abs(cs) >= abs(c) ){
+      cc = (cs - t) + c;
+    }else{
+      cc = (c - t) + cs;
+    }
+    cs = t;
+    ccs = ccs + cc;
+  }
+  return s + cs + ccs;
+}
+
+
+template <typename T,typename F>
+double PairWiseSum(T *begin,T *end,F value){
+  double sum = 0;
+  size_t n = end - begin;
+  if(n <= 10){
+    for(T* p=begin ; p != end ; ++p){
+      sum += value(p);
+    }
+  }else{
+    sum = PairWiseSum<T,F>(begin,begin + n/2,value) + PairWiseSum<T,F>(begin + n/2,end,value);
+  }
+  return sum;
+}
+
+/// Does a parwise sumation of a vector which incresses the precision of the sumation to ~O(epsilon log(n) )
+template <typename T>
+double PairWiseSum(T *begin,T *end){
+  double sum = 0;
+  size_t n = end - begin;
+  if(n <= 10){
+    for(T* p=begin ; p != end ; ++p){
+      sum += *p;
+    }
+  }else{
+    sum = PairWiseSum(begin,begin + n/2) + PairWiseSum(begin + n/2,end);
+  }
+  return sum;
+}
+
+/// Does a parwise sumation of a vector which incresses the precision of the sumation to ~O(epsilon log(n) )
+template <typename T>
+double PairWiseSum(std::vector<T> &v){
+  return PairWiseSum(v.data(),v.data() + v.size());
+}
+
+/// This version allows you to specify a function( value(T * p) ), that returns the value of a pointer to a T type that is to be summed.  This is useful for summing the squares or summing some a particular variable within a list of objects.  A lambda function is particularly useful here.
+template <typename T,typename F>
+double PairWiseSum(std::vector<T> &v,F value){
+  return PairWiseSum(v.data(),v.data() + v.size(),value);
+}
+
 }  // Utilities
 
 #endif

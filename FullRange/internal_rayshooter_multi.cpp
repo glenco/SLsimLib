@@ -560,21 +560,18 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
   {
     // ????find which plnaes to go through
     double zs = p->rays[i].zs;
-    long jmax = 0;
     // distance to new source plane
     PosType Ds = cosmo->coorDist(zs);
-    {
-      jmax = 0;
-      while (jmax < p->NPlanes && p->Dl[jmax] < Ds) ++jmax;
-    }
+
+    long jmax = 0;
+    while (jmax < p->NPlanes && p->Dl[jmax] < Ds) ++jmax;
     
     // case of no lensing
     if(jmax==0 || p->flag_switch_lensing_off ){
        p->rays[i].y[0] = p->rays[i].x[0];
        p->rays[i].y[1] = p->rays[i].x[1];
+      
        p->rays[i].kappa = 0.0;
-       p->rays[i].dt = 0.0;
-            
        p->rays[i].gamma[0] = 0;
        p->rays[i].gamma[1] = 0;
        p->rays[i].gamma[2] = 0;
@@ -583,12 +580,9 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
        continue;
     }
     
-    PosType dDs = Ds;
-    if(jmax > 0) dDs = cosmo->coorDist(p->plane_redshifts[jmax-1],zs);
-    PosType dTs;
-    if(jmax > 0) dTs = cosmo->radDist(p->plane_redshifts[jmax-1],zs);
-    else  dTs = cosmo->radDist(0,zs);
-    
+    PosType dDs = cosmo->coorDist(p->plane_redshifts[jmax-1],zs);
+    PosType dTs = cosmo->radDist(p->plane_redshifts[jmax-1],zs);
+   
     // find position on first lens plane in comoving units
     p->rays[i].y[0] = p->rays[i].x[0] * p->Dl[0]; // x^1 = Theta * D_1
     p->rays[i].y[1] = p->rays[i].x[1] * p->Dl[0];
@@ -614,7 +608,6 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
     p->rays[i].gamma[0] = 0;
     p->rays[i].gamma[1] = 0;
     p->rays[i].gamma[2] = 0;
-    p->rays[i].dt = 0;
     
     // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
     p->rays[i].dt = 0;
@@ -629,13 +622,15 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
  
     for(j = 0; j < jmax ; ++j)
     {
-      PosType dD,Dl;
-      if(j == jmax -1){
+      PosType dD,Dl,dT;
+      if(j == jmax-1){
         dD = dDs;
         Dl = Ds;
+        dT = dTs;
       }else{
         dD = p->dDl[j+1];
         Dl = p->Dl[j+1];
+        dT = p->dTl[j+1];
       }
       // convert to physical coordinates on the plane j, just for force calculation
       xx[0] = p->rays[i].y[0]/(1+p->plane_redshifts[j]);
@@ -729,7 +724,7 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
       // ----------------------------------------------
 
       // Geometric time delay with added potential
-      p->rays[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) ) * p->dTl[j+1] /dD /dD - phi * p->charge ; /// in Mpc  ???
+      p->rays[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) ) * dT /dD /dD - phi * p->charge ; /// in Mpc  ???
       
       // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
       // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
@@ -752,7 +747,7 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
     
     // TEST : showing final quantities
     // ===============================
-    if(verbose) std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->rays[i].kappa << " " << p->rays[i].gamma[0] << " " << p->rays[i].gamma[1] << " " << p->rays[i].gamma[2] << " " << p->rays[i].invmag() << " | " << p->rays[i].dt << std::endl ;
+    if(verbose) std::cout << "RSI final : X X | " << Ds << " | " << p->rays[i].kappa << " " << p->rays[i].gamma[0] << " " << p->rays[i].gamma[1] << " " << p->rays[i].gamma[2] << " " << p->rays[i].invmag() << " | " << p->rays[i].dt << std::endl ;
     
   } // End of the main loop.
 }
