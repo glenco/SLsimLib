@@ -258,9 +258,9 @@ xxp(xpt)
 ,sigma_background(my_sigma_background)
 ,Nbucket(bucket)
 ,force_theta(theta_force)
+,max_range(maximum_range)
 ,periodic_buffer(my_periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
-,max_range(maximum_range)
 {
   index.resize(Npoints);
   IndexType ii;

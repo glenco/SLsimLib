@@ -31,7 +31,7 @@ namespace Utilities {
     public:
       SphericalPoint(T r,T theta,T phi):
       r(r),theta(theta),phi(phi){};
-      SphericalPoint():r(0),theta(0),phi(0){};
+      SphericalPoint():r(1),theta(0),phi(0){};
       SphericalPoint(Point_3d<T> &x){
         TOspherical(x);
       }
@@ -93,7 +93,7 @@ namespace Utilities {
        T OrthographicAnglePhi(const SphericalPoint &central);
       
       // returns the unit theta vector
-      Point_3d<T> theta_hat(){
+      Point_3d<T> theta_hat() const{
         Point_3d<T> p;
         p[0] = -sin(theta)*cos(phi);
         p[1] = -sin(theta)*sin(phi);
@@ -103,7 +103,7 @@ namespace Utilities {
       }
 
       // returns the unit phi vector
-      Point_3d<T> phi_hat(){
+      Point_3d<T> phi_hat() const{
          Point_3d<T> p;
          p[0] = -sin(phi);
          p[1] =  cos(phi);
