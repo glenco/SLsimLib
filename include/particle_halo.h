@@ -49,6 +49,7 @@ public:
                     ,bool recenter           /// center on center of mass
                     ,bool my_multimass       /// set to true is particles have different sizes
                     ,PosType MinPSize        /// minimum particle size
+                    ,PosType rescale_mass = 1.0   /// rescale particle masses
                     ,bool verbose=false
   );
  
@@ -191,6 +192,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
                                             ,bool recenter
                                             ,bool my_multimass
                                             ,PosType MinPSize
+                                            ,PosType massscaling
                                             ,bool verbose
                                             )
 :LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
@@ -235,12 +237,14 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
       min_s = pp[i].Size;
       smallest_part = i;
     }
+    pp[i].Mass *= massscaling;
   }
   
   densest_point[0] = pp[smallest_part].x[0];
   densest_point[1] = pp[smallest_part].x[1];
   densest_point[2] = pp[smallest_part].x[2];
 
+  
   // convert from comoving to physical coordinates
   PosType scale_factor = 1/(1+redshift);
   mcenter *= 0.0;
