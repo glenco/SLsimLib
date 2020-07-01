@@ -709,7 +709,7 @@ void LensMap::read_header(std::string fits_input_file
   
   if(cpfits.readKey("CD1_1",angular_pixel_size)){
     std::cerr << "LensMap fits map must have header keywords:" << std::endl
-    << " CD1_1 - angular resolution must exit" << std::endl;
+    << " CD1_1 - angular resolution in degrees must exit" << std::endl;
     
     exit(1);
   }
@@ -775,7 +775,7 @@ void LensMap::read(std::string fits_input_file,double angDist){
   if(err){
     
     std::cerr << "LensMap fits map must have header keywords:" << std::endl
-    << " CD1_1 - angular resolution" << std::endl;
+    << " CD1_1 - angular resolution in degrees" << std::endl;
     //<< " REDSHIFT - redshift of lens" << std::endl
     //<< " WLOW - closest radial distance in cMpc/h" << std::endl
     //<< " WUP - furthest radial distance in cMpc/h" << std::endl;

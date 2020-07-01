@@ -558,7 +558,6 @@ void compute_rays_parallelR(TmpParamsR *p,const COSMOLOGY *cosmo)
   // Main loop : loop over the points
   for(i = start; i < end; i++)
   {
-    // ????find which plnaes to go through
     double zs = p->rays[i].zs;
     // distance to new source plane
     PosType Ds = cosmo->coorDist(zs);
