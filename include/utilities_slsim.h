@@ -1988,6 +1988,56 @@ double PairWiseSum(std::vector<T> &v,F value){
   return PairWiseSum(v.data(),v.data() + v.size(),value);
 }
 
+/// class for adding large amounts of numbers with less error than the simple sum
+template <typename T>
+class SUMMER{
+
+public:
+
+  SUMMER():batch(100),n(0),current(0.0),ntotal(0){};
+  SUMMER(size_t batchsize)
+  :batch(batchsize),n(0),current(0.0),ntotal(0){};
+
+  /// add another number
+  void operator+=(T x){
+    ++n;
+    current += x;
+    ++ntotal;
+    if(n % batch == 0){
+      v.push_back(current);
+      n=0;
+      current = 0;
+    }
+  }
+  
+  /// returns the current total
+  T operator*(){
+    if(v.size() ==0 ) return 0;
+    v.push_back(current);
+    return Utilities::PairWiseSum(v);
+  }
+  
+  /// reset to start over, frees memory
+  void reset(){
+    std::vector<T> dump;
+    std::swap(v,dump);
+    n = ntotal = 0;
+    current = 0;
+  }
+  
+  /// returns the number of numbers that have been added
+  size_t total_number(){
+    return ntotal;
+  }
+  
+private:
+  size_t batch;
+  size_t n;
+  size_t ntotal;
+  T current;
+  std::vector<T> v;
+};
+
 }  // Utilities
 
 #endif
