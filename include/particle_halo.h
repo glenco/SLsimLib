@@ -49,6 +49,7 @@ public:
                     ,bool recenter           /// center on center of mass
                     ,bool my_multimass       /// set to true is particles have different sizes
                     ,PosType MinPSize        /// minimum particle size
+                    ,PosType rescale_mass = 1.0   /// rescale particle masses
                     ,bool verbose=false
   );
  
@@ -70,6 +71,7 @@ public:
   
   LensHaloParticles(LensHaloParticles &&h):LensHalo(std::move(h)){
     mcenter = h.mcenter;
+    densest_point = h.densest_point;
     trash_collector =std::move(h.trash_collector);
     pp = trash_collector.data();
     h.pp = nullptr;
@@ -96,8 +98,10 @@ public:
   void rotate(Point_2d theta);
   
   /// get current center of mass in input coordinates
-  Point_3d CenterOfMass(){return mcenter;}
-  
+   Point_3d CenterOfMass(){return mcenter;}
+  /// get the densistt point in input coordinates
+   Point_3d DensestPoint(){return densest_point;}
+
   /** \brief This is a test class that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
    
    This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
@@ -159,6 +163,8 @@ protected:
   void assignParams(InputParams& params);
 
   Point_3d mcenter;
+  Point_3d densest_point;
+  
   PType *pp;
   std::vector<PType> trash_collector;
   
@@ -186,12 +192,13 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
                                             ,bool recenter
                                             ,bool my_multimass
                                             ,PosType MinPSize
+                                            ,PosType massscaling
                                             ,bool verbose
                                             )
 :LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
 {
   
-  LensHalo::setZlens(redshift);
+  LensHalo::setZlens(redshift,cosmo);
   LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
@@ -222,6 +229,21 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
     //for(size_t i=0; i<Npoints ; ++i) if(sizes[i] < min_size) sizes[i] = min_size;
     for(size_t i=0; i<Npoints ; ++i) if(pp[i].size() < min_size) pp[i].Size = min_size;
   }
+  
+  double min_s = pp[0].Size;
+  size_t smallest_part = 0;
+  for(size_t i = 1 ; i<Npoints ; ++i){
+    if(pp[i].Size < min_s){
+      min_s = pp[i].Size;
+      smallest_part = i;
+    }
+    pp[i].Mass *= massscaling;
+  }
+  
+  densest_point[0] = pp[smallest_part].x[0];
+  densest_point[1] = pp[smallest_part].x[1];
+  densest_point[2] = pp[smallest_part].x[2];
+
   
   // convert from comoving to physical coordinates
   PosType scale_factor = 1/(1+redshift);
@@ -260,12 +282,16 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
     }
     
     LensHalo::setRsize( sqrt(r2max) );
+    
+    densest_point -= mcenter;
+    
+    mcenter *= 0;
   }
   
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
-  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,0,20);
 }
 
 template<typename PType>
@@ -287,6 +313,19 @@ void LensHaloParticles<PType>::set_up(
   Rmax = 1.0e3;
   LensHalo::setRsize(Rmax);
   
+  double min_s = pp[0].Size;
+  size_t smallest_part = 0;
+  for(size_t i =0 ; i<Npoints ; ++i){
+    if(pp[i].Size < min_s){
+      min_s = pp[i].Size;
+      smallest_part = i;
+    }
+  }
+  
+  densest_point[0] = pp[smallest_part].x[0];
+  densest_point[1] = pp[smallest_part].x[1];
+  densest_point[2] = pp[smallest_part].x[2];
+
   // convert from comoving to physical coordinates
   //PosType scale_factor = 1/(1+redshift);
   mcenter *= 0.0;
@@ -317,6 +356,10 @@ void LensHaloParticles<PType>::set_up(
       
       r2 = pp[i][0]*pp[i][0] + pp[i][1]*pp[i][1] + pp[i][2]*pp[i][2];
       if(r2 > r2max) r2max = r2;
+      
+      densest_point -= mcenter;
+      
+      mcenter *= 0;
     }
     
     LensHalo::setRsize( sqrt(r2max) );
@@ -558,11 +601,12 @@ void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y)
   coord[0][1] = 0;   coord[1][1] = cx;     coord[2][1] = sx;
   coord[0][2] = -sy; coord[1][2] = -cy*sx; coord[2][2] = cy*cx;
   
-  PosType tmp[3];
+  //PosType tmp[3];
+  Point_3d tmp;
   int j;
-  /* rotate particle positions */
+  // rotate particle positions */
   for(size_t i=0;i<Npoints;++i){
-    for(j=0;j<3;++j) tmp[j]=0.0;
+    tmp *= 0;
     for(j=0;j<3;++j){
       tmp[0] += coord[0][j]*pp[i][j];
       tmp[1] += coord[1][j]*pp[i][j];
@@ -570,6 +614,24 @@ void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y)
     }
     for(j=0;j<3;++j) pp[i][j]=tmp[j];
   }
+  
+  // rotate center of mass
+  tmp *= 0.0;
+  for(j=0;j<3;++j){
+    tmp[0] += coord[0][j]*mcenter[j];
+    tmp[1] += coord[1][j]*mcenter[j];
+    tmp[2] += coord[2][j]*mcenter[j];
+  }
+  mcenter = tmp;
+
+  // rotate center of mass
+  tmp *= 0.0;
+  for(j=0;j<3;++j){
+    tmp[0] += coord[0][j]*densest_point[j];
+    tmp[1] += coord[1][j]*densest_point[j];
+    tmp[2] += coord[2][j]*densest_point[j];
+  }
+  densest_point = tmp;
 }
 
 template<typename PType>
@@ -699,6 +761,7 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
   if(this == &h) return *this;
   LensHalo::operator=(std::move(h));
   mcenter = h.mcenter;
+  densest_point = h.densest_point;
   trash_collector =std::move(h.trash_collector);
   pp = h.pp;  // note: this depends on std:move keeping the pointer valid if it is constructed with the public constructor
   h.pp = nullptr;
