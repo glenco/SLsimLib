@@ -1098,6 +1098,7 @@ public:
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle
                 ,const COSMOLOGY &cosmo  /// cosmology
+                ,float f=20 /// cuttoff radius in units of truncation radius
                 );
   
   LensHaloTNSIE(const LensHaloTNSIE &h):
@@ -1123,7 +1124,7 @@ public:
     return *this;
   }
   
-  ~LensHaloTNSIE();
+  ~LensHaloTNSIE(){};
   
   /// overridden function to calculate the lensing properties
   void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);

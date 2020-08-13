@@ -902,9 +902,10 @@ LensHaloTNSIE::LensHaloTNSIE(
                                    ,float my_rcore
                                    ,float my_fratio
                                    ,float my_pa
-                                   ,const COSMOLOGY &cosmo)
-:LensHalo(),sigma(my_sigma),rcore(my_rcore)
-,fratio(my_fratio), pa(PI/2 - my_pa)
+                                   ,const COSMOLOGY &cosmo
+                                   ,float f)
+:LensHalo(),sigma(my_sigma),fratio(my_fratio)
+,pa(PI/2 - my_pa),rcore(my_rcore)
 {
   rscale=1.0;
   LensHalo::setMass(my_mass);
@@ -914,8 +915,8 @@ LensHaloTNSIE::LensHaloTNSIE(
   
   units = sigma*sigma/lightspeed/lightspeed/Grav;///sqrt(fratio); // mass/distance(physical);
   
-  rtrunc = units/PI + rcore;
-  Rmax = 5 * rtrunc;
+  rtrunc = my_mass*sqrt(my_fratio)/units/PI + rcore;
+  Rmax = f * rtrunc;
   LensHalo::setRsize(Rmax);
 }
 
@@ -969,7 +970,6 @@ void LensHaloTNSIE::force_halo(
         gamma[1] += xcm[0]*xcm[1]*fac;
       }
     }
-    
   }
   else
   {
