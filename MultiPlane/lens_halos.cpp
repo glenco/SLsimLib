@@ -889,6 +889,103 @@ LensHaloPowerLaw::~LensHaloPowerLaw(){
 }
 
 
+LensHaloTNSIE::LensHaloTNSIE(
+                                   float my_mass
+                                   ,PosType my_zlens
+                                   ,float my_sigma
+                                   ,float my_rcore
+                                   ,float my_fratio
+                                   ,float my_pa
+                                   ,const COSMOLOGY &cosmo
+                                   ,float f)
+:LensHalo(),sigma(my_sigma),fratio(my_fratio)
+,pa(PI/2 - my_pa),rcore(my_rcore)
+{
+  rscale=1.0;
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens,cosmo);
+
+  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+  
+  units = sigma*sigma/lightspeed/lightspeed/Grav;///sqrt(fratio); // mass/distance(physical);
+  
+  rtrunc = my_mass*sqrt(my_fratio)/units/PI + rcore;
+  Rmax = f * rtrunc;
+  LensHalo::setRsize(Rmax);
+}
+
+void LensHaloTNSIE::force_halo(
+                                  PosType *alpha
+                                  ,KappaType *kappa
+                                  ,KappaType *gamma
+                                  ,KappaType *phi
+                                  ,PosType const *xcm
+                                  ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                  ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
+)
+{
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  
+  if(rcm2 < 1e-20) rcm2 = 1e-20;
+  if(rcm2 < Rmax*Rmax){
+ 
+    PosType tmp[2]={0,0};
+    alphaNSIE(tmp,xcm,fratio,rcore,pa);
+    alpha[0] += units*tmp[0];
+    alpha[1] += units*tmp[1];
+
+    alphaNSIE(tmp,xcm,fratio,rtrunc,pa);
+    alpha[0] -= units*tmp[0];
+    alpha[1] -= units*tmp[1];
+    {
+      KappaType tmp[2]={0,0};
+      *kappa += units*(kappaNSIE(xcm,fratio,rcore,pa) - kappaNSIE(xcm,fratio,rtrunc,pa) );
+                       
+      gammaNSIE(tmp,xcm,fratio,rcore,pa);
+      gamma[0] += units*tmp[0];
+      gamma[1] += units*tmp[1];
+
+      gammaNSIE(tmp,xcm,fratio,rtrunc,pa);
+      gamma[0] -= units*tmp[0];
+      gamma[1] -= units*tmp[1];
+    }
+    
+    if(subtract_point)
+    {
+      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
+      alpha[0] += fac*xcm[0];
+      alpha[1] += fac*xcm[1];
+      
+      {
+        fac = 2.0*fac/rcm2;
+        
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+        gamma[1] += xcm[0]*xcm[1]*fac;
+      }
+    }
+  }
+  else
+  {
+    // outside of the halo
+    if (subtract_point == false)
+    {
+      PosType prefac = LensHalo::get_mass()/rcm2/PI;
+      alpha[0] += -1.0*prefac*xcm[0];
+      alpha[1] += -1.0*prefac*xcm[1];
+      
+      {
+        PosType tmp = -2.0*prefac/rcm2;
+        
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        gamma[1] += xcm[0]*xcm[1]*tmp;
+      }
+    }
+  }
+  
+  return;
+}
+
 /*
  LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_sigma
  , float my_rcore,float my_fratio,float my_pa,int my_stars_N){
@@ -910,7 +1007,7 @@ LensHaloRealNSIE::LensHaloRealNSIE(
                                    float my_mass     /// mass, sets truncation radius
                                    ,PosType my_zlens /// redshift
                                    ,float my_sigma   /// in km/s
-                                   ,float my_rcore   /// in units of R_einstein
+                                   ,float my_rcore   /// core radius
                                    ,float my_fratio  /// axis ratio
                                    ,float my_pa      /// postion angle
                                    ,const COSMOLOGY &cosmo)

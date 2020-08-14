@@ -991,9 +991,6 @@ private:
 };
 
 
-
-
-
 /** \brief Represents a non-singular isothermal elliptical lens
 
 This is a true NSIE lens rather than an expansion that approximates one.
@@ -1034,8 +1031,7 @@ public:
   
 	/// overridden function to calculate the lensing properties
 	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
-  
+	
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
 	// get the NSIE radius
@@ -1107,7 +1103,86 @@ protected:
   
 };
 
+/** \brief Truncated non-singular isothermal ellipsoid
 
+This is a true NSIE lens rather than an expansion that approximates one.
+*/
+class LensHaloTNSIE : public LensHalo{
+public:
+
+  LensHaloTNSIE(float my_mass  /// total mass in Msun
+                ,PosType my_zlens /// redshift
+                ,float my_sigma  /// vleocity dispertion in km/s
+                ,float my_rcore  ///  core size Mpc
+                ,float my_fratio /// axis ratio
+                ,float my_pa     /// position angle
+                ,const COSMOLOGY &cosmo  /// cosmology
+                ,float f=20 /// cuttoff radius in units of truncation radius
+                );
+  
+  LensHaloTNSIE(const LensHaloTNSIE &h):
+  LensHalo(h)
+  {
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    rtrunc = h.rtrunc;
+    units = h.units;
+  }
+  
+  LensHaloTNSIE &operator=(const LensHaloTNSIE &h){
+    if(&h == this) return *this;
+    LensHalo::operator=(h);
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    rtrunc = h.rtrunc;
+    units = h.units;
+    return *this;
+  }
+  
+  ~LensHaloTNSIE(){};
+  
+  /// overridden function to calculate the lensing properties
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  
+  /// get the velocity dispersion
+  float get_sigma(){return sigma;};
+  // get the NSIE radius
+  //float get_Rsize(){return Rsize;};
+  /// get the axis ratio
+  float get_fratio(){return fratio;};
+  /// get the position angle
+  float get_pa(){return pa;};
+  /// get the core radius
+  float get_rcore(){return rcore;};
+  /// get the truncation radius
+  float get_rtrunc(){return rtrunc;};
+  
+  void setZlens(PosType my_zlens,const COSMOLOGY &cosmo){
+    LensHalo::setZlens(my_zlens,cosmo);
+  }
+
+  
+protected:
+  
+  float units;
+  
+  /// read-in parameters from a parameter file
+  void assignParams(InputParams& params);
+  /// velocity dispersion of TNSIE
+  float sigma;
+  /// axis ratio of surface mass distribution
+  float fratio;
+  /// position angle on sky, radians
+  float pa;
+  /// core size of NSIE
+  float rcore;
+  /// core size of NSIE
+  float rtrunc;
+};
 
 /**
  *
