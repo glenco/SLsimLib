@@ -973,8 +973,17 @@ private:
 
 
 /** \brief Represents a non-singular isothermal elliptical lens
-
-This is a true NSIE lens rather than an expansion that approximates one.
+ *
+ * This is a true NSIE lens rather than an expansion that approximates one.
+ *
+ * The maximum radius is set by requireing the total mass to match the input mass.
+ *  At radii larger than this radius the halo is treated as a point mass.  In the case of
+ *  an ellipitcal halo there is a transition region between these to match the solutions
+ *  without a discontinuity.  In this region the lensing quanties have small corrections
+ *  which do not correspond to a realistic mass distribution.  If the halo is expected to
+ *  be sampled at or beyond the maxiumum radius you should consider using a Truncated
+ *  NonSingular Isotherma Ellipsoid (`LensHaloTNSIE') which more naturally deals with the
+ *   finite truncation.
 */
 class LensHaloRealNSIE : public LensHalo{
 public:
