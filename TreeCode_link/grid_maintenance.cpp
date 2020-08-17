@@ -38,11 +38,11 @@ Grid::Grid(
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 
-    {
+  {
     std::lock_guard<std::mutex> hold(grid_mutex);
   	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
-    }
-             
+  }
+  
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
 	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init,1,range);  // make tree on source plane with a buffer

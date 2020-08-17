@@ -29,21 +29,21 @@ SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radia
 //  assignParams(params);
 //}
 
-SourceBLR::SourceBLR(InputParams& params) : Source(){
-  assignParams(params);
-}
-
-SourceBLRDisk::SourceBLRDisk(InputParams& params) : SourceBLR(params){
-  
-}
-
-SourceBLRSph1::SourceBLRSph1(InputParams& params) : SourceBLR(params){
-  
-}
-
-SourceBLRSph2::SourceBLRSph2(InputParams& params) : SourceBLR(params){
-  
-}
+//SourceBLR::SourceBLR(InputParams& params) : Source(){
+//  assignParams(params);
+//}
+//
+//SourceBLRDisk::SourceBLRDisk(InputParams& params) : SourceBLR(params){
+//
+//}
+//
+//SourceBLRSph1::SourceBLRSph1(InputParams& params) : SourceBLR(params){
+//
+//}
+//
+//SourceBLRSph2::SourceBLRSph2(InputParams& params) : SourceBLR(params){
+//
+//}
 
 Source::~Source(){
 }
@@ -147,7 +147,7 @@ void SourceBLR::assignParams(InputParams& params){
 		  fail = true;
   }
   
-  if(fail) exit(1);
+  if(fail) throw std::runtime_error("In SourceBLR");
   
   source_inclination *= PI/180;
   source_opening_angle *= PI/180;
@@ -206,8 +206,8 @@ PosType SourceBLRSph2::SurfaceBrightness(PosType *y){
 //void in_source(PosType *y_source,ListHndl sourcelist){
 //  return;
 //}
-SourcePixelled::SourcePixelled(InputParams& params)
-{}
+//SourcePixelled::SourcePixelled(InputParams& params)
+//{}
 
 SourcePixelled::SourcePixelled(
                                PosType my_z            /// redshift of the source
@@ -723,13 +723,13 @@ void SourceShapelets::NormalizeFlux()
   coeff_flux *= sqrt(PI)*source_r;
 }
 
-/// Default constructor. Reads in sources from the default catalog. No magnitude limit.
-SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
-: Source(),index(0)
-{
-  assignParams(params);
-  readCatalog();
-}
+// Default constructor. Reads in sources from the default catalog. No magnitude limit.
+//SourceMultiShapelets::SourceMultiShapelets(InputParams& params)
+//: Source(),index(0)
+//{
+//  assignParams(params);
+//  readCatalog();
+//}
 
 SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
 : Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)
@@ -859,7 +859,7 @@ void SourceMultiShapelets::readCatalog()
 
 void SourceMultiShapelets::assignParams(InputParams& params){
   if(!params.get("source_mag_limit",mag_limit)){
-    std::cout << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
+    std::cerr << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
     exit(1);
   }
   
@@ -869,12 +869,12 @@ void SourceMultiShapelets::assignParams(InputParams& params){
     sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
   
   if(!params.get("shapelets_folder",shapelets_folder)){
-    std::cout << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
+    std::cerr << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
     exit(1);
   }
   
   if(!params.get("shapelets_band",band)){
-    std::cout << "ERROR: Must assign shapelets_band in parameter file " << params.filename() << std::endl;
+    std::cerr << "ERROR: Must assign shapelets_band in parameter file " << params.filename() << std::endl;
     exit(1);
   }
   

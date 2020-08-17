@@ -53,7 +53,7 @@
  */
 class LensHaloBaseNSIE : public LensHalo{
 public:
-	LensHaloBaseNSIE(InputParams& params);
+	//LensHaloBaseNSIE(InputParams& params,const COSMOLOGY &cosmo);
   LensHaloBaseNSIE();
   
   virtual void abstractfunction() = 0; // pure virtual
@@ -104,7 +104,7 @@ public:
   ClumpInternal main_sub_type;
 
   //void setZlens(PosType zlens);
-  void assignParams(InputParams& params);
+  void assignParams(InputParams& params,const COSMOLOGY &cosmo);
   void PrintLens(bool show_substruct,bool show_stars);
   void error_message1(std::string name,std::string filename);
 

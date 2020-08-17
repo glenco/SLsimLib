@@ -34,7 +34,7 @@ LensHalo(redshift,c),write_shorts(write_subfields),single_grid(single_grid_mode)
   else
     Rmax = std::numeric_limits<float>::max();
  
-  setZlens(redshift);
+  setZlens(redshift,c);
   setZlensDist(redshift,cosmo);
 
   double D = LensHalo::getDist();

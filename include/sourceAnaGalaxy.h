@@ -33,7 +33,7 @@ class SourceMultiAnaGalaxy: public Source{
 public:
 	SourceMultiAnaGalaxy(PosType mag, PosType mag_bulge, PosType Reff, PosType Rdisk, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,Utilities::RandomNumbers_NR &ran);
 	SourceMultiAnaGalaxy(SourceOverzierPlus *my_galaxy);
-	SourceMultiAnaGalaxy(InputParams& params,Utilities::RandomNumbers_NR &ran);
+	//SourceMultiAnaGalaxy(InputParams& params,Utilities::RandomNumbers_NR &ran);
 	~SourceMultiAnaGalaxy();
 	
 	/// Surface brightness of current galaxy.
@@ -183,7 +183,7 @@ bool idcompare(SourceOverzierPlus s1,SourceOverzierPlus s2);
 class SourceMultiShapelets: public Source{
 public:
   
-  SourceMultiShapelets(InputParams& params);
+  //SourceMultiShapelets(InputParams& params);
   /// Reads in sources from a catalog.
   SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit = -1);
 

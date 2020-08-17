@@ -227,6 +227,7 @@ PixelMap::PixelMap(
           std::cerr << "PixelMap input fits field must have header keywords:" << std::endl
           << " PHYSICALSIZE - size of map in degrees" <<std::endl
           << " or CDELT1 and CDELT2 or CD1_1, DC1_2, CD2_1 and CD2_2" << std::endl;
+          
           throw std::invalid_argument("bad header");
         }
         my_res = ps/Nx;

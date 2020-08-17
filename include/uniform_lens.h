@@ -16,7 +16,10 @@
  * Note the units of the input shear and surface density are not Sigma_crit's.
  * This lens will extend to infinity in the angular directions.
  *
+ *  If the magnitude g and position angle, theta,  are specified then
  *
+ * Shear[0] = g * cos( 2*theta )
+ * Shear[1] = g * sin(  2*theta )
  */
 
 class LensHaloUniform: public LensHalo{
