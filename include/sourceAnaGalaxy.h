@@ -185,7 +185,7 @@ public:
   
   //SourceMultiShapelets(InputParams& params);
   /// Reads in sources from a catalog.
-  SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit = -1);
+  SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit = -1);
 
   ~SourceMultiShapelets();
   void sortInRedshift();

@@ -1517,10 +1517,12 @@ namespace Utilities
     int ReadCSVnumerical1(std::string filename   /// file name to be read
                 ,std::vector<std::vector<T> > &data  /// output data
                 ,std::vector<std::string> &column_names /// list of column names
+                ,size_t MaxNumber = 100000000 /// maximum number of entries read
                 ,char comment_char = '#'  /// comment charactor for header
                 ,char deliniator = ','    /// deliniator between values
+                ,std::string reject = "\\N"    /// reject rows with this entry
+
                          ){
-    
       std::ifstream file(filename);
       // find number of particles
       if (!file.is_open()){
@@ -1549,10 +1551,11 @@ namespace Utilities
       }
 
       int columns = NumberOfEntries(line,deliniator);
-      //int i = 0;
+      size_t rows = 0;
       data.resize(columns);
       for(auto &v : data ) v.empty();
-      while(std::getline(file,line)){
+      while(std::getline(file,line) && rows < MaxNumber){
+        ++rows;
         // read the names
         std::stringstream          lineStream(line);
         std::string                cell;
@@ -1560,11 +1563,19 @@ namespace Utilities
         int i=0;
         while(std::getline(lineStream,cell, deliniator))
         {
+          if(cell==reject){
+            --i;
+            while(i>=0){
+              data[i].pop_back();
+              --i;
+            }
+            break;
+          }
           data[i].push_back(to_numeric<T>(cell));
           i = (i+1)%columns;
         }
       }
-                           return 1;
+      return 1;
     }
     
     /** \brief Read numerical data from a csv file with a header
@@ -1814,8 +1825,10 @@ public:
           ,size_t MaxNumber = 1000000 /// maximum number of entries read
           ,char comment_char = '#'  /// comment charactor for header
           ,char deliniator = ','    /// deliniator between values
+          ,std::string reject = "\\N"    /// reject rows with this entry
     ):filename(datafile){
-      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names);
+      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',reject);
+ 
       for(int i=0 ; i<column_names.size() ; ++i){
         datamap[column_names[i]] = i;
       }

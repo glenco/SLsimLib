@@ -731,7 +731,7 @@ void SourceShapelets::NormalizeFlux()
 //  readCatalog();
 //}
 
-SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
+SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
 : Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)
 {
   
