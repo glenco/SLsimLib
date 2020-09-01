@@ -165,10 +165,9 @@ long ImageFinding::IF_routines::refine_edges(
 
 	if(Nimages < 1) return 0;
 
-	long i,j,Ncells=0,Ncells_o=0,count=0;
+	long i,j,Ncells=0,Ncells_o=0;
 	Point *point;
 	PosType area_total=0;
-	std::vector<Point *> points_to_refine;
 
 	// count border points
 	if( criterion == 2 ) for(i=0,area_total=0.0;i<Nimages;++i) area_total += imageinfo[i].area;
@@ -198,6 +197,9 @@ long ImageFinding::IF_routines::refine_edges(
 	if(Ncells==0) return 0;
 
 	Ncells_o=Ncells;
+
+  long count=0;
+  std::vector<Point *> points_to_refine;
 
 	for(i=0,Ncells=0;i<Nimages;++i){
 			/* loop through outer border of ith image */
@@ -255,7 +257,9 @@ long ImageFinding::IF_routines::refine_edges(
 
 	if(batch){
 		Point *i_points = grid->RefineLeaves(lens,points_to_refine);
-		if(newpointskist && i_points != NULL){
+    if(i_points == NULL){
+      count = 0;
+    }else if(newpointskist){
 			for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 		}
     points_to_refine.clear();

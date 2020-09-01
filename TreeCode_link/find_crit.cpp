@@ -74,6 +74,14 @@ void ImageFinding::find_crit(
     --i_tree_pointlist_it;
   }
   
+  // case where all the points have negative magnification
+  if(negimage[0].imagekist->Nunits() == grid->i_tree->pointlist->size()){
+    crtcurve.resize(0);
+    *Ncrits=0;
+    
+    return;
+  }
+  
   if(negimage[0].imagekist->Nunits() == 0){
     if(minpoint->gridsize <= resolution){  // no caustic found at this resolution
       *Ncrits=0;
@@ -134,8 +142,9 @@ void ImageFinding::find_crit(
       //negimage[ii].imagekist->SetInImage(NO);
       //if(negimage[ii].innerborder->Nunits() > 2000) break;
       
-      refinements=ImageFinding::IF_routines::refine_edges(lens,grid,&negimage[ii]
-                                                          ,1,resolution,1,&newpoint_kist,true);
+      refinements=ImageFinding::IF_routines::refine_edges(
+                                lens,grid,&negimage[ii]
+                                ,1,resolution,1,&newpoint_kist,true);
       
       if(refinements==0) break;
       
@@ -143,6 +152,7 @@ void ImageFinding::find_crit(
       // add new negative points to negpoints
       newpoint_kist.MoveToTop();
       negimage[ii].imagekist->MoveToBottom();
+      if(newpoint_kist.Nunits()>0){
       do{
         if(newpoint_kist.getCurrent()->invmag < invmag_min){
           if(usingminpoint){
@@ -157,7 +167,7 @@ void ImageFinding::find_crit(
         if(usingminpoint && newpoint_kist.getCurrent()->kappa > minpoint->kappa) minpoint = newpoint_kist.getCurrent();
         
        }while(newpoint_kist.Down());
-      
+      }
       // if no negative island has been found update negimage to minpoint
       if(usingminpoint && minpoint != negimage[ii].imagekist->getCurrent()){
         negimage[ii].imagekist->TakeOutCurrent()->in_image = NO;
