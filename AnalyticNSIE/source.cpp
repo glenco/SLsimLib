@@ -596,8 +596,6 @@ SourceShapelets::SourceShapelets(
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
 
-  
-  
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
  
@@ -624,7 +622,8 @@ SourceShapelets::SourceShapelets(
   setActiveBand(KiDS_I);
   
   cpfits.readKey("REDSHIFT", zsource);
-  cpfits.readKey("ID", id);
+  //cpfits.readKey("ID", id); // I'm not sure what this is.
+  id = -1;
   cpfits.readKey("DIM", n1);
   
   n2 = n1;
@@ -677,7 +676,9 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   }
   sb *= exp(- r_norm2 )/source_r;
   sb *= flux/coeff_flux;
+  sb /= arcsecTOradians*arcsecTOradians;
   assert(flux > 0);
+  
   
   return MAX(sb,0);
   //return max(sb,std::numeric_limits<PosType>::epsilon());
@@ -731,8 +732,9 @@ void SourceShapelets::NormalizeFlux()
 //  readCatalog();
 //}
 
-SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
-: Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)
+SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit,double maximum_radius)
+: Source(),index(0),mag_limit(my_mag_limit),band(my_band)
+,radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
 {
   
   if(sb_limit == -1)
@@ -822,11 +824,9 @@ void SourceMultiShapelets::readCatalog()
       SourceShapelets s(shap_file.c_str());
       
       s.id = i;
-//      assert(viz_cat[j][1] == i);
-//      assert(y_cat[j][1] == i);
-//      assert(j_cat[j][1] == i);
-//      assert(h_cat[j][1] == i);
 
+      s.sed_type = viz_cat[j][4];
+      
       assert(viz_cat.size() > j );
       s.setBand(EUC_VIS,viz_cat[j][2]);
       assert(y_cat.size() > j );
@@ -838,7 +838,8 @@ void SourceMultiShapelets::readCatalog()
       
       //s.setActiveBand(band);
       if (s.getMag() > 0. && s.getMag(EUC_VIS) < mag_limit
-          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0 ){
+          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0
+          && s.getRadius() < radius_max){
         galaxies.push_back(s);
         shap_input.close();
       }

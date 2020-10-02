@@ -185,7 +185,12 @@ public:
   
   //SourceMultiShapelets(InputParams& params);
   /// Reads in sources from a catalog.
-  SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit = -1);
+  SourceMultiShapelets(const std::string &my_shapelets_folder  /// directory where shapelet files are located
+                       ,Band my_band  /// band that will be used as default
+                       ,double my_mag_limit  /// magnitude limit in that band
+                       ,double my_sb_limit = -1 /// surface brightness limit
+                       ,double maximum_radius = 1.0e100  /// maximum radius (as defined in shapelet expansion) in radians
+                       );
 
   ~SourceMultiShapelets();
   void sortInRedshift();
@@ -272,6 +277,7 @@ private:
  	std::size_t index;
 	float mag_limit;
   Band band;
+  double radius_max;
   std::vector<SourceShapelets> galaxies;
 
   void readCatalog();
