@@ -23,7 +23,7 @@ struct Grid;
 struct GridMap;
 class Source;
 
-/// these are partial units for the pixel map that can be used to ensure consistency
+/// These are partial units for the pixel map that can be used to ensure consistency.  For example, maps with different units cannot be added together.  default: ndef
 enum PixelMapUnits {ndef,surfb,photon_flux,count_per_sec,mass,mass_density};
 
 /**
@@ -384,18 +384,19 @@ public:
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
 
   
-  float getExpTime(){return exp_time;}
-	int getExpNum(){return exp_num;}
-	float getBackMag(){return back_mag;}
-	float getDiameter(){return diameter;}
-	float getTransmission(){return transmission;}
+  float getExpTime() const {return exp_time;}
+	int getExpNum() const {return exp_num;}
+	float getBackMag() const {return back_mag;}
+	float getDiameter() const {return diameter;}
+	float getTransmission() const {return transmission;}
     /// read-out noise in electrons/pixel
-	float getRon(){return ron;}
+	float getRon() const {return ron;}
   /// seeing in arcsecs
-	float getSeeing(){return seeing;}
-	float getZeropoint(){return mag_zeropoint;}
+	float getSeeing() const {return seeing;}
+	float getZeropoint() const {return mag_zeropoint;}
     /// pixel size in radians
-  float getPixelSize(){return pix_size;}
+  float getPixelSize() const {return pix_size;}
+  void setPixelSize(float pixel_size){pix_size=pixel_size;}
   float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);

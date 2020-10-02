@@ -878,8 +878,6 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
   //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
   //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
@@ -895,8 +893,11 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", center[0], "radians, center");
-  cpfits.writeKey("DEC", center[1], "radians, center");
+   cpfits.writeKey("RA", center[0], "radians, center");
+   cpfits.writeKey("DEC", center[1], "radians, center");
+  
+   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
   
 }
 
@@ -938,7 +939,10 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
   cpfits.writeKey("RA", center[0], "radians");
   cpfits.writeKey("DEC", center[1], "radians");
-  
+
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+
   for(auto hp : extra_header_info){
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }

@@ -14,15 +14,15 @@
 
 // used for default position of object
 //template<class T>
-//PosType  *defaultposition(T &in){return in.x;}
+//D  *defaultposition(T &in){return in.x;}
 
     /** \brief
      * A tree for doing quick searches in multidimensional space.  A pointer to an array of
      *  objects type T is provided.  If they are in a vector, vector.data() can be put in the constructor.
-     *  The order of objects in the array is not changed.  If Mypos is not specified the method PosType * T::x() must exist.
+     *  The order of objects in the array is not changed.  If Mypos is not specified the method D * T::x() must exist.
      *  It is this coordinate that is used for the object's position.  Another definition for the position of and object can made by specifying Mypos.
      */
-template <class T>
+template <typename T,typename D = PosType>
 class TreeSimpleVec {
 public:
     
@@ -33,7 +33,7 @@ public:
                   ,int dimensions = 2     /// dimension of space
                   ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
-                ,PosType *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
+                ,D *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
   ):Nbranches(0)
   {
     index.resize(Npoints);
@@ -60,11 +60,11 @@ public:
     };
   
 	/// \brief Finds the points within a circle around center and puts their index numbers in a list
-	void PointsWithinCircle(PosType center[2],float radius,std::list<unsigned long> &neighborkist);
+	void PointsWithinCircle(D center[2],float radius,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the points within an ellipse around center and puts their index numbers in a list
-	void PointsWithinEllipse(PosType center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
+	void PointsWithinEllipse(D center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
-	void NearestNeighbors(PosType *ray,int Nneighbors,float *radius,IndexType *neighbors);
+	void NearestNeighbors(D *ray,int Nneighbors,float *radius,IndexType *neighbors);
     
     /** \brief Box representing a branch in a tree.  It has four children.  Used in TreeNBStruct which is used in TreeForce.
      */
@@ -79,9 +79,9 @@ public:
       int level;
       unsigned long number;
         /// bottom, left, back corner of box
-      PosType *boundary_p1 = nullptr;
+      D *boundary_p1 = nullptr;
         /// top, right, front corner of box
-      PosType *boundary_p2 = nullptr;
+      D *boundary_p2 = nullptr;
       BranchV *child1;
       BranchV *child2;
         /// father of branch
@@ -92,13 +92,13 @@ public:
         
         
       BranchV(int my_Ndim,IndexType *my_branch_index,IndexType my_nparticles
-                ,PosType my_boundary_p1[],PosType my_boundary_p2[]
+                ,D my_boundary_p1[],D my_boundary_p2[]
                 ,int my_level,unsigned long my_BranchVnumber)
         :Ndim(my_Ndim),branch_index(my_branch_index),nparticles(my_nparticles)
          ,level(my_level),number(my_BranchVnumber)
         {
             
-          boundary_p1 = new PosType[Ndim*2];
+          boundary_p1 = new D[Ndim*2];
           boundary_p2 = &boundary_p1[Ndim];
 
             for(size_t i=0;i<Ndim;++i){
@@ -119,7 +119,7 @@ public:
                 level = branch.level;
                 number = branch.number;
 
-                boundary_p1 = new PosType[Ndim*2];
+                boundary_p1 = new D[Ndim*2];
                 boundary_p2 = &boundary_p1[Ndim];
                 
                 for(size_t i=0;i<Ndim;++i){
@@ -145,11 +145,11 @@ protected:
 	IndexType Nparticles;
 	bool median_cut;
 	int Nbucket;
-	PosType realray[2];
+	D realray[2];
 	T *points;
-  PosType *(*position)(T&);
+  D *(*position)(T&);
   
-  std::vector<PosType> workspace;
+  std::vector<D> workspace;
     
   BranchV *top;
   BranchV *current;
@@ -162,8 +162,8 @@ protected:
     
 	void _BuildTree(IndexType nparticles,IndexType *tmp_index);
     
-	void _PointsWithin(PosType *ray,float *rmax,std::list<unsigned long> &neighborkist);
-	void _NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors);
+	void _PointsWithin(D *ray,float *rmax,std::list<unsigned long> &neighborkist);
+	void _NearestNeighbors(D *ray,int Nneighbors,unsigned long *neighbors,D *rneighbors);
     
 	void freeTree();
     
@@ -179,7 +179,7 @@ protected:
 	void moveUp();
 	void moveToChild(int child);
 	void attachChildToCurrent(IndexType *branch_index,IndexType nparticles
-                              ,PosType boundary_p1[],PosType boundary_p2[]
+                              ,D boundary_p1[],D boundary_p2[]
                               ,int child);
 	void attachChildToCurrent(BranchV &data,int child);
 	bool TreeWalkStep(bool allowDescent);
@@ -187,7 +187,7 @@ protected:
 	inline bool atLeaf(){
 		return (current->child1 == NULL)*(current->child2 == NULL);
 	}
-	inline bool inbox(const PosType* center,PosType *p1,PosType *p2){
+	inline bool inbox(const D* center,D *p1,D *p2){
         return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 	}
 
@@ -219,15 +219,15 @@ TreeSimpleVec<T>::TreeSimpleVec<T>(T *xpt,IndexType Npoints,int bucket,int dimen
 
 
 
-template <class T>
-void TreeSimpleVec<T>::PointsWithinEllipse(
-                                        PosType *ray     /// center of ellipse
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::PointsWithinEllipse(
+                                        D *ray     /// center of ellipse
                                         ,float rmax      /// major axis
                                         ,float rmin     /// minor axis
                                         ,float posangle  /// position angle of major axis, smallest angle between the x-axis and the long axis
                                         ,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
                                         ){
-	PosType x,y,cs,sn;
+	D x,y,cs,sn;
     
     
 	if(rmax < rmin){float tmp = rmax; rmax=rmin; rmin=tmp;}
@@ -249,9 +249,9 @@ void TreeSimpleVec<T>::PointsWithinEllipse(
 	return;
 }
 
-template <class T>
-void TreeSimpleVec<T>::PointsWithinCircle(
-                                       PosType *ray     /// center of circle
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::PointsWithinCircle(
+                                       D *ray     /// center of circle
                                        ,float rmax      /// radius of circle
                                        ,std::list <unsigned long> &neighborlist  /// output neighbor list, will be emptied if it contains anything on entry
                                        ){
@@ -283,12 +283,12 @@ void TreeSimpleVec<T>::PointsWithinCircle(
 }
 /**
  * Used in PointsWithinKist() to walk tree.*/
-template <class T>
-void TreeSimpleVec<T>::_PointsWithin(PosType *ray,float *rmax,std::list <unsigned long> &neighborlist){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::_PointsWithin(D *ray,float *rmax,std::list <unsigned long> &neighborlist){
     
     int j,incell2=1;
     unsigned long i;
-    PosType radius;
+    D radius;
     short pass;
     
     if(incell){  // not found cell yet
@@ -396,9 +396,9 @@ void TreeSimpleVec<T>::_PointsWithin(PosType *ray,float *rmax,std::list <unsigne
 /**
  *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
  *  */
-template <class T>
-void TreeSimpleVec<T>::NearestNeighbors(
-                                     PosType *ray       /// position
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::NearestNeighbors(
+                                     D *ray       /// position
                                      ,int Nneighbors    /// number of neighbors to be found
                                      ,float *radius     /// distance of furthest neighbor found from ray[]
                                      ,IndexType *neighborsout  /// list of the indexes ofx the neighbors
@@ -407,7 +407,7 @@ void TreeSimpleVec<T>::NearestNeighbors(
     //static int count=0,oldNneighbors=-1;
     short j;
     
-    PosType rneighbors[Nneighbors+Nbucket];
+    D rneighbors[Nneighbors+Nbucket];
     IndexType neighbors[Nneighbors+Nbucket];
     
     if(top->nparticles < Nneighbors){
@@ -443,8 +443,8 @@ void TreeSimpleVec<T>::NearestNeighbors(
     return;
 }
 
-template <class T>
-void TreeSimpleVec<T>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned long *neighbors,PosType *rneighbors){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::_NearestNeighbors(D *ray,int Nneighbors,unsigned long *neighbors,D *rneighbors){
     
     int incellNB2=1;
     IndexType i;
@@ -537,11 +537,11 @@ void TreeSimpleVec<T>::_NearestNeighbors(PosType *ray,int Nneighbors,unsigned lo
     return;
 }
 
-template <class T>
-void TreeSimpleVec<T>::BuildTree(){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::BuildTree(){
     IndexType i;
     short j;
-  std::vector<PosType> p1(Ndimensions),p2(Ndimensions);
+  std::vector<D> p1(Ndimensions),p2(Ndimensions);
   
   if(Nparticles > 0){
     for(j=0;j<Ndimensions;++j){
@@ -590,11 +590,11 @@ void TreeSimpleVec<T>::BuildTree(){
 
 
 // tree must be created and first branch must be set before start
-template <class T>
-void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     IndexType i,cut,dimension;
     BranchV *cbranch,branch1(*current),branch2(*current);
-    PosType xcut;
+    D xcut;
 
     
     cbranch=current; // pointer to current branch
@@ -610,8 +610,8 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     // set dimension to cut box
     dimension=(cbranch->level % Ndimensions);
   
-   // PosType *x = new PosType[cbranch->nparticles];
-    PosType *x = workspace.data();
+   // D *x = new D[cbranch->nparticles];
+    D *x = workspace.data();
     for(i=0;i<cbranch->nparticles;++i) x[i] = position(points[tmp_index[i]])[dimension];
     
     if(median_cut){
@@ -669,8 +669,8 @@ void TreeSimpleVec<T>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
 }
 
 /// Free all the tree branches
-template <class T>
-void TreeSimpleVec<T>::freeTree(){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::freeTree(){
     
 	clearTree();
   delete top;
@@ -679,8 +679,8 @@ void TreeSimpleVec<T>::freeTree(){
 	return;
 }
 
-template <class T>
-short TreeSimpleVec<T>::clearTree(){
+template <typename T,typename D>
+short TreeSimpleVec<T,D>::clearTree(){
     
 	moveTop();
 	_freeTree(0);
@@ -690,8 +690,8 @@ short TreeSimpleVec<T>::clearTree(){
 	return 1;
 }
 
-template <class T>
-void TreeSimpleVec<T>::_freeTree(short child){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::_freeTree(short child){
 	BranchV *branch;
     
 	assert( current);
@@ -731,8 +731,8 @@ void TreeSimpleVec<T>::_freeTree(short child){
  * isEmpty
  * Returns "true" if the Tree is empty and "false" otherwise.  Exported.
  ************************************************************************/
-template <class T>
-bool TreeSimpleVec<T>::isEmpty(){
+template <typename T,typename D>
+bool TreeSimpleVec<T,D>::isEmpty(){
     return(Nbranches == 0);
 }
 
@@ -742,8 +742,8 @@ bool TreeSimpleVec<T>::isEmpty(){
  * Exported.
  * Pre: !isEmpty()
  ************************************************************************/
-template <class T>
-bool TreeSimpleVec<T>::atTop(){
+template <typename T,typename D>
+bool TreeSimpleVec<T,D>::atTop(){
     
     if( isEmpty() ){
     	ERROR_MESSAGE();
@@ -759,8 +759,8 @@ bool TreeSimpleVec<T>::atTop(){
  * Exported.
  * Pre: !isEmpty()
  ************************************************************************/
-template <class T>
-bool TreeSimpleVec<T>::noChild(){
+template <typename T,typename D>
+bool TreeSimpleVec<T,D>::noChild(){
     
     if( isEmpty() ){
         
@@ -776,8 +776,8 @@ bool TreeSimpleVec<T>::noChild(){
  * offEnd
  * Returns "true" if current is off end and "false" otherwise.  Exported.
  ************************************************************************/
-template <class T>
-bool TreeSimpleVec<T>::offEnd(){
+template <typename T,typename D>
+bool TreeSimpleVec<T,D>::offEnd(){
     
     return(current == NULL);
 }
@@ -787,8 +787,8 @@ bool TreeSimpleVec<T>::offEnd(){
  * Returns the particuls of current.  Exported.
  * Pre: !offEnd()
  ************************************************************************/
-template <class T>
-void TreeSimpleVec<T>::getCurrent(IndexType *branch_index,IndexType *nparticles){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::getCurrent(IndexType *branch_index,IndexType *nparticles){
     
     if( offEnd() ){
         
@@ -806,8 +806,8 @@ void TreeSimpleVec<T>::getCurrent(IndexType *branch_index,IndexType *nparticles)
  * getNbranches
  * Returns the NBranchVes of tree.  Exported.
  ************************************************************************/
-template <class T>
-size_t TreeSimpleVec<T>::getNbranches(){
+template <typename T,typename D>
+size_t TreeSimpleVec<T,D>::getNbranches(){
     
     return(Nbranches);
 }
@@ -819,8 +819,8 @@ size_t TreeSimpleVec<T>::getNbranches(){
  * Moves current to the front of tree.  Exported.
  * Pre: !isEmpty()
  ************************************************************************/
-template <class T>
-void TreeSimpleVec<T>::moveTop(){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::moveTop(){
    
     if( isEmpty() ){
         
@@ -839,8 +839,8 @@ void TreeSimpleVec<T>::moveTop(){
  * off end.  Exported.
  * Pre: !offEnd()
  ************************************************************************/
-template <class T>
-void TreeSimpleVec<T>::moveUp(){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::moveUp(){
     
     if( offEnd() ){
         ERROR_MESSAGE(); fprintf(stderr, "Tree Error: call to moveUp() when current is off end\n");
@@ -861,8 +861,8 @@ void TreeSimpleVec<T>::moveUp(){
  * end.  Exported.
  * Pre: !offEnd()
  ************************************************************************/
-template <class T>
-void TreeSimpleVec<T>::moveToChild(int child){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::moveToChild(int child){
     
     if( offEnd() ){
         
@@ -892,9 +892,9 @@ void TreeSimpleVec<T>::moveToChild(int child){
  * data field of the new BranchV to input.  Exported.
  * Pre: !offEnd()
  ************************************************************************/
-template <class T>
-void TreeSimpleVec<T>::attachChildToCurrent(IndexType *branch_index,IndexType nparticles
-                                           ,PosType boundary_p1[],PosType boundary_p2[]
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::attachChildToCurrent(IndexType *branch_index,IndexType nparticles
+                                           ,D boundary_p1[],D boundary_p2[]
                                            ,int child){
     
     /*printf("attaching child%i  current paricle number %i\n",child,current->nparticles);*/
@@ -933,8 +933,8 @@ void TreeSimpleVec<T>::attachChildToCurrent(IndexType *branch_index,IndexType np
 }
 
 /* same as above but takes a BranchV structure */
-template <class T>
-void TreeSimpleVec<T>::attachChildToCurrent(BranchV &data,int child){
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::attachChildToCurrent(BranchV &data,int child){
     
     attachChildToCurrent(data.branch_index,data.nparticles
                            ,data.boundary_p1,data.boundary_p2,child);
@@ -942,8 +942,8 @@ void TreeSimpleVec<T>::attachChildToCurrent(BranchV &data,int child){
 }
 
 // step for walking tree by iteration instead of recursion
-template <class T>
-bool TreeSimpleVec<T>::TreeWalkStep(bool allowDescent){
+template <typename T,typename D>
+bool TreeSimpleVec<T,D>::TreeWalkStep(bool allowDescent){
 	if(allowDescent && current->child1 != NULL){
 		moveToChild(1);
 		return true;

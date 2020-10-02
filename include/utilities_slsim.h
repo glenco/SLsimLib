@@ -1520,7 +1520,7 @@ namespace Utilities
                 ,size_t MaxNumber = 100000000 /// maximum number of entries read
                 ,char comment_char = '#'  /// comment charactor for header
                 ,char deliniator = ','    /// deliniator between values
-                ,std::string reject = "\\N"    /// reject rows with this entry
+                ,std::string replace = "\\N"  /// replace this string with zero
 
                          ){
       std::ifstream file(filename);
@@ -1563,14 +1563,19 @@ namespace Utilities
         int i=0;
         while(std::getline(lineStream,cell, deliniator))
         {
-          if(cell==reject){
-            --i;
-            while(i>=0){
-              data[i].pop_back();
-              --i;
-            }
-            break;
-          }
+          if(cell==replace) cell='0';
+//          {
+//            --i;
+//            while(i>=0){
+//              data[i].pop_back();
+//              --i;
+//            }
+//            break;
+//          }
+//
+          
+          /// clean blank spaces
+          cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
           data[i].push_back(to_numeric<T>(cell));
           i = (i+1)%columns;
         }
@@ -1601,6 +1606,7 @@ namespace Utilities
                           ,char comment_char = '#'  /// comment charactor for header
                           ,char deliniator = ','    /// deliniator between values
                           ,bool header = true    /// false if there are no column names
+                          ,std::string reject = ""  /// reject lines with this entry after striping black space
     ){
       
       
@@ -1621,7 +1627,7 @@ namespace Utilities
       std::stringstream          lineStream(line);
       std::string                cell;
       column_names.empty();
-      size_t ii = 0;
+      long ii = 0;
       
       if(header){
         while(std::getline(lineStream,cell,deliniator))
@@ -1644,6 +1650,8 @@ namespace Utilities
         data.emplace_back(column_names.size());
         int i=0;
         for(auto a : column_names){
+          /// clean blank spaces
+          cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
           data.back()[i++] = to_numeric<T>(a);
         }
         ++ii;
@@ -1665,8 +1673,15 @@ namespace Utilities
         while(std::getline(lineStream,cell, deliniator))
         {
           assert(i < columns);
-          data.back()[i] = to_numeric<T>(cell);
-          ++i;
+          cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
+          if(cell == reject){
+            data.pop_back();
+            --ii;
+            break;
+          }else{
+            data.back()[i] = to_numeric<T>(cell);
+            ++i;
+          }
         }
         ++ii;
       }
@@ -1825,9 +1840,9 @@ public:
           ,size_t MaxNumber = 1000000 /// maximum number of entries read
           ,char comment_char = '#'  /// comment charactor for header
           ,char deliniator = ','    /// deliniator between values
-          ,std::string reject = "\\N"    /// reject rows with this entry
+          ,std::string replace = "\\N"    /// replace this string with zeros
     ):filename(datafile){
-      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',reject);
+      Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',replace);
  
       for(int i=0 ; i<column_names.size() ; ++i){
         datamap[column_names[i]] = i;
