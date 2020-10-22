@@ -357,6 +357,23 @@ PosType Grid::magnification() const{
   return flux/mag;
 }
 
+Point_2d Grid::centroid() const{
+  double flux = 0;
+  
+  Point_2d centroid(0,0);
+  
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    double area = (*it)->gridsize*(*it)->gridsize;
+    centroid += *(*it)*(*it)->surface_brightness*area;
+    flux += (*it)->surface_brightness*area;
+  }
+
+  return centroid/flux;
+}
+
 /**
  *  \brief Reset the surface brightness and in_image flag in every point on image and source planes to zero (false)
  */

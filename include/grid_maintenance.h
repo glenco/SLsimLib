@@ -121,8 +121,10 @@ struct Grid{
   }
   
   /// flux weighted magnification
-  PosType magnification() const;
-private:
+    PosType magnification() const;
+   /// centroid of flux
+    Point_2d centroid() const;
+  private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   

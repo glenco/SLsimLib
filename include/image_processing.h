@@ -299,8 +299,12 @@ public:
     flipY();
   }
   
-  /// recenter the map without changing anything else
-  void recenter(PosType c[2]);
+  /// recenter the map without changing anything else.
+  
+  void recenter(PosType newcenter[2] /// in radians
+                 );
+  void recenter(Point_2d newcenter /// in radians
+                 );
   
   /** \brief convolve the image with a kernel.
    
@@ -308,6 +312,8 @@ public:
    that the kernal has the same pixel size as the image.
    **/
   void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
+
+  std::vector<std::tuple<std::string,float,std::string> > header;
   
 private:
 

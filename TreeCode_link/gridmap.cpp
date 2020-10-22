@@ -490,3 +490,15 @@ PosType GridMap::magnification() const{
   return flux/mag;
 }
 
+Point_2d GridMap::centroid() const{
+  double flux = 0;
+  Point_2d centroid(0,0);
+  
+  size_t N = Ngrid_init*Ngrid_init2;
+  for(size_t i=0;i<N;++i){
+    centroid += i_points[i]*i_points[i].surface_brightness;
+    flux += i_points[i].surface_brightness;
+  }
+  return centroid/flux;
+}
+

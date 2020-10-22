@@ -899,6 +899,10 @@ void PixelMap::printFITS(std::string filename, bool verbose)
    cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
    cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
   
+  for(auto &h : header){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  
 }
 
 void PixelMap::printFITS(std::string filename
@@ -920,8 +924,8 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
   //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
   //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
@@ -2222,6 +2226,10 @@ void PixelMap::recenter(PosType c[2] /// new center
   center[1] = c[1];
   
   return;
+}
+void PixelMap::recenter(Point_2d c /// new center
+){
+  recenter(c.x);
 }
 
 /*
