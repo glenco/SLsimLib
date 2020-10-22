@@ -203,8 +203,8 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
-  stars_N = 0;
-  stars_implanted = false;
+  //stars_N = 0;
+  //stars_implanted = false;
   
   Rmax = 1.0e3;
   LensHalo::setRsize(Rmax);
@@ -308,8 +308,8 @@ void LensHaloParticles<PType>::set_up(
   //LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
-  stars_N = 0;
-  stars_implanted = false;
+  //stars_N = 0;
+  //stars_implanted = false;
   
   Rmax = 1.0e3;
   LensHalo::setRsize(Rmax);

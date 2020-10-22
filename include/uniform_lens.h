@@ -77,5 +77,69 @@ protected:
   PosType lens_expand(PosType *mod,PosType const *x,PosType *alpha,KappaType *gamma,KappaType *phi);
 };
 
+class LensHaloKappaDisk: public LensHalo{
+public:
+ /// Direct constructor without any stars
+   LensHaloKappaDisk(double zlens  /// lens redshift
+                     ,double Sigma_in  /// surface density of lens in Msun/Mpc^2
+                     ,double Rmax   /// radius in Mpc
+                     ,const Point_2d ang_center  /// angular center
+                     ,COSMOLOGY &cosmo
+                     )
+  :LensHalo(zlens,cosmo),Sigma(Sigma_in)
+  {
+  
+    if(Rmax <= 0){
+      std::cerr << "LensHaloKappaDisk: Rmax cannot be <= 0" << std::endl;
+      throw std::invalid_argument("Rmax<=0");
+    }
+    LensHalo::setMass(PI*Rmax*Rmax*Sigma);
+    LensHalo::Rmax = Rmax;
+    LensHalo::setRsize(Rmax);
+    LensHalo::set_rsize(Rmax);
+    LensHalo::setTheta(ang_center);
+   }
 
+  ~LensHaloKappaDisk(){};
+
+  /// surface density in Msun/Mpc^2
+  float getSigma() const {return Sigma;};
+    
+  LensHaloKappaDisk(const LensHaloKappaDisk &h):LensHalo(h){
+    Sigma = h.Sigma;
+  }
+  
+  LensHaloKappaDisk & operator=(const LensHaloKappaDisk &h){
+    if(this == &h) return *this;
+    LensHalo::operator=(h);
+    Sigma = h.Sigma;
+    return *this;
+ }
+
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0){
+
+      float tmp;
+      PosType tmp_mass;
+      
+      PosType r=sqrt(xcm[0]*xcm[0] + xcm[1]*xcm[1]);
+
+      if(r < Rmax){
+        alpha[0] -= Sigma*xcm[0];
+        alpha[1] -= Sigma*xcm[1];
+        *kappa = Sigma;
+      }else{
+        tmp_mass = mass/PI/r/r; //Sigma * Rmax*Rmax/r/r; 
+        alpha[0] -= tmp_mass*xcm[0];
+        alpha[1] -= tmp_mass*xcm[1];
+
+        tmp = 2*tmp_mass/r/r;
+        gamma[0] -= 0.5*(xcm[0]*xcm[0] - xcm[1]*xcm[1])*tmp;
+        gamma[1] -= xcm[0]*xcm[1]*tmp;
+      }
+    
+    return;
+  }
+protected:
+  double Sigma; // surface density
+};
 #endif /* UNIFORM_LENS_H_ */
