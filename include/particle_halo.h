@@ -992,4 +992,140 @@ private:
 
 };
 
+/** \brief
+ 
+ */
+
+template<typename HType>
+class LensHaloHalos : public LensHalo
+{
+public:
+  
+  LensHaloHalos(std::vector<HType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+                    ,float redshift        /// redshift of origin
+                    ,const COSMOLOGY& cosmo  /// cosmology
+                    ,bool verbose=false
+  ):LensHalo(redshift,cosmo)
+  {
+    std::swap(pvector,trash_collector);
+    Nhalos = trash_collector.size();
+    vpp.resize(Nhalos);
+
+    for(size_t ii = 0 ; ii < Nhalos ; ++ii) vpp[ii] = &trash_collector[ii];
+    set_up(redshift,cosmo,verbose);
+  }
+  ~LensHaloHalos();
+  
+  LensHaloHalos(LensHaloHalos &&h):LensHalo(std::move(h)){
+    mcenter = h.mcenter;
+    trash_collector =std::move(h.trash_collector);
+    vpp = std::move(h.vpp);
+    
+    center = h.center;
+    Nhalos = h.Nhalos;
+    
+    qtree = h.qtree;
+    h.qtree = nullptr;
+  }
+  LensHaloHalos & operator=(LensHaloHalos &&h);
+
+
+  void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
+                  ,double const *xcm
+                  ,bool subtract_point=false,PosType screening = 1.0);
+
+  size_t getN() const { return Nhalos; };
+  
+  /// get current center of mass in input coordinates
+  Point_2d CenterOfMass(){return mcenter;}
+  
+protected:
+  Point_2d mcenter;
+  
+  std::vector<HType *> vpp;
+  std::vector<HType> trash_collector;
+  
+  Utilities::Geometry::SphericalPoint<> center;
+  
+  size_t Nhalos;
+  
+  TreeQuadHalos * qtree;
+  
+  //TreeQuadParticles<HType> * qtree;
+  void set_up(float redshift,const COSMOLOGY& cosmo,bool verbose);
+};
+
+template<typename HType>
+void LensHaloHalos<HType>::set_up(
+                                 float redshift        /// redshift of origin
+                                 ,const COSMOLOGY& cosmo  /// cosmology
+                                  ,bool verbose
+){
+
+  LensHalo::set_flag_elliptical(false);
+  
+  Rmax = 1.0e3;  // ????
+  LensHalo::setRsize(Rmax);
+
+  // convert from comoving to physical coordinates
+  //PosType scale_factor = 1/(1+redshift);
+  mcenter *= 0.0;
+  PosType max_mass = 0.0,min_mass = HUGE_VALF,mass=0;
+
+  for(HType &h : trash_collector){
+    
+    mcenter[0] += h[0]*h.get_mass();
+    mcenter[1] += h[1]*h.get_mass();
+    
+    mass += h.get_mass();
+    
+    max_mass = (h.get_mass() > max_mass) ? h.get_mass() : max_mass;
+    min_mass = (h.get_mass() < min_mass) ? h.get_mass() : min_mass;
+  }
+  LensHalo::setMass(mass);
+  
+  mcenter /= mass;
+  
+  if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
+  
+  // ????
+  qtree = new TreeQuadHalos(vpp.data(),Nhalos);
+  //qtree = new TreeQuadParticles<HType>(pp.data(),Nhalos,-1,-1,0,20);
+}
+
+template<typename HType>
+LensHaloHalos<HType>::~LensHaloHalos(){
+  delete qtree;
+}
+
+template<typename HType>
+void LensHaloHalos<HType>::force_halo(double *alpha,KappaType *kappa
+                               ,KappaType *gamma,KappaType *phi
+                                          ,double const *xcm
+                                          ,bool subtract_point,PosType screening){
+  qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
+
+//   ?????
+//  alpha[0] *= -1;
+//  alpha[1] *= -1;
+}
+
+template<typename HType>
+LensHaloHalos<HType> & LensHaloHalos<HType>::operator=(LensHaloHalos<HType> &&h){
+  if(this == &h) return *this;
+  LensHalo::operator=(std::move(h));
+  mcenter = h.mcenter;
+
+  trash_collector =std::move(h.trash_collector);
+  vpp = std::move(h.vpp);  // note: this depends on std:move keeping the pointer valid if it is constructed with the public constructor
+  
+  center = h.center;
+  Nhalos = h.Nhalos;
+  
+  qtree = h.qtree;
+  h.qtree = nullptr;
+  
+  return *this;
+}
+
 #endif

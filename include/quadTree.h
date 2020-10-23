@@ -1192,6 +1192,9 @@ void TreeQuadParticles<PType>::printBranchs(int level){
  */
 
 class LensHalo;
+/** \brief Class to calculate the deflection, etc. for a collection of LensHalos using a tree structure.
+ 
+ */
 
 class TreeQuadHalos {
 public:

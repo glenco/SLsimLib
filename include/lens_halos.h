@@ -87,7 +87,7 @@ public:
   }
 
   /// returns position of the Halo in physical Mpc on the lens plane
-  PosType operator[](int i) const{return posHalo[0]*Dist;}
+  PosType operator[](int i) const{return posHalo[i]*Dist;}
   
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
@@ -1154,6 +1154,11 @@ public:
   
   ~LensHaloTNSIE(){};
   
+  /// returns the sigma in km / s for the other parameters fixed
+  static double calc_sigma(float mass,float Rtrunc,float Rcore,float fratio){
+    return lightspeed*sqrt( Grav*mass*sqrt(fratio) / (Rtrunc-Rcore) / PI);
+  }
+
   /// overridden function to calculate the lensing properties
   void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
