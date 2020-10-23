@@ -86,7 +86,7 @@ public:
   }
 
   /// returns position of the Halo in physical Mpc on the lens plane
-  PosType operator[](int i) const{return posHalo[0]*Dist;}
+  PosType operator[](int i) const{return posHalo[i]*Dist;}
   
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
