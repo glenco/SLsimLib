@@ -15,6 +15,7 @@
 #include "particle_types.h"
 #include "utilities_slsim.h"
 #include "lens_halos.h"
+#include "quadTreeHalos.h"
 
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
@@ -1049,7 +1050,7 @@ protected:
   
   size_t Nhalos;
   
-  TreeQuadHalos * qtree;
+  TreeQuadHalos<HType> * qtree;
   
   //TreeQuadParticles<HType> * qtree;
   void set_up(float redshift,const COSMOLOGY& cosmo,bool verbose);
@@ -1089,7 +1090,7 @@ void LensHaloHalos<HType>::set_up(
   if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
   
   // ????
-  qtree = new TreeQuadHalos(vpp.data(),Nhalos);
+  qtree = new TreeQuadHalos<HType>(vpp.data(),Nhalos);
   //qtree = new TreeQuadParticles<HType>(pp.data(),Nhalos,-1,-1,0,20);
 }
 

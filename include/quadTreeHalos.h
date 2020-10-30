@@ -7,10 +7,6 @@
 
 #ifndef quadTreeHalos_h
 #define quadTreeHalos_h
-
-#include "slsimlib.h"
-#include "Tree.h"
-
 /**
  * \brief TreeQuadHalo is a class for calculating the deflection, kappa and gamma by tree method.
  *

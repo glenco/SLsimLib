@@ -10,12 +10,12 @@
 
 #include <iterator>
 
-LensPlaneTree::LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos
+LensPlaneTree::LensPlaneTree(LensHalo **my_halos,IndexType Nhalos
                              ,PosType my_sigma_background,PosType inv_screening_scale)
 : LensPlane(), halos(my_halos, my_halos + Nhalos)
 {
-	if(inv_screening_scale != 0) halo_tree = new TreeQuadHalos(my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
-	else halo_tree = new TreeQuadHalos(my_halos,Nhalos,my_sigma_background);
+	if(inv_screening_scale != 0) halo_tree = new TreeQuadHalos<LensHalo>(my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
+	else halo_tree = new TreeQuadHalos<LensHalo>(my_halos,Nhalos,my_sigma_background);
 }
 LensPlaneTree::LensPlaneTree(const LensPlaneTree &p)
 : LensPlane()
@@ -23,11 +23,11 @@ LensPlaneTree::LensPlaneTree(const LensPlaneTree &p)
   halos = p.halos;
   
   if(p.halo_tree->inv_screening_scale2 != 0){
-    halo_tree = new TreeQuadHalos(halos.data(),halos.size()
+    halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size()
                                   ,p.halo_tree->sigma_background
                                   ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
   }else{
-    halo_tree = new TreeQuadHalos(halos.data(),halos.size(),p.halo_tree->sigma_background);
+    halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->sigma_background);
   }
 }
 
@@ -40,11 +40,11 @@ LensPlaneTree & LensPlaneTree::operator=(const LensPlaneTree &p){
     halos = p.halos;
     
     if(p.halo_tree->inv_screening_scale2 != 0){
-      halo_tree = new TreeQuadHalos(halos.data(),halos.size()
+      halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size()
                                     ,p.halo_tree->sigma_background
                                     ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
     }else{
-      halo_tree = new TreeQuadHalos(halos.data(),halos.size(),p.halo_tree->sigma_background);
+      halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->sigma_background);
     }
   }
   

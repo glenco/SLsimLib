@@ -305,7 +305,6 @@ LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
 }
 
 void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
-	int i;
 	cout << "zlens " << getZlens() << endl;
 
 	 // parameters of substructures
