@@ -53,6 +53,7 @@ public:
   void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors) const;
 	
 private:
+
 	std::vector<LensHalo *> halos;
   TreeQuadHalos<LensHalo> * halo_tree;
 };
