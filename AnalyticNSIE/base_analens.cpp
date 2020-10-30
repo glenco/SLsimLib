@@ -24,9 +24,8 @@ void LensHaloBaseNSIE::force_halo(
                                   )
 {
 
-  long j;
   PosType alpha_tmp[2];
-  KappaType kappa_tmp = 0.0, gamma_tmp[2];
+  KappaType gamma_tmp[2];
   KappaType phi_tmp ;
   
   gamma_tmp[0] = gamma_tmp[1] = 0.0;
