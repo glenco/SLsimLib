@@ -208,7 +208,7 @@ PixelMap::PixelMap(
     {
       err = 0;
       {
-        double cd12, cd21, cd22;
+        //double cd12, cd21, cd22;
         err += cpfits.readKey("CD1_1", my_res);
         //err += cpfits.readKey("CD1_2", cd12);
         //err += cpfits.readKey("CD2_1", cd21);
@@ -899,10 +899,16 @@ void PixelMap::printFITS(std::string filename, bool verbose)
    cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
    cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
   
-  for(auto &h : header){
+  for(auto &h : headers_float){
     cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
   }
-  
+  for(auto &h : headers_long){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  for(auto &h : headers_string){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+
 }
 
 void PixelMap::printFITS(std::string filename

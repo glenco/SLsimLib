@@ -7,7 +7,7 @@
 
 #include "slsimlib.h"
 
-const float sheartol = 1.0e-3;
+//const float sheartol = 1.0e-3;
 
 using namespace std;
 

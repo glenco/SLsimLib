@@ -419,8 +419,8 @@ PosType Source::changeFilter(
   // Applies Delta m = int (sed*fout) / int (sed*fin) * int fin / int fout
  	PosType fin_int = integrateFilter(wavel_in,ampl_in);
   PosType fout_int = integrateFilter(wavel_out,ampl_out);
-  PosType sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
-  PosType sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
+  PosType sed_in = integrateFilterSED(wavel_in, ampl_in, wavel_sed, ampl_sed);
+  PosType sed_out = integrateFilterSED(wavel_out, ampl_out, wavel_sed, ampl_sed);
   
   if (sed_in < std::numeric_limits<PosType>::epsilon() || sed_out < std::numeric_limits<PosType>::epsilon())
   {
@@ -448,7 +448,7 @@ PosType Source::integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosT
 /**  \brief Calculates the integral of the sed multiplied by the filter curve.
  *
  */
-PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed)
+PosType Source::integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed)
 {
   int wavel_new_size = 10000;
   vector<PosType> wavel_new(wavel_new_size), fil_val(wavel_new_size), sed_val(wavel_new_size);

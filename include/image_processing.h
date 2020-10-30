@@ -313,9 +313,27 @@ public:
    **/
   void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
 
-  std::vector<std::tuple<std::string,float,std::string> > header;
-  
+  /// add a heaader keyword that will appear in fits output
+   void addheader(std::string label,long value,std::string comment){
+     headers_long.push_back(std::make_tuple(label,value,comment));
+   }
+   void addheader(std::string label,size_t value,std::string comment){
+     headers_long.push_back(std::make_tuple(label,value,comment));
+   }
+   void addheader(std::string label,float value,std::string comment){
+     headers_float.push_back(std::make_tuple(label,value,comment));
+   }
+  void addheader(std::string label,double value,std::string comment){
+    headers_float.push_back(std::make_tuple(label,value,comment));
+  }
+  void addheader(std::string label,std::string &value,std::string comment){
+      headers_string.push_back(std::make_tuple(label,value,comment));
+  }
+
 private:
+  std::vector<std::tuple<std::string,float,std::string> > headers_float;
+  std::vector<std::tuple<std::string,long,std::string> > headers_long;
+  std::vector<std::tuple<std::string,std::string,std::string> > headers_string;
 
   std::valarray<double> map;
 	std::size_t Nx;

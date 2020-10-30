@@ -89,7 +89,7 @@ public:
 
 	PosType changeFilter(std::string filter_in, std::string filter_out, std::string sed);
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
-	PosType integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
+	PosType integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
 
   static PosType *getx(Source &source){return source.source_x.x;}
   
