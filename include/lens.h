@@ -193,12 +193,6 @@ public:
   template <typename T>
   void replaceMainHalo(const T &halo_in,bool addplanes,bool verbose=false)
   {
-    //Utilities::delete_container(main_halos);   // ????
-    /*while(main_halos.size() > 0){
-      delete main_halos.back();
-      main_halos.pop_back();
-    }*/
-    
     main_halos.clear();  // ???? is this a memory leak ????
     
     T * halo = new T(halo_in);

@@ -929,7 +929,7 @@ public:
   
   double getZoriginal(){return z_original;}
 
-  std::vector<ParticleType<float> > data; // ???
+  std::vector<ParticleType<float> > data;
 private:
   const std::string filename;
   int Nsmooth;
@@ -1089,7 +1089,6 @@ void LensHaloHalos<HType>::set_up(
   
   if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
   
-  // ????
   qtree = new TreeQuadHalos<HType>(vpp.data(),Nhalos);
   //qtree = new TreeQuadParticles<HType>(pp.data(),Nhalos,-1,-1,0,20);
 }

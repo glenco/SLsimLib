@@ -24,7 +24,6 @@
 Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
 Npix_x(Npix_x),Npix_y(Npix_y)
 {
-  
  
   switch (tel_name) {
     case Euclid_VIS:
@@ -270,11 +269,9 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
   << " size : " << noise_corr.size() << std::endl;
   
   //PixelMap::swap(noise_corr,nc_map);
-  
-  
   // now find the power spectrum of the noise
   
-  // calculates normalisation of ncorr
+  // calculates normalisation of ncor
   int N_ncorr = noise_corr.size();
   side_ncorr = sqrt(N_ncorr);
   double map_norm = 0.;
@@ -358,7 +355,7 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitT
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
   }
   //PixelMap outmap =
-  PhotonToCounts(map);
+  //PhotonToCounts(map); ?????
   if (psf == true)  ApplyPSF(map);
   if (noise == true) AddNoise(map,seed);
   

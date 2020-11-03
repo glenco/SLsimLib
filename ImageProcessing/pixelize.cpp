@@ -548,7 +548,7 @@ void PixelMap::AddImages(
 
 void PixelMap::AddGridBrightness(Grid &grid){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != photon_flux) throw std::invalid_argument("wrong units");  // ???
   PointList *plist = grid.i_tree->pointlist;
   
   if(plist->size() == 0) return;
