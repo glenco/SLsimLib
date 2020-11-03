@@ -205,7 +205,6 @@ PixelMap::PixelMap(
     {
       err = 0;
       {
-        double cd12, cd21, cd22;
         err += cpfits.readKey("CD1_1", my_res);
         //err += cpfits.readKey("CD1_2", cd12);
         //err += cpfits.readKey("CD2_1", cd21);
