@@ -28,7 +28,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
   switch (tel_name) {
     case Euclid_VIS:
       // from Eric
-      // Equivalent gain is 11160 e-/ADU
+      // Equivalent gain is 11160 e-/ADU (Analog Digital Units)
       // Saturation is 71 ADU
       // Equivalent exposure time with 4 frames is 2260s
       // Magnitude Zeropoint is 23.9
@@ -177,8 +177,10 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       break;
 	}
 
-	mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
+  mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck * 3.63e-20 );  // zero point for one e- per second
 	telescope = true;
+
+  set_up();
 }
 
 /** *  Creates a custom observation setup with parameters decided by the user.
@@ -193,10 +195,12 @@ Npix_x(Npix_x),Npix_y(Npix_y)
  */
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
 Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter),transmission(transmission),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),ron(ron),seeing(seeing)
-		{
-			mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
-			telescope = false;
-		}
+{
+  mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+  telescope = false;
+ 
+  set_up();
+}
 
 /**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
  *
@@ -212,7 +216,7 @@ Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter),transmission(transmission),exp_
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
 Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter), transmission(transmission), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , ron(ron), oversample(oversample)
 		{
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) - 48.6;
+      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
 
       CPFITS_READ cpfits(psf_file);
 
@@ -224,6 +228,8 @@ Npix_x(Npix_x),Npix_y(Npix_y),diameter(diameter), transmission(transmission), ex
       //map_psf.resize(N_psf);
       //h0->read(map_psf);
       telescope = false;
+      
+      set_up();
 }
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
@@ -346,7 +352,7 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
  * \param noise Decides if noise is added
  * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
-void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitType unit)
+void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed)
 {
   
   if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
@@ -354,35 +360,19 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed, unitT
     std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
   }
-  //PixelMap outmap =
-  //PhotonToCounts(map); ?????
+  
+  ToCounts(map);
   if (psf == true)  ApplyPSF(map);
   if (noise == true) AddNoise(map,seed);
+  ToSurfaceBrightness(map);
   
-  if (unit == flux && map.getUnits() != photon_flux )
-  {
-    double counts_to_flux = pow(10,-0.4*mag_zeropoint);
-    map.Renormalize(counts_to_flux);
-    map.ChangeUnits(photon_flux);
-  }
+  //if (unit == flux && map.getUnits() != photon_flux )
+  //{
+    //double counts_to_flux = pow(10,-0.4*mag_zeropoint);
+    //map.Renormalize(zero_point_flux);
+    //map.ChangeUnits(photon_flux);
+  //}
   return;
-}
-
-/// Converts an observed image to the units of the lensing simulation
-void Observation::Convert_back (PixelMap &map)
-{
-	//PixelMap outmap(map);
-  
-  if(map.getUnits() != photon_flux){
-    std::cerr << "Map needs to be in photon flux units." << std::endl;
-      throw std::runtime_error("wrong units");
-  }
-
-	double Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
-	map.Renormalize(1./Q);
-  map.ChangeUnits(count_per_sec);
-  
-	return;
 }
 
 void Observation::fftpsf(){
@@ -582,29 +572,37 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
       throw std::runtime_error("The resolution is different from the one of the simulated instrument!");
     }
 
-    double Q = pow(10,0.4*(mag_zeropoint+48.6));
-    double res_in_arcsec = resolution*180.*60.*60/PI;
-    double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
-    
-    double rms = sqrt(exp_num*ron*ron+back_mean)/exp_time;
-    
+    double res_in_arcsec = resolution / arcsecTOradians ;
+    double back_mean = pow(10,-0.4*(back_mag-mag_zeropoint))*res_in_arcsec*res_in_arcsec*exp_time;
+
+    double rms = sqrt(exp_num*ron*ron + back_mean)/exp_time;
     if (unit==flux) rms *= pow(10,-0.4*mag_zeropoint);
-    
+
     return rms;
 }
+
+void Observation::set_up(){
+  //zero_point_flux = pow(10,-0.4*mag_zeropoint);  // erg/s/Hz/cm**2
+  e_per_s_to_ergs_s_cm2 = pow(10,0.4*(mag_zeropoint+AB_zeropoint));
+  background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
+ }
 
 /// Applies realistic noise (read-out + Poisson) on an image
 void Observation::AddNoise(PixelMap &pmap,long *seed)
 {
   if(pmap.getNx() != pmap.getNy()){
-    std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+    std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
+  }
+  if(pmap.getUnits() != count_per_sec){
+    std::cerr << "Units need to be in counts per second in Observation::AddNoise." << std::endl;
+    throw std::runtime_error("wrong units.");
   }
   
   //PixelMap outmap(pmap);
-  double Q = pow(10,0.4*(mag_zeropoint+48.6));
-  double res_in_arcsec = pmap.getResolution()*180.*60.*60/PI;
-  double back_mean = pow(10,-0.4*(48.6+back_mag))*res_in_arcsec*res_in_arcsec*Q*exp_time;
+  double res_in_arcsec = pmap.getResolution() / arcsecTOradians;
+  double back_mean = background_flux * res_in_arcsec*res_in_arcsec * exp_time ;
+
   double rms, noise;
   double rms2 = sqrt(exp_num*ron*ron);
   double norm_map;
@@ -614,12 +612,12 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
   size_t N = pmap.size();
   for (unsigned long i = 0; i < N ; i++)
   {
-    norm_map = pmap[i]*exp_time;
+    norm_map = pmap[i]*exp_time;  // in counts
     if (norm_map+back_mean > 500.)
     {
       rms = sqrt(exp_num*ron*ron + norm_map + back_mean);
       noise = gasdev(seed)*rms;
-      noise_map[i] = noise/exp_time;
+      noise_map[i] = noise/exp_time;  // back to counts per sec
     }
     else
     {
@@ -634,14 +632,8 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
       noise = gasdev(seed)*rms2;
       noise_map[i] = (k - 1 + noise - back_mean - norm_map)/exp_time;
     }
-    //sum += noise_map[i];
-    //sum2 += noise_map[i]*noise_map[i];
   }
-  
-  //sum /= N;
-  //sum2 = (sum2 - N*sum*sum)/(N-1);
-  //std::cout << "Noise Variance in flux units is : " << sum2 << std::endl;
-  
+
   CorrelateNoise(noise_map);
   pmap += noise_map;
   
@@ -649,14 +641,23 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
 }
 
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second
-void Observation::PhotonToCounts(PixelMap &pmap)
+void Observation::ToCounts(PixelMap &pmap)
 {
   
+  //zero_point_flux = pow(10,-0.4*mag_zeropoint);  // erg/s/Hz/cm**2
+  //background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
+
   double Q;
+  PixelMapUnits units = pmap.getUnits();
+  if(units == count_per_sec) return;
+  
   if(pmap.getUnits() == surfb){
-    Q = pow(10,0.4*(mag_zeropoint+48.6))*hplanck;
-  }else if(pmap.getUnits() == photon_flux ){
-    Q = pow(10,0.4*mag_zeropoint);
+    Q = hplanck/zero_point_flux;
+    //Q = pow(10,0.4*(mag_zeropoint - AB_zeropoint))*hplanck;
+//  }else if(pmap.getUnits() == photon_flux ){
+//    Q = hplanck/;
+  }else if(units==photon_flux){
+    Q = 1/zero_point_flux;
   }else{
     std::cerr << "Map needs to be in photon flux units." << std::endl;
     throw std::runtime_error("wrong units");
@@ -666,4 +667,22 @@ void Observation::PhotonToCounts(PixelMap &pmap)
   pmap.ChangeUnits(count_per_sec);
 	return;
 }
+
+/// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second
+void Observation::ToSurfaceBrightness(PixelMap &pmap)
+{
+
+  double Q;
+  if(pmap.getUnits() == count_per_sec){
+    Q = zero_point_flux;
+  }else{
+    std::cerr << "Map needs to be in photon flux units." << std::endl;
+    throw std::runtime_error("wrong units");
+  }
+  
+  pmap.Renormalize(Q);
+  pmap.ChangeUnits(photon_flux);
+  return;
+}
+
 

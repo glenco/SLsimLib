@@ -276,9 +276,9 @@ void TreeSimpleVec<T,D>::PointsWithinCircle(
     
     _PointsWithin(ray,&rmax,neighborlist);
     
-    for(auto i : neighborlist){
-      assert( rmax*rmax > (position(points[i])[0]-ray[0])*(position(points[i])[0]-ray[0]) + (position(points[i])[1]-ray[1])*(position(points[i])[1]-ray[1]) );
-    }
+    //for(auto i : neighborlist){
+    //  assert( rmax*rmax > (position(points[i])[0]-ray[0])*(position(points[i])[0]-ray[0]) + (position(points[i])[1]-ray[1])*(position(points[i])[1]-ray[1]) );
+    //}
     return;
 }
 /**

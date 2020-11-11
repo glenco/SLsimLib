@@ -20,7 +20,6 @@ class LensHaloMassMap;
 
 /** 
  * \brief Structure to contain both source and image trees.
- * It is not yet used, but may be useful.
  */
 struct Grid{
   

@@ -24,7 +24,15 @@ struct GridMap;
 class Source;
 
 /// These are partial units for the pixel map that can be used to ensure consistency.  For example, maps with different units cannot be added together.  default: ndef
-enum PixelMapUnits {ndef,surfb,photon_flux,count_per_sec,mass,mass_density};
+enum PixelMapUnits {
+  ndef     // not defined
+  ,surfb   // ergs / s / cm**2
+  ,photon_flux // surfb / hplanck
+  ,count_per_sec
+  ,mass
+  ,mass_density
+  
+};
 
 /**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
@@ -425,11 +433,10 @@ public:
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
   void setNoiseCorrelation(std::string nc_file);
-	void Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
+	void Convert(PixelMap &map, bool psf, bool noise,long *seed);
   /// returns factor by which code image units need to be multiplied by to get flux units
   double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
 
-	void Convert_back(PixelMap &map);
   void setExpTime(float time){exp_time = time;}
 
   size_t getNx(){ return Npix_x;}
@@ -453,10 +460,17 @@ private:
 	float oversample; // psf oversampling factor
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?
+  float zero_point_flux;  // e- / s   for zero magnitudes
+  float background_flux;  // e- / s / arcsec
+  
+  const float AB_zeropoint = - 48.6;
 
+  void set_up();
+  
 	void AddNoise(PixelMap &pmap,long *seed);
   
-	void PhotonToCounts(PixelMap &pmap);
+  void ToCounts(PixelMap &pmap);
+  void ToSurfaceBrightness(PixelMap &pmap);
 	void ApplyPSF(PixelMap &pmap);
   void fftpsf();  // FFT the psf for later use
   std::vector<std::complex<double> > fft_psf;
