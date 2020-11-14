@@ -73,7 +73,7 @@ public:
 	inline void setMag(PosType x)
 	{
 		mag = x;
-		flux = pow(10, -0.4*(mag+48.6));
+		flux = pow(10, -0.4*(mag+48.6)) * inv_hplanck;
 	}
 	
 	inline void setPA(PosType x)

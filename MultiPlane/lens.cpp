@@ -2044,7 +2044,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
 				case dummy_lens:
 					field_halos.push_back(new LensHaloDummy);
 					ERROR_MESSAGE();
-					std::cout << "Why would you want dummy file halos???" << std::endl;
+					std::cout << "Why would you want dummy file halos?!" << std::endl;
 					break;
 				case hern_lens:
 					ERROR_MESSAGE();
@@ -2398,7 +2398,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
          case dummy_lens:
             field_halos.push_back(new LensHaloDummy);
             ERROR_MESSAGE();
-            std::cout << "Why would you want dummy file halos???" << std::endl;
+            std::cout << "Why would you want dummy file halos?!" << std::endl;
             break;
           case hern_lens:
             ERROR_MESSAGE();
@@ -2711,7 +2711,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
       case dummy_lens:
         field_halos.push_back(new LensHaloDummy);
         ERROR_MESSAGE();
-        std::cout << "Why would you want dummy file halos???" << std::endl;
+        std::cout << "Why would you want dummy file halos?!" << std::endl;
         break;
       case hern_lens:
         ERROR_MESSAGE();

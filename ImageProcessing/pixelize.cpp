@@ -418,7 +418,6 @@ bool PixelMap::agrees(const PixelMap& other) const
 /// Add the values of another PixelMap to this one.
 PixelMap& PixelMap::operator+=(const PixelMap& rhs)
 {
-  // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
@@ -441,7 +440,6 @@ PixelMap PixelMap::operator+(const PixelMap& a) const
 /// Subtract the values of another PixelMap from this one.
 PixelMap& PixelMap::operator-=(const PixelMap& rhs)
 {
-  // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
@@ -548,7 +546,7 @@ void PixelMap::AddImages(
 
 void PixelMap::AddGridBrightness(Grid &grid){
   
-  if(units != photon_flux) throw std::invalid_argument("wrong units");  // ???
+  //if(units != photon_flux) throw std::invalid_argument("wrong units");
   PointList *plist = grid.i_tree->pointlist;
   
   if(plist->size() == 0) return;

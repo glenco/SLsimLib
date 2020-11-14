@@ -496,11 +496,11 @@ void SourceShapelets::setActiveBand(Band band)
   
   mag = mag_map.at(band);
   if (mag < 0.)
-      flux = std::numeric_limits<PosType>::epsilon();
+      flux_total = std::numeric_limits<PosType>::epsilon();
     else
-      flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+      flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
   
-  assert(flux > 0);
+  assert(flux_total > 0);
   current_band = band;
   return;
 }
@@ -530,8 +530,8 @@ SourceShapelets::SourceShapelets(
   coeff = my_coeff;
   source_r = my_scale;
   
-  flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-  assert(flux > 0.0);
+  flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  assert(flux_total > 0.0);
   
   NormalizeFlux();
   
@@ -571,8 +571,8 @@ SourceShapelets::SourceShapelets(
   vector<long> size;
   cpfits.read(coeff,size);
 
-  flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-  assert(flux > 0);
+  flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+  assert(flux_total > 0);
   
   NormalizeFlux();
   
@@ -675,9 +675,9 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
     }
   }
   sb *= exp(- r_norm2 )/source_r;
-  sb *= flux/coeff_flux;
-  sb /= arcsecTOradians*arcsecTOradians;
-  assert(flux > 0);
+  sb *= flux_total/coeff_flux;
+
+  assert(flux_total > 0);
   
   
   return MAX(sb,0);

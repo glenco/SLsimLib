@@ -46,8 +46,10 @@ public:
   }
 
 	// in lens.cpp
-	// TODO: make SurfaceBrightness take a const double*
-	/// Surface brightness of source in grid coordinates not source centered coordinates.
+	/** Surface brightness of source in grid coordinates not source centered coordinates.
+   
+   * The units shuld be ergs / s / Hz / cm^2 / hplanck
+   */
   virtual PosType SurfaceBrightness(PosType *y) = 0;
   virtual PosType getTotalFlux() const = 0;
   virtual void printSource() = 0;
@@ -177,7 +179,7 @@ public:
     n1 = s.n1;
     n2 = s.n2;
     id = s.id;
-    flux = s.flux;
+    flux_total = s.flux_total;
     mag = s.mag;
     //ang = s.ang;
     cos_sin[0] = s.cos_sin[0];
@@ -197,7 +199,7 @@ public:
     n1 = s.n1;
     n2 = s.n2;
     id = s.id;
-    flux = s.flux;
+    flux_total = s.flux_total;
     mag = s.mag;
     //ang = s.ang;
     cos_sin[0] = s.cos_sin[0];
@@ -219,7 +221,7 @@ public:
 
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
-	inline PosType getTotalFlux() const {return flux;}
+	inline PosType getTotalFlux() const {return flux_total;}
 	inline PosType getRadius() const {return source_r*10.;}
   inline PosType getMag() const { assert(current_band != NoBand); return mag;}
 	inline PosType getMag(Band band) const {return mag_map.at(band);}
@@ -284,7 +286,7 @@ private:
 	std::valarray<PosType> coeff;
 	int n1,n2;
   int id;
-	PosType flux, mag;
+	PosType flux_total, mag;
 	//PosType ang;
   PosType cos_sin[2];  // [0] is cos(ang), [1] is sin(ang)
   std::map<Band,PosType> mag_map;

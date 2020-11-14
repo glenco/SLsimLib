@@ -27,7 +27,7 @@ class Source;
 enum PixelMapUnits {
   ndef     // not defined
   ,surfb   // ergs / s / cm**2
-  ,photon_flux // surfb / hplanck
+  //,photon_flux // surfb / hplanck
   ,count_per_sec
   ,mass
   ,mass_density
@@ -414,14 +414,14 @@ public:
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron
               ,size_t Npix_x,size_t Npix_y,float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
-
+  
+  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing=0);
+  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
   
   float getExpTime() const {return exp_time;}
 	int getExpNum() const {return exp_num;}
 	float getBackMag() const {return back_mag;}
-	float getDiameter() const {return diameter;}
-	float getTransmission() const {return transmission;}
-    /// read-out noise in electrons/pixel
+   /// read-out noise in electrons/pixel
 	float getRon() const {return ron;}
   /// seeing in arcsecs
 	float getSeeing() const {return seeing;}
@@ -435,7 +435,7 @@ public:
   void setNoiseCorrelation(std::string nc_file);
 	void Convert(PixelMap &map, bool psf, bool noise,long *seed);
   /// returns factor by which code image units need to be multiplied by to get flux units
-  double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
+  //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
 
   void setExpTime(float time){exp_time = time;}
 
@@ -448,8 +448,8 @@ private:
   std::vector<double> sqrt_noise_power;  // stores sqrt root of power noise spectrum
   size_t side_ncorr; // pixels on a side of input noise correlation function
 
-	float diameter;  // diameter of telescope (in cm)
-	float transmission;  // total transmission of the instrument
+	//float diameter;  // diameter of telescope (in cm)
+	//float transmission;  // total transmission of the instrument
 	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
 	float exp_time;  // total exposure time (in sec)
 	int exp_num;  // number of exposures
@@ -460,7 +460,7 @@ private:
 	float oversample; // psf oversampling factor
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?
-  float zero_point_flux;  // e- / s   for zero magnitudes
+  float e_per_s_to_ergs_s_cm2;  // e- / s   for zero magnitudes
   float background_flux;  // e- / s / arcsec
   
   const float AB_zeropoint = - 48.6;

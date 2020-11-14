@@ -520,7 +520,6 @@ void LensMap::PreProcessFFTWMap(float zerosize,T Wphi_of_k,bool do_alpha){
         gamma2_bar[i+nx*j] = float(-realsp[ii+Nnx*jj]/NN);
       }
     }
-    //for(auto &a : gamma2_bar) assert(!isnan(a)); // ???
   }
 
   // kappa - this is done over because of the window in Fourier space
