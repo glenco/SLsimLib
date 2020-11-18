@@ -39,8 +39,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       exp_num = 4;
       mag_zeropoint = 23.9;
       
-      back_mag = 22.8;  back_mag = 29.8; // ?????
-      ron = 5.; ron = 0.1; // ?????
+      back_mag = 22.8;  back_mag = 25.0; // ?????
+      ron = 5.; ron = 0.01; // ?????
       seeing = 0.18;
       pix_size = .1*arcsecTOradians;
       break;
