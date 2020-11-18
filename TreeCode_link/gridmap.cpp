@@ -242,7 +242,15 @@ PixelMap GridMap::writePixelMapUniform(
   return map;
 }
 
-PixelMap GridMap::writePixelMapUniform(
+void GridMap::writeFits(
+                        LensingVariable lensvar /// which quantity is to be displayed
+                        ,std::string filename  /// output files
+                        ){
+                          PixelMap map = writePixelMap(lensvar);
+                          map.printFITS(filename);
+}
+
+PixelMap GridMap::writePixelMap(
               LensingVariable lensvar  /// which quantity is to be displayed
 ){
   size_t Nx =  Ngrid_init;
@@ -318,6 +326,9 @@ void GridMap::writePixelMapUniform(
   
   map.Clean();
   
+  //writePixelMapUniform_(i_points,getNumberOfPoints(),&map,lensvar);
+  //return;
+  
   std::thread thr[20];
   int nthreads = Utilities::GetNThreads();
   
@@ -330,7 +341,7 @@ void GridMap::writePixelMapUniform(
   size_t size = chunk_size;
   for(int ii = 0; ii < nthreads ;++ii){
     if(ii == nthreads-1)
-      size = getNumberOfPoints() - (nthreads-1)*chunk_size;
+    size = getNumberOfPoints() - (nthreads-1)*chunk_size;
     thr[ii] = std::thread(&GridMap::writePixelMapUniform_,this,&(i_points[ii*chunk_size]),size,&map,lensvar);
   }
   for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
@@ -434,7 +445,7 @@ void GridMap::writeFitsUniform(
       break;
   }
   
-  PixelMap map = this->writePixelMapUniform(center,Nx,Ny,lensvar);
+  PixelMap map = writePixelMapUniform(center,Nx,Ny,lensvar);
   map.printFITS(filename + tag);
 }
 

@@ -9,6 +9,7 @@
 #include "Tree.h"
 #include <mutex>
 #include <thread>
+#include "grid_maintenance.h"
 
 std::mutex Grid::grid_mutex;
 
@@ -1222,7 +1223,7 @@ void Grid::writeFitsUniform(
       break;
   }
 
-  PixelMap map = this->writePixelMapUniform(center,Nx,Ny,lensvar);
+  PixelMap map = writePixelMapUniform(center,Nx,Ny,lensvar);
   map.printFITS(filename + tag);
 }
 
@@ -1244,16 +1245,26 @@ PixelMap Grid::writePixelMapUniform(
   PixelMap map(center, Nx, Ny,i_tree->pointlist->Top()->gridsize);
   map.Clean();
   
-  int Nblocks = Utilities::GetNThreads();
-  std::vector<PointList> lists(Nblocks);
+  //int Nblocks = Utilities::GetNThreads();
+  int Nblocks = 16;
+                                      
+  //std::vector<PointList> lists(Nblocks);
+                                      
+  std::vector<Point *> heads(Nblocks);
+  std::vector<size_t> sizes(Nblocks,0);
   
   bool allowDecent;
   TreeStruct::iterator i_tree_it(i_tree);
   int i = 0;
+                                      
   do{
     if((*i_tree_it)->level == 4){
-      lists[i].setTop( (*i_tree_it)->points );
-      lists[i].setN( (*i_tree_it)->npoints );
+      
+      heads[i] = (*i_tree_it)->points;
+      sizes[i] = (*i_tree_it)->npoints;
+      
+      //lists[i].setTop( (*i_tree_it)->points );
+      //lists[i].setN( (*i_tree_it)->npoints );
       ++i;
       allowDecent = false;
     }else{
@@ -1262,9 +1273,11 @@ PixelMap Grid::writePixelMapUniform(
   }while(i_tree_it.TreeWalkStep(allowDecent) && i < Nblocks);
   
   std::vector<std::thread> thrs;
-  
   for(int ii = 0; ii < i ;++ii){
-    thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar));
+  //writePixelMapUniform_(heads[ii],sizes[ii],&map,lensvar);
+  //thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar));
+
+    thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,heads[ii],sizes[ii],&map,lensvar));
   }
   for(int ii = 0; ii < i ;++ii) thrs[ii].join();
   
@@ -1280,8 +1293,11 @@ void Grid::writePixelMapUniform(
   
   map.Clean();
   int Nblocks = 16;
-  std::vector<PointList> lists(Nblocks);
+  //std::vector<PointList> lists(Nblocks);
   TreeStruct::iterator i_tree_it(i_tree);
+
+  std::vector<Point *> heads(Nblocks);
+  std::vector<size_t> sizes(Nblocks,0);
 
   
   bool allowDecent;
@@ -1290,8 +1306,11 @@ void Grid::writePixelMapUniform(
   do{
     if((*i_tree_it)->level == 4){
       assert(i < 16);
-      lists[i].setTop( (*i_tree_it)->points );
-      lists[i].setN( (*i_tree_it)->npoints );
+      //lists[i].setTop( (*i_tree_it)->points );
+      //lists[i].setN( (*i_tree_it)->npoints );
+      heads[i] = (*i_tree_it)->points;
+      sizes[i] = (*i_tree_it)->npoints;
+      
       ++i;
       allowDecent = false;
     }else{
@@ -1300,56 +1319,114 @@ void Grid::writePixelMapUniform(
   }while(i_tree_it.TreeWalkStep(allowDecent) && i < Nblocks);
   
   std::thread thr[16];
-  
   for(int ii = 0; ii < i ;++ii){
-    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+    //thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,heads[ii],sizes[ii],&map,lensvar);
   }
   for(int ii = 0; ii < i ;++ii) thr[ii].join();
 
 }
 
-void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val){
+//void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val){
+//  double tmp;
+//  PosType tmp2[2];
+//  long index;
+//
+//  PointList::iterator list_it;
+//  list_it.current = (list.Top());
+//  for(size_t i = 0; i< list.size(); ++i){
+//    switch (val) {
+//      case ALPHA:
+//        tmp2[0] = (*list_it)->x[0] - (*list_it)->image->x[0];
+//        tmp2[1] = (*list_it)->x[1] - (*list_it)->image->x[1];
+//        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+//        break;
+//      case ALPHA1:
+//        tmp = ((*list_it)->x[0] - (*list_it)->image->x[0]);
+//        break;
+//      case ALPHA2:
+//        tmp = ((*list_it)->x[1] - (*list_it)->image->x[1]);
+//        break;
+//      case KAPPA:
+//        tmp = (*list_it)->kappa;
+//        break;
+//      case GAMMA:
+//        tmp2[0] = (*list_it)->gamma[0];
+//        tmp2[1] = (*list_it)->gamma[1];
+//        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+//        break;
+//      case GAMMA1:
+//        tmp = (*list_it)->gamma[0];
+//        break;
+//      case GAMMA2:
+//        tmp = (*list_it)->gamma[1];
+//        break;
+//      case GAMMA3:
+//        tmp = (*list_it)->gamma[2];
+//        break;
+//      case INVMAG:
+//        tmp = (*list_it)->invmag;
+//        break;
+//      case DELAYT:
+//        tmp = (*list_it)->dt;
+//        break;
+//      default:
+//        std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
+//        throw std::runtime_error("PixelMap::AddGrid() does not work for the input LensingVariable");
+//        break;
+//        // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+//    }
+//
+//    index = map->find_index((*list_it)->x);
+//    if(index != -1)(*map)[index] = tmp;
+//
+//    --list_it;
+//  }
+//}
+
+void Grid::writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVariable val){
   double tmp;
   PosType tmp2[2];
   long index;
   
-  PointList::iterator list_it;
-  list_it.current = (list.Top());
-  for(size_t i = 0; i< list.size(); ++i){
+  Point *ppoint = head;
+  
+  for(size_t i = 0; i< N; ++i){
+    
     switch (val) {
       case ALPHA:
-        tmp2[0] = (*list_it)->x[0] - (*list_it)->image->x[0];
-        tmp2[1] = (*list_it)->x[1] - (*list_it)->image->x[1];
+        tmp2[0] = ppoint->x[0] - ppoint->image->x[0];
+        tmp2[1] = ppoint->x[1] - ppoint->image->x[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
       case ALPHA1:
-        tmp = ((*list_it)->x[0] - (*list_it)->image->x[0]);
+        tmp = (ppoint->x[0] - ppoint->image->x[0]);
         break;
       case ALPHA2:
-        tmp = ((*list_it)->x[1] - (*list_it)->image->x[1]);
+        tmp = (ppoint->x[1] - ppoint->image->x[1]);
         break;
       case KAPPA:
-        tmp = (*list_it)->kappa;
+        tmp = ppoint->kappa;
         break;
       case GAMMA:
-        tmp2[0] = (*list_it)->gamma[0];
-        tmp2[1] = (*list_it)->gamma[1];
+        tmp2[0] = ppoint->gamma[0];
+        tmp2[1] = ppoint->gamma[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
       case GAMMA1:
-        tmp = (*list_it)->gamma[0];
+        tmp = ppoint->gamma[0];
         break;
       case GAMMA2:
-        tmp = (*list_it)->gamma[1];
+        tmp = ppoint->gamma[1];
         break;
       case GAMMA3:
-        tmp = (*list_it)->gamma[2];
+        tmp = ppoint->gamma[2];
         break;
       case INVMAG:
-        tmp = (*list_it)->invmag;
+        tmp = ppoint->invmag;
         break;
       case DELAYT:
-        tmp = (*list_it)->dt;
+        tmp = ppoint->dt;
         break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
@@ -1358,10 +1435,10 @@ void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVari
         // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
     }
     
-    index = map->find_index((*list_it)->x);
+    index = map->find_index(ppoint->x);
     if(index != -1)(*map)[index] = tmp;
     
-    --list_it;
+    ppoint = ppoint->next;
   }
 }
 

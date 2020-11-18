@@ -145,7 +145,9 @@ struct Grid{
   
   unsigned long pointID;
   PosType axisratio;
-  void writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val);
+  //void writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val);
+  void writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVariable val);
+
   static std::mutex grid_mutex;
 };
 

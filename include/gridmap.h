@@ -60,15 +60,18 @@ struct GridMap{
   /// resolution in radians, this is range / (N-1)
   double getResolution(){return x_range/(Ngrid_init-1);}
   
-  PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
-  /// make pixel map of lensing quantities at the resolution of the GridMap
-  PixelMap writePixelMapUniform(LensingVariable lensvar);
+   /// make pixel map of lensing quantities at the resolution of the GridMap
+  PixelMap writePixelMap(LensingVariable lensvar);
+   /// fits output of lensing quantities at the resolution of the GridMap
+  void writeFits(LensingVariable lensvar,std::string filensame);
+
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
-  
+  PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
+
   /// this will make a fits map of the grid as is.
   void writeFitsUniform(LensingVariable lensvar,std::string filename){
-    PixelMap map = writePixelMapUniform(lensvar);
+    PixelMap map = writePixelMap(lensvar);
     map.printFITS(filename);
   }
   
