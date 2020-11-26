@@ -55,4 +55,5 @@ add_sources(
 	disk.h
 	cpfits.h
 	quadTreeHalos.h
+	powell.h
 )

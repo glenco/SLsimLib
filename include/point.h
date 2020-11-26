@@ -220,6 +220,20 @@ private:
   //Point &operator=(const Point &p);
 };
 
+/** \brief A point that automatically has an image point.
+ 
+ This does not produce a stack of source plan points that are contigious in memory.
+ */
+struct LinkedPoint : public Point
+{
+  LinkedPoint(){
+    image = &im;
+    im.image = this;
+  }
+private:
+  Point im;
+};
+
 /** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
 struct RAY{
