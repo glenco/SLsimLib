@@ -92,6 +92,14 @@ struct Grid{
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
+  void finder_images(LensHndl lens
+  ,PosType *y_source
+  ,PosType r_source
+  ,int &Nimages
+  ,std::vector<ImageInfo> &imageinfo
+  ,unsigned long &Nimagepoints
+  );
+  
   Grid(Grid &&grid){
     *this = std::move(grid);
   }
@@ -369,8 +377,8 @@ namespace ImageFinding{
                         ,PosType initial_size,bool splitimages,short edge_refinement
                         ,bool verbose = false);
   
-  void find_image_simple(LensHndl lens,Point_2d y_source,PosType z_source,Point_2d &image_x
-                         ,PosType xtol2,PosType &fret);
+  //void find_image_simple(LensHndl lens,Point_2d y_source,PosType z_source,Point_2d &image_x
+  //                       ,PosType xtol2,PosType &fret);
   
   void find_images_microlens(LensHndl lens,double *y_source,double r_source,GridHndl grid
                              ,int *Nimages,std::vector<ImageInfo> &imageinfo,unsigned long *Nimagepoints
