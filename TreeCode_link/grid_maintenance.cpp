@@ -350,9 +350,12 @@ PosType Grid::magnification() const{
   it = (i_tree->pointlist->Top());
   size_t N = i_tree->pointlist->size();
   for(unsigned long i=0 ; i < N ; ++i,--it){
-    double area = (*it)->gridsize*(*it)->gridsize;
-    mag += (*it)->surface_brightness*fabs((*it)->invmag)*area;
-    flux += (*it)->surface_brightness*area;
+    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+    assert(f >= 0);
+    if(f > 0){
+      mag += f;
+      flux += f/fabs((*it)->invmag);
+    }
   }
 
   return flux/mag;
