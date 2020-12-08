@@ -46,6 +46,12 @@ inline double to_numeric<double>(const std::string &str) {
 };
 //********************************************************
 
+template <typename T>
+bool AlwaysTrue(T t){return true;}
+
+template <typename T>
+bool AlwaysFalse(T t){return false;}
+
 // this is not for the user
 namespace detail
 {
@@ -1511,18 +1517,26 @@ void ReadASCII(std::vector<T> &data
  
  This function is not particularly fast for large amounts of data.  If the
  number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
+ 
+ * The accept function can be used to limit the amount of data added.  If there is an object, a, used to
+ *    make this selection this can be done like [&a](str::vector<T> &v}{return a.itsok(v[3],v[4]);}
+ *         where v corresponds to a row in the data file in order.
+ 
  */
 
 template <typename T>
-int ReadCSVnumerical1(std::string filename   /// file name to be read
-                      ,std::vector<std::vector<T> > &data  /// output data
-                      ,std::vector<std::string> &column_names /// list of column names
-                      ,size_t MaxNumber = 100000000 /// maximum number of entries read
-                      ,char comment_char = '#'  /// comment charactor for header
-                      ,char deliniator = ','    /// deliniator between values
-                      ,std::string replace = "\\N"  /// replace this string with zero
-
+int ReadCSVnumerical1(std::string filename                              /// file name to be read
+                      ,std::vector<std::vector<T> > &data               /// output data
+                      ,std::vector<std::string> &column_names           /// list of column names
+                       ,size_t MaxNumber = 100000000                     /// maximum number of entries read
+                      ,char comment_char = '#'                          /// comment charactor for header
+                      ,char deliniator = ','                            /// deliniator between values
+                      ,std::string replace = "\\N"                      /// replace this string with zero
+                      ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
 ){
+  
+  bool verbose = false;
+  
   std::ifstream file(filename);
   // find number of particles
   if (!file.is_open()){
@@ -1553,14 +1567,23 @@ int ReadCSVnumerical1(std::string filename   /// file name to be read
     column_names.push_back("");
   }
   
+  if(verbose){ // print colum names
+    int i = 0;
+    for(auto st : column_names){
+      std::cout << i++ << " " << st << std::endl;
+    }
+  }
+  
   int columns = NumberOfEntries(line,deliniator);
   
   // count number of data line
   size_t number_of_data_lines = 0;
   while(std::getline(file, line) && number_of_data_lines < MaxNumber ) ++number_of_data_lines;
   
-  std::vector<std::vector<T> > tmp_data(columns,std::vector<T>(number_of_data_lines));
+  //std::vector<std::vector<T> > tmp_data(columns,std::vector<T>(number_of_data_lines));
+  std::vector<std::vector<T> > tmp_data(columns,std::vector<T>(0));
   swap(data,tmp_data);
+  std::vector<T> tmp_row(columns);
   
   /// return to first data line
   //file.seekg(std::ios::beg);
@@ -1584,23 +1607,18 @@ int ReadCSVnumerical1(std::string filename   /// file name to be read
     while(std::getline(lineStream,cell,deliniator))
     {
       if(cell==replace) cell='0';
-      //          {
-      //            --i;
-      //            while(i>=0){
-      //              data[i].pop_back();
-      //              --i;
-      //            }
-      //            break;
-      //          }
-      //
       
       /// clean blank spaces
       cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
       //data[i].push_back(to_numeric<T>(cell));
-      data[i][rows] = to_numeric<T>(cell);
+      //data[i][rows] = to_numeric<T>(cell);
+      tmp_row[i] = to_numeric<T>(cell);
       i = (i+1)%columns;
     }
-    ++rows;
+    if(accept(tmp_row)){
+      ++rows;
+      for(int i=0 ; i < columns ; ++i) data[i].push_back(tmp_row[i]);
+    }
   }
   return 1;
 }
@@ -1853,7 +1871,9 @@ void splitstring(std::string &line,std::vector<std::string> &vec,const std::stri
 
 /** \brief class for impoting data from a csv file and allowing label string lookup like a data frame.
  *
- *
+ * The accept function can be used to limit the amount of data added.  If there is an object, a, used to
+ *    make this selection this can be done like [&a](str::vector<T> &v}{return a.itsok(v[3],v[4]);}
+ *         where v corresponds to a row in the data file in order.
  */
 template< typename T>
 class DataFrame{
@@ -1863,13 +1883,32 @@ public:
             ,char comment_char = '#'  /// comment charactor for header
             ,char deliniator = ','    /// deliniator between values
             ,std::string replace = "\\N"    /// replace this string with zeros
+            ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
   ):filename(datafile){
-    Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',replace);
+    Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',replace,accept);
     
     for(int i=0 ; i<column_names.size() ; ++i){
       datamap[column_names[i]] = i;
     }
   };
+ 
+  DataFrame(){};
+  
+  void input(std::string datafile   /// input catalog file in csv format
+            ,size_t MaxNumber = 1000000 /// maximum number of entries read
+            ,char comment_char = '#'  /// comment charactor for header
+            ,char deliniator = ','    /// deliniator between values
+            ,std::string replace = "\\N"    /// replace this string with zeros
+            ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
+  ){
+    filename = datafile;
+    Utilities::IO::ReadCSVnumerical1(datafile,data, column_names,MaxNumber,'#',',',replace,accept);
+    
+    for(int i=0 ; i<column_names.size() ; ++i){
+      datamap[column_names[i]] = i;
+    }
+  };
+
   
   /// returns column by name
   std::vector<T>& operator[](const std::string &label){
@@ -1902,6 +1941,23 @@ public:
   std::vector<std::string> labels() const{
     return column_names;
   };
+  
+  // sort by one of the columns
+  void sortby(std::string name){
+    std::vector<size_t> index(data[0].size());
+    size_t N = index.size();
+    for(size_t i=0 ; i<N ; ++i) index[i] = i;
+    
+    sort_indexes(data[datamap[name]],index);
+    std::vector<T> tmp_v(N);
+    
+    for(size_t j=0 ; j<data.size() ; ++j){
+      for(size_t i=0 ; i<N ; ++i){
+        tmp_v[i] = data[j][index[i]];
+      }
+      swap(data[j],tmp_v);
+    }
+  }
   
   size_t number_of_rows(){return data[0].size();}
   size_t number_of_columns(){return data.size();}
