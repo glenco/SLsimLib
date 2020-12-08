@@ -744,6 +744,25 @@ SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folde
   
   readCatalog();
 }
+
+void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit,double maximum_radius)
+{
+  
+  index=0;
+  mag_limit = my_mag_limit;
+  band = my_band;
+  radius_max = maximum_radius;
+  shapelets_folder = my_shapelets_folder;
+  
+  if(sb_limit == -1)
+    setSBlimit_magarcsec(30.);
+  else
+    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+  
+  readCatalog();
+}
+
+
 SourceMultiShapelets::~SourceMultiShapelets()
 {
 }
