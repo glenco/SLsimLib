@@ -1623,6 +1623,110 @@ int ReadCSVnumerical1(std::string filename                              /// file
   return 1;
 }
 
+/**
+ Finds ranges
+ */
+
+template <typename T>
+size_t ReadCSVrange(std::string filename                              /// file name to be read
+                      ,std::vector<std::vector<T> > &ranges               /// output data
+                      ,std::vector<std::string> &column_names           /// list of column names
+                       ,size_t MaxNumber = 100000000                     /// maximum number of entries read
+                      ,char comment_char = '#'                          /// comment charactor for header
+                      ,char deliniator = ','                            /// deliniator between values
+                      ,std::string replace = "\\N"                      /// replace this string with zero
+                      ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
+){
+  
+  bool verbose = false;
+  
+  std::ifstream file(filename);
+  // find number of particles
+  if (!file.is_open()){
+    std::cerr << "file " << filename << " cann't be opened." << std::endl;
+    throw std::runtime_error("no file");
+  }
+  
+  int count_preamble=0;
+  std::string line;
+  // read comment lines and first data line
+  do{
+    std::getline(file,line);
+    ++count_preamble;
+    if(!file) break;  // probably EOF
+  }while(line[0] == comment_char);
+  
+  // read the names
+  std::stringstream          lineStream(line);
+  std::string                cell;
+  column_names.empty();
+  while(std::getline(lineStream,cell, ','))
+  {
+    column_names.push_back(cell);
+  }
+  // This checks for a trailing comma with no data after it.
+  if (!lineStream && cell.empty())
+  {
+    column_names.push_back("");
+  }
+  
+  if(verbose){ // print colum names
+    int i = 0;
+    for(auto st : column_names){
+      std::cout << i++ << " " << st << std::endl;
+    }
+  }
+  
+  int columns = NumberOfEntries(line,deliniator);
+  
+  std::vector<std::vector<T> > tmp_ranges(columns,std::vector<T>(2));
+  swap(ranges,tmp_ranges);
+  std::vector<T> tmp_row(columns);
+  
+  /// return to first data line
+  //file.seekg(std::ios::beg);
+  file.clear();
+  file.close();
+  file.open(filename);
+  for(int i=0; i < count_preamble; ++i){
+    file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+  }
+  //std::getline(file,line);
+  
+  size_t rows = 0;
+  while(std::getline(file,line) && rows < MaxNumber){
+    // read the names
+    std::stringstream          lineStream(line);
+    std::string                cell;
+    
+    int i=0;
+    while(std::getline(lineStream,cell,deliniator))
+    {
+      if(cell==replace) cell='0';
+      
+      /// clean blank spaces
+      cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
+      tmp_row[i] = to_numeric<T>(cell);
+      i = (i+1)%columns;
+    }
+    if(accept(tmp_row)){
+      if(rows==0){
+        for(int j=0 ; j < columns ; ++j){
+          ranges[j][0] = tmp_row[j];
+          ranges[j][1] = tmp_row[j];
+        }
+      }else{
+        for(int j=0 ; j < columns ; ++j){
+          if(ranges[j][0] > tmp_row[j]) ranges[j][0] = tmp_row[j];
+          if(ranges[j][1] < tmp_row[j]) ranges[j][1] = tmp_row[j];
+        }
+      }
+      ++rows;
+    }
+  }
+  return rows;
+}
+
 /** \brief Read numerical data from a csv file with a header
  
  Same as ReadCSVnumerical1 except the order of the data storage is
