@@ -25,7 +25,7 @@ SourceOverzier::SourceOverzier(
 		,unsigned long my_id          ///          id number
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
-		){
+		):Source(0,Point_2d(0,0),my_z){
 
       //std::cout << "SourceOverzier constructor" << std::endl;
   setInternals(my_mag,my_mag_bulge,my_Reff

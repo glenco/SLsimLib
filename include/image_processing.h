@@ -89,6 +89,7 @@ public:
   PosType AddSource(Source &source);
   /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged
   PosType AddSource(Source &source,int oversample);
+  void AddPointSource(const Point_2d &x,double flux);
   
   /** \brief copy a PixelMap into this one.
    

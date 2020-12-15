@@ -153,7 +153,7 @@ public:
 
 private:
   // make it uncopyable
-  SourceMultiAnaGalaxy(SourceOverzierPlus &s){};
+  //SourceMultiAnaGalaxy(SourceMultiAnaGalaxy &s){};
   SourceMultiAnaGalaxy & operator=(SourceMultiAnaGalaxy &s){return s;}
   
 	Band band;
@@ -185,7 +185,7 @@ public:
   
   //SourceMultiShapelets(InputParams& params);
   
-  SourceMultiShapelets():Source(){};
+  SourceMultiShapelets():Source(0,Point_2d(0,0),0){};
   
   /// Reads in sources from a catalog.
   SourceMultiShapelets(const std::string &my_shapelets_folder  /// directory where shapelet files are located
@@ -281,15 +281,16 @@ public:
   int getCurrentID(){
     return galaxies[index].id;
   }
-    
+ 
+  std::vector<SourceShapelets> galaxies;
+
 private:
 	void assignParams(InputParams& params);
  	std::size_t index;
 	float mag_limit;
   Band band;
   double radius_max;
-  std::vector<SourceShapelets> galaxies;
-
+ 
   void readCatalog();
 	std::string shapelets_folder;
 };

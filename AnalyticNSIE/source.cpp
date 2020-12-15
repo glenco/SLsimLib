@@ -16,12 +16,8 @@ using namespace std;
 //}
 
 SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radians):
-  Source()
+Source(radius_in_radians,position,z)
 {
-  source_r = radius_in_radians;
-  source_x = position;
-  setSBlimit_magarcsec(100.);
-  zsource = z;
 }
 
 
@@ -216,7 +212,7 @@ SourcePixelled::SourcePixelled(
                                , PosType my_resolution  /// resolution (in rad)
                                , PosType* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
 )
-:Source(), resolution(my_resolution), Npixels (my_Npixels){
+:Source(0,my_center,my_z), resolution(my_resolution), Npixels (my_Npixels){
   zsource = my_z;
   
   range = resolution*(Npixels-1);
@@ -225,8 +221,6 @@ SourcePixelled::SourcePixelled(
   for (int i = 0; i < Npixels*Npixels; i++)
     values[i] = arr_val[i];
   source_r =  range/sqrt(2.);
-  source_x[0] = my_center[0];
-  source_x[1] = my_center[1];
   calcTotalFlux();
   calcCentroid();
   calcEll();
@@ -243,7 +237,7 @@ SourcePixelled::SourcePixelled(
                                , PosType my_z                 /// redshift of the source
                                , PosType factor                /// optional rescaling factor for the flux
 )
-:Source(){
+:Source(0,Point_2d(0,0),0){
   if(gal_map.getNx() != gal_map.getNy()){
     std::cout << "SourcePixelled::SourcePixelled() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
@@ -491,8 +485,10 @@ PosType Source::integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<P
 
 size_t SourceShapelets::count = 0;;
 
-void SourceShapelets::setActiveBand(Band band)
+void SourceColored::setActiveBand(Band band)
 {
+  
+  if(mag_map.size() == 0) return;
   
   mag = mag_map.at(band);
   if (mag < 0.)
@@ -513,14 +509,14 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang					/// rotation angle (in rad)
 )
-:Source()
+:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource)
 {
-  zsource = my_z;
-  mag = my_mag;
-  if(my_center != NULL)
-    setTheta(my_center[0], my_center[1]);
-  else
-    setTheta(0, 0);
+
+  assert(my_center != NULL);
+//  if(my_center != NULL)
+//    setTheta(my_center[0], my_center[1]);
+//  else
+//    setTheta(0, 0);
 
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
@@ -528,9 +524,7 @@ SourceShapelets::SourceShapelets(
   n1 = sqrt(my_coeff.size());
   n2 = n1;
   coeff = my_coeff;
-  source_r = my_scale;
   
-  flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
   assert(flux_total > 0.0);
   
   NormalizeFlux();
@@ -546,14 +540,14 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang			/// rotation angle (in rad)
 )
-:Source()
+:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z)
 {
-  zsource = my_z;
-  mag = my_mag;
-  if(my_center != NULL)
-    setTheta(my_center[0], my_center[1]);
-  else
-    setTheta(0, 0);
+  
+  assert(my_center != NULL);
+//  if(my_center != NULL)
+//    setTheta(my_center[0], my_center[1]);
+//  else
+//    setTheta(0, 0);
   
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
@@ -571,7 +565,6 @@ SourceShapelets::SourceShapelets(
   vector<long> size;
   cpfits.read(coeff,size);
 
-  flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
   assert(flux_total > 0);
   
   NormalizeFlux();
@@ -586,13 +579,14 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center  					/// center (in rad)
                                  , PosType my_ang				 /// rotation angle (in rad)
 )
-:Source()
+:SourceColored(0,0,Point_2d(my_center[0],my_center[1]),0)
 {
-  if(my_center != NULL)
-    setTheta(my_center[0], my_center[1]);
-  else
-    setTheta(0, 0);
-  
+  assert(my_center != NULL);
+//  if(my_center != NULL)
+//    setTheta(my_center[0], my_center[1]);
+//  else
+//    setTheta(0, 0);
+//
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
 
@@ -733,7 +727,7 @@ void SourceShapelets::NormalizeFlux()
 //}
 
 SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit,double maximum_radius)
-: Source(),index(0),mag_limit(my_mag_limit),band(my_band)
+: Source(0,Point_2d(0,0),0),index(0),mag_limit(my_mag_limit),band(my_band)
 ,radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
 {
   

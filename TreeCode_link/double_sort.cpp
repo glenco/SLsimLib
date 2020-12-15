@@ -171,7 +171,7 @@ namespace Utilities{
         /*brr[j-1]=b;*/
         PointCopy(&brr[j-1],&b);
         jstack += 2;
-        if (jstack > NSTACK) nrerror("NSTACK too small in double_sort_points");
+        if (jstack > NSTACK) throw std::runtime_error("NSTACK too small in double_sort_points");
         if (ir-i+1 >= j-l) {
           istack[jstack]=ir;
           istack[jstack-1]=i;
