@@ -187,19 +187,20 @@ void powell_tp(
 	T del,fp,fptt,t;
   T *p = pp-1;
   
+  //Utilities::D2Matrix<T> xi(n+1, n+1);
   std::vector<T> simplex((n+1)*(n+1));
   
   T **xi = new T*[n+1];
   xi[0] = simplex.data();
   for (long i = 1; i <= n; ++i) xi[i] = xi[0] + i * (n+1);
   
-  for (long i = 1; i <= n; ++i){
-    xi[i][i] = 1;
+  for (long i = 0; i <= n; ++i){
+    xi[i][i] = 2*sqrt(ftol);
     for (long j = i+1; j <= n; ++j) {
       xi[i][j] = xi[j][i] = 0;
     }
   }
-  
+
 	std::vector<T> pt(n+1);
 	std::vector<T> ptt(n+1);
 	std::vector<T> xit(n+1);
