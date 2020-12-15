@@ -332,10 +332,10 @@ public:
   
   This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
   */
-  void find_image(
+  RAY find_image(
           Point_2d y_source    /// input position of source (radians)
           ,Point_2d &x_image    /// initial guess for image postion (radians)
-           ,PosType z_source     /// redshift of source
+          ,PosType z_source     /// redshift of source
           ,PosType ytol2        /// target tolerance in source position squared
           ,PosType &fret        ///
           ,int sign=0             /// sign of magnification, it is found automatically if left out

@@ -599,6 +599,11 @@ void PixelMap::AddImages(
   AddImages(imageinfo.data(),Nimages,rescale);
 }
 
+void PixelMap::AddPointSource(const Point_2d &x,double flux){
+  long index = find_index(x.x);
+  if(index > -1) map[index] += flux;
+}
+
 /*
 void PixelMap::AddImages(const GridMap &map){
   Point_2d x;

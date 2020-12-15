@@ -35,7 +35,16 @@ struct Grid{
   unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
   
   double RefreshSurfaceBrightnesses(SourceHndl source);
+  
   double AddSurfaceBrightnesses(SourceHndl source);
+  
+  double mark_point_source_images(
+                                Point_2d y_source    /// angular position of source,
+                               ,PosType r_source_max  /// points outside this radius on the source plane will not be considered as in the image
+                               ,PosType luminosity
+                               ,bool verbose=false
+                         );
+   
   double ClearSurfaceBrightnesses();
   
   unsigned long getNumberOfPoints() const;
@@ -92,14 +101,15 @@ struct Grid{
   void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
-  void finder_images(LensHndl lens
-  ,PosType *y_source
+  void find_images(
+  PosType *y_source
   ,PosType r_source
   ,int &Nimages
   ,std::vector<ImageInfo> &imageinfo
   ,unsigned long &Nimagepoints
   );
-  
+ 
+ 
   Grid(Grid &&grid){
     *this = std::move(grid);
   }
@@ -131,6 +141,7 @@ struct Grid{
     PosType magnification() const;
    /// centroid of flux
     Point_2d centroid() const;
+  
   private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);

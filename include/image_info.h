@@ -30,6 +30,7 @@ struct ImageInfo{
     copy(rhs,true);
   }
 	~ImageInfo();
+  
   ImageInfo & operator=(const ImageInfo & rhs){
     if(this == &rhs) return *this;
     copy(rhs,true);
@@ -73,6 +74,8 @@ struct ImageInfo{
   KappaType aveInvMag();
   /// finds the ray in the image that is closest to the point y on the source plane
   RAY closestRay(const Point_2d &y);
+  /// finds the point in the image that is closest to the point y on the source plane
+  Point * closestPoint(const Point_2d &y);
   /// finds the ray in the image that has the highest surface brightness
   RAY highestSurfaceBrightnessRay();
   /// Print information about the image

@@ -273,8 +273,8 @@ Npix_x(Npix_x),Npix_y(Npix_y), exp_time(exp_time), exp_num(exp_num), back_mag(ba
  * \param seeing FWHM in arcsecs of the image
  */
 Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
-Npix_x(Npix_x),Npix_y(Npix_y),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
-,ron(ron),seeing(seeing),mag_zeropoint(zeropoint_mag)
+Npix_x(Npix_x),Npix_y(Npix_y),mag_zeropoint(zeropoint_mag),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
+,ron(ron),seeing(seeing)
 {
   telescope = false;
  
@@ -292,8 +292,8 @@ Npix_x(Npix_x),Npix_y(Npix_y),exp_time(exp_time), exp_num(exp_num), back_mag(bac
  * \param oversample Oversampling rate of the PSF image
  */
 Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
-Npix_x(Npix_x),Npix_y(Npix_y), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
-, ron(ron), oversample(oversample), mag_zeropoint(zeropoint_mag)
+Npix_x(Npix_x),Npix_y(Npix_y), mag_zeropoint(zeropoint_mag), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
+, ron(ron), oversample(oversample)
     {
       CPFITS_READ cpfits(psf_file);
 

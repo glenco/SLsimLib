@@ -946,8 +946,8 @@ void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
   <\p>
  */
 
-void Grid::finder_images(LensHndl lens
-                            ,PosType *y_source
+void Grid::find_images(
+                            PosType *y_source
                             ,PosType r_source
                             ,int &Nimages
                             ,std::vector<ImageInfo> &imageinfo
@@ -1048,3 +1048,32 @@ void Grid::finder_images(LensHndl lens
 
   return;
 }
+
+/** \breaf This function finds all the images for a circular source of radius r_source,
+ then finds the points within each image that are closest to the center and then markes
+ each surface brightness.  Only one pixel per image gets flux.
+ */
+double Grid::mark_point_source_images(
+                             Point_2d y_source
+                            ,PosType r_source
+                            ,PosType luminosity
+                            ,bool verbose
+                            ){
+  
+  int Nimages = 0;
+  size_t Npoints=0;
+  Point *pp;
+  double total=0;
+  
+  std::vector<ImageInfo> imageinfo;
+  find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
+
+  std::cout << "centroids" << std::endl;
+  for(int i=0 ; i<Nimages ; ++i){
+    pp = imageinfo[i].closestPoint(y_source);
+    
+    total += luminosity/fabs(pp->invmag);
+    pp->surface_brightness += luminosity/pp->gridsize/pp->gridsize/fabs(pp->invmag);
+  }
+  return total;
+};

@@ -188,7 +188,7 @@ struct Point: public Point_2d{
   KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
   double dt;                 // time delay : double implies permanent precision independently from DOUBLE_PRECISION
   KappaType invmag = 1;          // inverse of magnification
-    
+ 
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
@@ -243,8 +243,22 @@ struct RAY{
   };
   
   RAY(const Point &p){
-    x = p.x;
-    y = p.image->x;
+    x[0] = p.x[0];
+    x[1] = p.x[1];
+    y[0] = p.image->x[0];
+    y[1] = p.image->x[1];
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+  };
+  RAY(const LinkedPoint &p){
+    x[0] = p.x[0];
+    x[1] = p.x[1];
+    y[0] = p.image->x[0];
+    y[1] = p.image->x[1];
     kappa = p.kappa;
     dt = p.dt;
     
@@ -264,8 +278,11 @@ struct RAY{
   };
 
   RAY & operator=(const Point &p){
-    x = p.x;
-    y = p.image->x;
+    x[0] = p.x[0];
+    x[1] = p.x[1];
+    y[0] = p.image->x[0];
+    y[1] = p.image->x[1];
+
     kappa = p.kappa;
     dt = p.dt;
     
