@@ -576,12 +576,12 @@ SourceShapelets::SourceShapelets(
 
 SourceShapelets::SourceShapelets(
                                  std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
-                                 , PosType* my_center  					/// center (in rad)
-                                 , PosType my_ang				 /// rotation angle (in rad)
-)
-:SourceColored(0,0,Point_2d(my_center[0],my_center[1]),0)
+                                 , PosType my_ang         /// rotation angle (in rad)
+                                //, PosType* my_center  					/// center (in rad)
+ )
+:SourceColored(0,0,Point_2d(0,0),0)
 {
-  assert(my_center != NULL);
+//  assert(my_center != NULL);
 //  if(my_center != NULL)
 //    setTheta(my_center[0], my_center[1]);
 //  else
