@@ -525,36 +525,36 @@ public:
   
   int read_column(std::string &colname,std::vector<float> &vecf){
    
-    int col, status=0;
+    int col, status=0,anyval=0;
     col = column_index(colname);
 
     if(vecf.size() < Nrow ) vecf.resize(Nrow);
     
     fits_read_col_flt(fptr, col, 1, 1,Nrow,0,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
 
     return status;
   }
   int read_column(std::string &colname,long firstsrow,long nelements,std::vector<float> &vecf,float nulval = -100){
    
-    int status=0;
+    int status=0,anyval=0;
     int colnum = column_index(colname);
     
     if(vecf.size() < nelements ) vecf.resize(nelements);
     fits_read_col(fptr,TFLOAT,colnum, firstsrow, 1,nelements,&nulval,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
     check_status(status);
 
     return status;
   }
   int read_column(int colnum,long firstsrow,long nelements,std::vector<float> &vecf,float nulval = -100){
    
-    int status=0;
+    int status=0,anyval=0;
     
     if(vecf.size() < nelements ) vecf.resize(nelements);
     
     fits_read_col(fptr,TFLOAT,colnum, firstsrow, 1,nelements,&nulval,
-                      vecf.data(), 0, &status);
+                      vecf.data(), &anyval, &status);
 
     check_status(status);
 
@@ -563,46 +563,46 @@ public:
   
   int read_column(std::string &colname,long firstsrow,long nelements,std::vector<double> &vecf,double nulval = -100){
    
-    int status=0;
+    int status=0,anyval=0;
     int colnum = column_index(colname);
     
     if(vecf.size() < nelements ) vecf.resize(nelements);
     fits_read_col(fptr,TDOUBLE,colnum, firstsrow, 1,nelements,&nulval,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
     check_status(status);
 
     return status;
   }
   int read_column(int colnum,long firstsrow,long nelements,std::vector<double> &vecf,double nulval = -100){
    
-    int status=0;
+    int status=0,anyval=0;
     
     if(vecf.size() < nelements ) vecf.resize(nelements);
     fits_read_col(fptr,TDOUBLE,colnum, firstsrow, 1,nelements,&nulval,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
     check_status(status);
 
     return status;
   }
   int read_column(std::string &colname,long firstsrow,long nelements,std::vector<long> &vecf,int nulval = -100){
    
-    int status=0;
+    int status=0,anyval=0;
     int colnum = column_index(colname);
     
     if(vecf.size() < nelements ) vecf.resize(nelements);
     fits_read_col(fptr,TLONG,colnum, firstsrow, 1,nelements,&nulval,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
     check_status(status);
 
     return status;
   }
   int read_column(int colnum,long firstsrow,long nelements,std::vector<long> &vecf,int nulval = -100){
    
-    int status=0;
+    int status=0,anyval=0;
     
     if(vecf.size() < nelements ) vecf.resize(nelements);
     fits_read_col(fptr,TLONG,colnum, firstsrow, 1,nelements,&nulval,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
     check_status(status);
 
     return status;
@@ -622,7 +622,7 @@ public:
   
   int read_column(int column_index,std::vector<float> &vecf){
    
-    int status=0;
+    int status=0,anyval=0;
 
     if(column_index < 1){
       std::cerr << "CPFITS: column number must be > 0" << std::endl;
@@ -635,7 +635,7 @@ public:
     if(vecf.size() < Nrow ) vecf.resize(Nrow);
     
     fits_read_col_flt(fptr, column_index, 1, 1,Nrow,0,
-                      vecf.data(), 0, &status);
+                      vecf.data(),&anyval, &status);
 
     return status;
   }
@@ -644,7 +644,7 @@ public:
   template <typename T>
   void read(std::vector<T> data,int ncol){
     
-      int status = 0;
+      int status = 0,anyval=0;
     long i, n, nread, ntodo, nrest;
     int buffer_size = 20000;
     std::vector<float> fitscol(buffer_size);
@@ -655,7 +655,7 @@ public:
       while (nrest) {
        ntodo = MIN(nrest,buffer_size);
        fits_read_col_flt(fptr, col, nread + 1, 1, ntodo, 0,
-                             fitscol.data(),0, &status);
+                             fitscol.data(),&anyval, &status);
        for (i = 0; i < ntodo; i++) data[i + nread][col-1] = fitscol[i];
        nread += ntodo;
        nrest -= ntodo;
