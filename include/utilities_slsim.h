@@ -2004,11 +2004,22 @@ public:
     filename = datafile;
     Utilities::IO::ReadCSVnumerical1(datafile,data,column_names,MaxNumber,'#',',',replace,accept);
     
-    for(int i=0 ; i<column_names.size() ; ++i){
-      datamap[column_names[i]] = i;
-    }
+    for(int i=0 ; i<column_names.size() ; ++i) datamap[column_names[i]] = i;
   };
 
+  /// remove a column
+  void pop(std::string colname){
+    
+    int i=datamap[colname];
+ 
+    swap(column_names[i],column_names.back());
+    column_names.pop_back();
+    swap(data[i],data.back());
+    data.pop_back();
+    
+    datamap.empty();
+    for(int i=0 ; i<column_names.size() ; ++i) datamap[column_names[i]] = i;
+  }
   
   /// returns column by name
   std::vector<T>& operator[](const std::string &label){
@@ -2059,6 +2070,23 @@ public:
     }
   }
   
+  // shuffle order of rows
+  void shuffle(Utilities::RandomNumbers_NR &ran){
+    std::vector<size_t> index(data[0].size());
+    size_t N = index.size();
+    for(size_t i=0 ; i<N ; ++i) index[i] = i;
+    Utilities::shuffle(index, ran);
+    
+    std::vector<T> tmp_v(N);
+    
+    for(size_t j=0 ; j<data.size() ; ++j){
+      for(size_t i=0 ; i<N ; ++i){
+        tmp_v[i] = data[j][index[i]];
+      }
+      swap(data[j],tmp_v);
+    }
+  }
+
   size_t number_of_rows(){return data[0].size();}
   size_t number_of_columns(){return data.size();}
   

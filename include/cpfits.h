@@ -691,6 +691,7 @@ public:
         used_column_names = columns;
       }
       
+      std::cout << "Reading " << used_column_names.size() << " columns." << std::endl;
       
       for(std::string a : used_column_names){
         column_index.push_back(cpfits.column_index(a));
@@ -715,23 +716,36 @@ public:
       }
     }
  
-    /// reads in only the rows that meet the criterion given by accept
-    int read(std::vector<std::function<bool(T &)> > &accept,long maxsize = -1){
+    /** \brief reads in only the rows that meet the criterion given by accept criterion.
+        accept -  a vector of functions that define acceptence in the order of the column names provided to the constructor
+        add=true  - add more rows with a new acceptence criterion searched from the top of the file
+        add=false - clear contents and start from where it last left off in the file
+        maxsize -  maximum number of rows added, can read in batches by running again with add=false, default is the total number of rows in the file
+     */
+    int read(
+             std::vector<std::function<bool(T &)> > &accept
+             ,bool add=false
+             ,long maxsize = -1
+             ){
       long chunksize = 10000;
       int ncol = column_index.size();
       long nrow = cpfits.rows();
       int requirements = accept.size();
-      
+
+      if(add){
+        n0=1;
+      }else{
+        for(int i=0; i<ncol ; ++i){
+          data[i].clear();
+        }
+      }
+  
       if(maxsize > 0) nrow = MIN(maxsize + n0,nrow);
       
       if(requirements > ncol){
         throw std::invalid_argument("Too many requirments");
       }
- 
-      for(int i=0; i<ncol ; ++i){
-        data[i].clear();
-      }
-
+  
       std::vector<std::vector<T> > tdata(ncol);
       while(n0 < nrow){
         chunksize = MIN(nrow-n0+1,chunksize);
@@ -761,9 +775,72 @@ public:
   
         }
       }
-      
-    }
+    };
     
+    size_t read(
+             std::function<bool(T,T)> &binary_accept
+             ,std::pair<int,int> index_binary                  /// the columns to be compared
+             ,std::vector<std::function<bool(T &)> > &unary_accept
+             ,std::vector<int> index_unary
+             ,bool add=false
+             ,long maxsize = -1
+             ){
+      long chunksize = 10000;
+      int ncol = column_index.size();
+      long nrow = cpfits.rows();
+      
+      if(unary_accept.size() != index_unary.size() ) throw std::invalid_argument("index_unar wrong sized ");
+ 
+      if(add){
+        n0=1;
+      }else{
+        for(int i=0; i<ncol ; ++i){
+          data[i].clear();
+        }
+      }
+  
+      if(maxsize > 0) nrow = MIN(maxsize + n0,nrow);
+      
+      if(index_unary.size() > ncol){
+        throw std::invalid_argument("Too many requirments");
+      }
+  
+      std::vector<std::vector<T> > tdata(ncol);
+      while(n0 < nrow){
+        chunksize = MIN(nrow-n0+1,chunksize);
+        
+        if(data[0].capacity() - data[0].size() < chunksize ){
+          for(int i=0; i<ncol ; ++i){
+            data[i].reserve(chunksize + data[i].capacity());
+          }
+        }
+      
+        for(int i=0 ; i< ncol ; ++i){
+          cpfits.read_column(column_index[i],n0,chunksize,tdata[i]);
+        }
+        n0 += chunksize;
+      
+        for(long j = 0 ; j < chunksize ; ++j){
+    
+          bool accpt = binary_accept(tdata[index_binary.first][j],tdata[index_binary.second][j] );
+          
+          int k=0;
+          for(int i : index_unary){
+            accpt *= unary_accept[k++]( tdata[i][j] );
+          }
+          
+          if( accpt ){
+            for(int i=0; i<ncol ; ++i){
+              data[i].push_back( tdata[i][j] ) ;
+            }
+          }
+  
+        }
+      }
+      
+      return data.size();
+    }
+
     /// read the next maxsize rows.  This will errase the rows already read
     int read(long maxsize){
       int ncol = column_index.size();
