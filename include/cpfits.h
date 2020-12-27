@@ -901,6 +901,7 @@ public:
     /// returns column by name
     std::vector<T>& operator[](const std::string &label){
       if(datamap.find(label) == datamap.end()){
+        std::cerr << "No label - " << label << " - in " << filename <<std::endl;
         throw std::invalid_argument("no label");
       }
       return data[datamap[label]];
