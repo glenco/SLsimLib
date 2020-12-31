@@ -24,7 +24,7 @@ namespace Utilities {
   /// Namespace for geometrical functions mostly having to do with spherical coordinates
   namespace Geometry{
     
-    /// represents a point in spherical coordinates theta = 0 is equator
+    /// represents a point in spherical coordinates, theta = 0 is equator
     template <typename T = double>
     class SphericalPoint{
       
@@ -66,10 +66,12 @@ namespace Utilities {
 
       void cartisianTOspherical(T const x[]);
       void TOspherical(Point_3d<T> &x);
+      
       void StereographicProjection(const SphericalPoint &central
                                    ,T x[]) const;
       void StereographicProjection(const SphericalPoint &central,Point_2d &x) const;
       Point_2d StereographicProjection(const SphericalPoint &central) const;
+      
       void OrthographicProjection(const SphericalPoint &central
                                   ,T x[]) const;
       Point_2d OrthographicProjection(const SphericalPoint &central) const;
@@ -107,8 +109,10 @@ namespace Utilities {
      Quaternion q(sp);
      
      // apply the rotation
-     q = q.Rotate(R);
-     
+     p = q.Rotate(R);
+     // this could also be written as
+     p = R*q*R.conj();
+
      // rotate in place, same as above but with one less copy
      q.RotInplace(R);
      
@@ -243,24 +247,11 @@ namespace Utilities {
       }
       
       Quaternion operator+(const Quaternion &q) const{
-        Quaternion p = q;
-        
-        p.v[0] += v[0];
-        p.v[1] += v[1];
-        p.v[2] += v[2];
-        p.v[3] += v[3];
-        
-        return p;
+        return Quaternion(v[0] + q.v[0] , v[1] + q.v[1] , v[2] + q.v[2] , v[3] + q.v[3] );
+
       }
       Quaternion operator-(const Quaternion &q) const{
-        Quaternion p = *this;
-        
-        p.v[0] -= q.v[0];
-        p.v[1] -= q.v[1];
-        p.v[2] -= q.v[2];
-        p.v[3] -= q.v[3];
-        
-        return p;
+        return Quaternion(v[0] - q.v[0] , v[1] - q.v[1] , v[2] - q.v[2] , v[3] - q.v[3] );
       }
       
       /// division by a scaler

@@ -1745,7 +1745,7 @@ void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
 			{
 				case null_lens:
 					ERROR_MESSAGE();
-					std::cout << "field_int_prof_type is null!!!!" << std::endl;
+					std::cout << "field_int_prof_type is null!" << std::endl;
 					break;
 				case nfw_lens:
 					//field_halos.push_back(new LensHaloNFW);
@@ -1808,19 +1808,19 @@ void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
         switch(field_int_prof_gal_type){
           case pl_gal:
             ERROR_MESSAGE();
-            std::cout << "field_int_prof_gal_type 2, i.e. PowerLaw not yet implemented!!!" << std::endl;
+            std::cout << "field_int_prof_gal_type 2, i.e. PowerLaw not yet implemented!" << std::endl;
             break;
           case hern_gal:
             ERROR_MESSAGE();
-            std::cout << "field_int_prof_gal_type 3, i.e. Hernquist not yet implemented!!!" << std::endl;
+            std::cout << "field_int_prof_gal_type 3, i.e. Hernquist not yet implemented!" << std::endl;
             break;
           case jaffe_gal:
             ERROR_MESSAGE();
-            std::cout << "field_int_prof_gal_type 4, i.e. Jaffe not yet implemented!!!" << std::endl;
+            std::cout << "field_int_prof_gal_type 4, i.e. Jaffe not yet implemented!" << std::endl;
             break;
           case null_gal:
             ERROR_MESSAGE();
-            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!" << std::endl;
+            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
             break;
             
           case nsie_gal:
@@ -2009,7 +2009,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
 			{
 				case null_lens:
 					ERROR_MESSAGE();
-					std::cout << "field_int_prof_type is null!!!!" << std::endl;
+					std::cout << "field_int_prof_type is null!" << std::endl;
 					break;
 				case nfw_lens:
 					field_halos.push_back(new LensHaloNFW);
@@ -2095,7 +2095,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
  				switch(field_int_prof_gal_type){
           case null_gal:
             ERROR_MESSAGE();
-            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+            std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
             break;
           case nsie_gal:
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,cosmo));
@@ -2358,7 +2358,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
         {
           case null_lens:
             ERROR_MESSAGE();
-            std::cout << "field_int_prof_type is null!!!!" << std::endl;
+            std::cout << "field_int_prof_type is null!" << std::endl;
             break;
           case nfw_lens:
             // calculate the average size and concentration of a NFW at the mass and reshift
@@ -2436,7 +2436,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
           switch(field_int_prof_gal_type){
             case null_gal:
               ERROR_MESSAGE();
-              std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+              std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
               break;
             case nsie_gal:
               field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,cosmo));
@@ -2668,12 +2668,12 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
     {
       case null_lens:
         ERROR_MESSAGE();
-        std::cout << "field_int_prof_type is null!!!!" << std::endl;
+        std::cout << "field_int_prof_type is null!" << std::endl;
         break;
       case nfw_lens:
         // calculate the average size and concentration of a NFW at the mass and reshift
 
-        std::cout << "Making an NFW halo, but not of the right mass!!!!" << std::endl;
+        std::cout << "Making an NFW halo, but not of the right mass!" << std::endl;
       {
         mass = PI*vdist*vdist*rcut/Grav/lightspeed/lightspeed/field_galaxy_mass_fraction;
         
@@ -2748,7 +2748,7 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
      switch(field_int_prof_gal_type){
      case null_gal:
      ERROR_MESSAGE();
-     std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!!!!" << std::endl;
+     std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
      break;
      case nsie_gal:
      field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,0));
@@ -2927,6 +2927,7 @@ void Lens::combinePlanes(bool verbose)
   
   // calculate radial distance between planes
   dTl.push_back(cosmo.radDist(0,plane_redshifts[0]));
+  
   for(std::size_t i = 1; i < Dl.size(); ++i)
    dTl.push_back(cosmo.radDist(plane_redshifts[i],plane_redshifts[i-1]));
   

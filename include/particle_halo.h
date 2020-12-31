@@ -903,9 +903,8 @@ public:
     for(auto p : halos) delete p;
   }
   
-  /// recenter the particles to 3d point in physical Mpc/h units
+  /// recenter the particles to 3d point in physical Mpc/h units  If the halos have already been created they will be destroyed.
 
-  /// If the halos have already been created they will be destroyed.
   void Recenter(Point_3d<> x);
 
   void CreateHalos(const COSMOLOGY &cosmo,double redshift);

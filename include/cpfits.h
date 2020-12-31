@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "fitsio.h"
+#include <mutex>
 
 class CPFITS_BASE{
   
@@ -43,6 +44,8 @@ protected:
     }
   }
   fitsfile *fptr;
+  
+  std::mutex mutex_lock;
 public:
 
   /////////////////////////////////
@@ -51,6 +54,7 @@ public:
   
   /// returns the number of tabels or images
   int get_num_hdus(){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int hdunum;
     int status = 0;
     fits_get_num_hdus(fptr, &hdunum, &status);
@@ -60,6 +64,7 @@ public:
   }
   /// returns the current image / table number, starts with 1 not 0
   int get_current_hdu_num(){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int hdunum;
     fits_get_hdu_num(fptr,&hdunum);
     return hdunum;
@@ -73,7 +78,10 @@ public:
     }
     int hdutype;
     int status = 0;
-    fits_movabs_hdu(fptr,i,&hdutype,&status);
+    {
+      std::lock_guard<std::mutex> hold(mutex_lock);
+      fits_movabs_hdu(fptr,i,&hdutype,&status);
+    }
     check_status(status);
     reset_imageInfo();
  
@@ -81,6 +89,7 @@ public:
   }
   
   int get_current_hdu_type(bool verbose=false){
+
     int hdutype,status = 0;
     fits_get_hdu_type(fptr,&hdutype,&status);
     check_status(status);
@@ -119,7 +128,8 @@ public:
    DOUBLE_IMG    = -64   (64-bit floating point pixels)
    */
   void reset_imageInfo(){
-    
+    std::lock_guard<std::mutex> hold(mutex_lock);
+
     int status = 0;
     fits_get_img_type(fptr,&bitpix,&status);
     check_status(status);
@@ -138,32 +148,38 @@ public:
 
   /// number of keywords for current table, returns != 0 if keyname is not found
   int nkyewords(){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int keysexist,status=0;
     return fits_get_hdrspace(fptr,&keysexist,NULL,&status);
   }
   
   /// read a key value for the current table / image, returns 0 if the key word does not exit
   int readKey(std::string keyname,double &value){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     return fits_read_key(fptr,TDOUBLE,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string keyname,float &value){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     return fits_read_key(fptr,TFLOAT,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string keyname,int &value){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     return fits_read_key(fptr,TINT,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string keyname,size_t &value){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     return fits_read_key(fptr,TULONG,keyname.c_str(),
                          &value,NULL,&status);
   }
   int readKey(std::string keyname,long &value){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     return fits_read_key(fptr,TLONG,keyname.c_str(),
                          &value,NULL,&status);
@@ -184,13 +200,13 @@ private:
   
 public:
   CPFITS_READ(std::string filename,bool verbose = false) {
+
     int status = 0;
     //fits_open_file(&fptr,filename.c_str(), READONLY, &status);
     fits_open_image(&fptr,filename.c_str(), READONLY, &status);
        //    print any error messages
     check_status(status,"Problem with input fits file.");
     reset_imageInfo();
-
     
     if(verbose){
       std::cout << "Opening file : " << filename << std::endl;
@@ -212,6 +228,7 @@ public:
   
   /// close old and reopen a new file
   void reset(std::string filename){
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     fits_close_file(fptr, &status);
     check_status(status);
@@ -230,6 +247,7 @@ public:
     std::vector<long> start(size.size(),1);
 
     output.resize(nelements);
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     return fits_read_pix(fptr,TDOUBLE,start.data(),nelements
                          ,NULL,output.data(),NULL, &status);
@@ -245,6 +263,7 @@ public:
     output.resize(nelements);
     
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_read_pix(fptr,TFLOAT,start.data(),nelements
                          ,NULL,output.data(),NULL, &status);
   }
@@ -260,6 +279,7 @@ public:
     output.resize(nelements);
     
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_read_pix(fptr,TFLOAT,start.data(),nelements
                          ,NULL,&output[0],NULL, &status);
   }
@@ -274,6 +294,7 @@ public:
     output.resize(nelements);
     
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int error = fits_read_pix(fptr,TDOUBLE,start.data(),nelements
                             ,NULL,&output[0],NULL, &status);
     check_status(status,"PixMap Read Failure");
@@ -284,11 +305,13 @@ public:
   /// read nelements in order from image to output array
   int read_block(double *output,long nelements,long * start){
     int status =0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_read_pix(fptr,TDOUBLE,start,nelements
                          ,NULL,output,NULL, &status);
   }
   int read_block(float *output,long nelements,long * start){
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_read_pix(fptr,TFLOAT,start,nelements
                          ,NULL,output,NULL, &status);
   }
@@ -298,6 +321,7 @@ public:
   int read_subset(double *output,long *lowerleft,long *upperright){
     long inc[2] = {1,1};  // this is a step
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_read_subset(fptr,TDOUBLE,lowerleft,upperright,inc
                             ,NULL,output,NULL,&status);
   }
@@ -305,6 +329,7 @@ public:
   int read_subset(float *output,long *lowerleft,long *upperright){
     long inc[2] = {1,1};  // this is a step
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_read_subset(fptr,TFLOAT,lowerleft,upperright,inc
                             ,NULL,output,NULL,&status);
   }
@@ -356,6 +381,7 @@ public:
     for(size_t i : size) n *= i;
     assert(im.size() == n);
     int status=0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     fits_create_img(fptr,DOUBLE_IMG,size.size(),
                     size.data(), &status);
     check_status(status);
@@ -369,6 +395,7 @@ public:
     for(size_t i : size) n *= i;
     assert(im.size() == n);
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     fits_create_img(fptr,FLOAT_IMG,size.size(),
                     size.data(), &status);
     check_status(status);
@@ -382,6 +409,7 @@ public:
     for(size_t i : size) n *= i;
     assert(im.size() == n);
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     fits_create_img(fptr,DOUBLE_IMG,size.size(),
                     size.data(), &status);
     check_status(status);
@@ -397,6 +425,7 @@ public:
     for(size_t i : size) n *= i;
     assert(im.size() == n);
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     fits_create_img(fptr,FLOAT_IMG,size.size(),
                     size.data(), &status);
     check_status(status);
@@ -410,6 +439,7 @@ public:
   int writeKey(std::string key,std::string value,std::string comment ){
     int status = 0;
     char *s = strdup(value.c_str());
+    std::lock_guard<std::mutex> hold(mutex_lock);
     int error = fits_write_key(fptr,TSTRING,key.c_str(),
                            s,comment.c_str(),&status);
     delete[] s;
@@ -417,26 +447,31 @@ public:
   }
   int writeKey(std::string key,double value,std::string comment ){
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_update_key(fptr,TDOUBLE,key.c_str(),
                            &value,comment.c_str(),&status);
   }
   int writeKey(std::string key,float value,std::string comment ){
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_update_key(fptr,TFLOAT,key.c_str(),
                            &value,comment.c_str(),&status);
   }
   int writeKey(std::string key,int value,std::string comment ){
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_update_key(fptr,TINT,key.c_str(),
                            &value,comment.c_str(),&status);
   }
   int writeKey(std::string key,long value,std::string comment ){
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_update_key(fptr,TLONG,key.c_str(),
                            &value,comment.c_str(),&status);
   }
   int writeKey(std::string key,size_t value,std::string comment ){
     int status = 0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
     return fits_update_key(fptr,TULONG,key.c_str(),
                            &value,comment.c_str(),&status);
   }

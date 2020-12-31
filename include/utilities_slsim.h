@@ -1714,6 +1714,7 @@ size_t ReadCSVrange(std::string filename                              /// file n
         for(int j=0 ; j < columns ; ++j){
           ranges[j][0] = tmp_row[j];
           ranges[j][1] = tmp_row[j];
+
         }
       }else{
         for(int j=0 ; j < columns ; ++j){

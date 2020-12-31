@@ -100,6 +100,7 @@ public:
   
   /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
   void setDist(COSMOLOGY &co){Dist = co.angDist(zlens);}
+
   /// return current angular size distance, ie conversion between angular and special coordinates.  This may not agree with
   /// the getZ() value because of the projection onto the lens plane.
   PosType getDist() const {return Dist;}

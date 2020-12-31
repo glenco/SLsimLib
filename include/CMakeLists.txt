@@ -56,4 +56,5 @@ add_sources(
 	cpfits.h
 	quadTreeHalos.h
 	powell.h
+	slicer.h
 )
