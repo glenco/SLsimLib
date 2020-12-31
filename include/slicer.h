@@ -7,15 +7,31 @@
 
 #ifndef slicer_h
 #define slicer_h
-
-template <typename V,typename P,typename R>
+/**
+ This is a slice sampler that can be used to do a markov chain without repeated entries in the chain.
+ 
+ types;  V is usuatly a std::vector<float> or  std::vector<double>
+      L is the functor type used for the likelihood function, this functure should
+                have a opertor()(V p) that will return the log of the likeliwood
+          
+ */
+template <typename V,typename L,typename R>
 class Slicer{
 public:
-  Slicer(int Dim,double scale,int kmax = 10):
+  Slicer(int Dim       /// number of parameters
+         ,double scale  /// initial stepsize in parameter space
+          ,int kmax = 10  ///  maximuma number of attempts made in each step
+         ):
   w(scale),Kmax(kmax),dim(Dim){
   }
 
-  void run(P &lnprob,std::vector<V> &chain,V xo,R &ran){
+ /// run the MC chain
+  void run(L &lnprob               /// log likelihood function or funtor
+           ,std::vector<V> &chain  /// will contain the MC chain on return. should be initialized to the desired length
+           ,V xo                   /// initial point in parameter space
+           ,R &ran                 /// rendom number generator
+           ,int step_type /// 0 step_out, !=0 step_double
+           ){
     int n = chain.size();
     int k = 0;
     if(lnprob(xo) <= -1.0e6){
@@ -26,8 +42,8 @@ public:
     chain[0] = xo;
     for(int i=1;i<n;++i){
       chain[i] = chain[i-1];
-      //step_double(chain[i],lnprob,k,ran);
-      step_out(chain[i],lnprob,k,ran);
+      if(step_type) step_double(chain[i],lnprob,k,ran);
+      else step_out(chain[i],lnprob,k,ran);
       k = (k+1)%dim;
     }
   }
@@ -37,7 +53,7 @@ public:
   int Kmax;
   int dim;
   
-  void step_double(V &x,P &lnprob,int i,R &ran){
+  void step_double(V &x,L &lnprob,int i,R &ran){
     //double y = prob(x) * ran();
     double y = lnprob(x) + log(ran());
   
@@ -75,7 +91,7 @@ public:
     swap(x,x_new);
   }
 
-  void step_out(V &x,P &lnprob,int i,R &ran){
+  void step_out(V &x,L &lnprob,int i,R &ran){
      //double y = prob(x) * ran();
     
     double y = lnprob(x) + log(ran());
@@ -117,7 +133,7 @@ public:
 
 private:
   
-  bool accept(double y,V &xo,V &x1,int i,P &lnprob){
+  bool accept(double y,V &xo,V &x1,int i,L &lnprob){
     ll = xl;
     rr = xr;
     bool D = false;
