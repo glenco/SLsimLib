@@ -824,7 +824,7 @@ public:
       int ncol = column_index.size();
       long nrow = cpfits.rows();
       
-      if(unary_accept.size() != index_unary.size() ) throw std::invalid_argument("index_unar wrong sized ");
+      if(unary_accept.size() != index_unary.size() ) throw std::invalid_argument("index_unary wrong sized ");
  
       if(add){
         n0=1;

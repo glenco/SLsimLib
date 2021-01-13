@@ -650,11 +650,11 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
     }
 
     double res_in_arcsec = resolution / arcsecTOradians ;
-    double back_mean = background_flux*res_in_arcsec*res_in_arcsec*exp_time;
+    double back_mean = background_flux * res_in_arcsec*res_in_arcsec * exp_time ;
 
     double rms = sqrt(exp_num*ron*ron + back_mean) / exp_time;
-    if (unit==flux) rms *= e_per_s_to_ergs_s_cm2 / hplanck;
-
+    if (unit==flux) rms /= e_per_s_to_ergs_s_cm2 * hplanck;
+  
     return rms;
 }
 
