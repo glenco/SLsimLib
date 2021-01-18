@@ -810,6 +810,8 @@ public:
   
         }
       }
+      
+      return 1;
     };
     
     size_t read(

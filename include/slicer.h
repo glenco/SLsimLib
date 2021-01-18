@@ -32,13 +32,12 @@ public:
            ,R &ran                 /// rendom number generator
            ,int step_type /// 0 step_out, !=0 step_double
            ){
-    int n = chain.size();
-    int k = 0;
-    if(lnprob(xo) <= -1.0e6){
+     if(lnprob(xo) <= -1.0e6){
       std::cerr << "Slicer: Initial point has 0 probability" << std::endl;
       throw std::runtime_error("bad point");
     }
-    
+    int n = chain.size();
+    int k = 0;
     chain[0] = xo;
     for(int i=1;i<n;++i){
       chain[i] = chain[i-1];
