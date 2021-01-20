@@ -529,7 +529,7 @@ public:
       std::cout << "Opening file : " << filename << std::endl;
       std::cout << Ncol << " columns" << std::endl;
       std::cout << Nrow << " rows" << std::endl;
-     }
+    }
   }
   
   ~CPFITS_READ_TABLES(){
@@ -743,7 +743,8 @@ public:
     std::vector<std::string> get_all_columnnames(){return all_column_names;}
     std::vector<std::string> get_used_columnnames(){return all_column_names;}
     
-    void reset(){
+    // clear data
+    void clear(){
       n0=1;
       int ncol=data.size();
       for(int i=0; i<ncol ; ++i){
@@ -879,9 +880,10 @@ public:
     }
 
     /// read the next maxsize rows.  This will errase the rows already read
-    int read(long maxsize){
+    int read(long maxsize=-1){
       int ncol = column_index.size();
       long nrow = cpfits.rows();
+      if(maxsize==-1) maxsize = nrow;
       
       long chunksize = nrow-n0+1;
       chunksize = MIN(maxsize,chunksize);
@@ -890,6 +892,8 @@ public:
         cpfits.read_column(column_index[i],n0,chunksize,data[i]);
       }
       n0 += chunksize;
+      
+      return 1;
     }
 
     /// Find the ranges for each used column
@@ -958,7 +962,7 @@ public:
       size_t N = index.size();
       for(size_t i=0 ; i<N ; ++i) index[i] = i;
       
-      sort_indexes(data[datamap[name]],index);
+      Utilities::sort_indexes(data[datamap[name]],index);
       std::vector<T> tmp_v(N);
       
       for(size_t j=0 ; j<data.size() ; ++j){
