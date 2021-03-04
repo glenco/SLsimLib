@@ -19,10 +19,11 @@ template <typename V,typename L,typename R>
 class Slicer{
 public:
   Slicer(int Dim       /// number of parameters
-         ,double scale  /// initial stepsize in parameter space
-          ,int kmax = 10  ///  maximuma number of attempts made in each step
+         ,const V &scale  /// initial stepsize in parameter space
+         ,int kmax = 10  ///  maximuma number of attempts made in each step
          ):
   w(scale),Kmax(kmax),dim(Dim){
+    assert(scale.size()>=Dim);
   }
 
  /// run the MC chain
@@ -31,43 +32,52 @@ public:
            ,V xo                   /// initial point in parameter space
            ,R &ran                 /// rendom number generator
            ,int step_type /// 0 step_out, !=0 step_double
+           ,bool verbose=false
            ){
-     if(lnprob(xo) <= -1.0e6){
+    if(lnprob(xo) <= -1.0e20){
       std::cerr << "Slicer: Initial point has 0 probability" << std::endl;
       throw std::runtime_error("bad point");
     }
     int n = chain.size();
     int k = 0;
     chain[0] = xo;
+    if(verbose) std::cout << std::endl;
     for(int i=1;i<n;++i){
       chain[i] = chain[i-1];
       if(step_type) step_double(chain[i],lnprob,k,ran);
       else step_out(chain[i],lnprob,k,ran);
       k = (k+1)%dim;
+      if(verbose) std::cout << i << "  " << chain[i] << std::endl;
     }
   }
   
   V xl,xr,ll,rr,lshrink,rshrink,x_new;
-  double w;
-  int Kmax;
-  int dim;
+  const V w;
+  const int Kmax;
+  const int dim;
   
   void step_double(V &x,L &lnprob,int i,R &ran){
     //double y = prob(x) * ran();
     double y = lnprob(x) + log(ran());
   
+    assert(!isnan(y));
     // find range
     int k = Kmax;
     
-    xl = x; xl[i] = x[i] - w * ran();;
-    xr = x; xr[i] = xl[i] + w;
+    xl = x; xl[i] = x[i] - w[i] * ran();;
+    xr = x; xr[i] = xl[i] + w[i];
     
-    while( k > 0 && ( y < lnprob(xl) || y < lnprob(xr) )){
+    double lprob = lnprob(xl);
+    double rprob = lnprob(xr);
+ 
+    while( k > 0 && ( y < lprob || y < rprob )){
       double u = ran();
       if(u<0.5){
         xl[i] = 2*xl[i] - xr[i];
+        lprob = lnprob(xl);
       }else{
         xr[i] = 2*xr[i] - xl[i];
+        rprob = lnprob(xr);
       }
       --k;
     }
@@ -98,17 +108,17 @@ public:
      // find range
     xl = xr = x;
     
-    xl[i] = x[i] - w * ran();;
-    xr[i] = xl[i] + w;
+    xl[i] = x[i] - w[i] * ran();;
+    xr[i] = xl[i] + w[i];
     int j = floor(Kmax*ran());
     int k = Kmax - 1 - j;
     
     while( j > 0 && y < lnprob(xl)){
-      xl[i] = xl[i] - w;
+      xl[i] = xl[i] - w[i];
       --j;
     }
     while( k > 0 && y < lnprob(xr)){
-      xr[i] = xr[i] + w;
+      xr[i] = xr[i] + w[i];
       --k;
     }
      
@@ -132,21 +142,27 @@ public:
 
 private:
   
-  bool accept(double y,V &xo,V &x1,int i,L &lnprob){
+  bool accept(const double y,V &xo,V &x1,int i,L &lnprob){
     ll = xl;
     rr = xr;
     bool D = false;
-    while(rr[i] - ll[i] > 1.1 * w){
+    
+    double lprob = lnprob(ll);
+    double rprob = lnprob(rr);
+
+    while( (rr[i] - ll[i]) > 1.1 * w[i]){
       double m = (ll[i]+rr[i])/2;
       if( (xo[i] < m)*(x1[i] >= m) ||
           (xo[i] >= m)*(x1[i] < m) ) D = true;
       
       if(x_new[i] < m ){
         rr[i] = m;
+        rprob = lnprob(rr);
       }else{
         ll[i] = m;
+        lprob = lnprob(ll);
       }
-      if(D && y >= lnprob(ll) && y >= lnprob(rr) ) return false;
+      if(D && y >= lprob && y >= rprob ) return false;
     }
     return true;
   }
