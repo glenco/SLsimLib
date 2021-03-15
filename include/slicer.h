@@ -51,6 +51,7 @@ public:
     }
   }
   
+private:
   V xl,xr,ll,rr,lshrink,rshrink,x_new;
   const V w;
   const int Kmax;
@@ -139,8 +140,6 @@ public:
      
     swap(x,x_new);
    }
-
-private:
   
   bool accept(const double y,V &xo,V &x1,int i,L &lnprob){
     ll = xl;

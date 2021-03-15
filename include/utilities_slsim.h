@@ -163,6 +163,41 @@ private:
   T *array;
 };
 
+/** \brief Symetric matrix
+ 
+ This is a class to represent symmetric maticies so that they can be accessed as
+ normal but takes up n(n+1)/2 in memory.
+ */
+template <typename T>
+class SymmetricMatrix{
+  std::vector<T> v;
+  int n;
+  int m;
+public:
+  SymmetricMatrix(size_t n):n(n){
+    v.resize(n*(n+1)/2);
+    m = 2*n-1;
+  }
+  T& operator()(int i,int j){
+    //long k = j + (2*n-1-i)*i/2 ;
+    //size_t k = (i <= j ) ? j + (2*n-1-i)*i/2 : i + (2*n-1-j)*j/2;
+    size_t k = (i <= j ) ? j + (m-i)*i/2 : i + (m-j)*j/2;
+    //assert(k>=0);
+    //assert(k < v.size());
+    return v[ k ];
+  }
+  T& operator[](size_t k){
+    return v[ k ];
+  }
+  
+  int size(){return n;}
+  
+  /// convertion from 2d to 1d index
+  size_t oned_index(int i,int j){
+    size_t k = (i <= j ) ? j + (m-i)*i/2 : i + (m-j)*j/2;
+  }
+};
+
 
 /** \brief A container that can hold mixed objects all derived from
  * a base class and retains the ability to access derived class functions/members.
