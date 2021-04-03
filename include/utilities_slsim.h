@@ -1548,7 +1548,7 @@ void ReadASCII(std::vector<T> &data
  number of columns and rows are returned.  The entries will be stored at data[column][row].
  
  Comments must only be before the data.  There must be a line with the
- column lines after the comments and before the data.
+ column names after the comments and before the data.
  
  This function is not particularly fast for large amounts of data.  If the
  number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
@@ -1592,7 +1592,7 @@ int ReadCSVnumerical1(std::string filename                              /// file
   std::stringstream          lineStream(line);
   std::string                cell;
   column_names.empty();
-  while(std::getline(lineStream,cell, ','))
+  while(std::getline(lineStream,cell, deliniator))
   {
     column_names.push_back(cell);
   }
