@@ -22,7 +22,7 @@ public:
          ,const V &scale  /// initial stepsize in parameter space
          ,int kmax = 10  ///  maximuma number of attempts made in each step
          ):
-  w(scale),Kmax(kmax),dim(Dim){
+  w(scale),Kmax(kmax),dim(Dim),n_evals(0){
     assert(scale.size()>=Dim);
   }
 
@@ -38,6 +38,7 @@ public:
       std::cerr << "Slicer: Initial point has 0 probability" << std::endl;
       throw std::runtime_error("bad point");
     }
+    n_evals=0;
     int n = chain.size();
     int k = 0;
     chain[0] = xo;
@@ -47,9 +48,12 @@ public:
       if(step_type) step_double(chain[i],lnprob,k,ran);
       else step_out(chain[i],lnprob,k,ran);
       k = (k+1)%dim;
-      if(verbose) std::cout << i << "  " << chain[i] << std::endl;
+      if(verbose) std::cout << i << "  " << n_evals << "  " << chain[i] << std::endl;
     }
   }
+  
+  /// returns the number of evaluations of the posterior during the last run
+  size_t number_evaluations(){ return n_evals;}
   
 private:
   V xl,xr,ll,rr,lshrink,rshrink,x_new;
@@ -57,9 +61,11 @@ private:
   const int Kmax;
   const int dim;
   
+  size_t n_evals;
+  
   void step_double(V &x,L &lnprob,int i,R &ran){
     //double y = prob(x) * ran();
-    double y = lnprob(x) + log(ran());
+    double y = lnprob(x) + log(ran()); ++n_evals;
   
     assert(!isnan(y));
     // find range
@@ -68,17 +74,17 @@ private:
     xl = x; xl[i] = x[i] - w[i] * ran();;
     xr = x; xr[i] = xl[i] + w[i];
     
-    double lprob = lnprob(xl);
-    double rprob = lnprob(xr);
+    double lprob = lnprob(xl); ++n_evals;
+    double rprob = lnprob(xr); ++n_evals;
  
     while( k > 0 && ( y < lprob || y < rprob )){
       double u = ran();
       if(u<0.5){
         xl[i] = 2*xl[i] - xr[i];
-        lprob = lnprob(xl);
+        lprob = lnprob(xl); ++n_evals;
       }else{
         xr[i] = 2*xr[i] - xl[i];
-        rprob = lnprob(xr);
+        rprob = lnprob(xr); ++n_evals;
       }
       --k;
     }
@@ -90,6 +96,7 @@ private:
     
     for(;;){
       x_new[i] = lshrink[i] + ran()*( rshrink[i] - lshrink[i] );
+      ++n_evals;
       if( y < lnprob(x_new) && accept(y,x,x_new,i,lnprob)) break;
       if(x_new[i] < x[i]){
         lshrink[i] = x_new[i];
@@ -104,7 +111,7 @@ private:
   void step_out(V &x,L &lnprob,int i,R &ran){
      //double y = prob(x) * ran();
     
-    double y = lnprob(x) + log(ran());
+    double y = lnprob(x) + log(ran()); ++n_evals;
    
      // find range
     xl = xr = x;
@@ -115,10 +122,12 @@ private:
     int k = Kmax - 1 - j;
     
     while( j > 0 && y < lnprob(xl)){
+      ++n_evals;
       xl[i] = xl[i] - w[i];
       --j;
     }
     while( k > 0 && y < lnprob(xr)){
+      ++n_evals;
       xr[i] = xr[i] + w[i];
       --k;
     }
@@ -130,6 +139,7 @@ private:
      
     for(;;){
       x_new[i] = lshrink[i] + ran()*( rshrink[i] - lshrink[i] );
+      ++n_evals;
       if( y < lnprob(x_new) ) break;
       if(x_new[i] < x[i]){
         lshrink[i] = x_new[i];
@@ -146,8 +156,8 @@ private:
     rr = xr;
     bool D = false;
     
-    double lprob = lnprob(ll);
-    double rprob = lnprob(rr);
+    double lprob = lnprob(ll); ++n_evals;
+    double rprob = lnprob(rr); ++n_evals;
 
     while( (rr[i] - ll[i]) > 1.1 * w[i]){
       double m = (ll[i]+rr[i])/2;
@@ -156,10 +166,10 @@ private:
       
       if(x_new[i] < m ){
         rr[i] = m;
-        rprob = lnprob(rr);
+        rprob = lnprob(rr); ++n_evals;
       }else{
         ll[i] = m;
-        lprob = lnprob(ll);
+        lprob = lnprob(ll); ++n_evals;
       }
       if(D && y >= lprob && y >= rprob ) return false;
     }
