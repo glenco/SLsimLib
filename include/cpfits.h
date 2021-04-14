@@ -390,7 +390,20 @@ public:
                           im.size(),im.data(),&status);
     check_status(status);
   }
-  void write_image(std::vector<float> &im,std::vector<long> &size){
+  void write_image(double *im,std::vector<long> &size){
+    size_t n=1;
+    for(size_t i : size) n *= i;
+    int status=0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
+    fits_create_img(fptr,DOUBLE_IMG,size.size(),
+                    size.data(), &status);
+    check_status(status);
+    std::vector<long> fpixel(size.size(),1);
+    fits_write_pix(fptr,TDOUBLE,fpixel.data(),
+                          n,im,&status);
+    check_status(status);
+  }
+ void write_image(std::vector<float> &im,std::vector<long> &size){
     size_t n=1;
     for(size_t i : size) n *= i;
     assert(im.size() == n);
@@ -402,6 +415,19 @@ public:
     std::vector<long> fpixel(size.size(),1);
     fits_write_pix(fptr,TFLOAT,fpixel.data(),
                           im.size(),im.data(),&status);
+    check_status(status);
+  }
+  void write_image(float *im,std::vector<long> &size){
+    size_t n=1;
+    for(size_t i : size) n *= i;
+    int status=0;
+    std::lock_guard<std::mutex> hold(mutex_lock);
+    fits_create_img(fptr,FLOAT_IMG,size.size(),
+                    size.data(), &status);
+    check_status(status);
+    std::vector<long> fpixel(size.size(),1);
+    fits_write_pix(fptr,TFLOAT,fpixel.data(),
+                          n,im,&status);
     check_status(status);
   }
   void write_image(std::valarray<double> &im,std::vector<long> &size){
@@ -681,14 +707,15 @@ public:
     
       int status = 0,anyval=0;
     long i, n, nread, ntodo, nrest;
-    int buffer_size = 20000;
+    long buffer_size = 20000;
     std::vector<float> fitscol(buffer_size);
     
     for(int col = 1 ; col != ncol ; ++col){
       nread = 0;
       nrest = n;
       while (nrest) {
-       ntodo = MIN(nrest,buffer_size);
+        //ntodo = MIN(nrest,buffer_size);
+        ntodo = (nrest < buffer_size) ? nrest : buffer_size;
        fits_read_col_flt(fptr, col, nread + 1, 1, ntodo, 0,
                              fitscol.data(),&anyval, &status);
        for (i = 0; i < ntodo; i++) data[i + nread][col-1] = fitscol[i];
@@ -886,7 +913,8 @@ public:
       if(maxsize==-1) maxsize = nrow;
       
       long chunksize = nrow-n0+1;
-      chunksize = MIN(maxsize,chunksize);
+      //chunksize = MIN(maxsize,chunksize);
+      chunksize = (maxsize < chunksize) ? maxsize : chunksize;
       
       for(int i=0 ; i< ncol ; ++i){
         cpfits.read_column(column_index[i],n0,chunksize,data[i]);
@@ -918,7 +946,10 @@ public:
       
       long n=2;
       while(n < nrow){
-        chunksize = MIN(nrow-n+1,chunksize);
+
+        //chunksize = MIN(nrow-n+1,chunksize);
+        chunksize = (nrow-n+1 < chunksize) ? nrow-n+1 : chunksize;
+
       
         for(int i=0 ; i< ncol ; ++i){
           cpfits.read_column(column_index[i],n,chunksize,tdata);
