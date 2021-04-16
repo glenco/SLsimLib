@@ -177,5 +177,64 @@ private:
   }
 };
 
+template <typename V,typename L,typename R>
+class SimpleMH_MCMC{
+public:
+  SimpleMH_MCMC(int Dim       /// number of parameters
+         ,const V &scale  /// initial stepsize in parameter space
+         ):
+  w(scale),dim(Dim),n_evals(0){
+    assert(scale.size()>=Dim);
+  }
+  
+  /// run the MC chain
+   void run(L &lnprob               /// log likelihood function or funtor
+            ,std::vector<V> &chain  /// will contain the MC chain on return. should be initialized to the desired length
+            ,V xo                   /// initial point in parameter space
+            ,R &ran                 /// rendom number generator
+            ,bool cyclic = true     /// if true it cycles thruogh the parameters one at a time
+            ,bool verbose=false
+            ){
+     
+     double lnp = lnprob(xo);
+     n_evals=0;
+     int n = chain.size();
+     chain[0] = xo;
+     if(verbose) std::cout << std::endl;
+     
+     int k=0;
+     for(int i=1;i<n;++i){
+       chain[i] = chain[i-1];
+     
+       if(cyclic){
+         chain[i][k] += w[k]*ran.gauss();
+         k = (k+1) % dim;
+       }else{
+         for(int j=0;j<dim;++j){
+           chain[i][j] += w[j]*ran.gauss();
+         }
+       }
+       double lnp2 = lnprob(chain[i]);
+     
+       if( lnp2 <= lnp && exp(lnp2 - lnp) < ran() ){
+         chain[i] = chain[i-1];
+       }else{
+         lnp = lnp2;
+         ++n_evals;
+       }
+       if(verbose) std::cout << i << "  " << n_evals << "  " << chain[i] << std::endl;
+     }
+   }
+  
+  /// returns the number of evaluations of the posterior during the last run
+  size_t number_evaluations(){ return n_evals;}
+  
+private:
+ 
+  const V w;
+  const int dim;
+  
+  size_t n_evals;
 
+};
 #endif /* slicer_h */
