@@ -17,9 +17,15 @@
 #define cpfits_h
 
 #include <string.h>
+#include <iostream>
 #include <stdio.h>
+#include <valarray>
+#include <map>
 #include "fitsio.h"
 #include <mutex>
+
+#include <Tree.h>
+
 
 class CPFITS_BASE{
   
