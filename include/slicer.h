@@ -179,12 +179,30 @@ private:
 
 template <typename V,typename L,typename R>
 class SimpleMH_MCMC{
+private:
+ 
+  const V w;
+  int dim;
+  
+  size_t n_evals;
+  std::vector<int> active;
+  
 public:
   SimpleMH_MCMC(int Dim       /// number of parameters
          ,const V &scale  /// initial stepsize in parameter space
+         ,std::vector<int> active_parameters  = {} /// active variable, empty does first ones
          ):
-  w(scale),dim(Dim),n_evals(0){
-    assert(scale.size()>=Dim);
+  w(scale),dim(Dim),n_evals(0),active(active_parameters)
+  {
+    
+    if(active.size() == 0){
+      for(int i ; i<dim ; ++i) active.push_back(i);
+    }else{
+      if(dim > active.size()) dim = active.size();
+    }
+    
+    assert(scale.size() >= dim);
+    assert(active.size() >= dim);
   }
   
   /// run the MC chain
@@ -207,10 +225,12 @@ public:
        chain[i] = chain[i-1];
      
        if(cyclic){
-         chain[i][k] += w[k]*ran.gauss();
+         int j = active[k];
+         chain[i][j] += w[j]*ran.gauss();
          k = (k+1) % dim;
        }else{
          for(int j=0;j<dim;++j){
+           k = active[k];
            chain[i][j] += w[j]*ran.gauss();
          }
        }
@@ -275,12 +295,5 @@ public:
   /// returns the number of evaluations of the posterior during the last run
   size_t number_evaluations(){ return n_evals;}
   
-private:
- 
-  const V w;
-  const int dim;
-  
-  size_t n_evals;
-
 };
 #endif /* slicer_h */
