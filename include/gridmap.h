@@ -87,6 +87,7 @@ struct GridMap{
 
   /// flux weighted magnification with current surface brightness averaged on the image plane
   PosType magnification() const;
+  PosType magnification2() const;
   /// returns centroid of flux on the grid
   Point_2d centroid() const;
   

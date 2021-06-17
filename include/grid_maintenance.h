@@ -138,7 +138,8 @@ struct Grid{
   }
   
   /// flux weighted magnification
-    PosType magnification() const;
+  PosType magnification() const;
+  PosType magnification2() const;
    /// centroid of flux
     Point_2d centroid() const;
   

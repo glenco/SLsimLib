@@ -356,7 +356,7 @@ PosType Grid::EinsteinArea() const {
   return total;
 }
 
-PosType Grid::magnification() const{
+PosType Grid::magnification2() const{
   double mag = 0,flux = 0;
   
   PointList::iterator it;
@@ -371,6 +371,24 @@ PosType Grid::magnification() const{
     }
   }
 
+  return flux/mag;
+}
+
+PosType Grid::magnification() const{
+  double mag = 0,flux = 0;
+  
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+    assert(f >= 0);
+    if(f > 0){
+      mag += f*fabs((*it)->invmag);
+      flux += f;
+    }
+  }
+  
   return flux/mag;
 }
 
