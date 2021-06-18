@@ -140,8 +140,9 @@ struct Grid{
   /// flux weighted magnification
   PosType magnification() const;
   PosType magnification2() const;
-   /// centroid of flux
-    Point_2d centroid() const;
+  PosType magnification3() const;
+ /// centroid of flux
+  Point_2d centroid() const;
   
   private:
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
@@ -162,6 +163,8 @@ struct Grid{
   
   bool uniform_mag_from_deflect(double *a,Point *point);
   bool uniform_mag_from_shooter(double *a,Point *point);
+  
+  double mag_from_deflect(Point *point) const;
   
   unsigned long pointID;
   PosType axisratio;
