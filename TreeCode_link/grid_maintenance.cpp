@@ -384,8 +384,13 @@ PosType Grid::magnification() const{
     double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
     assert(f >= 0);
     if(f > 0){
-      mag += f*fabs((*it)->invmag);
-      flux += f;
+      if((*it)->invmag <= 1.0){
+        mag += f*fabs((*it)->invmag);
+        flux += f;
+      }else{
+        mag += f;
+        flux += f/fabs((*it)->invmag);
+      }
     }
   }
   
