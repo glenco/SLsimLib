@@ -125,6 +125,7 @@ public:
   
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
   void FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors) const;
+  void FindAllBoxNeighborsKist(Point *point,std::vector<Point *> &neighbors) const;
   void PointsWithinEllipKist(const PosType* center,float rmax,float rmin,float posangle,Kist<Point> * neighborkist) const;
   PosType PointsWithinKist(const PosType* center,PosType rmax,Kist<Point> * neighborkist,short markpoints) const;
   void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist) const;
