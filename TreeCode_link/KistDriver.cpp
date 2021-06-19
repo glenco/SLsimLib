@@ -107,6 +107,25 @@ void TreeStruct::FindAllBoxNeighborsKist(Point *point,Kist<Point> * neighbors) c
 // *************************************************/
 	return;
 }
+/**
+ *
+ * \brief Finds all the leaves that are neighboring a point.
+*
+* Points outside of grid have no box neighbors
+* Warning: Does not take empty leaves into account.
+*/
+void TreeStruct::FindAllBoxNeighborsKist(Point *point,std::vector<Point *> &neighbors) const{
+  neighbors.resize(0);
+
+  for(std::list<Branch *>::iterator it = point->leaf->neighbors.begin();
+      it != point->leaf->neighbors.end() ; ++it){
+    assert((*it)->npoints <= 1);
+
+    if((*it)->npoints == 1) neighbors.push_back((*it)->points);
+  }
+
+  return;
+}
 /**  
  * A recessive function that was used in FindAllBoxNeighborsKist().
 *    It has been known to cause stack overflow. Use _FindAllBoxNeighborsKist_iter instead.

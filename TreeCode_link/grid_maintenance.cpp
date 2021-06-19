@@ -976,35 +976,42 @@ bool Grid::uniform_mag_from_deflect(
 
 double Grid::mag_from_deflect(Point *point       /// point to be tested
 ) const {
-  
-  Point *point2,*point1;
-  int count=0;
-  
+ 
+  std::vector<Point *> neighbors;
   i_tree->FindAllBoxNeighborsKist(point,neighbors);
-  neighbors->MoveToTop();
-  int i=0;
-  std::vector<Point *> points(neighbors->Nunits()-1);
-  do{
-    points[i++] = neighbors->getCurrent();
-  }while(neighbors->Down());
-  
+ 
   Point_2d i_center = *point;
-  std::sort(points.begin(),points.end()
+  std::sort(neighbors.begin(),neighbors.end()
             ,[&i_center](Point *p1,Point *p2){return atan2((*p1)[1]-i_center[1],(*p1)[0]-i_center[0]) < atan2((*p2)[1]-i_center[1],(*p2)[0]-i_center[0]);});
  
   Point_2d s_center = *(point->image);
  
-  double image_area = 0,source_area = 0;
-  int n=points.size();
+  double image_area = 0;
+  int n=neighbors.size();
   for(int i=1 ; i < n ; ++i){
-    image_area += fabs( ( *(points[i-1]) - i_center)^( *(points[i]) - i_center) ) / 2;
-    source_area += fabs( ( *(points[i-1]->image) - s_center)^( *(points[i]->image) - s_center) ) / 2;
+    image_area += ( ( *(neighbors[i-1]) - i_center)^( *(neighbors[i]) - i_center) ) / 2;
   }
+  image_area += ( ( *(neighbors.back()) - i_center)^( *(neighbors[0]) - i_center) ) / 2;
+ 
+  // switch to source plane
+  for(Point *p : neighbors) p = p->image;
   
-  image_area += fabs( ( *(points.back()) - i_center)^( *(points[0]) - i_center) ) / 2;
-  source_area += fabs( ( *(points.back()->image) - s_center)^( *(points[0]->image) - s_center) ) / 2;
-  
-  return image_area / source_area;
+  std::sort(neighbors.begin(),neighbors.end()
+            ,[&s_center](Point *p1,Point *p2){return atan2((*p1)[1]-s_center[1],(*p1)[0]-s_center[0]) < atan2((*p2)[1]-s_center[1],(*p2)[0]-s_center[0]);});
+ 
+  double source_area = 0;
+  int npos = 0;
+  for(int i=1 ; i < n ; ++i){
+    if(neighbors[i]->invmag * neighbors[i-1]->invmag > 0 ){
+      source_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+      ++npos;
+    }
+  }
+  if(neighbors.back()->invmag * neighbors[0]->invmag > 0 ){
+    source_area += ( ( *(neighbors.back()) - s_center)^( *(neighbors[0]) - s_center) ) / 2;
+  }
+ 
+  return fabs(image_area / source_area);
 }
 
 /** \brief Test if point is in a region of uniform magnification using the kappa and gamma calculated from the
