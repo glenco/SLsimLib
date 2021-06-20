@@ -289,7 +289,7 @@ void Grid::ReShoot(LensHndl lens){
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
  *
- * returns the sum of the surface brightnesses
+ * returns total flux
  */
 PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
@@ -306,7 +306,7 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
       tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
       (*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
       = tmp;
-      total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+      total += tmp*pow( (*s_tree_pointlist_it)->image->gridsize ,2);
       assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
       (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
       = NO;
@@ -356,25 +356,25 @@ PosType Grid::EinsteinArea() const {
   return total;
 }
 
-PosType Grid::magnification2() const{
-  double mag = 0,flux = 0;
-  
-  PointList::iterator it;
-  it = (i_tree->pointlist->Top());
-  size_t N = i_tree->pointlist->size();
-  for(unsigned long i=0 ; i < N ; ++i,--it){
-    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
-    assert(f >= 0);
-    if(f > 0){
-      mag += f;
-      flux += f/fabs((*it)->invmag);
-    }
-  }
+//PosType Grid::magnification2() const{
+//  double mag = 0,flux = 0;
+//
+//  PointList::iterator it;
+//  it = (i_tree->pointlist->Top());
+//  size_t N = i_tree->pointlist->size();
+//  for(unsigned long i=0 ; i < N ; ++i,--it){
+//    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+//    assert(f >= 0);
+//    if(f > 0){
+//      mag += f;
+//      flux += f/fabs((*it)->invmag);
+//    }
+//  }
+//
+//  return flux/mag;
+//}
 
-  return flux/mag;
-}
-
-PosType Grid::magnification3() const {
+PosType Grid::magnification() const {
   double mag = 0,flux = 0;
   
   PointList::iterator it;
@@ -393,23 +393,23 @@ PosType Grid::magnification3() const {
 }
 
 
-PosType Grid::magnification() const{
-  double mag = 0,flux = 0;
-  
-  PointList::iterator it;
-  it = (i_tree->pointlist->Top());
-  size_t N = i_tree->pointlist->size();
-  for(unsigned long i=0 ; i < N ; ++i,--it){
-    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
-    assert(f >= 0);
-    if(f > 0){
-      mag += f*fabs((*it)->invmag);
-      flux += f;
-    }
-  }
-  
-  return flux/mag;
-}
+//PosType Grid::magnification() const{
+//  double mag = 0,flux = 0;
+//
+//  PointList::iterator it;
+//  it = (i_tree->pointlist->Top());
+//  size_t N = i_tree->pointlist->size();
+//  for(unsigned long i=0 ; i < N ; ++i,--it){
+//    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+//    assert(f >= 0);
+//    if(f > 0){
+//      mag += f*fabs((*it)->invmag);
+//      flux += f;
+//    }
+//  }
+//
+//  return flux/mag;
+//}
 
 Point_2d Grid::centroid() const{
   double flux = 0;
