@@ -374,7 +374,7 @@ PosType Grid::magnification2() const{
   return flux/mag;
 }
 
-PosType Grid::magnification3() const{
+PosType Grid::magnification3() const {
   double mag = 0,flux = 0;
   
   PointList::iterator it;
@@ -384,8 +384,8 @@ PosType Grid::magnification3() const{
     double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
     assert(f >= 0);
     if(f > 0){
-      mag += f * mag_from_deflect((*it));
-      flux += f;
+      mag += f;
+      flux += f / mag_from_deflect((*it));
     }
   }
 
@@ -993,24 +993,46 @@ double Grid::mag_from_deflect(Point *point       /// point to be tested
   }
   image_area += ( ( *(neighbors.back()) - i_center)^( *(neighbors[0]) - i_center) ) / 2;
  
-  // switch to source plane
-  for(Point *p : neighbors) p = p->image;
+  assert(image_area > 0);
   
-  std::sort(neighbors.begin(),neighbors.end()
-            ,[&s_center](Point *p1,Point *p2){return atan2((*p1)[1]-s_center[1],(*p1)[0]-s_center[0]) < atan2((*p2)[1]-s_center[1],(*p2)[0]-s_center[0]);});
- 
-  double source_area = 0;
-  int npos = 0;
-  for(int i=1 ; i < n ; ++i){
-    if(neighbors[i]->invmag * neighbors[i-1]->invmag > 0 ){
-      source_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+  // switch to source plane
+  for(int i=0 ; i< n ; ++i) neighbors[i] = neighbors[i]->image;
+  
+  int npos=0,nneg=0;
+  for(int i=0 ; i< n ; ++i){
+    if(neighbors[i]->invmag >= 0){
       ++npos;
+    }else{
+      ++nneg;
     }
   }
-  if(neighbors.back()->invmag * neighbors[0]->invmag > 0 ){
+ 
+  double source_area = 0;
+  if(npos==0 || nneg==0){
+ 
+    for(int i=1 ; i < n ; ++i){
+        source_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+    }
     source_area += ( ( *(neighbors.back()) - s_center)^( *(neighbors[0]) - s_center) ) / 2;
+  }else{
+ 
+    double neg_area = 0,pos_area = 0;
+    
+    for(int i=1 ; i < n ; ++i){
+      if(neighbors[i]->invmag * neighbors[i-1]->invmag > 0 ){
+    
+        if(neighbors[i]->invmag > 0){
+          pos_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+        }else{
+          neg_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+        }
+      }
+    }
+    
+    source_area = fabs(neg_area) + fabs(pos_area);
   }
  
+  assert(source_area != 0);
   return fabs(image_area / source_area);
 }
 
