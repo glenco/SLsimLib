@@ -137,10 +137,10 @@ struct Grid{
     return *this;
   }
   
-  /// flux weighted magnification
+  /// flux weighted local magnification that does not take multiple imaging into effect
   PosType magnification() const;
-  PosType magnification2() const;
-  PosType magnification3() const;
+  //PosType magnification2() const;
+  //PosType magnification3() const;
  /// centroid of flux
   Point_2d centroid() const;
   
