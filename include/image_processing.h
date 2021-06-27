@@ -161,7 +161,7 @@ public:
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
-	void printFITS(std::string filename, bool verbose = false);
+	void printFITS(std::string filename,bool Xflip = false, bool verbose = false);
   void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
 
 	void smooth(double sigma);
