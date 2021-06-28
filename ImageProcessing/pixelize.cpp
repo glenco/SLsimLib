@@ -897,7 +897,7 @@ void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
   //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
-  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
   cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
