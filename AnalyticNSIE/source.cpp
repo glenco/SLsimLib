@@ -558,7 +558,7 @@ SourceShapelets::SourceShapelets(
   CPFITS_READ cpfits(shap_file.c_str());
   
   cpfits.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*PI;
+  source_r *= 0.03*arcsecTOradians;
   cpfits.readKey("DIM", n1);
   cpfits.readKey("ID", id);
   n2 = n1;
@@ -596,7 +596,8 @@ SourceShapelets::SourceShapelets(
   CPFITS_READ cpfits(shap_file.c_str());
   
   cpfits.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*PI;
+  source_r *= 0.03*arcsecTOradians;
+
   cpfits.readKey("SED_TYPE",sed_type);
   
   cpfits.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude

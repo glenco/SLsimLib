@@ -7,27 +7,44 @@
 #include "slsimlib.h"
 
 SourceSersic::SourceSersic()
-: Source(0,Point_2d(0,0),0)
+: SourceColored(0,0,Point_2d(0,0),0)
 {
   /// set to values that hopefully will cause an error if it is used
-  ReSet(1.0e10,1,0,0,-1,-1,0);
+  ReSet(1,0,0,-1,-1,0);
+  sed_type = 1;
 }
 
+//SourceSersic::SourceSersic(
+//	double my_mag            /// Total magnitude
+//	,double my_Reff          /// Bulge half light radius (arcs)
+//	,double my_PA            /// Position angle (radians)
+//	,double my_index         /// Sersic index
+//	,double my_q             /// axes ratio
+//	,double my_z             /// redshift
+//	,const double *my_theta  /// optional angular position on the sky
+//)
+//: Source(0,Point_2d(0,0),my_z)
+//{
+//  assert(my_Reff > 0);
+//  ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
+//}
+
 SourceSersic::SourceSersic(
-	double my_mag            /// Total magnitude
-	,double my_Reff          /// Bulge half light radius (arcs)
-	,double my_PA            /// Position angle (radians)
-	,double my_index         /// Sersic index
-	,double my_q             /// axes ratio
-	,double my_z             /// redshift
-	,const double *my_theta  /// optional angular position on the sky
-)
-: Source(0,Point_2d(0,0),my_z)
+              double my_mag            /// Total magnitude
+              ,double my_Reff          /// Bulge half light radius (arcs)
+              ,double my_PA            /// Position angle (radians)
+              ,double my_index         /// Sersic index
+              ,double my_q             /// axes ratio
+              ,double my_z             /// redshift
+        )
+: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z)
 {
-  assert(my_Reff > 0);
-  ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
+    sed_type = 1;
+    assert(my_Reff > 0);
+    ReSet(my_Reff,my_PA,my_index,my_q,my_z,0);
 }
-SourceSersic::SourceSersic(const SourceSersic &p):Source(p){
+
+SourceSersic::SourceSersic(const SourceSersic &p):SourceColored(p){
   
   Reff = p.Reff;
   mag = p.mag;
@@ -35,7 +52,7 @@ SourceSersic::SourceSersic(const SourceSersic &p):Source(p){
   index = p.index;
   bn = p.bn;
   q = p.q;
-  flux = p.flux;
+  //flux = p.flux;
   I_r = p.I_r;
   I_n = p.I_n;
   I_q = p.I_q;
@@ -45,14 +62,14 @@ SourceSersic::SourceSersic(const SourceSersic &p):Source(p){
 SourceSersic& SourceSersic::operator=(const SourceSersic &p){
   if(this == &p) return *this;
   
-  Source::operator=(p);
+  SourceColored::operator=(p);
   Reff = p.Reff;
   mag = p.mag;
   PA = p.PA;
   index = p.index;
   bn = p.bn;
   q = p.q;
-  flux = p.flux;
+  //flux = p.flux;
   I_r = p.I_r;
   I_n = p.I_n;
   I_q = p.I_q;
@@ -91,7 +108,6 @@ void SourceSersic::ReSet(
 
 SourceSersic::~SourceSersic()
 {
-  
 }
 
 PosType SourceSersic::SurfaceBrightness(
