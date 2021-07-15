@@ -122,7 +122,7 @@ PosType SourceSersic::SurfaceBrightness(
 
 	PosType r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
 
-	PosType sb = flux * I_n * I_q * I_r * exp(-bn*pow(r/Reff,1./index));
+	PosType sb = flux_total * I_n * I_q * I_r * exp(-bn*pow(r/Reff,1./index));
   
   if (sb < sb_limit) return 0.;
   assert(sb >= 0.0);

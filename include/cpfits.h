@@ -785,7 +785,7 @@ public:
   
   public:
     DataFrameFits(
-                  std::string datafile   /// input catalog file in csv format
+                  std::string datafile   /// input catalog file in fits format
                   ,std::vector<std::string> &columns
     ):filename(datafile),cpfits(filename,true),n0(1){
    
