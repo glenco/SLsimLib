@@ -31,8 +31,9 @@ enum PixelMapUnits {
   ,count_per_sec
   ,mass
   ,mass_density
-  
 };
+
+std::string to_string(PixelMapUnits unit);
 
 /**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
