@@ -9,6 +9,7 @@
 
 #include "source.h"
 
+
 /** \brief Class for sources described by a Sersic profile
  *
  * The sources are constructed from magnitude, half light radius Reff, Sersic index, axis ratio q and main axis orientation PA.
@@ -16,7 +17,7 @@
  * The elliptical model is defined for axis ratio q < 1.
  *
  */
-class SourceSersic : public Source
+class SourceSersic : public SourceColored
 {
 public:
   /// sets values to invalid values
@@ -28,7 +29,7 @@ public:
                ,double my_index         /// Sersic index
                ,double my_q             /// axes ratio
                ,double my_z             /// redshift
-               ,const double *my_theta=0  /// optional angular position on the sky
+               //,const double *my_theta=0  /// optional angular position on the sky
   );
 	~SourceSersic();
   
@@ -45,7 +46,7 @@ public:
 	inline PosType getAxesRatio() const { return q; }
   /// in arcseconds
 	inline PosType getReff() const { return Reff/arcsecTOradians; }
-	inline PosType getMag() const { return mag; }
+	//inline PosType getMag() const { return mag; }
 	inline PosType getPA() const { return PA; }
 	
 	inline void setSersicIndex(PosType x)
@@ -70,11 +71,11 @@ public:
 		updateRadius();
 	}
 	
-	inline void setMag(PosType x)
-	{
-		mag = x;
-		flux = pow(10, -0.4*(mag+48.6)) * inv_hplanck;
-	}
+//	inline void setMag(PosType x)
+//	{
+//		mag = x;
+//		flux_total = pow(10, -0.4*(mag+48.6)) * inv_hplanck;
+//	}
 	
 	inline void setPA(PosType x)
 	{
@@ -82,8 +83,14 @@ public:
     cosPA = cos(x);
     sinPA = sin(x);
 	}
+  
+  void rotate(PosType theta){
+    PA = PA + theta;
+    cosPA = cos(PA);
+    sinPA = sin(PA);
+  }
 	
-	inline PosType getTotalFlux() const { return flux; }
+	//inline PosType getTotalFlux() const { return flux_total; }
 	
 	PosType SurfaceBrightness(PosType *x);
 	void printSource();
@@ -99,12 +106,12 @@ private:
 	void assignParams(InputParams& params);
                       
 	PosType Reff;  // in radians
-	PosType mag;
+	//PosType mag;
 	PosType PA;
 	PosType index;
 	PosType bn;
 	PosType q;
-	PosType flux;
+	//PosType flux;
 	PosType I_r, I_n, I_q;
   PosType cosPA,sinPA;
 };

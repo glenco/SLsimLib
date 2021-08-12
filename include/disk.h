@@ -166,7 +166,7 @@ inclination(my_inclination)
   LensHaloParticles<ParticleType<T> >::mcenter *= 0.0;
   LensHalo::setMass(mass);
   
-  LensHaloParticles<ParticleType<T> >::min_size=0;
+  LensHaloParticles<ParticleType<T> >::min_size;
   LensHaloParticles<ParticleType<T> >::multimass=false;
   
   Point_2d no_rotation;

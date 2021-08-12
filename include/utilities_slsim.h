@@ -1051,6 +1051,17 @@ public:
     }
   };
   
+  int poisson(double lam){
+    double L = exp(-lam),p=1;
+    int k = 0;
+    do{
+      ++k;
+      p *= operator()();
+    }while(p>L);
+    
+    return k-1;
+  }
+  
   size_t calls = 0;  /// total number of calls
   
   long getseed(){return firstseed;}

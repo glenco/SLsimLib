@@ -31,8 +31,9 @@ enum PixelMapUnits {
   ,count_per_sec
   ,mass
   ,mass_density
-  
 };
+
+std::string to_string(PixelMapUnits unit);
 
 /**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
@@ -161,7 +162,7 @@ public:
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
-	void printFITS(std::string filename, bool verbose = false);
+	void printFITS(std::string filename,bool Xflip = false, bool verbose = false);
   void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
 
 	void smooth(double sigma);
@@ -434,7 +435,7 @@ public:
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
   void setNoiseCorrelation(std::string nc_file);
-	void Convert(PixelMap &map, bool psf, bool noise,long *seed);
+	PixelMap Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran);
   /// returns factor by which code image units need to be multiplied by to get flux units
   //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
 
@@ -468,7 +469,7 @@ private:
 
   void set_up();
   
-	void AddNoise(PixelMap &pmap,long *seed);
+  PixelMap AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran);//,long *seed);
   
   void ToCounts(PixelMap &pmap);
   void ToSurfaceBrightness(PixelMap &pmap);
