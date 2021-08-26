@@ -1103,9 +1103,9 @@ void shuffle(
   if(vec.size() < 2) return;
   for (size_t i = vec.size()-1; i>0; --i) {
     ran_t = (size_t)(ran()*(i+1));
-    tmp = vec[ran_t];
-    vec[ran_t] = vec[i];
-    vec[i] = tmp;
+    //swap(tmp,vec[ran_t]);
+    std::swap(vec[ran_t],vec[i]);
+    //swap(vec[i],tmp);
   }
 }
 
