@@ -194,7 +194,7 @@ public:
   
   /// convertion from 2d to 1d index
   size_t oned_index(int i,int j){
-    size_t k = (i <= j ) ? j + (m-i)*i/2 : i + (m-j)*j/2;
+    return (i <= j ) ? j + (m-i)*i/2 : i + (m-j)*j/2;
   }
 };
 
