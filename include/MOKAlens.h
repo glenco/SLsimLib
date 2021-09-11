@@ -193,7 +193,7 @@ public:
                   ,PixelMapType maptype
                   ,int pixel_map_zeropad
                   ,bool my_zeromean
-                  ,COSMOLOGY& lenscosmo
+                  ,const COSMOLOGY& lenscosmo
                   );
   
   //LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
@@ -206,18 +206,26 @@ public:
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
                   ,bool my_zeromean         /// if true, subtracts average density
-                  ,COSMOLOGY& lenscosmo  /// cosmology
+                  ,const COSMOLOGY& lenscosmo  /// cosmology
   );
   
+  /// This makes a uniform rectangular mass sheat
+  LensHaloMassMap(double mass           /// total mass in rectangle
+                  ,Point_2d center      /// center of rectangle
+                  ,Point_2d range       /// width and hight in radians
+                  ,double resolution    /// resolution in radians
+                  ,int zeropadding      /// factor by which to zero pad in FFTs, ex. 1 is no padding, 2 FFT grid is twice as big as original map
+                  ,double redshift      /// redshift of plane
+                  ,const COSMOLOGY &cosmo
+                  );
+  
   LensHaloMassMap(const LensHaloMassMap &h):LensHalo(h),cosmo(h.cosmo){
-//    LensHaloMassMap(const LensHaloMassMap &h){
     maptype = h.maptype;
     map = h.map;
     zerosize = h.zerosize;
     zeromean = h.zeromean;
   }
  LensHaloMassMap(LensHaloMassMap &&h):cosmo(h.cosmo){
-//    LensHaloMassMap(LensHaloMassMap &&h){
     *this = std::move(h);
   }
   
@@ -302,6 +310,9 @@ private:
 	const COSMOLOGY& cosmo;
   int zerosize;
   bool zeromean;
+  
+protected:
+  LensHaloMassMap(COSMOLOGY &c):cosmo(c){}
 };
 
 void make_friendship(int ii,int ji,int np,std:: vector<int> &friends, std:: vector<double> &pointdist);

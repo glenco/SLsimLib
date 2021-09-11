@@ -63,7 +63,8 @@ void cmass(int n, std::valarray<double> map, std:: vector<double> x, double &xcm
  * \brief loads a mass map from a given filename
  */
 
-LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad,bool my_zeromean, COSMOLOGY& lenscosmo)
+LensHaloMassMap::LensHaloMassMap(const std::string& filename, PixelMapType my_maptype,int pixel_map_zeropad
+                                 ,bool my_zeromean, const COSMOLOGY& lenscosmo)
 : LensHalo(),
 MOKA_input_file(filename), flag_MOKA_analyze(0), flag_background_field(0),
 maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
@@ -80,18 +81,22 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
  
  This is especially useful for representing the visible stars from an image in
  the lens model.
+ 
+ constructor for making lens halo directly from a mass map
+ 
+ The pixel map should be defined with physical Mpc dimensions.
+ 
  */
-/// constructor for making lens halo directly from a mass map
 LensHaloMassMap::LensHaloMassMap(
                                  const PixelMap &MassMap   /// mass map in solar mass units
                                  ,double massconvertion    /// convertion factor from pixel units to solar masses
                                  ,double redshift          /// redshift of lens
-                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
+                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 1 is no padding, 2 FFT grid is twice as big as original map
                                  ,bool my_zeromean         /// if true, subtracts average density
-                                 ,COSMOLOGY& lenscosmo  /// cosmology
+                                 ,const COSMOLOGY& lenscosmo  /// cosmology
 )
 :LensHalo()
-, flag_MOKA_analyze(0), flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
+, flag_MOKA_analyze(0),flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
   rscale = 1.0;
 
@@ -100,11 +105,42 @@ LensHaloMassMap::LensHaloMassMap(
   LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
   
   setZlensDist(map.zlens,cosmo);
-  //setZlens(redshift);
-  // set redshift to value from map
-  //setZlens(map.zlens);
-  
 }
+
+LensHaloMassMap::LensHaloMassMap(
+                double mass          /// total mass on sheet
+                ,Point_2d center
+                ,Point_2d range      /// range in radians
+                ,double resolution   /// resolution in radians
+                ,int zeropadding   
+                ,double redshift
+                ,const COSMOLOGY &cosmo
+                )
+:LensHalo(),flag_MOKA_analyze(0),flag_background_field(0),maptype(pix_map),cosmo(cosmo)
+,zerosize(zeropadding),zeromean(false)
+{
+  rscale = 1.0;
+
+  double d = cosmo.angDist(redshift);
+  
+  size_t Nx = abs(range[0])/resolution;
+  size_t Ny = abs(range[1])/resolution;
+
+  PixelMap mass_map(center.x,Nx,Ny,resolution * d);  // Is this right ????
+
+  double density = mass / Nx / Ny;
+  
+  for(double &a : mass_map.data()){
+    a = density;
+  }
+  
+  setMap(mass_map,1,redshift);
+  LensHalo::setTheta(mass_map.getCenter()[0],mass_map.getCenter()[1]);
+  
+  setZlensDist(map.zlens,cosmo);
+}
+  
+
 /*
 LensHaloMassMap::LensHaloMassMap(
                                  PixelMap &my_map        /// map of mass
@@ -378,7 +414,7 @@ void LensHaloMassMap::force_halo(double *alpha
                                  ,KappaType *kappa
                                  ,KappaType *gamma
                                  ,KappaType *phi
-                                 ,double const *xx
+                                 ,double const *xx      /// position in physical Mpc
                                  ,bool subtract_point
                                  ,PosType screening
                                  )
@@ -388,7 +424,7 @@ void LensHaloMassMap::force_halo(double *alpha
   Utilities::Interpolator<valarray<double> > interp(xx,map.nx,map.boxlMpc,map.ny
           ,map.ny*map.boxlMpc/map.nx,map.center.x);
 
-    assert(map.nx == map.ny);
+  assert(map.nx == map.ny);
   
   alpha[0] = interp.interpolate(map.alpha1_bar);
   alpha[1] = interp.interpolate(map.alpha2_bar);

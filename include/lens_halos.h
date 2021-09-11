@@ -169,10 +169,10 @@ public:
    */
   virtual void force_halo(
       PosType *alpha          /// deflection solar mass/Mpc
-      ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
+      ,KappaType *kappa     /// surface density in units of Sigma crit
       ,KappaType *gamma     /// three components of shear
       ,KappaType *phi       /// potential in solar masses
-      ,PosType const *xcm   /// position relative to center (Mpc?)
+      ,PosType const *xcm   /// position relative to center (in physical Mpc)
       ,bool subtract_point=false /// if true contribution from a point mass is subtracted
       ,PosType screening=1.0   /// the factor by which to scale the mass for screening of the point mass subtraction
   );
@@ -253,7 +253,7 @@ public:
                          LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
                          ,size_t Nx
                          ,size_t Ny
-                         ,double res             /// resolution in physical Mpc on the lens plane
+                         ,double res             /// angular resolution in radians
   );
   
 private:
