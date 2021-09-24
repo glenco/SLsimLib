@@ -322,6 +322,13 @@ public:
    that the kernal has the same pixel size as the image.
    **/
   void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
+  
+  /** \brief Creates a PixelMap with a lower resolution.
+   *  The value of the pixels are added for the new pixels.
+   *   If n does not go into the orginial number of pixels evenly the right (top) redge is dropped.
+   */
+  PixelMap downsize(int n /// number of pixels each direction added into each new pixel
+                    );
 
   /// add a heaader keyword that will appear in fits output
    void addheader(std::string label,long value,std::string comment){
