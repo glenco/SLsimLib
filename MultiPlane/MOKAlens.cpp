@@ -301,25 +301,20 @@ void LensHaloMassMap::setMap(
                                  ){
   
   // must be a square map
-  assert(inputmap.getNx() == inputmap.getNy());
+  // ???? assert(inputmap.getNx() == inputmap.getNy());
   
   if(std::numeric_limits<float>::has_infinity)
     Rmax = std::numeric_limits<float>::infinity();
   else
     Rmax = std::numeric_limits<float>::max();
   
-  map.nx = map.ny = inputmap.getNx();
+  map.nx = inputmap.getNx();
+  map.ny = inputmap.getNy();
   map.center[0] = map.center[1] = 0.0;
   
   std::size_t size = map.nx*map.ny;
   
   map.surface_density.resize(size);
- // map.alpha1_bar.resize(size);
- // map.alpha2_bar.resize(size);
- // map.gamma1_bar.resize(size);
- // map.gamma2_bar.resize(size);
- //map.gamma3_bar.resize(size);
- // map.phi_bar.resize(size);
   
   map.zlens = z;
   
@@ -424,7 +419,7 @@ void LensHaloMassMap::force_halo(double *alpha
   Utilities::Interpolator<valarray<double> > interp(xx,map.nx,map.boxlMpc,map.ny
           ,map.ny*map.boxlMpc/map.nx,map.center.x);
 
-  assert(map.nx == map.ny);
+  // ??? assert(map.nx == map.ny);
   
   alpha[0] = interp.interpolate(map.alpha1_bar);
   alpha[1] = interp.interpolate(map.alpha2_bar);

@@ -518,11 +518,12 @@ unsigned long prevpower(unsigned long k){
     double *nk=new double[Nny*(Nnx/2+1)];
     double *nc=new double[Nny*(Nnx/2+1)];
     // sorted vectors
-    for(int i=0; i<Nnx/2+1; i++)
+    for(int i=0; i<Nnx/2+1; i++){
       for(int j=0; j<Nny;j++){
         nk[i+(Nnx/2+1)*j] = ks[ik[i+(Nnx/2+1)*j]];
         nc[i+(Nnx/2+1)*j] = Nfcc[ik[i+(Nnx/2+1)*j]][0];
       }
+    }
     std:: vector<double> bink(nl);
     // build the binned power spectrum
     Utilities::fill_linear(bink,nl,log10(nk[1]),log10(nk[Nny*(Nnx/2+1)-1]));
@@ -572,8 +573,10 @@ unsigned long prevpower(unsigned long k){
     Pl.resize(nl);
     
     fftw_complex *fNa=new fftw_complex[ny*(nx/2+1)];
+    //std::vector<fftw_complex> fNa(ny*(nx/2+1));
     
     fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa,FFTW_ESTIMATE);
+    //fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa.data(),FFTW_ESTIMATE);
     fftw_execute( p1 );
     fftw_destroy_plan(p1);
    
@@ -604,21 +607,27 @@ unsigned long prevpower(unsigned long k){
     std::vector<size_t> ik(ny*(nx/2+1));
     Utilities::sort_indexes<double>(ks,ik);
     
-    double *nk=new double[ny*(nx/2+1)];
-    double *nc=new double[ny*(nx/2+1)];
+    //double *nk=new double[ny*(nx/2+1)];
+    //double *nc=new double[ny*(nx/2+1)];
+    
+    std::vector<double> nk(ny*(nx/2+1));
+    std::vector<double> nc(ny*(nx/2+1));
+ 
     // sorted vectors
-    for(int i=0; i<nx/2+1; i++)
+    for(int i=0; i<nx/2+1; i++){
       for(int j=0; j<ny;j++){
         size_t kk = i+(nx/2+1)*j;
 
         nk[kk] = ks[ik[kk]];
         nc[kk] = fNa[ik[kk]][0];
       }
+    }
     std:: vector<double> bink(nl);
     // build the binned power spectrum
     Utilities::fill_linear(bink,nl,log10(nk[1]),log10(nk[ny*(nx/2+1)-1]));
     double lk1,lk2;
     for(int i=0;i<nl;i++){
+      
       if(i==0) lk1=bink[i];
       else lk1=bink[i]-0.5*(bink[i]-bink[i-1]);
       if(i==nl-1) lk2=bink[i];
@@ -640,8 +649,8 @@ unsigned long prevpower(unsigned long k){
       }
     }
     delete [] fNa;
-    delete [] nk;
-    delete [] nc;
+    //delete [] nk;
+    //delete [] nc;
   }
 
 #endif
