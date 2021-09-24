@@ -342,10 +342,32 @@ PixelMap::PixelMap(
   }
 }
 
-//PixelMap::~PixelMap(){}
-//{
-//  map.resize(0);
-//}
+
+PixelMap PixelMap::downsize(int n){
+
+  size_t nx = Nx/n,ny = Ny/n;
+
+  PixelMap new_map(center,nx,ny,resolution*n);
+
+  new_map.units = units;
+
+  for(size_t i=0 ; i < nx ; ++i){
+    for(size_t j=0 ; j < ny ; ++j){
+
+      double &m = new_map(i,j);
+      m = 0;
+
+      for(size_t jj = j*n ; jj < (j+1)*n ; ++jj){
+        for(size_t ii = i*n ; ii < (i+1)*n ; ++ii){
+          m += map[ii + Nx*jj];
+        }
+      }
+
+    }
+  }
+
+  return new_map;
+}
 
 PixelMap& PixelMap::operator=(const PixelMap &other)
 {
