@@ -64,7 +64,10 @@ struct Point_2d{
   bool operator==(const Point_2d &p) const{
     return (x[0] == p.x[0])*(x[1] == p.x[1]);
   }
-  
+  bool operator!=(const Point_2d &p) const{
+    return (x[0] != p.x[0]) || (x[1] != p.x[1]);
+  }
+ 
   Point_2d  operator+(const Point_2d &p) const{
     Point_2d tmp;
     tmp.x[0] = x[0] + p.x[0];
