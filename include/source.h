@@ -13,6 +13,8 @@
 #include "image_processing.h"
 #include "utilities_slsim.h"
 
+class PixelMap;
+
 /** \brief Base class for all sources.
  *
  */
@@ -57,6 +59,7 @@ public:
   virtual PosType getTotalFlux() const = 0;
   virtual void printSource() = 0;
 
+  
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
 	/// Gets sb_limit in mag/arcsec^2
@@ -97,7 +100,7 @@ protected:
   virtual void assignParams(InputParams& params){};
 	
 	// source parameters
-	/// total source size, ie no flux outside this radius
+	/// charactoristic source size
 	PosType source_r;
 	/// center of source
 	Point_2d source_x;
@@ -115,9 +118,10 @@ public:
   SourceColored(PosType magnitude,PosType r,Point_2d x,PosType z
                 ,PosType SBlimit=40):Source(r,x,z,SBlimit)
   {
-    mag=magnitude;
-    flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    //mag=magnitude;
+    //flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
     current_band = NoBand;
+    setMag(magnitude);
     id = -1;
   }
   
@@ -144,6 +148,21 @@ public:
     return *this;
   }
   
+  /// this copies only the Source and SourceColored parts
+  SourceColored & copy_color(const SourceColored &s){
+    if(this == &s) return *this;
+    
+    Source::operator=(s);
+    mag = s.mag;
+    mag_map = s.mag_map;
+    current_band = s.current_band;
+    sed_type = s.sed_type;
+    id = s.id;
+    flux_total = s.flux_total;
+    
+    return *this;
+  }
+  
   virtual ~SourceColored(){};
   
   PosType getMag() const { assert(current_band != NoBand); return mag;}
@@ -151,16 +170,31 @@ public:
   Band getBand() const{return current_band;}
   long getID() const {return id;}
   float getSEDtype() const {return sed_type;}
+  
   void setSEDtype(float sed) {sed_type = sed;}
-
   void setActiveBand(Band band);
   void setBand(Band band,float m){mag_map[band]=m;};
   inline PosType getTotalFlux() const {return flux_total;}
   
+  void setMag(float magnitude){
+    if(current_band == NoBand){
+      mag=magnitude;
+      flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    }else{
+      std::cerr << "Cannot change mag of source that has multiple bands." << std::endl;
+      throw std::runtime_error("source has ");
+    }
+  }
   
   // rotate on the sky
   virtual void rotate(PosType theta) = 0;
 
+  /// shift all magnitudes my delta_mag and update flux_total, keeps color
+  void shiftmag(float delta_mag){
+    mag += delta_mag;
+    flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    for(auto &b : mag_map) b.second += delta_mag;
+  }
 protected:
   std::map<Band,PosType> mag_map;
   Band current_band;
@@ -171,7 +205,6 @@ protected:
 };
 
 
-class PixelMap;
 
 /** \brief Class for sources described by an array of pixels
  *
@@ -266,6 +299,7 @@ public:
 
 	PosType SurfaceBrightness(PosType *y);
 	void printSource();
+  /// maximum size
 	inline PosType getRadius() const {return source_r*10.;}
   
   void pepper(int n,double s,Utilities::RandomNumbers_NR &ran){
