@@ -885,7 +885,7 @@ void PixelMap::printASCIItoFile(std::string filename) const
   return;
 }
 /// Output the pixel map as a fits file.
-void PixelMap::printFITS(std::string filename, bool verbose)
+void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
 {
 
   if(filename.empty())
@@ -897,8 +897,18 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   naxex[0] = Nx;
   naxex[1] = Ny;
 
-  cpfits.write_image(map,naxex);  // write the map
-
+  if(flipX){
+    std::valarray<double> map_inv(map.size());
+    size_t s = 0;
+    for(size_t i=0 ; i<Ny ; ++i){
+      for(size_t j=1 ; j<=Nx ; ++j){
+        map_inv[Nx-j + i*Nx] = map[s++];
+      }
+    }
+    cpfits.write_image(map_inv,naxex);  // write the map
+  }else{
+    cpfits.write_image(map,naxex);  // write the map
+  }
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");

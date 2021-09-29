@@ -375,6 +375,9 @@ PosType Grid::EinsteinArea() const {
 //}
 
 PosType Grid::magnification() const {
+  
+  return LensedFlux()/UnlensedFlux();
+  
   double mag = 0,flux = 0;
   
   PointList::iterator it;
@@ -413,19 +416,43 @@ PosType Grid::magnification() const {
 
 Point_2d Grid::centroid() const{
   double flux = 0;
-  
   Point_2d centroid(0,0);
   
   PointList::iterator it;
   it = (i_tree->pointlist->Top());
   size_t N = i_tree->pointlist->size();
   for(unsigned long i=0 ; i < N ; ++i,--it){
-    double area = (*it)->gridsize*(*it)->gridsize;
-    centroid += *(*it)*(*it)->surface_brightness*area;
+    double area = (*it)->gridsize * (*it)->gridsize;
+    centroid += *(*it) * (*it)->surface_brightness*area;
     flux += (*it)->surface_brightness*area;
   }
 
   return centroid/flux;
+}
+
+PosType Grid::UnlensedFlux() const{
+  
+  double flux = 0;
+  PointList::iterator s_tree_pointlist_it;
+  s_tree_pointlist_it.current = (s_tree->pointlist->Top());
+  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+    flux += (*s_tree_pointlist_it)->surface_brightness*(*s_tree_pointlist_it)->leaf->area();
+  }
+  
+  return flux;
+}
+
+PosType Grid::LensedFlux() const{
+  
+  double flux = 0;
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    flux += (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+  }
+  
+  return flux;
 }
 
 /**
