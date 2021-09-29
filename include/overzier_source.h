@@ -158,7 +158,7 @@ public:
                                          PosType my_mag         /// total magnitude
                                          ,PosType my_mag_bulge  /// magnitude of bulge
                                          ,PosType my_Reff       /// effective radius of bulge
-                                         ,PosType my_Rdisk         /// scale hight of disk
+                                         ,PosType my_Rdisk      /// scale hight of disk
                                          ,PosType my_PA         /// position angle
                                          ,PosType inclination   /// inclination in radians
                                          ,unsigned long my_id

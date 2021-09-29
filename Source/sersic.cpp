@@ -7,7 +7,7 @@
 #include "slsimlib.h"
 
 SourceSersic::SourceSersic()
-: Source()
+: Source(0,Point_2d(0,0),0)
 {
   /// set to values that hopefully will cause an error if it is used
   ReSet(1.0e10,1,0,0,-1,-1,0);
@@ -22,12 +22,13 @@ SourceSersic::SourceSersic(
 	,double my_z             /// redshift
 	,const double *my_theta  /// optional angular position on the sky
 )
-: Source()
+: Source(0,Point_2d(0,0),my_z)
 {
   assert(my_Reff > 0);
   ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
 }
-SourceSersic::SourceSersic(const SourceSersic &p){
+SourceSersic::SourceSersic(const SourceSersic &p):Source(p){
+  
   Reff = p.Reff;
   mag = p.mag;
   PA = p.PA;
@@ -44,6 +45,7 @@ SourceSersic::SourceSersic(const SourceSersic &p){
 SourceSersic& SourceSersic::operator=(const SourceSersic &p){
   if(this == &p) return *this;
   
+  Source::operator=(p);
   Reff = p.Reff;
   mag = p.mag;
   PA = p.PA;
@@ -104,7 +106,7 @@ PosType SourceSersic::SurfaceBrightness(
 
 	PosType r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
 
-	PosType sb = flux * I_n * I_q * I_r *inv_hplanck * exp(-bn*pow(r/Reff,1./index));
+	PosType sb = flux * I_n * I_q * I_r * exp(-bn*pow(r/Reff,1./index));
   
   if (sb < sb_limit) return 0.;
   assert(sb >= 0.0);

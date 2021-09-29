@@ -20,7 +20,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		,PosType my_z               /// redshift of source
 		,PosType *my_theta          /// position on the sky
     ,Utilities::RandomNumbers_NR &ran
-		): Source(),index(0){
+		): Source(0,Point_2d(0,0),0),index(0){
 	
 	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rdisk,PA,inclination,0,my_z,my_theta,ran));
 }
@@ -29,7 +29,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 */
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		SourceOverzierPlus *my_galaxy
-		): Source(),index(0){
+		): Source(0,Point_2d(0,0),0),index(0){
 	
 	galaxies.push_back(*my_galaxy);
 }

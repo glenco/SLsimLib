@@ -24,9 +24,8 @@ void LensHaloBaseNSIE::force_halo(
                                   )
 {
 
-  long j;
   PosType alpha_tmp[2];
-  KappaType kappa_tmp = 0.0, gamma_tmp[2];
+  KappaType gamma_tmp[2];
   KappaType phi_tmp ;
   
   gamma_tmp[0] = gamma_tmp[1] = 0.0;
@@ -120,33 +119,33 @@ void LensHaloBaseNSIE::force_halo(
     
     
   // add substructure
-  if(substruct_implanted)
-  {
-    for(j=0;j<sub_N;++j)
-    {
-      
-      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
-      
-      alpha[0] += alpha_tmp[0];
-      alpha[1] += alpha_tmp[1];
-      
-      {
-        *kappa += kappa_tmp;
-        gamma[0] += gamma_tmp[0];
-        gamma[1] += gamma_tmp[1];
-        *phi += phi_tmp;
-      }
-    }
-    
-    gamma_tmp[0] = gamma_tmp[1] = 0.0;
-    alpha_tmp[0] = alpha_tmp[1] = 0.0;
-    phi_tmp = 0.0;
-  }
+//  if(substruct_implanted)
+//  {
+//    for(j=0;j<sub_N;++j)
+//    {
+//
+//      subs[j].force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,xcm);
+//
+//      alpha[0] += alpha_tmp[0];
+//      alpha[1] += alpha_tmp[1];
+//
+//      {
+//        *kappa += kappa_tmp;
+//        gamma[0] += gamma_tmp[0];
+//        gamma[1] += gamma_tmp[1];
+//        *phi += phi_tmp;
+//      }
+//    }
+//
+//    gamma_tmp[0] = gamma_tmp[1] = 0.0;
+//    alpha_tmp[0] = alpha_tmp[1] = 0.0;
+//    phi_tmp = 0.0;
+//  }
   
   // add stars for microlensing
-  if(stars_N > 0 && stars_implanted){
-    force_stars(alpha,kappa,gamma,xcm);
-  }
+//  if(stars_N > 0 && stars_implanted){
+//    force_stars(alpha,kappa,gamma,xcm);
+//  }
   
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
@@ -185,28 +184,28 @@ void LensHaloBaseNSIE::assignParams(InputParams& params,const COSMOLOGY &cosmo){
 	if(!params.get("zsource_reference",zsource_reference)) error_message1("zsource_reference",params.filename());
   
   // Substructure parameters
-  if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
-  
-  else if(sub_Ndensity > 0){
-    if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
-    if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
-    if(!params.get("main_sub_Rsize",sub_Rsize)) error_message1("main_sub_Rsize",params.filename());
-    if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
-    if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
-    if(sub_Mmin < 1.0e3){
-      ERROR_MESSAGE();
-      std::cerr << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
-      exit(1);
-    }
-    if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
-    
-  }
+//  if(!params.get("main_sub_Ndensity",sub_Ndensity)) error_message1("main_sub_Ndensity",params.filename());
+//
+//  else if(sub_Ndensity > 0){
+//    if(!params.get("main_sub_beta",sub_beta)) error_message1("main_sub_beta",params.filename());
+//    if(!params.get("main_sub_alpha",sub_alpha)) error_message1("main_sub_alpha",params.filename());
+//    if(!params.get("main_sub_Rsize",sub_Rsize)) error_message1("main_sub_Rsize",params.filename());
+//    if(!params.get("main_sub_mass_max",sub_Mmax)) error_message1("main_sub_mass_max",params.filename());
+//    if(!params.get("main_sub_mass_min",sub_Mmin)) error_message1("main_sub_mass_min",params.filename());
+//    if(sub_Mmin < 1.0e3){
+//      ERROR_MESSAGE();
+//      std::cerr << "Are you sure the minimum halo mass should be " << sub_Mmin << " Msun?" << std::endl;
+//      exit(1);
+//    }
+//    if(!params.get("main_sub_type",main_sub_type)) error_message1("main_sub_type",params.filename());
+//    
+//  }
   // Stars parameters
-  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+  //if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
   
-  else if(stars_N){
-    assignParams_stars(params);
-  }
+//  else if(stars_N){
+ //   assignParams_stars(params);
+ // }
   
 }
 
@@ -221,19 +220,18 @@ void LensHaloBaseNSIE::setZlens(PosType zl){
   
 }*/
 
-void LensHaloBaseNSIE::reNormSubstructure(PosType kappa_sub){
-	/* renomalizes substructure so that
-	 * the average surface density it kappa_sub
-	 */
-	  PosType avem;
-	  avem=sub_Mmax*(sub_alpha+1)
-	    /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/
-	    (1-pow(sub_Mmin/sub_Mmax,sub_alpha+1));
-
-	  sub_Ndensity=kappa_sub*Sigma_crit/avem;
-
-	  return ;
-}
+//void LensHaloBaseNSIE::reNormSubstructure(PosType kappa_sub){
+//	// renomalizes substructure so that
+//  //the average surface density it kappa_sub
+//	  PosType avem;
+//	  avem=sub_Mmax*(sub_alpha+1)
+//	    /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/
+//	    (1-pow(sub_Mmin/sub_Mmax,sub_alpha+1));
+//
+//	  sub_Ndensity=kappa_sub*Sigma_crit/avem;
+//
+//	  return ;
+//}
 
 /// Sets parameters within BaseLens that depend on the source redshift - Dl,Sigma_crit,etc.
 void LensHaloAnaNSIE::setCosmology(const COSMOLOGY& cosmo)
@@ -291,15 +289,15 @@ LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
   perturb_rms = new PosType[6];
   
   // parameters for stars
-  stars_implanted = false; // stars are implanted later
-  star_theta_force = 0.1;
-  sub_theta_force = 0.1;
+  //stars_implanted = false; // stars are implanted later
+  //star_theta_force = 0.1;
+  //sub_theta_force = 0.1;
   
   perturb_Nmodes = 0;
   //sub_sigmaScale = sigma = pa = Einstein_ro = fratio = rcore = 0.0;
   
-  if(sub_Ndensity == 0)
-    sub_N = 0;
+  //if(sub_Ndensity == 0)
+  //  sub_N = 0;
   
   Sigma_crit = 0;
   
@@ -307,52 +305,51 @@ LensHaloBaseNSIE::LensHaloBaseNSIE() : LensHalo(){
 }
 
 void LensHaloBaseNSIE::PrintLens(bool show_substruct,bool show_stars){
-	int i;
 	cout << "zlens " << getZlens() << endl;
 
 	 // parameters of substructures
-	cout << endl << "main_sub_Ndensity "<< sub_Ndensity << endl;
-	if(sub_Ndensity > 0){
-		cout << "betaSubstruct "<<sub_beta << endl;
-		cout << "alphaSubstruct "<<sub_alpha << endl;
-		cout << "RsizeSubstruct "<<sub_Rsize << " Mpc" << endl;
-		cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << endl;
-		cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << endl;
-	}
+	//cout << endl << "main_sub_Ndensity "<< sub_Ndensity << endl;
+	//if(sub_Ndensity > 0){
+		//cout << "betaSubstruct "<<sub_beta << endl;
+		//cout << "alphaSubstruct "<<sub_alpha << endl;
+		//cout << "RsizeSubstruct "<<sub_Rsize << " Mpc" << endl;
+		//cout << "MmaxSubstruct "<<sub_Mmax << " Msun" << endl;
+		//cout << "MminSubstruct "<<sub_Mmin << " Msun\n" << endl;
+	//}
 
-	if(sub_N > 0){
-		cout << endl << "NSubstruct "<< sub_N << endl;
-		if(show_substruct){
-			if(substruct_implanted || sub_N > 0){
-				for(i=0;i<sub_N;++i){
-				  cout << "RcutSubstruct "<<i << " " <<subs[i].getRsize() << " Mpc" << endl;
-				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
-				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
-					switch(main_sub_type){
-					case nfw:
-						cout << "  NFW clumps" << endl;
-						break;
-					case powerlaw:
-						cout << "  Power Law clumps" << endl;
-						break;
-					case pointmass:
-						cout << "  Point Mass clumps" << endl;
-						break;
-					default:
-						ERROR_MESSAGE();
-						cerr << "ERROR: no submass internal profile chosen" << endl;
-						exit(1);
-						break;
-					}
-				}
-			}else cout << "substructures are not implanted yet" << endl;
-		}
-	}
+//	if(sub_N > 0){
+//		//cout << endl << "NSubstruct "<< sub_N << endl;
+//		if(show_substruct){
+//			if(substruct_implanted || sub_N > 0){
+//				for(i=0;i<sub_N;++i){
+//				  cout << "RcutSubstruct "<<i << " " <<subs[i].getRsize() << " Mpc" << endl;
+//				  cout << "massSubstruct "<<i<<" "<<subs[i].get_mass() << " Msun" << endl;
+//				  cout << "xSubstruct "<<i<<" "<<sub_x[i][0]<<" "<<sub_x[i][1] << " Mpc" << endl;
+//					switch(main_sub_type){
+//					case nfw:
+//						cout << "  NFW clumps" << endl;
+//						break;
+//					case powerlaw:
+//						cout << "  Power Law clumps" << endl;
+//						break;
+//					case pointmass:
+//						cout << "  Point Mass clumps" << endl;
+//						break;
+//					default:
+//						ERROR_MESSAGE();
+//						cerr << "ERROR: no submass internal profile chosen" << endl;
+//						exit(1);
+//						break;
+//					}
+//				}
+//			}else cout << "substructures are not implanted yet" << endl;
+//		}
+//	}
 
 	if(Sigma_crit)
 		cout << "critical density is " << Sigma_crit << " Msun/Mpc^2" << endl << endl;
 
-	if (stars_implanted) PrintStars(show_stars);
+	//if (stars_implanted) PrintStars(show_stars);
 }
 
 std::size_t LensHaloBaseNSIE::Nparams() const
@@ -428,18 +425,18 @@ LensHaloBaseNSIE::~LensHaloBaseNSIE(){
 		// std::cout << "deleting modes" << endl;
 		delete[] perturb_modes;
 	}
-	if(sub_N > 0 && substruct_implanted){
+	//if(sub_N > 0 && substruct_implanted){
 		// std::cout << "deleting subs" << endl;
-		Utilities::free_PosTypeMatrix(sub_x,sub_N,2);
-		delete[] subs;
-		delete[] sub_substructures;
-	}
-	if(stars_N > 0 && stars_implanted){
-		// std::cout << "deleting stars" << endl;
-		//delete[] star_masses;
-		star_xdisk.clear();
-		delete star_tree;
-	}
+		//Utilities::free_PosTypeMatrix(sub_x,sub_N,2);
+		//delete[] subs;
+		//delete[] sub_substructures;
+	//}
+//	if(stars_N > 0 && stars_implanted){
+//		// std::cout << "deleting stars" << endl;
+//		//delete[] star_masses;
+//		star_xdisk.clear();
+//		delete star_tree;
+//	}
 }
 
 /******************************************************

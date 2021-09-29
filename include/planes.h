@@ -9,9 +9,11 @@
 #define PLANES_H_
 
 #include "quadTree.h"
+#include "quadTreeHalos.h"
 #include "lens_halos.h"
 
 /// Base class representing a plane in redshift onto which lenses are placed.
+
 class LensPlane{
 public:
 	LensPlane(float redshift):z(redshift) {}
@@ -32,7 +34,9 @@ public:
 /// A LensPlane with a TreeQuad on it to calculate the deflection caused by field lenses
 class LensPlaneTree : public LensPlane{
 public:
-	LensPlaneTree(float z,LensHaloHndl *my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
+
+	LensPlaneTree(float z,LensHalo **my_halos,IndexType Nhalos,PosType my_sigma_background,PosType my_inv_screening_scale = 0);
+
   LensPlaneTree(const LensPlaneTree &p);
   LensPlaneTree(LensPlaneTree &&p):LensPlane(p.z){
     std::swap(*this,p);
@@ -53,8 +57,9 @@ public:
   void getNeighborHalos(PosType ray[],PosType rmax,std::vector<LensHalo*> &neighbors) const;
 	
 private:
-	std::vector<LensHalo*> halos;
-	TreeQuadHalos * halo_tree;
+
+	std::vector<LensHalo *> halos;
+  TreeQuadHalos<LensHalo> * halo_tree;
 };
 
 /** \brief A LensPlane with a list of LensHalo's in it.  

@@ -1,23 +1,127 @@
-/*
- * quadTree.cpp
+//
+//  quadTreeHalos.h
+//  GLAMER
+//
+//  Created by Robert Benton Metcalf on 30/10/2020.
+//
+
+#ifndef quadTreeHalos_h
+#define quadTreeHalos_h
+/**
+ * \brief TreeQuadHalo is a class for calculating the deflection, kappa and gamma by tree method.
  *
- *  Created on: Sep 4, 2012
- *      Author: mpetkova
+ * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
+ * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
+ * the tree is built in such a way the large particles are stored in branches that are no smaller
+ * than their size.  In this way particles are stored on all levels of the tree and not just in the
+ * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
+ *
+ * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
+ * The shear and kappa is always more accurate than the deflection.
+ *
  */
 
-/*
- * Programmer:    R Ben Metcalf
- */
 
-#include "slsimlib.h"
-#include "Tree.h"
+/** \brief Class to calculate the deflection, etc. for a collection of LensHalos using a tree structure.
+ 
+ */
+template <typename LensHaloType>
+class TreeQuadHalos {
+public:
+  TreeQuadHalos(
+           LensHaloType **my_halos
+           ,IndexType Npoints
+           ,PosType my_sigma_background = 0
+           ,int bucket = 5
+           ,PosType theta_force = 0.1
+           ,bool my_periodic_buffer = false
+           ,PosType my_inv_screening_scale = 0
+           );
+  ~TreeQuadHalos();
+  
+  friend class LensPlaneTree;
+  void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
+                       ,KappaType *phi) const;
+  
+  void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa
+                             ,KappaType *gamma,KappaType *phi);
+  
+  /// find all points within rmax of ray in 2D
+  void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const;
+  void neighbors(PosType ray[],PosType rmax,std::vector<LensHaloType *> &neighbors) const;
+  
+  void printParticlesInBranch(unsigned long number);
+  
+  void printBranchs(int level = -1);
+  
+protected:
+  
+  std::vector<PosType> workspace;
+  PosType **xp;
+  bool MultiMass;
+  bool MultiRadius;
+  //float *masses;
+  //float *sizes;
+  
+  IndexType Nparticles;
+  PosType sigma_background;
+  int Nbucket;
+  
+  PosType force_theta;
+  
+  QTreeNB<PosType *> * tree;
+  std::vector<IndexType> index;
+  
+  //bool haloON;
+  LensHaloType **halos;
+  
+  PosType realray[2];
+  int incell,incell2;
+  
+  /// if true there is one layer of peridic buffering
+  bool periodic_buffer;
+  PosType inv_screening_scale2;
+  PosType original_xl;  // x-axis size of simulation used for peridic buffering.  Requrement that it top branch be square my make it differ from the size of top branch.
+  PosType original_yl;  // x-axis size of simulation used for peridic buffering.
+  
+  QTreeNB<PosType *> * BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
+  void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
+  
+  inline short WhichQuad(PosType *x,QBranchNB &branch);
+  
+  //inline bool atLeaf();
+  inline bool inbox(const PosType *ray,const PosType *p1,const PosType *p2){
+    return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
+  }
+  //int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
+  
+  void CalcMoments();
+  void rotate_coordinates(PosType **coord);
+  
+  //QTreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
+  //                              ,PosType **coord,PosType theta,float *rsph,float *mass
+  //                              ,bool MultiRadius,bool MultiMass);
+  //QTreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
+  //                           ,PosType **coord,PosType theta,float *rsph,float *mass
+  //                           ,bool MultiRadius,bool MultiMass);
+  void cuttoffscale(QTreeNB<PosType *> * tree,PosType *theta);
+  
+  void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+  void walkTree_iter(QBiterator<PosType *> &treeit, PosType const *ray,PosType *alpha,KappaType *kappa
+                     ,KappaType *gamma,KappaType *phi) const;
+  
+  PosType phiintconst;
+  
+};
 
 
 /** \brief Constructor meant for halos with internal structure parameters.  This is a protected constructor because
  * it should only be invoked from the derived classes that have specific defined halo models.
  */
-TreeQuadHalos::TreeQuadHalos(
-                   LensHaloHndl *my_halos     /// list of halos to be put in tree
+
+template <typename LensHaloType>
+TreeQuadHalos<LensHaloType>::TreeQuadHalos(
+                   LensHaloType **my_halos     /// list of halos to be put in tree
                    ,IndexType Npoints          /// number of halos
                    ,PosType my_sigma_background /// background kappa that is subtracted
                    ,int bucket                  /// maximum number of halos in each leaf of the tree
@@ -26,13 +130,13 @@ TreeQuadHalos::TreeQuadHalos(
                    ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadHalos::force2D_recur().
                    ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
 ):
-MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
+MultiMass(true),MultiRadius(true)//,masses(NULL),sizes(NULL)
 ,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
 ,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 ,max_range(max_range)
 {
-  index = new IndexType[Npoints];
+  index.resize(Npoints);
   IndexType ii;
   
   for(ii=0;ii<Npoints;++ii) index[ii] = ii;
@@ -42,8 +146,7 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
   for(ii=0;ii<Npoints;++ii) halos[ii]->getX(xp[ii]);
   
   if(Npoints > 0){
-    tree = BuildQTreeNB(xp,Npoints,index);
-    
+    tree = BuildQTreeNB(xp,Npoints,index.data());
     CalcMoments();
   }
   
@@ -52,16 +155,17 @@ MultiMass(true),MultiRadius(true),masses(NULL),sizes(NULL)
 }
 
 /// Particle positions and other data are not destroyed.
-TreeQuadHalos::~TreeQuadHalos()
+template <typename LensHaloType>
+TreeQuadHalos<LensHaloType>::~TreeQuadHalos()
 {
   if(Nparticles == 0) return;
   delete tree;
-  delete[] index;
   Utilities::free_PosTypeMatrix(xp,Nparticles,2);
   return;
 }
 
-QTreeNB<PosType *> * TreeQuadHalos::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles){
+template <typename LensHaloType>
+QTreeNB<PosType *> * TreeQuadHalos<LensHaloType>::BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles){
   IndexType i;
   short j;
   PosType p1[2],p2[2];
@@ -115,12 +219,14 @@ QTreeNB<PosType *> * TreeQuadHalos::BuildQTreeNB(PosType **xp,IndexType Nparticl
 }
 
 /// returns an index for which of the four quadrangles of the branch the point x[] is in
-inline short TreeQuadHalos::WhichQuad(PosType *x,QBranchNB &branch){
+template <typename LensHaloType>
+inline short TreeQuadHalos<LensHaloType>::WhichQuad(PosType *x,QBranchNB &branch){
   return (x[0] < branch.center[0]) + 2*(x[1] < branch.center[1]);
 }
 
 /// tree must be created and first branch must be set before start
-void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   
   QBranchNB *cbranch = tree->current; /* pointer to current branch */
   IndexType i,j,cut,cut2,jt;
@@ -336,7 +442,8 @@ void TreeQuadHalos::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
 }
 
 // calculates moments of the mass and the cutoff scale for each box
-void TreeQuadHalos::CalcMoments(){
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::CalcMoments(){
   
   //*** make compatable
   IndexType i;
@@ -395,7 +502,8 @@ void TreeQuadHalos::CalcMoments(){
 }
 
 /// simple rotates the coordinates in the xp array
-void TreeQuadHalos::rotate_coordinates(PosType **coord){
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::rotate_coordinates(PosType **coord){
   IndexType i;
   short j;
   PosType tmp[3];
@@ -433,8 +541,8 @@ void TreeQuadHalos::rotate_coordinates(PosType **coord){
  *   If inv_screening_scale2 != 0 the mass of cells are reduced by a factor of exp(-|ray - center of mass|^2*inv_screening_scale2) which
  *   screens the large scale geometry of the simulation on the sky.  This is useful when the region is rectangular instead of circular.
  * */
-
-void TreeQuadHalos::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi) const{
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi) const{
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=*phi=0.0;
@@ -472,7 +580,8 @@ void TreeQuadHalos::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,K
 
 /** \brief Returns the halos that are within rmax of ray[]
  */
-void TreeQuadHalos::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const{
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const{
   //QTreeNB::iterator it(tree);
   QBiterator<PosType *> it(tree);
   
@@ -502,17 +611,18 @@ void TreeQuadHalos::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &n
 }
 /** \brief Returns the halos that are within rmax of ray[]
  */
-void TreeQuadHalos::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors) const{
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::neighbors(PosType ray[],PosType rmax,std::vector<LensHaloType *> &neighbors) const{
   neighbors.clear();
   
   if(halos == NULL){
-    std::cerr << "TreeQuadHalos::neighbors - The are no halos in this tree use other version of this function" << std::endl;
+    std::cerr << "TreeQuadHalos<LensHaloType>::neighbors - The are no halos in this tree use other version of this function" << std::endl;
     throw std::runtime_error("no halos");
     return;
   }
   
   std::list<IndexType> neighbor_indexes;
-  TreeQuadHalos::neighbors(ray,rmax,neighbor_indexes);
+  TreeQuadHalos<LensHaloType>::neighbors(ray,rmax,neighbor_indexes);
   
   neighbors.resize(neighbor_indexes.size());
   std::list<IndexType>::iterator it = neighbor_indexes.begin();
@@ -523,7 +633,8 @@ void TreeQuadHalos::neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *>
   return;
 }
 
-void TreeQuadHalos::walkTree_iter(
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::walkTree_iter(
                              QBiterator<PosType *> &treeit,
                              const PosType *ray
                              ,PosType *alpha
@@ -702,7 +813,8 @@ void TreeQuadHalos::walkTree_iter(
  *   screens the large scale geometry of the simulation on the sky.  This is useful when the region is rectangular instead of circular.
  * */
 
-void TreeQuadHalos::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
   
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
@@ -758,9 +870,8 @@ void TreeQuadHalos::force2D_recur(const PosType *ray,PosType *alpha,KappaType *k
   return;
 }
 
-
-
-void TreeQuadHalos::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
   
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -887,7 +998,8 @@ void TreeQuadHalos::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType 
 /** This is a diagnostic routine that prints the position of every point in a
  * given branch of the tree.
  */
-void TreeQuadHalos::printParticlesInBranch(unsigned long number){
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::printParticlesInBranch(unsigned long number){
   unsigned long i;
   
   tree->moveTop();
@@ -907,7 +1019,9 @@ void TreeQuadHalos::printParticlesInBranch(unsigned long number){
  * Prints to stdout the borders of each branch in the tree below level.
  * If level < 0 or not specified the whole tree will be printed.
  */
-void TreeQuadHalos::printBranchs(int level){
+
+template <typename LensHaloType>
+void TreeQuadHalos<LensHaloType>::printBranchs(int level){
   
   bool decend = true;
   tree->moveTop();
@@ -920,3 +1034,5 @@ void TreeQuadHalos::printBranchs(int level){
   
   return;
 }
+
+#endif /* quadTreeHalos_h */

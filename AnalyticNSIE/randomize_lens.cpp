@@ -7,7 +7,7 @@
 
 #include "slsimlib.h"
 
-const float sheartol = 1.0e-3;
+//const float sheartol = 1.0e-3;
 
 using namespace std;
 
@@ -178,264 +178,264 @@ void LensHaloAnaNSIE::AlignedRandomlyDistortLens(long *seed,PosType theta,int Np
 
 	return ;
 }
-/** \ingEinstein_roup ChangeLens
- *
- */
-void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
-	long i,k;
-	PosType r,theta,rmax,rav[2],r2av=0,area_av=0;
-	static unsigned long NsubMax;
-	static PosType Rm = 0.0,scale = 0.0,ndensity = 0.0,Einstein_ro_save = 0.0;
-
-	rav[0]=rav[1]=0.0;
-
-
-	// scaling of substructure masses with host sigma
-	//  exponent of 3 is for  M_host pEinstein_ropto sigma^3 model
-	if(sigma > 0.0){
-		scale = pow(sigma/sub_sigmaScale,3);
-
-		// keep fraction of surface density at r = f R(sigma) constant
-		//   R(sigma) pEinstein_ropto sigma to make all hosts have the same average density
-		ndensity = sub_Ndensity*pow(sigma/sub_sigmaScale,1)/scale;
-	}
-
-	if(Einstein_ro > 0.0){
-		Rm = Einstein_ro*rangeInRei + sub_Rsize*pow(scale,1./3.)
-	          + pow(2*sub_Mmax*scale*Einstein_ro/PI/Sigma_crit/sheartol,1./3.);
-		Einstein_ro_save = Einstein_ro;
-	}
-
-	if(!(substruct_implanted) && ndensity > 0){
-		NsubMax=(unsigned long)(ndensity*PI*Rm*Rm + 5*sqrt(ndensity*PI*Rm*Rm) );
-		if(NsubMax > 0){
-			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
-			switch(main_sub_type){
-			case pointmass:
-				subs = new LensHalo[NsubMax];
-				break;
-			case powerlaw:
-				subs = new LensHaloPowerLaw[NsubMax];
-				break;
-			case nfw:
-				subs = new LensHaloNFW[NsubMax];
-				break;
-			default:
-				subs = new LensHalo[NsubMax];
-				break;
-			}
-			sub_substructures = new IndexType[NsubMax];
-		}
-		substruct_implanted=true;
-	}
-	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
-	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*PI*Rm*Rm,seed),ndensity*PI*Rm*Rm);
-
-	unsigned int Nsub=(int)(poidev(ndensity*PI*Rm*Rm,seed));
-	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
-
-	//std::cout << "scale = %e\n",scale);
-
-	for(i=0,k=0; i < Nsub;++i){
-		//for(i=0;i<NSubstruct;++i){
-
-		r=Rm*sqrt(ran2(seed));
-
-		do{
-			if(sub_alpha == -1.0){
-				float ratio = sub_Mmax/sub_Mmin;
-				subs[k].set_mass(sub_Mmin*scale*pow(ratio,ran2(seed)));
-			}else{
-				subs[k].set_mass(sub_Mmin*scale
-						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
-								,1.0/(sub_alpha+1)));
-			}
-		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
-
-		// average density of a substructure does not scale with host
-		subs[k].set_RsizeRmax(sub_Rsize*pow(scale,1./3.)
-				*pow(subs[k].get_mass()/sub_Mmax/scale,1/3.));
-
-		subs[k].set_slope(sub_beta);
-
-		subs[k].set_rscale(0.1*subs[k].getRsize());
-
-		// maximum radius for a substructure of this mass
-		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
-		     + pow(2*subs[k].get_mass()*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.) );
-
-		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
-		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
-		if( r < rmax){
-			theta=2*PI*ran2(seed);
-			sub_x[k][0]=r*cos(theta);
-			sub_x[k][1]=r*sin(theta);
-			assert(k<NsubMax);
-
-			rav[0] += sub_x[k][0];
-			rav[1] += sub_x[k][1];
-			r2av += r*r;
-			area_av += pow(subs[k].getRsize(),2);
-			++k;
-		}
-	}
-
-	sub_N = k;
-
-/*
-	if(sub_N > 2){
-		// decide if it is worth doing substructure force calculation by tree or
-		//   by direct summation
-		r2av /= sub_N;
-		r2av = r2av - (rav[0]*rav[0]+rav[1]*rav[1])/(sub_N)/(sub_N);
-		area_av /= sub_N;
-
-		//std::cout << "relative area of average particle %e \n",area_av/r2av);
-
-		assert(r2av > 0);
-		assert(area_av >= 0.0);
-
-		if(main_sub_type == pointmass){  // always use tree for point mass substructures
-			sub_theta_force=1.0e-1;
-			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
-				false,true,sub_N,sub_substructures,2,sub_theta_force);
-		}else if( area_av/r2av < 1.0e-2 && sub_N > 300 ){
-			// build tree for doing substructure force calculation
-			sub_theta_force=1.0e-1;
-			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
-				true,true,sub_N,sub_substructures,2,sub_theta_force);
-		}else sub_tree = 0;
-	}else sub_tree = 0;
-*/
-	return;
-}
-/** \ingEinstein_roup ChangeLens
-	 *
-	 *  get a random population of substructures
-	 *  This version does not scale to Einstein_ro and
-	 *  sigma
-	 */
-void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
-	long i,k;
-	PosType r,theta,rmax,rav[2],r2av=0,area_av=0;
-	static unsigned long NsubMax;
-	static PosType Rm = 0.0,Einstein_ro_save = 0.0;
-
-	rav[0]=rav[1]=0.0;
-
-	if(Einstein_ro > 0.0){
-		Einstein_ro_save = Einstein_ro;
-		//std::cout << "Einstein_ro = %e\n",Einstein_ro);
-	}else if( perturb_Nmodes >= 4 && perturb_modes[3] > 0 ){  // this is in case the the host has already been fit to image positions
-		Einstein_ro_save = perturb_modes[3]/2;
-	}
-
-	assert(Einstein_ro_save > 0.0);
-
-	Rm = Einstein_ro_save*rangeInRei;
-	Rm +=  sub_Rsize
-          + pow(2*sub_Mmax*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.);
-
-	assert(Rm > 0.0);
-
-	if(!substruct_implanted){
-		NsubMax=(unsigned long)(sub_Ndensity*PI*Rm*Rm*(1+5/sqrt(sub_Ndensity*PI*Rm*Rm)) );
-		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
-		switch(main_sub_type){
-		case pointmass:
-			subs = new LensHalo[NsubMax];
-			break;
-		case powerlaw:
-			subs = new LensHaloPowerLaw[NsubMax];
-			break;
-		case nfw:
-			subs = new LensHaloNFW[NsubMax];
-			break;
-		default:
-			subs = new LensHalo[NsubMax];
-			break;
-		}
-		substruct_implanted=true;
-		sub_substructures = new IndexType[NsubMax];
-	}
-	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
-	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*PI*Rm*Rm,seed),ndensity*PI*Rm*Rm);
-
-	unsigned int Nsub=(int)(poidev(sub_Ndensity*PI*Rm*Rm,seed));
-
-	assert(Nsub < NsubMax);
-
-	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
-	//std::cout << "scale = %e\n",scale);
-	for(i=0,k=0; i < Nsub;++i){
-		//for(i=0;i<NSubstruct;++i){
-
-		r=Rm*sqrt(ran2(seed));
-
-		do{
-			if(sub_alpha == -1.0){
-				float ratio = sub_Mmax/sub_Mmin;
-				subs[k].set_mass(sub_Mmin*pow(ratio,ran2(seed)));
-			}else{
-				subs[k].set_mass(sub_Mmin
-						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
-								,1.0/(sub_alpha+1)));
-			}
-		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
-
-		// average density of a substructure does not scale with host
-		subs[k].set_RsizeRmax(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
-
-		// maximum radius for a substructure of this mass
-		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
-		     + pow(2*subs[k].get_mass()*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.) );
-
-		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
-		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
-		if( r < rmax){
-			theta=2*PI*ran2(seed);
-			sub_x[k][0]=r*cos(theta);
-			sub_x[k][1]=r*sin(theta);
-			assert(k<NsubMax);
-
-			rav[0] += sub_x[k][0];
-			rav[1] += sub_x[k][1];
-			r2av += r*r;
-			area_av += pow(subs[k].getRsize(),2);
-			++k;
-		}
-	}
-
-	sub_N = k;
-
-	//std::cout << "sub_N = %li Nsub = %li ndensity =%e\n",sub_N,Nsub,sub_Ndensity);
-/*
-	if(sub_N > 2){
-		// decide if it is worth doing substructure force calculation by tree or
-		//   by direct summation
-		r2av /= sub_N;
-		r2av = r2av - (rav[0]*rav[0]+rav[1]*rav[1])/(sub_N)/(sub_N);
-		area_av /= sub_N;
-
-		//std::cout << "relative area of average particle %e \n",area_av/r2av);
-
-		assert(r2av > 0);
-		assert(area_av >= 0.0);
-
-		if(main_sub_type == pointmass){  // always use tree for point mass substructures
-			sub_theta_force=1.0e-1;
-			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
-				false,true,sub_N,sub_substructures,2,sub_theta_force);
-		}else if( area_av/r2av < 1.0e-2 && sub_N > 300 ){
-			// build tree for doing substructure force calculation
-			sub_theta_force=1.0e-1;
-			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
-				true,true,sub_N,sub_substructures,2,sub_theta_force);
-		}else sub_tree = 0;
-	}else sub_tree = 0;
-*/
-	return;
-}
+///* \ingEinstein_roup ChangeLens
+// *
+// */
+//void LensHaloAnaNSIE::RandomizeSubstructure2(PosType rangeInRei,long *seed){
+//	long i,k;
+//	PosType r,theta,rmax,rav[2],r2av=0,area_av=0;
+//	static unsigned long NsubMax;
+//	static PosType Rm = 0.0,scale = 0.0,ndensity = 0.0,Einstein_ro_save = 0.0;
+//
+//	rav[0]=rav[1]=0.0;
+//
+//
+//	// scaling of substructure masses with host sigma
+//	//  exponent of 3 is for  M_host pEinstein_ropto sigma^3 model
+////	if(sigma > 0.0){
+////		scale = pow(sigma/sub_sigmaScale,3);
+////
+////		// keep fraction of surface density at r = f R(sigma) constant
+////		//   R(sigma) pEinstein_ropto sigma to make all hosts have the same average density
+////		ndensity = sub_Ndensity*pow(sigma/sub_sigmaScale,1)/scale;
+////	}
+////
+////	if(Einstein_ro > 0.0){
+////		Rm = Einstein_ro*rangeInRei + sub_Rsize*pow(scale,1./3.)
+////	          + pow(2*sub_Mmax*scale*Einstein_ro/PI/Sigma_crit/sheartol,1./3.);
+////		Einstein_ro_save = Einstein_ro;
+////	}
+//
+////	if(!(substruct_implanted) && ndensity > 0){
+////		NsubMax=(unsigned long)(ndensity*PI*Rm*Rm + 5*sqrt(ndensity*PI*Rm*Rm) );
+////		if(NsubMax > 0){
+////			sub_x=Utilities::PosTypeMatrix(NsubMax,2);
+////			switch(main_sub_type){
+////			case pointmass:
+////				subs = new LensHalo[NsubMax];
+////				break;
+////			case powerlaw:
+////				subs = new LensHaloPowerLaw[NsubMax];
+////				break;
+////			case nfw:
+////				subs = new LensHaloNFW[NsubMax];
+////				break;
+////			default:
+////				subs = new LensHalo[NsubMax];
+////				break;
+////			}
+////			sub_substructures = new IndexType[NsubMax];
+////		}
+////		substruct_implanted=true;
+////	}
+//	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
+//	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*PI*Rm*Rm,seed),ndensity*PI*Rm*Rm);
+//
+////	unsigned int Nsub=(int)(poidev(ndensity*PI*Rm*Rm,seed));
+////	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
+//
+//	//std::cout << "scale = %e\n",scale);
+//
+////	for(i=0,k=0; i < Nsub;++i){
+////		//for(i=0;i<NSubstruct;++i){
+////
+////		r=Rm*sqrt(ran2(seed));
+////
+////		do{
+////			if(sub_alpha == -1.0){
+////				float ratio = sub_Mmax/sub_Mmin;
+////				subs[k].set_mass(sub_Mmin*scale*pow(ratio,ran2(seed)));
+////			}else{
+////				subs[k].set_mass(sub_Mmin*scale
+////						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
+////								,1.0/(sub_alpha+1)));
+////			}
+////		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
+////
+////		// average density of a substructure does not scale with host
+////		subs[k].set_RsizeRmax(sub_Rsize*pow(scale,1./3.)
+////				*pow(subs[k].get_mass()/sub_Mmax/scale,1/3.));
+////
+////		subs[k].set_slope(sub_beta);
+////
+////		subs[k].set_rscale(0.1*subs[k].getRsize());
+////
+////		// maximum radius for a substructure of this mass
+////		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
+////		     + pow(2*subs[k].get_mass()*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.) );
+////
+////		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
+////		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
+////		if( r < rmax){
+////			theta=2*PI*ran2(seed);
+////			sub_x[k][0]=r*cos(theta);
+////			sub_x[k][1]=r*sin(theta);
+////			assert(k<NsubMax);
+////
+////			rav[0] += sub_x[k][0];
+////			rav[1] += sub_x[k][1];
+////			r2av += r*r;
+////			area_av += pow(subs[k].getRsize(),2);
+////			++k;
+////		}
+////	}
+////
+////	sub_N = k;
+//
+///*
+//	if(sub_N > 2){
+//		// decide if it is worth doing substructure force calculation by tree or
+//		//   by direct summation
+//		r2av /= sub_N;
+//		r2av = r2av - (rav[0]*rav[0]+rav[1]*rav[1])/(sub_N)/(sub_N);
+//		area_av /= sub_N;
+//
+//		//std::cout << "relative area of average particle %e \n",area_av/r2av);
+//
+//		assert(r2av > 0);
+//		assert(area_av >= 0.0);
+//
+//		if(main_sub_type == pointmass){  // always use tree for point mass substructures
+//			sub_theta_force=1.0e-1;
+//			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
+//				false,true,sub_N,sub_substructures,2,sub_theta_force);
+//		}else if( area_av/r2av < 1.0e-2 && sub_N > 300 ){
+//			// build tree for doing substructure force calculation
+//			sub_theta_force=1.0e-1;
+//			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
+//				true,true,sub_N,sub_substructures,2,sub_theta_force);
+//		}else sub_tree = 0;
+//	}else sub_tree = 0;
+//*/
+//	return;
+//}
+///* \ingEinstein_roup ChangeLens
+//	 *
+//	 *  get a random population of substructures
+//	 *  This version does not scale to Einstein_ro and
+//	 *  sigma
+//	 */
+//void LensHaloAnaNSIE::RandomizeSubstructure3(PosType rangeInRei,long *seed){
+//	long i,k;
+//	PosType r,theta,rmax,rav[2],r2av=0,area_av=0;
+//	static unsigned long NsubMax;
+//	static PosType Rm = 0.0,Einstein_ro_save = 0.0;
+//
+//	rav[0]=rav[1]=0.0;
+//
+//	if(Einstein_ro > 0.0){
+//		Einstein_ro_save = Einstein_ro;
+//		//std::cout << "Einstein_ro = %e\n",Einstein_ro);
+//	}else if( perturb_Nmodes >= 4 && perturb_modes[3] > 0 ){  // this is in case the the host has already been fit to image positions
+//		Einstein_ro_save = perturb_modes[3]/2;
+//	}
+//
+//	assert(Einstein_ro_save > 0.0);
+//
+//	Rm = Einstein_ro_save*rangeInRei;
+//	Rm +=  sub_Rsize
+//          + pow(2*sub_Mmax*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.);
+//
+//	assert(Rm > 0.0);
+//
+////	if(!substruct_implanted){
+////		NsubMax=(unsigned long)(sub_Ndensity*PI*Rm*Rm*(1+5/sqrt(sub_Ndensity*PI*Rm*Rm)) );
+////		sub_x=Utilities::PosTypeMatrix(NsubMax,2);
+////		switch(main_sub_type){
+////		case pointmass:
+////			subs = new LensHalo[NsubMax];
+////			break;
+////		case powerlaw:
+////			subs = new LensHaloPowerLaw[NsubMax];
+////			break;
+////		case nfw:
+////			subs = new LensHaloNFW[NsubMax];
+////			break;
+////		default:
+////			subs = new LensHalo[NsubMax];
+////			break;
+////		}
+////		substruct_implanted=true;
+////		sub_substructures = new IndexType[NsubMax];
+////	}
+////	//std::cout << "Rm/re = %e\n",Rm/Einstein_ro);
+////	//for(i=0;i<12;++i) std::cout << "%f %f\n",poidev(ndensity*PI*Rm*Rm,seed),ndensity*PI*Rm*Rm);
+////
+////	unsigned int Nsub=(int)(poidev(sub_Ndensity*PI*Rm*Rm,seed));
+////
+////	assert(Nsub < NsubMax);
+////
+////	Nsub = (NsubMax > Nsub) ? Nsub : NsubMax ;
+////	//std::cout << "scale = %e\n",scale);
+////	for(i=0,k=0; i < Nsub;++i){
+////		//for(i=0;i<NSubstruct;++i){
+////
+////		r=Rm*sqrt(ran2(seed));
+////
+////		do{
+////			if(sub_alpha == -1.0){
+////				float ratio = sub_Mmax/sub_Mmin;
+////				subs[k].set_mass(sub_Mmin*pow(ratio,ran2(seed)));
+////			}else{
+////				subs[k].set_mass(sub_Mmin
+////						*pow(ran2(seed)*(pow(sub_Mmax/sub_Mmin,sub_alpha+1)-1)+1.0
+////								,1.0/(sub_alpha+1)));
+////			}
+////		}while(subs[k].get_mass() < sub_Mmin);  // not sure why this is necessary
+////
+////		// average density of a substructure does not scale with host
+////		subs[k].set_RsizeRmax(sub_Rsize*pow(subs[k].get_mass()/sub_Mmax,1/3.));
+////
+////		// maximum radius for a substructure of this mass
+////		rmax = (Einstein_ro_save*rangeInRei + subs[k].getRsize()
+////		     + pow(2*subs[k].get_mass()*Einstein_ro_save/PI/Sigma_crit/sheartol,1./3.) );
+////
+////		//std::cout << "RcutSubstruct[%i] = %e\n",k,RcutSubstruct[k]);
+////		//std::cout << "%e %e %e Rm=%e\n",r/rmax,r,rmax,Rm);
+////		if( r < rmax){
+////			theta=2*PI*ran2(seed);
+////			sub_x[k][0]=r*cos(theta);
+////			sub_x[k][1]=r*sin(theta);
+////			assert(k<NsubMax);
+////
+////			rav[0] += sub_x[k][0];
+////			rav[1] += sub_x[k][1];
+////			r2av += r*r;
+////			area_av += pow(subs[k].getRsize(),2);
+////			++k;
+////		}
+////	}
+////
+////	sub_N = k;
+//
+//	//std::cout << "sub_N = %li Nsub = %li ndensity =%e\n",sub_N,Nsub,sub_Ndensity);
+///*
+//	if(sub_N > 2){
+//		// decide if it is worth doing substructure force calculation by tree or
+//		//   by direct summation
+//		r2av /= sub_N;
+//		r2av = r2av - (rav[0]*rav[0]+rav[1]*rav[1])/(sub_N)/(sub_N);
+//		area_av /= sub_N;
+//
+//		//std::cout << "relative area of average particle %e \n",area_av/r2av);
+//
+//		assert(r2av > 0);
+//		assert(area_av >= 0.0);
+//
+//		if(main_sub_type == pointmass){  // always use tree for point mass substructures
+//			sub_theta_force=1.0e-1;
+//			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
+//				false,true,sub_N,sub_substructures,2,sub_theta_force);
+//		}else if( area_av/r2av < 1.0e-2 && sub_N > 300 ){
+//			// build tree for doing substructure force calculation
+//			sub_theta_force=1.0e-1;
+//			sub_tree=BuildTreeNB(sub_x,sub_Rcut,sub_mass,
+//				true,true,sub_N,sub_substructures,2,sub_theta_force);
+//		}else sub_tree = 0;
+//	}else sub_tree = 0;
+//*/
+//	return;
+//}
 
 namespace Utilities{
 /** \ingEinstein_roup Utill
@@ -452,26 +452,26 @@ namespace Utilities{
 	}
 }
 
-PosType LensHaloAnaNSIE::FractionWithinRe(PosType rangeInRei){
-	PosType B;
+//PosType LensHaloAnaNSIE::FractionWithinRe(PosType rangeInRei){
+//	PosType B;
+//
+//	B = (sub_Rsize/pow(sub_Mmax,1./3.)
+//			+ pow(2*Einstein_ro/PI/Sigma_crit/1.e-3,1./3.) );
+//
+//	return 1+(1+sub_alpha)*(
+//		2*rangeInRei*Einstein_ro*B*(
+//				pow(sub_Mmax,sub_alpha+4./3.)-pow(sub_Mmin,sub_alpha+4./3.)
+//				)/(sub_alpha+4./3.)
+//		+ B*B*(
+//				pow(sub_Mmax,sub_alpha+5./3.)-pow(sub_Mmin,sub_alpha+5./3.)
+//				)/(sub_alpha+5./3.)
+//		)/(pow(rangeInRei*Einstein_ro,2)*(pow(sub_Mmax,sub_alpha+1.0)-pow(sub_Mmin,sub_alpha+1.0))
+//				);
+//}
 
-	B = (sub_Rsize/pow(sub_Mmax,1./3.)
-			+ pow(2*Einstein_ro/PI/Sigma_crit/1.e-3,1./3.) );
-
-	return 1+(1+sub_alpha)*(
-		2*rangeInRei*Einstein_ro*B*(
-				pow(sub_Mmax,sub_alpha+4./3.)-pow(sub_Mmin,sub_alpha+4./3.)
-				)/(sub_alpha+4./3.)
-		+ B*B*(
-				pow(sub_Mmax,sub_alpha+5./3.)-pow(sub_Mmin,sub_alpha+5./3.)
-				)/(sub_alpha+5./3.)
-		)/(pow(rangeInRei*Einstein_ro,2)*(pow(sub_Mmax,sub_alpha+1.0)-pow(sub_Mmin,sub_alpha+1.0))
-				);
-}
-
-PosType LensHaloBaseNSIE::averageSubMass(){
-	// average mass of substructures
-	return sub_Mmax*(sub_alpha+1)
-				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/
-				  (1-pow(sub_Mmin/sub_Mmax,sub_alpha+1));
-}
+//PosType LensHaloBaseNSIE::averageSubMass(){
+//	// average mass of substructures
+//	return sub_Mmax*(sub_alpha+1)
+//				  /(sub_alpha+2)*(1-pow(sub_Mmin/sub_Mmax,sub_alpha+2))/
+//				  (1-pow(sub_Mmin/sub_Mmax,sub_alpha+1));
+//}

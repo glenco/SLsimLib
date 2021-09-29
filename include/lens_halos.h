@@ -50,7 +50,8 @@ public:
   //LensHalo(InputParams& params,bool needRsize = true);
   LensHalo(const LensHalo &h);
   
-  LensHalo(LensHalo &&h):star_tree(nullptr){
+  LensHalo(LensHalo &&h){
+//    LensHalo(LensHalo &&h):star_tree(nullptr){
     *this = std::move(h);
   }
 
@@ -86,7 +87,7 @@ public:
   }
 
   /// returns position of the Halo in physical Mpc on the lens plane
-  PosType operator[](int i) const{return posHalo[0]*Dist;}
+  PosType operator[](int i) const{return posHalo[i]*Dist;}
   
   /// set the position of the Halo in radians
   void setTheta(PosType PosX, PosType PosY) { posHalo[0] = PosX ; posHalo[1] = PosY ; }
@@ -153,31 +154,47 @@ public:
    if not overwritten by derived class it uses alpha_h(), gamma_h(), etc. of the
    derived case or for a point source in this class
    
+   xcm - the physical position on the lens plane relative to the center of the LensHalo in Mpc
   Units :
+   
   ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
   KAPPA    -    surface mass density , mass / /PhysMpc/PhysMpc - KAPPA / Sig_crit is the convergence
   GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
   PHI      -    mass - PHI / Sig_crit is the lensing potential
+   
+* returns the lensing quantities of a ray in center of mass coordinates.
+   *
+   *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need
+   *  to be zeroed out if the contribution of just this halo is wanted.
    */
-	virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening=1.0);
+  virtual void force_halo(
+      PosType *alpha          /// deflection solar mass/Mpc
+      ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
+      ,KappaType *gamma     /// three components of shear
+      ,KappaType *phi       /// potential in solar masses
+      ,PosType const *xcm   /// position relative to center (Mpc?)
+      ,bool subtract_point=false /// if true contribution from a point mass is subtracted
+      ,PosType screening=1.0   /// the factor by which to scale the mass for screening of the point mass subtraction
+  );
+
   
 	/// force tree calculation for stars
-	void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
+	//void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
   
 	/// internal compare redshift function
 	bool compareZ(PosType z){return z > zlens;};
   
   /// stars
-  bool AreStarsImplanted() const {return stars_implanted;}
-  void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
-  void implant_stars(PosType *center,long *seed,IMFtype type = One);
-  //void implant_stars(PosType *x,PosType *y,int Nregions,long *seed,IMFtype type=One);
-  void remove_stars();
-  IMFtype getStarIMF_type() const {return main_stars_imf_type;}
-  /// Fraction of surface density in stars
-  PosType getFstars() const {return star_fstars;}
-  /// The mass of the stars if they are all the same mass
-  PosType getStarMass() const {if(stars_implanted)return stars_xp[0].mass(); else return 0.0;}
+//  bool AreStarsImplanted() const {return stars_implanted;}
+//  void implant_stars(PosType **centers,int Nregions,long *seed, IMFtype type=One);
+//  void implant_stars(PosType *center,long *seed,IMFtype type = One);
+//  //void implant_stars(PosType *x,PosType *y,int Nregions,long *seed,IMFtype type=One);
+//  void remove_stars();
+//  IMFtype getStarIMF_type() const {return main_stars_imf_type;}
+//  /// Fraction of surface density in stars
+//  PosType getFstars() const {return star_fstars;}
+//  /// The mass of the stars if they are all the same mass
+//  PosType getStarMass() const {if(stars_implanted)return stars_xp[0].mass(); else return 0.0;}
   
   /// the method used to ellipticize a halo if fratio!=1 and halo is not NSIE
   EllipMethod getEllipMethod() const {return main_ellip_method;}
@@ -197,7 +214,7 @@ public:
 	virtual void printCSV(std::ostream&, bool header = false) const;
   
 	/// Prints star parameters; if show_stars is true, prints data for single stars
-	void PrintStars(bool show_stars);
+	//void PrintStars(bool show_stars);
   
   PosType MassBy2DIntegation(PosType R);
   PosType MassBy1DIntegation(PosType R);
@@ -247,12 +264,14 @@ private:
   /// Position of the Halo in angle
   PosType posHalo[2];
   PosType zlens;
-  float mass;
   // This is the size of the halo beyond which it does not have the expected profile.
   float Rsize = 0;
 
 protected:
 
+  // total mass in Msun
+  float mass;
+  // angular size distance to this lens
   PosType Dist;
   PosType mnorm;
 
@@ -288,29 +307,29 @@ protected:
     PosType operator ()(PosType x) {return halo.gfunction(x)/x ;}
   };
   
-  std::vector<IndexType> stars_index;
-  std::vector<StarType> stars_xp;
-  TreeQuadParticles<StarType> *star_tree;
-  
-  int stars_N;
-  PosType star_massscale;
-  /// star masses relative to star_massscles
-  //float *star_masses;
-  PosType star_fstars;
-  PosType star_theta_force;
-  int star_Nregions;
-  std::vector<PosType> star_region;
+//  std::vector<IndexType> stars_index;
+//  std::vector<StarType> stars_xp;
+//  TreeQuadParticles<StarType> *star_tree;
+//
+//  int stars_N;
+//  PosType star_massscale;
+//  /// star masses relative to star_massscles
+//  //float *star_masses;
+//  PosType star_fstars;
+//  PosType star_theta_force;
+//  int star_Nregions;
+//  std::vector<PosType> star_region;
   PosType beta;
-  void substract_stars_disks(PosType const *ray,PosType *alpha
-                             ,KappaType *kappa,KappaType *gamma);
-  std::vector<float> stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
-                               ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
+//  void substract_stars_disks(PosType const *ray,PosType *alpha
+//                             ,KappaType *kappa,KappaType *gamma);
+//  std::vector<float> stellar_mass_function(IMFtype type, unsigned long Nstars, long *seed, PosType minmass=0.0, PosType maxmass=0.0
+//                               ,PosType bendmass=0.0, PosType powerlo=0.0, PosType powerhi=0.0);
   
   
   /// read in parameters from a parameterfile in InputParams params
   void assignParams(InputParams& params,bool needRsize);
   /// read in star parameters. This is valid for all halos and not overloaded.
-  void assignParams_stars(InputParams& params);
+  //void assignParams_stars(InputParams& params);
   
   /// error message printout
   void error_message1(std::string name,std::string filename);
@@ -323,20 +342,21 @@ protected:
   float rscale;
   // redshift
   //PosType zlens;
-  
-  bool stars_implanted;
-  /// Number of regions to be subtracted to compensate for the mass in stars
-  IMFtype main_stars_imf_type;
-  PosType main_stars_min_mass;
-  PosType main_stars_max_mass;
+
   EllipMethod main_ellip_method;
-  PosType bend_mstar;
-  PosType lo_mass_slope;
-  PosType hi_mass_slope;
-  /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
-  std::vector<PosType> star_Sigma;
-  std::vector<Point_2d> star_xdisk;
-  
+
+//  bool stars_implanted;
+//  /// Number of regions to be subtracted to compensate for the mass in stars
+//  IMFtype main_stars_imf_type;
+//  PosType main_stars_min_mass;
+//  PosType main_stars_max_mass;
+//  PosType bend_mstar;
+//  PosType lo_mass_slope;
+//  PosType hi_mass_slope;
+//  /// parameters for stellar mass function: minimal and maximal stellar mass, bending point for a broken power law IMF
+//  std::vector<PosType> star_Sigma;
+//  std::vector<Point_2d> star_xdisk;
+//
   
   /// point mass case
   /// r |alpha(r)| pi Sigma_crit / Mass
@@ -718,7 +738,6 @@ public:
               ,float my_concentration
               ,float my_fratio    /// axis ratio
               ,float my_pa
-              ,int my_stars_N
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=Pseudo
               );
@@ -848,7 +867,7 @@ class LensHaloPseudoNFW: public LensHalo{
 public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
+  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
 	//LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   
@@ -922,7 +941,7 @@ class LensHaloPowerLaw: public LensHalo{
 public:
 	LensHaloPowerLaw();
   LensHaloPowerLaw(float my_mass,float my_Rsize,PosType my_zlens,PosType my_beta
-                   ,float my_fratio,float my_pa, int my_stars_N,const COSMOLOGY &cosmo
+                   ,float my_fratio,float my_pa,const COSMOLOGY &cosmo
                    ,EllipMethod my_ellip_method=Pseudo);
 	//LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
@@ -976,19 +995,25 @@ private:
 };
 
 
-
-
-
 /** \brief Represents a non-singular isothermal elliptical lens
-
-This is a true NSIE lens rather than an expansion that approximates one.
+ *
+ * This is a true NSIE lens rather than an expansion that approximates one.
+ *
+ * The maximum radius is set by requireing the total mass to match the input mass.
+ *  At radii larger than this radius the halo is treated as a point mass.  In the case of
+ *  an ellipitcal halo there is a transition region between these to match the solutions
+ *  without a discontinuity.  In this region the lensing quanties have small corrections
+ *  which do not correspond to a realistic mass distribution.  If the halo is expected to
+ *  be sampled at or beyond the maxiumum radius you should consider using a Truncated
+ *  NonSingular Isotherma Ellipsoid (`LensHaloTNSIE') which more naturally deals with the
+ *   finite truncation.
 */
 class LensHaloRealNSIE : public LensHalo{
 public:
 
   /// explicit constructor, Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
   LensHaloRealNSIE(float my_mass,PosType my_zlens,float my_sigma
-                   ,float my_rcore,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo);
+                   ,float my_rcore,float my_fratio,float my_pa,const COSMOLOGY &cosmo);
   
   // Warning: If my_rcore > 0.0 and my_fratio < 1 then the mass will be somewhat less than my_mass.
 	//LensHaloRealNSIE(InputParams& params);
@@ -1019,8 +1044,7 @@ public:
   
 	/// overridden function to calculate the lensing properties
 	void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
-	// void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType *xcm,bool subtract_point=false);
-  
+	
 	/// get the velocity dispersion
 	float get_sigma(){return sigma;};
 	// get the NSIE radius
@@ -1092,7 +1116,91 @@ protected:
   
 };
 
+/** \brief Truncated non-singular isothermal ellipsoid
 
+This is a true NSIE lens rather than an expansion that approximates one.
+*/
+class LensHaloTNSIE : public LensHalo{
+public:
+
+  LensHaloTNSIE(float my_mass  /// total mass in Msun
+                ,PosType my_zlens /// redshift
+                ,float my_sigma  /// vleocity dispertion in km/s
+                ,float my_rcore  ///  core size Mpc
+                ,float my_fratio /// axis ratio
+                ,float my_pa     /// position angle
+                ,const COSMOLOGY &cosmo  /// cosmology
+                ,float f=20 /// cuttoff radius in units of truncation radius
+                );
+  
+  LensHaloTNSIE(const LensHaloTNSIE &h):
+  LensHalo(h)
+  {
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    rtrunc = h.rtrunc;
+    units = h.units;
+  }
+  
+  LensHaloTNSIE &operator=(const LensHaloTNSIE &h){
+    if(&h == this) return *this;
+    LensHalo::operator=(h);
+    sigma = h.sigma;
+    fratio = h.fratio;
+    pa = h.pa;
+    rcore = h.rcore;
+    rtrunc = h.rtrunc;
+    units = h.units;
+    return *this;
+  }
+  
+  ~LensHaloTNSIE(){};
+  
+  /// returns the sigma in km / s for the other parameters fixed
+  static double calc_sigma(float mass,float Rtrunc,float Rcore,float fratio){
+    return lightspeed*sqrt( Grav*mass*sqrt(fratio) / (Rtrunc-Rcore) / PI);
+  }
+
+  /// overridden function to calculate the lensing properties
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
+  
+  /// get the velocity dispersion
+  float get_sigma(){return sigma;};
+  // get the NSIE radius
+  //float get_Rsize(){return Rsize;};
+  /// get the axis ratio
+  float get_fratio(){return fratio;};
+  /// get the position angle
+  float get_pa(){return pa;};
+  /// get the core radius
+  float get_rcore(){return rcore;};
+  /// get the truncation radius
+  float get_rtrunc(){return rtrunc;};
+  
+  void setZlens(PosType my_zlens,const COSMOLOGY &cosmo){
+    LensHalo::setZlens(my_zlens,cosmo);
+  }
+
+  
+protected:
+  
+  float units;
+  
+  /// read-in parameters from a parameter file
+  void assignParams(InputParams& params);
+  /// velocity dispersion of TNSIE
+  float sigma;
+  /// axis ratio of surface mass distribution
+  float fratio;
+  /// position angle on sky, radians
+  float pa;
+  /// core size of NSIE
+  float rcore;
+  /// core size of NSIE
+  float rtrunc;
+};
 
 /**
  *
@@ -1107,7 +1215,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
-  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
+  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
 	//LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
@@ -1186,7 +1294,7 @@ class LensHaloJaffe: public LensHalo{
 public:
 	//LensHaloJaffe();
   LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio
-                ,float my_pa,int my_stars_N,const COSMOLOGY &cosmo
+                ,float my_pa,const COSMOLOGY &cosmo
                 , EllipMethod my_ellip_method=Pseudo);
 	//LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
@@ -1261,7 +1369,7 @@ private:
 class LensHaloDummy: public LensHalo{
 public:
 	LensHaloDummy();
-  LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N,const COSMOLOGY &cosmo);
+  LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,const COSMOLOGY &cosmo);
 	//LensHaloDummy(InputParams& params);
 	~LensHaloDummy(){};
 	

@@ -55,4 +55,7 @@ add_sources(
 	disk.h
 	cpfits.h
 	shear.h
+	quadTreeHalos.h
+	powell.h
+	slicer.h
 )

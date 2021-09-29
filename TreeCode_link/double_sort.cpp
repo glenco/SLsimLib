@@ -171,7 +171,7 @@ namespace Utilities{
         /*brr[j-1]=b;*/
         PointCopy(&brr[j-1],&b);
         jstack += 2;
-        if (jstack > NSTACK) nrerror("NSTACK too small in double_sort_points");
+        if (jstack > NSTACK) throw std::runtime_error("NSTACK too small in double_sort_points");
         if (ir-i+1 >= j-l) {
           istack[jstack]=ir;
           istack[jstack-1]=i;
@@ -266,106 +266,6 @@ namespace Utilities{
     return ;
   }
 
-  void quicksort(unsigned long *particles,PosType *arr,unsigned long N){
-    
-    std::vector<size_t> index(N);
-    
-    Utilities::sort_indexes(arr,index,N);
-    
-    Utilities::apply_permutation(particles,index);
-    Utilities::apply_permutation(arr,index);
-    
-    //std::cout << arr[0] << " " << arr[1] << " " << arr[2] << std::endl;
-    assert(arr[0] <= arr[N-1]);
-    return;
 
-    
-    PosType pivotvalue;
-    unsigned long pivotindex,newpivotindex,i;
-    
-    if(N <= 1) return ;
-    
-    // pick pivot as the median of the first, last and middle values
-    if ((arr[0] >= arr[N/2] && arr[0] <= arr[N-1])
-        || (arr[0] >= arr[N-1] && arr[0] <= arr[N/2])) pivotindex = 0;
-    else if ((arr[N/2] >= arr[0] && arr[N/2] <= arr[N-1])
-             || (arr[N/2] >= arr[N-1] && arr[N/2] <= arr[0])) pivotindex = N/2;
-    else pivotindex = N-1;
-    pivotvalue=arr[pivotindex];
-    
-    // move pivet to end of array
-    std::swap(arr[pivotindex],arr[N-1]);
-    std::swap(particles[pivotindex],particles[N-1]);
-    newpivotindex=0;
-    
-    // partition list and array
-    for(i=0;i<N;++i){
-      if(arr[i] <= pivotvalue){
-        std::swap(arr[newpivotindex],arr[i]);
-        std::swap(particles[newpivotindex],particles[i]);
-        ++newpivotindex;
-      }
-    }
-    if(newpivotindex != 0) --newpivotindex;
-    
-    quicksort(particles,arr,newpivotindex);
-    quicksort(&particles[newpivotindex+1],&arr[newpivotindex+1],N-newpivotindex-1);
-    
-    return ;
-  }
-  
-  /*
-   * Partitions arr[] and particles[] into those with x <= pivotvalue and those with
-   *  x > pivotvalue  pivotindex is left at first array value with x > pivotvalue
-   */
-  void quickPartition(PosType pivotvalue,unsigned long *pivotindex,unsigned long *particles
-                      ,PosType *arr,unsigned long N){
-    unsigned long i;
-    
-    *pivotindex=0;
-    
-    for(i=0;i<N;++i){
-      if(arr[i] <= pivotvalue){
-        std::swap(arr[*pivotindex],arr[i]);
-        std::swap(particles[*pivotindex],particles[i]);
-        ++(*pivotindex);
-      }
-    }
-    
-    return ;
-  }
-  void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
-                            ,Point *pointarray,PosType *arr,unsigned long N){
-    unsigned long i;
-    
-    *pivotindex=0;
-    
-    for(i=0;i<N;++i){
-      if(arr[i] <= pivotvalue){
-        std::swap(arr[*pivotindex],arr[i]);
-        assert(*pivotindex < N);
-        SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
-        ++(*pivotindex);
-      }
-    }
-    
-    return ;
-  }
-  void quickPartitionPoints(PosType pivotvalue,unsigned long *pivotindex
-                            ,Point *pointarray,PosType (*func)(Point &p),unsigned long N){
-    unsigned long i;
-    
-    *pivotindex=0;
-    
-    for(i=0;i<N;++i){
-      if(func(pointarray[i]) <= pivotvalue){
-        assert(*pivotindex < N);
-        SwapPointsInArray(&pointarray[*pivotindex],&pointarray[i]);
-        ++(*pivotindex);
-      }
-    }
-    
-    return ;
-  }
- 
 }
+ 

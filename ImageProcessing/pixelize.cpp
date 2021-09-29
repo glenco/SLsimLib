@@ -440,7 +440,6 @@ bool PixelMap::agrees(const PixelMap& other) const
 /// Add the values of another PixelMap to this one.
 PixelMap& PixelMap::operator+=(const PixelMap& rhs)
 {
-  // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
@@ -463,7 +462,6 @@ PixelMap PixelMap::operator+(const PixelMap& a) const
 /// Subtract the values of another PixelMap from this one.
 PixelMap& PixelMap::operator-=(const PixelMap& rhs)
 {
-  // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
@@ -570,7 +568,7 @@ void PixelMap::AddImages(
 
 void PixelMap::AddGridBrightness(Grid &grid){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  //if(units != photon_flux) throw std::invalid_argument("wrong units");
   PointList *plist = grid.i_tree->pointlist;
   
   if(plist->size() == 0) return;
@@ -621,6 +619,11 @@ void PixelMap::AddImages(
 ///  see full notes
 ){
   AddImages(imageinfo.data(),Nimages,rescale);
+}
+
+void PixelMap::AddPointSource(const Point_2d &x,double flux){
+  long index = find_index(x.x);
+  if(index > -1) map[index] += flux;
 }
 
 /*
@@ -900,9 +903,7 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
- 
+
   cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
@@ -914,10 +915,25 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", RA, "radians, center");
-  cpfits.writeKey("DEC",DEC, "radians, center");
+
+  cpfits.writeKey("RA_global", RA, "radians, center");
+  cpfits.writeKey("DEC_global",DEC, "radians, center");
   cpfits.writeKey("center_x", center[0], "radians, center");
   cpfits.writeKey("center_y", center[1], "radians, center");
+  
+   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+  
+  for(auto &h : headers_float){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  for(auto &h : headers_long){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  for(auto &h : headers_string){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  
 }
 
 void PixelMap::printFITS(std::string filename
@@ -939,8 +955,8 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
   //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
   //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
   //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
@@ -954,10 +970,14 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", RA, "radians, center");
-  cpfits.writeKey("DEC",DEC, "radians, center");
+  
+  cpfits.writeKey("RA_global", RA, "radians, center");
+  cpfits.writeKey("DEC_global",DEC, "radians, center");
   cpfits.writeKey("center_x", center[0], "radians, center");
   cpfits.writeKey("center_y", center[1], "radians, center");
+
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
 
   for(auto hp : extra_header_info){
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
@@ -2238,6 +2258,10 @@ void PixelMap::recenter(PosType c[2] /// new center
   center[1] = c[1];
   
   return;
+}
+void PixelMap::recenter(Point_2d c /// new center
+){
+  recenter(c.x);
 }
 
 /*

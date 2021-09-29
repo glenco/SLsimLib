@@ -83,6 +83,7 @@ namespace Utilities {
       void OrthographicProjection(const SphericalPoint &central
                                   ,T x[]) const;
       Point_2d OrthographicProjection(const SphericalPoint &central) const;
+
       void InverseOrthographicProjection(
           const SphericalPoint &central,T const x[]);
       void InverseOrthographicProjection(
@@ -111,7 +112,9 @@ namespace Utilities {
          
          return p;
        }
-};
+ 
+      SphericalPoint<T> InverseOrthographicProjection(const Point_2d &x);
+    };
     
     /** \brief Quaternion class that is especially useful for rotations.
      
@@ -504,7 +507,8 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
                             - x[1]*sin(central.theta) );
 }
-    template <typename T>
+    
+template <typename T>
 void SphericalPoint<T>::InverseOrthographicProjection(
     const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
     ,const Point_2d &x             /// 2D output coordinate on projection
@@ -536,6 +540,20 @@ T SphericalPoint<T>::OrthographicAngleTheta(
                    *cos(phi - central.phi)
           , -sin(phi - central.phi) * sin(phi - central.phi) );
     }
+
+  //// deprojection where this is the center of the projection
+template <typename T>
+SphericalPoint<T> SphericalPoint<T>::InverseOrthographicProjection(
+     const Point_2d &x             /// 2D coordinate on projection
+){
+  PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
+  PosType c = asin(rho);
+  T new_theta = asin( cos(c)*sin(theta) + x[1]*sin(c)*cos(theta)/rho );
+  T new_phi = phi + atan2(x[0]*sin(c),rho*cos(theta)*cos(c)
+                            - x[1]*sin(theta)*sin(c) );
+  
+  return SphericalPoint<T>(1,new_theta,new_phi);
+}
 
 ///  3 dimensional distance between points
     template <typename T>

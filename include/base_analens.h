@@ -83,25 +83,25 @@ public:
 	virtual PosType get_rcore(){return rcore;};
 
   /// substructures
-  bool AreSubStructImplanted(){return substruct_implanted;}
-  PosType sub_sigmaScale;
-  PosType sub_Ndensity;
+  //bool AreSubStructImplanted(){return substruct_implanted;}
+  //PosType sub_sigmaScale;
+  //PosType sub_Ndensity;
   /// actual number of substructures
-  int sub_N;
-  PosType **sub_x;
+  //int sub_N;
+  //PosType **sub_x;
   /// slope of mass profile
-  PosType sub_beta;
+  //PosType sub_beta;
   /// slope of mass function
-  PosType sub_alpha;
+  //PosType sub_alpha;
   /// radius of largest mass substructures
-  PosType sub_Rsize;
-  PosType sub_Mmax;
-  PosType sub_Mmin;
-  PosType sub_theta_force;
-  LensHalo *subs;
-  TreeQuadHalos *sub_tree;
-  IndexType *sub_substructures;
-  ClumpInternal main_sub_type;
+  //PosType sub_Rsize;
+  //PosType sub_Mmax;
+  //PosType sub_Mmin;
+  //PosType sub_theta_force;
+  //LensHalo *subs;
+  //TreeQuadHalos *sub_tree;
+  //IndexType *sub_substructures;
+  //ClumpInternal main_sub_type;
 
   //void setZlens(PosType zlens);
   void assignParams(InputParams& params,const COSMOLOGY &cosmo);
@@ -111,10 +111,10 @@ public:
   virtual void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1);
 
   // in randoimize_lens.c
-  PosType averageSubMass();
+  //PosType averageSubMass();
 
   // in readlens_ana.c
-  void reNormSubstructure(PosType kappa_sub);
+  //void reNormSubstructure(PosType kappa_sub);
   //void toggleStars(bool implanted);
 
   PosType getHost_Dl(){return Dl;}
@@ -122,7 +122,7 @@ public:
   //PosType getEinstein_ro(){return Einstein_ro;}
 
   PosType getPerturb_beta(){return perturb_beta;}
-  IMFtype getIMF_type(){return main_stars_imf_type;}
+  //IMFtype getIMF_type(){return main_stars_imf_type;}
   EllipMethod getEllipMethod(){return main_ellip_method;}
   
   int getPerturb_Nmodes(){return perturb_Nmodes;}    /// this includes two for external shear

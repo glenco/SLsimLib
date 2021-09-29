@@ -372,8 +372,8 @@ void LensHaloFit::FindLensSimple(
   std::cout << "source : y[0] = " << y[0] << " , y[1] = " << y[1] << std::endl;
   
   // For convenience :
-  PosType zl = LensHalo::getZlens() ;
-  PosType zs = zsource_reference ;
+  //PosType zl = LensHalo::getZlens() ;
+  //PosType zs = zsource_reference ;
     
   // Converting source position to physical angle :
   // y[0] *= Dl * (1+zl) / (Ds * (1+zs)) ;
@@ -405,7 +405,7 @@ void LensHaloFit::FindLensSimple(
   // mod[3,4,5,...] are now in PhysMpc.
 
   // Check that Dl*(1+zl) + Dls*(1+zs) = Ds*(1+zs), i.e. that D*(1+z) are here the comoving distances :
-  assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
+  //assert(Dl*(1+zl) + Dls*(1+zs) - Ds*(1+zs) == 0.);
   // std::cout << "Dl (1+zl) + Dls (1+zs) = " << Dl*(1+zl) + Dls*(1+zs) << " , Ds (1+zs) = " << Ds*(1+zs) << std::endl ;
   
   for(i=0;i<perturb_Nmodes;i++) perturb_modes[i] /= (4*PI*Grav * Dls * Dl / Ds) ;

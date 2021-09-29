@@ -436,70 +436,6 @@ void ImageFinding::find_images_kist(
   return;
 }
 
-/**  \brief Find a image position for a source position.
- 
- This routine finds the image position by minimizing the seporation on the source plane with Powell's method of minimization.  This will not find all images.  For that you must use another routine.  In the weak lensing regiam this should be sufficient.
- 
- Warning: This is not thread safe because it uses global variable in the ImageFinding::Temporary namespace.
- 
- */
-
-//using namespace ImageFinding::Temporary;
-namespace ImageFinding {
-  namespace Temporary {
-    Lens * lens;
-    Point *point;
-    Point_2d y;
-  }
-}
-/** \brief  Find the image position of a source without grid refinement.
- 
- This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
- 
- */
-
-void ImageFinding::find_image_simple(
-          LensHndl lens         /// lens to be shot through
-          ,Point_2d y_source    /// input position of source (radians)
-          ,PosType z_source     /// redshift of source
-          ,Point_2d &image_x    /// output image position (radians)
-          ,PosType ytol2        /// target tolerance in source position squared
-          ,PosType &fret        /// 
-                                     ){
-  
-  PosType tmp_zs = lens->getSourceZ();
-  lens->ResetSourcePlane(z_source,false);
-  Point point;
-  LinkToSourcePoints(&point,1);
-  
-  Temporary::point = &point;
-  Temporary::y = y_source;
-  Temporary::lens = lens;
-  double **xi = Utilities::PosTypeMatrix(3,3) ;
-  int iter;
-  
-  xi[1][1] = xi[2][2] = 1.0;
-  xi[1][2] = xi[2][1] = 0.0;
-  
-  image_x[0] = y_source.x[0];
-  image_x[1] = y_source.x[1];
-  
-  powellD(image_x.x-1,xi,2,ytol2,&iter,&fret,ImageFinding::Temporary::mindyfunc);
-  
-  lens->ResetSourcePlane(tmp_zs,false);
-  Utilities::free_PosTypeMatrix(xi,3,3);
-}
-
-PosType ImageFinding::Temporary::mindyfunc(PosType *x){
-  
-  point->x[0] = x[1];
-  point->x[1] = x[2];
-  
-  lens->rayshooterInternal(1,point);
-  
-  return (y[0]-point->image->x[0])*(y[0]-point->image->x[0])
-  + (y[1]-point->image->x[1])*(y[1]-point->image->x[1]);
-}
 
 /** Finding
  *
@@ -1575,18 +1511,20 @@ void ImageFinding::find_images_microlens_exper(
 /** 
  *
  * \brief Finds images for a given source position and size.  Not meant for high level user.
- *
- * image points are put into imageinfo[].imagekist
- *      imageinfo[].points and imageinfo[].Npoints are not changed
- *
- * splitparities=  0 don't split attached negative and positive parity images
- *              =  1 do split parities  NOTE: this is now obsolete
- *              = -1 doesn't slit into images at all
- *	                 , also does not find borders or change in_image markers
- * true_images = 1 gives just the points that are in the image
- *             = 0 if there are not enough points in images this will include close points to be refined
- *
- * side-effects :  Will make in_image = true for all image points if splitparities == 0
+ *<p>
+  image points are put into imageinfo[].imagekist
+       imageinfo[].points and imageinfo[].Npoints are not changed
+ 
+  splitparities=  0 don't split attached negative and positive parity images
+               =  1 do split parities  NOTE: this is now obsolete
+               = -1 doesn't slit into images at all
+ 	                 , also does not find borders or change in_image markers
+  true_images = 1 gives just the points that are in the image
+              = 0 if there are not enough points in images this will include close points to be refined
+ 
+  side-effects :  Will make in_image = true for all image points if splitparities == 0
+ 
+  <\p>
  */
 
 void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_source,GridHndl grid
@@ -1594,10 +1532,6 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
                                      ,short splitparities,short true_images){
   
   unsigned long i,Nsource_points=0;
-  //static long count=0,Nold_images;
-  //static PosType oldy[2];
-  //short moved;
-  //PosType r;
   
   if(imageinfo.size() < 3) imageinfo.resize(3);
   //if(count==0) oldy[0]=oldy[1]=0;
@@ -1609,14 +1543,6 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
     printf("ERROR: cannot do point source right now \n");
     exit(1);
   }
-  //  printf("in image_finder\n");
-  /*  if( (oldy[0] != y_source[0]) ||  (oldy[1] != y_source[1]) ){
-   oldy[0] = y_source[0];
-   oldy[1] = y_source[1];
-   moved=1;
-   }else */
-  
-  //++count;
   
   grid->ClearAllMarks();
   assert(imageinfo[0].imagekist);
@@ -1639,6 +1565,7 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
    }
 	  }
    }else{*/
+  
   // if source hasn't moved just take points within image
   s_tree->PointsWithinKist(y_source,r_source,imageinfo[0].imagekist,0);
   
@@ -1651,12 +1578,10 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
 		  Nimagepoints=0;
 		  return;
   }
-  //7.22502e-07}
   
   Nsource_points = imageinfo[0].imagekist->Nunits();
   
   // if there are not enough points in source find nearest ones
-
   if(!true_images && imageinfo[0].imagekist->Nunits() < NpointsRequired){
     if(imageinfo[0].imagekist->Nunits() == 0){
       s_tree->NearestNeighborKist(y_source,NpointsRequired,imageinfo[0].imagekist);
@@ -1749,22 +1674,10 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
       imageinfo[i].gridrange[0] = imageinfo[i].gridrange[1];
     }
     
-    // find area of images
-    //findarea(&imageinfo[i]);  // ****this is now done in divide_images
-    
     assert(imageinfo[i].area >= 0.0);
     if(Nsource_points < NpointsRequired ) imageinfo[i].area_error=1.0;
     else imageinfo[i].area_error = pow(imageinfo[i].gridrange[1],2)/imageinfo[i].area;
   }
-  
-  /*/ Empty the border lists of old images to save mem
-   for(i=*Nimages;i<Nold_images;++i){
-	  imageinfo[i].innerborder->Empty();
-	  imageinfo[i].outerborder->Empty();
-   }*/
-  
-  //for(i=0;i<*Nimages;++i) printf("  image %i  Npoints = %li Ninner = %li Noutter = %li  area = %e\n",i
-  //,imageinfo[i].Npoints,imageinfo[i].innerborder->Nunits,imageinfo[i].outerborder->Nunits,imageinfo[i].area);
   
   return;
 }
