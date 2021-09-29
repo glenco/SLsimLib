@@ -34,10 +34,12 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,bool write_subfields
                  ,std::string dir_scratch
                  ,bool subtract_ave
+                 ,double ffactor
+                 ,double gfactor
                  ):
 LensHalo(redshift,c),write_shorts(write_subfields)
 ,cosmo(c),cpfits(dir_data + fitsfile),ave_ang_sd(0)
-,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile)
+,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile),gfactor(gfactor),ffactor(ffactor)
 {
   
   ++count;

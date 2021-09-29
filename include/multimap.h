@@ -167,7 +167,7 @@ struct LensMap{
   }
 };
 
-/** \brief A lens halo that calculates all lensing qunatities on two grids - a low res long range grid
+/** \brief A lens halo that calculates all lensing quantities on two grids - a low res long range grid
  *   and a high res short range grid.  This is done to reduce the required memory required.
  *
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
@@ -188,6 +188,8 @@ public:
                    ,bool write_subfields = false   /// write subfields to be read if they already exist
                    ,std::string dir_scratch = ""   /// directory for saving long rang force if different than directory where fitsfile is
                    ,bool subtract_ave = true       /// subtract the average of the full field
+                   ,double ffactor = 5   // coarse grid size in units of smoothing size
+                   ,double gfactor = 5   // ratio of the border size to the smoothing scale
                    );
 
   ~LensHaloMultiMap(){
@@ -213,8 +215,9 @@ public:
   static size_t ny_sub_extended;
   static int count;
 
-
-  const double ffactor = 5,gfactor = 5;
+  //const double ffactor = 5,gfactor = 5;
+  double ffactor;
+  double gfactor;
   //const double ffactor = 10,gfactor = 10;
 
   // Add highres map be specifying the corners in pixel values
@@ -312,6 +315,8 @@ public:
     ave_ang_sd = m.ave_ang_sd;
     subfield_filename = m.subfield_filename;
     write_shorts = m.write_shorts;
+    ffactor = m.ffactor;
+    gfactor = m.gfactor;
   }
   
   LensHaloMultiMap(LensHaloMultiMap &&m):
@@ -340,6 +345,8 @@ public:
     ave_ang_sd = m.ave_ang_sd;
     subfield_filename = m.subfield_filename;
     write_shorts = m.write_shorts;
+    ffactor = m.ffactor;
+    gfactor = m.gfactor;
   }
 
 public:
