@@ -61,6 +61,29 @@ void swap(PixelMap& x, PixelMap& y)
   swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
 
+std::string to_string(PixelMapUnits unit){
+  switch (unit) {
+    case ndef:
+      return "not defined";
+      break;
+    case surfb:
+      return "surface brightness (ergs / s / cm**2) ";
+      break;
+    case count_per_sec:
+      return "counts per sec";
+      break;
+    case mass:
+      return "mass";
+      break;
+    case mass_density:
+      return "mass density";
+      break;
+
+    default:
+      break;
+  }
+};
+
 PixelMap::PixelMap()
 : map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(ndef)
 {
@@ -931,8 +954,10 @@ void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
   cpfits.writeKey("center_x", center[0], "radians, center");
   cpfits.writeKey("center_y", center[1], "radians, center");
   
-   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
-   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+  
+  cpfits.writeKey("UNITS",to_string(units),"");
   
   for(auto &h : headers_float){
     cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
@@ -992,6 +1017,8 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
 
+  cpfits.writeKey("UNITS",to_string(units),"");
+ 
   for(auto hp : extra_header_info){
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }

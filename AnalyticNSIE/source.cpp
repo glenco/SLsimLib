@@ -727,9 +727,11 @@ void SourceShapelets::NormalizeFlux()
 //  readCatalog();
 //}
 
-SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit,double maximum_radius)
-: Source(0,Point_2d(0,0),0),index(0),mag_limit(my_mag_limit),band(my_band)
-,radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
+SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band
+                                           ,double my_max_mag_limit,double my_min_mag_limit
+                                           ,double my_sb_limit,double maximum_radius)
+: Source(0,Point_2d(0,0),0),index(0),max_mag_limit(my_max_mag_limit),min_mag_limit(my_min_mag_limit)
+,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
 {
   
   if(sb_limit == -1)
@@ -740,11 +742,14 @@ SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folde
   readCatalog();
 }
 
-void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit,double maximum_radius)
+void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_band
+                                 ,double my_max_mag_limit,double my_min_mag_limit
+                                 ,double my_sb_limit,double maximum_radius)
 {
   
   index=0;
-  mag_limit = my_mag_limit;
+  max_mag_limit = my_max_mag_limit;
+  min_mag_limit = my_min_mag_limit;
   band = my_band;
   radius_max = maximum_radius;
   shapelets_folder = my_shapelets_folder;
@@ -851,7 +856,7 @@ void SourceMultiShapelets::readCatalog()
       s.setBand(EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag(EUC_VIS) < mag_limit
+      if (s.getMag() > 0. && s.getMag(EUC_VIS) < max_mag_limit && s.getMag(EUC_VIS) > min_mag_limit
           && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0
           && s.getRadius() < radius_max){
         galaxies.push_back(s);
@@ -873,10 +878,14 @@ void SourceMultiShapelets::readCatalog()
 
 
 void SourceMultiShapelets::assignParams(InputParams& params){
-  if(!params.get("source_mag_limit",mag_limit)){
+  if(!params.get("source_mag_limit",max_mag_limit)){
     std::cerr << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
     exit(1);
   }
+  if(!params.get("source_min_mag_limit",min_mag_limit)){
+    min_mag_limit = -1;
+  }
+
   
   if(!params.get("source_sb_limit",sb_limit))
     setSBlimit_magarcsec(30.);

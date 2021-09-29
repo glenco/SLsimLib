@@ -39,8 +39,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       exp_num = 4;
       mag_zeropoint = 23.9;
       
-      back_mag = 22.8;  back_mag = 25.0; // ?????
-      ron = 5.; ron = 0.01; // ?????
+      back_mag = 22.8;  //back_mag = 25.0; // ?????
+      ron = 5.; //ron = 0.01; // ?????
       seeing = 0.18;
       pix_size = .1*arcsecTOradians;
       break;
@@ -429,7 +429,7 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
  * \param noise Decides if noise is added
  * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
  */
-void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed)
+PixelMap Observation::Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran)//long *seed)
 {
   
   if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
@@ -438,9 +438,11 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed)
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
   }
   
+  PixelMap error_map;
+  
   ToCounts(map);
   if (psf == true)  ApplyPSF(map);
-  if (noise == true) AddNoise(map,seed);
+  if (noise == true) error_map = AddNoise(map,ran);
   ToSurfaceBrightness(map);
   
   //if (unit == flux && map.getUnits() != photon_flux )
@@ -449,7 +451,7 @@ void Observation::Convert(PixelMap &map, bool psf, bool noise, long *seed)
     //map.Renormalize(zero_point_flux);
     //map.ChangeUnits(photon_flux);
   //}
-  return;
+  return error_map;
 }
 
 void Observation::fftpsf(){
@@ -664,8 +666,8 @@ void Observation::set_up(){
   background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
  }
 
-/// Applies realistic noise (read-out + Poisson) on an image
-void Observation::AddNoise(PixelMap &pmap,long *seed)
+/// Applies realistic noise (read-out + Poisson) on an image, returns noise map
+PixelMap Observation::AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran)//,long *seed)
 {
   if(pmap.getNx() != pmap.getNy()){
     std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
@@ -676,12 +678,13 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
     throw std::runtime_error("wrong units.");
   }
   
-  //PixelMap outmap(pmap);
+  
+  PixelMap error_map(pmap);
+  
   double res_in_arcsec = pmap.getResolution() / arcsecTOradians;
   double back_mean = background_flux * res_in_arcsec*res_in_arcsec * exp_time ;
 
-  double rms, noise;
-  double rms2 = sqrt(exp_num*ron*ron);
+  double var_readout = exp_num*ron*ron;
   double norm_map;
   
   PixelMap noise_map(pmap);
@@ -692,29 +695,33 @@ void Observation::AddNoise(PixelMap &pmap,long *seed)
     norm_map = pmap[i]*exp_time;  // in counts
     if (norm_map+back_mean > 500.)
     {
-      rms = sqrt(exp_num*ron*ron + norm_map + back_mean);
-      noise = gasdev(seed)*rms;
-      noise_map[i] = noise/exp_time;  // back to counts per sec
+      double sdv = sqrt(var_readout + norm_map + back_mean);
+      noise_map[i] = ran.gauss()*sdv/exp_time;  // back to counts per sec
+      error_map[i] = sdv*sdv/exp_time/exp_time;
     }
     else
     {
-      int k = 0;
-      double p = 1.;
-      double L = exp(-(norm_map + back_mean));
-      while (p > L)
-      {
-        k++;
-        p *= ran2(seed);
-      }
-      noise = gasdev(seed)*rms2;
-      noise_map[i] = (k - 1 + noise - back_mean - norm_map)/exp_time;
+//      int k = 0;
+//      double p = 1.;
+//      double L = exp(-(norm_map + back_mean));
+//      do{
+//        k++;
+//        p *= ran();
+//      } while (p > L);
+//
+      // photons from mean
+      int k = ran.poisson(norm_map + back_mean);
+      double noise = ran.gauss()*sqrt(var_readout);
+      
+      noise_map[i] = (k + noise - back_mean - norm_map)/exp_time;
+      error_map[i] = (back_mean + norm_map + var_readout)/exp_time;
     }
   }
 
   CorrelateNoise(noise_map);
   pmap += noise_map;
   
-  return;
+  return error_map;
 }
 
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second

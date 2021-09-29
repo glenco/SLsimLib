@@ -1051,6 +1051,17 @@ public:
     }
   };
   
+  int poisson(double lam){
+    double L = exp(-lam),p=1;
+    int k = 0;
+    do{
+      ++k;
+      p *= operator()();
+    }while(p>L);
+    
+    return k-1;
+  }
+  
   size_t calls = 0;  /// total number of calls
   
   long getseed(){return firstseed;}
@@ -1092,9 +1103,9 @@ void shuffle(
   if(vec.size() < 2) return;
   for (size_t i = vec.size()-1; i>0; --i) {
     ran_t = (size_t)(ran()*(i+1));
-    tmp = vec[ran_t];
-    vec[ran_t] = vec[i];
-    vec[i] = tmp;
+    //swap(tmp,vec[ran_t]);
+    std::swap(vec[ran_t],vec[i]);
+    //swap(vec[i],tmp);
   }
 }
 
