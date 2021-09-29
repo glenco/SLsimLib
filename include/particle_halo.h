@@ -49,7 +49,7 @@ public:
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,bool my_multimass       /// set to true is particles have different sizes
-                    ,PosType MinPSize        /// minimum particle size
+                    ,PosType MinPSize =0        /// minimum particle size
                     ,PosType rescale_mass = 1.0   /// rescale particle masses
                     ,bool verbose=false
   );
@@ -190,8 +190,8 @@ protected:
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
-                    ,float MinPSize        /// minimum particle size
-                    ,bool verbose
+                    ,float MinPSize = 0       /// minimum particle size
+                    ,bool verbose = false
   ):LensHalo(redshift,cosmo),pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
   {
     set_up(redshift,cosmo,theta_rotate,-1,recenter,verbose);

@@ -1222,7 +1222,7 @@ void apply_permutation(
 #ifdef ENABLE_FFTW
 /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
  *
- *   Adaptied from Carlo Gioccoli's pl() routine.
+ *   Adaptied from Carlo Giocoli's pl() routine.
  */
 void powerspectrum2d(
                      std::valarray<double> const &aa      /// first realspace map to be

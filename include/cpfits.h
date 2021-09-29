@@ -308,6 +308,26 @@ public:
     return error;
   }
 
+  /// read the whole image into a vector
+  template<typename T>
+  int read(std::vector<std::vector<T> > &output){
+  
+    std::vector<long> size;
+    std::vector<T> tmp;
+    int status = read(tmp,size);
+    output.resize(size[0]);
+    size_t k = 0;
+    for(size_t i=0 ; i < size[0] ; ++i){
+      output[i].resize(size[1]);
+      for(T &x : output[i]){
+        x = tmp[k++];
+      }
+    }
+    
+    return status;
+  }
+  /// read the whole image into a vector
+  
   /// read nelements in order from image to output array
   int read_block(double *output,long nelements,long * start){
     int status =0;
@@ -490,6 +510,24 @@ public:
     fits_write_pix(fptr,TFLOAT,fpixel.data(),
                           im.size(),&im[0],&status);
     check_status(status);
+  }
+
+  /// write a two dimensional image that is stored in a vector of vectors
+  template<typename T>
+  void write_image(std::vector<std::vector<T> > &im){
+    std::vector<long> size(2);
+    size[0] = im.size();
+    size[1] = im[0].size();
+    
+    size_t k=0;
+    std::vector<T> tmp(size[0]*size[1]);
+    for(long i=0; i<size[0] ; ++i){
+      for(long j=0; j<size[1] ; ++j){
+        tmp[k++] = im[i][j];
+      }
+    }
+    
+    write_image(tmp,size);
   }
 
   /// add or replace a key value in the header of the current table / image

@@ -179,12 +179,30 @@ private:
 
 template <typename V,typename L,typename R>
 class SimpleMH_MCMC{
+private:
+ 
+  const V w;
+  int dim;
+  
+  size_t n_evals;
+  std::vector<int> active;
+  
 public:
   SimpleMH_MCMC(int Dim       /// number of parameters
          ,const V &scale  /// initial stepsize in parameter space
+         ,std::vector<int> active_parameters  = {} /// active variable, empty does first ones
          ):
-  w(scale),dim(Dim),n_evals(0){
-    assert(scale.size()>=Dim);
+  w(scale),dim(Dim),n_evals(0),active(active_parameters)
+  {
+    
+    if(active.size() == 0){
+      for(int i ; i<dim ; ++i) active.push_back(i);
+    }else{
+      if(dim > active.size()) dim = active.size();
+    }
+    
+    assert(scale.size() >= dim);
+    assert(active.size() >= dim);
   }
   
   /// run the MC chain
@@ -207,10 +225,12 @@ public:
        chain[i] = chain[i-1];
      
        if(cyclic){
-         chain[i][k] += w[k]*ran.gauss();
+         int j = active[k];
+         chain[i][j] += w[j]*ran.gauss();
          k = (k+1) % dim;
        }else{
          for(int j=0;j<dim;++j){
+           k = active[k];
            chain[i][j] += w[j]*ran.gauss();
          }
        }
@@ -226,15 +246,54 @@ public:
      }
    }
   
+  /// run the MC chain
+  /// class L must have method aux_update(R )
+   void runAux(L &lnprob               /// log likelihood function or funtor
+            ,std::vector<V> &chain  /// will contain the MC chain on return. should be initialized to the desired length
+            ,V xo                   /// initial point in parameter space
+            ,R &ran                 /// rendom number generator
+            ,bool cyclic = true     /// if true it cycles thruogh the parameters one at a time
+            ,bool verbose=false
+            ){
+     
+     double lnp = lnprob(xo);
+     n_evals=0;
+     int n = chain.size();
+     chain[0] = xo;
+     lnprob.aux_update(ran,lnp);
+     
+     if(verbose) std::cout << std::endl;
+     
+     int k=0;
+     for(int i=1;i<n;++i){
+       chain[i] = chain[i-1];
+       
+       if(i%dim == 0){
+         lnprob.aux_update(ran,lnp);
+       }else{
+         if(cyclic){
+           chain[i][k] += w[k]*ran.gauss();
+           k = (k+1) % dim;
+         }else{
+           for(int j=0;j<dim;++j){
+             chain[i][j] += w[j]*ran.gauss();
+           }
+         }
+         double lnp2 = lnprob(chain[i]);
+         
+         if( lnp2 <= lnp && exp(lnp2 - lnp) < ran() ){
+           chain[i] = chain[i-1];
+         }else{
+           lnp = lnp2;
+           ++n_evals;
+         }
+       }
+       if(verbose) std::cout << i << "  " << n_evals << "  " << chain[i] << std::endl;
+     }
+   }
+
   /// returns the number of evaluations of the posterior during the last run
   size_t number_evaluations(){ return n_evals;}
   
-private:
- 
-  const V w;
-  const int dim;
-  
-  size_t n_evals;
-
 };
 #endif /* slicer_h */
