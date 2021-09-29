@@ -260,10 +260,10 @@ void LensHalo::assignParams(InputParams& params,bool needRsize){
 //}
 
 PixelMap LensHalo::map_variables(
-                       LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
+                       LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI  in units of sigma crit
                        ,size_t Nx
                        ,size_t Ny
-                       ,double res /// resolution in physical Mpc on the lens plane
+                       ,double res
 ){
   
   Point_2d center;
@@ -276,6 +276,9 @@ PixelMap LensHalo::map_variables(
     force_halo(alpha.data(),&kappa,gamma,&phi,x.data());
     
     switch (lensvar) {
+      case ALPHA:
+        map[i] = sqrt(alpha[0]*alpha[0] + alpha[1]*alpha[1]);
+        break;
       case ALPHA1:
         map[i] = alpha[0];
         break;
@@ -296,7 +299,8 @@ PixelMap LensHalo::map_variables(
         break;
         
       default:
-        break;
+        std::cerr << "Error :  LensHalo::map_variables - lensing variable not acceptable " << std::endl;
+        throw std::invalid_argument("bad lensing variable");
     }
   }
   return map;

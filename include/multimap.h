@@ -70,12 +70,13 @@ struct LensMap{
   std::valarray<float> phi_bar;     // Msun  
   int nx,ny;
 
-  double boxlMpc;
+  double boxlMpc;   // range in Mpc
   double angular_pixel_size;  // in radians
 	Point_2d center;
   Point_2d lowerleft;  /// boundery with centred grid
   Point_2d upperright; ///
   
+  /// resolution in Mpc
   double x_resolution(){return boxlMpc / nx ;}
   double y_resolution(){return (upperright[1]-lowerleft[1])/ny;}
   // # of pixels times resolution

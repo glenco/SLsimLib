@@ -316,7 +316,7 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
  */
 PixelMap::PixelMap(
                    const PixelMap& pmap
-                   , PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
+                   ,PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
 )
 {
   resolution = res_ratio*pmap.resolution;
@@ -363,7 +363,6 @@ PixelMap::PixelMap(
     }
   }
 }
-
 
 PixelMap PixelMap::downsize(int n){
 
@@ -2400,6 +2399,5 @@ void PixelMap::convolve(PixelMap &kernel,long center_x,long center_y){
   
   std::swap(map,output);
 }
-
 
 
