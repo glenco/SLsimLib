@@ -903,10 +903,11 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
 
-  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  
   cpfits.writeKey("CROTA2", 0.0, "");
-  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
   cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
@@ -956,15 +957,18 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
-  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
-  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x (degrees)");
-  cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y (degrees)");
+
+  cpfits.writeKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  //cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  //cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+  cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
