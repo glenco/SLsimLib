@@ -163,6 +163,41 @@ private:
   T *array;
 };
 
+/** \brief Symetric matrix
+ 
+ This is a class to represent symmetric maticies so that they can be accessed as
+ normal but takes up n(n+1)/2 in memory.
+ */
+template <typename T>
+class SymmetricMatrix{
+  std::vector<T> v;
+  int n;
+  int m;
+public:
+  SymmetricMatrix(size_t n):n(n){
+    v.resize(n*(n+1)/2);
+    m = 2*n-1;
+  }
+  T& operator()(int i,int j){
+    //long k = j + (2*n-1-i)*i/2 ;
+    //size_t k = (i <= j ) ? j + (2*n-1-i)*i/2 : i + (2*n-1-j)*j/2;
+    size_t k = (i <= j ) ? j + (m-i)*i/2 : i + (m-j)*j/2;
+    //assert(k>=0);
+    //assert(k < v.size());
+    return v[ k ];
+  }
+  T& operator[](size_t k){
+    return v[ k ];
+  }
+  
+  int size(){return n;}
+  
+  /// convertion from 2d to 1d index
+  size_t oned_index(int i,int j){
+    size_t k = (i <= j ) ? j + (m-i)*i/2 : i + (m-j)*j/2;
+  }
+};
+
 
 /** \brief A container that can hold mixed objects all derived from
  * a base class and retains the ability to access derived class functions/members.
@@ -1513,7 +1548,7 @@ void ReadASCII(std::vector<T> &data
  number of columns and rows are returned.  The entries will be stored at data[column][row].
  
  Comments must only be before the data.  There must be a line with the
- column lines after the comments and before the data.
+ column names after the comments and before the data.
  
  This function is not particularly fast for large amounts of data.  If the
  number of rows is large it would be best to use data.reserve() to set the capacity of data large enough that no rellocation of memory occurs.
@@ -1557,7 +1592,7 @@ int ReadCSVnumerical1(std::string filename                              /// file
   std::stringstream          lineStream(line);
   std::string                cell;
   column_names.empty();
-  while(std::getline(lineStream,cell, ','))
+  while(std::getline(lineStream,cell, deliniator))
   {
     column_names.push_back(cell);
   }

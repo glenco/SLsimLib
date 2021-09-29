@@ -151,6 +151,8 @@ public:
   Band getBand() const{return current_band;}
   long getID() const {return id;}
   float getSEDtype() const {return sed_type;}
+  void setSEDtype(float sed) {sed_type = sed;}
+
   void setActiveBand(Band band);
   void setBand(Band band,float m){mag_map[band]=m;};
   inline PosType getTotalFlux() const {return flux_total;}

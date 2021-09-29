@@ -547,6 +547,8 @@ SphericalPoint<T> SphericalPoint<T>::InverseOrthographicProjection(
      const Point_2d &x             /// 2D coordinate on projection
 ){
   PosType rho = sqrt(x[0]*x[0] + x[1]*x[1]);
+  if(rho==0) return *this;
+  
   PosType c = asin(rho);
   T new_theta = asin( cos(c)*sin(theta) + x[1]*sin(c)*cos(theta)/rho );
   T new_phi = phi + atan2(x[0]*sin(c),rho*cos(theta)*cos(c)
