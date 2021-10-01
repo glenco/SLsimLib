@@ -658,6 +658,20 @@ struct Point_3d{
     x[2] /= s;
   }
   
+  /// returns the unit vector in the direction of the right handed spherical coordinate Phi
+  Point_3d<T> unitPhi(){
+    double s = sqrt(x[0]*x[0] + x[1]*x[1]);
+    return Point_3d<T>(-x[1],x[0],0) / s;
+  }
+
+  /// returns the unit vector in the direction of the right handed spherical coordinate Theta, Theta= pi/2 is the north
+  /// pole and Theta=0 is the equater (z=0).
+  Point_3d<T> unitTheta(){
+    Point_3d<T> v(-x[0]*x[2],-x[1]*x[2] ,x[0]*x[0] + x[1]*x[1]);
+    v.unitize();
+    return v;
+  }
+
   T* data(){return x;}
   
   T x[3];
