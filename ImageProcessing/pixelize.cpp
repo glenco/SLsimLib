@@ -1169,11 +1169,11 @@ void PixelMap::drawdisk(
   PosType x1[2],x2[2];
   
   // To do the circle (easy) :
-  // group=====================
+  // group---------------------
   drawcircle(r_center,radius,value);
   
   // To fill the circle :
-  // ====================
+  // ------------------==
   
 /*  for(float theta = 0; theta < 2*PI; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
@@ -1295,11 +1295,11 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip)
   PosType N = double(Nstrip);
   
   // To do the frame (easy) :
-  // ========================
+  // ------------------------
   drawSquare(p1,p2,value);
   
   // To fill the square :
-  // ====================
+  // ------------------==
 
   // Initiating :
   if(p2[1]-p1[1]<0)

@@ -36,6 +36,7 @@ public:
            ,PosType theta_force = 0.1
            ,bool my_periodic_buffer = false
            ,PosType my_inv_screening_scale = 0
+           ,PosType maximum_range  = -1
            );
   ~TreeQuadHalos();
   
@@ -68,6 +69,7 @@ protected:
   int Nbucket;
   
   PosType force_theta;
+  PosType max_range;
   
   QTreeNB<PosType *> * tree;
   std::vector<IndexType> index;

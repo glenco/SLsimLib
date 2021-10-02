@@ -364,7 +364,7 @@ void *compute_rays_parallel(void *_p)
     
     
     // TEST : showing initial quantities
-    // =================================
+    // ---------------------------------
     if(verbose) std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     
@@ -477,7 +477,7 @@ void *compute_rays_parallel(void *_p)
 
       
       // TEST : showing plus quantities
-      // ==============================
+      // ------------------------------
       if(verbose) std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
@@ -522,7 +522,7 @@ void *compute_rays_parallel(void *_p)
     
     
     // TEST : showing final quantities
-    // ===============================
+    // ------------------------------=
     if(verbose) std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
   } // End of the main loop.
@@ -824,7 +824,7 @@ void *compute_rays_parallel(void *_p)
 
 
     // TEST : showing initial quantities
-    // =================================
+    // ---------------------------------
     std::cout << "RSI initial : X X | X | " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
     
     // Begining of the loop through the planes :
@@ -996,7 +996,7 @@ void *compute_rays_parallel(void *_p)
       
       
       // TEST : showing plus quantities
-      // ==============================
+      // ------------------------------
       std::cout << "RSI plane " << j << " : " << p->i_points[i].image->x[0] << " " << p->i_points[i].image->x[1] << " | " << p->Dl[j] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " X | " << p->i_points[i].dt << std::endl ;
       
       
@@ -1047,7 +1047,7 @@ void *compute_rays_parallel(void *_p)
     
     
     // TEST : showing final quantities
-    // ===============================
+    // ------------------------------=
     std::cout << "RSI final : X X | " << p->Dl[p->NPlanes] << " | " << p->i_points[i].kappa << " " << p->i_points[i].gamma[0] << " " << p->i_points[i].gamma[1] << " " << p->i_points[i].gamma[2] << " " << p->i_points[i].invmag << " | " << p->i_points[i].dt << std::endl ;
     
  
