@@ -1244,7 +1244,7 @@ void powerspectrum2d(
                      ,double boxly                 /// range of image in y direction
                      ,std::vector<double> &ll      /// output multiplot number of bins
                      ,std::vector<double> &Pl      /// output binned power spectrum
-                     ,double zeropaddingfactor = 4
+                     ,double zeropaddingfactor
                      );
 void powerspectrum2d(
                      std::valarray<double> &aa      /// first realspace map to be
@@ -1255,6 +1255,17 @@ void powerspectrum2d(
                      ,std::vector<double> &ll      /// output multiplot number of bins
                      ,std::vector<double> &Pl      /// output binned power spectrum
 );
+void powerspectrum2dprebin(
+                     std::valarray<double> &aa      /// first realspace map to be
+                     ,int nx                       /// number of pixels in x direction
+                     ,int ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,const std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+                     ,std::vector<double> &llave     /// average value of Fourier node in bins
+);
+
 #endif
 
 

@@ -269,10 +269,28 @@ public:
     
     if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
     
-    if(overwrite) Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
-    else{
+    if(overwrite){
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    }else{
       std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,tmp_power);
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+    }
+  }
+
+  /// Find the power spectrum of the map
+  void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
+                     ,const std::vector<PosType> &lbins            /// output l values of bands
+                     ,std::vector<PosType> &lave            /// output l values of bands
+                     ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
+                     ){
+    
+    if(overwrite){
+      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,power_spectrum,lave);
+    }else{
+      if(power_spectrum.size() != lbins.size()-1) throw std::invalid_argument("these must be the same size");
+      std::vector<PosType> tmp_power(power_spectrum.size());
+      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,tmp_power,lave);
       for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
     }
   }
