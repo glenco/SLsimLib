@@ -40,7 +40,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       mag_zeropoint = 23.9;
       
       back_mag = 22.8;  //back_mag = 25.0; // ?????
-      ron = 5.; //ron = 0.01; // ?????
+      ron = 5.; //ron = 1.0; //ron = 0.01; // ?????
       seeing = 0.18;
       pix_size = .1*arcsecTOradians;
       break;
