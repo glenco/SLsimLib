@@ -233,8 +233,6 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
  *     imageinfo[i].imagekist is set to the points in ith image
  *	   image point flags in_image == YES
  *	   the area and area_error of each image are calculated
- *
- *
  *	   imageinfo[i].ShouldNotRefile = 0 is set for every image.
  *
  *	   Calculates images' geometric centers and area's.
@@ -286,14 +284,6 @@ void divide_images_kist(
 
 		//printf("   new_imagekist %li\n",new_imagekist.Nunits());
 		imageinfo[i].area = partition_images_kist(new_imagekist.getCurrent(),imageinfo[i].imagekist,i_tree);
-
-/*		if(imageinfo[i].imagekist->Nunits() > new_imagekist.Nunits()){
-			bool test1,test2;
-			test1 = new_imagekist.AreDataUnique();
-			test2 = imageinfo[i].imagekist->AreDataUnique();
-			assert(imageinfo[i].imagekist->Nunits() <= new_imagekist.Nunits());  // check that no more than
-		}
-*/
 
 		// take out points that got un-marked in partition_images
 

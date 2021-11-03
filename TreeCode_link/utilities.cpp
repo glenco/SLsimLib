@@ -518,11 +518,12 @@ unsigned long prevpower(unsigned long k){
     double *nk=new double[Nny*(Nnx/2+1)];
     double *nc=new double[Nny*(Nnx/2+1)];
     // sorted vectors
-    for(int i=0; i<Nnx/2+1; i++)
+    for(int i=0; i<Nnx/2+1; i++){
       for(int j=0; j<Nny;j++){
         nk[i+(Nnx/2+1)*j] = ks[ik[i+(Nnx/2+1)*j]];
         nc[i+(Nnx/2+1)*j] = Nfcc[ik[i+(Nnx/2+1)*j]][0];
       }
+    }
     std:: vector<double> bink(nl);
     // build the binned power spectrum
     Utilities::fill_linear(bink,nl,log10(nk[1]),log10(nk[Nny*(Nnx/2+1)-1]));
@@ -572,8 +573,10 @@ unsigned long prevpower(unsigned long k){
     Pl.resize(nl);
     
     fftw_complex *fNa=new fftw_complex[ny*(nx/2+1)];
+    //std::vector<fftw_complex> fNa(ny*(nx/2+1));
     
     fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa,FFTW_ESTIMATE);
+    //fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa.data(),FFTW_ESTIMATE);
     fftw_execute( p1 );
     fftw_destroy_plan(p1);
    
@@ -604,21 +607,24 @@ unsigned long prevpower(unsigned long k){
     std::vector<size_t> ik(ny*(nx/2+1));
     Utilities::sort_indexes<double>(ks,ik);
     
-    double *nk=new double[ny*(nx/2+1)];
-    double *nc=new double[ny*(nx/2+1)];
+    std::vector<double> nk(ny*(nx/2+1));
+    std::vector<double> nc(ny*(nx/2+1));
+ 
     // sorted vectors
-    for(int i=0; i<nx/2+1; i++)
+    for(int i=0; i<nx/2+1; i++){
       for(int j=0; j<ny;j++){
         size_t kk = i+(nx/2+1)*j;
 
         nk[kk] = ks[ik[kk]];
         nc[kk] = fNa[ik[kk]][0];
       }
+    }
     std:: vector<double> bink(nl);
     // build the binned power spectrum
     Utilities::fill_linear(bink,nl,log10(nk[1]),log10(nk[ny*(nx/2+1)-1]));
     double lk1,lk2;
     for(int i=0;i<nl;i++){
+      
       if(i==0) lk1=bink[i];
       else lk1=bink[i]-0.5*(bink[i]-bink[i-1]);
       if(i==nl-1) lk2=bink[i];
@@ -629,9 +635,9 @@ unsigned long prevpower(unsigned long k){
       // start from 1 because the first is 0
       for(int j=1;j<ny*(nx/2+1)-1;j++){
         if(log10(nk[j])>=lk1 && log10(nk[j])<lk2){
-          Pl[i]=Pl[i]+nc[j];
-          ll[i]=ll[i]+nk[j];
-          nin=nin+1;
+          Pl[i] += nc[j];
+          ll[i] += nk[j];
+          ++nin;
         }
       }
       if(nin>0){
@@ -640,9 +646,89 @@ unsigned long prevpower(unsigned long k){
       }
     }
     delete [] fNa;
-    delete [] nk;
-    delete [] nc;
   }
+
+void powerspectrum2dprebin(
+                     std::valarray<double> &aa
+                     ,int nx
+                     ,int ny
+                     ,double boxlx
+                     ,double boxly
+                     ,const std::vector<double> &ll  /// pre-set bins,  one more value than number of bins
+                     ,std::vector<double> &Pl
+                     ,std::vector<double> &llave     /// average value of Fourier node in bins
+                     )
+{
+  int nl = ll.size();
+  Pl.resize(nl-1);
+  
+  fftw_complex *fNa=new fftw_complex[ny*(nx/2+1)];
+  
+  fftw_plan p1 = fftw_plan_dft_r2c_2d(ny,nx,&(aa[0]),fNa,FFTW_ESTIMATE);
+  fftw_execute( p1 );
+  fftw_destroy_plan(p1);
+ 
+  std::vector<double> ks(ny*(nx/2+1));
+  
+  double tmp = boxlx*boxly * pow(1.0/nx/ny,2);
+  
+  // fb and fa are then used to compute the power spectrum
+  // build modes
+  for( int i=0; i<nx/2+1; i++ ){
+    // kx = i if i<n/2 else i-n
+    // double kx=(i<nx/2)?double(i):double(i-nx);
+    double kx=double(i);
+    for( int j=0; j<ny; j++ ){
+      size_t kk = i+(nx/2+1)*j;
+
+      double ky=(j<ny/2)?double(j):double(j-ny);
+      // rescale respect to the box size
+      ks[kk] = sqrt(kx*kx/boxlx/boxlx + ky*ky/boxly/boxly)*2.*M_PI;
+      
+      fNa[kk][0] = (fNa[kk][0]*fNa[kk][0] +
+                    fNa[kk][1]*fNa[kk][1])*tmp;
+      fNa[kk][1] = 0;
+    }
+  }
+  std::vector<size_t> ik(ny*(nx/2+1));
+  Utilities::sort_indexes<double>(ks,ik);
+  
+  std::vector<double> nk(ny*(nx/2+1));
+  std::vector<double> nc(ny*(nx/2+1));
+
+  // sorted vectors
+  for(int i=0; i<nx/2+1; i++){
+    for(int j=0; j<ny;j++){
+      size_t kk = i+(nx/2+1)*j;
+
+      nk[kk] = ks[ik[kk]];
+      nc[kk] = fNa[ik[kk]][0];
+    }
+  }
+  
+  llave.resize(nl-1);
+  for(int i=0;i<nl-1;i++){
+        
+    Pl[i]=0.;
+    llave[i]=0.;
+    int nin=0;
+    
+    // start from 1 because the first is 0
+    for(int j=1;j<ny*(nx/2+1)-1;j++){
+      if(ll[i] < nk[j] && ll[i+1] >= nk[j] ){
+      //if(log10(nk[j])>=lk1 && log10(nk[j])<lk2){
+        Pl[i] += nc[j];
+        llave[i] += nk[j];
+        ++nin;
+      }
+    }
+    if(nin>0){
+      Pl[i]=Pl[i]/double(nin);
+      llave[i]=llave[i]/double(nin);
+    }
+  }
+  delete [] fNa;
+}
 
 #endif
   

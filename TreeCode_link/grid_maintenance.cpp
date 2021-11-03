@@ -9,6 +9,8 @@
 #include "Tree.h"
 #include <mutex>
 #include <thread>
+#include "grid_maintenance.h"
+#include "source.h"
 
 std::mutex Grid::grid_mutex;
 
@@ -38,11 +40,11 @@ Grid::Grid(
 	xygridpoints(i_points,range,center,Ngrid_init,0);
 	s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
 
-    {
+  {
     std::lock_guard<std::mutex> hold(grid_mutex);
   	lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
-    }
-             
+  }
+  
 	// Build trees
 	i_tree = new TreeStruct(i_points,Ngrid_init*Ngrid_init);
 	s_tree = new TreeStruct(s_points,Ngrid_init*Ngrid_init,1,range);  // make tree on source plane with a buffer
@@ -287,23 +289,29 @@ void Grid::ReShoot(LensHndl lens){
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
  *
- * returns the sum of the surface brightnesses
+ * returns total flux
  */
 PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
   
-  PointList::iterator s_tree_pointlist_it;
-  s_tree_pointlist_it.current = (s_tree->pointlist->Top());
-  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
-    tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
-    (*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
-    = tmp;
-    total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
-    assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
-    (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
-    = NO;
-  }
+  SourcePoint *sp = dynamic_cast<SourcePoint *>(source);
   
+  if(sp){
+    ClearSurfaceBrightnesses();
+    total = mark_point_source_images(sp->getTheta(),sp->getRadius(),sp->getTotalFlux());
+  }else{
+    PointList::iterator s_tree_pointlist_it;
+    s_tree_pointlist_it.current = (s_tree->pointlist->Top());
+    for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+      tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
+      (*s_tree_pointlist_it)->surface_brightness = (*s_tree_pointlist_it)->image->surface_brightness
+      = tmp;
+      total += tmp*pow( (*s_tree_pointlist_it)->image->gridsize ,2);
+      assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
+      (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
+      = NO;
+    }
+  }
   return total;
 }
 /**
@@ -315,16 +323,22 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
 PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
   
-  PointList::iterator s_tree_pointlist_it;
-  s_tree_pointlist_it.current = (s_tree->pointlist->Top());
-  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
-    tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
-    (*s_tree_pointlist_it)->surface_brightness += tmp;
-    (*s_tree_pointlist_it)->image->surface_brightness += tmp;
-    total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
-    assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
-    (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
-    = NO;
+  SourcePoint *sp = dynamic_cast<SourcePoint *>(source);
+ 
+  if(sp){
+    total = mark_point_source_images(sp->getTheta(),sp->getRadius(),sp->getTotalFlux());
+  }else{
+    PointList::iterator s_tree_pointlist_it;
+    s_tree_pointlist_it.current = (s_tree->pointlist->Top());
+    for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+      tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
+      (*s_tree_pointlist_it)->surface_brightness += tmp;
+      (*s_tree_pointlist_it)->image->surface_brightness += tmp;
+      total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+      assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
+      (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
+      = NO;
+    }
   }
   
   return total;
@@ -342,19 +356,103 @@ PosType Grid::EinsteinArea() const {
   return total;
 }
 
-PosType Grid::magnification() const{
+//PosType Grid::magnification2() const{
+//  double mag = 0,flux = 0;
+//
+//  PointList::iterator it;
+//  it = (i_tree->pointlist->Top());
+//  size_t N = i_tree->pointlist->size();
+//  for(unsigned long i=0 ; i < N ; ++i,--it){
+//    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+//    assert(f >= 0);
+//    if(f > 0){
+//      mag += f;
+//      flux += f/fabs((*it)->invmag);
+//    }
+//  }
+//
+//  return flux/mag;
+//}
+
+PosType Grid::magnification() const {
+  
+  return LensedFlux()/UnlensedFlux();
+  
   double mag = 0,flux = 0;
   
   PointList::iterator it;
   it = (i_tree->pointlist->Top());
   size_t N = i_tree->pointlist->size();
   for(unsigned long i=0 ; i < N ; ++i,--it){
-    double area = (*it)->gridsize*(*it)->gridsize;
-    mag += (*it)->surface_brightness*fabs((*it)->invmag)*area;
+    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+    assert(f >= 0);
+    if(f > 0){
+      mag += f;
+      flux += f / mag_from_deflect((*it));
+    }
+  }
+
+  return mag / flux;
+}
+
+
+//PosType Grid::magnification() const{
+//  double mag = 0,flux = 0;
+//
+//  PointList::iterator it;
+//  it = (i_tree->pointlist->Top());
+//  size_t N = i_tree->pointlist->size();
+//  for(unsigned long i=0 ; i < N ; ++i,--it){
+//    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+//    assert(f >= 0);
+//    if(f > 0){
+//      mag += f*fabs((*it)->invmag);
+//      flux += f;
+//    }
+//  }
+//
+//  return flux/mag;
+//}
+
+Point_2d Grid::centroid() const{
+  double flux = 0;
+  Point_2d centroid(0,0);
+  
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    double area = (*it)->gridsize * (*it)->gridsize;
+    centroid += *(*it) * (*it)->surface_brightness*area;
     flux += (*it)->surface_brightness*area;
   }
 
-  return flux/mag;
+  return centroid/flux;
+}
+
+PosType Grid::UnlensedFlux() const{
+  
+  double flux = 0;
+  PointList::iterator s_tree_pointlist_it;
+  s_tree_pointlist_it.current = (s_tree->pointlist->Top());
+  for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
+    flux += (*s_tree_pointlist_it)->surface_brightness*(*s_tree_pointlist_it)->leaf->area();
+  }
+  
+  return flux;
+}
+
+PosType Grid::LensedFlux() const{
+  
+  double flux = 0;
+  PointList::iterator it;
+  it = (i_tree->pointlist->Top());
+  size_t N = i_tree->pointlist->size();
+  for(unsigned long i=0 ; i < N ; ++i,--it){
+    flux += (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+  }
+  
+  return flux;
 }
 
 /**
@@ -870,38 +968,101 @@ bool Grid::find_mag_matrix(PosType *a,Point *p0,Point *p1,Point *p2){
  * set in the Grid constructor.
  */
 bool Grid::uniform_mag_from_deflect(
-		PosType *a           /// Returned magnification matrix, not specified if returning false
-		,Point *point       /// point to be tested
-		){
-	Point *point2;
-	PosType ao[4];
-	int count=0;
-
-    i_tree->FindAllBoxNeighborsKist(point,neighbors);
-    if(neighbors->Nunits() <= 3) return false;  // This is the case where the point does not have enough neighbors.
-    neighbors->MoveToTop();
-    point2 = neighbors->getCurrent();
-    neighbors->Down();
-	while(!find_mag_matrix(a,point,point2,neighbors->getCurrent())) neighbors->Down();
-	//std::cout << "deflection neighbors a" << std::endl;
-	while(neighbors->Down()){
-		if(find_mag_matrix(ao,point,point2,neighbors->getCurrent())){
-			if( !( (fabs(a[0]-ao[0]) < maglimit)*(fabs(a[1]-ao[1]) < maglimit)
-    				*(fabs(a[2]-ao[2]) < maglimit)*(fabs(a[3]-ao[3]) < maglimit) )) return false;
-			//std::cout  << ao[0] << " " << ao[1] << " " << ao[2] << " " << ao[3] << std::endl;
-
-			a[0] = (count*a[0] + ao[0])/(count+1);
-			a[1] = (count*a[1] + ao[1])/(count+1);
-			a[2] = (count*a[2] + ao[2])/(count+1);
-			a[3] = (count*a[3] + ao[3])/(count+1);
-
-    		++count;
-    	}
+                                    PosType *a           /// Returned magnification matrix, not specified if returning false
+                                    ,Point *point       /// point to be tested
+){
+  Point *point2;
+  PosType ao[4];
+  int count=0;
+  
+  i_tree->FindAllBoxNeighborsKist(point,neighbors);
+  if(neighbors->Nunits() <= 3) return false;  // This is the case where the point does not have enough neighbors.
+  neighbors->MoveToTop();
+  point2 = neighbors->getCurrent();
+  neighbors->Down();
+  while(!find_mag_matrix(a,point,point2,neighbors->getCurrent())) neighbors->Down();
+  //std::cout << "deflection neighbors a" << std::endl;
+  while(neighbors->Down()){
+    if(find_mag_matrix(ao,point,point2,neighbors->getCurrent())){
+      if( !( (fabs(a[0]-ao[0]) < maglimit)*(fabs(a[1]-ao[1]) < maglimit)
+            *(fabs(a[2]-ao[2]) < maglimit)*(fabs(a[3]-ao[3]) < maglimit) )) return false;
+      //std::cout  << ao[0] << " " << ao[1] << " " << ao[2] << " " << ao[3] << std::endl;
+      
+      a[0] = (count*a[0] + ao[0])/(count+1);
+      a[1] = (count*a[1] + ao[1])/(count+1);
+      a[2] = (count*a[2] + ao[2])/(count+1);
+      a[3] = (count*a[3] + ao[3])/(count+1);
+      
+      ++count;
     }
-
-	if(count == 0) return false;  // This is the case where the point does not have enough non-colinear neighbors.
-    return true;
+  }
+  
+  if(count == 0) return false;  // This is the case where the point does not have enough non-colinear neighbors.
+  return true;
 }
+
+double Grid::mag_from_deflect(Point *point       /// point to be tested
+) const {
+ 
+  std::vector<Point *> neighbors;
+  i_tree->FindAllBoxNeighborsKist(point,neighbors);
+ 
+  Point_2d i_center = *point;
+  std::sort(neighbors.begin(),neighbors.end()
+            ,[&i_center](Point *p1,Point *p2){return atan2((*p1)[1]-i_center[1],(*p1)[0]-i_center[0]) < atan2((*p2)[1]-i_center[1],(*p2)[0]-i_center[0]);});
+ 
+  Point_2d s_center = *(point->image);
+ 
+  double image_area = 0;
+  int n=neighbors.size();
+  for(int i=1 ; i < n ; ++i){
+    image_area += ( ( *(neighbors[i-1]) - i_center)^( *(neighbors[i]) - i_center) ) / 2;
+  }
+  image_area += ( ( *(neighbors.back()) - i_center)^( *(neighbors[0]) - i_center) ) / 2;
+ 
+  assert(image_area > 0);
+  
+  // switch to source plane
+  for(int i=0 ; i< n ; ++i) neighbors[i] = neighbors[i]->image;
+  
+  int npos=0,nneg=0;
+  for(int i=0 ; i< n ; ++i){
+    if(neighbors[i]->invmag >= 0){
+      ++npos;
+    }else{
+      ++nneg;
+    }
+  }
+ 
+  double source_area = 0;
+  if(npos==0 || nneg==0){
+ 
+    for(int i=1 ; i < n ; ++i){
+        source_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+    }
+    source_area += ( ( *(neighbors.back()) - s_center)^( *(neighbors[0]) - s_center) ) / 2;
+  }else{
+ 
+    double neg_area = 0,pos_area = 0;
+    
+    for(int i=1 ; i < n ; ++i){
+      if(neighbors[i]->invmag * neighbors[i-1]->invmag > 0 ){
+    
+        if(neighbors[i]->invmag > 0){
+          pos_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+        }else{
+          neg_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
+        }
+      }
+    }
+    
+    source_area = fabs(neg_area) + fabs(pos_area);
+  }
+ 
+  assert(source_area != 0);
+  return fabs(image_area / source_area);
+}
+
 /** \brief Test if point is in a region of uniform magnification using the kappa and gamma calculated from the
  * rayshooter.
  *
@@ -913,35 +1074,35 @@ bool Grid::uniform_mag_from_deflect(
  *
  */
 bool Grid::uniform_mag_from_shooter(
-		PosType *a           /// Returned magnification matrix, not specified if returning false
-		,Point *point       /// point to be tested
-		){
-	Point *point2;
-
-    i_tree->FindAllBoxNeighborsKist(point,neighbors);
-    assert(neighbors->Nunits() > 1);
-    neighbors->MoveToTop();
- 	do{
- 		point2 = neighbors->getCurrent();
- 		if( !( (fabs(point->kappa-point2->kappa) < maglimit)*(fabs(point->gamma[0]-point2->gamma[0]) < maglimit)
- 				*(fabs(point->gamma[1]-point2->gamma[1]) < maglimit)*(fabs(point->gamma[2]-point2->gamma[2]) < maglimit) ) ) return false;
-    }while(neighbors->Down());
-
-    neighbors->MoveToTop();
-    std::cout << "shooter neighbors " << std::endl;
-  	do{
-  		point2 = neighbors->getCurrent();
- 		std::cout << point->kappa-point2->kappa << "  " << point->gamma[0]-point2->gamma[0] << "   " <<
-  				point->gamma[1]-point2->gamma[1] << "  " << point->gamma[2]-point2->gamma[2] << std::endl;
-     }while(neighbors->Down());
-
-
-	a[0] = 1 - point->kappa - point->gamma[0];
-	a[1] = 1 - point->kappa + point->gamma[0];
-	a[2] = -point->gamma[1] - point->gamma[2];
-	a[3] = -point->gamma[1] + point->gamma[2];
-
-    return true;
+                                    PosType *a           /// Returned magnification matrix, not specified if returning false
+                                    ,Point *point       /// point to be tested
+){
+  Point *point2;
+  
+  i_tree->FindAllBoxNeighborsKist(point,neighbors);
+  assert(neighbors->Nunits() > 1);
+  neighbors->MoveToTop();
+  do{
+    point2 = neighbors->getCurrent();
+    if( !( (fabs(point->kappa-point2->kappa) < maglimit)*(fabs(point->gamma[0]-point2->gamma[0]) < maglimit)
+          *(fabs(point->gamma[1]-point2->gamma[1]) < maglimit)*(fabs(point->gamma[2]-point2->gamma[2]) < maglimit) ) ) return false;
+  }while(neighbors->Down());
+  
+  neighbors->MoveToTop();
+  std::cout << "shooter neighbors " << std::endl;
+  do{
+    point2 = neighbors->getCurrent();
+    std::cout << point->kappa-point2->kappa << "  " << point->gamma[0]-point2->gamma[0] << "   " <<
+    point->gamma[1]-point2->gamma[1] << "  " << point->gamma[2]-point2->gamma[2] << std::endl;
+  }while(neighbors->Down());
+  
+  
+  a[0] = 1 - point->kappa - point->gamma[0];
+  a[1] = 1 - point->kappa + point->gamma[0];
+  a[2] = -point->gamma[1] - point->gamma[2];
+  a[3] = -point->gamma[1] + point->gamma[2];
+  
+  return true;
 }
 void Grid::test_mag_matrix(){
 	PosType aa[4];
@@ -1205,7 +1366,7 @@ void Grid::writeFitsUniform(
       break;
   }
 
-  PixelMap map = this->writePixelMapUniform(center,Nx,Ny,lensvar);
+  PixelMap map = writePixelMapUniform(center,Nx,Ny,lensvar);
   map.printFITS(filename + tag);
 }
 
@@ -1227,16 +1388,26 @@ PixelMap Grid::writePixelMapUniform(
   PixelMap map(center, Nx, Ny,i_tree->pointlist->Top()->gridsize);
   map.Clean();
   
-  int Nblocks = Utilities::GetNThreads();
-  std::vector<PointList> lists(Nblocks);
+  //int Nblocks = Utilities::GetNThreads();
+  int Nblocks = 16;
+                                      
+  //std::vector<PointList> lists(Nblocks);
+                                      
+  std::vector<Point *> heads(Nblocks);
+  std::vector<size_t> sizes(Nblocks,0);
   
   bool allowDecent;
   TreeStruct::iterator i_tree_it(i_tree);
   int i = 0;
+                                      
   do{
     if((*i_tree_it)->level == 4){
-      lists[i].setTop( (*i_tree_it)->points );
-      lists[i].setN( (*i_tree_it)->npoints );
+      
+      heads[i] = (*i_tree_it)->points;
+      sizes[i] = (*i_tree_it)->npoints;
+      
+      //lists[i].setTop( (*i_tree_it)->points );
+      //lists[i].setN( (*i_tree_it)->npoints );
       ++i;
       allowDecent = false;
     }else{
@@ -1245,9 +1416,11 @@ PixelMap Grid::writePixelMapUniform(
   }while(i_tree_it.TreeWalkStep(allowDecent) && i < Nblocks);
   
   std::vector<std::thread> thrs;
-  
   for(int ii = 0; ii < i ;++ii){
-    thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar));
+  //writePixelMapUniform_(heads[ii],sizes[ii],&map,lensvar);
+  //thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar));
+
+    thrs.push_back(std::thread(&Grid::writePixelMapUniform_,this,heads[ii],sizes[ii],&map,lensvar));
   }
   for(int ii = 0; ii < i ;++ii) thrs[ii].join();
   
@@ -1263,8 +1436,11 @@ void Grid::writePixelMapUniform(
   
   map.Clean();
   int Nblocks = 16;
-  std::vector<PointList> lists(Nblocks);
+  //std::vector<PointList> lists(Nblocks);
   TreeStruct::iterator i_tree_it(i_tree);
+
+  std::vector<Point *> heads(Nblocks);
+  std::vector<size_t> sizes(Nblocks,0);
 
   
   bool allowDecent;
@@ -1273,8 +1449,11 @@ void Grid::writePixelMapUniform(
   do{
     if((*i_tree_it)->level == 4){
       assert(i < 16);
-      lists[i].setTop( (*i_tree_it)->points );
-      lists[i].setN( (*i_tree_it)->npoints );
+      //lists[i].setTop( (*i_tree_it)->points );
+      //lists[i].setN( (*i_tree_it)->npoints );
+      heads[i] = (*i_tree_it)->points;
+      sizes[i] = (*i_tree_it)->npoints;
+      
       ++i;
       allowDecent = false;
     }else{
@@ -1283,56 +1462,114 @@ void Grid::writePixelMapUniform(
   }while(i_tree_it.TreeWalkStep(allowDecent) && i < Nblocks);
   
   std::thread thr[16];
-  
   for(int ii = 0; ii < i ;++ii){
-    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+    //thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
+    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,heads[ii],sizes[ii],&map,lensvar);
   }
   for(int ii = 0; ii < i ;++ii) thr[ii].join();
 
 }
 
-void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val){
+//void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val){
+//  double tmp;
+//  PosType tmp2[2];
+//  long index;
+//
+//  PointList::iterator list_it;
+//  list_it.current = (list.Top());
+//  for(size_t i = 0; i< list.size(); ++i){
+//    switch (val) {
+//      case ALPHA:
+//        tmp2[0] = (*list_it)->x[0] - (*list_it)->image->x[0];
+//        tmp2[1] = (*list_it)->x[1] - (*list_it)->image->x[1];
+//        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+//        break;
+//      case ALPHA1:
+//        tmp = ((*list_it)->x[0] - (*list_it)->image->x[0]);
+//        break;
+//      case ALPHA2:
+//        tmp = ((*list_it)->x[1] - (*list_it)->image->x[1]);
+//        break;
+//      case KAPPA:
+//        tmp = (*list_it)->kappa;
+//        break;
+//      case GAMMA:
+//        tmp2[0] = (*list_it)->gamma[0];
+//        tmp2[1] = (*list_it)->gamma[1];
+//        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+//        break;
+//      case GAMMA1:
+//        tmp = (*list_it)->gamma[0];
+//        break;
+//      case GAMMA2:
+//        tmp = (*list_it)->gamma[1];
+//        break;
+//      case GAMMA3:
+//        tmp = (*list_it)->gamma[2];
+//        break;
+//      case INVMAG:
+//        tmp = (*list_it)->invmag;
+//        break;
+//      case DELAYT:
+//        tmp = (*list_it)->dt;
+//        break;
+//      default:
+//        std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
+//        throw std::runtime_error("PixelMap::AddGrid() does not work for the input LensingVariable");
+//        break;
+//        // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+//    }
+//
+//    index = map->find_index((*list_it)->x);
+//    if(index != -1)(*map)[index] = tmp;
+//
+//    --list_it;
+//  }
+//}
+
+void Grid::writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVariable val){
   double tmp;
   PosType tmp2[2];
   long index;
   
-  PointList::iterator list_it;
-  list_it.current = (list.Top());
-  for(size_t i = 0; i< list.size(); ++i){
+  Point *ppoint = head;
+  
+  for(size_t i = 0; i< N; ++i){
+    
     switch (val) {
       case ALPHA:
-        tmp2[0] = (*list_it)->x[0] - (*list_it)->image->x[0];
-        tmp2[1] = (*list_it)->x[1] - (*list_it)->image->x[1];
+        tmp2[0] = ppoint->x[0] - ppoint->image->x[0];
+        tmp2[1] = ppoint->x[1] - ppoint->image->x[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
       case ALPHA1:
-        tmp = ((*list_it)->x[0] - (*list_it)->image->x[0]);
+        tmp = (ppoint->x[0] - ppoint->image->x[0]);
         break;
       case ALPHA2:
-        tmp = ((*list_it)->x[1] - (*list_it)->image->x[1]);
+        tmp = (ppoint->x[1] - ppoint->image->x[1]);
         break;
       case KAPPA:
-        tmp = (*list_it)->kappa;
+        tmp = ppoint->kappa;
         break;
       case GAMMA:
-        tmp2[0] = (*list_it)->gamma[0];
-        tmp2[1] = (*list_it)->gamma[1];
+        tmp2[0] = ppoint->gamma[0];
+        tmp2[1] = ppoint->gamma[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
       case GAMMA1:
-        tmp = (*list_it)->gamma[0];
+        tmp = ppoint->gamma[0];
         break;
       case GAMMA2:
-        tmp = (*list_it)->gamma[1];
+        tmp = ppoint->gamma[1];
         break;
       case GAMMA3:
-        tmp = (*list_it)->gamma[2];
+        tmp = ppoint->gamma[2];
         break;
       case INVMAG:
-        tmp = (*list_it)->invmag;
+        tmp = ppoint->invmag;
         break;
       case DELAYT:
-        tmp = (*list_it)->dt;
+        tmp = ppoint->dt;
         break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
@@ -1341,10 +1578,10 @@ void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVari
         // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
     }
     
-    index = map->find_index((*list_it)->x);
+    index = map->find_index(ppoint->x);
     if(index != -1)(*map)[index] = tmp;
     
-    --list_it;
+    ppoint = ppoint->next;
   }
 }
 

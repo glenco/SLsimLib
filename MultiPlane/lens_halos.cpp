@@ -13,20 +13,20 @@ using namespace std;
 LensHalo::LensHalo(){
   rscale = 1.0;
   mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
-  stars_implanted = false;
+  //stars_implanted = false;
   elliptical_flag = false;
   Dist = -1;
-  stars_N =0.0;
+  //stars_N =0.0;
   zlens = 0.0;
 }
 
 LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
   rscale = 1.0;
   mass = Rsize = Rmax = xmax = posHalo[0] = posHalo[1] = 0.0;
-  stars_implanted = false;
+  //stars_implanted = false;
   elliptical_flag = false;
   Dist = cosmo.angDist(z);
-  stars_N =0.0;
+  //stars_N =0.0;
   zlens = z;
 }
 
@@ -57,40 +57,40 @@ LensHalo::LensHalo(const LensHalo &h){
   mnorm = h.mnorm;
   Rmax = h.Rmax;
   
-  stars_index = h.stars_index;
-  stars_xp = h.stars_xp;
-  
-  stars_N = h.stars_N;
-  star_theta_force = h.star_theta_force;
-  
-  if(stars_N > 1){
-    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
-                                              ,false,false,0,4,star_theta_force);
-  }else{
-    star_tree = nullptr;
-  }
-  star_massscale = h.star_massscale;
-  star_fstars = h.star_fstars;
-  
-  star_Nregions = h.star_Nregions;
-  star_region = h.star_region;
+//  stars_index = h.stars_index;
+//  stars_xp = h.stars_xp;
+//
+//  stars_N = h.stars_N;
+//  star_theta_force = h.star_theta_force;
+//
+//  if(stars_N > 1){
+//    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
+//                                              ,false,false,0,4,star_theta_force);
+//  }else{
+//    star_tree = nullptr;
+//  }
+//  star_massscale = h.star_massscale;
+//  star_fstars = h.star_fstars;
+//
+//  star_Nregions = h.star_Nregions;
+//  star_region = h.star_region;
   
   beta = h.beta;
   
   Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
   rscale = h.rscale;
   
-  stars_implanted = h.stars_implanted;
-  main_stars_imf_type = h.main_stars_imf_type;
-  main_stars_min_mass = h. main_stars_min_mass;
-  main_stars_max_mass = h.main_stars_max_mass;
+//  stars_implanted = h.stars_implanted;
+//  main_stars_imf_type = h.main_stars_imf_type;
+//  main_stars_min_mass = h. main_stars_min_mass;
+//  main_stars_max_mass = h.main_stars_max_mass;
   main_ellip_method = h.main_ellip_method;
-  bend_mstar =h.bend_mstar;
-  lo_mass_slope = h.lo_mass_slope;
-  hi_mass_slope = h.hi_mass_slope;
-  
-  star_Sigma = h.star_Sigma;
-  star_xdisk = h.star_xdisk;
+//  bend_mstar =h.bend_mstar;
+//  lo_mass_slope = h.lo_mass_slope;
+//  hi_mass_slope = h.hi_mass_slope;
+//
+//  star_Sigma = h.star_Sigma;
+//  star_xdisk = h.star_xdisk;
   
   xmax = h.xmax;
   mass_norm_factor = h.mass_norm_factor;
@@ -114,38 +114,38 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     mnorm = h.mnorm;
     Rmax = h.Rmax;
   
-    stars_index = h.stars_index;
-    stars_xp = h.stars_xp;
-  
-    stars_N = h.stars_N;
-    star_theta_force = h.star_theta_force;
-  
-    delete star_tree;
-    star_tree = h.star_tree;
-    h.star_tree = nullptr;
-  
-    star_massscale = h.star_massscale;
-    star_fstars = h.star_fstars;
-  
-    star_Nregions = h.star_Nregions;
-    star_region = h.star_region;
+//    stars_index = h.stars_index;
+//    stars_xp = h.stars_xp;
+//
+//    stars_N = h.stars_N;
+//    star_theta_force = h.star_theta_force;
+//
+//    delete star_tree;
+//    star_tree = h.star_tree;
+//    h.star_tree = nullptr;
+//
+//    star_massscale = h.star_massscale;
+//    star_fstars = h.star_fstars;
+//
+//    star_Nregions = h.star_Nregions;
+//    star_region = h.star_region;
   
     beta = h.beta;
   
     Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
     rscale = h.rscale;
   
-    stars_implanted = h.stars_implanted;
-    main_stars_imf_type = h.main_stars_imf_type;
-    main_stars_min_mass = h. main_stars_min_mass;
-    main_stars_max_mass = h.main_stars_max_mass;
+//    stars_implanted = h.stars_implanted;
+//    main_stars_imf_type = h.main_stars_imf_type;
+//    main_stars_min_mass = h. main_stars_min_mass;
+//    main_stars_max_mass = h.main_stars_max_mass;
     main_ellip_method = h.main_ellip_method;
-    bend_mstar =h.bend_mstar;
-    lo_mass_slope = h.lo_mass_slope;
-    hi_mass_slope = h.hi_mass_slope;
-  
-    star_Sigma = h.star_Sigma;
-    star_xdisk = h.star_xdisk;
+//    bend_mstar =h.bend_mstar;
+//    lo_mass_slope = h.lo_mass_slope;
+//    hi_mass_slope = h.hi_mass_slope;
+//
+//    star_Sigma = h.star_Sigma;
+//    star_xdisk = h.star_xdisk;
   
     xmax = h.xmax;
     mass_norm_factor = h.mass_norm_factor;
@@ -173,40 +173,40 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   mnorm = h.mnorm;
   Rmax = h.Rmax;
   
-  stars_index = h.stars_index;
-  stars_xp = h.stars_xp;
-  
-  stars_N = h.stars_N;
-  star_theta_force = h.star_theta_force;
-  
-  if(stars_N > 1){
-    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
-                                              ,false,false,0,4,star_theta_force);
-  }else{
-    star_tree = nullptr;
-  }
-  star_massscale = h.star_massscale;
-  star_fstars = h.star_fstars;
-  
-  star_Nregions = h.star_Nregions;
-  star_region = h.star_region;
+//  stars_index = h.stars_index;
+//  stars_xp = h.stars_xp;
+//
+//  stars_N = h.stars_N;
+//  star_theta_force = h.star_theta_force;
+//
+//  if(stars_N > 1){
+//    star_tree = new TreeQuadParticles<StarType>(stars_xp.data(),stars_N
+//                                              ,false,false,0,4,star_theta_force);
+//  }else{
+//    star_tree = nullptr;
+//  }
+//  star_massscale = h.star_massscale;
+//  star_fstars = h.star_fstars;
+//
+//  star_Nregions = h.star_Nregions;
+//  star_region = h.star_region;
   
   beta = h.beta;
   
   Rmax_to_Rsize_ratio = h.Rmax_to_Rsize_ratio;
   rscale = h.rscale;
   
-  stars_implanted = h.stars_implanted;
-  main_stars_imf_type = h.main_stars_imf_type;
-  main_stars_min_mass = h. main_stars_min_mass;
-  main_stars_max_mass = h.main_stars_max_mass;
+//  stars_implanted = h.stars_implanted;
+//  main_stars_imf_type = h.main_stars_imf_type;
+//  main_stars_min_mass = h. main_stars_min_mass;
+//  main_stars_max_mass = h.main_stars_max_mass;
   main_ellip_method = h.main_ellip_method;
-  bend_mstar =h.bend_mstar;
-  lo_mass_slope = h.lo_mass_slope;
-  hi_mass_slope = h.hi_mass_slope;
-  
-  star_Sigma = h.star_Sigma;
-  star_xdisk = h.star_xdisk;
+//  bend_mstar =h.bend_mstar;
+//  lo_mass_slope = h.lo_mass_slope;
+//  hi_mass_slope = h.hi_mass_slope;
+//
+//  star_Sigma = h.star_Sigma;
+//  star_xdisk = h.star_xdisk;
   
   xmax = h.xmax;
   mass_norm_factor = h.mass_norm_factor;
@@ -241,29 +241,29 @@ void LensHalo::assignParams(InputParams& params,bool needRsize){
   if(!params.get("main_zlens",zlens)) error_message1("main_zlens",params.filename());
 }
 
-void LensHalo::PrintStars(bool show_stars)
-{
-  std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
-  if(stars_N>0){
-    if(star_Nregions > 0)
-      std::cout << "stars_Nregions "<<star_Nregions << std::endl;
-    std::cout << "stars_massscale "<<star_massscale << std::endl;
-    std::cout << "stars_fstars "<<star_fstars << std::endl;
-    std::cout << "stars_theta_force "<<star_theta_force << std::endl;
-    if(show_stars){
-      if(stars_implanted){
-        for(int i=0 ; i < stars_N ; ++i) std::cout << "    x["<<i<<"]="
-						    << stars_xp[i][0] << " " << stars_xp[i][1] << std::endl;
-      }else std::cout << "stars are not implanted yet" << std::endl;
-    }
-  }
-}
+//void LensHalo::PrintStars(bool show_stars)
+//{
+//  std::cout << std::endl << "Nstars "<<stars_N << std::endl << std::endl;
+//  if(stars_N>0){
+//    if(star_Nregions > 0)
+//      std::cout << "stars_Nregions "<<star_Nregions << std::endl;
+//    std::cout << "stars_massscale "<<star_massscale << std::endl;
+//    std::cout << "stars_fstars "<<star_fstars << std::endl;
+//    std::cout << "stars_theta_force "<<star_theta_force << std::endl;
+//    if(show_stars){
+//      if(stars_implanted){
+//        for(int i=0 ; i < stars_N ; ++i) std::cout << "    x["<<i<<"]="
+//						    << stars_xp[i][0] << " " << stars_xp[i][1] << std::endl;
+//      }else std::cout << "stars are not implanted yet" << std::endl;
+//    }
+//  }
+//}
 
 PixelMap LensHalo::map_variables(
-                       LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
+                       LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI  in units of sigma crit
                        ,size_t Nx
                        ,size_t Ny
-                       ,double res /// resolution in physical Mpc on the lens plane
+                       ,double res
 ){
   
   Point_2d center;
@@ -276,6 +276,9 @@ PixelMap LensHalo::map_variables(
     force_halo(alpha.data(),&kappa,gamma,&phi,x.data());
     
     switch (lensvar) {
+      case ALPHA:
+        map[i] = sqrt(alpha[0]*alpha[0] + alpha[1]*alpha[1]);
+        break;
       case ALPHA1:
         map[i] = alpha[0];
         break;
@@ -296,43 +299,44 @@ PixelMap LensHalo::map_variables(
         break;
         
       default:
-        break;
+        std::cerr << "Error :  LensHalo::map_variables - lensing variable not acceptable " << std::endl;
+        throw std::invalid_argument("bad lensing variable");
     }
   }
   return map;
 }
 
 
-/// calculates the deflection etc. caused by stars alone
-void LensHalo::force_stars(
-                           PosType *alpha     /// mass/Mpc
-                           ,KappaType *kappa
-                           ,KappaType *gamma
-                           ,PosType const *xcm     /// physical position on lens plane
-)
-{
-  PosType alpha_tmp[2];
-  KappaType gamma_tmp[3], tmp = 0;
-  KappaType phi;
-  
-  gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
-  alpha_tmp[0] = alpha_tmp[1] = 0.0;
-  
-  substract_stars_disks(xcm,alpha,kappa,gamma);
-  
-	 // do stars with tree code
-  star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,&phi);
-  
-  alpha[0] -= star_massscale*alpha_tmp[0];
-  alpha[1] -= star_massscale*alpha_tmp[1];
-  
-  {
-    *kappa += star_massscale*tmp;
-    gamma[0] -= star_massscale*gamma_tmp[0];
-    gamma[1] -= star_massscale*gamma_tmp[1];
-  }
-  
-}
+// calculates the deflection etc. caused by stars alone
+//void LensHalo::force_stars(
+//                           PosType *alpha     /// mass/Mpc
+//                           ,KappaType *kappa
+//                           ,KappaType *gamma
+//                           ,PosType const *xcm     /// physical position on lens plane
+//)
+//{
+//  PosType alpha_tmp[2];
+//  KappaType gamma_tmp[3], tmp = 0;
+//  KappaType phi;
+//
+//  gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
+//  alpha_tmp[0] = alpha_tmp[1] = 0.0;
+//
+//  substract_stars_disks(xcm,alpha,kappa,gamma);
+//
+//	 // do stars with tree code
+//  star_tree->force2D_recur(xcm,alpha_tmp,&tmp,gamma_tmp,&phi);
+//
+//  alpha[0] -= star_massscale*alpha_tmp[0];
+//  alpha[1] -= star_massscale*alpha_tmp[1];
+//
+//  {
+//    *kappa += star_massscale*tmp;
+//    gamma[0] -= star_massscale*gamma_tmp[0];
+//    gamma[1] -= star_massscale*gamma_tmp[1];
+//  }
+//
+//}
 
 LensHalo::~LensHalo()
 {
@@ -363,8 +367,9 @@ LensHaloNFW::LensHaloNFW()
   LensHalo::Dist = -1;  // to be set later
   
   fratio=1;
-  pa = stars_N = 0;
-  stars_implanted = false;
+  pa = 0;
+  //stars_N = 0;
+  //stars_implanted = false;
   rscale = LensHalo::getRsize()/5;
   xmax = LensHalo::getRsize()/rscale;
 
@@ -374,7 +379,7 @@ LensHaloNFW::LensHaloNFW()
 }
 
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration
-                         ,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo
+                         ,float my_fratio,float my_pa,const COSMOLOGY &cosmo
                          ,EllipMethod my_ellip_method
                          ){
 
@@ -383,8 +388,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   LensHalo::setZlens(my_zlens,cosmo);
 
 
-  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N, main_ellip_method=my_ellip_method;
-  stars_implanted = false;
+  fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method;
   rscale = LensHalo::getRsize()/my_concentration;
   xmax = LensHalo::getRsize()/rscale;
   make_tables();
@@ -643,7 +647,6 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
                                      ,PosType my_beta          /// large r slope, see class description
                                      ,float my_fratio          /// axis ratio
                                      ,float my_pa              /// position angle
-                                     ,int my_stars_N           /// number of stars, not yet implanted
                                      ,const COSMOLOGY &cosmo
                                      ,EllipMethod my_ellip_method /// ellipticizing method
 )
@@ -655,9 +658,6 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
   beta = my_beta;
   fratio = my_fratio;
   pa = my_pa;
-  stars_N = my_stars_N;
-  
-  stars_implanted = false;
   rscale = LensHalo::getRsize()/my_concentration;
   xmax = LensHalo::getRsize()/rscale;
   
@@ -797,7 +797,6 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    ,PosType my_beta    /// logarithmic slop of surface density, kappa \propto r^{-beta}
                                    ,float my_fratio    /// axis ratio in asymetric case
                                    ,float my_pa        /// position angle
-                                   ,int my_stars_N     /// number of stars, not yet implanted
                                    ,const COSMOLOGY &cosmo
                                    ,EllipMethod my_ellip_method /// ellipticizing method
 ){
@@ -807,8 +806,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   LensHalo::setRsize(my_Rsize);
   
   beta=my_beta;
-  fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method, stars_N=my_stars_N;
-  stars_implanted = false;
+  fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method;
   rscale = 1;
   xmax = LensHalo::getRsize()/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
   //mnorm = renormalization(get_Rmax());
@@ -884,16 +882,113 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
   if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
-  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
-  else if(stars_N){
-    assignParams_stars(params);
-  }
+//  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+//  else if(stars_N){
+//    assignParams_stars(params);
+//  }
 }
 
 LensHaloPowerLaw::~LensHaloPowerLaw(){
   
 }
 
+
+LensHaloTNSIE::LensHaloTNSIE(
+                                   float my_mass
+                                   ,PosType my_zlens
+                                   ,float my_sigma
+                                   ,float my_rcore
+                                   ,float my_fratio
+                                   ,float my_pa
+                                   ,const COSMOLOGY &cosmo
+                                   ,float f)
+:LensHalo(),sigma(my_sigma),fratio(my_fratio)
+,pa(PI/2 - my_pa),rcore(my_rcore)
+{
+  rscale=1.0;
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens,cosmo);
+
+  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+  
+  units = sigma*sigma/lightspeed/lightspeed/Grav;///sqrt(fratio); // mass/distance(physical);
+  
+  rtrunc = my_mass*sqrt(my_fratio)/units/PI + rcore;
+  Rmax = f * rtrunc;
+  LensHalo::setRsize(Rmax);
+}
+
+void LensHaloTNSIE::force_halo(
+                                  PosType *alpha
+                                  ,KappaType *kappa
+                                  ,KappaType *gamma
+                                  ,KappaType *phi
+                                  ,PosType const *xcm
+                                  ,bool subtract_point /// if true contribution from a point mass is subtracted
+                                  ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
+)
+{
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  
+  if(rcm2 < 1e-20) rcm2 = 1e-20;
+  if(rcm2 < Rmax*Rmax){
+ 
+    PosType tmp[2]={0,0};
+    alphaNSIE(tmp,xcm,fratio,rcore,pa);
+    alpha[0] += units*tmp[0];
+    alpha[1] += units*tmp[1];
+
+    alphaNSIE(tmp,xcm,fratio,rtrunc,pa);
+    alpha[0] -= units*tmp[0];
+    alpha[1] -= units*tmp[1];
+    {
+      KappaType tmp[2]={0,0};
+      *kappa += units*(kappaNSIE(xcm,fratio,rcore,pa) - kappaNSIE(xcm,fratio,rtrunc,pa) );
+                       
+      gammaNSIE(tmp,xcm,fratio,rcore,pa);
+      gamma[0] += units*tmp[0];
+      gamma[1] += units*tmp[1];
+
+      gammaNSIE(tmp,xcm,fratio,rtrunc,pa);
+      gamma[0] -= units*tmp[0];
+      gamma[1] -= units*tmp[1];
+    }
+    
+    if(subtract_point)
+    {
+      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
+      alpha[0] += fac*xcm[0];
+      alpha[1] += fac*xcm[1];
+      
+      {
+        fac = 2.0*fac/rcm2;
+        
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+        gamma[1] += xcm[0]*xcm[1]*fac;
+      }
+    }
+  }
+  else
+  {
+    // outside of the halo
+    if (subtract_point == false)
+    {
+      PosType prefac = LensHalo::get_mass()/rcm2/PI;
+      alpha[0] += -1.0*prefac*xcm[0];
+      alpha[1] += -1.0*prefac*xcm[1];
+      
+      {
+        PosType tmp = -2.0*prefac/rcm2;
+        
+        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+        gamma[1] += xcm[0]*xcm[1]*tmp;
+      }
+    }
+  }
+  
+  return;
+}
 
 /*
  LensHaloRealNSIE::LensHaloRealNSIE(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_sigma
@@ -916,10 +1011,9 @@ LensHaloRealNSIE::LensHaloRealNSIE(
                                    float my_mass     /// mass, sets truncation radius
                                    ,PosType my_zlens /// redshift
                                    ,float my_sigma   /// in km/s
-                                   ,float my_rcore   /// in units of R_einstein
+                                   ,float my_rcore   /// core radius
                                    ,float my_fratio  /// axis ratio
                                    ,float my_pa      /// postion angle
-                                   ,int my_stars_N
                                    ,const COSMOLOGY &cosmo)
 :LensHalo(){
   rscale=1.0;
@@ -928,8 +1022,8 @@ LensHaloRealNSIE::LensHaloRealNSIE(
 
 
   sigma=my_sigma, rcore=my_rcore;
-  fratio=my_fratio, pa = PI/2 - my_pa, stars_N=my_stars_N;
-  stars_implanted = false;
+  fratio=my_fratio, pa = PI/2 - my_pa;//, stars_N=my_stars_N;
+  //stars_implanted = false;
   
   if(fratio  != 1.0) elliptical_flag = true;
   else elliptical_flag = false;
@@ -993,10 +1087,10 @@ void LensHaloRealNSIE::assignParams(InputParams& params){
   if(params.get("main_ellip_method",main_ellip_method)){std::cout << "main_ellip_method is NOT needed in file " << params.filename() << ". RealNSIE produces parametric ellipses!" << endl;};
   
   
-  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
-  else if(stars_N){
-    assignParams_stars(params);
-  }
+//  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+//  else if(stars_N){
+//    assignParams_stars(params);
+//  }
   
 }
 
@@ -1067,20 +1161,7 @@ PosType LensHaloRealNSIE::rmax_calc(){
  }
  */
 
-/** \brief returns the lensing quantities of a ray in center of mass coordinates.
- *
- *  Warning: This adds to input value of alpha, kappa, gamma, and phi.  They need
- *  to be zeroed out if the contribution of just this halo is wanted.
- */
-void LensHalo::force_halo(
-                          PosType *alpha          /// deflection solar mass/Mpc
-                          ,KappaType *kappa     /// surface density in Msun/Mpc^2 (?)
-                          ,KappaType *gamma     /// three components of shear
-                          ,KappaType *phi       /// potential in solar masses
-                          ,PosType const *xcm   /// position relative to center (Mpc?)
-                          ,bool subtract_point /// if true contribution from a point mass is subtracted
-                          ,PosType screening   /// the factor by which to scale the mass for screening of the point mass subtraction
-)
+void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening)
 {
   if (elliptical_flag){
     force_halo_asym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
@@ -1154,10 +1235,10 @@ void LensHalo::force_halo_sym(
   }
   
   /// add stars for microlensing
-  if(stars_N > 0 && stars_implanted)
-  {
-    force_stars(alpha,kappa,gamma,xcm);
-  }
+//  if(stars_N > 0 && stars_implanted)
+//  {
+//    force_stars(alpha,kappa,gamma,xcm);
+//  }
   
   //(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
@@ -1293,10 +1374,10 @@ void LensHalo::force_halo_asym(
   }
   
   /// add stars for microlensing
-  if(stars_N > 0 && stars_implanted)
-  {
-    force_stars(alpha,kappa,gamma,xcm);
-  }
+//  if(stars_N > 0 && stars_implanted)
+//  {
+//    force_stars(alpha,kappa,gamma,xcm);
+//  }
   
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
@@ -1540,13 +1621,6 @@ void LensHaloRealNSIE::force_halo(
     }
   }
   
-  
-  // add stars for microlensing
-  if(stars_N > 0 && stars_implanted)
-  {
-    force_stars(alpha,kappa,gamma,xcm);
-  }
-  
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
   return;
@@ -1574,15 +1648,14 @@ PosType* LensHaloHernquist::xgtable = NULL;
 	gmax = InterpolateFromTable(gtable,xmax);
  }
  */
-LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method){
+LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method){
   
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   rscale=my_rscale;
-  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
-  stars_implanted = false;
+  fratio=my_fratio, pa=my_pa;
   
   xmax = LensHalo::getRsize()/rscale;
   make_tables();
@@ -1685,12 +1758,12 @@ void LensHaloHernquist::assignParams(InputParams& params){
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
-  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
-  else if(stars_N){
-    assignParams_stars(params);
-    
-    std::cout << "LensHalo::getRsize() " << LensHalo::getRsize() <<std::endl;
-  }
+//  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+//  else if(stars_N){
+//    assignParams_stars(params);
+//
+//    std::cout << "LensHalo::getRsize() " << LensHalo::getRsize() <<std::endl;
+//  }
   
 }
 
@@ -1726,15 +1799,14 @@ PosType* LensHaloJaffe::xgtable = NULL;
 	gmax = InterpolateFromTable(gtable,xmax);
  }
  */
-LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,int my_stars_N,const COSMOLOGY &cosmo, EllipMethod my_ellip_method){
+LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method){
   
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   rscale=my_rscale;
-  fratio=my_fratio, pa=my_pa, stars_N=my_stars_N;
-  stars_implanted = false;
+  fratio=my_fratio, pa=my_pa;
   xmax = LensHalo::getRsize()/rscale;
   make_tables();
   gmax = InterpolateFromTable(gtable,xmax);
@@ -1833,10 +1905,10 @@ void LensHaloJaffe::assignParams(InputParams& params){
   
   if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
-  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
-  else if(stars_N){
-    assignParams_stars(params);
-  }
+//  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
+//  else if(stars_N){
+//    assignParams_stars(params);
+//  }
   
 }
 
@@ -1861,14 +1933,12 @@ LensHaloDummy::LensHaloDummy()
   //	mass = 0.;
 }
 
-LensHaloDummy::LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale, int my_stars_N,const COSMOLOGY &cosmo){
+LensHaloDummy::LensHaloDummy(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,const COSMOLOGY &cosmo){
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
 
   rscale=my_rscale;
-  stars_N=my_stars_N;
-  stars_implanted = false;
   setTheta(0.0,0.0);
 }
 
@@ -1918,15 +1988,7 @@ void LensHaloDummy::force_halo(PosType *alpha
     *phi += phi_h(x);
     
   }
-  
-  // add stars for microlensing
-  if(stars_N > 0 && stars_implanted)
-  {
-    force_stars(alpha,kappa,gamma,xcm);
-  }
-  
-  //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-
+ 
 }
 
 void LensHaloDummy::assignParams(InputParams& params)

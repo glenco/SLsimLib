@@ -54,4 +54,8 @@ add_sources(
 	multimap.h
 	disk.h
 	cpfits.h
+	shear.h
+	quadTreeHalos.h
+	powell.h
+	slicer.h
 )

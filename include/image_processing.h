@@ -23,8 +23,17 @@ struct Grid;
 struct GridMap;
 class Source;
 
-/// these are partial units for the pixel map that can be used to ensure consistency
-enum PixelMapUnits {ndef,surfb,photon_flux,count_per_sec,mass,mass_density};
+/// These are partial units for the pixel map that can be used to ensure consistency.  For example, maps with different units cannot be added together.  default: ndef
+enum PixelMapUnits {
+  ndef     // not defined
+  ,surfb   // ergs / s / cm**2
+  //,photon_flux // surfb / hplanck
+  ,count_per_sec
+  ,mass
+  ,mass_density
+};
+
+std::string to_string(PixelMapUnits unit);
 
 /**
  * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
@@ -92,6 +101,7 @@ public:
   PosType AddSource(Source &source);
   /// Add a source to the pixel map by oversamples the source so that oversample^2 points within each pixel are averaged
   PosType AddSource(Source &source,int oversample);
+  void AddPointSource(const Point_2d &x,double flux);
   
   /** \brief copy a PixelMap into this one.
    
@@ -163,7 +173,7 @@ public:
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
-	void printFITS(std::string filename, bool verbose = false);
+	void printFITS(std::string filename,bool Xflip = false, bool verbose = false);
   void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
 
 	void smooth(double sigma);
@@ -259,10 +269,28 @@ public:
     
     if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
     
-    if(overwrite) Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
-    else{
+    if(overwrite){
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
+    }else{
       std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, tmp_power);
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,tmp_power);
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+    }
+  }
+
+  /// Find the power spectrum of the map
+  void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
+                     ,const std::vector<PosType> &lbins            /// output l values of bands
+                     ,std::vector<PosType> &lave            /// output l values of bands
+                     ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
+                     ){
+    
+    if(overwrite){
+      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,power_spectrum,lave);
+    }else{
+      if(power_spectrum.size() != lbins.size()-1) throw std::invalid_argument("these must be the same size");
+      std::vector<PosType> tmp_power(power_spectrum.size());
+      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,tmp_power,lave);
       for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
     }
   }
@@ -310,8 +338,12 @@ public:
     flipY();
   }
   
-  /// recenter the map without changing anything else
-  void recenter(PosType c[2]);
+  /// recenter the map without changing anything else.
+  
+  void recenter(PosType newcenter[2] /// in radians
+                 );
+  void recenter(Point_2d newcenter /// in radians
+                 );
   
   /** \brief convolve the image with a kernel.
    
@@ -319,8 +351,36 @@ public:
    that the kernal has the same pixel size as the image.
    **/
   void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
-  
+ 
+  /** \brief Creates a PixelMap with a lower resolution.
+   *  The value of the pixels are added for the new pixels.
+   *   If n does not go into the orginial number of pixels evenly the right (top) redge is dropped.
+   */
+  PixelMap downsize(int n /// number of pixels each direction added into each new pixel
+                    );
+
+
+  /// add a heaader keyword that will appear in fits output
+   void addheader(std::string label,long value,std::string comment){
+     headers_long.push_back(std::make_tuple(label,value,comment));
+   }
+   void addheader(std::string label,size_t value,std::string comment){
+     headers_long.push_back(std::make_tuple(label,value,comment));
+   }
+   void addheader(std::string label,float value,std::string comment){
+     headers_float.push_back(std::make_tuple(label,value,comment));
+   }
+  void addheader(std::string label,double value,std::string comment){
+    headers_float.push_back(std::make_tuple(label,value,comment));
+  }
+  void addheader(std::string label,std::string &value,std::string comment){
+      headers_string.push_back(std::make_tuple(label,value,comment));
+  }
+
 private:
+  std::vector<std::tuple<std::string,float,std::string> > headers_float;
+  std::vector<std::tuple<std::string,long,std::string> > headers_long;
+  std::vector<std::tuple<std::string,std::string,std::string> > headers_string;
 
   std::valarray<double> map;
 	std::size_t Nx;
@@ -394,29 +454,29 @@ public:
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron
               ,size_t Npix_x,size_t Npix_y,float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
-
   
-  float getExpTime(){return exp_time;}
-	int getExpNum(){return exp_num;}
-	float getBackMag(){return back_mag;}
-	float getDiameter(){return diameter;}
-	float getTransmission(){return transmission;}
-    /// read-out noise in electrons/pixel
-	float getRon(){return ron;}
+  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing=0);
+  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
+  
+  float getExpTime() const {return exp_time;}
+	int getExpNum() const {return exp_num;}
+	float getBackMag() const {return back_mag;}
+   /// read-out noise in electrons/pixel
+	float getRon() const {return ron;}
   /// seeing in arcsecs
-	float getSeeing(){return seeing;}
-	float getZeropoint(){return mag_zeropoint;}
+	float getSeeing() const {return seeing;}
+	float getZeropoint() const {return mag_zeropoint;}
     /// pixel size in radians
-  float getPixelSize(){return pix_size;}
+  float getPixelSize() const {return pix_size;}
+  void setPixelSize(float pixel_size){pix_size=pixel_size;}
   float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
   void setNoiseCorrelation(std::string nc_file);
-	void Convert(PixelMap &map, bool psf, bool noise,long *seed, unitType unit = counts_x_sec);
+	PixelMap Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran);
   /// returns factor by which code image units need to be multiplied by to get flux units
-  double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
+  //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
 
-	void Convert_back(PixelMap &map);
   void setExpTime(float time){exp_time = time;}
 
   size_t getNx(){ return Npix_x;}
@@ -428,8 +488,8 @@ private:
   std::vector<double> sqrt_noise_power;  // stores sqrt root of power noise spectrum
   size_t side_ncorr; // pixels on a side of input noise correlation function
 
-	float diameter;  // diameter of telescope (in cm)
-	float transmission;  // total transmission of the instrument
+	//float diameter;  // diameter of telescope (in cm)
+	//float transmission;  // total transmission of the instrument
 	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
 	float exp_time;  // total exposure time (in sec)
 	int exp_num;  // number of exposures
@@ -440,10 +500,17 @@ private:
 	float oversample; // psf oversampling factor
 	double pix_size; // pixel size (in rad)
 	bool telescope; // was the observation created from a default telescope?
-
-	void AddNoise(PixelMap &pmap,long *seed);
+  float e_per_s_to_ergs_s_cm2;  // e- / s   for zero magnitudes
+  float background_flux;  // e- / s / arcsec
   
-	void PhotonToCounts(PixelMap &pmap);
+  const float AB_zeropoint = - 48.6;
+
+  void set_up();
+  
+  PixelMap AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran);//,long *seed);
+  
+  void ToCounts(PixelMap &pmap);
+  void ToSurfaceBrightness(PixelMap &pmap);
 	void ApplyPSF(PixelMap &pmap);
   void fftpsf();  // FFT the psf for later use
   std::vector<std::complex<double> > fft_psf;

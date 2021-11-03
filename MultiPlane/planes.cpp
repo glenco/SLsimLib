@@ -10,24 +10,24 @@
 
 #include <iterator>
 
-LensPlaneTree::LensPlaneTree(LensHaloHndl *my_halos,IndexType Nhalos
+LensPlaneTree::LensPlaneTree(float z,LensHalo **my_halos,IndexType Nhalos
                              ,PosType my_sigma_background,PosType inv_screening_scale)
-: LensPlane(), halos(my_halos, my_halos + Nhalos)
+: LensPlane(z), halos(my_halos, my_halos + Nhalos)
 {
-	if(inv_screening_scale != 0) halo_tree = new TreeQuadHalos(my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
-	else halo_tree = new TreeQuadHalos(my_halos,Nhalos,my_sigma_background);
+	if(inv_screening_scale != 0) halo_tree = new TreeQuadHalos<LensHalo>(my_halos,Nhalos,my_sigma_background,5,0.1,true,inv_screening_scale);
+	else halo_tree = new TreeQuadHalos<LensHalo>(my_halos,Nhalos,my_sigma_background);
 }
 LensPlaneTree::LensPlaneTree(const LensPlaneTree &p)
-: LensPlane()
+: LensPlane(p.z)
 {
   halos = p.halos;
   
   if(p.halo_tree->inv_screening_scale2 != 0){
-    halo_tree = new TreeQuadHalos(halos.data(),halos.size()
+    halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size()
                                   ,p.halo_tree->sigma_background
                                   ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
   }else{
-    halo_tree = new TreeQuadHalos(halos.data(),halos.size(),p.halo_tree->sigma_background);
+    halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->sigma_background);
   }
 }
 
@@ -40,11 +40,11 @@ LensPlaneTree & LensPlaneTree::operator=(const LensPlaneTree &p){
     halos = p.halos;
     
     if(p.halo_tree->inv_screening_scale2 != 0){
-      halo_tree = new TreeQuadHalos(halos.data(),halos.size()
+      halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size()
                                     ,p.halo_tree->sigma_background
                                     ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
     }else{
-      halo_tree = new TreeQuadHalos(halos.data(),halos.size(),p.halo_tree->sigma_background);
+      halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->sigma_background);
     }
   }
   
@@ -96,8 +96,8 @@ std::vector<const LensHalo*> LensPlaneTree::getHalos() const
 	return std::vector<const LensHalo*>(halos.begin(), halos.end());
 }
 
-LensPlaneSingular::LensPlaneSingular(LensHalo** my_halos, std::size_t my_Nhalos)
-: LensPlane(), halos(my_halos, my_halos + my_Nhalos)
+LensPlaneSingular::LensPlaneSingular(float z,LensHalo** my_halos, std::size_t my_Nhalos)
+: LensPlane(z), halos(my_halos, my_halos + my_Nhalos)
 {
 }
 
@@ -129,8 +129,9 @@ void LensPlaneSingular::force(PosType *alpha
 	gamma[0] = gamma[1] = gamma[2] = 0.0;
   *phi = 0.0;
   
+  size_t n = halos.size();
     // Loop over the different halos present in a given lens plane.
-	for(std::size_t i = 0, n = halos.size(); i < n; ++i)
+	for(std::size_t i = 0; i < n; ++i)
 	{
         alpha_tmp[0] = alpha_tmp[1] = 0.0;
         kappa_tmp = 0.0;

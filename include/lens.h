@@ -91,8 +91,6 @@ public:
 	void resetFieldNplanes(std::size_t field_Nplanes, bool verbose = false);
 
 	/** keep the main lens and the number of planes constant, but generate new field halos.
-    This function will also erase the substructure halos so they need to be regenerated using 
-   resetSubstructure() if they are desired .
    */
 	void resetFieldHalos(bool verbose = false);
 
@@ -195,12 +193,6 @@ public:
   template <typename T>
   void replaceMainHalo(const T &halo_in,bool addplanes,bool verbose=false)
   {
-    //Utilities::delete_container(main_halos);   // ????
-    /*while(main_halos.size() > 0){
-      delete main_halos.back();
-      main_halos.pop_back();
-    }*/
-    
     main_halos.clear();  // ???? is this a memory leak ????
     
     T * halo = new T(halo_in);
@@ -278,31 +270,34 @@ public:
 	/// replaces existing main halos with a sequence of main halos
 	// replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
 
-  /** \brief Add substructures to the lens.
-   
-   This method is meant for inserting substructure to a main lens.  All the substructure will be at 
-   one redshift.  The mass function follows a power law.  The density of substructures is constant within 
-   a circular region.  The tidal truncation is controlled through the parameter density_contrast which is
-   the average density within the substructures orbit in units of the average density to the universe at 
-   the redshift where they are places.  For example density_contrast=200 would give them the truncation radius appropriate at R_200. 
-   */
-  void insertSubstructures(
-        PosType Rregion            /// radius of region in which substructures are inserted (radians)
-        ,PosType center[]          /// center of region in which the substructures are inserted (radians)
-        ,PosType NumberDensity     /// number density per radian^2 of all substructures
-        ,PosType Mass_min          /// minimum mass of substructures
-        ,PosType Mass_max          /// maximum mass of substructures
-        ,PosType redshift          /// redshift of substructures
-        ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
-        ,PosType density_contrast  ///
-        ,bool verbose
-  );
-  /** \brief This function will randomize the substructure without changing the region, mass function, etc.
-   
-   The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
-   */
-  void resetSubstructure(bool verbose = false);
-  
+
+//  /* \brief Add substructures to the lens.
+//
+//   This method is meant for inserting substructure to a main lens.  All the substructure will be at
+//   one redshift.  The mass function follows a power law.  The density of substructures is constant within
+//   a circular region.  The tidal truncation is controlled through the parameter density_contrast which is
+//   the average density within the substructures orbit in units of the average density to the universe at
+//   the redshift where they are places.  For example density_contrast=200 would give them the truncation radius appropriate at R_200.
+//   */
+//  void insertSubstructures(
+//        PosType Rregion            /// radius of region in which substructures are inserted (radians)
+//        ,PosType center[]          /// center of region in which the substructures are inserted (radians)
+//        ,PosType NumberDensity     /// number density per radian^2 of all substructures
+//        ,PosType Mass_min          /// minimum mass of substructures
+//        ,PosType Mass_max          /// maximum mass of substructures
+//        ,PosType redshift          /// redshift of substructures
+//        ,PosType alpha             /// index of mass function (dN/dm \propto m^alpha)
+//        ,PosType density_contrast  ///
+//        ,bool verbose
+//  );
+//
+//  /** \brief This function will randomize the substructure without changing the region, mass function, etc.
+//
+//   The Lens::insertSubstructures() function must have been called on this instance of the Lens before.
+//   */
+//  void resetSubstructure(bool verbose = false);
+//
+
 	/// get number of main halos
 	std::size_t getNMainHalos() const;
 	/// get number of main halos of given type
@@ -324,6 +319,9 @@ public:
    image point.
    */
   void rayshooter(RAY &ray);
+  void rayshooter(std::vector<RAY> &rays,bool RSIverbose = false);
+  void rayshooter(RAY *begin,RAY *end,bool RSIVerbose =false);
+  
 	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
   void info_rayshooter(Point *i_point
                       ,std::vector<Point_2d> & ang_positions
@@ -335,6 +333,18 @@ public:
                       ,PosType rmax,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
                       ,bool verbose = false
                                        );
+  /** \brief  Find the image position of a source without grid refinement.
+  
+  This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
+  */
+  RAY find_image(
+          Point_2d y_source    /// input position of source (radians)
+          ,Point_2d &x_image    /// initial guess for image postion (radians)
+          ,PosType z_source     /// redshift of source
+          ,PosType ytol2        /// target tolerance in source position squared
+          ,PosType &fret        ///
+          ,int sign=0             /// sign of magnification, it is found automatically if left out
+  );
 
 	// methods used for use with implanted sources
 
@@ -431,9 +441,9 @@ public:
     field_Dl = lens.field_Dl;
     field_Dl_original = lens.field_Dl_original;
     
-    substructure = lens.substructure;
+    //substructure = lens.substructure;
     
-    WasInsertSubStructuresCalled = lens.WasInsertSubStructuresCalled;
+    //WasInsertSubStructuresCalled = lens.WasInsertSubStructuresCalled;
     field_mass_func_type = lens.field_mass_func_type;
     mass_func_PL_slope = lens.mass_func_PL_slope;
     field_min_mass = lens.field_min_mass;
@@ -581,8 +591,6 @@ private:
   PosType aveNhalosField ;
   /// Log(mass) vector
   std::vector<PosType> Logm;
-  /// Number of halos  field + substructure
-  //std::size_t Nhalos ;
   /// table of halos bins for each sampled redshifts
   std::vector<std::vector<PosType>> NhalosbinMass;
   /// table for sigma_back in createFieldPlanes
@@ -596,7 +604,7 @@ private:
   /// Number of Field Halos
   size_t getNFieldHalos() const {return field_halos.size();}
   /// Number of Sub Halos
-  size_t getNSubHalos() const {return substructure.halos.size();}
+  //size_t getNSubHalos() const {return substructure.halos.size();}
   
 private: /* force calculation */
 	/// if >= 1, deflection in the rayshooting is switched off
@@ -621,10 +629,9 @@ private: /* field */
 	bool flag_switch_field_off;
 	
   /// vector of all field halos
-  std::vector<LensHalo*> field_halos;
+  std::vector<LensHalo *> field_halos;
 	/// original number of field planes
   std::size_t field_Nplanes_original;
-  /// current number of field planes which may include substructure plane
   std::size_t field_Nplanes_current;
   
 	/// vector of all field planes
@@ -638,28 +645,28 @@ private: /* field */
   /// original vector of field plane distances
   std::vector<PosType> field_Dl_original;
   
-  struct SubStructureInfo{
-    // things for substructures
-    /// vector of all substructure halos
-    std::vector<LensHalo*> halos;
-    LensPlane *plane;
-    PosType Rregion = 0;
-    PosType Mmax = 0;
-    PosType Mmin = 0;
-    PosType alpha = 0;
-    PosType Ndensity = 0;
-    Point_2d center;
-    PosType rho_tidal = 0;
-    // Added quantities for the resetting of the substructure
-    // (when WasInsertSubStructuresCalled = MAYBE) :
-    PosType redshift = 0;
-    bool verbose = false;
-  };
-  
-  SubStructureInfo substructure;
+//  struct SubStructureInfo{
+//    // things for substructures
+//    /// vector of all substructure halos
+//    std::vector<LensHaloNFW *> halos;
+//    LensPlane *plane;
+//    PosType Rregion = 0;
+//    PosType Mmax = 0;
+//    PosType Mmin = 0;
+//    PosType alpha = 0;
+//    PosType Ndensity = 0;
+//    Point_2d center;
+//    PosType rho_tidal = 0;
+//    // Added quantities for the resetting of the substructure
+//    // (when WasInsertSubStructuresCalled = MAYBE) :
+//    PosType redshift = 0;
+//    bool verbose = false;
+//  };
+//
+//  SubStructureInfo substructure;
   
   /// Flag to know if InsertSubStructures was called
-  Boo WasInsertSubStructuresCalled = NO ;
+ // Boo WasInsertSubStructuresCalled = NO ;
   
 	/// Perpendicular position of halo TODO: (In proper distance?)
 	//PosType **halo_pos;
@@ -736,6 +743,26 @@ private: /* input */
   /// inverse of the angular screening scale in the tree force calculation
   PosType inv_ang_screening_scale;
   
+  struct MINyFunction{
+     MINyFunction(Lens &mylens,Point_2d y,int sign):lens(mylens),y(y),sign(sign),r2max(0){}
+
+    double operator()(double *x){
+      point.x[0] = x[1];
+      point.x[1] = x[2];
+      lens.rayshooterInternal(1,&point);
+      double r2 = (y[0]-point.image->x[0])*(y[0]-point.image->x[0])
+      + (y[1]-point.image->x[1])*(y[1]-point.image->x[1]);
+      
+      r2max = MAX(r2,r2max);
+      return r2 + r2max*abs(sign - sgn(point.invmag));
+    }
+    
+    Lens &lens;
+    Point_2d y;
+    int sign;
+    double r2max;
+    LinkedPoint point;
+  };
 };
 
 inline std::size_t Lens::getNMainHalos() const

@@ -64,7 +64,10 @@ struct Point_2d{
   bool operator==(const Point_2d &p) const{
     return (x[0] == p.x[0])*(x[1] == p.x[1]);
   }
-  
+  bool operator!=(const Point_2d &p) const{
+    return (x[0] != p.x[0]) || (x[1] != p.x[1]);
+  }
+ 
   Point_2d  operator+(const Point_2d &p) const{
     Point_2d tmp;
     tmp.x[0] = x[0] + p.x[0];
@@ -188,7 +191,7 @@ struct Point: public Point_2d{
   KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
   double dt;                 // time delay : double implies permanent precision independently from DOUBLE_PRECISION
   KappaType invmag = 1;          // inverse of magnification
-    
+ 
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
@@ -220,23 +223,56 @@ private:
   //Point &operator=(const Point &p);
 };
 
+std::ostream &operator<<(std::ostream &os, Point const &p);
+
+/** \brief A point that automatically has an image point.
+ 
+ This does not produce a stack of source plan points that are contigious in memory.
+ */
+struct LinkedPoint : public Point
+{
+  LinkedPoint(){
+    image = &im;
+    im.image = this;
+  }
+private:
+  Point im;
+};
+
 /** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
 struct RAY{
   RAY(){
     kappa = dt = 0.0;
     gamma[0] = gamma[1] = gamma[2] = 0.0;
+    zs = 0;
   };
   
   RAY(const Point &p){
-    x = p.x;
-    y = p.image->x;
+    x[0] = p.x[0];
+    x[1] = p.x[1];
+    y[0] = p.image->x[0];
+    y[1] = p.image->x[1];
     kappa = p.kappa;
     dt = p.dt;
     
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+  };
+  RAY(const LinkedPoint &p){
+    x[0] = p.x[0];
+    x[1] = p.x[1];
+    y[0] = p.image->x[0];
+    y[1] = p.image->x[1];
+    kappa = p.kappa;
+    dt = p.dt;
+    
+    gamma[0] = p.gamma[0];
+    gamma[1] = p.gamma[1];
+    gamma[2] = p.gamma[2];
+    
+    zs = 0;
   };
   RAY(const RAY &p){
     x = p.x;
@@ -247,17 +283,24 @@ struct RAY{
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = p.zs;
   };
 
   RAY & operator=(const Point &p){
-    x = p.x;
-    y = p.image->x;
+    x[0] = p.x[0];
+    x[1] = p.x[1];
+    y[0] = p.image->x[0];
+    y[1] = p.image->x[1];
+
     kappa = p.kappa;
     dt = p.dt;
     
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = 0;
     
     return *this;
   };
@@ -271,6 +314,8 @@ struct RAY{
     gamma[0] = p.gamma[0];
     gamma[1] = p.gamma[1];
     gamma[2] = p.gamma[2];
+    
+    zs = p.zs;
     
     return *this;
   };
@@ -289,6 +334,8 @@ struct RAY{
   /// time-delay
   KappaType dt;
   
+  KappaType zs;
+  
   /// inverse of the magnification
   KappaType invmag(){return (1-kappa)*(1-kappa) - gamma[0]*gamma[0]
     - gamma[1]*gamma[1] + gamma[2]*gamma[2];}
@@ -297,7 +344,7 @@ struct RAY{
   Point_2d alpha(){return x - y;}
 };
 
-std::ostream &operator<<(std::ostream &os, Point const &p);
+std::ostream &operator<<(std::ostream &os, RAY const &r);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
 struct Branch{
@@ -624,6 +671,20 @@ struct Point_3d{
     x[2] /= s;
   }
   
+  /// returns the unit vector in the direction of the right handed spherical coordinate Phi
+  Point_3d<T> unitPhi(){
+    double s = sqrt(x[0]*x[0] + x[1]*x[1]);
+    return Point_3d<T>(-x[1],x[0],0) / s;
+  }
+
+  /// returns the unit vector in the direction of the right handed spherical coordinate Theta, Theta= pi/2 is the north
+  /// pole and Theta=0 is the equater (z=0).
+  Point_3d<T> unitTheta(){
+    Point_3d<T> v(-x[0]*x[2],-x[1]*x[2] ,x[0]*x[0] + x[1]*x[1]);
+    v.unitize();
+    return v;
+  }
+
   T* data(){return x;}
   
   T x[3];

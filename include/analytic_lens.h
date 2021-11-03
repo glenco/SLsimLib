@@ -141,7 +141,7 @@ public:
   ~LensHaloAnaNSIE();
   
   void assignParams(InputParams& params);
-  double FractionWithinRe(double rangeInRei);
+  //double FractionWithinRe(double rangeInRei);
   void PrintLens(bool show_substruct,bool show_stars);
   
   void setCosmology(const COSMOLOGY& cosmo);
@@ -151,9 +151,9 @@ public:
   void RandomizeSigma(long *seed,bool tables);
   void RandomlyDistortLens(long *seed,int Nmodes);
   void AlignedRandomlyDistortLens(long *seed,double theta,int n);
-  void RandomizeSubstructure(double rangeInRei,long *seed);
-  void RandomizeSubstructure2(double rangeInRei,long *seed);
-  void RandomizeSubstructure3(double rangeInRei,long *seed);
+  //void RandomizeSubstructure(double rangeInRei,long *seed);
+  //void RandomizeSubstructure2(double rangeInRei,long *seed);
+  //void RandomizeSubstructure3(double rangeInRei,long *seed);
   
   /// get the velocity dispersion
   virtual PosType get_sigma(){return sigma;};

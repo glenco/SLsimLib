@@ -52,6 +52,7 @@ public:
       ,PosType theta_force = 0.1
       ,bool my_periodic_buffer = false
       ,PosType my_inv_screening_scale = 0
+      ,PosType maximum_range = -1
       );
  
 	~TreeQuadParticles();
@@ -83,6 +84,7 @@ protected:
   int Nbucket;
   
   PosType force_theta;
+  PosType max_range;
   
   std::unique_ptr<QTreeNB<PType> > tree;
   std::vector<IndexType> index;
@@ -239,19 +241,25 @@ protected:
  */
 template<typename PType>
 TreeQuadParticles<PType>::TreeQuadParticles(
-                          PType *xpt
-                          ,IndexType Npoints
-                          ,float mass_fixed
-                          ,float size_fixed
-                          ,PosType my_sigma_background /// background kappa that is subtracted
-                          ,int bucket
-                          ,PosType theta_force
-                          ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadParticles::force2D() for details.  See note for TreeQuadParticles::force2D_recur().
-                          ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadParticles::force2D_recur().
+                    PType *xpt
+                   ,IndexType Npoints
+                   ,float mass_fixed
+                   ,float size_fixed
+                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,int bucket
+                   ,PosType theta_force
+                   ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadParticles::force2D() for details.  See note for TreeQuadParticles::force2D_recur().
+                   ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadParticles::force2D_recur().
+                   ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
+
 ):
 xxp(xpt)
-,Nparticles(Npoints),sigma_background(my_sigma_background)
-,Nbucket(bucket),force_theta(theta_force),periodic_buffer(my_periodic_buffer)
+,Nparticles(Npoints)
+,sigma_background(my_sigma_background)
+,Nbucket(bucket)
+,force_theta(theta_force)
+,max_range(maximum_range)
+,periodic_buffer(my_periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 {
   index.resize(Npoints);
@@ -353,10 +361,19 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
   cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
   cbranch->quad[0] = cbranch->quad[1]=cbranch->quad[2]=0;
   cbranch->mass = 0.0;
-  
-  
+    
+  double theta_range = 2*force_theta;
+  if(max_range > 0){
+    double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
+    theta_range = boxsize / MAX(sqrt(cbranch->center[0]*cbranch->center[0]
+           + cbranch->center[1]*cbranch->center[1] )
+           - max_range, boxsize );
+  }
+    
   // leaf case
-  if(cbranch->nparticles <= Nbucket){
+  if(cbranch->nparticles <= Nbucket
+     || force_theta > theta_range
+     ){
     PosType r;
     cbranch->Nbig_particles = 0;
     for(i=0;i<cbranch->nparticles;++i){
@@ -371,8 +388,7 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
         r = xxp[particles[i]*MultiRadius].size();
         if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
       }
-    }
-    else{
+    }else{
       cbranch->big_particles.reset(nullptr);
     }
     
@@ -405,7 +421,6 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
         cbranch->Nbig_particles = cut2;
       }
       
-      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
       cbranch->big_particles.reset(new IndexType[cbranch->Nbig_particles]);
       for(i=cut;i<(cut+cut2);++i) cbranch->big_particles[i-cut] = particles[i];
     }
@@ -1138,110 +1153,5 @@ void TreeQuadParticles<PType>::printBranchs(int level){
   
   return;
 };
-
-/**
- * \brief TreeQuadHalo is a class for calculating the deflection, kappa and gamma by tree method.
- *
- * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
- * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
- * the tree is built in such a way the large particles are stored in branches that are no smaller
- * than their size.  In this way particles are stored on all levels of the tree and not just in the
- * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
- *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
- *
- */
-
-class LensHalo;
-
-class TreeQuadHalos {
-public:
-  TreeQuadHalos(
-           LensHalo **my_halos
-           ,IndexType Npoints
-           ,PosType my_sigma_background = 0
-           ,int bucket = 5
-           ,PosType theta_force = 0.1
-           ,bool my_periodic_buffer = false
-           ,PosType my_inv_screening_scale = 0
-           );
-  ~TreeQuadHalos();
-  
-  friend class LensPlaneTree;
-  void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
-                       ,KappaType *phi) const;
-  
-  void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa
-                             ,KappaType *gamma,KappaType *phi);
-  
-  /// find all points within rmax of ray in 2D
-  void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const;
-  void neighbors(PosType ray[],PosType rmax,std::vector<LensHalo *> &neighbors) const;
-  
-  void printParticlesInBranch(unsigned long number);
-  
-  void printBranchs(int level = -1);
-  
-protected:
-  
-  std::vector<PosType> workspace;
-  PosType **xp;
-  bool MultiMass;
-  bool MultiRadius;
-  float *masses;
-  float *sizes;
-  
-  IndexType Nparticles;
-  PosType sigma_background;
-  int Nbucket;
-  
-  PosType force_theta;
-  
-  QTreeNB<PosType *> * tree;
-  IndexType *index;
-  
-  //bool haloON;
-  LensHalo **halos;
-  
-  PosType realray[2];
-  int incell,incell2;
-  
-  /// if true there is one layer of peridic buffering
-  bool periodic_buffer;
-  PosType inv_screening_scale2;
-  PosType original_xl;  // x-axis size of simulation used for peridic buffering.  Requrement that it top branch be square my make it differ from the size of top branch.
-  PosType original_yl;  // x-axis size of simulation used for peridic buffering.
-  
-  QTreeNB<PosType *> * BuildQTreeNB(PosType **xp,IndexType Nparticles,IndexType *particles);
-  void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
-  
-  inline short WhichQuad(PosType *x,QBranchNB &branch);
-  
-  //inline bool atLeaf();
-  inline bool inbox(const PosType *ray,const PosType *p1,const PosType *p2){
-    return (ray[0]>=p1[0])*(ray[0]<=p2[0])*(ray[1]>=p1[1])*(ray[1]<=p2[1]);
-  }
-  //int cutbox(PosType *ray,PosType *p1,PosType *p2,float rmax);
-  
-  void CalcMoments();
-  void rotate_coordinates(PosType **coord);
-  
-  //QTreeNBHndl rotate_simulation(PosType **xp,IndexType Nparticles,IndexType *particles
-  //                              ,PosType **coord,PosType theta,float *rsph,float *mass
-  //                              ,bool MultiRadius,bool MultiMass);
-  //QTreeNBHndl rotate_project(PosType **xp,IndexType Nparticles,IndexType *particles
-  //                           ,PosType **coord,PosType theta,float *rsph,float *mass
-  //                           ,bool MultiRadius,bool MultiMass);
-  void cuttoffscale(QTreeNB<PosType *> * tree,PosType *theta);
-  
-  void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
-  void walkTree_iter(QBiterator<PosType *> &treeit, PosType const *ray,PosType *alpha,KappaType *kappa
-                     ,KappaType *gamma,KappaType *phi) const;
-  
-  PosType phiintconst;
-  
-};
-
 
 #endif /* QUAD_TREE_H_ */

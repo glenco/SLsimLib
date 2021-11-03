@@ -165,10 +165,9 @@ long ImageFinding::IF_routines::refine_edges(
 
 	if(Nimages < 1) return 0;
 
-	long i,j,Ncells=0,Ncells_o=0,count=0;
+	long i,j,Ncells=0,Ncells_o=0;
 	Point *point;
 	PosType area_total=0;
-	std::vector<Point *> points_to_refine;
 
 	// count border points
 	if( criterion == 2 ) for(i=0,area_total=0.0;i<Nimages;++i) area_total += imageinfo[i].area;
@@ -198,6 +197,9 @@ long ImageFinding::IF_routines::refine_edges(
 	if(Ncells==0) return 0;
 
 	Ncells_o=Ncells;
+
+  long count=0;
+  std::vector<Point *> points_to_refine;
 
 	for(i=0,Ncells=0;i<Nimages;++i){
 			/* loop through outer border of ith image */
@@ -255,7 +257,9 @@ long ImageFinding::IF_routines::refine_edges(
 
 	if(batch){
 		Point *i_points = grid->RefineLeaves(lens,points_to_refine);
-		if(newpointskist && i_points != NULL){
+    if(i_points == NULL){
+      count = 0;
+    }else if(newpointskist){
 			for(unsigned int k=0;k < i_points->head; ++k) newpointskist->InsertAfterCurrent(&i_points[k]);
 		}
     points_to_refine.clear();
@@ -924,3 +928,152 @@ void SwapImages(OldImageInfo *image1,OldImageInfo *image2){
 
 	return ;
 }
+
+/**
+ *
+  \brief Finds images for a given source position and size.  It seporates images of different
+  pairities.
+ 
+  <p>
+ 
+  No grid refinement is done.  If the images is not initially found no nearest neighbor points are returned.
+ 
+  image points are put into imageinfo[].imagekist
+       imageinfo[].points and imageinfo[].Npoints are not changed
+ 
+  side-effects :  Will make in_image = true for all image points if splitparities == 0
+ 
+  <\p>
+ */
+
+void Grid::find_images(
+                            PosType *y_source
+                            ,PosType r_source
+                            ,int &Nimages
+                            ,std::vector<ImageInfo> &imageinfo
+                            ,unsigned long &Nimagepoints
+                            ){
+  
+  
+  if(imageinfo.size() < 3) imageinfo.resize(3);
+  
+
+  assert(imageinfo[0].imagekist);
+  
+  ImageInfo allpoints;
+  
+  // if source hasn't moved just take points within image
+  s_tree->PointsWithinKist(y_source,r_source,allpoints.imagekist,0);
+  Nimagepoints = allpoints.imagekist->Nunits();
+  
+  if(allpoints.imagekist->Nunits() < 1 ){  // no points in the source
+    imageinfo.clear();
+    Nimages=0;
+    Nimagepoints=0;
+    return;
+  }
+  // case where image fills all of the grid
+  if( allpoints.imagekist->Nunits() >= i_tree->pointlist->size()){
+    imageinfo.push_back(allpoints);
+    Nimages = 1;
+    imageinfo[0].area = 0.0;
+    imageinfo[0].imagekist->MoveToTop();
+    do{
+      imageinfo[0].area += pow(imageinfo[0].imagekist->getCurrent()->gridsize,2);
+    }while(imageinfo[0].imagekist->Down());
+    return;
+  }
+   
+  std::vector<std::vector<ImageInfo> > images(2);
+  
+  ClearAllMarks();
+  int Nimages_par[2] = {0,0};
+  size_t Npoints_done=0;
+  // one time for each parity
+  for(int par=0 ; par < 2 ; ++par){
+    if(Npoints_done == Nimagepoints) break;
+    
+    int sign = 1 - 2*par;
+    // ?? if it has already found all the points break
+    images[par].resize(1);
+    
+     // mark all image points
+    allpoints.imagekist->MoveToTop();
+    do{
+      if(sgn(allpoints.imagekist->getCurrent()->invmag) == sign){
+        allpoints.imagekist->getCurrent()->in_image = YES;
+        allpoints.imagekist->getCurrent()->image->in_image = YES;
+        images[par][0].imagekist->InsertAfterCurrent(allpoints.imagekist->getCurrent());
+      }else{
+        allpoints.imagekist->getCurrent()->in_image = NO;
+        allpoints.imagekist->getCurrent()->image->in_image = NO;
+      }
+    }while(allpoints.imagekist->Down());
+  
+    // transform from source plane to image points
+    images[par][0].imagekist->TranformPlanes();
+  
+    Npoints_done += images[par][0].getNimagePoints();
+    
+    // split images
+    divide_images_kist(i_tree,images[par],&Nimages_par[par]);
+ 
+    // find borders
+    for(int i=0;i<Nimages_par[par];++i) findborders4(i_tree,&images[par][i]);
+  }
+  
+  // ?? copy both pairities into imageinfo
+  Nimages = Nimages_par[0] + Nimages_par[1];
+  imageinfo.resize(Nimages);
+  int i=0;
+  for(auto &im : images[0]){
+     std::swap(im,imageinfo[i++]);
+   }
+  for(auto &im : images[1]){
+     std::swap(im,imageinfo[i++]);
+  }
+  
+  // put estimated errors on image area
+  for(i=0;i<Nimages;++i){
+    assert(imageinfo[i].area >= 0.0);
+    if(imageinfo[i].getNimagePoints() < 4 ) imageinfo[i].area_error=1.0;
+    else imageinfo[i].area_error = pow(imageinfo[i].gridrange[1],2)/imageinfo[i].area;
+  }
+  
+  allpoints.imagekist->MoveToTop();
+  do{
+    allpoints.imagekist->getCurrent()->in_image = NO;
+    allpoints.imagekist->getCurrent()->image->in_image = NO;
+  }while(allpoints.imagekist->Down());
+
+  return;
+}
+
+/** \breaf This function finds all the images for a circular source of radius r_source,
+ then finds the points within each image that are closest to the center and then markes
+ each surface brightness.  Only one pixel per image gets flux.
+ */
+double Grid::mark_point_source_images(
+                             Point_2d y_source
+                            ,PosType r_source
+                            ,PosType luminosity
+                            ,bool verbose
+                            ){
+  
+  int Nimages = 0;
+  size_t Npoints=0;
+  Point *pp;
+  double total=0;
+  
+  std::vector<ImageInfo> imageinfo;
+  find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
+
+  std::cout << "centroids" << std::endl;
+  for(int i=0 ; i<Nimages ; ++i){
+    pp = imageinfo[i].closestPoint(y_source);
+    
+    total += luminosity/fabs(pp->invmag);
+    pp->surface_brightness += luminosity/pp->gridsize/pp->gridsize/fabs(pp->invmag);
+  }
+  return total;
+};

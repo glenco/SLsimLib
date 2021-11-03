@@ -536,7 +536,7 @@ void MOKAmap::PreProcessFFTWMap(float zerosize){
   int Nnx=int(zerosize*nx);
   int Nny=int(zerosize*ny);
   double Nboxlx = boxlMpc*zerosize;
-  double Nboxly = boxlMpc*zerosize/nx*ny;
+  double Nboxly = boxlMpc*zerosize*ny/nx;
 
   std:: valarray<float> Nmap;
   try{

@@ -61,6 +61,29 @@ void swap(PixelMap& x, PixelMap& y)
   swap(x.map_boundary_p2[1], y.map_boundary_p2[1]);
 }
 
+std::string to_string(PixelMapUnits unit){
+  switch (unit) {
+    case ndef:
+      return "not defined";
+      break;
+    case surfb:
+      return "surface brightness (ergs / s / cm**2) ";
+      break;
+    case count_per_sec:
+      return "counts per sec";
+      break;
+    case mass:
+      return "mass";
+      break;
+    case mass_density:
+      return "mass density";
+      break;
+
+    default:
+      break;
+  }
+};
+
 PixelMap::PixelMap()
 : map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(ndef)
 {
@@ -208,7 +231,6 @@ PixelMap::PixelMap(
     {
       err = 0;
       {
-        double cd12, cd21, cd22;
         err += cpfits.readKey("CD1_1", my_res);
         //err += cpfits.readKey("CD1_2", cd12);
         //err += cpfits.readKey("CD2_1", cd21);
@@ -294,7 +316,7 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
  */
 PixelMap::PixelMap(
                    const PixelMap& pmap
-                   , PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
+                   ,PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
 )
 {
   resolution = res_ratio*pmap.resolution;
@@ -342,10 +364,31 @@ PixelMap::PixelMap(
   }
 }
 
-//PixelMap::~PixelMap(){}
-//{
-//  map.resize(0);
-//}
+PixelMap PixelMap::downsize(int n){
+
+  size_t nx = Nx/n,ny = Ny/n;
+
+  PixelMap new_map(center,nx,ny,resolution*n);
+
+  new_map.units = units;
+
+  for(size_t i=0 ; i < nx ; ++i){
+    for(size_t j=0 ; j < ny ; ++j){
+
+      double &m = new_map(i,j);
+      m = 0;
+
+      for(size_t jj = j*n ; jj < (j+1)*n ; ++jj){
+        for(size_t ii = i*n ; ii < (i+1)*n ; ++ii){
+          m += map[ii + Nx*jj];
+        }
+      }
+
+    }
+  }
+
+  return new_map;
+}
 
 PixelMap& PixelMap::operator=(const PixelMap &other)
 {
@@ -418,7 +461,6 @@ bool PixelMap::agrees(const PixelMap& other) const
 /// Add the values of another PixelMap to this one.
 PixelMap& PixelMap::operator+=(const PixelMap& rhs)
 {
-  // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
@@ -441,7 +483,6 @@ PixelMap PixelMap::operator+(const PixelMap& a) const
 /// Subtract the values of another PixelMap from this one.
 PixelMap& PixelMap::operator-=(const PixelMap& rhs)
 {
-  // TODO: maybe check if PixelMaps agree, but is slower
   if(Nx != rhs.getNx() || Ny != rhs.getNy())
     throw std::runtime_error("Dimensions of maps are not compatible");
   if(units != rhs.units)
@@ -548,7 +589,7 @@ void PixelMap::AddImages(
 
 void PixelMap::AddGridBrightness(Grid &grid){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  //if(units != photon_flux) throw std::invalid_argument("wrong units");
   PointList *plist = grid.i_tree->pointlist;
   
   if(plist->size() == 0) return;
@@ -599,6 +640,11 @@ void PixelMap::AddImages(
 ///  see full notes
 ){
   AddImages(imageinfo.data(),Nimages,rescale);
+}
+
+void PixelMap::AddPointSource(const Point_2d &x,double flux){
+  long index = find_index(x.x);
+  if(index > -1) map[index] += flux;
 }
 
 /*
@@ -861,7 +907,7 @@ void PixelMap::printASCIItoFile(std::string filename) const
   return;
 }
 /// Output the pixel map as a fits file.
-void PixelMap::printFITS(std::string filename, bool verbose)
+void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
 {
 
   if(filename.empty())
@@ -873,18 +919,27 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   naxex[0] = Nx;
   naxex[1] = Ny;
 
-  cpfits.write_image(map,naxex);  // write the map
-
+  if(flipX){
+    std::valarray<double> map_inv(map.size());
+    size_t s = 0;
+    for(size_t i=0 ; i<Ny ; ++i){
+      for(size_t j=1 ; j<=Nx ; ++j){
+        map_inv[Nx-j + i*Nx] = map[s++];
+      }
+    }
+    cpfits.write_image(map_inv,naxex);  // write the map
+  }else{
+    cpfits.write_image(map,naxex);  // write the map
+  }
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
- 
-  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+
+  //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  
   cpfits.writeKey("CROTA2", 0.0, "");
-  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  cpfits.writeKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
   cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
   cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
@@ -892,10 +947,27 @@ void PixelMap::printFITS(std::string filename, bool verbose)
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", RA, "radians, center");
-  cpfits.writeKey("DEC",DEC, "radians, center");
+
+  cpfits.writeKey("RA_global", RA, "radians, center");
+  cpfits.writeKey("DEC_global",DEC, "radians, center");
   cpfits.writeKey("center_x", center[0], "radians, center");
   cpfits.writeKey("center_y", center[1], "radians, center");
+  
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+  
+  cpfits.writeKey("UNITS",to_string(units),"");
+  
+  for(auto &h : headers_float){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  for(auto &h : headers_long){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  for(auto &h : headers_string){
+    cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
+  }
+  
 }
 
 void PixelMap::printFITS(std::string filename
@@ -917,28 +989,35 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("WCSAXES", 2, "number of World Coordinate System axes");
   cpfits.writeKey("CRPIX1", 0.5*(naxex[0]+1), "x-coordinate of reference pixel");
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
-  cpfits.writeKey("CRVAL1", 0.0, "first axis value at reference pixel");
-  cpfits.writeKey("CRVAL2", 0.0, "second axis value at reference pixel");
-  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-  cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+  cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
-  cpfits.writeKey("CD1_1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
-  cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
-  cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
+
+  cpfits.writeKey("CD1_1", -180*resolution/PI, "partial of first axis coordinate w.r.t. x");
+  //cpfits.writeKey("CD1_2", 0.0, "partial of first axis coordinate w.r.t. y");
+  //cpfits.writeKey("CD2_1", 0.0, "partial of second axis coordinate w.r.t. x");
   cpfits.writeKey("CD2_2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   
   cpfits.writeKey("Nx", Nx, "");
   cpfits.writeKey("Ny", Ny, "");
   cpfits.writeKey("range x", map_boundary_p2[0]-map_boundary_p1[0], "radians");
-  cpfits.writeKey("RA", RA, "radians, center");
-  cpfits.writeKey("DEC",DEC, "radians, center");
+  
+  cpfits.writeKey("RA_global", RA, "radians, center");
+  cpfits.writeKey("DEC_global",DEC, "radians, center");
   cpfits.writeKey("center_x", center[0], "radians, center");
   cpfits.writeKey("center_y", center[1], "radians, center");
 
+  cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
+  cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
+
+  cpfits.writeKey("UNITS",to_string(units),"");
+ 
   for(auto hp : extra_header_info){
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }
@@ -1090,11 +1169,11 @@ void PixelMap::drawdisk(
   PosType x1[2],x2[2];
   
   // To do the circle (easy) :
-  // group=====================
+  // group---------------------
   drawcircle(r_center,radius,value);
   
   // To fill the circle :
-  // ====================
+  // ------------------==
   
 /*  for(float theta = 0; theta < 2*PI; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
@@ -1216,11 +1295,11 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip)
   PosType N = double(Nstrip);
   
   // To do the frame (easy) :
-  // ========================
+  // ------------------------
   drawSquare(p1,p2,value);
   
   // To fill the square :
-  // ====================
+  // ------------------==
 
   // Initiating :
   if(p2[1]-p1[1]<0)
@@ -2219,6 +2298,10 @@ void PixelMap::recenter(PosType c[2] /// new center
   
   return;
 }
+void PixelMap::recenter(Point_2d c /// new center
+){
+  recenter(c.x);
+}
 
 /*
 void PixelMap::AddSource(Source &source,int oversample){
@@ -2316,6 +2399,5 @@ void PixelMap::convolve(PixelMap &kernel,long center_x,long center_y){
   
   std::swap(map,output);
 }
-
 
 

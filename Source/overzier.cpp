@@ -19,13 +19,13 @@ SourceOverzier::SourceOverzier(
 		PosType my_mag          /// Total magnitude
 		,double my_mag_bulge    /// magnitude of bulge
 		,double my_Reff         /// Bulge half light radius (arcs)
-		,double my_Rdisk           /// disk scale hight (arcs)
+		,double my_Rdisk        /// disk scale hight (arcs)
 		,double my_PA           /// Position angle (radians)
 		,double my_inclination  /// inclination of disk (radians)
 		,unsigned long my_id          ///          id number
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
-		){
+		):Source(0,Point_2d(0,0),my_z){
 
       //std::cout << "SourceOverzier constructor" << std::endl;
   setInternals(my_mag,my_mag_bulge,my_Reff
@@ -104,17 +104,15 @@ PosType SourceOverzier::SurfaceBrightness(
 	x[0] = y[0]-getTheta()[0];
 	x[1] = y[1]-getTheta()[1];
 	
-	PosType R = current.cxx*x[0]*x[0] + current.cyy*x[1]*x[1] + current.cxy*x[0]*x[1],sb;
+	PosType R = current.cxx*x[0]*x[0] + current.cyy*x[1]*x[1] + current.cxy*x[0]*x[1];
 	R = sqrt(R);
 
 	//sb = sbDo*exp(-(R)) + sbSo*exp(-7.6693*pow(R/Reff,0.25));
-	sb = current.sbDo*exp(-R);
+	PosType sb = current.sbDo*exp(-R);
       
 	if(current.Reff > 0.0) sb += current.sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])
                                                             /current.Reff/current.Reff,0.125));
-  //	if(sb < 1.0e-4*(sbDo + sbSo) ) return 0.0;
-	sb *= pow(10,-0.4*48.6)*inv_hplanck;
-	
+
 	if(sb< sb_limit)
 		return 0.;
 	
@@ -122,7 +120,7 @@ PosType SourceOverzier::SurfaceBrightness(
 }
 
 PosType SourceOverzier::getTotalFlux() const{
-	return pow(10,-(48.6 + current.mag)/2.5);
+	return pow(10,-(48.6 + current.mag)/2.5)*inv_hplanck;
 }
 
 void SourceOverzier::printSource(){
@@ -151,10 +149,10 @@ PosType SourceOverzier::getMagBulge(Band band) const {
 
 void SourceOverzier::renormalize_current(){
   float BtoT = getBtoT();
-  if(current.Rdisk > 0.0) current.sbDo = pow(10,-current.mag/2.5)*0.159148*(1-BtoT)
+  if(current.Rdisk > 0.0) current.sbDo = pow(10,-0.4*(current.mag + 48.6))*0.159148*(1-BtoT)*inv_hplanck
     /pow(current.Rdisk,2);
   else current.sbDo = 0.0;
-  if(current.Reff > 0.0) current.sbSo = pow(10,-current.mag/2.5)*94.484376*BtoT
+  if(current.Reff > 0.0) current.sbSo = pow(10,-0.4*(current.mag + 48.6))*94.484376*BtoT*inv_hplanck
     /pow(current.Reff,2);
   else current.sbSo = 0.0;
 }
@@ -178,8 +176,9 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,my_PA,inclination,my_id,my_z
   //double index = 4 + 3*(ran()-0.5)*2;
   
   //double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
-  double index = ran() + 3.5 ;
-  
+  //double index = ran() + 3.5 ;
+  double index = 3.5 + 0.5*ran();  // ????
+
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
@@ -283,8 +282,6 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   }
   
   assert(sb >= 0.0);
-  
-  sb *= pow(10,-0.4*48.6)*inv_hplanck;
   
   //std::cout << "disk sb " << sb << std::endl;
   
@@ -409,7 +406,8 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   
   //double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
   //double index = 4*pow(10,0.2*(ran()-0.5));
-  double index = ran() + 3.5;
+  //double index = ran() + 3.5;  //
+  double index = 3.5 + 0.5*ran();  // ???
   assert(index > 0.5 && index < 9);
   double q = 1 + (0.5-1)*ran();
   

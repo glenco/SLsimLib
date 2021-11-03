@@ -278,7 +278,7 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
     struct alphaForInt alphaForIntFunc(f,bc,theta);
     
     // Returning phi from the integration of alphaForIntFunc :
-    // =======================================================
+    // ------------------------------------------------------=
     return Utilities::nintegrate<alphaForInt,PosType>(alphaForIntFunc, 1.0e-7, r, 1.0e-7);
     
   }
@@ -286,7 +286,7 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
   {
     
     // Calculating the modes necessary to ellipticize phi : OLD METHOD -- DOES NOT WORK !
-    // ====================================================
+    // ---------------------------------------------------=
 
     // calcModes(f, 2-beta, theta, tmp_pert_modes);
     
@@ -308,7 +308,7 @@ KappaType LensHaloBaseNSIE::phiNSIE(PosType const *xt    /// position on the ima
 
     
     // Computing phi from the method in lens_expand :
-    // ==============================================
+    // ---------------------------------------------=
     /*
     PosType tmp_theta, cosx, sinx, cos2theta, sin2theta ;
     PosType F, F1, F2;

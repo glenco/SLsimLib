@@ -87,6 +87,7 @@ void LensHaloUniform::force_halo(
   alpha[0] *= -1;
   alpha[1] *= -1;
   
+  
   //*phi += phi_tmp ;
   
   assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
@@ -137,28 +138,28 @@ PosType LensHaloUniform::lens_expand(PosType *mod
   return mod[0];
 }
 
-void LensHalo::assignParams_stars(InputParams& params){
-  
-  if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
-  if(star_fstars < 0 || star_fstars > 1){
-    ERROR_MESSAGE();
-    cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
-    exit(0);
-  }
-  if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
-  
-  if(!params.get("main_stars_mass_function",main_stars_imf_type)) error_message1("main_stars_mass_function",params.filename());
-  if(main_stars_imf_type != One){
-    if(!params.get("main_stars_min_mass",main_stars_min_mass)) error_message1("main_stars_min_mass",params.filename());
-    if(main_stars_imf_type != Mono){
-      if(!params.get("main_stars_max_mass",main_stars_max_mass)) error_message1("main_stars_max_mass",params.filename());
-      if(!params.get("main_stars_bending_point",bend_mstar)) error_message1("main_stars_bending_point",params.filename());
-      if(!params.get("main_stars_lo_mass_slope",lo_mass_slope)) error_message1("main_stars_lo_mass_slope",params.filename());
-      if(!params.get("main_stars_hi_mass_slope",hi_mass_slope)) error_message1("main_stars_hi_mass_slope",params.filename());
-    }
-  }else{
-    main_stars_min_mass = main_stars_max_mass = 1.0;
-  }
-  
-  return;
-}
+//void LensHalo::assignParams_stars(InputParams& params){
+//  
+//  if(!params.get("main_stars_fraction",star_fstars)) error_message1("main_stars_fraction",params.filename());
+//  if(star_fstars < 0 || star_fstars > 1){
+//    ERROR_MESSAGE();
+//    cout << "main_stars_fraction cannot be less than 0 or larger than 1 in file " << params.filename() <<endl;
+//    exit(0);
+//  }
+//  if(!params.get("main_stars_mass",star_massscale)) error_message1("main_stars_mass",params.filename());
+//  
+//  if(!params.get("main_stars_mass_function",main_stars_imf_type)) error_message1("main_stars_mass_function",params.filename());
+//  if(main_stars_imf_type != One){
+//    if(!params.get("main_stars_min_mass",main_stars_min_mass)) error_message1("main_stars_min_mass",params.filename());
+//    if(main_stars_imf_type != Mono){
+//      if(!params.get("main_stars_max_mass",main_stars_max_mass)) error_message1("main_stars_max_mass",params.filename());
+//      if(!params.get("main_stars_bending_point",bend_mstar)) error_message1("main_stars_bending_point",params.filename());
+//      if(!params.get("main_stars_lo_mass_slope",lo_mass_slope)) error_message1("main_stars_lo_mass_slope",params.filename());
+//      if(!params.get("main_stars_hi_mass_slope",hi_mass_slope)) error_message1("main_stars_hi_mass_slope",params.filename());
+//    }
+//  }else{
+//    main_stars_min_mass = main_stars_max_mass = 1.0;
+//  }
+//  
+//  return;
+//}

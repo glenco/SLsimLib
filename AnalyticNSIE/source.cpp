@@ -16,12 +16,8 @@ using namespace std;
 //}
 
 SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radians):
-  Source()
+Source(radius_in_radians,position,z)
 {
-  source_r = radius_in_radians;
-  source_x = position;
-  setSBlimit_magarcsec(100.);
-  zsource = z;
 }
 
 
@@ -216,7 +212,7 @@ SourcePixelled::SourcePixelled(
                                , PosType my_resolution  /// resolution (in rad)
                                , PosType* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
 )
-:Source(), resolution(my_resolution), Npixels (my_Npixels){
+:Source(0,my_center,my_z), resolution(my_resolution), Npixels (my_Npixels){
   zsource = my_z;
   
   range = resolution*(Npixels-1);
@@ -225,8 +221,6 @@ SourcePixelled::SourcePixelled(
   for (int i = 0; i < Npixels*Npixels; i++)
     values[i] = arr_val[i];
   source_r =  range/sqrt(2.);
-  source_x[0] = my_center[0];
-  source_x[1] = my_center[1];
   calcTotalFlux();
   calcCentroid();
   calcEll();
@@ -243,7 +237,7 @@ SourcePixelled::SourcePixelled(
                                , PosType my_z                 /// redshift of the source
                                , PosType factor                /// optional rescaling factor for the flux
 )
-:Source(){
+:Source(0,Point_2d(0,0),0){
   if(gal_map.getNx() != gal_map.getNy()){
     std::cout << "SourcePixelled::SourcePixelled() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
@@ -419,8 +413,8 @@ PosType Source::changeFilter(
   // Applies Delta m = int (sed*fout) / int (sed*fin) * int fin / int fout
  	PosType fin_int = integrateFilter(wavel_in,ampl_in);
   PosType fout_int = integrateFilter(wavel_out,ampl_out);
-  PosType sed_in = integrateFilterSed(wavel_in, ampl_in, wavel_sed, ampl_sed);
-  PosType sed_out = integrateFilterSed(wavel_out, ampl_out, wavel_sed, ampl_sed);
+  PosType sed_in = integrateFilterSED(wavel_in, ampl_in, wavel_sed, ampl_sed);
+  PosType sed_out = integrateFilterSED(wavel_out, ampl_out, wavel_sed, ampl_sed);
   
   if (sed_in < std::numeric_limits<PosType>::epsilon() || sed_out < std::numeric_limits<PosType>::epsilon())
   {
@@ -448,7 +442,7 @@ PosType Source::integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosT
 /**  \brief Calculates the integral of the sed multiplied by the filter curve.
  *
  */
-PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed)
+PosType Source::integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed)
 {
   int wavel_new_size = 10000;
   vector<PosType> wavel_new(wavel_new_size), fil_val(wavel_new_size), sed_val(wavel_new_size);
@@ -491,16 +485,18 @@ PosType Source::integrateFilterSed(std::vector<PosType> wavel_fil, std::vector<P
 
 size_t SourceShapelets::count = 0;;
 
-void SourceShapelets::setActiveBand(Band band)
+void SourceColored::setActiveBand(Band band)
 {
+  
+  if(mag_map.size() == 0) return;
   
   mag = mag_map.at(band);
   if (mag < 0.)
-      flux = std::numeric_limits<PosType>::epsilon();
+      flux_total = std::numeric_limits<PosType>::epsilon();
     else
-      flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+      flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
   
-  assert(flux > 0);
+  assert(flux_total > 0);
   current_band = band;
   return;
 }
@@ -513,14 +509,14 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang					/// rotation angle (in rad)
 )
-:Source()
+:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource)
 {
-  zsource = my_z;
-  mag = my_mag;
-  if(my_center != NULL)
-    setTheta(my_center[0], my_center[1]);
-  else
-    setTheta(0, 0);
+
+  assert(my_center != NULL);
+//  if(my_center != NULL)
+//    setTheta(my_center[0], my_center[1]);
+//  else
+//    setTheta(0, 0);
 
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
@@ -528,10 +524,8 @@ SourceShapelets::SourceShapelets(
   n1 = sqrt(my_coeff.size());
   n2 = n1;
   coeff = my_coeff;
-  source_r = my_scale;
   
-  flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-  assert(flux > 0.0);
+  assert(flux_total > 0.0);
   
   NormalizeFlux();
   
@@ -546,14 +540,14 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang			/// rotation angle (in rad)
 )
-:Source()
+:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z)
 {
-  zsource = my_z;
-  mag = my_mag;
-  if(my_center != NULL)
-    setTheta(my_center[0], my_center[1]);
-  else
-    setTheta(0, 0);
+  
+  assert(my_center != NULL);
+//  if(my_center != NULL)
+//    setTheta(my_center[0], my_center[1]);
+//  else
+//    setTheta(0, 0);
   
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
@@ -564,15 +558,14 @@ SourceShapelets::SourceShapelets(
   CPFITS_READ cpfits(shap_file.c_str());
   
   cpfits.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*PI;
+  source_r *= 0.03*arcsecTOradians;
   cpfits.readKey("DIM", n1);
   cpfits.readKey("ID", id);
   n2 = n1;
   vector<long> size;
   cpfits.read(coeff,size);
 
-  flux = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-  assert(flux > 0);
+  assert(flux_total > 0);
   
   NormalizeFlux();
   
@@ -583,28 +576,28 @@ SourceShapelets::SourceShapelets(
 
 SourceShapelets::SourceShapelets(
                                  std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
-                                 , PosType* my_center  					/// center (in rad)
-                                 , PosType my_ang				 /// rotation angle (in rad)
-)
-:Source()
+                                 , PosType my_ang         /// rotation angle (in rad)
+                                //, PosType* my_center  					/// center (in rad)
+ )
+:SourceColored(0,0,Point_2d(0,0),0)
 {
-  if(my_center != NULL)
-    setTheta(my_center[0], my_center[1]);
-  else
-    setTheta(0, 0);
-  
+//  assert(my_center != NULL);
+//  if(my_center != NULL)
+//    setTheta(my_center[0], my_center[1]);
+//  else
+//    setTheta(0, 0);
+//
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
 
-  
-  
   if(shap_file.empty())
     throw std::invalid_argument("Please enter a valid filename for the FITS file input");
  
   CPFITS_READ cpfits(shap_file.c_str());
   
   cpfits.readKey("BETA", source_r);
-  source_r *= 0.03/180./60./60.*PI;
+  source_r *= 0.03*arcsecTOradians;
+
   cpfits.readKey("SED_TYPE",sed_type);
   
   cpfits.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude
@@ -624,7 +617,8 @@ SourceShapelets::SourceShapelets(
   setActiveBand(KiDS_I);
   
   cpfits.readKey("REDSHIFT", zsource);
-  cpfits.readKey("ID", id);
+  //cpfits.readKey("ID", id); // I'm not sure what this is.
+  id = -1;
   cpfits.readKey("DIM", n1);
   
   n2 = n1;
@@ -676,8 +670,10 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
     }
   }
   sb *= exp(- r_norm2 )/source_r;
-  sb *= flux/coeff_flux;
-  assert(flux > 0);
+  sb *= flux_total/coeff_flux;
+
+  assert(flux_total > 0);
+  
   
   return MAX(sb,0);
   //return max(sb,std::numeric_limits<PosType>::epsilon());
@@ -731,8 +727,11 @@ void SourceShapelets::NormalizeFlux()
 //  readCatalog();
 //}
 
-SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band my_band,double my_mag_limit,double my_sb_limit)
-: Source(),index(0),mag_limit(my_mag_limit),band(my_band),shapelets_folder(my_shapelets_folder)
+SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band
+                                           ,double my_max_mag_limit,double my_min_mag_limit
+                                           ,double my_sb_limit,double maximum_radius)
+: Source(0,Point_2d(0,0),0),index(0),max_mag_limit(my_max_mag_limit),min_mag_limit(my_min_mag_limit)
+,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
 {
   
   if(sb_limit == -1)
@@ -742,6 +741,28 @@ SourceMultiShapelets::SourceMultiShapelets(std::string &my_shapelets_folder,Band
   
   readCatalog();
 }
+
+void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_band
+                                 ,double my_max_mag_limit,double my_min_mag_limit
+                                 ,double my_sb_limit,double maximum_radius)
+{
+  
+  index=0;
+  max_mag_limit = my_max_mag_limit;
+  min_mag_limit = my_min_mag_limit;
+  band = my_band;
+  radius_max = maximum_radius;
+  shapelets_folder = my_shapelets_folder;
+  
+  if(sb_limit == -1)
+    setSBlimit_magarcsec(30.);
+  else
+    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+  
+  readCatalog();
+}
+
+
 SourceMultiShapelets::~SourceMultiShapelets()
 {
 }
@@ -822,11 +843,9 @@ void SourceMultiShapelets::readCatalog()
       SourceShapelets s(shap_file.c_str());
       
       s.id = i;
-//      assert(viz_cat[j][1] == i);
-//      assert(y_cat[j][1] == i);
-//      assert(j_cat[j][1] == i);
-//      assert(h_cat[j][1] == i);
 
+      s.sed_type = viz_cat[j][4];
+      
       assert(viz_cat.size() > j );
       s.setBand(EUC_VIS,viz_cat[j][2]);
       assert(y_cat.size() > j );
@@ -837,8 +856,9 @@ void SourceMultiShapelets::readCatalog()
       s.setBand(EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag(EUC_VIS) < mag_limit
-          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0 ){
+      if (s.getMag() > 0. && s.getMag(EUC_VIS) < max_mag_limit && s.getMag(EUC_VIS) > min_mag_limit
+          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0
+          && s.getRadius() < radius_max){
         galaxies.push_back(s);
         shap_input.close();
       }
@@ -858,10 +878,14 @@ void SourceMultiShapelets::readCatalog()
 
 
 void SourceMultiShapelets::assignParams(InputParams& params){
-  if(!params.get("source_mag_limit",mag_limit)){
+  if(!params.get("source_mag_limit",max_mag_limit)){
     std::cerr << "ERROR: Must assign source_mag_limit in parameter file " << params.filename() << std::endl;
     exit(1);
   }
+  if(!params.get("source_min_mag_limit",min_mag_limit)){
+    min_mag_limit = -1;
+  }
+
   
   if(!params.get("source_sb_limit",sb_limit))
     setSBlimit_magarcsec(30.);
