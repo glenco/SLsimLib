@@ -109,8 +109,4 @@ int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
   return number == 0 ? 0 : 1;
 }
 
-template <typename T>
-std::ostream &operator<<(std::ostream &os, Utilities::Geometry::SphericalPoint<T> const &p){
-  return os << "r: " << p.r << " theta: " << p.theta << " phi: " << p.phi;
-}
 

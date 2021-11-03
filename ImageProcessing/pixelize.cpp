@@ -316,7 +316,7 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
  */
 PixelMap::PixelMap(
                    const PixelMap& pmap
-                   , PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
+                   ,PosType res_ratio     /// resolution of map is res_ratio times the resolution of the input map
 )
 {
   resolution = res_ratio*pmap.resolution;
@@ -364,10 +364,35 @@ PixelMap::PixelMap(
   }
 }
 
-//PixelMap::~PixelMap(){}
-//{
-//  map.resize(0);
-//}
+
+
+PixelMap PixelMap::downsize(int n){
+  
+  size_t nx = Nx/n,ny = Ny/n;
+  
+  PixelMap new_map(center,nx,ny,resolution*n);
+  
+  new_map.units = units;
+  
+  for(size_t i=0 ; i < nx ; ++i){
+    for(size_t j=0 ; j < ny ; ++j){
+
+      double &m = new_map(i,j);
+      m = 0;
+      
+      for(size_t jj = j*n ; jj < (j+1)*n ; ++jj){
+        for(size_t ii = i*n ; ii < (i+1)*n ; ++ii){
+          m += map[ii + Nx*jj];
+        }
+      }
+      
+    }
+  }
+  
+  return new_map;
+}
+
+
 
 PixelMap& PixelMap::operator=(const PixelMap &other)
 {
@@ -1143,11 +1168,11 @@ void PixelMap::drawdisk(
   PosType x1[2],x2[2];
   
   // To do the circle (easy) :
-  // group=====================
+  // group---------------------
   drawcircle(r_center,radius,value);
   
   // To fill the circle :
-  // ====================
+  // ------------------==
   
 /*  for(float theta = 0; theta < 2*PI; theta += pi/N){
     x1[0] = r_center[0] - radius*cos(theta);
@@ -1269,11 +1294,11 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip)
   PosType N = double(Nstrip);
   
   // To do the frame (easy) :
-  // ========================
+  // ------------------------
   drawSquare(p1,p2,value);
   
   // To fill the square :
-  // ====================
+  // ------------------==
 
   // Initiating :
   if(p2[1]-p1[1]<0)
@@ -2373,6 +2398,5 @@ void PixelMap::convolve(PixelMap &kernel,long center_x,long center_y){
   
   std::swap(map,output);
 }
-
 
 

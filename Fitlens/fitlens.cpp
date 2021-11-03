@@ -83,7 +83,7 @@ bool LensHaloFit::SafeFindLensSimple(
   
   
   // We compute the modes SafetyNum times and retain the min, the max, and the sum :
-  // ===============================================================================
+  // ------------------------------------------------------------------------------=
   
   // We call FindLensSimple many times :
   for(int i=0;i<SafetyNum;i++)
@@ -179,7 +179,7 @@ bool LensHaloFit::SafeFindLensSimple(
   
 
   // Testing that the image positions are consistent when traced back to the source plane :
-  // ======================================================================================
+  // ------------------------------------------------------------------------------------==
   
   std::cout << std::endl << "Evaluated position of the source from each image :" << std::endl ;
   
@@ -265,7 +265,7 @@ bool LensHaloFit::SafeFindLensSimple(
   }
 
   // OTHER TESTS ?
-  // =============
+  // ------------=
   
   // Otherwise we keep the last computed modes and display them :
   std::cout << std::endl << "Perturbation modes (in LensHaloFit::FindLensSimple) :" << std::endl;
@@ -393,7 +393,7 @@ void LensHaloFit::FindLensSimple(
   //sigma = 0.0;
     
     
-  // ===== Applying factors to the modes ======================================================
+  // ----- Applying factors to the modes ------------------------------------------------------
     
   // Multiplying the first 3 modes by scale :
   for(i=3;i<perturb_Nmodes;i++) perturb_modes[i] *= scale ; // Important step !
@@ -412,14 +412,14 @@ void LensHaloFit::FindLensSimple(
   // mod[0,1,2] are now in radians / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc^2.
   // mod[3,4,5,...] are now in PhysMpc / ((PhysMpc / mass) * PhysMpc) = mass / PhysMpc for beta = 1.
     
-  // ==========================================================================================
+  // ------------------------------------------------------------------------------------------
     
     
-  // ================================================
+  // ------------------------------------------------
   // So when the modes go out they are in the units :
   // mod[0,1,2] in mass / PhysMpc^2.
   // mod[3,4,5,...] in mass / PhysMpc.
-  // ================================================
+  // ------------------------------------------------
     
     
   // Print modes :
