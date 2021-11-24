@@ -1293,6 +1293,67 @@ inline bool file_exists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0);
 }
 
+  template <class T>
+  void read1columnfile(
+                       std::string filename    /// input file name
+                       ,std::vector<T> &x     /// vector that will contain the first column
+                       ,int skiplines = 0
+                       ,bool verbose = false
+                       ){
+
+    x.clear();
+
+    std::ifstream file_in(filename.c_str());
+    std::string myline;
+    std::string space = " ";
+    T myt1;
+
+    std::string strg;
+    std::stringstream buffer;
+
+    if(!file_in){
+      std::cout << "Can't open file " << filename << std::endl;
+      ERROR_MESSAGE();
+      throw std::runtime_error(" Cannot open file.");
+    }
+
+    std::cout << "Reading caustic information from " << filename << std::endl;
+    size_t i=0;
+    while(i < skiplines){
+      getline(file_in,myline);
+      ++i;
+    }
+    while(file_in.peek() == '#'){
+      file_in.ignore(10000,'\n');
+      ++i;
+    }
+    std::cout << "skipped "<< i << " comment lines in " << filename << std::endl;
+
+    size_t pos;
+    // read in data
+    while(getline(file_in,myline)){
+
+      if(myline[0] == '#'){
+        std::cout << "skipped line " << i << std::endl;
+        continue;
+      }
+
+      pos= myline.find_first_not_of(space);
+      myline.erase(0,pos);
+
+      buffer << myline;
+      buffer >> myt1;
+      if(verbose) std::cout << myt1 << " ";
+      x.push_back(myt1);
+
+      strg.clear();
+      buffer.clear();
+      myline.clear();
+
+    }
+    std::cout << "Read " << x.size() << " lines from " << filename << std::endl;
+  }
+
 /** \brief Read in data from an ASCII file with two columns
  */
 template <class T1,class T2>
