@@ -201,7 +201,7 @@ public:
 	//LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
   LensHaloMassMap(
-                  const PixelMap &MassMap   /// mass map in solar mass units
+                  const PixelMap &MassMap   /// mass map
                   ,double massconvertion    /// convertion factor from pixel units to solar masses
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
