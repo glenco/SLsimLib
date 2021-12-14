@@ -88,7 +88,7 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
  
  */
 LensHaloMassMap::LensHaloMassMap(
-                                 const PixelMap &MassMap   /// mass map in solar mass units
+                                 const PixelMap &MassMap   /// mass map
                                  ,double massconvertion    /// convertion factor from pixel units to solar masses
                                  ,double redshift          /// redshift of lens
                                  ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 1 is no padding, 2 FFT grid is twice as big as original map
@@ -324,7 +324,7 @@ void LensHaloMassMap::setMap(
   map.Dlens = cosmo.angDist(0.,map.zlens);  // physical
   map.boxlrad = inputmap.getRangeX();
   map.boxlarcsec = inputmap.getRangeX()/arcsecTOradians;
-  map.boxlMpc = inputmap.getRangeX()/map.Dlens;
+  map.boxlMpc = inputmap.getRangeX()*map.Dlens;
   
   double pixelarea = inputmap.getResolution()*map.Dlens;
   pixelarea *= pixelarea;
