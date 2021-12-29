@@ -79,7 +79,19 @@ typedef enum {NO, YES, MAYBE} Boo;
 #ifndef lensquant_declare
 #define lensquant_declare
 /// output lensing variables
-enum LensingVariable {DELAYT,ALPHA,ALPHA1,ALPHA2,KAPPA,GAMMA,GAMMA1,GAMMA2,GAMMA3,INVMAG,PHI} ;
+enum LensingVariable {
+  DELAYT   /// time delay
+  ,ALPHA   /// magnitude of deflection in radians
+  ,ALPHA1  /// x component of deflection
+  ,ALPHA2  /// y component of deflection
+  ,KAPPA   /// convergence
+  ,GAMMA   /// magnitude of shear
+  ,GAMMA1  ///  first component of shear
+  ,GAMMA2  /// second component of shear
+  ,GAMMA3  /// third component of shear
+  ,INVMAG  /// inverse of magnification
+  ,PHI     /// lensing potential
+} ;
 #endif
 
 #ifndef PosType_declare
