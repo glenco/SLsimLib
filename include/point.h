@@ -164,6 +164,211 @@ struct Point_2d{
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
 
+template <typename T>
+struct Matrix2x2{
+  
+  Matrix2x2(){
+  }
+  
+  Matrix2x2(const Matrix2x2<T> &F){
+    a[0] = F.a[0];
+    a[1] = F.a[1];
+    a[2] = F.a[2];
+    a[3] = F.a[3];
+  }
+  
+  template <typename B>
+  Matrix2x2<T> operator =(const Matrix2x2<B> &F){
+    a[0] = F.a[0];
+    a[1] = F.a[1];
+    a[2] = F.a[2];
+    a[3] = F.a[3];
+    
+    return *this;
+  }
+  
+ 
+  Matrix2x2<T> operator *=(T f){
+    a[0] *= f;
+    a[1] *= f;
+    a[2] *= f;
+    a[3] *= f;
+    
+    return *this;
+  }
+ 
+  Matrix2x2<T> operator /=(T f){
+    a[0] /= f;
+    a[1] /= f;
+    a[2] /= f;
+    a[3] /= f;
+    
+    return *this;
+  }
+
+  Matrix2x2<T> operator *(T f){
+    Matrix2x2<T> m = *this;
+    m *= f;
+    return m;
+  }
+
+  Point_2d operator *(const Point_2d &v){
+    Point_2d v2;
+    v2[0] = a[0]*v[0] + a[1]*v[1];
+    v2[1] = a[2]*v[0] + a[3]*v[1];
+    return v2;
+  }
+
+
+  Matrix2x2<T> operator /(T f){
+    Matrix2x2<T> m = *this;
+    m /= f;
+    
+    return m;
+  }
+  
+  template <typename B>
+  Matrix2x2<T> operator *(const Matrix2x2<B> &F){
+    Matrix2x2<T> m;
+    
+    m.a[0] = a[0] * F.a[0] + a[1] * F.a[2];
+    m.a[1] = a[0] * F.a[1] + a[1] * F.a[3];
+    m.a[2] = a[2] * F.a[0] + a[3] * F.a[2];
+    m.a[3] = a[2] * F.a[1] + a[3] * F.a[3];
+    
+    return m;
+  }
+ 
+  template <typename B>
+  Matrix2x2<T> operator +=(const Matrix2x2<B> &F){
+    a[0] += F.a[0];
+    a[1] += F.a[1];
+    a[2] += F.a[2];
+    a[3] += F.a[3];
+    
+    return *this;
+  }
+  
+  template <typename B>
+  Matrix2x2<T> operator +(const Matrix2x2<B> &F){
+    Matrix2x2<T> m = *this;
+    m += F;
+
+    return m;
+  }
+  template <typename B>
+  Matrix2x2<T> operator -=(const Matrix2x2<B> &F){
+    a[0] -= F.a[0];
+    a[1] -= F.a[1];
+    a[2] -= F.a[2];
+    a[3] -= F.a[3];
+    
+    return *this;
+  }
+  
+  template <typename B>
+  Matrix2x2<T> operator -(const Matrix2x2<B> &F){
+    Matrix2x2<T> m = *this;
+    m -= F;
+
+    return m;
+  }
+
+  ///  column , row
+  T & operator()(int i,int j){
+    return a[ i + 2*j ];
+  }
+  
+  T operator()(int i,int j) const{
+    return a[ i + 2*j ];
+  }
+ 
+  
+  T & operator[](int i){
+    return a[i];
+  }
+ 
+  T det() const{
+    return a[0]*a[3] - a[1]*a[2];
+  }
+
+  Matrix2x2<T> inverse() const{
+    Matrix2x2<T> m;
+    
+    m.a[0] = a[3];
+    m.a[3] = a[0];
+    m.a[1] = -a[1];
+    m.a[2] = -a[2];
+ 
+    m /= det();
+    return m;
+  }
+  
+  void invert(){
+    
+    swap(a[0],a[3]);
+    a[1] *= -1;
+    a[2] *= -1;
+    
+    *this /= det();
+  }
+
+  T a[4];
+  
+  void setToI(){
+    a[0] = a[3] = 1;
+    a[1] = a[2] = 0;
+  }
+  
+  static Matrix2x2<T> I(){
+    Matrix2x2<T> m;
+    m.a[0] = m.a[3] = 1;
+    m.a[1] = m.a[2] = 0;
+    return m;
+  }
+  
+  static Matrix2x2<T> sig1(){
+    Matrix2x2<T> m;
+    m.a[0] = -1;
+    m.a[3] = 1;
+    m.a[1] = m.a[2] = 0;
+    return m;
+  }
+  static Matrix2x2<T> sig2(){
+    Matrix2x2<T> m;
+    m.a[0] = m.a[3] = 0;
+    m.a[1] = m.a[2] = -1;
+    return m;
+  }
+
+  static Matrix2x2<T> sig3(){
+    Matrix2x2<T> m;
+    m.a[0] = m.a[3] = 0;
+    m.a[1] = 1;
+    m.a[2] = -1;
+    return m;
+  }
+
+  T kappa() const {return 1-(a[0] + a[3])/2; }
+  // defined according to GLAMER II convention
+  T gamma1() const{ return (a[0] - a[3])/2;}
+  T gamma2() const{ return (a[1] + a[2])/2;}
+  T gamma3() const{ return (a[2] - a[1])/2;}
+
+  void gamma(T *g) const{
+    g[0] = gamma1();
+    g[1] = gamma2();
+    g[2] = gamma3();
+  }
+  
+
+  void print() const {
+    std::cout << std::endl;
+    std::cout << a[0] << "  " << a[1] << std::endl;
+    std::cout << a[2] << "  " << a[3] << std::endl;
+  }
+};
+
 
 //struct branchstruct;
 struct Branch;
@@ -180,18 +385,24 @@ struct Point: public Point_2d{
   Point *prev;
   Point *image;  // pointer to point on image or source plane
   unsigned long id;
-  //double x[2];         // the position of the point
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
   //PosType operator[](int i){return x[i];}
   
   // redundant information in image and source points
-  KappaType kappa;           // surface density
-  KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
+  //KappaType kappa;           // surface density
+  //KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
   double dt;                 // time delay : double implies permanent precision independently from DOUBLE_PRECISION
-  KappaType invmag = 1;          // inverse of magnification
+  //KappaType invmag = 1;          // inverse of magnification
  
+  Matrix2x2<KappaType> A;
+  
+  KappaType invmag() const{
+    return A.det();
+  }
+  
+  
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
@@ -214,7 +425,7 @@ struct Point: public Point_2d{
   }
 
   /// returns true if the image is double inverted,  At very low magnification this can fail.
-  bool inverted(){ return 0 > (1 - kappa + sqrt( fabs((1-kappa)*(1-kappa) - invmag) ) ); }
+  bool inverted(){ return 0 > (A.a[0] + sqrt( fabs(A.a[0]*A.a[0] - invmag()) ) ); }
   
 private:
   // make a point uncopyable
@@ -222,6 +433,8 @@ private:
   //Point &operator=(Point &p);
   //Point &operator=(const Point &p);
 };
+
+
 
 /** \brief A point that automatically has an image point.
  
@@ -686,5 +899,6 @@ std::ostream &operator<<(std::ostream &os, Point_3d<T> const &p) {
 
 inline double pointx(Point &p){return p.x[0];}
 inline double pointy(Point &p){return p.x[1];}
+
 
 #endif
