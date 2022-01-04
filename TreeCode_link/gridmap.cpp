@@ -280,30 +280,30 @@ PixelMap GridMap::writePixelMap(
       break;
     case KAPPA:
       for(size_t i=0 ; i<N ; ++i)
-        map[i] = i_points[i].kappa;
+        map[i] = i_points[i].kappa();
       break;
     case GAMMA:
        for(size_t i=0 ; i<N ; ++i){
-         tmp2[0] = i_points[i].gamma[0];
-         tmp2[1] = i_points[i].gamma[1];
+         tmp2[0] = i_points[i].gamma1();
+         tmp2[1] = i_points[i].gamma2();
          map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
       }
       break;
     case GAMMA1:
       for(size_t i=0 ; i<N ; ++i)
-        map[i] = i_points[i].gamma[0];
+        map[i] = i_points[i].gamma1();
       break;
     case GAMMA2:
       for(size_t i=0 ; i<N ; ++i)
-        map[i] = i_points[i].gamma[1];
+        map[i] = i_points[i].gamma2();
       break;
     case GAMMA3:
       for(size_t i=0 ; i<N ; ++i)
-        map[i] = i_points[i].gamma[2];
+        map[i] = i_points[i].gamma3();
       break;
     case INVMAG:
       for(size_t i=0 ; i<N ; ++i)
-        map[i] = i_points[i].invmag;
+        map[i] = i_points[i].invmag();
       break;
     case DELAYT:
       for(size_t i=0 ; i<N ; ++i)
@@ -367,24 +367,24 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,Lens
         tmp = (points[i].x[1] - points[i].image->x[1]);
         break;
       case KAPPA:
-        tmp = points[i].kappa;
+        tmp = points[i].kappa();
         break;
       case GAMMA:
-        tmp2[0] = points[i].gamma[0];
-        tmp2[1] = points[i].gamma[1];
+        tmp2[0] = points[i].gamma1();
+        tmp2[1] = points[i].gamma2();
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
       case GAMMA1:
-        tmp = points[i].gamma[0];
+        tmp = points[i].gamma1();
         break;
       case GAMMA2:
-        tmp = points[i].gamma[1];
+        tmp = points[i].gamma2();
         break;
       case GAMMA3:
-        tmp = points[i].gamma[2];
+        tmp = points[i].gamma3();
         break;
       case INVMAG:
-        tmp = points[i].invmag;
+        tmp = points[i].invmag();
         break;
       case DELAYT:
         tmp = points[i].dt;
@@ -485,7 +485,7 @@ PosType GridMap::EinsteinArea() const{
   size_t count = 0;
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){
-    if(i_points[i].invmag < 0) ++count;
+    if(i_points[i].invmag() < 0) ++count;
   }
   
   return count*x_range*x_range/Ngrid_init/Ngrid_init;
@@ -495,7 +495,7 @@ PosType GridMap::magnification() const{
   double mag = 0,flux = 0;
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){
-    mag += i_points[i].surface_brightness*fabs(i_points[i].invmag);
+    mag += i_points[i].surface_brightness*fabs(i_points[i].invmag());
     flux += i_points[i].surface_brightness;
   }
   return flux/mag;
@@ -506,7 +506,7 @@ PosType GridMap::magnification2() const{
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){
     mag += i_points[i].surface_brightness;
-    flux += i_points[i].surface_brightness/fabs(i_points[i].invmag);
+    flux += i_points[i].surface_brightness/fabs(i_points[i].invmag());
   }
   return flux/mag;
 }

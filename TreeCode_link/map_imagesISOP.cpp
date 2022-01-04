@@ -718,16 +718,33 @@ void ImageFinding::IF_routines::IntegrateFluxInCell(
 /** \brief Finds the source position of a point that lies half way between points p1 and p2 on the image plane by third order interpolation.
  */
 void ImageFinding::IF_routines::interpfrom2Points(Point const * p1,Point const * p2,PosType *x,PosType *y){
-  PosType dx = p1->x[0] - p2->x[0],dy = p1->x[1] - p2->x[1];
-  PosType l = sqrt(dx*dx +dy*dy);
-  dx /=l;
-  dy /=l;
+  //PosType dx = p1->x[0] - p2->x[0],dy = p1->x[1] - p2->x[1];
+  //PosType l = sqrt(dx*dx +dy*dy);
+  //dx /=l;
+  //dy /=l;
+
+  Point_2d dx(p1->x[0] - p2->x[0],p1->x[1] - p2->x[1]);
+  PosType l = dx.length();
+  
+  dx /= l;
+  
+  Point_2d Ap1 = (p1->A) * dx;
+  Point_2d Ap2 = (p2->A) * dx;
+  
+  
+  // *** ????? don't know about this since it was changed
   
   // The sign convention agrees with GLAMER paper II here which should be correct.
-  double A1p1 = (1 - p1->kappa - p1->gamma[0])*dx - (p1->gamma[1] - p1->gamma[2])*dy;
-  double A2p1 = (1 - p1->kappa + p1->gamma[0])*dy - (p1->gamma[1] + p1->gamma[2])*dx;
-  double A1p2 = (1 - p2->kappa - p2->gamma[0])*dx - (p2->gamma[1] - p2->gamma[2])*dy;
-  double A2p2 = (1 - p2->kappa + p2->gamma[0])*dy - (p2->gamma[1] + p2->gamma[2])*dx;
+  //double A1p1 = (1 - p1->kappa() - p1->gamma1())*dx - (p1->gamma2() - p1->gamma3())*dy;
+  //double A2p1 = (1 - p1->kappa() + p1->gamma1())*dy - (p1->gamma2() + p1->gamma3())*dx;
+  //double A1p2 = (1 - p2->kappa() - p2->gamma1())*dx - (p2->gamma2() - p2->gamma3())*dy;
+  //double A2p2 = (1 - p2->kappa() + p2->gamma1())*dy - (p2->gamma2() + p2->gamma3())*dx;
+  
+  //double A1p1 = p1->A(0,0)*dx + p1->A(1,0)*dy;
+  //double A2p1 = p1->A(1,1)*dy + p1->A(0,1)*dx;
+  //double A1p2 = p2->A(0,0)*dx + p2->A(1,0)*dy;
+  //double A2p2 = p2->A(1,1)*dy + p2->A(0,1)*dx;
+ 
   
   /*
    x = p1->image->x[0] + (p2->image->x[0] - p1->image->x[0])*s*s*(3-2*s)
@@ -736,11 +753,16 @@ void ImageFinding::IF_routines::interpfrom2Points(Point const * p1,Point const *
    + l*A2p1*s*(1-s)*(1-s) + l*A2p2*s*s*(1-s);
    */
   
-  *x = (p2->image->x[0] + p1->image->x[0])/2
-  + l*( A1p1 + A1p2 )/8;
-  *y = (p2->image->x[1] + p1->image->x[1])/2
-  + l*( A2p1 + A2p2 )/8;
+  //*x = (p2->image->x[0] + p1->image->x[0])/2
+  //+ l*( A1p1 + A1p2 )/8;
+  //*y = (p2->image->x[1] + p1->image->x[1])/2
+  //+ l*( A2p1 + A2p2 )/8;
   
+  *x = (p2->image->x[0] + p1->image->x[0])/2
+  + l*( Ap1[0] + Ap2[0] )/8;
+  *y = (p2->image->x[1] + p1->image->x[1])/2
+  + l*( Ap1[1] + Ap2[1] )/8;
+ 
   return;
 }
 

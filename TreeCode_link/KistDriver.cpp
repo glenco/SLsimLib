@@ -17,8 +17,8 @@ bool TreeStruct::Test(){
 
   pl_current.current = (*treeit)->points;
   for(int k = 0; k < (*treeit)->npoints ; ++k,--pl_current){
-    //assert( !std::isnan((*pl_current)->invmag) );
-    assert( (*pl_current)->invmag == (*pl_current)->invmag );
+    //assert( !std::isnan((*pl_current)->invmag()) );
+    assert( (*pl_current)->invmag() == (*pl_current)->invmag() );
   }
   
   size_t count = 0;
@@ -28,8 +28,8 @@ bool TreeStruct::Test(){
       pl_current.current = (*treeit)->points;
       for(int k = 0; k < (*treeit)->npoints ; ++k,--pl_current){
         assert( inbox((*pl_current)->x,(*treeit)->boundary_p1,(*treeit)->boundary_p2) );
-        //assert( !std::isnan((*pl_current)->invmag) );
-        assert( (*pl_current)->invmag == (*pl_current)->invmag );
+        //assert( !std::isnan((*pl_current)->invmag()) );
+        assert( (*pl_current)->invmag() == (*pl_current)->invmag() );
       }
     
       Branch *branch = *treeit;

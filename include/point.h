@@ -178,7 +178,7 @@ struct Matrix2x2{
   }
   
   template <typename B>
-  Matrix2x2<T> operator =(const Matrix2x2<B> &F){
+  Matrix2x2<T> operator=(const Matrix2x2<B> &F){
     a[0] = F.a[0];
     a[1] = F.a[1];
     a[2] = F.a[2];
@@ -188,7 +188,7 @@ struct Matrix2x2{
   }
   
  
-  Matrix2x2<T> operator *=(T f){
+  Matrix2x2<T> operator*=(T f){
     a[0] *= f;
     a[1] *= f;
     a[2] *= f;
@@ -197,7 +197,7 @@ struct Matrix2x2{
     return *this;
   }
  
-  Matrix2x2<T> operator /=(T f){
+  Matrix2x2<T> operator/=(T f){
     a[0] /= f;
     a[1] /= f;
     a[2] /= f;
@@ -206,13 +206,13 @@ struct Matrix2x2{
     return *this;
   }
 
-  Matrix2x2<T> operator *(T f){
+  Matrix2x2<T> operator*(T f) const{
     Matrix2x2<T> m = *this;
     m *= f;
     return m;
   }
 
-  Point_2d operator *(const Point_2d &v){
+  Point_2d operator*(const Point_2d &v) const{
     Point_2d v2;
     v2[0] = a[0]*v[0] + a[1]*v[1];
     v2[1] = a[2]*v[0] + a[3]*v[1];
@@ -220,7 +220,7 @@ struct Matrix2x2{
   }
 
 
-  Matrix2x2<T> operator /(T f){
+  Matrix2x2<T> operator/(T f) const{
     Matrix2x2<T> m = *this;
     m /= f;
     
@@ -228,7 +228,7 @@ struct Matrix2x2{
   }
   
   template <typename B>
-  Matrix2x2<T> operator *(const Matrix2x2<B> &F){
+  Matrix2x2<T> operator*(const Matrix2x2<B> &F) const{
     Matrix2x2<T> m;
     
     m.a[0] = a[0] * F.a[0] + a[1] * F.a[2];
@@ -240,7 +240,7 @@ struct Matrix2x2{
   }
  
   template <typename B>
-  Matrix2x2<T> operator +=(const Matrix2x2<B> &F){
+  Matrix2x2<T> operator+=(const Matrix2x2<B> &F){
     a[0] += F.a[0];
     a[1] += F.a[1];
     a[2] += F.a[2];
@@ -250,14 +250,14 @@ struct Matrix2x2{
   }
   
   template <typename B>
-  Matrix2x2<T> operator +(const Matrix2x2<B> &F){
+  Matrix2x2<T> operator+(const Matrix2x2<B> &F) const{
     Matrix2x2<T> m = *this;
     m += F;
 
     return m;
   }
   template <typename B>
-  Matrix2x2<T> operator -=(const Matrix2x2<B> &F){
+  Matrix2x2<T> operator-=(const Matrix2x2<B> &F){
     a[0] -= F.a[0];
     a[1] -= F.a[1];
     a[2] -= F.a[2];
@@ -267,7 +267,7 @@ struct Matrix2x2{
   }
   
   template <typename B>
-  Matrix2x2<T> operator -(const Matrix2x2<B> &F){
+  Matrix2x2<T> operator-(const Matrix2x2<B> &F)const{
     Matrix2x2<T> m = *this;
     m -= F;
 
@@ -306,7 +306,7 @@ struct Matrix2x2{
   
   void invert(){
     
-    swap(a[0],a[3]);
+    std::swap(a[0],a[3]);
     a[1] *= -1;
     a[2] *= -1;
     
@@ -315,6 +315,7 @@ struct Matrix2x2{
 
   T a[4];
   
+  // make the matrix the identity
   void setToI(){
     a[0] = a[3] = 1;
     a[1] = a[2] = 0;
@@ -354,6 +355,14 @@ struct Matrix2x2{
   T gamma1() const{ return (a[0] - a[3])/2;}
   T gamma2() const{ return (a[1] + a[2])/2;}
   T gamma3() const{ return (a[2] - a[1])/2;}
+  
+  void set(T kappa,T gamma[3]){
+    a[0] = 1 - kappa + gamma[0];
+    a[3] = 1 - kappa - gamma[0];
+    
+    a[1] = gamma[1] - gamma[3];
+    a[2] = gamma[1] + gamma[3];
+  }
 
   void gamma(T *g) const{
     g[0] = gamma1();
@@ -388,21 +397,32 @@ struct Point: public Point_2d{
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
-  //PosType operator[](int i){return x[i];}
-  
-  // redundant information in image and source points
-  //KappaType kappa;           // surface density
-  //KappaType gamma[3];        // shear, third component is the rotation quantity that is only non-zero for multi-plane lensing
+  Point operator=(const Point_2d &p){
+    Point_2d::operator=(p);
+    
+    return *this;
+  }
+ 
   double dt;                 // time delay : double implies permanent precision independently from DOUBLE_PRECISION
-  //KappaType invmag = 1;          // inverse of magnification
  
   Matrix2x2<KappaType> A;
   
   KappaType invmag() const{
     return A.det();
   }
-  
-  
+  KappaType gamma1() const{
+    return A.gamma1();
+  }
+  KappaType gamma2() const{
+    return A.gamma2();
+  }
+  KappaType gamma3() const{
+    return A.gamma3();
+  }
+  KappaType kappa() const{
+    return A.kappa();
+  }
+
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
@@ -426,12 +446,6 @@ struct Point: public Point_2d{
 
   /// returns true if the image is double inverted,  At very low magnification this can fail.
   bool inverted(){ return 0 > (A.a[0] + sqrt( fabs(A.a[0]*A.a[0] - invmag()) ) ); }
-  
-private:
-  // make a point uncopyable
-  //Point(const Point &p);
-  //Point &operator=(Point &p);
-  //Point &operator=(const Point &p);
 };
 
 
@@ -454,8 +468,8 @@ private:
 */
 struct RAY{
   RAY(){
-    kappa = dt = 0.0;
-    gamma[0] = gamma[1] = gamma[2] = 0.0;
+    dt = 0.0;
+    A = Matrix2x2<KappaType>::I();
   };
   
   RAY(const Point &p){
@@ -463,34 +477,28 @@ struct RAY{
     x[1] = p.x[1];
     y[0] = p.image->x[0];
     y[1] = p.image->x[1];
-    kappa = p.kappa;
+
     dt = p.dt;
-    
-    gamma[0] = p.gamma[0];
-    gamma[1] = p.gamma[1];
-    gamma[2] = p.gamma[2];
+        
+    A = p.A;
   };
   RAY(const LinkedPoint &p){
     x[0] = p.x[0];
     x[1] = p.x[1];
     y[0] = p.image->x[0];
     y[1] = p.image->x[1];
-    kappa = p.kappa;
+
     dt = p.dt;
-    
-    gamma[0] = p.gamma[0];
-    gamma[1] = p.gamma[1];
-    gamma[2] = p.gamma[2];
+        
+    A = p.A;
   };
   RAY(const RAY &p){
     x = p.x;
     y = p.y;
-    kappa = p.kappa;
+
     dt = p.dt;
     
-    gamma[0] = p.gamma[0];
-    gamma[1] = p.gamma[1];
-    gamma[2] = p.gamma[2];
+    A = p.A;
   };
 
   RAY & operator=(const Point &p){
@@ -499,26 +507,19 @@ struct RAY{
     y[0] = p.image->x[0];
     y[1] = p.image->x[1];
 
-    kappa = p.kappa;
     dt = p.dt;
-    
-    gamma[0] = p.gamma[0];
-    gamma[1] = p.gamma[1];
-    gamma[2] = p.gamma[2];
-    
+        
+    A = p.A;
     return *this;
   };
   
   RAY & operator=(const RAY &p){
     x = p.x;
     y = p.y;
-    kappa = p.kappa;
+    
     dt = p.dt;
-    
-    gamma[0] = p.gamma[0];
-    gamma[1] = p.gamma[1];
-    gamma[2] = p.gamma[2];
-    
+        
+    A = p.A;
     return *this;
   };
   
@@ -529,16 +530,29 @@ struct RAY{
   /// source position
   Point_2d y;
   
-  /// convergence
-  KappaType kappa;
-  /// shear
-  KappaType gamma[3];
+  Matrix2x2<KappaType> A;
+  
+  KappaType invmag() const{
+    return A.det();
+  }
+  KappaType gamma1() const{
+    return A.gamma1();
+  }
+  KappaType gamma2() const{
+    return A.gamma2();
+  }
+  KappaType gamma3() const{
+    return A.gamma3();
+  }
+  KappaType kappa() const{
+    return A.kappa();
+  }
+  
   /// time-delay
   KappaType dt;
   
   /// inverse of the magnification
-  KappaType invmag(){return (1-kappa)*(1-kappa) - gamma[0]*gamma[0]
-    - gamma[1]*gamma[1] + gamma[2]*gamma[2];}
+  KappaType invmag(){return A.det();}
   
   /// deflection angle
   Point_2d alpha(){return x - y;}

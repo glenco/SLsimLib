@@ -332,19 +332,50 @@ public:
   
   This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
   */
-  RAY find_image(
+  /*RAY find_image(
           Point_2d y_source    /// input position of source (radians)
           ,Point_2d &x_image    /// initial guess for image postion (radians)
           ,PosType z_source     /// redshift of source
           ,PosType ytol2        /// target tolerance in source position squared
           ,PosType &fret        ///
           ,int sign=0             /// sign of magnification, it is found automatically if left out
+  );*/
+  
+  /** \brief  Find the image position of a source without grid refinement.
+  
+  This finds an image position given a source postion.  No grid is necessary.
+   
+   If use_image_guess=true the input image position will be used as a first guess and the output image will be guarenteed to have the same pairity.
+   
+   This is useful for finding the position of weakly lensed images or for refining the image positions that are found on a finite grid.
+   
+  */
+  RAY find_image(
+            Point &p              ///  p.image->x should be set to source position
+            ,PosType ytol2       /// target tolerance in source position squared
+            ,PosType &dy2        /// final value of Delta y ^2
+            ,bool use_image_guess /// if true p.x[] will be used as a guess for the image position
+  );
+
+  RAY find_image(
+            RAY &p       /// p.y[] should be set to source position
+            ,PosType ytol2        /// target tolerance in source position squared
+            ,PosType &dy2        /// final value of Delta y ^2
+            ,bool use_image_guess  // if true p.x[] will be used as a guess for the image position
   );
 
 	// methods used for use with implanted sources
 
   ///  reset the redshift of the source plane
-	short ResetSourcePlane(PosType z,bool nearest=false, unsigned long GalID=0, PosType *xx=NULL,bool verbose = false);
+	short ResetSourcePlane(PosType z,bool nearest=false,bool verbose = false);
+
+  ///  find information on the position of the source plane with respect to the lens planes
+  void FindSourcePlane(
+                          PosType zs                 /// redshift of implanted source
+                          ,long &jmax                /// index of last plane at lower redshift
+                          ,double &Dls               /// coordinate distance between last plane and source plane
+                          ,double &Ds                /// total coordinate distance to source plane
+  );
 
 	/// Revert the source redshift to the value it was when the Lens was created.
 	void RevertSourcePlane(){ toggle_source_plane = false;}
@@ -400,11 +431,8 @@ public:
     init_seed = lens.init_seed;
     cosmo = lens.cosmo;
     toggle_source_plane = lens.toggle_source_plane;
-    dDs_implant = lens.dDs_implant;
-    dTs_implant = lens.dTs_implant;
+  
     zs_implant = lens.zs_implant;
-    Ds_implant = lens.Ds_implant;
-    index_of_new_sourceplane = lens.index_of_new_sourceplane;
     zsource = lens.zsource;
 
     NZSamples = lens.NZSamples;
@@ -507,6 +535,12 @@ private:
   // the cosmology
 	COSMOLOGY cosmo;
 
+  void compute_rays_parallel(int start
+                             ,int chunk_size
+                             ,Point *i_point
+                             ,double *source_zs
+                             ,bool multiZs
+                             ,bool verbose = false);
 	
 	//void readCosmology(InputParams& params);
 	//void assignParams(InputParams& params,bool verbose = false);
@@ -514,13 +548,9 @@ private:
 	
 	/// turns source plane on and off
 	bool toggle_source_plane;
-  /// the distance from the source to the next plane
-  PosType dDs_implant;
-  /// the distance from the source to the next plane
-  PosType dTs_implant;
-	PosType zs_implant,Ds_implant;
-	/// This is the index of the plane at one larger distance than the new source distance
-	int index_of_new_sourceplane;
+ 
+  // redhsift of true source plane if rest from original
+  PosType zs_implant;
 	
 	/// This is the source redshift that is read in from the parameter file and becomes the maximum redshift
 	PosType zsource;
@@ -749,7 +779,7 @@ private: /* input */
       + (y[1]-point.image->x[1])*(y[1]-point.image->x[1]);
       
       r2max = MAX(r2,r2max);
-      return r2 + r2max*abs(sign - sgn(point.invmag));
+      return r2 + r2max*abs(sign - sgn(point.invmag()));
     }
     
     Lens &lens;

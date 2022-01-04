@@ -350,7 +350,7 @@ PosType Grid::EinsteinArea() const {
   it = (i_tree->pointlist->Top());
   size_t N = i_tree->pointlist->size();
   for(unsigned long i=0 ; i < N ; ++i,--it){
-    if( (*it)->invmag < 0) total += (*it)->gridsize * (*it)->gridsize;
+    if( (*it)->invmag() < 0) total += (*it)->gridsize * (*it)->gridsize;
   }
   
   return total;
@@ -367,7 +367,7 @@ PosType Grid::EinsteinArea() const {
 //    assert(f >= 0);
 //    if(f > 0){
 //      mag += f;
-//      flux += f/fabs((*it)->invmag);
+//      flux += f/fabs((*it)->invmag());
 //    }
 //  }
 //
@@ -406,7 +406,7 @@ PosType Grid::magnification() const {
 //    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
 //    assert(f >= 0);
 //    if(f > 0){
-//      mag += f*fabs((*it)->invmag);
+//      mag += f*fabs((*it)->invmag());
 //      flux += f;
 //    }
 //  }
@@ -739,8 +739,8 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 
 					
 						i_points[jj].kappa = i_points[jj].image->kappa = 1-0.5*(aa[0]+aa[1]);
-						i_points[jj].gamma[0] = i_points[jj].image->gamma[0] = -0.5*(aa[0]-aa[1]);
-						i_points[jj].gamma[1] = i_points[jj].image->gamma[1] = -0.5*(aa[2]+aa[3]);
+						i_points[jj].gamma[0] = i_points[jj].image->gamma1() = -0.5*(aa[0]-aa[1]);
+						i_points[jj].gamma[1] = i_points[jj].image->gamma2() = -0.5*(aa[2]+aa[3]);
 						i_points[jj].gamma[2] = i_points[jj].image->gamma[2] = -0.5*(aa[2]-aa[3]);
 						i_points[jj].invmag = i_points[jj].image->invmag = (1-i_points[jj].kappa)*(1-i_points[jj].kappa)
 								     - i_points[jj].gamma[0]*i_points[jj].gamma[0]
@@ -1027,7 +1027,7 @@ double Grid::mag_from_deflect(Point *point       /// point to be tested
   
   int npos=0,nneg=0;
   for(int i=0 ; i< n ; ++i){
-    if(neighbors[i]->invmag >= 0){
+    if(neighbors[i]->invmag() >= 0){
       ++npos;
     }else{
       ++nneg;
@@ -1046,9 +1046,9 @@ double Grid::mag_from_deflect(Point *point       /// point to be tested
     double neg_area = 0,pos_area = 0;
     
     for(int i=1 ; i < n ; ++i){
-      if(neighbors[i]->invmag * neighbors[i-1]->invmag > 0 ){
+      if(neighbors[i]->invmag() * neighbors[i-1]->invmag() > 0 ){
     
-        if(neighbors[i]->invmag > 0){
+        if(neighbors[i]->invmag() > 0){
           pos_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
         }else{
           neg_area += ( ( *(neighbors[i-1]) - s_center)^( *(neighbors[i]) - s_center) ) / 2;
@@ -1073,80 +1073,84 @@ double Grid::mag_from_deflect(Point *point       /// point to be tested
  * set in the Grid constructor.
  *
  */
-bool Grid::uniform_mag_from_shooter(
-                                    PosType *a           /// Returned magnification matrix, not specified if returning false
-                                    ,Point *point       /// point to be tested
-){
-  Point *point2;
-  
-  i_tree->FindAllBoxNeighborsKist(point,neighbors);
-  assert(neighbors->Nunits() > 1);
-  neighbors->MoveToTop();
-  do{
-    point2 = neighbors->getCurrent();
-    if( !( (fabs(point->kappa-point2->kappa) < maglimit)*(fabs(point->gamma[0]-point2->gamma[0]) < maglimit)
-          *(fabs(point->gamma[1]-point2->gamma[1]) < maglimit)*(fabs(point->gamma[2]-point2->gamma[2]) < maglimit) ) ) return false;
-  }while(neighbors->Down());
-  
-  neighbors->MoveToTop();
-  std::cout << "shooter neighbors " << std::endl;
-  do{
-    point2 = neighbors->getCurrent();
-    std::cout << point->kappa-point2->kappa << "  " << point->gamma[0]-point2->gamma[0] << "   " <<
-    point->gamma[1]-point2->gamma[1] << "  " << point->gamma[2]-point2->gamma[2] << std::endl;
-  }while(neighbors->Down());
-  
-  
-  a[0] = 1 - point->kappa - point->gamma[0];
-  a[1] = 1 - point->kappa + point->gamma[0];
-  a[2] = -point->gamma[1] - point->gamma[2];
-  a[3] = -point->gamma[1] + point->gamma[2];
-  
-  return true;
-}
-void Grid::test_mag_matrix(){
-	PosType aa[4];
-	Point *point2;
-	PosType ao[4];
-	int count;
-	PosType kappa, gamma[3], invmag;
-
-  PointList::iterator i_tree_pointlist_it;
-  i_tree_pointlist_it.current = (i_tree->pointlist->Top());
-	do{
-		count=0;
-		i_tree->FindAllBoxNeighborsKist(*i_tree_pointlist_it,neighbors);
-		assert(neighbors->Nunits() >= 3);
-		neighbors->MoveToTop();
-		point2 = neighbors->getCurrent();
-		neighbors->Down();
-		while(!find_mag_matrix(aa,*i_tree_pointlist_it,point2,neighbors->getCurrent())) neighbors->Down();
-		//std::cout << "deflection neighbors a" << std::endl;
-		while(neighbors->Down()){
-			if(find_mag_matrix(ao,*i_tree_pointlist_it,point2,neighbors->getCurrent())){
-				aa[0] = (count*aa[0] + ao[0])/(count+1);
-				aa[1] = (count*aa[1] + ao[1])/(count+1);
-				aa[2] = (count*aa[2] + ao[2])/(count+1);
-				aa[3] = (count*aa[3] + ao[3])/(count+1);
-
-				++count;
-			}
-		}
-
-		kappa = 1-0.5*(aa[0]+aa[1]);
-		gamma[0] = -0.5*(aa[0]-aa[1]);
-		gamma[1] = -0.5*(aa[2]+aa[3]);
-		gamma[2] = -0.5*(aa[2]-aa[3]);
-		invmag = (1-kappa)*(1-kappa) - gamma[0]*gamma[0] - gamma[1]*gamma[1] + gamma[2]*gamma[2];
-
-		(*i_tree_pointlist_it)->kappa =  kappa/(*i_tree_pointlist_it)->kappa - 1.0;
-		(*i_tree_pointlist_it)->gamma[0] = gamma[0]/(*i_tree_pointlist_it)->gamma[0] - 1.0;
-		(*i_tree_pointlist_it)->gamma[1] = gamma[1]/(*i_tree_pointlist_it)->gamma[1] - 1.0;
-		(*i_tree_pointlist_it)->gamma[2] = gamma[2]/(*i_tree_pointlist_it)->gamma[2] - 1.0;
-		(*i_tree_pointlist_it)->invmag = invmag/(*i_tree_pointlist_it)->invmag - 1.0;
-
-	}while(--i_tree_pointlist_it);
-}
+//bool Grid::uniform_mag_from_shooter(
+//                                    PosType *a           /// Returned magnification matrix, not specified if returning false
+//                                    ,Point *point       /// point to be tested
+//){
+//  Point *point2;
+//  
+//  i_tree->FindAllBoxNeighborsKist(point,neighbors);
+//  assert(neighbors->Nunits() > 1);
+//  neighbors->MoveToTop();
+//  do{
+//    point2 = neighbors->getCurrent();
+//    if( !( (fabs(point->kappa() - point2->kappa()) < maglimit)*(fabs(point->gamma1()-point2->gamma1()) < maglimit)
+//          *(fabs(point->gamma2()-point2->gamma2()) < maglimit)*(fabs(point->gamma3()-point2->gamma3()) < maglimit) ) ) return false;
+//  }while(neighbors->Down());
+//  
+//  neighbors->MoveToTop();
+//  std::cout << "shooter neighbors " << std::endl;
+//  do{
+//    point2 = neighbors->getCurrent();
+//    std::cout << point->kappa() - point2->kappa() << "  " << point->gamma1()-point2->gamma1() << "   " <<
+//    point->gamma2()-point2->gamma2() << "  " << point->gamma3()-point2->gamma3() << std::endl;
+//  }while(neighbors->Down());
+//  
+//  
+//  // this gamma1 = -gamma1 as defined in Matrix2x2 class
+//  a[0] = 1 - point->kappa() - point->gamma1();
+//  a[1] = 1 - point->kappa() + point->gamma1();
+//  a[2] = -point->gamma2() - point->gamma3();
+//  a[3] = -point->gamma2() + point->gamma3();
+//  
+//  return true;
+//}
+//void Grid::test_mag_matrix(){
+//	PosType aa[4];
+//	Point *point2;
+//	PosType ao[4];
+//	int count;
+//	PosType kappa, gamma[3], invmag;
+//
+//  PointList::iterator i_tree_pointlist_it;
+//  i_tree_pointlist_it.current = (i_tree->pointlist->Top());
+//	do{
+//		count=0;
+//		i_tree->FindAllBoxNeighborsKist(*i_tree_pointlist_it,neighbors);
+//		assert(neighbors->Nunits() >= 3);
+//		neighbors->MoveToTop();
+//		point2 = neighbors->getCurrent();
+//		neighbors->Down();
+//		while(!find_mag_matrix(aa,*i_tree_pointlist_it,point2,neighbors->getCurrent())) neighbors->Down();
+//		//std::cout << "deflection neighbors a" << std::endl;
+//		while(neighbors->Down()){
+//			if(find_mag_matrix(ao,*i_tree_pointlist_it,point2,neighbors->getCurrent())){
+//				aa[0] = (count*aa[0] + ao[0])/(count+1);
+//				aa[1] = (count*aa[1] + ao[1])/(count+1);
+//				aa[2] = (count*aa[2] + ao[2])/(count+1);
+//				aa[3] = (count*aa[3] + ao[3])/(count+1);
+//
+//				++count;
+//			}
+//		}
+//
+//		kappa = 1-0.5*(aa[0]+aa[1]);
+//		gamma[0] = -0.5*(aa[0]-aa[1]);
+//		gamma[1] = -0.5*(aa[2]+aa[3]);
+//		gamma[2] = -0.5*(aa[2]-aa[3]);
+//		invmag = (1-kappa)*(1-kappa) - gamma[0]*gamma[0] - gamma[1]*gamma[1] + gamma[2]*gamma[2];
+//
+//
+//    //(*i_tree_pointlist_it)->kappa =  kappa/(*i_tree_pointlist_it)->kappa - 1.0;
+//    //(*i_tree_pointlist_it)->gamma[0] = gamma[0]/(*i_tree_pointlist_it)->gamma[0] - 1.0;
+//    //(*i_tree_pointlist_it)->gamma[1] = gamma[1]/(*i_tree_pointlist_it)->gamma[1] - 1.0;
+//    //(*i_tree_pointlist_it)->gamma[2] = gamma[2]/(*i_tree_pointlist_it)->gamma[2] - 1.0;
+//    //(*i_tree_pointlist_it)->invmag = invmag/(*i_tree_pointlist_it)->invmag - 1.0;
+//
+//    //(*i_tree_pointlist_it)->invmag = invmag/(*i_tree_pointlist_it)->invmag - 1.0;
+//
+//	}while(--i_tree_pointlist_it);
+//}
 
 /**
  * \brief quickly refines the grid down to a specific scale at a given point
@@ -1491,18 +1495,18 @@ void Grid::writePixelMapUniform(
 //        tmp = ((*list_it)->x[1] - (*list_it)->image->x[1]);
 //        break;
 //      case KAPPA:
-//        tmp = (*list_it)->kappa;
+//        tmp = (*list_it)->kappa();
 //        break;
 //      case GAMMA:
-//        tmp2[0] = (*list_it)->gamma[0];
-//        tmp2[1] = (*list_it)->gamma[1];
+//        tmp2[0] = (*list_it)->gamma1();
+//        tmp2[1] = (*list_it)->gamma2();
 //        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
 //        break;
 //      case GAMMA1:
-//        tmp = (*list_it)->gamma[0];
+//        tmp = (*list_it)->gamma1();
 //        break;
 //      case GAMMA2:
-//        tmp = (*list_it)->gamma[1];
+//        tmp = (*list_it)->gamma2();
 //        break;
 //      case GAMMA3:
 //        tmp = (*list_it)->gamma[2];
@@ -1549,24 +1553,24 @@ void Grid::writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVaria
         tmp = (ppoint->x[1] - ppoint->image->x[1]);
         break;
       case KAPPA:
-        tmp = ppoint->kappa;
+        tmp = ppoint->kappa();
         break;
       case GAMMA:
-        tmp2[0] = ppoint->gamma[0];
-        tmp2[1] = ppoint->gamma[1];
+        tmp2[0] = ppoint->gamma1();
+        tmp2[1] = ppoint->gamma2();
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
       case GAMMA1:
-        tmp = ppoint->gamma[0];
+        tmp = ppoint->gamma1();
         break;
       case GAMMA2:
-        tmp = ppoint->gamma[1];
+        tmp = ppoint->gamma2();
         break;
       case GAMMA3:
-        tmp = ppoint->gamma[2];
+        tmp = ppoint->gamma3();
         break;
       case INVMAG:
-        tmp = ppoint->invmag;
+        tmp = ppoint->invmag();
         break;
       case DELAYT:
         tmp = ppoint->dt;
@@ -1622,8 +1626,8 @@ void Grid::writeFitsVector(
         break;
       case GAMMA:
         
-        tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma[0];
-        tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma[1];
+        tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma1();
+        tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma2();
 
         tmp_image.imagekist->getCurrent()->surface_brightness = sqrt( tmp_x[0]*tmp_x[0] + tmp_x[1]*tmp_x[1]);
         tmp_image_theta.imagekist->getCurrent()->surface_brightness = atan2(tmp_x[1],tmp_x[0])/2;

@@ -67,9 +67,9 @@ Point::Point():Point_2d(0,0){
   leaf = nullptr;
   image = nullptr;
   next = prev = nullptr;
-  kappa = dt = gridsize = 0;
-  gamma[0] = gamma[1] = gamma[2] = 0;
-  invmag = 1;
+  dt = gridsize = 0;
+ 
+  A.setToI();
   flag = false;
 };
 
@@ -80,9 +80,9 @@ Point::Point(const Point_2d &p):Point_2d(p){
   leaf = nullptr;
   image = nullptr;
   next = prev = nullptr;
-  kappa = dt = gridsize = 0;
-  gamma[0] = gamma[1] = gamma[2] = 0;
-  invmag = 1;
+  dt = gridsize = 0;
+  
+  A.setToI();
   flag = false;
 };
 
@@ -93,9 +93,9 @@ Point::Point(PosType x,PosType y):Point_2d(x,y){
   leaf = nullptr;
   image = nullptr;
   next = prev = nullptr;
-  kappa = dt = gridsize = 0;
-  gamma[0] = gamma[1] = gamma[2] = 0;
-  invmag = 1;
+  dt = gridsize = 0;
+  
+  A.setToI();
   flag = false;
 };
 
@@ -109,10 +109,10 @@ void Point::Print(){
 	 std::cout << "  x " << x[0] << "    " << x[1] << std::endl;
 	 std::cout << "  head " << head << std::endl;
 	 std::cout << "  in_image " << in_image << std::endl;
-	 std::cout << "  kappa " << kappa << std::endl;
-	 std::cout << "  gamma " << gamma[0] << " " << gamma[1] << " " << gamma[2] << std::endl;
+	 std::cout << "  kappa " << kappa() << std::endl;
+	 std::cout << "  gamma " << gamma1() << " " << gamma2() << " " << gamma3() << std::endl;
 	 std::cout << "  dt " << dt << std::endl;
-	 std::cout << "  invmag " << invmag << std::endl;
+	 std::cout << "  invmag " << invmag() << std::endl;
 	 std::cout << "  inverted " << inverted() << std::endl;
 	 std::cout << "  gridsize " << gridsize << std::endl;
 	 std::cout << "  surface_brightness " << surface_brightness << std::endl;
@@ -719,11 +719,9 @@ void SwapPointsInArrayData(Point *p1,Point *p2){
 void PointCopy(Point *pcopy,Point *pin){
   pcopy->id = pin->id;
   pcopy->image = pin->image;
-  pcopy->invmag = pin->invmag;
-  pcopy->kappa = pin->kappa;
-  pcopy->gamma[0] = pin->gamma[0];
-  pcopy->gamma[1] = pin->gamma[1];
-  pcopy->gamma[2] = pin->gamma[2];
+  
+  pcopy->A = pin->A;
+  
   pcopy->dt = pin->dt;
   //pcopy->x = pin->x;
   pcopy->x[0] = pin->x[0];
@@ -742,11 +740,9 @@ void PointCopy(Point *pcopy,Point *pin){
 void PointCopyData(Point *pcopy,Point *pin){
   pcopy->id = pin->id;
   pcopy->image = pin->image;
-  pcopy->invmag = pin->invmag;
-  pcopy->kappa = pin->kappa;
-  pcopy->gamma[0] = pin->gamma[0];
-  pcopy->gamma[1] = pin->gamma[1];
-  pcopy->gamma[2] = pin->gamma[2];
+  
+  pcopy->A = pin->A;
+  
   pcopy->dt = pin->dt;
   //pcopy->x = pin->x;
   pcopy->x[0] = pin->x[0];
@@ -779,8 +775,8 @@ void TreeStruct::PointsInCurrent(unsigned long *ids,PosType **x){
 void PrintPoint(Point *point){
   std::cout << "Point id = " << point->id << std::endl;
   std::cout << "   x= " <<  point->x[0] << " " << point->x[1] << " gridsize = " << point->gridsize << std::endl;
-  std::cout << "   kappa= " << point->kappa;
-  std::cout << " gamma = " << point->gamma[0] << " " << point->gamma[1];
+  std::cout << "   kappa= " << point->kappa();
+  std::cout << " gamma = " << point->gamma1() << " " << point->gamma2();
   std::cout << " invmag " << point->in_image << std::endl;
 }
 /** 

@@ -765,8 +765,8 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 			  }else{ k = 0; }
 
 			  assert(sourceinfo[k].area > 0);
-			  assert(fabs(imageinfo[i].imagekist->getCurrent()->invmag) > 0.0);
-			  imageinfo[i].area = sourceinfo[k].area/fabs(imageinfo[i].imagekist->getCurrent()->invmag)/maxflux;
+			  assert(fabs(imageinfo[i].imagekist->getCurrent()->invmag()) > 0.0);
+			  imageinfo[i].area = sourceinfo[k].area/fabs(imageinfo[i].imagekist->getCurrent()->invmag())/maxflux;
 			  if(verbose) printf("magnification is uniform for image %lu\n",i);
 		  }
 	  }
@@ -1034,8 +1034,8 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 				}else{ k=0; }
 
 				assert(sourceinfo[k].area > 0);
-				assert(fabs(imageinfo[i].imagekist->getCurrent()->invmag) > 0);
-				imageinfo[i].area = sourceinfo[k].area/fabs(imageinfo[i].imagekist->getCurrent()->invmag)/maxflux;
+				assert(fabs(imageinfo[i].imagekist->getCurrent()->invmag()) > 0);
+				imageinfo[i].area = sourceinfo[k].area/fabs(imageinfo[i].imagekist->getCurrent()->invmag())/maxflux;
 
 			}else{
 				imageinfo[i].area = 0.0;
@@ -1131,7 +1131,7 @@ bool ImageFinding::IF_routines::RefinePoint_sb(Point *point,TreeHndl i_tree,PosT
 	if( point->gridsize*point->gridsize*point->surface_brightness/maxflux > 1.0e-4*image_area)
 		return false;
   
-  if(point->gridsize*point->gridsize*point->invmag > smallsize*smallsize) return true;
+  if(point->gridsize*point->gridsize*point->invmag() > smallsize*smallsize) return true;
   else return false;
   
   //*****************************************************************
@@ -1157,7 +1157,7 @@ bool ImageFinding::IF_routines::RefinePoint_smallsize(Point *point,TreeHndl i_tr
 	if( point->gridsize*point->gridsize*point->surface_brightness/maxflux > 1.0e-4*image_area)
 		return false;
   
-  if(point->gridsize*point->gridsize*point->invmag > smallsize*smallsize) return true;
+  if(point->gridsize*point->gridsize*point->invmag() > smallsize*smallsize) return true;
   
   return false;
 }
@@ -1228,11 +1228,11 @@ void ImageFinding::IF_routines::UniformMagCheck(ImageInfo *imageinfo){
 		PosType magmin,magmax;
 
 		imageinfo->imagekist->MoveToBottom();
-		magmin = magmax = 1.0/imageinfo->imagekist->getCurrent()->invmag;
+		magmin = magmax = 1.0/imageinfo->imagekist->getCurrent()->invmag();
 		imageinfo->imagekist->MoveToTop();
 		do{
-			magmin = MIN(magmin,1.0/imageinfo->imagekist->getCurrent()->invmag);
-			magmax = MAX(magmax,1.0/imageinfo->imagekist->getCurrent()->invmag);
+			magmin = MIN(magmin,1.0/imageinfo->imagekist->getCurrent()->invmag());
+			magmax = MAX(magmax,1.0/imageinfo->imagekist->getCurrent()->invmag());
 		}while( imageinfo->imagekist->Down() && (magmax-magmin) < tol_UniformMag*fabs(magmax) );
 
 		if((magmax-magmin) < tol_UniformMag*fabs(magmax)){

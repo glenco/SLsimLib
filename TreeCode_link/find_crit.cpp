@@ -62,7 +62,7 @@ void ImageFinding::find_crit(
   Point *minpoint = *i_tree_pointlist_it;
   
   for(i=0;i<grid->i_tree->pointlist->size();++i){
-    if((*i_tree_pointlist_it)->invmag < invmag_min){
+    if((*i_tree_pointlist_it)->invmag() < invmag_min){
       negimage[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
       negimage[0].imagekist->Down();
     }else{
@@ -70,7 +70,7 @@ void ImageFinding::find_crit(
     }
     
     // record point of maximum kappa
-    if((*i_tree_pointlist_it)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_it;
+    if((*i_tree_pointlist_it)->kappa() > minpoint->kappa()) minpoint = *i_tree_pointlist_it;
     --i_tree_pointlist_it;
   }
   
@@ -154,7 +154,7 @@ void ImageFinding::find_crit(
       negimage[ii].imagekist->MoveToBottom();
       if(newpoint_kist.Nunits()>0){
       do{
-        if(newpoint_kist.getCurrent()->invmag < invmag_min){
+        if(newpoint_kist.getCurrent()->invmag() < invmag_min){
           if(usingminpoint){
            negimage[ii].imagekist->TakeOutCurrent()->in_image = NO;
            usingminpoint = false;
@@ -164,7 +164,7 @@ void ImageFinding::find_crit(
         }
 
         // update minpoint
-        if(usingminpoint && newpoint_kist.getCurrent()->kappa > minpoint->kappa) minpoint = newpoint_kist.getCurrent();
+        if(usingminpoint && newpoint_kist.getCurrent()->kappa() > minpoint->kappa()) minpoint = newpoint_kist.getCurrent();
         
        }while(newpoint_kist.Down());
       }
@@ -220,15 +220,15 @@ void ImageFinding::find_crit(
       
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
-      while((*it).invmag < 0 && !it.atend() ) --it;
-      //if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma[1]*(*it).gamma[1]) ) ) crtcurve[ii].type = radial;
+      while((*it).invmag() < 0 && !it.atend() ) --it;
+      //if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma2()*(*it).gamma2()) ) ) crtcurve[ii].type = radial;
       if( (*it).inverted()  ) crtcurve[ii].type = radial;
       else crtcurve[ii].type = tangential;
       
       /************ test line ****************
        std::cout << "neighbors" << std::endl;
        for(it = neighbors.TopIt(); !it.atend() ; --it){
-       std::cout << (*it)->invmag << " " << 1 - ( (*it)->kappa - sqrt( (*it)->gamma[0]*(*it)->gamma[0] + (*it)->gamma[1]*(*it)->gamma[1] ) ) << std::endl;
+       std::cout << (*it)->invmag << " " << 1 - ( (*it)->kappa() - sqrt( (*it)->gamma1()*(*it)->gamma1() + (*it)->gamma2()*(*it)->gamma2() ) ) << std::endl;
        }
        ***************************************/
       
@@ -337,7 +337,7 @@ void ImageFinding::find_crit(
             grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
             bool good = false;
             for(auto &np : nkist){
-              if(np.invmag < 0){ good = true; break;}
+              if(np.invmag() < 0){ good = true; break;}
             }
             if(!good){
               
@@ -346,7 +346,7 @@ void ImageFinding::find_crit(
               
               std::cout << "Caustic point without negative neighbor"
               << std::endl;
-              std::cout << "invmag " << pointp->invmag << std::endl;
+              std::cout << "invmag " << pointp->invmag() << std::endl;
               std::cout << "inverted ? " << pointp->inverted() << std::endl;
               std::cout << "id " << pointp->id << std::endl;
               std::cout << "neighbors: " << std::endl;
@@ -370,7 +370,7 @@ void ImageFinding::find_crit(
           grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
           bool good = false;
           for(auto &np : nkist){
-            if(np.invmag < 0){ good = true; break;}
+            if(np.invmag() < 0){ good = true; break;}
           }
           assert(good);
         }
@@ -551,8 +551,8 @@ void ImageFinding::find_crit(
       negimage[ii].outerborder->MoveToTop();
       do{
         current = negimage[ii].outerborder->getCurrent();
-        //if(1 < ( current->kappa - sqrt( current->gamma[0]*current->gamma[0]
-        //                               + current->gamma[1]*current->gamma[1]) )){
+        //if(1 < ( current->kappa() - sqrt( current->gamma1()*current->gamma1()
+        //                               + current->gamma2()*current->gamma2()) )){
         
         if( current->inverted() ){
           // radial caustic must already have been found
@@ -794,7 +794,7 @@ void ImageFinding::find_crit(
             grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
             bool good = false;
             for(auto &np : nkist){
-              if(np.invmag < 0){ good = true; break;}
+              if(np.invmag() < 0){ good = true; break;}
             }
             if(!good){
               
@@ -803,7 +803,7 @@ void ImageFinding::find_crit(
               
               std::cout << "Critical point without negative neighbor"
               << std::endl;
-              std::cout << "invmag " << pointp->invmag << std::endl;
+              std::cout << "invmag " << pointp->invmag() << std::endl;
               std::cout << "inverted ? " << pointp->inverted() << std::endl;
               std::cout << "id " << pointp->id << std::endl;
               std::cout << "neighbors: " << std::endl;
@@ -817,7 +817,7 @@ void ImageFinding::find_crit(
                 std::cout << "At top boundary of grid." << std::endl;
               for(auto &np : nkist){
                 std::cout << np.id << "    inverted ? " << np.inverted() <<
-                " invmag " << np.invmag << std::endl;
+                " invmag " << np.invmag() << std::endl;
                 np.Print();
               }
               std::cout << " # of points in crit curve: " << crit.critical_curve.size()
@@ -831,7 +831,7 @@ void ImageFinding::find_crit(
           grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
           bool good = false;
           for(auto &np : nkist){
-            if(np.invmag < 0){ good = true; break;}
+            if(np.invmag() < 0){ good = true; break;}
           }
           //assert(good);
         }
@@ -1003,21 +1003,21 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     if(TEST){
       for(auto &p : *(pseudocurve.imagekist) ){
         assert( p.inverted());
-        assert( p.invmag > 0 );
+        assert( p.invmag() > 0 );
       }
 
       size_t i=0;
       for(auto &p : *(pseudocurve.outerborder) ){
-        if( p.invmag > 0 ){
+        if( p.invmag() > 0 ){
           p.Print();
-          std::cout << "invmag recalculated = " << (1-p.kappa)*(1-p.kappa) - (p.gamma[0]*p.gamma[0]) - (p.gamma[1]*p.gamma[1]) + p.gamma[2]*p.gamma[2] <<
+          std::cout << "invmag recalculated = " << (1-p.kappa())*(1-p.kappa()) - (p.gamma1()*p.gamma1()) - (p.gamma2()*p.gamma2()) + p.gamma3()*p.gamma3() <<
           std::endl;
         }
         ++i;
-        assert( p.invmag < 0 );
+        assert( p.invmag() < 0 );
       }
       for(auto &p : *(pseudocurve.innerborder) ){
-        assert( p.invmag > 0 );
+        assert( p.invmag() > 0 );
       }
    }
 
@@ -1034,7 +1034,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
           current->in_image = YES;
         }else current->in_image = NO;
         
-        if( current->invmag < 0 )
+        if( current->invmag() < 0 )
           negimage.imagekist->InsertAfterCurrent(current);
         
         
@@ -1044,10 +1044,10 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       
       if(TEST){
         for(auto &p : *(pseudocurve.outerborder) ){
-          assert( p.invmag < 0 );
+          assert( p.invmag() < 0 );
         }
         for(auto &p : *(pseudocurve.innerborder) ){
-          assert( p.invmag > 0 );
+          assert( p.invmag() > 0 );
         }
       }
     }  // refinement loop
@@ -1064,18 +1064,18 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   // case where no radial caustic has been detected yet
   pseudocurve.imagekist->copy(negimage.imagekist);
   Point *minmupoint = pseudocurve.imagekist->getCurrent();
-  PosType mumin = minmupoint->invmag;
+  PosType mumin = minmupoint->invmag();
   
   //std::cout << " pseudocurve size " << pseudocurve.imagekist->Nunits() << std::endl;
   
   /// remove all but the points below tmp_pseudolimit
   pseudocurve.imagekist->MoveToTop();
   do{
-    if(pseudocurve.imagekist->getCurrent()->invmag < mumin){
+    if(pseudocurve.imagekist->getCurrent()->invmag() < mumin){
       minmupoint = pseudocurve.imagekist->getCurrent();
-      mumin = pseudocurve.imagekist->getCurrent()->invmag;
+      mumin = pseudocurve.imagekist->getCurrent()->invmag();
     }
-    if(pseudocurve.imagekist->getCurrent()->invmag > pseudolimit){
+    if(pseudocurve.imagekist->getCurrent()->invmag() > pseudolimit){
       pseudocurve.imagekist->getCurrent()->in_image = NO;
       pseudocurve.imagekist->TakeOutCurrent();
     }
@@ -1083,7 +1083,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   
   
   // in case one before top was taken out
-  if( pseudocurve.imagekist->Nunits() > 0 && pseudocurve.imagekist->getCurrent()->invmag > pseudolimit){
+  if( pseudocurve.imagekist->Nunits() > 0 && pseudocurve.imagekist->getCurrent()->invmag() > pseudolimit){
     pseudocurve.imagekist->getCurrent()->in_image = NO;
     pseudocurve.imagekist->TakeOutCurrent();
   }
@@ -1107,7 +1107,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         ){
     // update region
     if(pseudocurve.ShouldNotRefine == 0){
-      mumin = pseudocurve.imagekist->getCurrent()->invmag;
+      mumin = pseudocurve.imagekist->getCurrent()->invmag();
       minmupoint = pseudocurve.imagekist->getCurrent();
       pseudocurve.imagekist->getCurrent()->in_image = NO;
       pseudocurve.imagekist->TakeOutCurrent();
@@ -1116,14 +1116,14 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     newpoints.MoveToTop();
     do{
       current = newpoints.getCurrent();
-      if(current->invmag < mumin){
-        mumin = current->invmag;
+      if(current->invmag() < mumin){
+        mumin = current->invmag();
         minmupoint = current;
       }
-      if(current->invmag < 0)
+      if(current->invmag() < 0)
         negimage.imagekist->InsertAfterCurrent(newpoints.getCurrent());
       
-      if(current->invmag < pseudolimit){
+      if(current->invmag() < pseudolimit){
         current->in_image = YES;
         pseudocurve.imagekist->InsertAfterCurrent(current);
       }
@@ -1165,10 +1165,10 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     // find point with minimum largest Eigenvalue
     negimage.imagekist->MoveCurrentToTop();
     current = negimage.imagekist->getCurrent();
-    eigmin = 1 - current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-                                      + current->gamma[1]*current->gamma[1]) ;
-    //eigmin = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
-    //                                 + current->invmag) ;
+    eigmin = 1 - current->kappa() + sqrt( current->gamma1()*current->gamma1()
+                                      + current->gamma2()*current->gamma2()) ;
+    //eigmin = 1-current->kappa() + sqrt( (1-current->kappa())*(1-current->kappa())
+    //                                 + current->invmag()) ;
     assert(eigmin == eigmin);
     
     if(eigmin < 0) paritypoints.InsertAfterCurrent(current);
@@ -1176,10 +1176,10 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     pmin = negimage.imagekist->getCurrent();
     while(negimage.imagekist->Down()){
       current = negimage.imagekist->getCurrent();
-      tmp = 1 - current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-                                     + current->gamma[1]*current->gamma[1]) ;
-     //tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
-     //                               + current->invmag) ;
+      tmp = 1 - current->kappa() + sqrt( current->gamma1()*current->gamma1()
+                                     + current->gamma2()*current->gamma2()) ;
+     //tmp = 1-current->kappa() + sqrt( (1-current->kappa())*(1-current->kappa())
+     //                               + current->invmag()) ;
       
       assert(tmp == tmp);
       
@@ -1201,10 +1201,10 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       newpoints.MoveToTop();
       do{
         current = newpoints.getCurrent();
-        tmp = 1 - current->kappa + sqrt( current->gamma[0]*current->gamma[0]
-                                       + current->gamma[1]*current->gamma[1]) ;
-        //tmp = 1-current->kappa + sqrt( (1-current->kappa)*(1-current->kappa)
-        //                              + current->invmag) ;
+        tmp = 1 - current->kappa() + sqrt( current->gamma1()*current->gamma1()
+                                       + current->gamma2()*current->gamma2()) ;
+        //tmp = 1-current->kappa() + sqrt( (1-current->kappa())*(1-current->kappa())
+        //                              + current->invmag()) ;
         assert(tmp == tmp);
        if(eigmin > tmp ){
           eigmin = tmp;
@@ -1285,13 +1285,13 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  Point *minpoint = *i_tree_pointlist_it;
  
  for(i=0;i<grid->i_tree->pointlist->size();++i){
- if((*i_tree_pointlist_it)->invmag < invmag_min){
+ if((*i_tree_pointlist_it)->invmag() < invmag_min){
  critcurve[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
  critcurve[0].imagekist->Down();
  }
  
  // record point of maximum kappa
- if((*i_tree_pointlist_it)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_it;
+ if((*i_tree_pointlist_it)->kappa() > minpoint->kappa()) minpoint = *i_tree_pointlist_it;
  --i_tree_pointlist_it;
  }
  bool maxpoint = false;
@@ -1333,7 +1333,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  newpoint_kist.MoveToTop();
  critcurve[ii].imagekist->MoveToBottom();
  do{
- if(newpoint_kist.getCurrent()->invmag < invmag_min){
+ if(newpoint_kist.getCurrent()->invmag() < invmag_min){
  newpoint_kist.getCurrent()->in_image = YES;
  critcurve[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
  
@@ -1354,7 +1354,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  // take out old max point
  critcurve[ii].imagekist->MoveToTop();
  do{
- if(critcurve[ii].imagekist->getCurrent()->invmag > 0){
+ if(critcurve[ii].imagekist->getCurrent()->invmag() > 0){
  critcurve[ii].imagekist->getCurrent()->in_image = NO;
  critcurve[ii].imagekist->TakeOutCurrent();
  break;
@@ -1365,8 +1365,8 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
  // update maximum kappa point if no negative magnification points have been found
  newpoint_kist.MoveToTop();
  do{
- if(newpoint_kist.getCurrent()->kappa
- > critcurve[ii].imagekist->getCurrent()->kappa ){
+ if(newpoint_kist.getCurrent()->kappa()
+ > critcurve[ii].imagekist->getCurrent()->kappa() ){
  critcurve[ii].imagekist->getCurrent()->in_image = NO;
  critcurve[ii].imagekist->TakeOutCurrent();
  newpoint_kist.getCurrent()->in_image = YES;
@@ -1602,7 +1602,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
     x[0] = (*i_tree_pointlist_it)->image->x[0] - x_source[0];
     x[1] = (*i_tree_pointlist_it)->image->x[1] - x_source[1];
     
-    if( (*i_tree_pointlist_it)->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) ){
+    if( (*i_tree_pointlist_it)->invmag() < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) ){
       negimage.imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
       negimage.imagekist->Down();
     }
@@ -1652,7 +1652,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
       x[0] = (*i_tree_pointlist_it)->image->x[0] - x_source[0];
       x[1] = (*i_tree_pointlist_it)->image->x[1] - x_source[1];
       
-      if(newpoint_kist.getCurrent()->image->invmag < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) )
+      if(newpoint_kist.getCurrent()->image->invmag() < 0 && r_source*r_source > (x[0]*x[0] + x[1]*x[1]) )
         negimage.imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
     }while(newpoint_kist.Down());
   }
@@ -1708,14 +1708,14 @@ void ImageFinding::IF_routines::refine_crit_in_image(
  Point *minpoint = *i_tree_pointlist_it;
  
  for(i=0;i<grid->i_tree->pointlist->size();++i){
- if ((*i_tree_pointlist_it)->kappa>isokappa){
- std::cout << (*i_tree_pointlist_it)->kappa << std::endl;
+ if ((*i_tree_pointlist_it)->kappa()>isokappa){
+ std::cout << (*i_tree_pointlist_it)->kappa() << std::endl;
  contour.imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
  contour.imagekist->Down();
  }
  
  // record point of maximum kappa
- if((*i_tree_pointlist_it)->kappa > minpoint->kappa) minpoint = *i_tree_pointlist_it;
+ if((*i_tree_pointlist_it)->kappa() > minpoint->kappa()) minpoint = *i_tree_pointlist_it;
  --i_tree_pointlist_it;
  }
  
@@ -1806,12 +1806,12 @@ void ImageFinding::find_contour(
     
     switch (contour_type) {
       case KAPPA:
-        value = (*i_tree_pointlist_it)->kappa;
-        maxval = minpoint->kappa;
+        value = (*i_tree_pointlist_it)->kappa();
+        maxval = minpoint->kappa();
         break;
       case INVMAG:
-        value = (*i_tree_pointlist_it)->invmag;
-        maxval = minpoint->invmag;
+        value = (*i_tree_pointlist_it)->invmag();
+        maxval = minpoint->invmag();
         break;
       case DELAYT:
         value = (*i_tree_pointlist_it)->dt;
@@ -1869,10 +1869,10 @@ void ImageFinding::find_contour(
       do{
         switch (contour_type) {
           case KAPPA:
-            value = newpoint_kist.getCurrent()->kappa;
+            value = newpoint_kist.getCurrent()->kappa();
             break;
           case INVMAG:
-            value = newpoint_kist.getCurrent()->invmag;
+            value = newpoint_kist.getCurrent()->invmag();
             break;
           case DELAYT:
             value = newpoint_kist.getCurrent()->dt;

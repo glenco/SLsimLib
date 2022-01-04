@@ -1447,7 +1447,7 @@ KappaType ImageInfo::aveInvMag()
   imagekist->MoveToTop(); // Move to first point of imagekist
   for(i=0;i<imagekist->Nunits();i++)
   {
-    tmp_invmag += imagekist->getCurrent()->invmag ;
+    tmp_invmag += imagekist->getCurrent()->invmag();
     imagekist->Down();
   }
   tmp_invmag /= imagekist->Nunits() ;
@@ -1543,7 +1543,7 @@ RAY ImageInfo::highestSurfaceBrightnessRay(){
 ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){
   
   if(!(uniform_mag && rhs.uniform_mag
-       && std::abs(imagekist->getCurrent()->invmag - rhs.imagekist->getCurrent()->invmag) < 1.0e-5 ) ) uniform_mag = no;
+       && std::abs(imagekist->getCurrent()->invmag() - rhs.imagekist->getCurrent()->invmag() ) < 1.0e-5 ) ) uniform_mag = no;
   
   imagekist->MoveToBottom();
   for(auto &p : *(rhs.imagekist)){
@@ -1605,10 +1605,10 @@ bool ImageInfo::constant(
   
   switch(lensvar){
 		case KAPPA:
-			max = min = imagekist->getCurrent()->kappa;
+			max = min = imagekist->getCurrent()->kappa();
 			break;
 		case INVMAG:
-			max = min = imagekist->getCurrent()->invmag;
+			max = min = imagekist->getCurrent()->invmag();
 			break;
 		default:
       throw std::runtime_error("ImageInfo::constant() only does kappa and invmag");
@@ -1617,8 +1617,8 @@ bool ImageInfo::constant(
 
   imagekist->MoveToTop();
   do{
-    if(lensvar == INVMAG) tmp = imagekist->getCurrent()->invmag;
-    if(lensvar == KAPPA) tmp = imagekist->getCurrent()->kappa;
+    if(lensvar == INVMAG) tmp = imagekist->getCurrent()->invmag();
+    if(lensvar == KAPPA) tmp = imagekist->getCurrent()->kappa();
     
     if(tmp > max ) max = tmp;
     if(tmp < min ) min = tmp;
@@ -1690,10 +1690,10 @@ PosType ImageInfo::ConcaveHullSourceArea(bool useborder){
 bool ImageInfo::IsMergedImages(){
   
   Kist<Point>::iterator it = imagekist->TopIt();
-  bool sig = ( (*it).invmag > 0);
+  bool sig = ( (*it).invmag() > 0);
   
   for(;!(it.atend());--it){
-    if( ( ((*it).invmag > 0) != sig ) ) return true;
+    if( ( ((*it).invmag() > 0) != sig ) ) return true;
   }
 
   return false;
