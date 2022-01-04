@@ -1033,8 +1033,8 @@ void LensMap::write(std::string filename
       break;
   }
   
-  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
-  cpfits.writeKey("CD1_1",angular_pixel_size /degreesTOradians,"pixel size in degrees");
+  cpfits.writeKey("CD1_1",-angular_pixel_size /degreesTOradians,"pixel size in degrees");
+  cpfits.writeKey("CD2_2",angular_pixel_size /degreesTOradians,"pixel size in degrees");
   cpfits.writeKey("SIDEL1",boxlMpc,"x range in radians");
   cpfits.writeKey("SIDEL2",y_range(),"y range in radians");
   cpfits.writeKey("CENTER_X",center[0],"center of field x");
