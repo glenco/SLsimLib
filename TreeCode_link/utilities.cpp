@@ -97,6 +97,17 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
  *
  */
 namespace Utilities{
+
+bool make_directories(const std::string &root_dir){
+  std::cout << "Making directory " << root_dir << std::endl;
+  struct stat st = {0};
+  if ( stat(root_dir.c_str(), &st) == -1) {
+    mkdir(root_dir.c_str(), 0700);
+    return false;
+  }
+  return true;
+ }
+
 long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center){
 	long ix,iy;
 	PosType fx, fy;
