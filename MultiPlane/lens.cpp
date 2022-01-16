@@ -3059,6 +3059,12 @@ short Lens::ResetSourcePlane(
 		return out;
 	}
   
+  if(lensing_planes.size() <=1 ){
+    std::cerr << "At least one LensHalo must be in a Lens before the source redshift can be changes.  This will be fixed." << endl;
+    throw std::invalid_argument("");
+    return out;
+  }
+
   
 	// distance to new source plane
 	PosType Ds = cosmo.coorDist(0,z);
