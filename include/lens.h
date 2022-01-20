@@ -317,7 +317,27 @@ public:
    image point.
    */
   void rayshooter(RAY &ray);
-	void rayshooterInternal(unsigned long Npoints, Point *i_points, bool RSIverbose = false);
+  /** \brief Main routine for shooting rays in parrallel.
+   
+   i_points[].x must be set to the image postion in angular radians.
+  
+   i_points must have linked image points.  `LinkedPoint`s could be used, but for its internal use this is not done.
+   */
+	void rayshooterInternal(unsigned long Npoints    /// number of points to be shot
+                          ,Point *i_points         /// points on the image plane
+                          ,bool RSIverbose = false/// verbose option
+                          );
+  
+  /** \brief Routine for shooting rays with differnt source redshifts in parrallel.
+   
+   i_points[].x must be set to the image postion in angular radians.
+   */
+  
+  void rayshooterInternal(unsigned long Npoints   /// number of points to be shot
+                          ,LinkedPoint *i_points        /// poinst on the image plane
+                          ,std::vector<double> &source_zs /// source redshifts
+                          ,bool RSIverbose = false/// verbose option
+                          );
   void info_rayshooter(Point *i_point
                       ,std::vector<Point_2d> & ang_positions
                       ,std::vector<KappaType> & kappa_on_planes
@@ -535,9 +555,10 @@ private:
   // the cosmology
 	COSMOLOGY cosmo;
 
+  template<typename P>
   void compute_rays_parallel(int start
                              ,int chunk_size
-                             ,Point *i_point
+                             ,P *i_point
                              ,double *source_zs
                              ,bool multiZs
                              ,bool verbose = false);
@@ -814,6 +835,197 @@ inline HaloType* Lens::getMainHalo(std::size_t i)
 }
 
 typedef Lens* LensHndl;
+
+
+template <typename P>
+void Lens::compute_rays_parallel(int start
+                                 ,int chunk_size
+                                 ,P *i_points
+                                 ,double *source_zs
+                                 ,bool multiZs
+                                 ,bool verbose)
+{
+  int end        = start + chunk_size;
+
+  int i, j;
+  
+  PosType xx[2];
+  PosType aa,bb;
+  PosType alpha[2];
+  
+  KappaType kappa,gamma[3];
+  KappaType phi;
+  
+  Matrix2x2<PosType> G;
+
+  PosType SumPrevAlphas[2];
+  Matrix2x2<PosType> SumPrevAG;
+  
+  PosType *theta;
+  
+  long jmax = lensing_planes.size();
+  double Dls_Ds; // this is the ratio between of the distance between the last lens plane and the source to the distance to the source
+  double D_Ds; // this is the ratio between of the distance to the last lens plane and the source to the distance to the source
+
+  if(!multiZs){
+    if(source_zs[0] == plane_redshifts.back() ){
+      Dls_Ds = dDl.back() / Dl.back();
+      D_Ds = Dl[Dl.size() - 2] / Dl.back();
+    }else{
+      PosType Dls,Ds;
+      FindSourcePlane(source_zs[0],jmax,Dls,Ds);
+      Dls_Ds = Dls / Ds;
+      if(jmax > 0) D_Ds = Dl[jmax-1] / Ds;
+    }
+  }
+  
+  // Main loop : loop over the points of the image
+  for(i = start; i < end; i++)
+  {
+    // In case e.g. a temporary point is outside of the grid.
+    if(i_points[i].in_image == MAYBE) continue;
+    
+    //theta = i_points[i].image->x;
+    theta = i_points[i].ptr_y();
+    
+    theta[0] = i_points[i].x[0];
+    theta[1] = i_points[i].x[1];
+
+    // Initializing SumPrevAlphas :
+    SumPrevAlphas[0] = theta[0];
+    SumPrevAlphas[1] = theta[1];
+
+    // Initializing SumPrevAG :
+    SumPrevAG.setToI();
+    
+    // Setting phi on the first plane.
+    phi = 0.0;
+    
+    // Default values :
+    i_points[i].A.setToI();
+    i_points[i].dt = 0;
+    
+    // In case we don't want to compute the values :
+    if(flag_switch_lensing_off)
+    {
+      i_points[i].image->A.setToI();
+      continue;
+    }
+    
+    // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
+    i_points[i].dt = 0;
+    
+    //0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
+    
+    if(multiZs){
+      PosType Dls,Ds;
+      FindSourcePlane(source_zs[i],jmax,Dls,Ds);
+      Dls_Ds = Dls / Ds;
+      if(jmax > 0) D_Ds = Dl[jmax-1]/Ds;
+    }
+    
+    // Begining of the loop through the planes :
+    // Each iteration leaves i_point[i].image on plane (j+1)
+
+    for(j = 0; j < jmax ; ++j)
+      {
+      
+      double Dphysical = Dl[j]/(1 + plane_redshifts[j]);
+      // convert to physical coordinates on the plane j, just for force calculation
+      xx[0] = theta[0] *  Dphysical;
+      xx[1] = theta[1] *  Dphysical;
+      // PhysMpc = ComMpc / (1+z)
+      
+      assert(xx[0] == xx[0] && xx[1] == xx[1]);
+      
+      ////////////////////////////////////////////////////////
+      
+      lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx);
+      // Computed in physical coordinates, xx is in PhysMpc.
+      
+      ////////////////////////////////////////////////////////
+      
+      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      if(std::isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!std::isinf(kappa));
+      
+      G[0] = kappa + gamma[0];    G[1] = gamma[1];
+      G[2] = gamma[1]; G[3] = kappa - gamma[0];
+  
+      /* multiply by fac to obtain 1/comoving_distance/physical_distance
+       * such that a multiplication with the charge (in units of physical distance)
+       * will result in a 1/comoving_distance quantity */
+      
+      G *= charge * Dl[j] / (1 + plane_redshifts[j]);
+        
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      assert(phi == phi);
+      
+      if(flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
+      
+      // This computes \vec{x}^{j+1} in terms of \vec{x}^{j}
+      // according to the corrected Eq. (18) of paper GLAMER II ---------------------------------
+      
+      // Adding the j-plane alpha contribution to the sum \Sum_{k=1}^{j} \vec{alpha_j} :
+      SumPrevAlphas[0] -= charge * alpha[0] ;
+      SumPrevAlphas[1] -= charge * alpha[1] ;
+      
+      if(j < jmax-1 ){
+        aa = dDl[j+1] / Dl[j+1];
+        bb = Dl[j] / Dl[j+1];
+      }else{
+        aa = Dls_Ds;
+        bb = D_Ds;
+      }
+      
+      theta[0] = bb * theta[0] + aa * SumPrevAlphas[0];
+      theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
+      
+      // ----------------------------------------------------------------------------------------
+            
+      // Sum_{k=1}^{j} Dl[k] A^k.G^k
+      SumPrevAG -= (G * (i_points[i].A)) ;
+      
+      // Computation of the "plus quantities", i.e. the  next plane quantities :
+      i_points[i].A = i_points[i].A * bb + SumPrevAG * aa;
+      
+      // ----------------------------------------------
+      
+      // Geometric time delay with added potential
+      //p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) ) * p->dTl[j+1] /p->dDl[j+1] /p->dDl[j+1] - phi * p->charge ; /// in Mpc  ???
+      
+      // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
+      // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      
+      
+    } // End of the loop going through the planes
+    
+    
+    // Subtracting off a term that makes the unperturbed ray to have zero time delay
+    //p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[NLastPlane];
+    
+    // Conversion of dt from Mpc (physical Mpc) to Years -----------------
+    i_points[i].dt *= MpcToSeconds * SecondToYears ;
+    
+    // ---------------------------------------------------------------------------------------------
+    
+    // Putting the final values of the quantities in the image point -----
+    i_points[i].image->A = i_points[i].A;
+    i_points[i].image->dt = i_points[i].dt;
+    // ------------------------------------------------------------------------
+    
+    
+    // TEST : showing final quantities
+    // ------------------------------=
+    if(verbose)  std::cout << "RSI final : X X | " << i << "  " << source_zs[i] << " | " << i_points[i].kappa() << " " << i_points[i].gamma1() << " " << i_points[i].gamma2() << " " << i_points[i].gamma3() << " " << i_points[i].invmag() << " | " << i_points[i].dt << std::endl ;
+    
+  } // End of the main loop.
+  
+  return 0;
+}
 
 #endif /* MULTIPLANE_H_ */
 

@@ -397,6 +397,8 @@ struct Point: public Point_2d{
   unsigned long head;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
+  PosType *ptr_y(){return image->x;}
+  
   Point operator=(const Point_2d &p){
     Point_2d::operator=(p);
     
@@ -426,9 +428,10 @@ struct Point: public Point_2d{
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
 
+  
   Branch *leaf;
   bool flag;
-
+  
   void Print();
   
   static bool orderX(Point *p1,Point *p2){
@@ -464,12 +467,14 @@ private:
   Point im;
 };
 
+
 /** \brief Simple representaion of a light path giving position on the image and source planes and lensing quantities.
 */
 struct RAY{
   RAY(){
     dt = 0.0;
     A = Matrix2x2<KappaType>::I();
+    z = -1;
   };
   
   RAY(const Point &p){
@@ -491,6 +496,7 @@ struct RAY{
     dt = p.dt;
         
     A = p.A;
+    z = -1;
   };
   RAY(const RAY &p){
     x = p.x;
@@ -499,9 +505,12 @@ struct RAY{
     dt = p.dt;
     
     A = p.A;
+    z = p.z;
   };
 
   RAY & operator=(const Point &p){
+    assert(p.image != nullptr);
+    
     x[0] = p.x[0];
     x[1] = p.x[1];
     y[0] = p.image->x[0];
@@ -510,6 +519,7 @@ struct RAY{
     dt = p.dt;
         
     A = p.A;
+    z = -1;
     return *this;
   };
   
@@ -520,6 +530,7 @@ struct RAY{
     dt = p.dt;
         
     A = p.A;
+    z = p.z;
     return *this;
   };
   
@@ -529,8 +540,13 @@ struct RAY{
   Point_2d x;
   /// source position
   Point_2d y;
+  PosType *ptr_y(){return y.x;}
   
   Matrix2x2<KappaType> A;
+  
+  /// time-delay
+  KappaType dt;
+  KappaType z;
   
   KappaType invmag() const{
     return A.det();
@@ -547,10 +563,7 @@ struct RAY{
   KappaType kappa() const{
     return A.kappa();
   }
-  
-  /// time-delay
-  KappaType dt;
-  
+    
   /// inverse of the magnification
   KappaType invmag(){return A.det();}
   

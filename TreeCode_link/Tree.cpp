@@ -205,9 +205,6 @@ void FreePointArray(Point *array,bool NewXs){
   /* Note: this deallocates positions!! */
 
   if(array[0].head){
-	  //if(NewXs) for(i=0;i<array[0].head;++i) free(array[i].x);
-	  //free(array);
-	  //if(NewXs) for(i=0;i<array[0].head;++i) delete[] array[i].x;
 	  delete[] array;
   }else{
 	  ERROR_MESSAGE();
