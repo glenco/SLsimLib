@@ -1,0 +1,72 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\title{Deflection Formalism}
+\author{R.B. Metcalf}
+\begin{document}
+\maketitle
+
+$\pmb{\xi}_j$ is the angular vector of the photon with respect to the radial coordinate when it leaves the $j$th plane,  
+\begin{align}
+\pmb{\xi} = \hat{k} - ( \hat{k}\cdot \hat{r}  )\, \hat{r}
+\end{align}
+where $\hat{k}$ is the direction of motion of the photon.
+\section{multiplane approximation}
+
+The fundamental equation connecting the angular position on plane $i$ to the angular position on plane $j+1$ is
+\begin{align}
+\pmb{\theta}_{j} 
+&= \pmb{\theta}_1 - \sum_{i=1}^{j-1} \frac{D_{j,i}}{D_{j}}  \pmb{\alpha}_i(\pmb{x_i}) \\
+&= \pmb{\theta}_1 - \sum_{i=1}^{j} \beta_{ji} \, \pmb{\alpha}_i(\pmb{x_i})
+\end{align}
+where $D_i$ is the comoving distance from us to plan $i$ and $D_{j,i}$ is the distance between planes $i$ and $j$.
+Multiplying by $D_{j}$ gives
+\begin{align}
+D_j \pmb{\theta}_{j} 
+&= D_j \pmb{\theta}_1 - \sum_{i=1}^{j-1} D_{j,i} \,  \pmb{\alpha}_i(\pmb{x_i}) \\
+D_{j+1} \pmb{\theta}_{j+1} 
+&= D_{j+1} \pmb{\theta}_1 - \sum_{i=1}^{j} D_{j+1,i} \,  \pmb{\alpha}_i(\pmb{x_i}) 
+\end{align}
+Subtracting these gives
+\begin{align}
+D_{j+1} \pmb{\theta}_{j+1} - D_j \pmb{\theta}_{j} 
+&= \left( D_{j+1} - D_j \right) \pmb{\theta}_1 - \sum_{i=1}^{j} \left[ D_{j+1,i} - D_{j,i}  \right] \,  \pmb{\alpha}_i(\pmb{x_i}) 
+\end{align}
+Because $D(z)$ is the comoving angular size distance it can be expressed as an integral over $z$.  Because of this $D_{j+1} - D_j = D_{j+1,j}$ and $ D_{j+1,i} - D_{j,i} = D_{j+1,j}$.  Using this we can simplify to
+\begin{align}
+D_{j+1} \pmb{\theta}_{j+1} - D_j \pmb{\theta}_{j} 
+&= D_{j+1,j} \left[ \pmb{\theta}_1 - \sum_{i=1}^{j}  \pmb{\alpha}_i(\pmb{x_i}) \right]
+\end{align}
+or
+\begin{align}
+\pmb{\theta}_{j+1} = \frac{D_j}{D_{j+1}} \pmb{\theta}_{j} 
++ \frac{D_{j+1,j}}{D_{j+1}} \left[ \pmb{\theta}_1 - \sum_{i=1}^{j}  \pmb{\alpha}_i(\pmb{x_i}) \right]
+\end{align}
+The advantage of this formula over every other one I have seen is that a running sum of the deflections can be maintained and only the information of plane-$j$ is needed to propagate to plane-$j+1$.
+
+The deflections from each plane is $\pmb{\alpha}_i(\pmb{\theta_i})$.  The deflections add up so that the deflection at the $j$th plane is the sum of all the lower redshift planes.
+
+
+Using the definitions 
+\begin{align}
+\pmb{A}^i \equiv \frac{\partial \pmb{\theta}_i }{\partial \pmb{\theta}_1} ~~~~~~~~ \pmb{G}^i \equiv  \frac{\partial \pmb{\alpha}_i }{\partial \pmb{x}_i }
+\end{align}
+the evolution equation is
+\begin{align}
+\pmb{A}^{j+1} &=  \frac{D_j}{D_{j+1}} \pmb{A}^{j} + \frac{D_{j+1,j}}{D_{j+1}} \left[ \pmb{I} - \sum_{i=1}^{j} \pmb{G}_i \frac{\partial \pmb{x}_i}{\partial \pmb{\theta}_1} \right] \\
+&=   \frac{D_j}{D_{j+1}} \pmb{A}^{j}+ \frac{D_{j+1,j}}{D_{j+1}} \left[ \pmb{I} -  \sum_{i=1}^{j} D_i \,\pmb{G}_i \pmb{A}^i \right]
+\end{align}
+with the initial condition $\pmb{A}^{0} = \pmb{I}$.
+
+\section{$\pmb{G}$}
+
+
+
+\section{time-delay}
+\section{references}
+
+Seitz, S., Schneider, P. \& Ehlers, J., 1994, "Light propagation in arbitrary spacetimes and the gravitational lens approximation", astro-ph/9403056
+\end{document}

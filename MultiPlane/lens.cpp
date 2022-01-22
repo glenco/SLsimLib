@@ -525,7 +525,6 @@ void Lens::defaultParams(PosType z_source,bool verbose)
   charge = 4*PI*Grav;
 
   read_sim_file = false;
-  index_of_new_sourceplane = -1;
   toggle_source_plane = false;
 
 
@@ -3045,8 +3044,6 @@ short Lens::ResetSourcePlane(
                                                       * by the halo of the source.  If the source is at higher redshift than the simulation
                                                       * volume the source will be at its real redshift.
                                                       */
-                             ,unsigned long GalID
-                             ,PosType *xx
                              ,bool verbose
                              ){
 	unsigned long j;
@@ -3058,7 +3055,6 @@ short Lens::ResetSourcePlane(
 		std::cout << "Warning: Source redshift can't be set to " << z << " in MultiLens::ResetSourcePlane." << endl;
 		return out;
 	}
-  
   
 	// distance to new source plane
 	PosType Ds = cosmo.coorDist(0,z);
@@ -3083,31 +3079,30 @@ short Lens::ResetSourcePlane(
   
 	if(nearest && (j < lensing_planes.size()) ){
 		zs_implant = plane_redshifts[j];
-		Ds_implant = Dl[j];
-    if(j > 0) dDs_implant = dDl[j];
-    else  dDs_implant = Ds_implant;
-
-    if(j > 0) dTs_implant = dTl[j];
-    else  dTs_implant = cosmo.radDist(0,z);
 	}else{
-		// if nearest==false or the source is at higher redshift than the last plane use the real redshift
-		Ds_implant = Ds;
 		zs_implant = z;
-    
-		if(j > 0) dDs_implant = cosmo.coorDist(plane_redshifts[j-1],z); //Ds - Dl[j-1];
-		else  dDs_implant = Ds;
-    
-    if(j > 0) dTs_implant = cosmo.radDist(plane_redshifts[j-1],z); //Ds - Dl[j-1];
-    else  dTs_implant = cosmo.radDist(0,z);
 	}
-  
-	if(verbose) std::cout << "Source on plane " << j << " zs " << zs_implant << " Ds " << Ds << " dDs " << dDs_implant << std::endl;
-  
-	index_of_new_sourceplane = j;
-  
-	out = j;
-	return out;
+
+	return j;
 }
+
+void Lens::FindSourcePlane(PosType zs,long &jmax,double &Dls,double &Ds){
+                          
+  Ds = cosmo.coorDist(zs);
+  jmax = plane_redshifts.size() - 1;  // the last plane is the source plane
+  
+  if(jmax <= 0){ // case where there is just a source plane
+    Dls = Ds;
+    return;
+  }
+  while( plane_redshifts[jmax-1] > zs  ){
+    --jmax;
+  }
+  
+  Dls = cosmo.coorDist(plane_redshifts[jmax-1],zs);
+}
+
+
 
 /// Sort field_halos[], brr[][], and id[] by content off arr[]
 void Lens::quicksort(LensHaloHndl *halos,PosType **pos,unsigned long N){

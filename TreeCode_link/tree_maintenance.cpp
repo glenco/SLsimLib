@@ -853,7 +853,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
           for(i=0;i<(*current)->npoints;i++){
             std::cout << std::scientific << std::setprecision(15) << (*pointlist_current)->x[0] << "  " << (*pointlist_current)->x[1] << " " << (*pointlist_current)->id << "      "
                       << (*pointlist_current)->image->x[0] << "  " << (*pointlist_current)->image->x[1] << " " << (*pointlist_current)->image->id << std::endl;
-            std::cout << "invmag " << (*pointlist_current)->invmag << " gridsize " << (*pointlist_current)->gridsize << std::endl;
+            std::cout << "invmag " << (*pointlist_current)->invmag() << " gridsize " << (*pointlist_current)->gridsize << std::endl;
             
             --pointlist_current;
           }

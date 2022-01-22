@@ -65,7 +65,7 @@ short find_peaks(
 		imageinfo[0].imagekist->MoveToTop();
 		Ntemp = imageinfo[0].imagekist->Nunits();
 		for(i=0;i<Ntemp;++i){
-			if(imageinfo[0].imagekist->getCurrent()->kappa < threshold){
+			if(imageinfo[0].imagekist->getCurrent()->kappa() < threshold){
 
 				imageinfo[0].imagekist->getCurrent()->in_image = NO;
 				if(imageinfo[0].imagekist->AtTop()){
@@ -104,7 +104,7 @@ short find_peaks(
 			// add new points that are above the threshold to image
 
 			while(newpointskist->Nunits() > 0){
-				if(newpointskist->getCurrent()->kappa > threshold){
+				if(newpointskist->getCurrent()->kappa() > threshold){
 
 					imageinfo[0].imagekist->InsertAfterCurrent(newpointskist->TakeOutCurrent());
 					imageinfo[0].imagekist->Down();

@@ -67,7 +67,7 @@ struct Grid{
   Point * RefineLeaves(LensHndl lens,std::vector<Point *>& points);
   void ClearAllMarks();
   
-  void test_mag_matrix();
+  //void test_mag_matrix();
   void writeFits(const double center[],size_t Npixels,double resolution,LensingVariable lensvar,std::string filename);
   void writeFits(const double center[],size_t Nx,size_t Ny,double resolution,LensingVariable lensvar,std::string filename);
   
@@ -165,7 +165,7 @@ struct Grid{
   bool find_mag_matrix(double *a,Point *p0,Point *p1,Point *p2);
   
   bool uniform_mag_from_deflect(double *a,Point *point);
-  bool uniform_mag_from_shooter(double *a,Point *point);
+  //bool uniform_mag_from_shooter(double *a,Point *point);
   
   double mag_from_deflect(Point *point) const;
   

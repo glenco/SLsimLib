@@ -1000,7 +1000,7 @@ void Grid::find_images(
      // mark all image points
     allpoints.imagekist->MoveToTop();
     do{
-      if(sgn(allpoints.imagekist->getCurrent()->invmag) == sign){
+      if(sgn(allpoints.imagekist->getCurrent()->invmag()) == sign){
         allpoints.imagekist->getCurrent()->in_image = YES;
         allpoints.imagekist->getCurrent()->image->in_image = YES;
         images[par][0].imagekist->InsertAfterCurrent(allpoints.imagekist->getCurrent());
@@ -1072,8 +1072,8 @@ double Grid::mark_point_source_images(
   for(int i=0 ; i<Nimages ; ++i){
     pp = imageinfo[i].closestPoint(y_source);
     
-    total += luminosity/fabs(pp->invmag);
-    pp->surface_brightness += luminosity/pp->gridsize/pp->gridsize/fabs(pp->invmag);
+    total += luminosity/fabs(pp->invmag());
+    pp->surface_brightness += luminosity/pp->gridsize/pp->gridsize/fabs(pp->invmag());
   }
   return total;
 };

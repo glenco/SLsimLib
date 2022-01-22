@@ -1466,7 +1466,8 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
 void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
   double tmp,area;
   PosType tmp2[2];
-  
+  KappaType tmp3[3];
+ 
   PointList::iterator pl_it = list.Top();
   do{
   //for(PointList::iterator pl_it = list.begin() ; pl_it != list.end() ; ++pl_it){
@@ -1485,24 +1486,24 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
         tmp = ((*pl_it)->x[1] - (*pl_it)->image->x[1])/resolution/resolution;
         break;
       case KAPPA:
-        tmp = (*pl_it)->kappa/resolution/resolution;
+        tmp = (*pl_it)->kappa()/resolution/resolution;
         break;
       case GAMMA:
-        tmp2[0] = (*pl_it)->gamma[0];
-        tmp2[1] = (*pl_it)->gamma[1];
-        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1])/resolution/resolution;
+        tmp2[0] = (*pl_it)->gamma1();
+        tmp2[1] = (*pl_it)->gamma2();
+        tmp = sqrt(tmp3[0]*tmp3[0] + tmp3[1]*tmp3[1])/resolution/resolution;
         break;
       case GAMMA1:
-        tmp = (*pl_it)->gamma[0]/resolution/resolution;
+        tmp = (*pl_it)->gamma1()/resolution/resolution;
         break;
       case GAMMA2:
-        tmp = (*pl_it)->gamma[1]/resolution/resolution;
+        tmp = (*pl_it)->gamma2()/resolution/resolution;
         break;
       case GAMMA3:
-        tmp = (*pl_it)->gamma[2]/resolution/resolution;
+        tmp = (*pl_it)->gamma3()/resolution/resolution;
         break;
       case INVMAG:
-        tmp = (*pl_it)->invmag/resolution/resolution;
+        tmp = (*pl_it)->invmag()/resolution/resolution;
         break;
       case DELAYT:
         tmp = (*pl_it)->dt/resolution/resolution;
