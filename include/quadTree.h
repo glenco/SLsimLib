@@ -35,7 +35,7 @@
  * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
+ * The shear and kappa are always more accurate than the deflection.
  *
  */
 

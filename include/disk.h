@@ -166,11 +166,12 @@ inclination(my_inclination)
   LensHaloParticles<ParticleType<T> >::mcenter *= 0.0;
   LensHalo::setMass(mass);
   
-  LensHaloParticles<ParticleType<T> >::min_size;
+  //LensHaloParticles<ParticleType<T> >::min_size;
   LensHaloParticles<ParticleType<T> >::multimass=false;
   
   Point_2d no_rotation;
-  LensHaloParticles<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,false,false);
+  LensHaloParticles<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,-1,false,false);
+  void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,double max_range,bool recenter,bool verbose);
 };
 
 #endif
