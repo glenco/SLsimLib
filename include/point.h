@@ -463,6 +463,8 @@ struct LinkedPoint : public Point
     image = &im;
     im.image = this;
   }
+  
+  Point_2d& y(){return im;}
 private:
   Point im;
 };
