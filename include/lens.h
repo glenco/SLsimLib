@@ -968,8 +968,6 @@ void Lens::compute_rays_parallel(int start
       assert(kappa == kappa);
       assert(phi == phi);
       
-      if(flag_switch_deflection_off){ alpha[0] = alpha[1] = 0.0; }
-      
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j}
       // according to the corrected Eq. (18) of paper GLAMER II ---------------------------------
       
@@ -985,9 +983,11 @@ void Lens::compute_rays_parallel(int start
         bb = D_Ds;
       }
       
-      theta[0] = bb * theta[0] + aa * SumPrevAlphas[0];
-      theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
-      
+        if(!flag_switch_deflection_off){
+          theta[0] = bb * theta[0] + aa * SumPrevAlphas[0];
+          theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
+        }
+   
       // ----------------------------------------------------------------------------------------
             
       // Sum_{k=1}^{j} Dl[k] A^k.G^k
@@ -1007,6 +1007,9 @@ void Lens::compute_rays_parallel(int start
       
     } // End of the loop going through the planes
     
+    if(flag_switch_deflection_off){
+      i_points[i].A = Matrix2x2<KappaType>::I() - SumPrevAG;
+    }
     
     // Subtracting off a term that makes the unperturbed ray to have zero time delay
     //p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[NLastPlane];
