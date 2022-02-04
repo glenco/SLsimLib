@@ -36,10 +36,12 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,bool subtract_ave
                  ,double ffactor
                  ,double gfactor
+                 ,double rsmooth2
                  ):
 LensHalo(redshift,c),write_shorts(write_subfields)
 ,cosmo(c),cpfits(dir_data + fitsfile),ave_ang_sd(0)
 ,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile),gfactor(gfactor),ffactor(ffactor)
+,rsmooth2(rsmooth2)
 {
   
   ++count;
@@ -61,12 +63,6 @@ LensHalo(redshift,c),write_shorts(write_subfields)
   LensMap tmp_map;
   tmp_map.read_header(fitsfilename,D);
    
-  //std::size_t size = bigmap.nx*bigmap.ny;
-  //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  rs2 = tmp_map.boxlMpc*tmp_map.boxlMpc/( 2*tmp_map.nx )*gfactor/ffactor;
-  wlr.rs2 = wsr.rs2 = rs2;
-  
   resolution_mpc = tmp_map.x_resolution();
   angular_resolution = tmp_map.angular_pixel_size;
   
@@ -262,7 +258,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     
     padd_lr = 1 + 2 * border_width_pix * resolution_mpc / long_range_map.x_range();
     padd_lr = MAX(padd_lr,2);
-  }
+  }  // long rang map deosn't exist
 
   /// set prefix to subfield maps
   size_t lastindex = fitsfile.find_last_of(".");
@@ -319,6 +315,16 @@ LensHalo(redshift,c),write_shorts(write_subfields)
      }
    }
   
+  //std::size_t size = bigmap.nx*bigmap.ny;
+  //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  rs2 = tmp_map.boxlMpc*tmp_map.boxlMpc/( 2*tmp_map.nx )*gfactor/ffactor;
+  //wlr.rs2 = wsr.rs2 = rs2;
+  
+  wlr.rs2 = rs2 + rsmooth2;
+  wsr_smooth.rs2 = rs2;
+  wsr_smooth.r_sm2 = rsmooth2;
+
   if(!long_range_file_exists){
     long_range_map.ProcessFFTs<WLR>(padd_lr,wlr,plan_long_range);
     
@@ -513,7 +519,12 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
       map.boxlMpc = map.nx * resolution_mpc;
     }
 
-    map.ProcessFFTs(wsr,plan_short_range);
+    if(rsmooth2 <= 0){
+      map.ProcessFFTs(wsr,plan_short_range);
+    }else{
+      map.ProcessFFTs(wsr_smooth,plan_short_range);
+    }
+    
     //map.PreProcessFFTWMap(wsr,mutex_multimap);
 
     // cut off bounders

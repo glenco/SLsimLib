@@ -191,6 +191,7 @@ public:
                    ,bool subtract_ave = true       /// subtract the average of the full field
                    ,double ffactor = 5   // coarse grid size in units of smoothing size
                    ,double gfactor = 5   // ratio of the border size to the smoothing scale
+                   ,double rsmooth2 = 0 // smoothing scale on potential
                    );
 
   ~LensHaloMultiMap(){
@@ -365,6 +366,7 @@ private:
   
   double max_pix = std::numeric_limits<double>::lowest();
   double min_pix = std::numeric_limits<double>::max();
+  double rsmooth2;
   
   double mass_unit;
   
@@ -397,9 +399,15 @@ private:
     float operator()(float k2){return 1 - exp(-k2*rs2);}
   };
   
+  struct WSRSMOOTH : WSR{
+    float r_sm2; // smoothing scale
+    float operator()(float k2){return (1 - exp(-k2*rs2)) * exp(-k2*r_sm2);}
+  };
+
   UNIT unit;
   WSR wsr;
   WLR wlr;
+  WSRSMOOTH wsr_smooth;
 };
 
 
