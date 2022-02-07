@@ -1558,8 +1558,10 @@ void ReadFileNames(
                    ,std::vector<std::string> & filenames  /// output vector of PixelMaps
                    ,bool verbose);
 
-/// check if the directory does not exist
+/// returns true if director exists and false if it doesn't 
 bool check_directory(std::string dir);
+/// make a directory if it doesn't exist
+bool make_directories(const std::string &root_dir);
 
 
 /** \brief This function will read in all the numbers from a multi-column
