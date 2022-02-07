@@ -1030,8 +1030,7 @@ void Lens::compute_rays_parallel(int start
     if(verbose)  std::cout << "RSI final : X X | " << i << "  " << source_zs[i] << " | " << i_points[i].kappa() << " " << i_points[i].gamma1() << " " << i_points[i].gamma2() << " " << i_points[i].gamma3() << " " << i_points[i].invmag() << " | " << i_points[i].dt << std::endl ;
     
   } // End of the main loop.
-  
-  return 0;
+
 }
 
 #endif /* MULTIPLANE_H_ */
