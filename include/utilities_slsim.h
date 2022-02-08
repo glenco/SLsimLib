@@ -1317,7 +1317,7 @@ inline bool file_exists (const std::string& name) {
       throw std::runtime_error(" Cannot open file.");
     }
 
-    std::cout << "Reading caustic information from " << filename << std::endl;
+    std::cout << "Reading from " << filename << std::endl;
     size_t i=0;
     while(i < skiplines){
       getline(file_in,myline);

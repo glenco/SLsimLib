@@ -66,6 +66,12 @@ LensHalo(redshift,c),write_shorts(write_subfields)
   resolution_mpc = tmp_map.x_resolution();
   angular_resolution = tmp_map.angular_pixel_size;
   
+  //std::size_t size = bigmap.nx*bigmap.ny;
+  //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
+  rs2 = tmp_map.boxlMpc*tmp_map.boxlMpc/( 2*tmp_map.nx )*gfactor/ffactor;
+  //wlr.rs2 = wsr.rs2 = rs2;
+ 
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width_pix = ffactor * sqrt(rs2) / resolution_mpc + 1;
  
@@ -315,14 +321,8 @@ LensHalo(redshift,c),write_shorts(write_subfields)
      }
    }
   
-  //std::size_t size = bigmap.nx*bigmap.ny;
-  //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
-  rs2 = tmp_map.boxlMpc*tmp_map.boxlMpc/( 2*tmp_map.nx )*gfactor/ffactor;
-  //wlr.rs2 = wsr.rs2 = rs2;
-  
   wlr.rs2 = rs2 + rsmooth2;
-  wsr_smooth.rs2 = rs2;
+  wsr_smooth.rs2 = wsr.rs2 = rs2;
   wsr_smooth.r_sm2 = rsmooth2;
 
   if(!long_range_file_exists){
