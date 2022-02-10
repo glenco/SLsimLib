@@ -182,7 +182,7 @@ public:
     size_t getcout(){return count;}
   private:
     size_t count = 0;
-    BranchNB *current
+    BranchNB *current;
     BranchNB *top;
   };
 protected:
