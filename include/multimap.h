@@ -222,28 +222,22 @@ public:
   double gfactor;
   //const double ffactor = 10,gfactor = 10;
 
-  // Add highres map be specifying the corners in pixel values
-  //void push_back_submap(
-  //            const std::vector<long> &lower_left
-  //            ,const std::vector<long> &upper_right
-  //);
   
-  void resetsubmap(int i,
-              const std::vector<long> &lower_left
-              //,const std::vector<long> &upper_right
+  /** reset the short range map
+   
+   The pixel position is for the usable region for ray-shooting and should not include the margin which is handled internally
+   */
+  void resetsubmap(
+                   int i  ///< the subfield
+                   ,const std::vector<long> &lower_left_pix  ///< the lower left of the subfield in pixels of full field
               );
-  /// Sets the least highres smaller map in physical coordinates relative to the center of the original map, periodic boundary conditions apply
-  //void push_back_submapPhys(Point_2d ll,Point_2d ur);
-  void resetsubmapPhys(int i,Point_2d ll);//,Point_2d ur);
   
-  //void push_back_submapAngular(Point_2d ll,Point_2d ur){
-  //  double D = getDist();
-  //  push_back_submapPhys(ll*D,ur*D);
-  //}
-  void resetsubmapAngular(int i,Point_2d ll){ //},Point_2d ur){
+  /// Sets the least highres smaller map in physical coordinates relative to the center of the original map, periodic boundary conditions apply
+  void resetsubmapPhys(int i,Point_2d ll);
+  void resetsubmapAngular(int i,Point_2d ll){
     if(i >= short_range_maps.size()) throw std::invalid_argument("");
     double D = getDist();
-    resetsubmapPhys(i,ll*D);//,ur*D);
+    resetsubmapPhys(i,ll*D);
   }
 
 	void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm,bool subtract_point=false,PosType screening = 1.0);
@@ -277,9 +271,9 @@ public:
 	/// return number of pixels on a y-axis side in original map
 	size_t getNy_lr() const { return long_range_map.ny; }
 	
-  /// return number of pixels on a x-axis side in short range map
+  /// return number of pixels on a x-axis side in short range map  (margins are hidden internally)
   size_t getNx_sr() const { return nx_sub; }
-  /// return number of pixels on a y-axis side in short range map
+  /// return number of pixels on a y-axis side in short range map (margins are hidden internally)
   size_t getNy_sr() const { return ny_sub; }
 
   /// return number of pixels on a x-axis side in original map
@@ -310,10 +304,12 @@ public:
     border_width_pix = m.border_width_pix;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
+    rsmooth2 = m.rsmooth2;
     zerosize = m.zerosize;
     unit = m.unit;
     wsr = m.wsr;
     wlr = m.wlr;
+    wsr_smooth = m.wsr_smooth;
     ave_ang_sd = m.ave_ang_sd;
     subfield_filename = m.subfield_filename;
     write_shorts = m.write_shorts;
@@ -340,10 +336,12 @@ public:
     border_width_pix = m.border_width_pix;
     fitsfilename = m.fitsfilename;
     rs2 = m.rs2;
+    rsmooth2 = m.rsmooth2;
     zerosize = m.zerosize;
     unit = m.unit;
     wsr = m.wsr;
     wlr = m.wlr;
+    wsr_smooth = m.wsr_smooth;
     ave_ang_sd = m.ave_ang_sd;
     subfield_filename = m.subfield_filename;
     write_shorts = m.write_shorts;
@@ -399,15 +397,16 @@ private:
     float operator()(float k2){return 1 - exp(-k2*rs2);}
   };
   
-  struct WSRSMOOTH : WSR{
+  struct WSRSMOOTH {
+    float rs2;
     float r_sm2; // smoothing scale
     float operator()(float k2){return (1 - exp(-k2*rs2)) * exp(-k2*r_sm2);}
   };
 
   UNIT unit;
+  WSRSMOOTH wsr_smooth;
   WSR wsr;
   WLR wlr;
-  WSRSMOOTH wsr_smooth;
 };
 
 

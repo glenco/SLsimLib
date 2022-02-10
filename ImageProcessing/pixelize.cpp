@@ -2283,6 +2283,31 @@ void PixelMap::paste(const PixelMap& pmap){
   }
 }
 
+void PixelMap::paste(const PixelMap& pmap,long nx_ll,long ny_ll){
+  
+  if(resolution != pmap.resolution){
+    std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
+    std::cerr << resolution << " " << pmap.resolution << " dres/res " << (pmap.resolution-pmap.resolution)/pmap.resolution << std::endl;
+    throw std::invalid_argument("resolution");
+  }
+  
+  if((nx_ll > Nx-1) || (ny_ll > Ny-1) ) return;
+  
+  long nx_ur = nx_ll + pmap.getNx();
+  long ny_ur = ny_ll + pmap.getNy();
+  
+  if((nx_ur < 0) || (ny_ur < 0) ) return;
+
+  if(nx_ur > Nx) nx_ur = Nx;
+  if(ny_ur > Ny) ny_ur = Ny;
+ 
+  for(long j = MAX(ny_ll,0) ; j<ny_ur ; ++j ){
+    for(long i= MAX(nx_ll,0) ; i<nx_ur ; ++i ){
+      map[i+j*Nx] += pmap(i-nx_ll,j-ny_ll);
+    }
+  }
+}
+
 void PixelMap::recenter(PosType c[2] /// new center
 ){
   double dc[2];
