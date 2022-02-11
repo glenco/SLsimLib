@@ -1216,34 +1216,34 @@ void Grid::writeFits(
   std::string tag;
   
   switch (lensvar) {
-    case DELAYT:
+    case LensingVariable::DELAYT:
       tag = ".dt.fits";
       break;
-    case ALPHA1:
+    case LensingVariable::ALPHA1:
       tag = ".alpha1.fits";
       break;
-    case ALPHA2:
+    case LensingVariable::ALPHA2:
       tag = ".alpha2.fits";
       break;
-    case ALPHA:
+    case LensingVariable::ALPHA:
       tag = ".alpha.fits";
       break;
-    case KAPPA:
+    case LensingVariable::KAPPA:
       tag = ".kappa.fits";
       break;
-    case GAMMA1:
+    case LensingVariable::GAMMA1:
       tag = ".gamma1.fits";
       break;
-    case GAMMA2:
+    case LensingVariable::GAMMA2:
       tag = ".gamma2.fits";
       break;
-    case GAMMA3:
+    case LensingVariable::GAMMA3:
       tag = ".gamma3.fits";
       break;
-    case GAMMA:
+    case LensingVariable::GAMMA:
       tag = ".gamma.fits";
       break;
-    case INVMAG:
+    case LensingVariable::INVMAG:
       tag = ".invmag.fits";
       break;
     default:
@@ -1336,34 +1336,34 @@ void Grid::writeFitsUniform(
   std::string tag;
   
   switch (lensvar) {
-    case DELAYT:
+    case LensingVariable::DELAYT:
       tag = ".dt.fits";
       break;
-    case ALPHA1:
+    case LensingVariable::ALPHA1:
       tag = ".alpha1.fits";
       break;
-    case ALPHA2:
+    case LensingVariable::ALPHA2:
       tag = ".alpha2.fits";
       break;
-    case ALPHA:
+    case LensingVariable::ALPHA:
       tag = ".alpha.fits";
       break;
-    case KAPPA:
+    case LensingVariable::KAPPA:
       tag = ".kappa.fits";
       break;
-    case GAMMA1:
+    case LensingVariable::GAMMA1:
       tag = ".gamma1.fits";
       break;
-    case GAMMA2:
+    case LensingVariable::GAMMA2:
       tag = ".gamma2.fits";
       break;
-    case GAMMA3:
+    case LensingVariable::GAMMA3:
       tag = ".gamma3.fits";
       break;
-    case GAMMA:
+    case LensingVariable::GAMMA:
       tag = ".gamma.fits";
       break;
-    case INVMAG:
+    case LensingVariable::INVMAG:
       tag = ".invmag.fits";
       break;
     default:
@@ -1483,38 +1483,38 @@ void Grid::writePixelMapUniform(
 //  list_it.current = (list.Top());
 //  for(size_t i = 0; i< list.size(); ++i){
 //    switch (val) {
-//      case ALPHA:
+//      case LensingVariable::ALPHA:
 //        tmp2[0] = (*list_it)->x[0] - (*list_it)->image->x[0];
 //        tmp2[1] = (*list_it)->x[1] - (*list_it)->image->x[1];
 //        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
 //        break;
-//      case ALPHA1:
+//      case LensingVariable::ALPHA1:
 //        tmp = ((*list_it)->x[0] - (*list_it)->image->x[0]);
 //        break;
-//      case ALPHA2:
+//      case LensingVariable::ALPHA2:
 //        tmp = ((*list_it)->x[1] - (*list_it)->image->x[1]);
 //        break;
-//      case KAPPA:
+//      case LensingVariable::KAPPA:
 //        tmp = (*list_it)->kappa();
 //        break;
-//      case GAMMA:
+//      case LensingVariable::GAMMA:
 //        tmp2[0] = (*list_it)->gamma1();
 //        tmp2[1] = (*list_it)->gamma2();
 //        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
 //        break;
-//      case GAMMA1:
+//      case LensingVariable::GAMMA1:
 //        tmp = (*list_it)->gamma1();
 //        break;
-//      case GAMMA2:
+//      case LensingVariable::GAMMA2:
 //        tmp = (*list_it)->gamma2();
 //        break;
-//      case GAMMA3:
+//      case LensingVariable::GAMMA3:
 //        tmp = (*list_it)->gamma[2];
 //        break;
-//      case INVMAG:
+//      case LensingVariable::INVMAG:
 //        tmp = (*list_it)->invmag;
 //        break;
-//      case DELAYT:
+//      case LensingVariable::DELAYT:
 //        tmp = (*list_it)->dt;
 //        break;
 //      default:
@@ -1541,38 +1541,38 @@ void Grid::writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVaria
   for(size_t i = 0; i< N; ++i){
     
     switch (val) {
-      case ALPHA:
+      case LensingVariable::ALPHA:
         tmp2[0] = ppoint->x[0] - ppoint->image->x[0];
         tmp2[1] = ppoint->x[1] - ppoint->image->x[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
-      case ALPHA1:
+      case LensingVariable::ALPHA1:
         tmp = (ppoint->x[0] - ppoint->image->x[0]);
         break;
-      case ALPHA2:
+      case LensingVariable::ALPHA2:
         tmp = (ppoint->x[1] - ppoint->image->x[1]);
         break;
-      case KAPPA:
+      case LensingVariable::KAPPA:
         tmp = ppoint->kappa();
         break;
-      case GAMMA:
+      case LensingVariable::GAMMA:
         tmp2[0] = ppoint->gamma1();
         tmp2[1] = ppoint->gamma2();
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
-      case GAMMA1:
+      case LensingVariable::GAMMA1:
         tmp = ppoint->gamma1();
         break;
-      case GAMMA2:
+      case LensingVariable::GAMMA2:
         tmp = ppoint->gamma2();
         break;
-      case GAMMA3:
+      case LensingVariable::GAMMA3:
         tmp = ppoint->gamma3();
         break;
-      case INVMAG:
+      case LensingVariable::INVMAG:
         tmp = ppoint->invmag();
         break;
-      case DELAYT:
+      case LensingVariable::DELAYT:
         tmp = ppoint->dt;
         break;
       default:
@@ -1612,7 +1612,7 @@ void Grid::writeFitsVector(
   for(tmp_image.imagekist->MoveToTop(),i=0;i<tmp_sb_vec.size();++i,tmp_image.imagekist->Down()){
     tmp_sb_vec[i] = tmp_image.imagekist->getCurrent()->surface_brightness;
     switch (lensvar) {
-      case ALPHA1:
+      case LensingVariable::ALPHA1:
         tmp_x[0] = tmp_image.imagekist->getCurrent()->x[0]
             - tmp_image.imagekist->getCurrent()->image->x[0];
 
@@ -1624,7 +1624,7 @@ void Grid::writeFitsVector(
             
         tag = ".alphaV.fits";
         break;
-      case GAMMA:
+      case LensingVariable::GAMMA:
         
         tmp_x[0] = tmp_image.imagekist->getCurrent()->gamma1();
         tmp_x[1] = tmp_image.imagekist->getCurrent()->gamma2();

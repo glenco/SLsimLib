@@ -5,6 +5,9 @@
  *      Author: bmetcalf
  */
 
+/*! \file InputParams.h
+  
+ */
 
 #ifndef INPUTPARAMS_H_
 #define INPUTPARAMS_H_
@@ -29,7 +32,7 @@
 #endif
 
 /// Type of mass function
-enum MassFuncType
+enum class MassFuncType
 {
 	PressSchechter,  /// Press & Schechter mass function
 	ShethTormen,  /// Sheth & Tormen mass function
@@ -37,7 +40,7 @@ enum MassFuncType
 };
 
 /// Type of halo profile
-enum LensHaloType
+enum class LensHaloType
 {
 	null_lens,
 	nfw_lens,
@@ -53,13 +56,13 @@ enum LensHaloType
 };
 
 /// format of mass map file
-enum PixelMapType
+enum class PixelMapType
 {
   moka,
   pix_map
 };
 
-enum GalaxyLensHaloType
+enum class GalaxyLensHaloType
 {
 	null_gal,
 	nsie_gal,
@@ -69,18 +72,18 @@ enum GalaxyLensHaloType
 };
 
 /// names of clump and sb models
-enum ClumpInternal {nfw,powerlaw,pointmass};
+enum class ClumpInternal {nfw,powerlaw,pointmass};
 /// Initial mass function type
-enum IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
+enum class IMFtype {One,Mono,BrokenPowerLaw,Salpeter,SinglePowerLaw,Kroupa,Chabrier};
 /// Photometric bands
-enum Band {NoBand,EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z
+enum class Band {NoBand,EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z
   ,KiDS_U,KiDS_G,KiDS_R,KiDS_I,DES_R,DES_G,DES_I,DES_Z
   ,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
 std::ostream &operator<<(std::ostream &os, Band const &p);
 
-enum HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData,null_cat};
+enum class HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData,null_cat};
 /// Methods to make a previously isotropic halo elliptical
-enum EllipMethod {Fourier,Pseudo,Schramm,Keeton};
+enum class EllipMethod {Fourier,Pseudo,Schramm,Keeton};
 
 /// convert a Band type to a string name.
 namespace Utilities{

@@ -20,10 +20,7 @@
 
 /***** Exported Types *****/
 
-#ifndef criterion_declare
-#define criterion_declare
-typedef enum{TotalArea,EachImage,Resolution,FillHoles} ExitCriterion;
-#endif
+enum class ExitCriterion {TotalArea,EachImage,Resolution,FillHoles};
 
 /** \brief Tree: Exported struct */
 struct TreeStruct{

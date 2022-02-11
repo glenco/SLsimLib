@@ -442,8 +442,8 @@ public:
                           ,MassFuncType mass_function /// type of mass function
                           ,double field_of_view  /// in square degrees
                           ,int Nplanes           /// number of lens planes
-                          ,LensHaloType halo_type = nfw_lens  /// type of halo
-                          ,GalaxyLensHaloType galaxy_type = null_gal  /// type of galaxy, if null_gal no galaxy
+                          ,LensHaloType halo_type = LensHaloType::nfw_lens  /// type of halo
+                          ,GalaxyLensHaloType galaxy_type = GalaxyLensHaloType::null_gal  /// type of galaxy, if null_gal no galaxy
                           ,double buffer = 1.0 /// buffer in Mpc for cone
                           ,bool verbose = false
                 );

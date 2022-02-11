@@ -180,7 +180,7 @@ struct Grid{
 typedef struct Grid* GridHndl;
 
 /// enumerates the types of critical curves. ND is "not defined".
-enum CritType {ND,radial,tangential,pseudo};
+enum class CritType {ND,radial,tangential,pseudo};
 
 /// converts CritType into descriptive string
 std::string to_string(CritType crit);
@@ -200,7 +200,7 @@ namespace ImageFinding{
       contour_ell = 0.0;
       ellipse_area = 0.0;
       z_source = 0.0;
-      type = ND;
+      type = CritType::ND;
       caustic_intersections = -1;
     };
     

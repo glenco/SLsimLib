@@ -387,17 +387,17 @@ bool InputParams::get(std::string label, MassFuncType& value) const
 	
 	if(!it->second.compare("0") || !it->second.compare("PS"))
 	{
-		value = PressSchechter;
+		value = MassFuncType::PressSchechter;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("ST"))
 	{
-		value = ShethTormen;
+		value = MassFuncType::ShethTormen;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
 	{
-		value = PowerLaw;
+		value = MassFuncType::PowerLaw;
 		return true;
 	}
 
@@ -423,57 +423,57 @@ bool InputParams::get(std::string label, LensHaloType& value) const
 	
 	if(!it->second.compare("0") || !it->second.compare("nolens"))
 	{
-		value = null_lens;
+		value = LensHaloType::null_lens;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("NFW"))
 	{
-		value = nfw_lens;
+		value = LensHaloType::nfw_lens;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PseudoNFW"))
 	{
-		value = pnfw_lens;
+		value = LensHaloType::pnfw_lens;
 		return true;
 	}
 	if(!it->second.compare("3") || !it->second.compare("PowerLaw"))
 	{
-		value = pl_lens;
+		value = LensHaloType::pl_lens;
 		return true;
 	}
 	if(!it->second.compare("4") || !it->second.compare("NSIE"))
 	{
-		value = nsie_lens;
+		value = LensHaloType::nsie_lens;
 		return true;
 	}
 	if(!it->second.compare("5") || !it->second.compare("AnaLens"))
 	{
-		value = ana_lens;
+		value = LensHaloType::ana_lens;
 		return true;
 	}
 	if(!it->second.compare("6") || !it->second.compare("UniLens")){
 		
-		value = uni_lens;
+		value = LensHaloType::uni_lens;
 		return true;
 	}
 	if(!it->second.compare("7") || !it->second.compare("MOKALens"))
 	{
-		value = moka_lens;
+		value = LensHaloType::moka_lens;
 		return true;
 	}
 	if(!it->second.compare("8") || !it->second.compare("DummyLens"))
 	{
-		value = dummy_lens;
+		value = LensHaloType::dummy_lens;
 		return true;
 	}
 	if(!it->second.compare("9") || !it->second.compare("Hernquist"))
 	{
-		value = hern_lens;
+		value = LensHaloType::hern_lens;
 		return true;
 	}
 	if(!it->second.compare("10") || !it->second.compare("Jaffe"))
 	{
-		value = jaffe_lens;
+		value = LensHaloType::jaffe_lens;
 		return true;
 	}
 
@@ -500,27 +500,27 @@ bool InputParams::get(std::string label, GalaxyLensHaloType& value) const
 	
 	if(!it->second.compare("0") || !it->second.compare("none"))
 	{
-		value = null_gal;
+		value = GalaxyLensHaloType::null_gal;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("NSIE"))
 	{
-		value = nsie_gal;
+		value = GalaxyLensHaloType::nsie_gal;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PowerLaw"))
 	{
-		value = pl_gal;
+		value = GalaxyLensHaloType::pl_gal;
 		return true;
 	}
 	if(!it->second.compare("3") || !it->second.compare("Hernquist"))
 	{
-		value = hern_gal;
+		value = GalaxyLensHaloType::hern_gal;
 		return true;
 	}
   if(!it->second.compare("4") || !it->second.compare("Jaffe"))
 	{
-		value = jaffe_gal;
+		value = GalaxyLensHaloType::jaffe_gal;
 		return true;
 	}
   
@@ -548,17 +548,17 @@ bool InputParams::get(std::string label, ClumpInternal& value) const
 	
 	if(!it->second.compare("0") || !it->second.compare("NFW"))
 	{
-		value = nfw;
+		value = ClumpInternal::nfw;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("PowerLaw"))
 	{
-		value = powerlaw;
+		value = ClumpInternal::powerlaw;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("PointMass"))
 	{
-		value = pointmass;
+		value = ClumpInternal::pointmass;
 		return true;
 	}
 
@@ -584,17 +584,17 @@ bool InputParams::get(std::string label, HaloCatFormats& value) const
 	
 	if(!it->second.compare("MillenniumObs"))
 	{
-		value = MillenniumObs;
+		value = HaloCatFormats::MillenniumObs;
 		return true;
 	}
   if(!it->second.compare("MultiDarkHalos"))
   {
-    value = MultiDarkHalos;
+    value = HaloCatFormats::MultiDarkHalos;
     return true;
   }
   if(!it->second.compare("ObservedData"))
   {
-    value = ObservedData;
+    value = HaloCatFormats::ObservedData;
     return true;
   }
   
@@ -620,37 +620,37 @@ bool InputParams::get(std::string label, IMFtype& value) const
 	
 	if(!it->second.compare("One"))
 	{
-		value = One;
+		value = IMFtype::One;
 		return true;
 	}
 	if(!it->second.compare("Mono"))
 	{
-		value = Mono;
+		value = IMFtype::Mono;
 		return true;
 	}
 	if(!it->second.compare("BrokenPowerLaw"))
 	{
-		value = BrokenPowerLaw;
+		value = IMFtype::BrokenPowerLaw;
 		return true;
 	}
 	if(!it->second.compare("Salpeter"))
 	{
-		value = Salpeter;
+		value = IMFtype::Salpeter;
 		return true;
 	}
 	if(!it->second.compare("SinglePowerLaw"))
 	{
-		value = SinglePowerLaw;
+		value = IMFtype::SinglePowerLaw;
 		return true;
 	}
 	if(!it->second.compare("Kroupa"))
 	{
-		value = Kroupa;
+		value = IMFtype::Kroupa;
 		return true;
 	}
 	if(!it->second.compare("Chabrier"))
 	{
-		value = Chabrier;
+		value = IMFtype::Chabrier;
 		return true;
 	}
 
@@ -677,22 +677,22 @@ bool InputParams::get(std::string label, EllipMethod& value) const
 	
   if(!it->second.compare("0") || !it->second.compare("Fourier"))
 	{
-		value = Fourier;
+		value = EllipMethod::Fourier;
 		return true;
 	}
 	if(!it->second.compare("1") || !it->second.compare("Pseudo"))
 	{
-		value = Pseudo;
+		value = EllipMethod::Pseudo;
 		return true;
 	}
 	if(!it->second.compare("2") || !it->second.compare("Schramm"))
 	{
-		value = Schramm;
+		value = EllipMethod::Schramm;
 		return true;
 	}
 	if(!it->second.compare("3") || !it->second.compare("Keeton"))
 	{
-		value = Keeton;
+		value = EllipMethod::Keeton;
 		return true;
 	}
 
@@ -719,107 +719,107 @@ bool InputParams::get(std::string label, Band& value) const
 	
 	if(!it->second.compare("EUC_VIS"))
 	{
-		value = EUC_VIS;
+		value = Band::EUC_VIS;
 		return true;
 	}
 	if(!it->second.compare("EUC_Y"))
 	{
-		value = EUC_Y;
+		value = Band::EUC_Y;
 		return true;
 	}
 	if(!it->second.compare("EUC_J"))
 	{
-		value = EUC_J;
+		value = Band::EUC_J;
 		return true;
 	}
 	if(!it->second.compare("EUC_H"))
 	{
-		value = EUC_H;
+		value = Band::EUC_H;
 		return true;
 	}
 	if(!it->second.compare("SDSS_U"))
 	{
-		value = SDSS_U;
+		value = Band::SDSS_U;
 		return true;
 	}
 	if(!it->second.compare("SDSS_G"))
 	{
-		value = SDSS_G;
+		value = Band::SDSS_G;
 		return true;
 	}
 	if(!it->second.compare("SDSS_R"))
 	{
-		value = SDSS_R;
+		value = Band::SDSS_R;
 		return true;
 	}
 	if(!it->second.compare("SDSS_I"))
 	{
-		value = SDSS_I;
+		value = Band::SDSS_I;
 		return true;
 	}
 	if(!it->second.compare("SDSS_Z"))
 	{
-		value = SDSS_Z;
+		value = Band::SDSS_Z;
 		return true;
 	}
 	if(!it->second.compare("J"))
 	{
-		value = J;
+		value = Band::J;
 		return true;
 	}
 	if(!it->second.compare("H"))
 	{
-		value = H;
+		value = Band::H;
 		return true;
 	}
 	if(!it->second.compare("Ks"))
 	{
-		value = Ks;
+		value = Band::Ks;
 		return true;
 	}
 	if(!it->second.compare("IRAC1"))
 	{
-		value = IRAC1;
+		value = Band::IRAC1;
 		return true;
 	}
 	if(!it->second.compare("IRAC2"))
 	{
-		value = IRAC2;
+		value = Band::IRAC2;
 		return true;
 	}
 	if(!it->second.compare("F435W"))
 	{
-		value = F435W;
+		value = Band::F435W;
 		return true;
 	}
 	if(!it->second.compare("F606W"))
 	{
-		value = F606W;
+		value = Band::F606W;
 		return true;
 	}
 	if(!it->second.compare("F775W"))
 	{
-		value = F775W;
+		value = Band::F775W;
 		return true;
 	}
 	if(!it->second.compare("F850LP"))
 	{
-		value = F850LP;
+		value = Band::F850LP;
 		return true;
 	}
 	if(!it->second.compare("F814W"))
 	{
-		value = F814W;
+		value = Band::F814W;
 		return true;
 	}
 	if(!it->second.compare("F110W"))
 	{
-		value = F110W;
+		value = Band::F110W;
 		return true;
 	}
 	if(!it->second.compare("F160W"))
 	{
-		value = F160W;
+		value = Band::F160W;
 		return true;
 	}
 
@@ -877,47 +877,47 @@ bool InputParams::exist(std::string label) const
 std::string Utilities::to_string(const Band &band){
   
   switch (band) {
-    case EUC_VIS:
+    case Band::EUC_VIS:
       return "EUC_VIS";
-    case EUC_Y:
+    case Band::EUC_Y:
       return "EUC_Y";
-    case EUC_J:
+    case Band::EUC_J:
       return "EUC_J";
-    case EUC_H:
+    case Band::EUC_H:
       return "EUC_H";
-    case SDSS_U:
+    case Band::SDSS_U:
       return "SDSS_U";
-    case SDSS_G:
+    case Band::SDSS_G:
       return "SDSS_G";
-    case SDSS_R:
+    case Band::SDSS_R:
       return "SDSS_R";
-    case SDSS_I:
+    case Band::SDSS_I:
       return "SDSS_I";
-    case SDSS_Z:
+    case Band::SDSS_Z:
       return "SDSS_Z";
-    case J:
+    case Band::J:
       return "J";
-    case H:
+    case Band::H:
       return "H";
-    case Ks:
+    case Band::Ks:
       return "Ks";
-    case IRAC1:
+    case Band::IRAC1:
       return "IRAC1";
-    case IRAC2:
+    case Band::IRAC2:
       return "IRAC2";
-    case F435W:
+    case Band::F435W:
       return "F435W";
-    case F606W:
+    case Band::F606W:
       return "F606W";
-    case F775W:
+    case Band::F775W:
       return "F775W";
-    case F850LP:
+    case Band::F850LP:
       return "F850LP";
-    case F814W:
+    case Band::F814W:
       return "F814W";
-    case F110W:
+    case Band::F110W:
       return "F110W";
-    case F160W:
+    case Band::F160W:
       return "F160W";
     default:
       return "UnknownBand";
@@ -928,47 +928,47 @@ std::string Utilities::to_string(const Band &band){
 std::ostream &operator<<(std::ostream &os, Band const &band) {
   
   switch (band) {
-    case EUC_VIS:
+    case Band::EUC_VIS:
       return os << "EUC_VIS";
-    case EUC_Y:
+    case Band::EUC_Y:
       return os << "EUC_Y";
-    case EUC_J:
+    case Band::EUC_J:
       return os << "EUC_J";
-    case EUC_H:
+    case Band::EUC_H:
       return os << "EUC_H";
-    case SDSS_U:
+    case Band::SDSS_U:
       return os << "SDSS_U";
-    case SDSS_G:
+    case Band::SDSS_G:
       return os << "SDSS_G";
-    case SDSS_R:
+    case Band::SDSS_R:
       return os << "SDSS_R";
-    case SDSS_I:
+    case Band::SDSS_I:
       return os << "SDSS_I";
-    case SDSS_Z:
+    case Band::SDSS_Z:
       return os << "SDSS_Z";
-    case J:
+    case Band::J:
       return os << "J";
-    case H:
+    case Band::H:
       return os << "H";
-    case Ks:
+    case Band::Ks:
       return os << "Ks";
-    case IRAC1:
+    case Band::IRAC1:
       return os << "IRAC1";
-    case IRAC2:
+    case Band::IRAC2:
       return os << "IRAC2";
-    case F435W:
+    case Band::F435W:
       return os << "F435W";
-    case F606W:
+    case Band::F606W:
       return os << "F606W";
-    case F775W:
+    case Band::F775W:
       return os << "F775W";
-    case F850LP:
+    case Band::F850LP:
       return os << "F850LP";
-    case F814W:
+    case Band::F814W:
       return os << "F814W";
-    case F110W:
+    case Band::F110W:
       return os << "F110W";
-    case F160W:
+    case Band::F160W:
       return os << "F160W";
     default:
       return os << "UnknownBand";

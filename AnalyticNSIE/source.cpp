@@ -569,7 +569,7 @@ SourceShapelets::SourceShapelets(
   
   NormalizeFlux();
   
-  current_band = NoBand;
+  current_band = Band::NoBand;
   ++count;
   id = 0;
 }
@@ -600,21 +600,21 @@ SourceShapelets::SourceShapelets(
 
   cpfits.readKey("SED_TYPE",sed_type);
   
-  cpfits.readKey("MAG_B",mag_map[F435W]); // ACS F435W band magnitude
-  cpfits.readKey("MAG_V",mag_map[F606W]); // ACS F606W band magnitude
-  cpfits.readKey("MAG_I",mag_map[F775W]); // ACS F775W band magnitude
-  cpfits.readKey("MAG_Z",mag_map[F850LP]);// ACS F850LP band magnitude
-  cpfits.readKey("MAG_J",mag_map[F110W]); // NIC3 F110W band magnitude
-  cpfits.readKey("MAG_H",mag_map[F160W]);  // NIC3 F160W band magnitude
-  cpfits.readKey("MAG_u_KIDS",mag_map[KiDS_U]); // u band obtained from SED fitting
-  cpfits.readKey("MAG_g_KIDS",mag_map[KiDS_G]); // g band obtained from SED fitting
-  cpfits.readKey("MAG_r_KIDS",mag_map[KiDS_R]); // r band obtained from SED fitting
-  cpfits.readKey("MAG_i_KIDS",mag_map[KiDS_I]); // i band obtained from SED fitting
+  cpfits.readKey("MAG_B",mag_map[Band::F435W]); // ACS F435W band magnitude
+  cpfits.readKey("MAG_V",mag_map[Band::F606W]); // ACS F606W band magnitude
+  cpfits.readKey("MAG_I",mag_map[Band::F775W]); // ACS F775W band magnitude
+  cpfits.readKey("MAG_Z",mag_map[Band::F850LP]);// ACS F850LP band magnitude
+  cpfits.readKey("MAG_J",mag_map[Band::F110W]); // NIC3 F110W band magnitude
+  cpfits.readKey("MAG_H",mag_map[Band::F160W]);  // NIC3 F160W band magnitude
+  cpfits.readKey("MAG_u_KIDS",mag_map[Band::KiDS_U]); // u band obtained from SED fitting
+  cpfits.readKey("MAG_g_KIDS",mag_map[Band::KiDS_G]); // g band obtained from SED fitting
+  cpfits.readKey("MAG_r_KIDS",mag_map[Band::KiDS_R]); // r band obtained from SED fitting
+  cpfits.readKey("MAG_i_KIDS",mag_map[Band::KiDS_I]); // i band obtained from SED fitting
 
   
   // by default, the magnitude is the one in the i band,
   // whose image has been used for shapelets decomposition
-  setActiveBand(KiDS_I);
+  setActiveBand(Band::KiDS_I);
   
   cpfits.readKey("REDSHIFT", zsource);
   //cpfits.readKey("ID", id); // I'm not sure what this is.
@@ -627,10 +627,10 @@ SourceShapelets::SourceShapelets(
 
   
   // ??? kluge
-  mag_map[EUC_VIS] = mag_map.at(KiDS_I);
-  //mag_map[EUC_Y] = mag_map.at(F110W);
-  mag_map[EUC_J] = mag_map.at(F110W);
-  mag_map[EUC_H] = mag_map.at(F160W);
+  mag_map[Band::EUC_VIS] = mag_map.at(Band::KiDS_I);
+  //mag_map[Band::EUC_Y] = mag_map.at(Band::F110W);
+  mag_map[Band::EUC_J] = mag_map.at(Band::F110W);
+  mag_map[Band::EUC_H] = mag_map.at(Band::F160W);
   
   NormalizeFlux();
   ++count;
@@ -847,17 +847,17 @@ void SourceMultiShapelets::readCatalog()
       s.sed_type = viz_cat[j][4];
       
       assert(viz_cat.size() > j );
-      s.setBand(EUC_VIS,viz_cat[j][2]);
+      s.setBand(Band::EUC_VIS,viz_cat[j][2]);
       assert(y_cat.size() > j );
-      s.setBand(EUC_Y,y_cat[j][2]);
+      s.setBand(Band::EUC_Y,y_cat[j][2]);
       assert(j_cat.size() > j );
-      s.setBand(EUC_J,j_cat[j][2]);
+      s.setBand(Band::EUC_J,j_cat[j][2]);
       assert(h_cat.size() > j );
-      s.setBand(EUC_H,h_cat[j++][2]);
+      s.setBand(Band::EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag(EUC_VIS) < max_mag_limit && s.getMag(EUC_VIS) > min_mag_limit
-          && s.getMag(EUC_J) > 0 && s.getMag(EUC_H) > 0
+      if (s.getMag() > 0. && s.getMag(Band::EUC_VIS) < max_mag_limit && s.getMag(Band::EUC_VIS) > min_mag_limit
+          && s.getMag(Band::EUC_J) > 0 && s.getMag(Band::EUC_H) > 0
           && s.getRadius() < radius_max){
         galaxies.push_back(s);
         shap_input.close();

@@ -13,10 +13,8 @@
 #include "Tree.h"
 //#include <grid_maintenance.h>
 
-#ifndef gate_declare
-#define gate_declare
-typedef enum{unchecked,yes,no} GATE;
-#endif
+enum GATE {unchecked,yes,no};
+
 
 /** \brief Structure for storing information about images or curves */
 struct ImageInfo{

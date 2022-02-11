@@ -221,9 +221,9 @@ void ImageFinding::find_crit(
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
       while((*it).invmag() < 0 && !it.atend() ) --it;
-      //if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma2()*(*it).gamma2()) ) ) crtcurve[ii].type = radial;
-      if( (*it).inverted()  ) crtcurve[ii].type = radial;
-      else crtcurve[ii].type = tangential;
+      //if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma2()*(*it).gamma2()) ) ) crtcurve[ii].type = CritType::radial;
+      if( (*it).inverted()  ) crtcurve[ii].type = CritType::radial;
+      else crtcurve[ii].type = CritType::tangential;
       
       /************ test line ****************
        std::cout << "neighbors" << std::endl;
@@ -304,8 +304,8 @@ void ImageFinding::find_crit(
       crtcurve[ii].caustic_intersections = Utilities::Geometry::intersect(crtcurve[ii].caustic_curve_intersecting);
       
       // take out infinitesimal cases
-      if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) continue;
-      if(crtcurve[ii].type != tangential && crtcurve[ii].caustic_area == 0.0) continue;
+      if(crtcurve[ii].type == CritType::tangential && crtcurve[ii].critical_area == 0.0) continue;
+      if(crtcurve[ii].type != CritType::tangential && crtcurve[ii].caustic_area == 0.0) continue;
 
       ++ii;
     }
@@ -329,9 +329,9 @@ void ImageFinding::find_crit(
       
       // check that all non-tangent critical line points have a neighbor
       //  with negative magnification
-      if(crit.type != tangential){
+      if(crit.type != CritType::tangential){
         Point *pointp = nullptr;
-        if(crit.type == radial){
+        if(crit.type == CritType::radial){
           for(Point_2d &p : crit.critical_curve){
             pointp = grid->i_tree->FindBoxPoint(p.x);
             grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
@@ -365,7 +365,7 @@ void ImageFinding::find_crit(
             }
             assert(good);
           }
-        }else if(crit.type == pseudo){
+        }else if(crit.type == CritType::pseudo){
           pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
           grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
           bool good = false;
@@ -378,7 +378,7 @@ void ImageFinding::find_crit(
       
       
       // check for no tangential orphans
-      if(crit.type != tangential){
+      if(crit.type != CritType::tangential){
         
         int count = 0;
         PosType rmax,rmin,rave,r;
@@ -390,7 +390,7 @@ void ImageFinding::find_crit(
         CriticalCurve *crit_closest = nullptr;
         
         for(auto &critt : crtcurve){
-          if(critt.type == tangential){
+          if(critt.type == CritType::tangential){
             critt.CriticalRadius(rmax,rmin,rave);
             assert(rmax >= rmin);
             assert(rave >= rmin);
@@ -425,7 +425,7 @@ void ImageFinding::find_crit(
           map.AddCurve(crit.critical_curve,1.0);
           map.printFITS("!orphin_pseudo.fits");
           
-          grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+          grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
           map.Clean();
           
           for(auto &critt : crtcurve){
@@ -443,7 +443,7 @@ void ImageFinding::find_crit(
         assert(count > 0);
         assert(count < 2);
         
-        if(crit.type == tangential){
+        if(crit.type == CritType::tangential){
           
           int count = 0;
           PosType rmax,rmin,rave,r;
@@ -455,7 +455,7 @@ void ImageFinding::find_crit(
           CriticalCurve *crit_closest = nullptr;
           
           for(auto &critt : crtcurve){
-            if(critt.type != tangential){
+            if(critt.type != CritType::tangential){
               crit.CriticalRadius(rmax,rmin,rave);
               assert(rmax >= rmin);
               assert(rave >= rmin);
@@ -490,7 +490,7 @@ void ImageFinding::find_crit(
             map.AddCurve(crit.critical_curve,1.0);
             map.printFITS("!orphin_pseudo.fits");
             
-            grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+            grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
             map.Clean();
             
             for(auto &critt : crtcurve){
@@ -569,7 +569,7 @@ void ImageFinding::find_crit(
       types[Npseudo] = ImageFinding::find_pseudo(pseudocurve[Npseudo],negimage[ii]
                                                  ,pseudolimit,lens,grid
                                                  ,resolution,paritypoints,false);
-      if(types[Npseudo] != ND ) ++Npseudo;
+      if(types[Npseudo] != CritType::ND ) ++Npseudo;
       else ++Nnotdefined;
       
     }
@@ -591,7 +591,7 @@ void ImageFinding::find_crit(
       
       //Point *current = pseudocurve[i].imagekist->getCurrent();
       
-      if(types[i] == ND) continue;
+      if(types[i] == CritType::ND) continue;
       ++ii;
       
       crtcurve[ii].type = types[i];
@@ -661,7 +661,7 @@ void ImageFinding::find_crit(
       crtcurve[ii].caustic_center[1] /= short_cac.size();
       
       
-      if(crtcurve[ii].type != pseudo)
+      if(crtcurve[ii].type != CritType::pseudo)
         Utilities::windings(crtcurve[ii].caustic_center,short_cac,&(crtcurve[ii].caustic_area));
       else crtcurve[ii].critical_area = 0.0;
 
@@ -679,7 +679,7 @@ void ImageFinding::find_crit(
       // hull = Utilities::convex_hull(hull);
       assert(hull.size() <= pseudocurve[i].outerborder->Nunits());
       
-      if(crtcurve[ii].type != pseudo){
+      if(crtcurve[ii].type != CritType::pseudo){
         crtcurve[ii].critical_curve.resize(hull.size());
         crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
       }else{
@@ -690,7 +690,7 @@ void ImageFinding::find_crit(
       crtcurve[ii].critical_center[1] = 0;
       
       for(size_t jj=0;jj<hull.size();++jj){
-        if(crtcurve[ii].type != pseudo){
+        if(crtcurve[ii].type != CritType::pseudo){
           crtcurve[ii].critical_curve[jj] = *hull[jj];
           crtcurve[ii].caustic_curve_intersecting[jj] = *(hull[jj]->image);
         }
@@ -707,7 +707,7 @@ void ImageFinding::find_crit(
         crtcurve[ii].critical_center += po;
       }
       
-      if(crtcurve[ii].type != pseudo)
+      if(crtcurve[ii].type != CritType::pseudo)
         Utilities::windings(crtcurve[ii].critical_center.x,hull.data(),hull.size(),&(crtcurve[ii].critical_area));
       else crtcurve[ii].critical_area = 0.0;
       */
@@ -762,8 +762,8 @@ void ImageFinding::find_crit(
       //Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
     
       // take out infinitesimal cases
-      if(crtcurve[ii].type == tangential && crtcurve[ii].critical_area == 0.0) --ii;
-      if(crtcurve[ii].type != tangential && crtcurve[ii].caustic_area == 0.0) --ii;
+      if(crtcurve[ii].type == CritType::tangential && crtcurve[ii].critical_area == 0.0) --ii;
+      if(crtcurve[ii].type != CritType::tangential && crtcurve[ii].caustic_area == 0.0) --ii;
     }
     
     // remove cases that were ND type
@@ -786,9 +786,9 @@ void ImageFinding::find_crit(
       
       // check that all non-tangent critical line points have a neighbor
       //  with negative magnification
-      if(crit.type != tangential){
+      if(crit.type != CritType::tangential){
         Point *pointp = nullptr;
-        if(crit.type == radial){
+        if(crit.type == CritType::radial){
           for(Point_2d &p : crit.critical_curve){
             pointp = grid->i_tree->FindBoxPoint(p.x);
             grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
@@ -821,12 +821,12 @@ void ImageFinding::find_crit(
                 np.Print();
               }
               std::cout << " # of points in crit curve: " << crit.critical_curve.size()
-              << " type: " << crit.type
+              << " type: " << to_string(crit.type)
               << std::endl;
             }
             //assert(good);
           }
-        }else if(crit.type == pseudo){
+        }else if(crit.type == CritType::pseudo){
           pointp = grid->i_tree->FindBoxPoint(crit.critical_center.x);
           grid->i_tree->FindAllBoxNeighborsKist(pointp,&nkist);
           bool good = false;
@@ -839,7 +839,7 @@ void ImageFinding::find_crit(
       
       
       // check for no tangential orphans
-      if(crit.type != tangential){
+      if(crit.type != CritType::tangential){
         
         int count = 0;
         PosType rmax,rmin,rave,r;
@@ -851,7 +851,7 @@ void ImageFinding::find_crit(
         CriticalCurve *crit_closest = nullptr;
         
         for(auto &critt : crtcurve){
-          if(critt.type == tangential){
+          if(critt.type == CritType::tangential){
             critt.CriticalRadius(rmax,rmin,rave);
             assert(rmax >= rmin);
             assert(rave >= rmin);
@@ -870,7 +870,7 @@ void ImageFinding::find_crit(
         
         Point *pointp = nullptr;
         if(count == 0){
-          std::cout << crit.type << " caustic without tangential partner, plots have been made named ophan*.fits"
+          std::cout << to_string(crit.type) << " caustic without tangential partner, plots have been made named ophan*.fits"
           << std::endl;
           
           
@@ -888,7 +888,7 @@ void ImageFinding::find_crit(
           map.AddCurve(crit.critical_curve,1.0);
           map.printFITS("!orphin_pseudo.fits");
           
-          grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+          grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
           map.Clean();
           
           for(auto &critt : crtcurve){
@@ -899,14 +899,14 @@ void ImageFinding::find_crit(
           
         }
         if(count > 1){
-          std::cout << crit.type << " caustic has " << count << " tangential critical line within rmax"
+          std::cout << to_string(crit.type) << " caustic has " << count << " tangential critical line within rmax"
           << std::endl;
         }
         
         assert(count > 0 || crit_closest->critical_curve.size() < 3);  // no partners
         assert(count < 2);  // more than one partner
         
-        if(crit.type == tangential){
+        if(crit.type == CritType::tangential){
           
           int count = 0;
           PosType rmax,rmin,rave,r;
@@ -918,7 +918,7 @@ void ImageFinding::find_crit(
           CriticalCurve *crit_closest = nullptr;
           
           for(auto &critt : crtcurve){
-            if(critt.type != tangential){
+            if(critt.type != CritType::tangential){
               crit.CriticalRadius(rmax,rmin,rave);
               assert(rmax >= rmin);
               assert(rave >= rmin);
@@ -953,7 +953,7 @@ void ImageFinding::find_crit(
             map.AddCurve(crit.critical_curve,1.0);
             map.printFITS("!orphin_pseudo.fits");
             
-            grid->writeFits(crit.critical_center.x,1000,range/1000,INVMAG,"!orphin_pseudo");
+            grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
             map.Clean();
             
             for(auto &critt : crtcurve){
@@ -1057,7 +1057,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     paritypoints.Empty();
     pseudocurve.ShouldNotRefine = 0;
 
-    return radial;
+    return CritType::radial;
   }
   
   
@@ -1233,13 +1233,13 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
       // everything has failed
       assert(paritypoints.Nunits() == 0);
       pseudocurve.Empty();
-      return ND;
+      return CritType::ND;
     }
   }
   
   pseudocurve.ShouldNotRefine = 0;
   // pseudo-caustic was found
-  return pseudo;
+  return CritType::pseudo;
 }
 
 
@@ -1805,15 +1805,15 @@ void ImageFinding::find_contour(
   for(i=0;i<grid->i_tree->pointlist->size();++i){
     
     switch (contour_type) {
-      case KAPPA:
+      case LensingVariable::KAPPA:
         value = (*i_tree_pointlist_it)->kappa();
         maxval = minpoint->kappa();
         break;
-      case INVMAG:
+      case LensingVariable::INVMAG:
         value = (*i_tree_pointlist_it)->invmag();
         maxval = minpoint->invmag();
         break;
-      case DELAYT:
+      case LensingVariable::DELAYT:
         value = (*i_tree_pointlist_it)->dt;
         maxval = minpoint->dt;
         break;
@@ -1868,13 +1868,13 @@ void ImageFinding::find_contour(
       critcurve[ii].imagekist->MoveToBottom();
       do{
         switch (contour_type) {
-          case KAPPA:
+          case LensingVariable::KAPPA:
             value = newpoint_kist.getCurrent()->kappa();
             break;
-          case INVMAG:
+          case LensingVariable::INVMAG:
             value = newpoint_kist.getCurrent()->invmag();
             break;
-          case DELAYT:
+          case LensingVariable::DELAYT:
             value = newpoint_kist.getCurrent()->dt;
             break;
           default:
@@ -2087,16 +2087,16 @@ void ImageFinding::find_contour(
 std::string to_string(CritType crit){
   std::string s;
   switch (crit) {
-    case ND:
+    case CritType::ND:
       s = "NotDefined";
       break;
-    case radial:
+    case CritType::radial:
       s = "radial";
       break;
-    case tangential:
+    case CritType::tangential:
       s = "tangential";
       break;
-    case pseudo:
+    case CritType::pseudo:
       s = "pseudo";
       break;
     default:

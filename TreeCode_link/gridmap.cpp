@@ -263,49 +263,49 @@ PixelMap GridMap::writePixelMap(
   
   double tmp2[2];
   switch (lensvar) {
-    case ALPHA:
+    case LensingVariable::ALPHA:
       for(size_t i=0 ; i<N ; ++i){
         tmp2[0] = i_points[i].x[0] - i_points[i].image->x[0];
         tmp2[1] = i_points[i].x[1] - i_points[i].image->x[1];
         map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
       }
       break;
-    case ALPHA1:
+    case LensingVariable::ALPHA1:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = (i_points[i].x[0] - i_points[i].image->x[0]);
       break;
-    case ALPHA2:
+    case LensingVariable::ALPHA2:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = (i_points[i].x[1] - i_points[i].image->x[1]);
       break;
-    case KAPPA:
+    case LensingVariable::KAPPA:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].kappa();
       break;
-    case GAMMA:
+    case LensingVariable::GAMMA:
        for(size_t i=0 ; i<N ; ++i){
          tmp2[0] = i_points[i].gamma1();
          tmp2[1] = i_points[i].gamma2();
          map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
       }
       break;
-    case GAMMA1:
+    case LensingVariable::GAMMA1:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].gamma1();
       break;
-    case GAMMA2:
+    case LensingVariable::GAMMA2:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].gamma2();
       break;
-    case GAMMA3:
+    case LensingVariable::GAMMA3:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].gamma3();
       break;
-    case INVMAG:
+    case LensingVariable::INVMAG:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].invmag();
       break;
-    case DELAYT:
+    case LensingVariable::DELAYT:
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].dt;
       break;
@@ -355,38 +355,38 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,Lens
   
   for(size_t i = 0; i< size; ++i){
     switch (val) {
-      case ALPHA:
+      case LensingVariable::ALPHA:
         tmp2[0] = points[i].x[0] - points[i].image->x[0];
         tmp2[1] = points[i].x[1] - points[i].image->x[1];
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
-      case ALPHA1:
+      case LensingVariable::ALPHA1:
         tmp = (points[i].x[0] - points[i].image->x[0]);
         break;
-      case ALPHA2:
+      case LensingVariable::ALPHA2:
         tmp = (points[i].x[1] - points[i].image->x[1]);
         break;
-      case KAPPA:
+      case LensingVariable::KAPPA:
         tmp = points[i].kappa();
         break;
-      case GAMMA:
+      case LensingVariable::GAMMA:
         tmp2[0] = points[i].gamma1();
         tmp2[1] = points[i].gamma2();
         tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
         break;
-      case GAMMA1:
+      case LensingVariable::GAMMA1:
         tmp = points[i].gamma1();
         break;
-      case GAMMA2:
+      case LensingVariable::GAMMA2:
         tmp = points[i].gamma2();
         break;
-      case GAMMA3:
+      case LensingVariable::GAMMA3:
         tmp = points[i].gamma3();
         break;
-      case INVMAG:
+      case LensingVariable::INVMAG:
         tmp = points[i].invmag();
         break;
-      case DELAYT:
+      case LensingVariable::DELAYT:
         tmp = points[i].dt;
         break;
       default:
@@ -411,34 +411,34 @@ void GridMap::writeFitsUniform(
   std::string tag;
   
   switch (lensvar) {
-    case DELAYT:
+    case LensingVariable::DELAYT:
       tag = ".dt.fits";
       break;
-    case ALPHA1:
+    case LensingVariable::ALPHA1:
       tag = ".alpha1.fits";
       break;
-    case ALPHA2:
+    case LensingVariable::ALPHA2:
       tag = ".alpha2.fits";
       break;
-    case ALPHA:
+    case LensingVariable::ALPHA:
       tag = ".alpha.fits";
       break;
-    case KAPPA:
+    case LensingVariable::KAPPA:
       tag = ".kappa.fits";
       break;
-    case GAMMA1:
+    case LensingVariable::GAMMA1:
       tag = ".gamma1.fits";
       break;
-    case GAMMA2:
+    case LensingVariable::GAMMA2:
       tag = ".gamma2.fits";
       break;
-    case GAMMA3:
+    case LensingVariable::GAMMA3:
       tag = ".gamma3.fits";
       break;
-    case GAMMA:
+    case LensingVariable::GAMMA:
       tag = ".gamma.fits";
       break;
-    case INVMAG:
+    case LensingVariable::INVMAG:
       tag = ".invmag.fits";
       break;
     default:

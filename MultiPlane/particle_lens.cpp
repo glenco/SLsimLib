@@ -30,7 +30,7 @@ MakeParticleLenses::MakeParticleLenses(
   
   
   
-  if(format == glmb ){
+  if(format == SimFileFormat::glmb ){
     nparticles.resize(6,0);
     if(!readSizesB(filename,data,Nsmooth,nparticles,z_original)){
       std::cerr << " Cannot read file " << filename << std::endl;
@@ -47,19 +47,19 @@ MakeParticleLenses::MakeParticleLenses(
     }else{
       // processed file does not exist read the gadget file and find sizes
       switch (format) {
-        case gadget2:
+        case SimFileFormat::gadget2:
           readGadget2(ignore_type_in_smoothing);
           break;
-        case csv3:
+        case SimFileFormat::csv3:
           readCSV(3);
           break;
-        case csv4:
+        case SimFileFormat::csv4:
           readCSV(4);
           break;
-        case csv5:
+        case SimFileFormat::csv5:
           readCSV(5);
           break;
-        case csv6:
+        case SimFileFormat::csv6:
           readCSV(6);
         default:
           std::cerr << "Data file formate is not supported in MakeParticleLens." << std::endl;

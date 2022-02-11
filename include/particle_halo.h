@@ -247,7 +247,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   LensHalo::setRsize(Rmax);
   
   switch (format) {
-    case ascii:
+    case  SimFileFormat::ascii:
       readPositionFileASCII(simulation_filename);
       break;
     default:
