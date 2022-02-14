@@ -125,7 +125,7 @@ void Lens::defaultParams(PosType z_source,bool verbose)
   field_buffer = 0.0;
   fieldofview = 0.0;
 
-  field_input_sim_format = null_cat;
+  field_input_sim_format = HaloCatFormats::null_cat;
   
   // spherical coordinates of center of field
   central_point_sphere.phi = 0.0;
@@ -172,9 +172,9 @@ void Lens::resetFieldHalos(bool verbose)
   
 	if(sim_input_flag){
 		if(read_sim_file == false){
-      if(field_input_sim_format == MillenniumObs) readInputSimFileMillennium(verbose);
-      if(field_input_sim_format == MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
-      if(field_input_sim_format == ObservedData) readInputSimFileObservedGalaxies(verbose);
+      if(field_input_sim_format == HaloCatFormats::MillenniumObs) readInputSimFileMillennium(verbose);
+      if(field_input_sim_format == HaloCatFormats::MultiDarkHalos) readInputSimFileMultiDarkHalos(verbose);
+      if(field_input_sim_format == HaloCatFormats::ObservedData) readInputSimFileObservedGalaxies(verbose);
     }
 	}
 	else{
@@ -1672,7 +1672,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
           case GalaxyLensHaloType::pl_gal:
             assert(field_int_prof_gal_slope>0);
           
-            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,field_int_prof_gal_slope,fratio,pa+PI/2.,cosmo,Fourier));
+            field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,field_int_prof_gal_slope,fratio,pa+PI/2.,cosmo,EllipMethod::Fourier));
              
             //field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,r_half_stel_mass/1.6*2.5,z,field_int_prof_gal_slope,0.99,pa+PI/2.,0,Fourier)); // explanation for r_half_stel_mass/1.34: relation between r_half_stel_mass and effective radius according to Kravtsev 2013 used!
             //field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,mass*Grav*lightspeed*lightspeed*sqrt(fratio)/PI/sigma/sigma,z,field_int_prof_gal_slope,fratio,pa,0,Fourier));
@@ -1680,10 +1680,10 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
             //std::cout << "PL "<<r_half_stel_mass/1.34 << std::endl;
             break;
           case GalaxyLensHaloType::hern_gal:
-            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,1,fratio,pa,cosmo,Pseudo));
+            field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,1,fratio,pa,cosmo,EllipMethod::Pseudo));
             break;
           case GalaxyLensHaloType::jaffe_gal:
-            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,fratio,0.0),z,1,fratio,pa,cosmo,Pseudo));
+            field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,fratio,0.0),z,1,fratio,pa,cosmo,EllipMethod::Pseudo));
             break;
             
           default:
