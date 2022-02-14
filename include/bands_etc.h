@@ -22,7 +22,7 @@ public:
   double lambda_central(Band band);
 
 private:
-  std::vector<Band> bands = {EUC_VIS,EUC_Y,EUC_J,EUC_H,SDSS_U,SDSS_G,SDSS_R,SDSS_I,SDSS_Z,J,H,Ks,IRAC1,IRAC2,F435W,F606W,F775W,F850LP,F814W,F110W,F160W};
+  std::vector<Band> bands = {Band::EUC_VIS,Band::EUC_Y,Band::EUC_J,Band::EUC_H,Band::SDSS_U,Band::SDSS_G,Band::SDSS_R,Band::SDSS_I,Band::SDSS_Z,Band::J,Band::H,Band::Ks,Band::IRAC1,Band::IRAC2,Band::F435W,Band::F606W,Band::F775W,Band::F850LP,Band::F814W,Band::F110W,Band::F160W};
   // central wavelength in Angstroms
   std::vector<double> lambda = {7630,4660,1.26e4,1.62e4,3540,4750,6220,7630,9050,1.26e4,1.62e4,2.15e4
     ,3.5e4,4.5e4,0,0,0,0,0,0};
