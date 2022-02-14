@@ -121,11 +121,11 @@ typedef size_t IndexType;
 #define treeNBdim 2  // dimension of boxes in tree
 #endif
 
-#ifdef DOUBLE_PRECISION
+//#ifdef DOUBLE_PRECISION
 typedef double KappaType;
-#else
-typedef float KappaType;
-#endif
+//#else
+//typedef float KappaType;
+//#endif
 
 // unit test definitions
 // GlamerTest overrides these as necessary

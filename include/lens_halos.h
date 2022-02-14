@@ -177,7 +177,6 @@ public:
       ,PosType screening=1.0   /// the factor by which to scale the mass for screening of the point mass subtraction
   );
 
-  
 	/// force tree calculation for stars
 	//void force_stars(PosType *alpha,KappaType *kappa,KappaType *gamma,PosType const *xcm);
   
@@ -264,10 +263,10 @@ private:
   /// Position of the Halo in angle
   PosType posHalo[2];
   PosType zlens;
-  // This is the size of the halo beyond which it does not have the expected profile.
-  float Rsize = 0;
 
 protected:
+  // This is the size of the halo beyond which it does not have the expected profile.
+  float Rsize = 0;
 
   // total mass in Msun
   float mass;
@@ -286,6 +285,9 @@ protected:
   void force_halo_sym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   void force_halo_asym(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
+  bool force_point(PosType *alpha,KappaType *kappa,KappaType *gamma
+                   ,KappaType *phi,PosType const *xcm,PosType rcm2
+                   ,bool subtract_point,PosType screening);
   
   struct norm_func{
     norm_func(LensHalo& halo, PosType my_r_max): halo(halo), r_max(my_r_max){};
@@ -718,7 +720,7 @@ protected:
 };
 
 /**
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of NFW
+ * \brief A class for calculating the deflection, kappa and gamma caused by an NFW
  * halos.
  *
  * This class uses the true expressions for the NFW profile.  This is
@@ -1118,7 +1120,7 @@ protected:
 
 /** \brief Truncated non-singular isothermal ellipsoid
 
-This is a true NSIE lens rather than an expansion that approximates one.
+This is a true TNSIE lens rather than an expansion that approximates one.
 */
 class LensHaloTNSIE : public LensHalo{
 public:
@@ -1204,9 +1206,314 @@ protected:
   float rtrunc;
 };
 
+/** \brief A truncated elliptical power-law profile
+
+ This is an implementation of O’Riordan, Warren, & Mortlock (2020)
+*/
+
+class LensHaloTEPL : public LensHalo{
+public:
+
+  LensHaloTEPL(float my_mass  /// total mass in Msun
+                ,PosType my_zlens /// redshift
+                ,PosType r_trunc  /// elliptical truncation radius in Mpc
+                ,PosType gamma    /// power-law index
+                ,float my_fratio /// axis ratio
+                ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                ,const COSMOLOGY &cosmo  /// cosmology
+                ,float f=10 /// cuttoff radius in units of truncation radius
+  ):LensHalo(),
+  q(my_fratio),pa(my_pa),x_T(r_trunc),tt(gamma)
+  {
+    if(tt >= 2){
+      std::cerr << "LensHaloTEPL : power-law index cannot be >= 2 because the mass will be unbounded." << std::endl;
+      throw std::invalid_argument("bad gamma");
+    }
+    
+    LensHalo::setMass(my_mass);
+    LensHalo::setZlens(my_zlens,cosmo);
+    if(q > 1) q = 1/q;
+    q_prime = (1-q*q)/q/q;
+    
+    R = std::complex<double>(cos(pa),sin(pa));
+    
+    SigmaT = my_mass * q * (2-tt) / (2 * PI * x_T * x_T);
+    mass_pi = mass / PI;
+    
+    LensHalo::setRsize(x_T*f);
+    Rmax = Rsize;
+  }
+  
+  LensHaloTEPL(const LensHaloTEPL &h):
+  LensHalo(h)
+  {
+    tt = h.tt;
+    x_T = h.x_T;
+    q = h.q;
+    q_prime = h.q_prime;
+    SigmaT = h.SigmaT;
+    pa = h.pa;
+    mass_pi = h.mass_pi;
+    R = h.R;
+  }
+  
+  LensHaloTEPL &operator=(const LensHaloTEPL &h){
+    if(&h == this) return *this;
+    LensHalo::operator=(h);
+
+    tt = h.tt;
+    x_T = h.x_T;
+    q = h.q;
+    q_prime = h.q_prime;
+    SigmaT = h.SigmaT;
+    pa = h.pa;
+    mass_pi = h.mass_pi;
+    R = h.R;
+
+    return *this;
+  }
+  
+  ~LensHaloTEPL(){};
+
+
+  /// overridden function to calculate the lensing properties
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0){
+  
+    std::complex<double> z(xcm[0],xcm[1]);
+    z = z * std::conj(R);
+ 
+    double r2=std::norm(z);
+    if(force_point(alpha,kappa,gamma,phi,xcm,r2
+                   ,subtract_point,screening)) return;
+
+    if(r2 < 1.0e-12){
+      *kappa = SigmaT * pow(x_T/1.0e-6,tt);
+      alpha[0] = alpha[1] = gamma[0] = gamma[1] = 0;
+      return;
+    }
+    
+    std::complex<double> a=0;
+    std::complex<double> g=0;
+    double k=0;
+    
+    deflection(z,a,g,k);
+
+    a = - std::conj(a) * R;
+    g = std::conj(g) * R * R;
+    
+    *kappa += k;
+    alpha[0] += a.real();
+    alpha[1] += a.imag();
+    gamma[0] += g.real();
+    gamma[1] += g.imag();
+    
+    assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  }
+  
+  /// get the axis ratio
+  float get_fratio(){return q;};
+  /// get the position angle
+  float get_pa(){return pa;};
+  /// get the truncation radius
+  float get_rtrunc(){return x_T;};
+  /// get the pwer-law index
+  float get_t(){return tt;}
+  
+  void set_pa(double p){pa = p;}
+  
+  void deflection(std::complex<double> &z
+                  ,std::complex<double> &a
+                  ,std::complex<double> &g
+                  ,KappaType &sigma) const{
+ 
+    double x_e = sqrt(q*q*z.real()*z.real() + z.imag()*z.imag());
+    
+    if(x_e <= x_T){
+      sigma = SigmaT * pow(x_T/x_e,tt);
+      a = mass_pi * pow(x_T/x_e,tt-2) * F(x_e,tt,z) / z;
+    }else{
+      sigma = 0;
+      a = mass_pi * F(x_T,tt,z) / z;
+     }
+
+    g =  (1 - tt) * a / z ;
+    
+    if(x_e <= x_T){
+      g -= sigma * std::conj(z) / z;
+    }else{
+      g -= (2-tt) * mass_pi / sqrt(1. - q_prime * x_T*x_T / z / z ) / z / z;
+    }
+  }
+  
+protected:
+  
+  //float units;
+  double tt;
+  double x_T;       // truncation radius
+  double q;
+  double q_prime;
+  double SigmaT;   // SigmaT - surface density at trunction radius
+  double pa;
+  double mass_pi;
+  std::complex<double> R; // rotation
+  
+  std::complex<double> F(double r_e,double t,std::complex<double> z) const{
+  
+    std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
+    assert(std::norm(u) < 1);
+    double a = 1;
+    std::complex<double> sum(1,0);
+    for(int n=1 ; n < 20 ; ++n){
+      a *= 2*(n+1-t)/(2*n+2-t);
+      sum += a * u;
+      u *= u;
+    }
+    
+    return sum;
+  }
+};
+
+class LensHaloTEBPL : public LensHalo{
+public:
+  
+  LensHaloTEBPL(float my_mass  /// total mass in Msun
+                ,PosType my_zlens /// redshift
+                ,PosType r_break  /// elliptical truncation radius in Mpc
+                ,PosType r_trunc  /// elliptical truncation radius in Mpc
+                ,PosType t1    /// inner power-law index
+                ,PosType t2    /// outer power-law index
+                ,float my_fratio /// axis ratio
+                ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                ,const COSMOLOGY &cosmo  /// cosmology
+                ,float f=10 /// cuttoff radius in units of truncation radius
+  ):LensHalo(),
+  q(my_fratio),rb(r_break),rt(r_trunc)
+  ,m2(my_mass/(1 + (t1-t2)/(2-t1)*pow(rb/rt,2-t2)))
+  ,m3(m2*pow(rb/rt,2-t2))
+  ,m1(m2*(2-t2)/(2-t1)*pow(rb/rt,2-t2))
+  ,h1(m1,my_zlens,rb,t1,q,0,cosmo)
+  ,h2(m2,my_zlens,rt,t2,q,0,cosmo)
+  ,h3(m3,my_zlens,rb,t2,q,0,cosmo)
+  {
+    
+    LensHalo::setMass(my_mass);
+    LensHalo::setZlens(my_zlens,cosmo);
+       
+    R = std::complex<double>(cos(my_pa),sin(my_pa));
+    
+    Rmax = Rsize = f*rt;
+ }
+
+  ~LensHaloTEBPL(){}
+  
+  LensHaloTEBPL(const LensHaloTEBPL &h):
+  LensHalo(h),h1(h.h1),h2(h.h2),h3(h.h3)
+  {
+ 
+    m2 = h.m2;
+    m3 = h.m3;
+    m1 = h.m1;
+    
+    rb = h.rb;
+    rt = h.rt;
+    q = h.q;
+
+    R = h.R;
+  }
+  
+  LensHaloTEBPL &operator=(const LensHaloTEBPL &h){
+    if(&h == this) return *this;
+    LensHalo::operator=(h);
+
+    h1 = h.h1;
+    h2 = h.h2;
+    h3 = h.h3;
+    
+    m2 = h.m2;
+    m3 = h.m3;
+    m1 = h.m1;
+    
+    rb = h.rb;
+    rt = h.rt;
+    q = h.q;
+
+    R = h.R;
+
+    return *this;
+  }
+  
+  /// get the axis ratio
+  float get_fratio(){return q;};
+  /// get the position angle
+  float get_pa(){return pa;};
+  /// get the truncation radius
+  float get_rtrunc(){return rt;};
+  /// get the break radius
+  float get_rbreak(){return rb;};
+  /// get inner pwer-law index
+  float get_t1(){return h1.get_t();}
+  /// get outer pwer-law index
+  float get_t2(){return h2.get_t();}
+
+  void set_pa(double p){pa = p;}
+
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0){
+ 
+    std::complex<PosType> z(xcm[0],xcm[1]);
+     
+    if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
+                   ,subtract_point,screening)) return;
+    
+    z = z * std::conj(R);
+
+    std::complex<PosType> a=0,g=0;
+    std::complex<PosType> at,gt;
+    double kappat;
+
+    double xe2 = q*q*z.real()*z.real() + z.imag()*z.imag();
+    if(xe2 > rb*rb){
+      h3.deflection(z,at,gt,kappat);
+      a -= at;
+      g -= gt;
+      h2.deflection(z,at,gt,kappat);
+      a += at;
+      g += gt;
+      *kappa += kappat;
+    }
+    h1.deflection(z,at,gt,kappat);
+    a += at;
+    g += gt;
+    *kappa += kappat;
+
+    a = - std::conj(a) * R;
+    g = std::conj(g) * R * R;
+    
+    alpha[0] += a.real();
+    alpha[1] += a.imag();
+    gamma[0] += g.real();
+    gamma[1] += g.imag();
+  }
+  
+private:
+
+  double q;
+  double rb;
+  double rt;
+
+  double m2 ;
+  double m3 ;
+  double m1 ;
+
+  LensHaloTEPL h1;
+  LensHaloTEPL h2;
+  LensHaloTEPL h3;
+  
+  std::complex<PosType> R;
+  
+};
 /**
  *
- * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
+ * \brief A class for calculating the deflection, kappa and gamma caused by a halos
  * with truncated Hernquist mass profiles.
  *
  * The profile is \f$ \rho \propto \left( \frac{r}{r_s} \right)^{-1} \left( 1 + \frac{r}{r_s} \right)^{-3} \f$.

@@ -126,7 +126,7 @@ public:
       if(r < Rmax){
         alpha[0] -= Sigma*xcm[0];
         alpha[1] -= Sigma*xcm[1];
-        *kappa = Sigma;
+        *kappa += Sigma;
       }else{
         tmp_mass = mass/PI/r/r; //Sigma * Rmax*Rmax/r/r; 
         alpha[0] -= tmp_mass*xcm[0];
