@@ -438,7 +438,7 @@ void CausticDataStore::printfile(std::string filename,std::string paramfile,doub
       << " | " << data[i].caustic_center[0] << " | " << data[i].caustic_center[1]
       << " | " << data[i].caustic_radius[1] << " | " << data[i].caustic_radius[0]
       << " | " << data[i].caustic_radius[2]
-      << " | " << data[i].caustic_area << " | " << data[i].crit_type
+      << " | " << data[i].caustic_area << " | " << int(data[i].crit_type)
       << std::endl;
   }
 }
@@ -557,7 +557,7 @@ int CausticDataStore::RandomLens(Utilities::RandomNumbers_NR &ran){
 
 std::ostream &operator<<(std::ostream &os, CausticStructure const &caust) {
   return os << " crit center: " << caust.crit_center << " caustic center: "
-  << caust.caustic_center << " type : " << caust.crit_type;
+  << caust.caustic_center << " type : " << to_string(caust.crit_type);
 }
 
 

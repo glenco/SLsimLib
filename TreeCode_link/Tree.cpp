@@ -989,7 +989,7 @@ std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p)
   // caustic_center,caustic_area,critical_center,critical_area,z_source,type
   os << p.caustic_center[0] << "," << p.caustic_center[1] << "," << p.caustic_area
   << "," << p.critical_center[0] << "," << p.critical_center[1] << ","
-  << p.critical_area << "," << p.z_source << "," << p.type;
+  << p.critical_area << "," << p.z_source << "," << to_string(p.type);
   
   return os;
 }
@@ -1025,7 +1025,7 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   PixelMap map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
-    map.AddCurve(c.critical_curve, c.type + 1);
+    map.AddCurve(c.critical_curve, int(c.type) + 1);
   }
   
   return map;
@@ -1061,7 +1061,7 @@ PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::Critical
   PixelMap map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
-    map.AddCurve(c.caustic_curve_intersecting, c.type + 1);
+    map.AddCurve(c.caustic_curve_intersecting, int(c.type) + 1);
   }
   
   return map;

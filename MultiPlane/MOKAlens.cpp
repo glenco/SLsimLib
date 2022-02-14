@@ -96,7 +96,7 @@ LensHaloMassMap::LensHaloMassMap(
                                  ,const COSMOLOGY& lenscosmo  /// cosmology
 )
 :LensHalo()
-, flag_MOKA_analyze(0),flag_background_field(0),maptype(pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
+, flag_MOKA_analyze(0),flag_background_field(0),maptype(PixelMapType::pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
 {
   rscale = 1.0;
 
@@ -116,7 +116,7 @@ LensHaloMassMap::LensHaloMassMap(
                 ,double redshift
                 ,const COSMOLOGY &cosmo
                 )
-:LensHalo(),flag_MOKA_analyze(0),flag_background_field(0),maptype(pix_map),cosmo(cosmo)
+:LensHalo(),flag_MOKA_analyze(0),flag_background_field(0),maptype(PixelMapType::pix_map),cosmo(cosmo)
 ,zerosize(zeropadding),zeromean(false)
 {
   rscale = 1.0;
@@ -234,7 +234,7 @@ LensHaloMassMap::~LensHaloMassMap()
 void LensHaloMassMap::initMap()
 {
   
-  if(!(maptype == pix_map || maptype == moka)){
+  if(!(maptype == PixelMapType::pix_map || maptype == PixelMapType::moka)){
     ERROR_MESSAGE();
     throw runtime_error("Does not recognize input lens map type");
   }
@@ -266,7 +266,7 @@ void LensHaloMassMap::initMap()
   map.center[0] = map.center[1] = 0.0;
   map.boxlrad = map.boxlarcsec*PI/180/3600.;
   
-  if(maptype == moka){
+  if(maptype == PixelMapType::moka){
     
     /// converts to the code units
     std::cout << "converting the units of the MOKA map" << std::endl;
@@ -396,7 +396,7 @@ void LensHaloMassMap::assignParams(InputParams& params)
   
   zeromean = true;
   zerosize = 4;  /// not really used
-  maptype = moka;
+  maptype = PixelMapType::moka;
 }
 
 /** 
