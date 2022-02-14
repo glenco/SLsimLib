@@ -246,33 +246,33 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
                                 ,pa,inclination,HaloID,z_cosm,theta,ran);
      //std::cout << "filling last galaxy" << std::endl;
 
-    galaxy.setMag(SDSS_U,SDSS_u);
-    galaxy.setMagBulge(SDSS_U,SDSS_u_Bulge);
-    galaxy.setMag(SDSS_G,SDSS_g);
-    galaxy.setMagBulge(SDSS_G,SDSS_g_Bulge);
-    galaxy.setMag(SDSS_R,SDSS_r);
-    galaxy.setMagBulge(SDSS_R,SDSS_r_Bulge);
-    galaxy.setMag(SDSS_I,SDSS_i);
-    galaxy.setMagBulge(SDSS_I,SDSS_i_Bulge);
-    galaxy.setMag(SDSS_Z,SDSS_z);
-    galaxy.setMagBulge(SDSS_Z,SDSS_z_Bulge);
-    galaxy.setMag(J,J_band);
-    galaxy.setMagBulge(J,J_band_Bulge);
-    galaxy.setMag(H,H_band);
-    galaxy.setMagBulge(H,H_band_Bulge);
-    galaxy.setMag(Ks,Ks_band);
-    galaxy.setMagBulge(Ks,Ks_band_Bulge);
+    galaxy.setMag(Band::SDSS_U,SDSS_u);
+    galaxy.setMagBulge(Band::SDSS_U,SDSS_u_Bulge);
+    galaxy.setMag(Band::SDSS_G,SDSS_g);
+    galaxy.setMagBulge(Band::SDSS_G,SDSS_g_Bulge);
+    galaxy.setMag(Band::SDSS_R,SDSS_r);
+    galaxy.setMagBulge(Band::SDSS_R,SDSS_r_Bulge);
+    galaxy.setMag(Band::SDSS_I,SDSS_i);
+    galaxy.setMagBulge(Band::SDSS_I,SDSS_i_Bulge);
+    galaxy.setMag(Band::SDSS_Z,SDSS_z);
+    galaxy.setMagBulge(Band::SDSS_Z,SDSS_z_Bulge);
+    galaxy.setMag(Band::J,J_band);
+    galaxy.setMagBulge(Band::J,J_band_Bulge);
+    galaxy.setMag(Band::H,H_band);
+    galaxy.setMagBulge(Band::H,H_band_Bulge);
+    galaxy.setMag(Band::Ks,Ks_band);
+    galaxy.setMagBulge(Band::Ks,Ks_band_Bulge);
 
-    galaxy.setMag(Ks,Ks_band);
-    galaxy.setMagBulge(Ks,Ks_band_Bulge);
+    galaxy.setMag(Band::Ks,Ks_band);
+    galaxy.setMagBulge(Band::Ks,Ks_band_Bulge);
 
       // The Euclid bands are not actually read in
-    galaxy.setMag(EUC_VIS,SDSS_i);
-    galaxy.setMagBulge(EUC_VIS,SDSS_i_Bulge);
-    galaxy.setMag(EUC_H,H_band);
-    galaxy.setMagBulge(EUC_H,H_band_Bulge);
-    galaxy.setMag(EUC_J,J_band);
-    galaxy.setMagBulge(EUC_J,J_band_Bulge);
+    galaxy.setMag(Band::EUC_VIS,SDSS_i);
+    galaxy.setMagBulge(Band::EUC_VIS,SDSS_i_Bulge);
+    galaxy.setMag(Band::EUC_H,H_band);
+    galaxy.setMagBulge(Band::EUC_H,H_band_Bulge);
+    galaxy.setMag(Band::EUC_J,J_band);
+    galaxy.setMagBulge(Band::EUC_J,J_band_Bulge);
 
     galaxy.changeBand(band);
       

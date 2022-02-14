@@ -120,7 +120,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
       long_range_file_exists = false;
     }
     cpfits.readKey("cosmology",tmp_int);
-    if(tmp_int != c.ParamSet()){
+    if(tmp_int != int(c.ParamSet())){
       std::cout << "missmatch cosmology " << tmp_int << " " << c.ParamSet() << std::endl;
       long_range_file_exists = false;
     }
@@ -339,7 +339,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     tmp_cpfits.writeKey("ave_ang_sd", ave_ang_sd,"average angulare density");
     tmp_cpfits.writeKey("redshift",redshift,"");
     tmp_cpfits.writeKey("mass_unit",mass_unit,"");
-    tmp_cpfits.writeKey("cosmology",c.ParamSet(),"cosmology");
+    tmp_cpfits.writeKey("cosmology",to_string(c.ParamSet()),"cosmology");
     tmp_cpfits.writeKey("rs2",rs2,"");
     tmp_cpfits.writeKey("border_width",border_width_pix,"");
     // *****************************************************
@@ -1014,26 +1014,26 @@ void LensMap::write(std::string filename
   naxex[1]=ny;
   
   switch (quant) {
-    case KAPPA:
+    case LensingVariable::KAPPA:
       cpfits.write_image(surface_density,naxex);
       break;
-    case GAMMA1:
+    case LensingVariable::GAMMA1:
       cpfits.write_image(gamma1_bar,naxex);
       break;
-    case GAMMA2:
+    case LensingVariable::GAMMA2:
       cpfits.write_image(gamma2_bar,naxex);
       break;
-    case GAMMA:
+    case LensingVariable::GAMMA:
     {
       std::valarray<float>  gamma =  sqrt( gamma1_bar*gamma1_bar + gamma2_bar*gamma2_bar );
       cpfits.write_image(gamma,naxex);
     }
       break;
-    case ALPHA1:
+    case LensingVariable::ALPHA1:
       cpfits.write_image(alpha1_bar,naxex);
       cpfits.writeKey("UNITS","radians","units of values");
      break;
-    case ALPHA2:
+    case LensingVariable::ALPHA2:
       cpfits.write_image(alpha2_bar,naxex);
       cpfits.writeKey("UNITS","radians","units of values");
       break;

@@ -120,7 +120,7 @@ public:
   {
     //mag=magnitude;
     //flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
-    current_band = NoBand;
+    current_band = Band::NoBand;
     setMag(magnitude);
     id = -1;
   }
@@ -165,7 +165,7 @@ public:
   
   virtual ~SourceColored(){};
   
-  PosType getMag() const { assert(current_band != NoBand); return mag;}
+  PosType getMag() const { assert(current_band != Band::NoBand); return mag;}
   PosType getMag(Band band) const {return (mag_map.size() > 0) ? mag_map.at(band) : mag;}
   Band getBand() const{return current_band;}
   long getID() const {return id;}
@@ -177,7 +177,7 @@ public:
   inline PosType getTotalFlux() const {return flux_total;}
   
   void setMag(float magnitude){
-    if(current_band == NoBand){
+    if(current_band == Band::NoBand){
       mag=magnitude;
       flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
     }else{

@@ -1094,7 +1094,7 @@ bool ImageFinding::IF_routines::RefinePoint2(Point *point,TreeHndl i_tree,PosTyp
 
 	if( image_area < target_all*res_target*total_area ) return false;
 
-	if(criterion == FillHoles)
+	if(criterion == ExitCriterion::FillHoles)
 		if(pow(point->gridsize,2)*(point->surface_brightness/maxflux) > res_target*image_area) return true;
 
 	// This stops the refinement when the cell is so small that the flux becomes zero because of underflow error.
@@ -1114,8 +1114,8 @@ bool ImageFinding::IF_routines::RefinePoint2(Point *point,TreeHndl i_tree,PosTyp
 	error = pow(point->gridsize,2)*(fabs(borderSB - point->surface_brightness)/6/maxflux);
 	//error = pow(point->gridsize,2)*maxdiff/6/maxflux;
 
-	if( ( criterion == EachImage || criterion == FillHoles ) && error > res_target*image_area ) return true;
-	if( criterion == TotalArea && error > res_target*total_area ) return true;
+	if( ( criterion == ExitCriterion::EachImage || criterion == ExitCriterion::FillHoles ) && error > res_target*image_area ) return true;
+	if( criterion == ExitCriterion::TotalArea && error > res_target*total_area ) return true;
 
 	return false;
 }

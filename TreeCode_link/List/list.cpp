@@ -358,9 +358,9 @@ std::ostream &operator<<(std::ostream &os, Point_2d const &p) {
 
 
 std::ostream &operator<<(std::ostream &os, CritType const &p) {
-  if(p == ND) return os << "not determined";
-  if(p == pseudo) return os << "Pseudo";
-  if(p == tangential) return os << "Tangential";
+  if(p == CritType::ND) return os << "not determined";
+  if(p == CritType::pseudo) return os << "Pseudo";
+  if(p == CritType::tangential) return os << "Tangential";
   return os << "Radial";
 }
 

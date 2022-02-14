@@ -276,25 +276,25 @@ PixelMap LensHalo::map_variables(
     force_halo(alpha.data(),&kappa,gamma,&phi,x.data());
     
     switch (lensvar) {
-      case ALPHA:
+      case LensingVariable::ALPHA:
         map[i] = sqrt(alpha[0]*alpha[0] + alpha[1]*alpha[1]);
         break;
-      case ALPHA1:
+      case LensingVariable::ALPHA1:
         map[i] = alpha[0];
         break;
-      case ALPHA2:
+      case LensingVariable::ALPHA2:
         map[i] = alpha[1];
         break;
-      case GAMMA1:
+      case LensingVariable::GAMMA1:
         map[i] = gamma[0];
         break;
-      case GAMMA2:
+      case LensingVariable::GAMMA2:
         map[i] = gamma[1];
         break;
-      case KAPPA:
+      case LensingVariable::KAPPA:
         map[i] = kappa;
         break;
-      case PHI:
+      case LensingVariable::PHI:
         map[i] = phi;
         break;
         
@@ -363,7 +363,7 @@ LensHaloNFW::LensHaloNFW()
   Rmax = LensHalo::getRsize();
 
   LensHalo::setMass(0.0);
-  LensHalo::setZlens(0,COSMOLOGY(Planck18));
+  LensHalo::setZlens(0,COSMOLOGY(CosmoParamSet::Planck18));
   LensHalo::Dist = -1;  // to be set later
   
   fratio=1;
@@ -400,7 +400,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*LensHalo::getRsize();
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
-    if(getEllipMethod()==Fourier){
+    if(getEllipMethod()==EllipMethod::Fourier){
       std::cout << "NFW constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of  kappa take calcModes(fratio, 2-get_slope(), pa, mod);
       std::cout << "NFW constructor: Fourier modes computed" << std::endl;
@@ -408,7 +408,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
-    if (getEllipMethod()==Pseudo or getEllipMethod()==Fourier){
+    if (getEllipMethod()==EllipMethod::Pseudo or getEllipMethod()==EllipMethod::Fourier){
       set_norm_factor();
       set_switch_flag(true);
     }
@@ -577,7 +577,7 @@ void LensHaloNFW::assignParams(InputParams& params){
   if(!params.get("main_concentration",rscale)) error_message1("main_concentration",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=EllipMethod::Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
   rscale = LensHalo::getRsize()/rscale; // was the concentration
   xmax = LensHalo::getRsize()/rscale;
@@ -666,14 +666,14 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*LensHalo::getRsize();
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
-    if(getEllipMethod()==Fourier){
+    if(getEllipMethod()==EllipMethod::Fourier){
       std::cout << "Note: Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. "<< get_slope()+0.5 << std::endl;
       calcModes(fratio, get_slope()+0.5, pa, mod);
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
-    if (getEllipMethod()==Pseudo){
+    if (getEllipMethod()==EllipMethod::Pseudo){
       set_norm_factor();
     }
   }else{
@@ -768,7 +768,7 @@ void LensHaloPseudoNFW::assignParams(InputParams& params){
   if(!params.get("main_slope",beta)) error_message1("main_slope",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo. CAUTION: Ellipticizing methods have not been tested with PseudoNFW yet!" << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=EllipMethod::Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo. CAUTION: Ellipticizing methods have not been tested with PseudoNFW yet!" << endl;};};
   
   rscale = LensHalo::getRsize()/rscale; // was the concentration
   xmax = LensHalo::getRsize()/rscale;
@@ -816,14 +816,14 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*LensHalo::getRsize();
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
-    if(getEllipMethod()==Fourier){
+    if(getEllipMethod()==EllipMethod::Fourier){
       calcModes(fratio, beta, pa, mod);
       for(int i=1;i<Nmod;i++){
         //std::cout << i << " " << mod[i] << std::endl;
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
-    if (getEllipMethod()==Pseudo){
+    if (getEllipMethod()==EllipMethod::Pseudo){
       fratio=0.00890632+0.99209115*pow(fratio,0.33697702); /// translate fratio's needed for kappa into fratio used for potential
       //std::cout << "Pseudo-elliptical method requires fratio transformation, new fratio=" << fratio <<   std::endl;
       set_norm_factor();
@@ -880,7 +880,7 @@ void LensHaloPowerLaw::assignParams(InputParams& params){
   //if(beta>=2.0) error_message1("main_slope < 2",params.filename());
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0.0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=EllipMethod::Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
 //  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
 //  else if(stars_N){
@@ -1275,10 +1275,10 @@ void LensHalo::force_halo_asym(
     if(rcm2 > LensHalo::getRsize()*LensHalo::getRsize()){
       PosType alpha_iso[2],alpha_ellip[2];
       alpha_ellip[0] = alpha_ellip[1] = 0;
-      if(main_ellip_method==Pseudo){alphakappagamma_asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Fourier){alphakappagamma1asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Schramm){alphakappagamma2asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Keeton){alphakappagamma3asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Pseudo){alphakappagamma_asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Fourier){alphakappagamma1asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Schramm){alphakappagamma2asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Keeton){alphakappagamma3asym(LensHalo::getRsize(),theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       alpha_ellip[0]=alpha_tmp[0]*mass_norm_factor;
       alpha_ellip[1]=alpha_tmp[1]*mass_norm_factor;
       double f1 = (Rmax - r)/(Rmax - LensHalo::getRsize()),f2 = (r - LensHalo::getRsize())/(Rmax - LensHalo::getRsize());
@@ -1301,10 +1301,10 @@ void LensHalo::force_halo_asym(
       }
       
     }else{
-      if(main_ellip_method==Pseudo){alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
-      if(main_ellip_method==Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Pseudo){alphakappagamma_asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Fourier){alphakappagamma1asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Schramm){alphakappagamma2asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
+      if(main_ellip_method==EllipMethod::Keeton){alphakappagamma3asym(r,theta, alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp);}
       
       alpha[0] +=  alpha_tmp[0]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/PI*xcm[0];
       alpha[1] +=  alpha_tmp[1]*mass_norm_factor;//-1.0*subtract_point*mass/rcm2/PI*xcm[1];
@@ -1666,14 +1666,14 @@ LensHaloHernquist::LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zle
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*LensHalo::getRsize();
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
-    if(getEllipMethod()==Fourier){
+    if(getEllipMethod()==EllipMethod::Fourier){
       //std::cout << "Hernquist constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod); // to ellipticize potential instead of kappa use (fratio, get_slope()-2, pa, mod)
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
-    if (getEllipMethod()==Pseudo){
+    if (getEllipMethod()==EllipMethod::Pseudo){
       fratio=0.00890632+0.99209115*pow(fratio,0.33697702);
       set_norm_factor();
     }
@@ -1757,7 +1757,7 @@ void LensHaloHernquist::assignParams(InputParams& params){
   xmax = LensHalo::getRsize()/rscale;
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=EllipMethod::Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
 //  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
 //  else if(stars_N){
 //    assignParams_stars(params);
@@ -1815,14 +1815,14 @@ LensHaloJaffe::LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float
   if(fratio!=1){
     Rmax = Rmax_to_Rsize_ratio*LensHalo::getRsize();
     //std::cout << getEllipMethod() << " method to ellipticise" << std::endl;
-    if(getEllipMethod()==Fourier){
+    if(getEllipMethod()==EllipMethod::Fourier){
       //std::cout << "Jaffe constructor: slope set to " << get_slope() << std::endl;
       calcModes(fratio, get_slope(), pa, mod);
       for(int i=1;i<Nmod;i++){
         if(mod[i]!=0){set_flag_elliptical(true);};
       }
     }else set_flag_elliptical(true);
-    if (getEllipMethod()==Pseudo){
+    if (getEllipMethod()==EllipMethod::Pseudo){
       fratio=0.00890632+0.99209115*pow(fratio,0.33697702);
       set_norm_factor();
     }
@@ -1903,7 +1903,7 @@ void LensHaloJaffe::assignParams(InputParams& params){
   if(!params.get("main_axis_ratio",fratio)){fratio=1; std::cout << "main_axis_ratio not defined in file " << params.filename() << ", hence set to 1." << std::endl;};
   if(!params.get("main_pos_angle",pa)){pa=0; std::cout << "main_pos_angle not defined in file " << params.filename() << ", hence set to 0." << std::endl;};
   
-  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
+  if(!params.get("main_ellip_method",main_ellip_method)){if(fratio!=1){main_ellip_method=EllipMethod::Pseudo;std::cout << "main_ellip_method is not defined in file " << params.filename() << ", hence set to Pseudo." << endl;};};
   
 //  if(!params.get("main_stars_N",stars_N)) error_message1("main_stars_N",params.filename());
 //  else if(stars_N){

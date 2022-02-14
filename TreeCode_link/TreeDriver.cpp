@@ -1542,8 +1542,8 @@ RAY ImageInfo::highestSurfaceBrightnessRay(){
 
 ImageInfo & ImageInfo::operator+=(ImageInfo & rhs){
   
-  if(!(uniform_mag && rhs.uniform_mag
-       && std::abs(imagekist->getCurrent()->invmag() - rhs.imagekist->getCurrent()->invmag() ) < 1.0e-5 ) ) uniform_mag = no;
+  if(!( uniform_mag  && rhs.uniform_mag
+       && std::abs(imagekist->getCurrent()->invmag() - rhs.imagekist->getCurrent()->invmag() ) < 1.0e-5 ) ) uniform_mag = GATE::no;
   
   imagekist->MoveToBottom();
   for(auto &p : *(rhs.imagekist)){
@@ -1604,10 +1604,10 @@ bool ImageInfo::constant(
   if(imagekist->Nunits() < 2) return false;
   
   switch(lensvar){
-		case KAPPA:
+    case LensingVariable::KAPPA:
 			max = min = imagekist->getCurrent()->kappa();
 			break;
-		case INVMAG:
+    case LensingVariable::INVMAG:
 			max = min = imagekist->getCurrent()->invmag();
 			break;
 		default:
@@ -1617,8 +1617,8 @@ bool ImageInfo::constant(
 
   imagekist->MoveToTop();
   do{
-    if(lensvar == INVMAG) tmp = imagekist->getCurrent()->invmag();
-    if(lensvar == KAPPA) tmp = imagekist->getCurrent()->kappa();
+    if(lensvar == LensingVariable::INVMAG) tmp = imagekist->getCurrent()->invmag();
+    if(lensvar == LensingVariable::KAPPA) tmp = imagekist->getCurrent()->kappa();
     
     if(tmp > max ) max = tmp;
     if(tmp < min ) min = tmp;

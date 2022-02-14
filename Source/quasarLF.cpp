@@ -182,11 +182,11 @@ double QuasarLF::getRandomFlux(Band band,Utilities::RandomNumbers_NR &rand)
  */
 double QuasarLF::getColor(Band band)
 {
-    if (band == SDSS_U)  return colors[0]+colors[1]+colors[2];
-    else if (band == SDSS_G) return colors[1]+colors[2];
-    else if (band == SDSS_R) return colors[2];
-    else if (band == SDSS_I) return 0.;
-    else if (band == SDSS_Z) return -colors[3];
+    if (band == Band::SDSS_U)  return colors[0]+colors[1]+colors[2];
+    else if (band == Band::SDSS_G) return colors[1]+colors[2];
+    else if (band == Band::SDSS_R) return colors[2];
+    else if (band == Band::SDSS_I) return 0.;
+    else if (band == Band::SDSS_Z) return -colors[3];
     else
     {
         ERROR_MESSAGE();
@@ -199,11 +199,11 @@ double QuasarLF::getColor(Band band)
  */
 double QuasarLF::getFluxRatio(Band band)
 {
-    if (band == SDSS_U)  return pow(10, -0.4*(colors[0]+colors[1]+colors[2]));
-    else if (band == SDSS_G) return pow(10, -0.4*(colors[1]+colors[2]));
-    else if (band == SDSS_R) return pow(10, -0.4*(colors[2]));
-    else if (band == SDSS_I) return 1.;
-    else if (band == SDSS_Z) return pow(10, -0.4*(-colors[3]));
+    if (band == Band::SDSS_U)  return pow(10, -0.4*(colors[0]+colors[1]+colors[2]));
+    else if (band == Band::SDSS_G) return pow(10, -0.4*(colors[1]+colors[2]));
+    else if (band == Band::SDSS_R) return pow(10, -0.4*(colors[2]));
+    else if (band == Band::SDSS_I) return 1.;
+    else if (band == Band::SDSS_Z) return pow(10, -0.4*(-colors[3]));
     else
     {
         ERROR_MESSAGE();

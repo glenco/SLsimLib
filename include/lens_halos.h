@@ -739,7 +739,7 @@ public:
               ,float my_fratio    /// axis ratio
               ,float my_pa
               ,const COSMOLOGY &cosmo
-              ,EllipMethod my_ellip_method=Pseudo
+              ,EllipMethod my_ellip_method=EllipMethod::Pseudo
               );
 	//LensHaloNFW(InputParams& params);
   LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
@@ -867,7 +867,7 @@ class LensHaloPseudoNFW: public LensHalo{
 public:
   /// shell constructor, should be avoided
 	LensHaloPseudoNFW();
-  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
+  LensHaloPseudoNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,PosType my_beta,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=EllipMethod::Pseudo);
 	//LensHaloPseudoNFW(InputParams& params);
 	~LensHaloPseudoNFW();
   
@@ -942,7 +942,7 @@ public:
 	LensHaloPowerLaw();
   LensHaloPowerLaw(float my_mass,float my_Rsize,PosType my_zlens,PosType my_beta
                    ,float my_fratio,float my_pa,const COSMOLOGY &cosmo
-                   ,EllipMethod my_ellip_method=Pseudo);
+                   ,EllipMethod my_ellip_method=EllipMethod::Pseudo);
 	//LensHaloPowerLaw(InputParams& params);
 	~LensHaloPowerLaw();
   
@@ -1215,7 +1215,7 @@ protected:
 class LensHaloHernquist: public LensHalo{
 public:
 	//LensHaloHernquist();
-  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=Pseudo);
+  LensHaloHernquist(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio,float my_pa,const COSMOLOGY &cosmo, EllipMethod my_ellip_method=EllipMethod::Pseudo);
 	//LensHaloHernquist(InputParams& params);
 	virtual ~LensHaloHernquist();
   
@@ -1295,7 +1295,7 @@ public:
 	//LensHaloJaffe();
   LensHaloJaffe(float my_mass,float my_Rsize,PosType my_zlens,float my_rscale,float my_fratio
                 ,float my_pa,const COSMOLOGY &cosmo
-                , EllipMethod my_ellip_method=Pseudo);
+                , EllipMethod my_ellip_method=EllipMethod::Pseudo);
 	//LensHaloJaffe(InputParams& params);
 	virtual ~LensHaloJaffe();
   

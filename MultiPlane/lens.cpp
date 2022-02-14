@@ -101,8 +101,8 @@ void Lens::defaultParams(PosType z_source,bool verbose)
 
   
   flag_switch_main_halo_on = true;
-  main_halo_type = null_lens;
-  main_galaxy_halo_type = null_gal;
+  main_halo_type = LensHaloType::null_lens;
+  main_galaxy_halo_type = GalaxyLensHaloType::null_gal;
   
   read_redshift_planes = false;
   flag_switch_field_off = false;
@@ -111,14 +111,14 @@ void Lens::defaultParams(PosType z_source,bool verbose)
 
   field_Nplanes_original = 0;
   field_Nplanes_current = field_Nplanes_original;
-  field_int_prof_type = null_lens;
+  field_int_prof_type = LensHaloType::null_lens;
   
   flag_field_gal_on = false;
-  field_int_prof_gal_type = null_gal;
+  field_int_prof_gal_type = GalaxyLensHaloType::null_gal;
   mass_func_PL_slope =0;
   field_prof_internal_slope = 0;
   field_input_sim_file = "";
-  field_mass_func_type = PressSchechter;
+  field_mass_func_type = MassFuncType::PressSchechter;
   
   sim_input_flag = false;
   field_min_mass = 0;
@@ -196,39 +196,39 @@ void Lens::printMultiLens(){
 	std::cout << endl << "MAIN HALOS" << endl;
 	std::cout << "Main lens profile type:" << endl;
 	switch(main_halo_type){
-    case null_lens:
+    case LensHaloType::null_lens:
       std::cout << "no lens" << endl;
       break;
-    case nfw_lens:
+    case LensHaloType::nfw_lens:
       std::cout << "NFW lens" << endl;
       break;
-    case pnfw_lens:
+    case LensHaloType::pnfw_lens:
       std::cout << "PseudoNFW lens" << endl;
       std::cout << "slope: " << field_prof_internal_slope << endl;
       break;
-    case pl_lens:
+    case LensHaloType::pl_lens:
       std::cout << "PowerLaw lens" << endl;
       std::cout << "slope: " << field_prof_internal_slope << endl;
       break;
-    case nsie_lens:
+    case LensHaloType::nsie_lens:
       std::cout << "NSIE lens" << endl;
       break;
-    case ana_lens:
+    case LensHaloType::ana_lens:
       std::cout << "AnaNSIE lens" << endl;
       break;
-    case uni_lens:
+    case LensHaloType::uni_lens:
       std::cout << "UniNSIE lens" << endl;
       break;
-    case moka_lens:
+    case LensHaloType::moka_lens:
       std::cout << "MOKA lens" << endl;
       break;
-    case dummy_lens:
+    case LensHaloType::dummy_lens:
       std::cout << "Dummy lens" << endl;
       break;
-    case hern_lens:
+    case LensHaloType::hern_lens:
       std::cout << "Hernquist lens" << endl;
       break;
-    case jaffe_lens:
+    case LensHaloType::jaffe_lens:
       std::cout << "Jaffe lens" << endl;
       break;
 	}
@@ -237,19 +237,19 @@ void Lens::printMultiLens(){
     
 	std::cout << endl << "Main galaxies profile type:" << endl;
 	switch(main_galaxy_halo_type){
-    case null_gal:
+    case GalaxyLensHaloType::null_gal:
       std::cout << "no galaxy" << endl;
       break;
-    case nsie_gal:
+    case GalaxyLensHaloType::nsie_gal:
       std::cout << "NSIE galaxy" << endl;
       break;
-    case pl_gal:
+    case GalaxyLensHaloType::pl_gal:
       std::cout << "PowerLaw galaxy" << endl;
       break;
-    case hern_gal:
+    case GalaxyLensHaloType::hern_gal:
       std::cout << "Hernquist galaxy" << endl;
       break;
-    case jaffe_gal:
+    case GalaxyLensHaloType::jaffe_gal:
       std::cout << "Jaffe galaxy" << endl;
       break;
 	}
@@ -267,13 +267,13 @@ void Lens::printMultiLens(){
 		std::cout << "Mass function type: "<< endl;
     
 		switch(field_mass_func_type){
-      case PressSchechter:
+      case MassFuncType::PressSchechter:
         std::cout << "  Press-Schechter mass function " << endl;
         break;
-      case ShethTormen:
+      case MassFuncType::ShethTormen:
         std::cout << "  Sheth-Tormen mass function " << endl;
         break;
-      case PowerLaw:
+      case MassFuncType::PowerLaw:
         std::cout << "  Power law mass function " << endl;
         std::cout << "  slope: " << mass_func_PL_slope << endl;
         break;
@@ -282,39 +282,39 @@ void Lens::printMultiLens(){
 		std::cout << endl << "Field halos profile type:" << endl;
 		switch(field_int_prof_type)
 		{
-			case null_lens:
+      case LensHaloType::null_lens:
 				std::cout << "no field type" << endl;
 				break;
-			case nfw_lens:
+      case LensHaloType::nfw_lens:
 				std::cout << "NFW field type" << endl;
 				break;
-			case pnfw_lens:
+      case LensHaloType::pnfw_lens:
 				std::cout << "PseudoNFW field type" << endl;
 				std::cout << "slope: " << field_prof_internal_slope << endl;
 				break;
-			case pl_lens:
+      case LensHaloType::pl_lens:
 				std::cout << "PowerLaw field type" << endl;
 				std::cout << "slope: " << field_prof_internal_slope << endl;
 				break;
-			case nsie_lens:
+      case LensHaloType::nsie_lens:
 				std::cout << "NSIE field type" << endl;
 				break;
-			case ana_lens:
+      case LensHaloType::ana_lens:
 				std::cout << "AnaNSIE field type" << endl;
 				break;
-			case uni_lens:
+      case LensHaloType::uni_lens:
 				std::cout << "UniNSIE field type" << endl;
 				break;
-      case moka_lens:
+      case LensHaloType::moka_lens:
         std::cout << "MOKA field type" << endl;
         break;
-			case dummy_lens:
+      case LensHaloType::dummy_lens:
 				std::cout << "Dummy field type" << endl;
 				break;
-			case hern_lens:
+      case LensHaloType::hern_lens:
 				std::cout << "Hernquist field type" << endl;
 				break;
-			case jaffe_lens:
+      case LensHaloType::jaffe_lens:
 				std::cout << "Jaffe field type" << endl;
 				break;
 		}
@@ -323,19 +323,19 @@ void Lens::printMultiLens(){
 
 		std::cout << endl << "Field galaxies profile type:" << endl;
 		switch(field_int_prof_gal_type){
-      case null_gal:
+      case GalaxyLensHaloType::null_gal:
         std::cout << "no field galaxy type" << endl;
         break;
-      case nsie_gal:
+      case GalaxyLensHaloType::nsie_gal:
         std::cout << "NSIE field galaxy type" << endl;
         break;
-      case pl_gal:
+      case GalaxyLensHaloType::pl_gal:
         std::cout << "PowerLaw field galaxy type" << endl;
         break;
-      case hern_gal:
+      case GalaxyLensHaloType::hern_gal:
         std::cout << "Hernquist field galaxy type" << endl;
         break;
-      case jaffe_gal:
+      case GalaxyLensHaloType::jaffe_gal:
         std::cout << "Jaffe field galaxy type" << endl;
         break;
 
@@ -404,7 +404,8 @@ void Lens::createFieldPlanes(bool verbose)
     PosType sigma_back;
     if(sigma_back_Tab.size() < field_Nplanes_original){
       sigma_back =
-        cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(PI/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/(PI*pow(sqrt(fieldofview/PI)*PI*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
+        cosmo.haloMassInBufferedCone(field_min_mass,z1,z2,fieldofview*pow(PI/180,2),field_buffer,int(field_mass_func_type)
+                                     ,mass_func_PL_slope)/(PI*pow(sqrt(fieldofview/PI)*PI*field_Dl[i]/180/(1+field_plane_redshifts[i]) + field_buffer,2));
       sigma_back_Tab.push_back(sigma_back);
     }else{
       sigma_back = sigma_back_Tab[i];
@@ -1144,7 +1145,8 @@ void Lens::ComputeHalosDistributionVariables ()
 {
   const PosType MaxLogm=16.;
   
-  aveNhalosField = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(PI/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
+  aveNhalosField = cosmo.haloNumberInBufferedCone(field_min_mass,0,zsource,fieldofview*pow(PI/180,2),field_buffer,int(field_mass_func_type)
+                                                  ,mass_func_PL_slope);
   
   Utilities::fill_linear(zbins,Nzbins,0.0,zsource);
   // construct redshift distribution table
@@ -1152,7 +1154,7 @@ void Lens::ComputeHalosDistributionVariables ()
   zbins[0] = 0;
   
   for(int k=1;k<Nzbins-1;++k){
-    NhalosbinZ[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(PI/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/aveNhalosField;
+    NhalosbinZ[k] = cosmo.haloNumberInBufferedCone(field_min_mass,zbins[k],zsource,fieldofview*pow(PI/180,2),field_buffer,int(field_mass_func_type),mass_func_PL_slope)/aveNhalosField;
   }
   // std::cout << std::endl ;
   zbins[Nzbins-1] = zsource;
@@ -1171,13 +1173,13 @@ void Lens::ComputeHalosDistributionVariables ()
     z1 = np*zsource/(NZSamples);
     z2 = (np+1)*zsource/(NZSamples);
     
-    Nhaloestot_Tab[np] = cosmo.haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(PI/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope);
+    Nhaloestot_Tab[np] = cosmo.haloNumberInBufferedCone(pow(10,Logm[0]),z1,z2,fieldofview*pow(PI/180,2),field_buffer,int(field_mass_func_type),mass_func_PL_slope);
     // std::cout << Nhaloestot_Tab[np] << " "  ;
     
     NhalosbinMass[np][0] = 1;
     for(int k=1;k<Nmassbin-1;k++){
       // cumulative number density in one square degree
-      NhalosbinMass[np][k] = cosmo.haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(PI/180,2),field_buffer,field_mass_func_type,mass_func_PL_slope)/Nhaloestot_Tab[np];
+      NhalosbinMass[np][k] = cosmo.haloNumberInBufferedCone(pow(10,Logm[k]),z1,z2,fieldofview*pow(PI/180,2),field_buffer,int(field_mass_func_type),mass_func_PL_slope)/Nhaloestot_Tab[np];
     }
     NhalosbinMass[np][Nmassbin-1] = 0;
     
@@ -1309,49 +1311,49 @@ void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
       
 			switch(field_int_prof_type)
 			{
-				case null_lens:
+        case LensHaloType::null_lens:
 					ERROR_MESSAGE();
 					std::cout << "field_int_prof_type is null!" << std::endl;
 					break;
-				case nfw_lens:
+        case LensHaloType::nfw_lens:
 					//field_halos.push_back(new LensHaloNFW);
           field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],Rsize/rscale,1.0,0,cosmo));
 					break;
-				case pnfw_lens:
+        case LensHaloType::pnfw_lens:
 					//field_halos.push_back(new LensHaloPseudoNFW);
           field_halos.push_back(new LensHaloPseudoNFW(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],Rsize/rscale,3,1.0,0,cosmo));
 					break;
-				case pl_lens:
+        case LensHaloType::pl_lens:
 					//field_halos.push_back(new LensHaloPowerLaw);
           field_halos.push_back(new LensHaloPowerLaw(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],1.0,1.0,0,cosmo));
           
 					break;
-				case nsie_lens:
+        case LensHaloType::nsie_lens:
           //std::cout << "Warning: All galaxies are spherical" << std::endl;
 					field_halos.push_back(new LensHaloRealNSIE(mass*(1-field_galaxy_mass_fraction),halo_zs_vec[i],sigma,0.0,1.0,0,cosmo));
 					//field_halos.push_back(new LensHaloRealNSIE);
 					break;
-				case ana_lens:
+        case LensHaloType::ana_lens:
 					ERROR_MESSAGE();
 					std::cout << "AnaNSIE not supported." << std::endl;
 					break;
-				case uni_lens:
+        case LensHaloType::uni_lens:
 					ERROR_MESSAGE();
 					std::cout << "UniNSIE not supported." << std::endl;
 					break;
-        case moka_lens:
+        case LensHaloType::moka_lens:
           ERROR_MESSAGE();
           std::cout << "MOKA not supported." << std::endl;
           break;
-				case dummy_lens:
+        case LensHaloType::dummy_lens:
 					field_halos.push_back(new LensHaloDummy);
           field_halos[j]->setZlens(halo_zs_vec[i],cosmo);
 					break;
-				case hern_lens:
+        case LensHaloType::hern_lens:
 					//field_halos.push_back(new LensHaloHernquist);
           field_halos.push_back(new LensHaloHernquist(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],rscale,1.0,0,cosmo));
 					break;
-				case jaffe_lens:
+        case LensHaloType::jaffe_lens:
 					//field_halos.push_back(new LensHaloJaffe);
           field_halos.push_back(new LensHaloJaffe(mass*(1-field_galaxy_mass_fraction),Rsize,halo_zs_vec[i],rscale,1.0,0,cosmo));
 					break;
@@ -1372,24 +1374,24 @@ void Lens::createFieldHalos(bool verbose,DM_Light_Division division_mode)
       
 			if(flag_field_gal_on){
         switch(field_int_prof_gal_type){
-          case pl_gal:
+          case GalaxyLensHaloType::pl_gal:
             ERROR_MESSAGE();
             std::cout << "field_int_prof_gal_type 2, i.e. PowerLaw not yet implemented!" << std::endl;
             break;
-          case hern_gal:
+          case GalaxyLensHaloType::hern_gal:
             ERROR_MESSAGE();
             std::cout << "field_int_prof_gal_type 3, i.e. Hernquist not yet implemented!" << std::endl;
             break;
-          case jaffe_gal:
+          case GalaxyLensHaloType::jaffe_gal:
             ERROR_MESSAGE();
             std::cout << "field_int_prof_gal_type 4, i.e. Jaffe not yet implemented!" << std::endl;
             break;
-          case null_gal:
+          case GalaxyLensHaloType::null_gal:
             ERROR_MESSAGE();
             std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
             break;
             
-          case nsie_gal:
+          case GalaxyLensHaloType::nsie_gal:
             
             float sigma = 126*pow(mass*field_galaxy_mass_fraction/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
             //std::cout << "Warning: All galaxies are spherical" << std::endl;
@@ -1573,50 +1575,50 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
       
       switch(field_int_prof_type)
 			{
-				case null_lens:
+        case LensHaloType::null_lens:
 					ERROR_MESSAGE();
 					std::cout << "field_int_prof_type is null!" << std::endl;
 					break;
-				case nfw_lens:
+        case LensHaloType::nfw_lens:
 					field_halos.push_back(new LensHaloNFW);
 					break;
-				case pnfw_lens:
+        case LensHaloType::pnfw_lens:
 					field_halos.push_back(new LensHaloPseudoNFW);
 					break;
 					ERROR_MESSAGE();
 					std::cout << "PseudoNFW not supported." << std::endl;
 					break;
-				case pl_lens:
+        case LensHaloType::pl_lens:
 					ERROR_MESSAGE();
 					std::cout << "PowerLaw not supported." << std::endl;
 					break;
-				case nsie_lens:
+        case LensHaloType::nsie_lens:
           field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,1.0,0.0,cosmo));
           
 					//field_halos.push_back(new LensHaloRealNSIE);
 					break;
-				case ana_lens:
+        case LensHaloType::ana_lens:
 					ERROR_MESSAGE();
 					std::cout << "AnaNSIE not supported." << std::endl;
 					break;
-				case uni_lens:
+        case LensHaloType::uni_lens:
 					ERROR_MESSAGE();
 					std::cout << "UniNSIE not supported." << std::endl;
 					break;
-        case moka_lens:
+        case LensHaloType::moka_lens:
           ERROR_MESSAGE();
           std::cout << "MOKA not supported." << std::endl;
           break;
-				case dummy_lens:
+        case LensHaloType::dummy_lens:
 					field_halos.push_back(new LensHaloDummy);
 					ERROR_MESSAGE();
 					std::cout << "Why would you want dummy file halos?!" << std::endl;
 					break;
-				case hern_lens:
+        case LensHaloType::hern_lens:
 					ERROR_MESSAGE();
 					std::cout << "Hernquist not supported." << std::endl;
 					break;
-				case jaffe_lens:
+        case LensHaloType::jaffe_lens:
 					ERROR_MESSAGE();
 					std::cout << "Jaffe not supported." << std::endl;
 					break;
@@ -1624,7 +1626,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
       field_halos[j]->setID(haloid);
       
 			field_halos[j]->setZlens(z,cosmo);
-      if(field_int_prof_type != nsie_lens){
+      if(field_int_prof_type != LensHaloType::nsie_lens){
         
         field_halos[j]->initFromFile(mass*(1-field_galaxy_mass_fraction)
                                      ,seed,vmax,r_halfmass*cosmo.gethubble());
@@ -1659,15 +1661,15 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
         float pa = 2*PI*ran2(seed);  //TODO: This is a kluge.
         
  				switch(field_int_prof_gal_type){
-          case null_gal:
+          case GalaxyLensHaloType::null_gal:
             ERROR_MESSAGE();
             std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
             break;
-          case nsie_gal:
+          case GalaxyLensHaloType::nsie_gal:
             field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,cosmo));
             //std::cout << sigma << std::endl;
             break;
-          case pl_gal:
+          case GalaxyLensHaloType::pl_gal:
             assert(field_int_prof_gal_slope>0);
           
             field_halos.push_back(new LensHaloPowerLaw(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,field_int_prof_gal_slope,fratio,pa+PI/2.,cosmo,Fourier));
@@ -1677,10 +1679,10 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
             
             //std::cout << "PL "<<r_half_stel_mass/1.34 << std::endl;
             break;
-          case hern_gal:
+          case GalaxyLensHaloType::hern_gal:
             field_halos.push_back(new LensHaloHernquist(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction, fratio, 0.0),z,1,fratio,pa,cosmo,Pseudo));
             break;
-          case jaffe_gal:
+          case GalaxyLensHaloType::jaffe_gal:
             field_halos.push_back(new LensHaloJaffe(mass*field_galaxy_mass_fraction,rmaxNSIE(sigma, mass*field_galaxy_mass_fraction,fratio,0.0),z,1,fratio,pa,cosmo,Pseudo));
             break;
             
@@ -1736,7 +1738,7 @@ void Lens::readInputSimFileMillennium(bool verbose,DM_Light_Division division_mo
 	std::cout << "    It is now " << fieldofview << " deg^2" << std::endl;
   
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-	field_mass_func_type = ShethTormen; // set mass function
+	field_mass_func_type = MassFuncType::ShethTormen; // set mass function
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMillennium()" << std::endl;
 	// sort the field_halos by readshift
@@ -1922,11 +1924,11 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
         
         switch(field_int_prof_type)
         {
-          case null_lens:
+          case LensHaloType::null_lens:
             ERROR_MESSAGE();
             std::cout << "field_int_prof_type is null!" << std::endl;
             break;
-          case nfw_lens:
+          case LensHaloType::nfw_lens:
             // calculate the average size and concentration of a NFW at the mass and reshift
             if(mass > 0){
               HALOCalculator hcalc(&cosmo,mass*(1-field_galaxy_mass_fraction),z);
@@ -1934,43 +1936,43 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
               field_halos.push_back(new LensHaloNFW(mass*(1-field_galaxy_mass_fraction),hcalc.getRvir(),z,hcalc.getConcentration(),1.0,0.0,cosmo));
             }
             break;
-          case pnfw_lens:
+          case LensHaloType::pnfw_lens:
             field_halos.push_back(new LensHaloPseudoNFW);
             break;
             ERROR_MESSAGE();
             std::cout << "PseudoNFW not supported." << std::endl;
             break;
-          case pl_lens:
+          case LensHaloType::pl_lens:
             ERROR_MESSAGE();
             std::cout << "PowerLaw not supported." << std::endl;
             break;
-          case nsie_lens:
+          case LensHaloType::nsie_lens:
             field_halos.push_back(new LensHaloRealNSIE(mass*(1-field_galaxy_mass_fraction),z,sigma,0.0,1.0,0.0,cosmo));
             
             //field_halos.push_back(new LensHaloRealNSIE);
             break;
-          case ana_lens:
+          case LensHaloType::ana_lens:
             ERROR_MESSAGE();
             std::cout << "AnaNSIE not supported." << std::endl;
             break;
-          case uni_lens:
+          case LensHaloType::uni_lens:
             ERROR_MESSAGE();
             std::cout << "UniNSIE not supported." << std::endl;
             break;
-          case moka_lens:
+          case LensHaloType::moka_lens:
             ERROR_MESSAGE();
             std::cout << "MOKA not supported." << std::endl;
             break;
-         case dummy_lens:
+          case LensHaloType::dummy_lens:
             field_halos.push_back(new LensHaloDummy);
             ERROR_MESSAGE();
             std::cout << "Why would you want dummy file halos?!" << std::endl;
             break;
-          case hern_lens:
+          case LensHaloType::hern_lens:
             ERROR_MESSAGE();
             std::cout << "Hernquist not supported." << std::endl;
             break;
-          case jaffe_lens:
+          case LensHaloType::jaffe_lens:
             ERROR_MESSAGE();
             std::cout << "Jaffe not supported." << std::endl;
             break;
@@ -2000,11 +2002,11 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
           float pa = 2*PI*ran2(seed);  //TODO: This is a kluge.
           
           switch(field_int_prof_gal_type){
-            case null_gal:
+            case GalaxyLensHaloType::null_gal:
               ERROR_MESSAGE();
               std::cout << "flag_field_gal_on is true, but field_int_prof_gal_type is null!" << std::endl;
               break;
-            case nsie_gal:
+            case GalaxyLensHaloType::nsie_gal:
               field_halos.push_back(new LensHaloRealNSIE(mass*field_galaxy_mass_fraction,z,sigma,0.0,fratio,pa,cosmo));
               break;
             default:
@@ -2081,7 +2083,7 @@ void Lens::readInputSimFileMultiDarkHalos(bool verbose,DM_Light_Division divisio
   }
   
 	if(verbose) std::cout << "Setting mass function to Sheth-Tormen." << std::endl;
-	field_mass_func_type = ShethTormen; // set mass function
+	field_mass_func_type = MassFuncType::ShethTormen; // set mass function
   
 	if(verbose) std::cout << "sorting in Lens::readInputSimFileMultiDarkHalos()" << std::endl;
 	// sort the field_halos by readshift
@@ -2232,11 +2234,11 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
     
     switch(field_int_prof_type)
     {
-      case null_lens:
+      case LensHaloType::null_lens:
         ERROR_MESSAGE();
         std::cout << "field_int_prof_type is null!" << std::endl;
         break;
-      case nfw_lens:
+      case LensHaloType::nfw_lens:
         // calculate the average size and concentration of a NFW at the mass and reshift
 
         std::cout << "Making an NFW halo, but not of the right mass!" << std::endl;
@@ -2248,42 +2250,42 @@ void Lens::readInputSimFileObservedGalaxies(bool verbose)
         field_halos.push_back(new LensHaloNFW(mass,hcalc.getRvir(),z,hcalc.getConcentration(),1.0,0.0,cosmo));
       }
         break;
-      case pnfw_lens:
+      case LensHaloType::pnfw_lens:
         ERROR_MESSAGE();
         std::cout << "PseudoNFW not supported." << std::endl;
         break;
-      case pl_lens:
+      case LensHaloType::pl_lens:
         ERROR_MESSAGE();
         std::cout << "PowerLaw not supported." << std::endl;
         break;
-      case nsie_lens:
+      case LensHaloType::nsie_lens:
         
         mass = PI*vdist*vdist*rmax/Grav/lightspeed/lightspeed;
         field_halos.push_back(new LensHaloRealNSIE(mass,z,vdist,0.0,1.0,0.0,cosmo));
         
         break;
-      case ana_lens:
+      case LensHaloType::ana_lens:
         ERROR_MESSAGE();
         std::cout << "AnaNSIE not supported." << std::endl;
         break;
-      case uni_lens:
+      case LensHaloType::uni_lens:
         ERROR_MESSAGE();
         std::cout << "UniNSIE not supported." << std::endl;
         break;
-      case moka_lens:
+      case LensHaloType::moka_lens:
         ERROR_MESSAGE();
         std::cout << "MOKA not supported." << std::endl;
         break;
-      case dummy_lens:
+      case LensHaloType::dummy_lens:
         field_halos.push_back(new LensHaloDummy);
         ERROR_MESSAGE();
         std::cout << "Why would you want dummy file halos?!" << std::endl;
         break;
-      case hern_lens:
+      case LensHaloType::hern_lens:
         ERROR_MESSAGE();
         std::cout << "Hernquist not supported." << std::endl;
         break;
-      case jaffe_lens:
+      case LensHaloType::jaffe_lens:
         ERROR_MESSAGE();
         std::cout << "Jaffe not supported." << std::endl;
         break;
@@ -2573,9 +2575,9 @@ void Lens::GenerateFieldHalos(double min_mass
   mass_func_PL_slope = 0;
   
   field_int_prof_type = halo_type;
-  if(galaxy_type == null_gal){
+  if(galaxy_type == GalaxyLensHaloType::null_gal){
     flag_field_gal_on = false;
-    field_int_prof_gal_type = nsie_gal;
+    field_int_prof_gal_type = GalaxyLensHaloType::nsie_gal;
   }else{
     flag_field_gal_on = true;
     field_int_prof_gal_type = galaxy_type;
