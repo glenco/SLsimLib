@@ -1183,6 +1183,8 @@ public:
     LensHalo::setZlens(my_zlens,cosmo);
   }
 
+  /// set the position angle
+  void set_pa(float my_pa){pa=my_pa;};
   
 protected:
   
