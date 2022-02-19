@@ -930,7 +930,9 @@ void LensHaloTNSIE::force_halo(
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
  
-  
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
  
@@ -955,38 +957,38 @@ void LensHaloTNSIE::force_halo(
       gamma[1] -= units*tmp[1];
     }
     
-    if(subtract_point)
-    {
-      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += fac*xcm[0];
-      alpha[1] += fac*xcm[1];
-      
-      {
-        fac = 2.0*fac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-        gamma[1] += xcm[0]*xcm[1]*fac;
-      }
-    }
+//    if(subtract_point)
+//    {
+//      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += fac*xcm[0];
+//      alpha[1] += fac*xcm[1];
+//
+//      {
+//        fac = 2.0*fac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+//        gamma[1] += xcm[0]*xcm[1]*fac;
+//      }
+//    }
   }
-  else
-  {
-    // outside of the halo
-    if (subtract_point == false)
-    {
-      PosType prefac = LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += -1.0*prefac*xcm[0];
-      alpha[1] += -1.0*prefac*xcm[1];
-      
-      {
-        PosType tmp = -2.0*prefac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-      }
-    }
-  }
-  
+//  else
+//  {
+//    // outside of the halo
+//    if (subtract_point == false)
+//    {
+//      PosType prefac = LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += -1.0*prefac*xcm[0];
+//      alpha[1] += -1.0*prefac*xcm[1];
+//
+//      {
+//        PosType tmp = -2.0*prefac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+//        gamma[1] += xcm[0]*xcm[1]*tmp;
+//      }
+//    }
+//  }
+//
   return;
 }
 
@@ -1163,6 +1165,12 @@ PosType LensHaloRealNSIE::rmax_calc(){
 
 void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening)
 {
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
+  
   if (elliptical_flag){
     force_halo_asym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
     //assert(!isinf(*kappa) );
@@ -1171,6 +1179,67 @@ void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,Kappa
     //assert(!isinf(*kappa) );
   }
 }
+
+/*
+ Used in derived classes to subtract the point mass if necescary and take care of quantities beyond Rmax
+ 
+ Returns true when no further calculation of the quantities should be done.
+ 
+ This should be put in the beginning of all of the force_halo() functions.
+ 
+ rcm2 needs to be calculated first
+ 
+ */
+bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
+    ,PosType const *xcm,PosType rcm2
+    ,bool subtract_point,PosType screening)
+{
+  
+  if(rcm2 < Rmax*Rmax){
+    if(subtract_point){
+    
+      PosType fac = screening*mass/rcm2/PI;
+    
+      alpha[0] += fac*xcm[0];
+      alpha[1] += fac*xcm[1];
+  
+      fac = 2.0*fac/rcm2;
+          
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+      gamma[1] += xcm[0]*xcm[1]*fac;
+      
+      *phi += -0.5*mass*log(rcm2) / PI;
+    }
+//    else{
+//      alpha[0] = alpha[1] = 0.0;
+//      gamma[0] = gamma[1] = gamma[2] = 0.0;
+//      *kappa = 0.0;
+//      *phi = 0.0 ;
+//    }
+    return false;
+  }
+  if(!subtract_point){
+    
+    PosType prefac = mass/rcm2/PI;
+    alpha[0] += -1.0*prefac*xcm[0];
+    alpha[1] += -1.0*prefac*xcm[1];
+      
+    PosType tmp = -2.0*prefac/rcm2;
+    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+    gamma[1] += xcm[0]*xcm[1]*tmp;
+    
+    *phi += 0.5*mass*log(rcm2) / PI;
+  }
+//  else{
+//    alpha[0] = alpha[1] = 0.0;
+//    gamma[0] = gamma[1] = gamma[2] = 0.0;
+//    *kappa = 0.0;
+//    *phi = 0.0 ;
+//  }
+  
+  return true;
+}
+
 
 /** \brief returns the lensing quantities of a ray in center of mass coordinates for a symmetric halo
  *
@@ -1521,6 +1590,9 @@ void LensHaloRealNSIE::force_halo(
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
  
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
   
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
@@ -1588,38 +1660,38 @@ void LensHaloRealNSIE::force_halo(
     }
     
     
-    if(subtract_point)
-    {
-      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += fac*xcm[0];
-      alpha[1] += fac*xcm[1];
-      
-      {
-        fac = 2.0*fac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-        gamma[1] += xcm[0]*xcm[1]*fac;
-      }
-    }
+//    if(subtract_point)
+//    {
+//      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += fac*xcm[0];
+//      alpha[1] += fac*xcm[1];
+//
+//      {
+//        fac = 2.0*fac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+//        gamma[1] += xcm[0]*xcm[1]*fac;
+//      }
+//    }
     
   }
-  else
-  {
-    // outside of the halo
-    if (subtract_point == false)
-    {
-      PosType prefac = LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += -1.0*prefac*xcm[0];
-      alpha[1] += -1.0*prefac*xcm[1];
-      
-      {
-        PosType tmp = -2.0*prefac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-      }
-    }
-  }
+//  else
+//  {
+//    // outside of the halo
+//    if (subtract_point == false)
+//    {
+//      PosType prefac = LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += -1.0*prefac*xcm[0];
+//      alpha[1] += -1.0*prefac*xcm[1];
+//
+//      {
+//        PosType tmp = -2.0*prefac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+//        gamma[1] += xcm[0]*xcm[1]*tmp;
+//      }
+//    }
+//  }
   
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
@@ -1968,6 +2040,10 @@ void LensHaloDummy::force_halo(PosType *alpha
 )
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
   PosType prefac = LensHalo::get_mass()/rcm2/PI;
   PosType tmp = subtract_point*prefac;
   alpha[0] += tmp*xcm[0];
