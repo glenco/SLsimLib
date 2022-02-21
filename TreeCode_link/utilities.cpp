@@ -98,15 +98,6 @@ void log_polar_grid(Point *i_points,PosType rmax,PosType rmin,PosType *center,lo
  */
 namespace Utilities{
 
-bool make_directories(const std::string &root_dir){
-  std::cout << "Making directory " << root_dir << std::endl;
-  struct stat st = {0};
-  if ( stat(root_dir.c_str(), &st) == -1) {
-    mkdir(root_dir.c_str(), 0700);
-    return false;
-  }
-  return true;
- }
 
 long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center){
 	long ix,iy;
@@ -830,7 +821,6 @@ std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t 
   int GetNThreads(){return N_THREADS;}
 }
 
-/// throws a runtime error if the directory does not exist
 bool Utilities::IO::check_directory(std::string dir){
   struct stat sb;
   if (stat(dir.c_str(), &sb) != 0 || !S_ISDIR(sb.st_mode)){
@@ -838,6 +828,16 @@ bool Utilities::IO::check_directory(std::string dir){
   }
   return true;
 }
+
+bool Utilities::IO::make_directories(const std::string &root_dir){
+  std::cout << "Making directory " << root_dir << std::endl;
+  struct stat st = {0};
+  if ( stat(root_dir.c_str(), &st) == -1) {
+    mkdir(root_dir.c_str(), 0700);
+    return false;
+  }
+  return true;
+ }
 
 void Utilities::IO::ReadFileNames(
                    std::string dir              /// path to directory containing fits files

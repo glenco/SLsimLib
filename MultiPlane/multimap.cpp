@@ -36,10 +36,12 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,bool subtract_ave
                  ,double ffactor
                  ,double gfactor
+                 ,double rsmooth2
                  ):
 LensHalo(redshift,c),write_shorts(write_subfields)
 ,cosmo(c),cpfits(dir_data + fitsfile),ave_ang_sd(0)
 ,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile),gfactor(gfactor),ffactor(ffactor)
+,rsmooth2(rsmooth2)
 {
   
   ++count;
@@ -61,15 +63,19 @@ LensHalo(redshift,c),write_shorts(write_subfields)
   LensMap tmp_map;
   tmp_map.read_header(fitsfilename,D);
    
+  resolution_mpc = tmp_map.x_resolution();
+  angular_resolution = tmp_map.angular_pixel_size;
+  
   //std::size_t size = bigmap.nx*bigmap.ny;
   //rs2 = submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   //rs2 = 2*4*submap.boxlMpc*submap.boxlMpc/( 2*PI*submap.nx );
   rs2 = tmp_map.boxlMpc*tmp_map.boxlMpc/( 2*tmp_map.nx )*gfactor/ffactor;
-  wlr.rs2 = wsr.rs2 = rs2;
-  
-  resolution_mpc = tmp_map.x_resolution();
-  angular_resolution = tmp_map.angular_pixel_size;
-  
+  //wlr.rs2 = wsr.rs2 = rs2;
+  wlr.rs2 = rs2 + rsmooth2;
+  wsr.rs2 = rs2;
+  wsr_smooth.rs2 = rs2;
+  wsr_smooth.r_sm2 = rsmooth2;
+
   //border_width = 4.5*sqrt(rs2)/res + 1;
   border_width_pix = ffactor * sqrt(rs2) / resolution_mpc + 1;
  
@@ -262,7 +268,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     
     padd_lr = 1 + 2 * border_width_pix * resolution_mpc / long_range_map.x_range();
     padd_lr = MAX(padd_lr,2);
-  }
+  }  // long rang map deosn't exist
 
   /// set prefix to subfield maps
   size_t lastindex = fitsfile.find_last_of(".");
@@ -319,6 +325,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
      }
    }
   
+ 
   if(!long_range_file_exists){
     long_range_map.ProcessFFTs<WLR>(padd_lr,wlr,plan_long_range);
     
@@ -374,7 +381,6 @@ void LensHaloMultiMap::push_back_submapPhys(Point_2d ll,Point_2d ur){
 */
 void LensHaloMultiMap::resetsubmapPhys(int i
                                        ,Point_2d ll
-                                       //,Point_2d ur
                                        ){
   
   std::vector<long> lower_left_pix(2);
@@ -390,7 +396,6 @@ void LensHaloMultiMap::resetsubmapPhys(int i
 void LensHaloMultiMap::resetsubmap(
                               int i
                               ,const std::vector<long> &lower_left_pix
-                              //,const std::vector<long> &upper_right
                                         ){
   if(i >= short_range_maps.size()){
     std::cerr << "Short range map has not been created yet." << std::endl;
@@ -414,8 +419,6 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
     std::cerr << "  lower left " << lower_left[0] << " " << lower_left[1]
               << " upper_right " << upper_right[0] << " " << upper_right[1] << std::endl;
     std::cerr << " N " << Noriginal[0] << " " << Noriginal[1] << std::endl;
-
-//    throw std::invalid_argument("out of bounds");
   }
   
   /// construct file name and have it printed
@@ -513,7 +516,12 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
       map.boxlMpc = map.nx * resolution_mpc;
     }
 
-    map.ProcessFFTs(wsr,plan_short_range);
+    if(wsr_smooth.r_sm2 <= 0){
+      map.ProcessFFTs<WSR>(wsr,plan_short_range);
+    }else{
+      map.ProcessFFTs<WSRSMOOTH>(wsr_smooth,plan_short_range);
+    }
+ 
     //map.PreProcessFFTWMap(wsr,mutex_multimap);
 
     // cut off bounders

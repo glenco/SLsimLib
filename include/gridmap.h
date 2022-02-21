@@ -70,7 +70,10 @@ struct GridMap{
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
 
   /// this will make a fits map of the grid as is.
-  void writeFitsUniform(LensingVariable lensvar,std::string filename){
+  void writeFitsUniform(
+                        LensingVariable lensvar    ///< quantity to be output
+                        ,std::string filename     ///< name of output fits file
+                        ){
     PixelMap map = writePixelMap(lensvar);
     map.printFITS(filename);
   }

@@ -120,7 +120,10 @@ public:
    This can be used to sew tiles together into a larger map.
    **/
   void paste(const PixelMap& pmap);
-  
+
+  /// paste a PixelMap on with the lower left pixel match to [nx,ny]
+  void paste(const PixelMap& pmap,long nx,long ny);
+
   /** \brief copy a PixelMap that must be the same without creating a new one..
    
    This avoids calling a any constructor or destructor.
