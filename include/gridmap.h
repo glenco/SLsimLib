@@ -21,6 +21,9 @@
  *
  *  GripMap is faster and uses less memory than Grid.  It does not construct the tree structures for the points 
  *  and thus cannot be used for adaptive mapping or image finding.
+ *
+ *  The distance between the left (lower) most and right (upper) most ray is range so the resolution is range/(N-1).
+ *  The lower left pixel is at center[]-0.5*range and the upper right is at center[]+0.5*range
  */
 
 struct GridMap{
