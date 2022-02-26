@@ -84,7 +84,7 @@ struct LensMap{
   // # of pixels times resolution
   double y_range(){return (upperright[1]-lowerleft[1]);}
 
-  bool evaluate(const double *x,float &sigma,float *gamma,double *alpha);
+  bool evaluate(const double *x,KappaType &sigma,KappaType *gamma,PosType *alpha);
   
 
   LensMap(std::string fits_input_file,double angDist){
