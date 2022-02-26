@@ -1222,27 +1222,7 @@ public:
                 ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
                 ,float f=10 /// cuttoff radius in units of truncation radius
-  ):LensHalo(),
-  q(my_fratio),pa(my_pa),x_T(r_trunc),tt(gamma)
-  {
-    if(tt >= 2){
-      std::cerr << "LensHaloTEPL : power-law index cannot be >= 2 because the mass will be unbounded." << std::endl;
-      throw std::invalid_argument("bad gamma");
-    }
-    
-    LensHalo::setMass(my_mass);
-    LensHalo::setZlens(my_zlens,cosmo);
-    if(q > 1) q = 1/q;
-    q_prime = (1-q*q)/q/q;
-    
-    R = std::complex<double>(cos(pa),sin(pa));
-    
-    SigmaT = my_mass * q * (2-tt) / (2 * PI * x_T * x_T);
-    mass_pi = mass / PI;
-    
-    LensHalo::setRsize(x_T*f);
-    Rmax = Rsize;
-  }
+  );
   
   LensHaloTEPL(const LensHaloTEPL &h):
   LensHalo(h)
@@ -1277,38 +1257,7 @@ public:
 
 
   /// overridden function to calculate the lensing properties
-  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0){
-  
-    std::complex<double> z(xcm[0],xcm[1]);
-    z = z * std::conj(R);
- 
-    double r2=std::norm(z);
-    if(force_point(alpha,kappa,gamma,phi,xcm,r2
-                   ,subtract_point,screening)) return;
-
-    if(r2 < 1.0e-12){
-      *kappa = SigmaT * pow(x_T/1.0e-6,tt);
-      alpha[0] = alpha[1] = gamma[0] = gamma[1] = 0;
-      return;
-    }
-    
-    std::complex<double> a=0;
-    std::complex<double> g=0;
-    double k=0;
-    
-    deflection(z,a,g,k);
-
-    a = - std::conj(a) * R;
-    g = std::conj(g) * R * R;
-    
-    *kappa += k;
-    alpha[0] += a.real();
-    alpha[1] += a.imag();
-    gamma[0] += g.real();
-    gamma[1] += g.imag();
-    
-    assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-  }
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
   /// get the axis ratio
   float get_fratio(){return q;};
@@ -1324,26 +1273,8 @@ public:
   void deflection(std::complex<double> &z
                   ,std::complex<double> &a
                   ,std::complex<double> &g
-                  ,KappaType &sigma) const{
- 
-    double x_e = sqrt(q*q*z.real()*z.real() + z.imag()*z.imag());
-    
-    if(x_e <= x_T){
-      sigma = SigmaT * pow(x_T/x_e,tt);
-      a = mass_pi * pow(x_T/x_e,tt-2) * F(x_e,tt,z) / z;
-    }else{
-      sigma = 0;
-      a = mass_pi * F(x_T,tt,z) / z;
-     }
-
-    g =  (1 - tt) * a / z ;
-    
-    if(x_e <= x_T){
-      g -= sigma * std::conj(z) / z;
-    }else{
-      g -= (2-tt) * mass_pi / sqrt(1. - q_prime * x_T*x_T / z / z ) / z / z;
-    }
-  }
+                  ,KappaType &sigma) const;
+  
   
 protected:
   
@@ -1357,20 +1288,7 @@ protected:
   double mass_pi;
   std::complex<double> R; // rotation
   
-  std::complex<double> F(double r_e,double t,std::complex<double> z) const{
-  
-    std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
-    assert(std::norm(u) < 1);
-    double a = 1;
-    std::complex<double> sum(1,0);
-    for(int n=1 ; n < 20 ; ++n){
-      a *= 2*(n+1-t)/(2*n+2-t);
-      sum += a * u;
-      u *= u;
-    }
-    
-    return sum;
-  }
+  std::complex<double> F(double r_e,double t,std::complex<double> z) const;
 };
 
 class LensHaloTEBPL : public LensHalo{
@@ -1386,23 +1304,7 @@ public:
                 ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
                 ,float f=10 /// cuttoff radius in units of truncation radius
-  ):LensHalo(),
-  q(my_fratio),rb(r_break),rt(r_trunc)
-  ,m2(my_mass/(1 + (t1-t2)/(2-t1)*pow(rb/rt,2-t2)))
-  ,m3(m2*pow(rb/rt,2-t2))
-  ,m1(m2*(2-t2)/(2-t1)*pow(rb/rt,2-t2))
-  ,h1(m1,my_zlens,rb,t1,q,0,cosmo)
-  ,h2(m2,my_zlens,rt,t2,q,0,cosmo)
-  ,h3(m3,my_zlens,rb,t2,q,0,cosmo)
-  {
-    
-    LensHalo::setMass(my_mass);
-    LensHalo::setZlens(my_zlens,cosmo);
-       
-    R = std::complex<double>(cos(my_pa),sin(my_pa));
-    
-    Rmax = Rsize = f*rt;
- }
+  );
 
   ~LensHaloTEBPL(){}
   
@@ -1457,42 +1359,7 @@ public:
 
   void set_pa(double p){pa = p;}
 
-  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0){
- 
-    std::complex<PosType> z(xcm[0],xcm[1]);
-     
-    if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
-                   ,subtract_point,screening)) return;
-    
-    z = z * std::conj(R);
-
-    std::complex<PosType> a=0,g=0;
-    std::complex<PosType> at,gt;
-    double kappat;
-
-    double xe2 = q*q*z.real()*z.real() + z.imag()*z.imag();
-    if(xe2 > rb*rb){
-      h3.deflection(z,at,gt,kappat);
-      a -= at;
-      g -= gt;
-      h2.deflection(z,at,gt,kappat);
-      a += at;
-      g += gt;
-      *kappa += kappat;
-    }
-    h1.deflection(z,at,gt,kappat);
-    a += at;
-    g += gt;
-    *kappa += kappat;
-
-    a = - std::conj(a) * R;
-    g = std::conj(g) * R * R;
-    
-    alpha[0] += a.real();
-    alpha[1] += a.imag();
-    gamma[0] += g.real();
-    gamma[1] += g.imag();
-  }
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1.0);
   
 private:
 
