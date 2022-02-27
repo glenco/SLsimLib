@@ -86,9 +86,8 @@ enum class HaloCatFormats {MillenniumObs,MultiDarkHalos,ObservedData,null_cat};
 enum class EllipMethod {Fourier,Pseudo,Schramm,Keeton};
 
 /// convert a Band type to a string name.
-namespace Utilities{
-  std::string to_string(const Band &band);
-}
+std::string to_string(const Band &band);
+
 /** \brief Structure for reading and writing parameters to and from a parameter file as well as a container 
  * for passing the parameters to other classes and functions.
  *
