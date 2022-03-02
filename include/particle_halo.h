@@ -65,13 +65,11 @@ public:
   ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true)
   {
     Npoints = pvector.size();
-    //if(keep_particles){
-    //  pp = pvector.data();
-    //}else{
-      std::swap(pvector,trash_collector);
-      pp = trash_collector.data();
-    //}
-     set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
+   
+    std::swap(pvector,trash_collector);
+    pp = trash_collector.data();
+  
+    set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
   }
 
   /// this constructor does not take possession of the particles
