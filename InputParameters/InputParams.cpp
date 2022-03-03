@@ -874,7 +874,7 @@ bool InputParams::exist(std::string label) const
 	return true;
 }
 
-std::string Utilities::to_string(const Band &band){
+std::string to_string(const Band &band){
   
   switch (band) {
     case Band::EUC_VIS:

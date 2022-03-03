@@ -153,9 +153,7 @@ inclination(my_inclination)
     ++i;
   }
   
-  LensHalo::Rmax = -8 * Rscale * log(1 - (float)(N-1) / N );
-  LensHalo::setRsize( LensHalo::Rmax );
-  
+ 
   LensHaloParticles<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
   
   // rotate particles to required inclination and position angle
@@ -171,7 +169,10 @@ inclination(my_inclination)
   
   Point_2d no_rotation;
   LensHaloParticles<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,-1,false,false);
-  void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,double max_range,bool recenter,bool verbose);
+
+  LensHalo::Rmax = -8 * Rscale * log(1 - (float)(N-1) / N );
+  LensHalo::setRsize( LensHalo::Rmax );
+  
 };
 
 #endif
