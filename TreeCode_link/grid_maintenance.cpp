@@ -1246,6 +1246,9 @@ void Grid::writeFits(
     case LensingVariable::INVMAG:
       tag = ".invmag.fits";
       break;
+    case LensingVariable::SurfBrightness:
+      tag = ".surfbright.fits";
+      break;
     default:
       break;
   }
@@ -1365,6 +1368,9 @@ void Grid::writeFitsUniform(
       break;
     case LensingVariable::INVMAG:
       tag = ".invmag.fits";
+      break;
+    case LensingVariable::SurfBrightness:
+      tag = ".surfbright.fits";
       break;
     default:
       break;
@@ -1574,6 +1580,9 @@ void Grid::writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVaria
         break;
       case LensingVariable::DELAYT:
         tmp = ppoint->dt;
+        break;
+      case LensingVariable::SurfBrightness:
+        tmp = ppoint->surface_brightness;
         break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;

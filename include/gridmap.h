@@ -79,11 +79,11 @@ struct GridMap{
   }
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
-  PixelMap getPixelMap(int res) const;
+  PixelMap getPixelMapFlux(int res) const;
   /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
   /// The map must have precisely the right size and center to match or an exception will be thrown.
-  /// Constructing the map with PixelMap getPixelMap(int res) will insure that it does.
-  void getPixelMap(PixelMap &map) const;
+  /// Constructing the map with PixelMap getPixelMapFlux(int res) will insure that it does.
+  void getPixelMapFlux(PixelMap &map) const;
   
   /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
   PosType EinsteinArea() const;

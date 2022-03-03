@@ -624,10 +624,10 @@ void PixelMap::AddGridMapBrightness(const GridMap &grid){
   if(units != surfb) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
-    grid.getPixelMap(*this);
+    grid.getPixelMapFlux(*this);
   } catch (const std::invalid_argument& ia) {
     // dimensions and/or alignment do not match
-    PixelMap newmap = grid.getPixelMap(1);
+    PixelMap newmap = grid.getPixelMapFlux(1);
     copy_in(newmap);
   }
   return;
@@ -1507,6 +1507,9 @@ void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
         break;
       case LensingVariable::DELAYT:
         tmp = (*pl_it)->dt/resolution/resolution;
+        break;
+      case LensingVariable::SurfBrightness:
+        tmp = (*pl_it)->surface_brightness;
         break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;

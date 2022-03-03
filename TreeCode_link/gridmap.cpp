@@ -125,7 +125,7 @@ void GridMap::ReInitializeGrid(LensHndl lens){
 }
 
 /// Output a PixelMap of the surface brightness with same res as the GridMap
-PixelMap GridMap::getPixelMap(int resf) const{
+PixelMap GridMap::getPixelMapFlux(int resf) const{
   
   if(resf <=0){
     ERROR_MESSAGE();
@@ -152,13 +152,13 @@ PixelMap GridMap::getPixelMap(int resf) const{
 }
 
 /// surface brightness map
-void GridMap::getPixelMap(PixelMap &map) const{
+void GridMap::getPixelMapFlux(PixelMap &map) const{
   
   int resf = (Ngrid_init-1)/(map.getNx()-1);
   
-  if(resf*map.getNx() != Ngrid_init-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
-  if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
-  if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMap() to contruct a PixelMap.");
+  if(resf*map.getNx() != Ngrid_init-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
   
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
@@ -309,6 +309,10 @@ PixelMap GridMap::writePixelMap(
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].dt;
       break;
+    case LensingVariable::SurfBrightness:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].surface_brightness;
+      break;
     default:
       std::cerr << "GridMap::writePixelMapUniform() does not work for the input LensingVariable" << std::endl;
       throw std::runtime_error("GridMap::writePixelMapUniform() does not work for the input LensingVariable");
@@ -389,6 +393,9 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,Lens
       case LensingVariable::DELAYT:
         tmp = points[i].dt;
         break;
+      case LensingVariable::SurfBrightness:
+        tmp = points[i].surface_brightness;
+        break;
       default:
         std::cerr << "PixelMap::AddGrid() does not work for the input LensingVariable" << std::endl;
         throw std::runtime_error("PixelMap::AddGrid() does not work for the input LensingVariable");
@@ -441,7 +448,10 @@ void GridMap::writeFitsUniform(
     case LensingVariable::INVMAG:
       tag = ".invmag.fits";
       break;
-    default:
+    case LensingVariable::SurfBrightness:
+      tag = ".surfbright.fits";
+      break;
+ default:
       break;
   }
   
