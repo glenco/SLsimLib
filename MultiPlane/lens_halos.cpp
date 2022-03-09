@@ -1308,6 +1308,92 @@ void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,
   gamma[1] += g.imag();
 }
 
+void LensHaloGaussian::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+  
+  std::complex<double> z(xcm[0],xcm[1]);
+  double r2=std::norm(z);
+  if(force_point(alpha,kappa,gamma,phi,xcm,r2
+                 ,subtract_point,screening)) return;
+
+  z = z * std::conj(R);
+  
+  std::complex<double> a=0;
+  std::complex<double> g=0;
+  double k=0;
+  
+  deflection(z,a,g,k);
+
+  a = std::conj(a) * R;
+  g = std::conj(g) * R * R;
+  
+  *kappa += k;
+  alpha[0] += a.real();
+  alpha[1] += a.imag();
+  gamma[0] += g.real();
+  gamma[1] += g.imag();
+  
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+}
+
+void LensHaloGaussian::deflection(std::complex<double> &z
+                ,std::complex<double> &a
+                ,std::complex<double> &g
+                ,KappaType &sigma) const {
+
+
+std::complex<double> zz = z / ss / sqrt(q_prime);
+  zz.real(abs(zz.real()));
+  zz.imag(abs(zz.imag()));
+
+double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
+
+  sigma = SigmaO * exp(- x_e2 );
+   
+  if(q==1.0){
+    a = norm / z * ( 1 - exp( - x_e2 ) );
+    g = a / z  + norm / z * exp( - x_e2 ) * (q*q*z.real() - I*z.imag());
+  }else{
+    
+    //std::complex<double> zz2 = zz*zz;
+    std::complex<double> b = sqrt(x_e2 - zz*zz);
+
+    // this is the correct result in all quadrants
+    //a =  norm * sqrt(z*z)/ z
+    //* ( sqrt(-zz2)/sqrt(zz2)*wF(I*sqrt(-zz2)) - b/(sqrt(zz2 - x_e2))*wF(I*b) * exp(- x_e2 ));
+    a = - norm * I * ( wF(zz) - wF(I*b) * exp(- x_e2 ));
+  
+    std::complex<double> dx_e2dzz = q*q*zz.real() - I*zz.imag();
+  
+    g = norm_g * I * ( dwdz(zz)
+                    - (0.5 * dwdz(I*b) * I * (dx_e2dzz - 2.0*zz)/b
+                       + wF(I*b)*dx_e2dzz)*exp(- x_e2 )
+                    );
+
+    if(z.real() < 0 && z.imag() < 0) a *= -1.0;
+    if(z.real() > 0 && z.imag() < 0){
+      a = std::conj(a);
+      g = std::conj(g);
+    }
+    if(z.real() < 0 && z.imag() > 0){
+      a = -1.0*std::conj(a);
+      g = std::conj(g);
+    }
+  }
+}
+
+std::complex<double> LensHaloGaussian::wF(std::complex<double> z) const{
+  double z2 = std::norm(z);
+
+  double _Complex w = w_of_z(reinterpret_cast<double _Complex(&)>(z));
+  assert( w == w);
+  return reinterpret_cast<std::complex<double>(&)>(w);
+}
+std::complex<double> LensHaloGaussian::my_erfc(std::complex<double> z) const{
+  double _Complex w = cerfc(reinterpret_cast<double _Complex(&)>(z));
+  assert( w == w);
+  return reinterpret_cast<std::complex<double>(&)>(w);
+}
+
 /*
  void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
