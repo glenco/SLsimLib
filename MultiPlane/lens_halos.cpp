@@ -1155,10 +1155,16 @@ q(my_fratio),pa(my_pa),x_T(r_trunc),tt(gamma)
     std::cerr << "LensHaloTEPL : power-law index cannot be >= 2 because the mass will be unbounded." << std::endl;
     throw std::invalid_argument("bad gamma");
   }
-  
+ 
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   if(q > 1) q = 1/q;
+  
+  if( q > 0.99 || q < 0.3){
+    std::cerr << "LensHaloTEPL : axis ratio cannot be too large or 1 ." << std::endl;
+    throw std::invalid_argument("bad gamma");
+  }
+  
   q_prime = (1-q*q)/q/q;
   
   R = std::complex<double>(cos(pa),sin(pa));
@@ -1306,6 +1312,45 @@ void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,
   alpha[1] += a.imag();
   gamma[0] += g.real();
   gamma[1] += g.imag();
+}
+
+LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
+              ,PosType my_zlens /// redshift
+              ,PosType r_scale  /// scale hight along the largest dimension
+              ,float my_fratio /// axis ratio
+              ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+              ,const COSMOLOGY &cosmo  /// cosmology
+              ,float f /// cuttoff radius in units of truncation radius
+):LensHalo(),
+q(my_fratio),pa(my_pa),I(0,1)
+{
+
+  I_sqpi = I / sqrt(PI);
+  
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens,cosmo);
+  if(q > 1){
+    q = 1/q;
+  }
+  Rhight = r_scale*q;
+  q_prime = (1-q*q)/q/q;
+  
+  R = std::complex<double>(cos(pa),sin(pa));
+  
+  SigmaO = mass * q / (2* PI * Rhight * Rhight);
+  
+  ss = sqrt(2)*Rhight;
+  if(q != 1.0){
+    norm = - SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
+    norm_g = norm /ss /sqrt(q_prime) ;
+  }else{
+    // normalization
+    norm = mass / sqrt(PI);
+    norm_g = 0;
+  }
+  
+  LensHalo::setRsize(Rhight*f);
+  Rmax = Rsize;
 }
 
 void LensHaloGaussian::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){

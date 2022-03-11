@@ -1400,38 +1400,7 @@ public:
                 ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
                 ,float f=100 /// cuttoff radius in units of truncation radius
-  ):LensHalo(),
-  q(my_fratio),pa(my_pa),I(0,1)
-  {
-  
-    I_sqpi = I / sqrt(PI);
-    
-    LensHalo::setMass(my_mass);
-    LensHalo::setZlens(my_zlens,cosmo);
-    if(q > 1){
-      q = 1/q;
-    }
-    Rhight = r_scale*q;
-    q_prime = (1-q*q)/q/q;
-    
-    R = std::complex<double>(cos(pa),sin(pa));
-    
-    SigmaO = mass * q / (2* PI * Rhight * Rhight);
-    
-    ss = sqrt(2)*Rhight;
-    if(q != 1.0){
-      norm = - SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
-      norm_g = norm /ss /sqrt(q_prime) ;
-    }else{
-      // normalization
-      norm = mass / sqrt(PI);
-      norm_g = 0;
-    }
-    
-    LensHalo::setRsize(Rhight*f);
-    Rmax = Rsize;
-  }
-
+  );
   
   LensHaloGaussian(const LensHaloGaussian &h):
   LensHalo(h)
