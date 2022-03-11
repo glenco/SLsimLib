@@ -143,12 +143,15 @@ inclination(my_inclination)
     //r = -Rscale * log(1 - (float)(i) / N );
     //theta = 2*PI*ran();
     theta += dt;
-    
+      
     p.x[0] = r*cos(theta);
     p.x[1] = r*sin(theta);
-    p.x[2] = -Rhight * log( 1 - ran() );
-    p.x[2] *= 2*(int)(2*ran()) - 1;  // random sign
-    
+    if(Rhight > 0){
+      p.x[2] = -Rhight * log( 1 - ran() );
+      p.x[2] *= 2*(int)(2*ran()) - 1;  // random sign
+    }else{
+      p.x[2] = 0;
+    }
     p.Mass = mass_res;
     ++i;
   }
@@ -159,7 +162,7 @@ inclination(my_inclination)
   LensHaloParticles<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
   
   // rotate particles to required inclination and position angle
-  Quaternion<T> R = Quaternion<T>::q_z_rotation(zpa) * Quaternion<T>::q_x_rotation(inclination);
+  Quaternion<T> R = Quaternion<T>::q_z_rotation(zpa) * Quaternion<T>::q_y_rotation(inclination);
   rotate_all(R);
   qrot_invers = R.conj();
   
