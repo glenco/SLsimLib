@@ -86,7 +86,7 @@ typedef enum {NO, YES, MAYBE} Boo;
 #define lensquant_declare
 
 /// output lensing variables
-enum LensingVariable {
+enum class LensingVariable {
   DELAYT   /// time delay
   ,ALPHA   /// magnitude of deflection in radians
   ,ALPHA1  /// x component of deflection
@@ -98,6 +98,7 @@ enum LensingVariable {
   ,GAMMA3  /// third component of shear
   ,INVMAG  /// inverse of magnification
   ,PHI     /// lensing potential
+  ,SurfBrightness  /// Surface brightness
 } ;
 #endif
 
@@ -120,11 +121,11 @@ typedef size_t IndexType;
 #define treeNBdim 2  // dimension of boxes in tree
 #endif
 
-#ifdef DOUBLE_PRECISION
+//#ifdef DOUBLE_PRECISION
 typedef double KappaType;
-#else
-typedef float KappaType;
-#endif
+//#else
+//typedef float KappaType;
+//#endif
 
 // unit test definitions
 // GlamerTest overrides these as necessary

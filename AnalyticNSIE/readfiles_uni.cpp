@@ -83,12 +83,6 @@ void LensHaloUniform::force_halo(
                                  )
 {
   *kappa += lens_expand(perturb_modes,xcm,alpha,gamma,phi);
-
-  alpha[0] *= -1;
-  alpha[1] *= -1;
-  
-  
-  //*phi += phi_tmp ;
   
   assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
   assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
@@ -109,8 +103,8 @@ PosType LensHaloUniform::lens_expand(PosType *mod
   alpha[1] += -x[1]*mod[1] + x[0]*mod[2];
   
   // add flat kappa
-  alpha[0] += -1.0*x[0]*mod[0];
-  alpha[1] += -1.0*x[1]*mod[0];
+  alpha[0] += x[0]*mod[0];
+  alpha[1] += x[1]*mod[0];
     
   
   gamma[0] += mod[1];
@@ -118,11 +112,7 @@ PosType LensHaloUniform::lens_expand(PosType *mod
  
   r=sqrt(x[0]*x[0] + x[1]*x[1]);
 
-  if(r == 0.0)
-  {
-    *phi = 0.0;
-  }
-  else
+  if(r > 0)
   {
     theta=atan2(x[1],x[0]);
     cosx=x[0]/r;
@@ -132,7 +122,7 @@ PosType LensHaloUniform::lens_expand(PosType *mod
     sin2theta=2*cosx*sinx;
 
     // potential
-    *phi = r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
+    *phi += r*r*(mod[0] + mod[1]*cos2theta + mod[2]*sin2theta)/2;
   }
   
   return mod[0];

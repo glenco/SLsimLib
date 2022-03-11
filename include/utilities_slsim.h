@@ -2336,6 +2336,33 @@ private:
   std::vector<T> v;
 };
 
+/*
+This is 1F2(a,b,c:x)
+ 
+ Note convergence restrictions: abs(x) < 1 and c not a negative integer or zero
+*/
+template <typename T = double>
+double hypergeometric( T a, T b, T c, T x )
+{
+
+  if(abs(x) > 1 ){
+    throw std::invalid_argument("out of bounds");
+  }
+  const double TOLERANCE = 1.0e-10;
+   double term = a * b * x / c;
+   double value = 1.0 + term;
+   int n = 1;
+
+   while ( abs( term ) > TOLERANCE )
+   {
+      a++, b++, c++, n++;
+      term *= a * b * x / c / n;
+      value += term;
+   }
+
+   return value;
+}
+
 }  // Utilities
 
 #endif

@@ -769,5 +769,3 @@ void Observation::ToSurfaceBrightness(PixelMap &pmap)
   pmap.ChangeUnits(surfb);
   return;
 }
-
-

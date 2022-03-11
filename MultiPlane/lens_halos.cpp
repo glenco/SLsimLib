@@ -930,7 +930,9 @@ void LensHaloTNSIE::force_halo(
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
  
-  
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
  
@@ -955,38 +957,38 @@ void LensHaloTNSIE::force_halo(
       gamma[1] -= units*tmp[1];
     }
     
-    if(subtract_point)
-    {
-      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += fac*xcm[0];
-      alpha[1] += fac*xcm[1];
-      
-      {
-        fac = 2.0*fac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-        gamma[1] += xcm[0]*xcm[1]*fac;
-      }
-    }
+//    if(subtract_point)
+//    {
+//      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += fac*xcm[0];
+//      alpha[1] += fac*xcm[1];
+//
+//      {
+//        fac = 2.0*fac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+//        gamma[1] += xcm[0]*xcm[1]*fac;
+//      }
+//    }
   }
-  else
-  {
-    // outside of the halo
-    if (subtract_point == false)
-    {
-      PosType prefac = LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += -1.0*prefac*xcm[0];
-      alpha[1] += -1.0*prefac*xcm[1];
-      
-      {
-        PosType tmp = -2.0*prefac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-      }
-    }
-  }
-  
+//  else
+//  {
+//    // outside of the halo
+//    if (subtract_point == false)
+//    {
+//      PosType prefac = LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += -1.0*prefac*xcm[0];
+//      alpha[1] += -1.0*prefac*xcm[1];
+//
+//      {
+//        PosType tmp = -2.0*prefac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+//        gamma[1] += xcm[0]*xcm[1]*tmp;
+//      }
+//    }
+//  }
+//
   return;
 }
 
@@ -1137,6 +1139,306 @@ PosType LensHaloRealNSIE::rmax_calc(){
   return LensHalo::get_mass()*Grav*lightspeed*lightspeed/PI/sigma/sigma/ellipticint;
 }
 
+LensHaloTEPL::LensHaloTEPL(
+              float my_mass
+              ,PosType my_zlens
+              ,PosType r_trunc
+              ,PosType gamma
+              ,float my_fratio
+              ,float my_pa
+              ,const COSMOLOGY &cosmo
+              ,float f
+):LensHalo(),
+q(my_fratio),pa(my_pa),x_T(r_trunc),tt(gamma)
+{
+  if(tt >= 2){
+    std::cerr << "LensHaloTEPL : power-law index cannot be >= 2 because the mass will be unbounded." << std::endl;
+    throw std::invalid_argument("bad gamma");
+  }
+ 
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens,cosmo);
+  if(q > 1) q = 1/q;
+  
+  if( q > 0.99 || q < 0.3){
+    std::cerr << "LensHaloTEPL : axis ratio cannot be too large or 1 ." << std::endl;
+    throw std::invalid_argument("bad gamma");
+  }
+  
+  q_prime = (1-q*q)/q/q;
+  
+  R = std::complex<double>(cos(pa),sin(pa));
+  
+  SigmaT = my_mass * q * (2-tt) / (2 * PI * x_T * x_T);
+  mass_pi = mass / PI;
+  
+  LensHalo::setRsize(x_T*f);
+  Rmax = Rsize;
+}
+
+void LensHaloTEPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+
+  std::complex<double> z(xcm[0],xcm[1]);
+  z = z * std::conj(R);
+
+  double r2=std::norm(z);
+  if(force_point(alpha,kappa,gamma,phi,xcm,r2
+                 ,subtract_point,screening)) return;
+
+  if(r2 < 1.0e-12){
+    *kappa = SigmaT * pow(x_T/1.0e-6,tt);
+    alpha[0] = alpha[1] = gamma[0] = gamma[1] = 0;
+    return;
+  }
+  
+  std::complex<double> a=0;
+  std::complex<double> g=0;
+  double k=0;
+  
+  deflection(z,a,g,k);
+
+  a = - std::conj(a) * R;
+  g = std::conj(g) * R * R;
+  
+  *kappa += k;
+  alpha[0] += a.real();
+  alpha[1] += a.imag();
+  gamma[0] += g.real();
+  gamma[1] += g.imag();
+  
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+}
+
+void LensHaloTEPL::deflection(std::complex<double> &z
+                ,std::complex<double> &a
+                ,std::complex<double> &g
+                ,KappaType &sigma) const{
+
+  double x_e = sqrt(q*q*z.real()*z.real() + z.imag()*z.imag());
+  
+  if(x_e <= x_T){
+    sigma = SigmaT * pow(x_T/x_e,tt);
+    a = mass_pi * pow(x_T/x_e,tt-2) * F(x_e,tt,z) / z;
+  }else{
+    sigma = 0;
+    a = mass_pi * F(x_T,tt,z) / z;
+   }
+
+  g =  (1 - tt) * a / z ;
+  
+  if(x_e <= x_T){
+    g -= sigma * std::conj(z) / z;
+  }else{
+    g -= (2-tt) * mass_pi / sqrt(1. - q_prime * x_T*x_T / z / z ) / z / z;
+  }
+}
+
+std::complex<double> LensHaloTEPL::F(double r_e,double t,std::complex<double> z) const{
+
+  std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
+  assert(std::norm(u) < 1);
+  double a = 1;
+  std::complex<double> sum(1,0);
+  for(int n=1 ; n < 20 ; ++n){
+    a *= 2*(n+1-t)/(2*n+2-t);
+    sum += a * u;
+    u *= u;
+  }
+  
+  return sum;
+}
+
+LensHaloTEBPL::LensHaloTEBPL(
+              float my_mass
+              ,PosType my_zlens
+              ,PosType r_break
+              ,PosType r_trunc
+              ,PosType t1
+              ,PosType t2
+              ,float my_fratio
+              ,float my_pa
+              ,const COSMOLOGY &cosmo
+              ,float f
+):LensHalo(),
+q(my_fratio),rb(r_break),rt(r_trunc)
+,m2(my_mass/(1 + (t1-t2)/(2-t1)*pow(rb/rt,2-t2)))
+,m3(m2*pow(rb/rt,2-t2))
+,m1(m2*(2-t2)/(2-t1)*pow(rb/rt,2-t2))
+,h1(m1,my_zlens,rb,t1,q,0,cosmo)
+,h2(m2,my_zlens,rt,t2,q,0,cosmo)
+,h3(m3,my_zlens,rb,t2,q,0,cosmo)
+{
+  
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens,cosmo);
+     
+  R = std::complex<double>(cos(my_pa),sin(my_pa));
+  
+  Rmax = Rsize = f*rt;
+}
+
+void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+  
+  std::complex<PosType> z(xcm[0],xcm[1]);
+   
+  if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
+                 ,subtract_point,screening)) return;
+  
+  z = z * std::conj(R);
+
+  std::complex<PosType> a=0,g=0;
+  std::complex<PosType> at,gt;
+  double kappat;
+
+  double xe2 = q*q*z.real()*z.real() + z.imag()*z.imag();
+  if(xe2 > rb*rb){
+    h3.deflection(z,at,gt,kappat);
+    a -= at;
+    g -= gt;
+    h2.deflection(z,at,gt,kappat);
+    a += at;
+    g += gt;
+    *kappa += kappat;
+  }
+  h1.deflection(z,at,gt,kappat);
+  a += at;
+  g += gt;
+  *kappa += kappat;
+
+  a = - std::conj(a) * R;
+  g = std::conj(g) * R * R;
+  
+  alpha[0] += a.real();
+  alpha[1] += a.imag();
+  gamma[0] += g.real();
+  gamma[1] += g.imag();
+}
+
+LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
+              ,PosType my_zlens /// redshift
+              ,PosType r_scale  /// scale hight along the largest dimension
+              ,float my_fratio /// axis ratio
+              ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+              ,const COSMOLOGY &cosmo  /// cosmology
+              ,float f /// cuttoff radius in units of truncation radius
+):LensHalo(),
+q(my_fratio),pa(my_pa),I(0,1)
+{
+
+  I_sqpi = I / sqrt(PI);
+  
+  LensHalo::setMass(my_mass);
+  LensHalo::setZlens(my_zlens,cosmo);
+  if(q > 1){
+    q = 1/q;
+  }
+  Rhight = r_scale*q;
+  q_prime = (1-q*q)/q/q;
+  
+  R = std::complex<double>(cos(pa),sin(pa));
+  
+  SigmaO = mass * q / (2* PI * Rhight * Rhight);
+  
+  ss = sqrt(2)*Rhight;
+  if(q != 1.0){
+    norm = - SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
+    norm_g = norm /ss /sqrt(q_prime) ;
+  }else{
+    // normalization
+    norm = mass / sqrt(PI);
+    norm_g = 0;
+  }
+  
+  LensHalo::setRsize(Rhight*f);
+  Rmax = Rsize;
+}
+
+void LensHaloGaussian::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+  
+  std::complex<double> z(xcm[0],xcm[1]);
+  double r2=std::norm(z);
+  if(force_point(alpha,kappa,gamma,phi,xcm,r2
+                 ,subtract_point,screening)) return;
+
+  z = z * std::conj(R);
+  
+  std::complex<double> a=0;
+  std::complex<double> g=0;
+  double k=0;
+  
+  deflection(z,a,g,k);
+
+  a = std::conj(a) * R;
+  g = std::conj(g) * R * R;
+  
+  *kappa += k;
+  alpha[0] += a.real();
+  alpha[1] += a.imag();
+  gamma[0] += g.real();
+  gamma[1] += g.imag();
+  
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+}
+
+void LensHaloGaussian::deflection(std::complex<double> &z
+                ,std::complex<double> &a
+                ,std::complex<double> &g
+                ,KappaType &sigma) const {
+
+
+std::complex<double> zz = z / ss / sqrt(q_prime);
+  zz.real(abs(zz.real()));
+  zz.imag(abs(zz.imag()));
+
+double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
+
+  sigma = SigmaO * exp(- x_e2 );
+   
+  if(q==1.0){
+    a = norm / z * ( 1 - exp( - x_e2 ) );
+    g = a / z  + norm / z * exp( - x_e2 ) * (q*q*z.real() - I*z.imag());
+  }else{
+    
+    //std::complex<double> zz2 = zz*zz;
+    std::complex<double> b = sqrt(x_e2 - zz*zz);
+
+    // this is the correct result in all quadrants
+    //a =  norm * sqrt(z*z)/ z
+    //* ( sqrt(-zz2)/sqrt(zz2)*wF(I*sqrt(-zz2)) - b/(sqrt(zz2 - x_e2))*wF(I*b) * exp(- x_e2 ));
+    a = - norm * I * ( wF(zz) - wF(I*b) * exp(- x_e2 ));
+  
+    std::complex<double> dx_e2dzz = q*q*zz.real() - I*zz.imag();
+  
+    g = norm_g * I * ( dwdz(zz)
+                    - (0.5 * dwdz(I*b) * I * (dx_e2dzz - 2.0*zz)/b
+                       + wF(I*b)*dx_e2dzz)*exp(- x_e2 )
+                    );
+
+    if(z.real() < 0 && z.imag() < 0) a *= -1.0;
+    if(z.real() > 0 && z.imag() < 0){
+      a = std::conj(a);
+      g = std::conj(g);
+    }
+    if(z.real() < 0 && z.imag() > 0){
+      a = -1.0*std::conj(a);
+      g = std::conj(g);
+    }
+  }
+}
+
+std::complex<double> LensHaloGaussian::wF(std::complex<double> z) const{
+  double z2 = std::norm(z);
+
+  double _Complex w = w_of_z(reinterpret_cast<double _Complex(&)>(z));
+  assert( w == w);
+  return reinterpret_cast<std::complex<double>(&)>(w);
+}
+std::complex<double> LensHaloGaussian::my_erfc(std::complex<double> z) const{
+  double _Complex w = cerfc(reinterpret_cast<double _Complex(&)>(z));
+  assert( w == w);
+  return reinterpret_cast<std::complex<double>(&)>(w);
+}
+
 /*
  void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){
 	mass = my_mass;
@@ -1163,6 +1465,12 @@ PosType LensHaloRealNSIE::rmax_calc(){
 
 void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening)
 {
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
+  
   if (elliptical_flag){
     force_halo_asym(alpha,kappa,gamma,phi,xcm,subtract_point,screening);
     //assert(!isinf(*kappa) );
@@ -1171,6 +1479,67 @@ void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,Kappa
     //assert(!isinf(*kappa) );
   }
 }
+
+/*
+ Used in derived classes to subtract the point mass if necescary and take care of quantities beyond Rmax
+ 
+ Returns true when no further calculation of the quantities should be done.
+ 
+ This should be put in the beginning of all of the force_halo() functions.
+ 
+ rcm2 needs to be calculated first
+ 
+ */
+bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
+    ,PosType const *xcm,PosType rcm2
+    ,bool subtract_point,PosType screening)
+{
+  
+  if(rcm2 < Rmax*Rmax){
+    if(subtract_point){
+    
+      PosType fac = screening*mass/rcm2/PI;
+    
+      alpha[0] += fac*xcm[0];
+      alpha[1] += fac*xcm[1];
+  
+      fac = 2.0*fac/rcm2;
+          
+      gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+      gamma[1] += xcm[0]*xcm[1]*fac;
+      
+      *phi += -0.5*mass*log(rcm2) / PI;
+    }
+//    else{
+//      alpha[0] = alpha[1] = 0.0;
+//      gamma[0] = gamma[1] = gamma[2] = 0.0;
+//      *kappa = 0.0;
+//      *phi = 0.0 ;
+//    }
+    return false;
+  }
+  if(!subtract_point){
+    
+    PosType prefac = mass/rcm2/PI;
+    alpha[0] += -1.0*prefac*xcm[0];
+    alpha[1] += -1.0*prefac*xcm[1];
+      
+    PosType tmp = -2.0*prefac/rcm2;
+    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+    gamma[1] += xcm[0]*xcm[1]*tmp;
+    
+    *phi += 0.5*mass*log(rcm2) / PI;
+  }
+//  else{
+//    alpha[0] = alpha[1] = 0.0;
+//    gamma[0] = gamma[1] = gamma[2] = 0.0;
+//    *kappa = 0.0;
+//    *phi = 0.0 ;
+//  }
+  
+  return true;
+}
+
 
 /** \brief returns the lensing quantities of a ray in center of mass coordinates for a symmetric halo
  *
@@ -1521,6 +1890,9 @@ void LensHaloRealNSIE::force_halo(
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
  
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
   
   if(rcm2 < 1e-20) rcm2 = 1e-20;
   if(rcm2 < Rmax*Rmax){
@@ -1588,38 +1960,38 @@ void LensHaloRealNSIE::force_halo(
     }
     
     
-    if(subtract_point)
-    {
-      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += fac*xcm[0];
-      alpha[1] += fac*xcm[1];
-      
-      {
-        fac = 2.0*fac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
-        gamma[1] += xcm[0]*xcm[1]*fac;
-      }
-    }
+//    if(subtract_point)
+//    {
+//      PosType fac = screening*LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += fac*xcm[0];
+//      alpha[1] += fac*xcm[1];
+//
+//      {
+//        fac = 2.0*fac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*fac;
+//        gamma[1] += xcm[0]*xcm[1]*fac;
+//      }
+//    }
     
   }
-  else
-  {
-    // outside of the halo
-    if (subtract_point == false)
-    {
-      PosType prefac = LensHalo::get_mass()/rcm2/PI;
-      alpha[0] += -1.0*prefac*xcm[0];
-      alpha[1] += -1.0*prefac*xcm[1];
-      
-      {
-        PosType tmp = -2.0*prefac/rcm2;
-        
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-      }
-    }
-  }
+//  else
+//  {
+//    // outside of the halo
+//    if (subtract_point == false)
+//    {
+//      PosType prefac = LensHalo::get_mass()/rcm2/PI;
+//      alpha[0] += -1.0*prefac*xcm[0];
+//      alpha[1] += -1.0*prefac*xcm[1];
+//
+//      {
+//        PosType tmp = -2.0*prefac/rcm2;
+//
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+//        gamma[1] += xcm[0]*xcm[1]*tmp;
+//      }
+//    }
+//  }
   
   //assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
@@ -1968,6 +2340,10 @@ void LensHaloDummy::force_halo(PosType *alpha
 )
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+ 
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
   PosType prefac = LensHalo::get_mass()/rcm2/PI;
   PosType tmp = subtract_point*prefac;
   alpha[0] += tmp*xcm[0];
