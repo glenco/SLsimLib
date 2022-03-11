@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include "lens_halos.h"
 
 using namespace std;
 
@@ -1314,6 +1315,8 @@ void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,
   gamma[1] += g.imag();
 }
 
+#ifdef ENABLE_CERF
+
 LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
               ,PosType my_zlens /// redshift
               ,PosType r_scale  /// scale hight along the largest dimension
@@ -1321,8 +1324,7 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
               ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
               ,const COSMOLOGY &cosmo  /// cosmology
               ,float f /// cuttoff radius in units of truncation radius
-):LensHalo(),
-q(my_fratio),pa(my_pa),I(0,1)
+):LensHalo(),q(my_fratio),pa(my_pa),I(0,1)
 {
 
   I_sqpi = I / sqrt(PI);
@@ -1427,8 +1429,7 @@ double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
 }
 
 std::complex<double> LensHaloGaussian::wF(std::complex<double> z) const{
-  double z2 = std::norm(z);
-
+  
   double _Complex w = w_of_z(reinterpret_cast<double _Complex(&)>(z));
   assert( w == w);
   return reinterpret_cast<std::complex<double>(&)>(w);
@@ -1438,6 +1439,8 @@ std::complex<double> LensHaloGaussian::my_erfc(std::complex<double> z) const{
   assert( w == w);
   return reinterpret_cast<std::complex<double>(&)>(w);
 }
+
+#endif
 
 /*
  void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){

@@ -1484,7 +1484,6 @@ protected:
 //    }
 //  }
   
-  //float units;
   double Rhight;  // scale hight in larges dimension
   double q;
   double q_prime;
