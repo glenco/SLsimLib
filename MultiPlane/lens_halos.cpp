@@ -1386,11 +1386,11 @@ void LensHaloGaussian::deflection(std::complex<double> &z
                 ,KappaType &sigma) const {
 
 
-std::complex<double> zz = z / ss / sqrt(q_prime);
+  std::complex<double> zz = z / ss / sqrt(q_prime);
   zz.real(abs(zz.real()));
   zz.imag(abs(zz.imag()));
 
-double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
+  double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
 
   sigma = SigmaO * exp(- x_e2 );
    
@@ -1401,17 +1401,21 @@ double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
     
     //std::complex<double> zz2 = zz*zz;
     std::complex<double> b = sqrt(x_e2 - zz*zz);
+    
+    std::complex<double> wfzz = wF(zz);
+    std::complex<double> wfib = wF(I*b);
+ 
 
     // this is the correct result in all quadrants
     //a =  norm * sqrt(z*z)/ z
     //* ( sqrt(-zz2)/sqrt(zz2)*wF(I*sqrt(-zz2)) - b/(sqrt(zz2 - x_e2))*wF(I*b) * exp(- x_e2 ));
-    a = - norm * I * ( wF(zz) - wF(I*b) * exp(- x_e2 ));
+    a = - norm * I * ( wfzz - wfib * exp(- x_e2 ));
   
     std::complex<double> dx_e2dzz = q*q*zz.real() - I*zz.imag();
   
-    g = norm_g * I * ( dwdz(zz)
-                    - (0.5 * dwdz(I*b) * I * (dx_e2dzz - 2.0*zz)/b
-                       + wF(I*b)*dx_e2dzz)*exp(- x_e2 )
+    g = norm_g * I * ( 2.0*(I_sqpi - z*wfzz)
+                    - ( (I_sqpi - z*wfib) * I * (dx_e2dzz - 2.0*zz)/b
+                       + wfib*dx_e2dzz)*exp(- x_e2 )
                     );
 
     if(z.real() < 0 && z.imag() < 0) a *= -1.0;
