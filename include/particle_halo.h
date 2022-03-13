@@ -971,12 +971,12 @@ public:
   MakeParticleLenses(const std::string &filename  /// path / root name of gadget-2 snapshot
                      ,SimFileFormat format
                      ,int Nsmooth   /// number of nearest neighbors used for smoothing
-                     ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                     ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
                      ,bool ignore_type_in_smoothing = false /// used only when format == gadget2, nearest neighbour smoothing is done amongst particles by type if set to false
                      );
   
   MakeParticleLenses(const std::string &filename  /// path / name of glmb file
-                     ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                     ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
                      );
   
   ~MakeParticleLenses(){

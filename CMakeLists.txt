@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+#cmake_minimum_required(VERSION 2.8)
 
 ####
 # project settings
@@ -82,6 +82,11 @@ endif()
 if(ENABLE_HDF5)
 	include_directories(${HDF5_INCLUDE_DIRS})
 	add_definitions(${HDF5_DEFINITIONS})
+endif()
+
+if(ENABLE_CERF)
+        include_directories(${CERF_INCLUDE_DIRS})
+        add_definitions(${CERF_DEFINITIONS})
 endif()
 
 include_directories(

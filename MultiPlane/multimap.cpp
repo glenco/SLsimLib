@@ -565,9 +565,8 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
   }
 }
 
+bool LensMap::evaluate(const PosType *x,KappaType &sigma,KappaType *gamma,PosType *alpha) {
 
-bool LensMap::evaluate(const double *x,KappaType &sigma,KappaType *gamma,PosType *alpha) {
-  
   double fx = (x[0] - lowerleft[0]) / x_resolution();
   double fy = (x[1] - lowerleft[1]) / y_resolution();
   

@@ -24,18 +24,20 @@ void LensHaloBaseNSIE::force_halo(
                                   )
 {
 
+  PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening)) return;
+
+
   PosType alpha_tmp[2];
   KappaType gamma_tmp[2];
-  KappaType phi_tmp ;
+  KappaType phi_tmp,kappa_tmp ;
   
   gamma_tmp[0] = gamma_tmp[1] = 0.0;
   alpha_tmp[0] = alpha_tmp[1] = 0.0;
-  phi_tmp = 0.0 ;
+  phi_tmp = kappa_tmp = 0.0 ;
   
-  alpha[0] = alpha[1] = 0.0;
-  gamma[0] = gamma[1] = gamma[2] = 0.0;
-  *kappa = 0.0;
-  *phi = 0.0 ;
+  
   
   if(sigma > 0.0){
     PosType xt[2]={0,0};
@@ -45,23 +47,30 @@ void LensHaloBaseNSIE::force_halo(
     xt[0]=xcm[0]; // in PhysMpc
     xt[1]=xcm[1];
     
-    alphaNSIE(alpha,xt,fratio,rcore,pa);
-    alpha[0] *= units;
-    alpha[1] *= units;
+    alphaNSIE(alpha_tmp,xt,fratio,rcore,pa);
+    alpha_tmp[0] *= units;
+    alpha_tmp[1] *= units;
     
     {
-      gammaNSIE(gamma,xcm,fratio,rcore,pa);
-      *kappa=kappaNSIE(xcm,fratio,rcore,pa);
-      *kappa *= units ;
-      gamma[0] *= units ;
-      gamma[1] *= units ;
-      gamma[2] *= units ;
+      gammaNSIE(gamma_tmp,xcm,fratio,rcore,pa);
+      kappa_tmp=kappaNSIE(xcm,fratio,rcore,pa);
+      kappa_tmp *= units ;
+      gamma_tmp[0] *= units ;
+      gamma_tmp[1] *= units ;
       
-      *phi = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
-      *phi *= units ;                               // phi now in Msun * Mpc
+      phi_tmp = -1.0 * phiNSIE(xcm,fratio,rcore,pa) ;  // phi in Mpc (physical)
+      phi_tmp *= units ;                               // phi now in Msun * Mpc
     }
   }
   
+  // As before :
+  alpha[0] += alpha_tmp[0];
+  alpha[1] += alpha_tmp[1];
+  gamma[0] += gamma_tmp[0];
+  gamma[1] += gamma_tmp[1];
+  *phi += phi_tmp ;
+  *kappa += kappa_tmp;
+    
   // perturbations of host lens
   if(perturb_Nmodes > 0)
   {

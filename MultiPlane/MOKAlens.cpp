@@ -421,14 +421,14 @@ void LensHaloMassMap::force_halo(double *alpha
 
   // ??? assert(map.nx == map.ny);
   
-  alpha[0] = interp.interpolate(map.alpha1_bar);
-  alpha[1] = interp.interpolate(map.alpha2_bar);
-  gamma[0] = interp.interpolate(map.gamma1_bar);
-  gamma[1] = interp.interpolate(map.gamma2_bar);
-  gamma[2] = 0.0;
+  alpha[0] += interp.interpolate(map.alpha1_bar);
+  alpha[1] += interp.interpolate(map.alpha2_bar);
+  gamma[0] += interp.interpolate(map.gamma1_bar);
+  gamma[1] += interp.interpolate(map.gamma2_bar);
+  gamma[2] += 0.0;
 
-  *kappa = interp.interpolate(map.surface_density);
-  *phi = interp.interpolate(map.phi_bar);
+  *kappa += interp.interpolate(map.surface_density);
+  *phi += interp.interpolate(map.phi_bar);
   
   return;
 }
