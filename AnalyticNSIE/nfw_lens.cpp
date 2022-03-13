@@ -40,7 +40,7 @@ KappaType LensHaloNFW::kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r
 
 	r=sqrt(pow(x[0]-center[0],2) + pow(x[1]-center[1],2));
 	if(r>=Rtrunc) return 0.0;
-	if(r < 1.0e-20) r=1.0e-20;
+	if(r < 1.0e-4) r=1.0e-4;
 
 	PosType y,b;
 

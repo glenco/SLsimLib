@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include "lens_halos.h"
 
 using namespace std;
 
@@ -933,7 +934,7 @@ void LensHaloTNSIE::force_halo(
   if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
                  ,subtract_point,screening)) return;
 
-  if(rcm2 < 1e-20) rcm2 = 1e-20;
+  if(rcm2 < 1.0e-5) rcm2 = 1e-5;
   if(rcm2 < Rmax*Rmax){
  
     PosType tmp[2]={0,0};
@@ -1148,8 +1149,7 @@ LensHaloTEPL::LensHaloTEPL(
               ,float my_pa
               ,const COSMOLOGY &cosmo
               ,float f
-):LensHalo(),
-q(my_fratio),pa(my_pa),x_T(r_trunc),tt(gamma)
+):LensHalo(),tt(gamma),x_T(r_trunc),q(my_fratio),pa(my_pa)
 {
   if(tt >= 2){
     std::cerr << "LensHaloTEPL : power-law index cannot be >= 2 because the mass will be unbounded." << std::endl;
@@ -1207,6 +1207,7 @@ void LensHaloTEPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,K
   gamma[1] += g.imag();
   
   assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
 }
 
 void LensHaloTEPL::deflection(std::complex<double> &z
@@ -1216,6 +1217,12 @@ void LensHaloTEPL::deflection(std::complex<double> &z
 
   double x_e = sqrt(q*q*z.real()*z.real() + z.imag()*z.imag());
   
+  if(x_e <= 1.0e-5){
+    sigma = SigmaT * pow(x_T/1.0e-5,tt);
+    a = 0;
+    g = 0;
+    return;
+  }
   if(x_e <= x_T){
     sigma = SigmaT * pow(x_T/x_e,tt);
     a = mass_pi * pow(x_T/x_e,tt-2) * F(x_e,tt,z) / z;
@@ -1312,7 +1319,13 @@ void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,
   alpha[1] += a.imag();
   gamma[0] += g.real();
   gamma[1] += g.imag();
+  
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+
 }
+
+#ifdef ENABLE_CERF
 
 LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
               ,PosType my_zlens /// redshift
@@ -1321,8 +1334,7 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
               ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
               ,const COSMOLOGY &cosmo  /// cosmology
               ,float f /// cuttoff radius in units of truncation radius
-):LensHalo(),
-q(my_fratio),pa(my_pa),I(0,1)
+):LensHalo(),q(my_fratio),pa(my_pa),I(0,1)
 {
 
   I_sqpi = I / sqrt(PI);
@@ -1378,6 +1390,7 @@ void LensHaloGaussian::force_halo(PosType *alpha,KappaType *kappa,KappaType *gam
   gamma[1] += g.imag();
   
   assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
 }
 
 void LensHaloGaussian::deflection(std::complex<double> &z
@@ -1385,14 +1398,20 @@ void LensHaloGaussian::deflection(std::complex<double> &z
                 ,std::complex<double> &g
                 ,KappaType &sigma) const {
 
-
   std::complex<double> zz = z / ss / sqrt(q_prime);
+
   zz.real(abs(zz.real()));
   zz.imag(abs(zz.imag()));
 
   double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
 
   sigma = SigmaO * exp(- x_e2 );
+  
+  if(x_e2 < 1.0e-8){
+    a = 0.0;
+    g = 0.0;
+    return;
+  }
    
   if(q==1.0){
     a = norm / z * ( 1 - exp( - x_e2 ) );
@@ -1431,8 +1450,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
 }
 
 std::complex<double> LensHaloGaussian::wF(std::complex<double> z) const{
-  double z2 = std::norm(z);
-
+  
   double _Complex w = w_of_z(reinterpret_cast<double _Complex(&)>(z));
   assert( w == w);
   return reinterpret_cast<std::complex<double>(&)>(w);
@@ -1442,6 +1460,8 @@ std::complex<double> LensHaloGaussian::my_erfc(std::complex<double> z) const{
   assert( w == w);
   return reinterpret_cast<std::complex<double>(&)>(w);
 }
+
+#endif
 
 /*
  void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){

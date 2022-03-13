@@ -244,7 +244,7 @@ public:
   PosType renormalization(PosType r_max);
  
   /** \brief Map a PixelMap of the surface, density, potential and potential gradient
-   centred on (0,0) in LenHalo coordinates
+   centred on (0,0) in LensHalo coordinates
 
    Units :
    ALPHA    -    mass/PhysMpc - ALPHA / Sig_crit / Dl is the deflection in radians
@@ -252,7 +252,7 @@ public:
    GAMMA    -    mass / /PhysMpc/PhysMpc - GAMMA / Sig_crit is the shear
    PHI      -    mass - PHI / Sig_crit / Dl / Dl  is the lensing potential whose angular gradient is the deflection and angular Laplacian is 2 times the convergence
  
-   centred on (0,0) in LenHalo coordinates
+   centred on (0,0) in LensHalo coordinates
    
    */
 
@@ -744,7 +744,7 @@ public:
               ,PosType my_zlens   /// redshift
               ,float my_concentration
               ,float my_fratio    /// axis ratio
-              ,float my_pa
+              ,float my_pa        /// position angle, it is off by PI/2 and orientation from some others
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=EllipMethod::Pseudo
               );
@@ -1484,7 +1484,6 @@ protected:
 //    }
 //  }
   
-  //float units;
   double Rhight;  // scale hight in larges dimension
   double q;
   double q_prime;
