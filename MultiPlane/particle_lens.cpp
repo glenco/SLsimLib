@@ -23,7 +23,7 @@ MakeParticleLenses::MakeParticleLenses(
                     const std::string &filename  /// path / root name of gadget-2 snapshot
                    ,SimFileFormat format  /// format of data file
                    ,int Nsmooth   /// number of nearest neighbors used for smoothing
-                   ,bool recenter /// recenter so that the LenHalos are centered on the center of mass of all the particles
+                   ,bool recenter /// recenter so that the LensHalos are centered on the center of mass of all the particles
                   ,bool ignore_type_in_smoothing
                    ):filename(filename),Nsmooth(Nsmooth)
 {
@@ -106,7 +106,7 @@ MakeParticleLenses::MakeParticleLenses(
 }
 
 MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / name of glmb file
-                   ,bool recenter /// recenter so that the LenHalos are centered on the center of mass
+                   ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
                    ):filename(filename)
 {
   
