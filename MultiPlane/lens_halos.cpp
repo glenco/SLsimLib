@@ -382,13 +382,11 @@ LensHaloNFW::LensHaloNFW()
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration
                          ,float my_fratio,float my_pa,const COSMOLOGY &cosmo
                          ,EllipMethod my_ellip_method
-                         ):LensHalo(my_zlens,cosmo),
+                         ):LensHalo(my_zlens,cosmo)
 {
 
   LensHalo::setRsize(my_Rsize);
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens,cosmo);
-
 
   fratio=my_fratio;
   pa= PI/2 - my_pa;
