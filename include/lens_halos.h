@@ -744,7 +744,7 @@ public:
               ,PosType my_zlens   /// redshift
               ,float my_concentration
               ,float my_fratio    /// axis ratio
-              ,float my_pa        /// position angle, it is off by PI/2 and orientation from some others
+              ,float my_pa        /// position angle, 0 is horizontal
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=EllipMethod::Pseudo
               );
