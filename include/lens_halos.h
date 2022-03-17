@@ -20,6 +20,12 @@
 #ifdef ENABLE_CERF
 #include <cerf.h>
 #endif
+#ifdef ENABLE_EIGEN
+//#include </usr/local/include/eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/StdVector>
+#include <boost/math/special_functions/gamma.hpp>
+#endif
 
 /**
  * \brief A base class for all types of lensing "halos" which are any mass distribution that cause lensing.
@@ -1559,7 +1565,175 @@ protected:
 //  double V2[7] = {10.479857,53.992907,170.35400,348.70392,457.33448,352.73063,122.60793};
 };
 
-#endif
+#ifdef ENABLE_EIGEN
+
+template <typename P>
+class LensHaloGDecomp: public LensHalo{
+    
+public:
+  
+  LensHaloGDecomp(
+                  float my_mass  /// total mass in Msun
+                  ,P &cum_profile  /// cumulative profile
+                  ,int Nradii    /// number of radii used
+                  ,PosType r_min
+                  ,PosType r_max
+                  ,PosType my_zlens /// redshift
+                  ,float my_fratio /// axis ratio
+                  ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                  ,const COSMOLOGY &cosmo  /// cosmology
+                  ,float f=100 /// cuttoff radius in units of truncation radius
+  ):LensHalo(my_zlens,cosmo),nn(Nradii),q(my_fratio),pa(my_pa){
+    
+    LensHalo::setMass(my_mass);
+    
+    if(q > 1){
+      q = 1/q;
+    }
+
+    // make logorithmic
+    sigmas.resize(nn);
+    {
+      double f = pow(r_max/r_min,1.0/(nn-1));
+      sigmas[0] = r_min;
+      for(int i=1 ; i < nn ; ++i){
+        sigmas[i] = f*sigmas[i-1];
+      }
+    }
+    
+    Eigen::MatrixXd M(nn,nn);
+    
+    // make M matrix
+    for(int m=0 ; m < nn ; ++m){
+      double cp = cum_profile(sigmas[m]);
+      //if(m == nn-1) cp = cum_profile(sigmas[m-1]);
+      for(int n=0 ; n < nn ; ++n){
+//          M(m,n) = exp( - sigmas[m]*sigmas[m] / 2 / sigmas[n] /sigmas[n])
+//                 / profile(sigmas[m]) ;
+  
+        M(m,n) = sigmas[n] * sigmas[n]
+                 * ( 1 -exp(-sigmas[m]*sigmas[m] / 2 / sigmas[n] /sigmas[n]) )
+                        / cp ;
+      }
+    }
+    
+    // invert M
+    
+    M = M.inverse();
+    
+    // find masses of Gaussian components
+    
+    std::vector<double> A(nn,0);
+    double total = 0;
+    for(int m=0 ; m<nn ; ++m){
+      for(int n=0 ; n <nn ; ++n){
+        A[m] += M(m,n);
+      }
+      total += 2*PI*sigmas[m]*sigmas[m]*q*A[m];
+    }
+    
+    double error =0;
+    for(int i=0 ; i < nn ; ++i){
+      double mass=0;
+      for(int j=0 ; j < nn ; ++j){
+         mass += A[j] * sigmas[j] * sigmas[j]
+                 * ( 1 - exp(-sigmas[i]*sigmas[i] / 2 / sigmas[j] /sigmas[j]) );
+       }
+      std::cout << cum_profile(sigmas[i]) << " "  << mass << std::endl;
+      
+      error += (mass - cum_profile(sigmas[i]) )*(mass - cum_profile(sigmas[i]) );
+    }
+    std::cout << error << std::endl;
+    
+    for(double &a : A) a *= mass/total;
+    
+    
+    
+    // construct Gaussian components
+    
+    for(int i=0 ; i<nn ; ++i){
+      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
+    }
+    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+    Rmax = Rsize = f*r_max;
+  }
+  
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+    
+    std::complex<PosType> z(xcm[0],xcm[1]);
+     
+    if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
+                   ,subtract_point,screening)) return;
+    
+    z = z * std::conj(Rotation);
+
+    std::complex<PosType> a=0,g=0;
+    std::complex<PosType> at,gt;
+    double kappat;
+
+    for(auto &h : gaussians){
+      h.deflection(z,a,g,kappat);
+      a += at;
+      g += gt;
+      *kappa += kappat;
+    }
+    
+    a = - std::conj(a) * Rotation;
+    g = std::conj(g) * Rotation * Rotation;
+    
+    alpha[0] += a.real();
+    alpha[1] += a.imag();
+    gamma[0] += g.real();
+    gamma[1] += g.imag();
+    
+    assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+    assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+  }
+  
+  // profiles
+  
+  struct powerlaw{
+    powerlaw(
+             float g  // power-law index of surfcae density
+    ){
+      if(g <= -2){
+        std::cerr << "power-law index <= 2 give unbounded mass!" << std::endl;
+        throw std::runtime_error("bad mass");
+      }
+      gamma = g;
+    }
+    double operator()(double r){return pow(r,gamma + 2);}
+    
+    float gamma;
+  };
+  
+  struct sersic{
+     sersic(float nn,float Re):re(Re),n(nn){
+       bn = 1.9992*n - 0.3271; // approximation valid for 0.5 < n < 8
+     }
+     double operator()(double r){
+       return boost::math::tgamma_lower(2*n, bn*pow(r/re , 1.0/n ) );
+     }
+    
+    float re;
+    float n;
+    float bn;
+  };
+
+  
+private:
+
+  int nn; // number of fit radii
+  double q;
+  double pa;
+  std::vector<double> sigmas;
+  std::complex<double> Rotation;
+  std::vector<LensHaloGaussian> gaussians;
+};
+
+#endif // eigen
+
+#endif // libcerf
 
 
 /**
