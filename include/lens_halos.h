@@ -1391,10 +1391,11 @@ private:
 };
 
 #ifdef ENABLE_CERF
-/**
+/***
+\brief  A class for making elliptical Gaussian lenses.
  
  This class uses the libcerf library (https://jugit.fz-juelich.de/mlz/libcerf).
- It can be installed with homebreww.
+ It can be installed with homebrew and it must be linked by setting the cmake variable ENABLE_CERF = ON
  */
 class LensHaloGaussian : public LensHalo{
 public:
@@ -1567,90 +1568,179 @@ protected:
 
 #ifdef ENABLE_EIGEN
 
+/***
+\brief  A class for constructing and approximation to any elliptical profile out of a series of elliptical gaussians.
+ 
+ The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
+ 
+ The profile is fit Nradii proints logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
+ Typically Nradii ~ 2 * Ngaussians.
+ 
+ The mass is normalized so that mass_norm is within the elliptical distance Rnorm.  The total mass with be calculated and can be recovered after construction.
+ 
+ This class uses both the libcerf library (https://jugit.fz-juelich.de/mlz/libcerf).
+ and the eigen library.  They must be installed and linked using the cmake variable ENABLE_CERF = ON and ENABLE_EIGEN=ON
+ */
+
 template <typename P>
-class LensHaloGDecomp: public LensHalo{
-    
+class LensHaloMultiGauss: public LensHalo{
+  
+private:
+  
+  int nn; // number of gaussians
+  int mm; // number of fit radii
+  double q;
+  double pa;
+  double mass_norm;
+  double r_norm;
+  std::vector<double> sigmas;
+  std::vector<double> radii;
+  std::complex<double> Rotation;
+  std::vector<LensHaloGaussian> gaussians;
+  std::vector<double> A;
+  float rms_error;
+  
 public:
   
-  LensHaloGDecomp(
-                  float my_mass  /// total mass in Msun
-                  ,P &cum_profile  /// cumulative profile
-                  ,int Nradii    /// number of radii used
-                  ,PosType r_min
-                  ,PosType r_max
-                  ,PosType my_zlens /// redshift
-                  ,float my_fratio /// axis ratio
-                  ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
-                  ,const COSMOLOGY &cosmo  /// cosmology
-                  ,float f=100 /// cuttoff radius in units of truncation radius
-  ):LensHalo(my_zlens,cosmo),nn(Nradii),q(my_fratio),pa(my_pa){
-    
-    LensHalo::setMass(my_mass);
+  LensHaloMultiGauss(
+                     double mass_norm  /// mass in Msun at radius Rnorm
+                     ,double Rnorm       /// elliptical radius for normalization of mass
+                     ,P &profile  /// cumulative profile
+                     ,int Ngaussians    /// number of gausians
+                     ,int Nradii    /// number of radii they are fit to
+                     ,PosType r_min
+                     ,PosType r_max
+                     ,PosType my_zlens /// redshift
+                     ,float my_fratio /// axis ratio
+                     ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                     ,const COSMOLOGY &cosmo  /// cosmology
+                     ,float f=10 /// cuttoff radius in units of truncation radius
+                     ,bool verbose = false
+  ):LensHalo(my_zlens,cosmo),nn(Ngaussians),mm(Nradii),q(my_fratio),pa(my_pa)
+  ,mass_norm(mass_norm),r_norm(Rnorm)
+  {
+
+   if(nn > mm){
+      std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
+      throw std::runtime_error("");
+    }
     
     if(q > 1){
       q = 1/q;
     }
-
+    
     // make logorithmic
     sigmas.resize(nn);
     {
-      double f = pow(r_max/r_min,1.0/(nn-1));
-      sigmas[0] = r_min;
-      for(int i=1 ; i < nn ; ++i){
-        sigmas[i] = f*sigmas[i-1];
+      double tmp = pow(r_max/r_min,1.0/(nn-2));
+      sigmas[0] = r_min/5;
+      sigmas[1] = r_min;
+      for(int i=2 ; i < nn ; ++i){
+        sigmas[i] = tmp*sigmas[i-1];
       }
     }
     
-    Eigen::MatrixXd M(nn,nn);
+    radii.resize(mm);
+    {
+      double tmp = pow(r_max/r_min,1.0/(mm-1));
+      radii[0] = r_min;
+      for(int i=1 ; i < mm ; ++i){
+        radii[i] = tmp*radii[i-1];
+      }
+    }
     
-    // make M matrix
-    for(int m=0 ; m < nn ; ++m){
-      double cp = cum_profile(sigmas[m]);
-      //if(m == nn-1) cp = cum_profile(sigmas[m-1]);
+    Eigen::MatrixXd M(mm,nn);
+    
+    // first radius is fit to mass within radius
+    {
+      double cp = profile.cum(radii[0]);
       for(int n=0 ; n < nn ; ++n){
-//          M(m,n) = exp( - sigmas[m]*sigmas[m] / 2 / sigmas[n] /sigmas[n])
-//                 / profile(sigmas[m]) ;
-  
-        M(m,n) = sigmas[n] * sigmas[n]
-                 * ( 1 -exp(-sigmas[m]*sigmas[m] / 2 / sigmas[n] /sigmas[n]) )
-                        / cp ;
+        M(0,n) = 2*PI*sigmas[n] * sigmas[n]
+        * ( 1 -exp(-radii[0]*radii[0] / 2 / sigmas[n] /sigmas[n]) )
+        / cp ;
+      }
+    }
+    
+    // all others are fit to relative density
+    for(int m=1 ; m < mm ; ++m){
+      double p = profile(radii[m]);
+      for(int n=0 ; n < nn ; ++n){
+        M(m,n) = exp( - radii[m]*radii[m] / 2 / sigmas[n] /sigmas[n])
+        / p ;
       }
     }
     
     // invert M
     
-    M = M.inverse();
+    A.resize(nn);
+    {
+      std::vector<double> b(mm,1);
+      Eigen::Map<Eigen::VectorXd> v(b.data(),mm);
+      Eigen::Map<Eigen::VectorXd> a(A.data(),nn);
+      
+      //M = M.inverse();
+      a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
+      
+      std::cout << "test " << std::endl << M*a << std::endl;
+    }
+    
+    // tests
+    {
+      rms_error=0;
+      for(int m=0 ; m < 1 ; ++m){
+        double surf=0;
+        for(int n=0 ; n < nn ; ++n){
+          surf += A[n] * sigmas[n] * sigmas[n]
+          * 2*PI*( 1 - exp(-radii[m]*radii[m] / 2 / sigmas[n] /sigmas[n]) );
+        }
+        double tmp = profile.cum(radii[m]);
+        if(verbose) std::cout << tmp << " "  << surf << std::endl;
+        
+        rms_error += (surf - tmp )*(surf - tmp) / tmp / tmp;
+      }
+      
+      for(int m=1 ; m < mm ; ++m){
+        double surf=0;
+        for(int n=0 ; n < nn ; ++n){
+          surf += A[n] * exp(-radii[m]*radii[m] / 2 / sigmas[n] /sigmas[n]) ;
+        }
+        double tmp = profile(radii[m]);
+        if(verbose) std::cout << tmp << " "  << surf << std::endl;
+        
+        rms_error += (surf - tmp )*(surf - tmp ) / tmp /tmp;
+      }
+      rms_error = sqrt(rms_error)/nn;
+      if(verbose) std::cout << " MSE error " << rms_error << std::endl;
+    }
     
     // find masses of Gaussian components
-    
-    std::vector<double> A(nn,0);
-    double total = 0;
-    for(int m=0 ; m<nn ; ++m){
-      for(int n=0 ; n <nn ; ++n){
-        A[m] += M(m,n);
+    double totalmass = 0;
+    {
+      double total = 0,mass_tmp = 0;
+      for(int n=0 ; n<nn ; ++n){
+        total += sigmas[n]*sigmas[n]*A[n];
+        mass_tmp += sigmas[n]*sigmas[n]*A[n]
+        *( 1 - exp(-r_norm*r_norm / 2 / sigmas[n] /sigmas[n]) );
       }
-      total += 2*PI*sigmas[m]*sigmas[m]*q*A[m];
-    }
-    
-    double error =0;
-    for(int i=0 ; i < nn ; ++i){
-      double mass=0;
-      for(int j=0 ; j < nn ; ++j){
-         mass += A[j] * sigmas[j] * sigmas[j]
-                 * ( 1 - exp(-sigmas[i]*sigmas[i] / 2 / sigmas[j] /sigmas[j]) );
-       }
-      std::cout << cum_profile(sigmas[i]) << " "  << mass << std::endl;
       
-      error += (mass - cum_profile(sigmas[i]) )*(mass - cum_profile(sigmas[i]) );
+      {  // convert to mass units of each component
+        double tmp = (mass_norm/mass_tmp);
+        // rescale so total mass is correct
+        for(int n=0 ; n<nn ; ++n) A[n] *= tmp*sigmas[n]*sigmas[n];
+      }
+      
+      totalmass = 0;
+      for(int n=0 ; n<nn ; ++n) totalmass += A[n];
+      mass_tmp = 0;
+      //for(int n=0 ; n<nn ; ++n) mass_tmp += A[n]*( 1 - exp(-r_norm*r_norm / 2 / sigmas[n] /sigmas[n]) );
+      //std::cout << "total mass = " << totalmass<< std::endl
+      //<<  mass_tmp   << " = " << mass_norm
+      //<< std::endl;
     }
-    std::cout << error << std::endl;
     
-    for(double &a : A) a *= mass/total;
-    
-    
-    
+    LensHalo::setMass(totalmass);
+  
     // construct Gaussian components
-    
     for(int i=0 ; i<nn ; ++i){
       gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
     }
@@ -1658,21 +1748,43 @@ public:
     Rmax = Rsize = f*r_max;
   }
   
-  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+  double profile(double r){
+    double sigma=0;
+    for(int n=0 ; n < nn ; ++n){
+      sigma += A[n] * exp(-r*r / 2 / sigmas[n] /sigmas[n]) /2/PI/sigmas[n] /sigmas[n];
+    }
+    
+    return sigma;
+  }
+  
+  /// mass within elliptical radius
+  double mass_cum(double r){
+    double mass_tmp=0;
+    for(int n=0 ; n<nn ; ++n) mass_tmp += A[n]*( 1 - exp(-r*r / 2 / sigmas[n] /sigmas[n]) );
+    
+    return mass_tmp;
+  }
+  
+  /// returns the RMS relative error for the fit points in the profile
+  float error(){
+    return rms_error;
+  }
+  
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1){
     
     std::complex<PosType> z(xcm[0],xcm[1]);
-     
+    
     if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
                    ,subtract_point,screening)) return;
     
     z = z * std::conj(Rotation);
-
+    
     std::complex<PosType> a=0,g=0;
     std::complex<PosType> at,gt;
     double kappat;
-
+    
     for(auto &h : gaussians){
-      h.deflection(z,a,g,kappat);
+      h.deflection(z,at,gt,kappat);
       a += at;
       g += gt;
       *kappa += kappat;
@@ -1690,47 +1802,72 @@ public:
     assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
   }
   
-  // profiles
-  
-  struct powerlaw{
-    powerlaw(
-             float g  // power-law index of surfcae density
-    ){
-      if(g <= -2){
-        std::cerr << "power-law index <= 2 give unbounded mass!" << std::endl;
-        throw std::runtime_error("bad mass");
-      }
-      gamma = g;
-    }
-    double operator()(double r){return pow(r,gamma + 2);}
-    
-    float gamma;
-  };
-  
-  struct sersic{
-     sersic(float nn,float Re):re(Re),n(nn){
-       bn = 1.9992*n - 0.3271; // approximation valid for 0.5 < n < 8
-     }
-     double operator()(double r){
-       return boost::math::tgamma_lower(2*n, bn*pow(r/re , 1.0/n ) );
-     }
-    
-    float re;
-    float n;
-    float bn;
-  };
 
-  
-private:
-
-  int nn; // number of fit radii
-  double q;
-  double pa;
-  std::vector<double> sigmas;
-  std::complex<double> Rotation;
-  std::vector<LensHaloGaussian> gaussians;
 };
 
+/// profiles that can be used in LensHeloMultiGauss
+namespace MultiGauss{
+struct powerlaw{
+  powerlaw(
+           float g  // power-law index of surfcae density
+  ){
+    if(g <= -2){
+      std::cerr << "power-law index <= 2 give unbounded mass!" << std::endl;
+      throw std::runtime_error("bad mass");
+    }
+    gamma = g;
+  }
+  double operator()(double r){return pow(r,gamma);}
+  double cum(double r){return 2*PI*pow(r,gamma + 2)/(gamma+2);}
+  
+  float gamma;
+};
+
+struct sersic{
+  sersic(float nn,float Re):re(Re),n(nn){
+    bn = 1.9992*n - 0.3271;  // approximation valid for 0.5 < n < 8
+    t = 1.0/n;
+    cum_norm = 2*PI*n/pow(bn,2*n)*re*re;
+  }
+  double cum(double r){
+    return cum_norm * boost::math::tgamma_lower(2*n, bn*pow(r/re,t) );
+  }
+  double operator()(double r){ //check that these are consistant
+    return exp(-bn*pow(r/re,t) );
+  }
+  
+  float t;
+  float re;
+  float n;
+  float bn;
+  float cum_norm;
+};
+
+struct nfw{
+  nfw(float rs):rs(rs){
+  }
+  double cum(double r){
+    double x =r/rs;
+    
+    double ans=log(x/2);
+    if(x==1.0) ans += 1.0;
+    if(x>1.0) ans += 2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);
+    if(x<1.0) ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);
+    
+    return 2*PI*rs*rs*ans;
+  }
+  double operator()(double r){ //check that these are consistant
+    double x =r/rs;
+    
+    if(x==1.0){return 1.0/3.0;}
+    if(x>1.0) return (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1);
+    if(x<1.0) return (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1);
+  }
+  
+  float rs;
+  float cum_norm;
+};
+}
 #endif // eigen
 
 #endif // libcerf
