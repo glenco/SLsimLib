@@ -1403,7 +1403,7 @@ public:
                 ,PosType my_zlens /// redshift
                 ,PosType r_scale  /// scale hight along the largest dimension
                 ,float my_fratio /// axis ratio
-                ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                ,float my_pa     /// position angle, 0 has long axis along the horizontal axis and goes counter clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
                 ,float f=100 /// cuttoff radius in units of truncation radius
   );
