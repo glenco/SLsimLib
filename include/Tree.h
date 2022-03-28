@@ -463,7 +463,9 @@ std::vector<double *> concave_hull(std::vector<double *> &P,int k);
 
 
 void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
+void contour_ellipse(std::vector<RAY> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
 Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);
+Point_2d contour_center(std::vector<RAY> &P, unsigned long Npoints);
 
 long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
@@ -847,12 +849,16 @@ unsigned long prevpower(unsigned long k);
 int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
 int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
 int windings(Point_2d &x,std::vector<Point_2d> &point,PosType *area);
+// this is for the image postions
+int windings(Point_2d &x,std::vector<RAY> &point,PosType *area);
 int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
 int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
 int incurve(PosType x[],std::vector<Point *> curve);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
 int incurve(PosType x[],std::vector<Point_2d> curve);
+/// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
+int incurve(PosType x[],std::vector<RAY> curve);
 
 unsigned long order_curve4(Point *curve,long Npoints);
 unsigned long order_curve4(Kist<Point> * curve);

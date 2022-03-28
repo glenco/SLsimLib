@@ -942,18 +942,18 @@ void ImageFinding::CriticalCurve::RandomSourceStrictlyWithinCaustic(int N,std::v
 
 
 void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
-  if(critical_curve.size() == 0){
+  if(critcurve.size() == 0){
     my_p1 *= 0;
     my_p2 *= 0;
     return;
   }
-  my_p1 = my_p2 = critical_curve[0];
+  my_p1 = my_p2 = critcurve[0].x;
   
-  for(size_t ii=1;ii < critical_curve.size();++ii){
-    if(critical_curve[ii][0] < my_p1[0] ) my_p1[0] = critical_curve[ii][0];
-    if(critical_curve[ii][0] > my_p2[0] ) my_p2[0] = critical_curve[ii][0];
-    if(critical_curve[ii][1] < my_p1[1] ) my_p1[1] = critical_curve[ii][1];
-    if(critical_curve[ii][1] > my_p2[1] ) my_p2[1] = critical_curve[ii][1];
+  for(size_t ii=1;ii < critcurve.size();++ii){
+    if(critcurve[ii].x[0] < my_p1[0] ) my_p1[0] = critcurve[ii].x[0];
+    if(critcurve[ii].x[0] > my_p2[0] ) my_p2[0] = critcurve[ii].x[0];
+    if(critcurve[ii].x[1] < my_p1[1] ) my_p1[1] = critcurve[ii].x[1];
+    if(critcurve[ii].x[1] > my_p2[1] ) my_p2[1] = critcurve[ii].x[1];
   }
 }
 void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
@@ -1025,7 +1025,7 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   PixelMap map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
-    map.AddCurve(c.critical_curve, int(c.type) + 1);
+    map.AddCurve(c.critcurve, int(c.type) + 1);
   }
   
   return map;
