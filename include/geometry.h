@@ -373,7 +373,7 @@ double AngleBetween2d(double v1[],double v2[]);
  *
  *  This is faster than the windings() functions which also calulate the area
  */
-int incurve(PosType x[],std::vector<double *> curve);
+int incurve(PosType x[],std::vector<double *> &curve);
 
 }
 }

@@ -164,6 +164,7 @@ public:
   void AddCurve(ImageInfo *curve,double value);
   void AddCurve(Kist<Point> *imagekist,PosType value);
   void AddCurve(std::vector<Point_2d> &curve,double value);
+  void AddCurve(std::vector<RAY> &curve,double value);
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);

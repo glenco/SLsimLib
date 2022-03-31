@@ -205,8 +205,8 @@ namespace ImageFinding{
     };
     
     CriticalCurve(const CriticalCurve &p){
-      //critical_curve.resize(p.critical_curve.size());
-      critical_curve = p.critical_curve;
+      critcurve = p.critcurve;
+      //critical_curve = p.critical_curve;
       caustic_curve_outline = p.caustic_curve_outline;
       caustic_curve_intersecting = p.caustic_curve_intersecting;
       critical_center = p.critical_center;
@@ -224,7 +224,8 @@ namespace ImageFinding{
     CriticalCurve & operator=(const CriticalCurve &p){
       if(this == &p) return *this;
       
-      critical_curve = p.critical_curve;
+      critcurve = p.critcurve;
+      //critical_curve = p.critical_curve;
       caustic_curve_outline = p.caustic_curve_outline;
       caustic_curve_intersecting = p.caustic_curve_intersecting;
       critical_center = p.critical_center;
@@ -240,7 +241,8 @@ namespace ImageFinding{
       return *this;
     }
     
-    std::vector<Point_2d> critical_curve;
+    std::vector<RAY> critcurve;
+    //std::vector<Point_2d> critical_curve;
     std::vector<Point_2d> caustic_curve_outline;
     std::vector<Point_2d> caustic_curve_intersecting;
     std::vector<Point_2d> ellipse_curve;
@@ -267,17 +269,18 @@ namespace ImageFinding{
     PosType ellipse_area;
     
     /// return true if x is inside or on the border of the caustic curve
-    bool inCausticCurve(Point_2d x){
+    bool inCausticCurve(Point_2d &x){
       return Utilities::incurve(x.x,caustic_curve_outline);
     }
     
     /// return true if x is inside or on the border of the critical curve
-    bool inCriticalCurve(Point_2d x){
-      return Utilities::incurve(x.x,critical_curve);
+    bool inCriticalCurve(Point_2d &x){
+      //return Utilities::incurve(x.x,critical_curve);
+      return Utilities::incurve(x.x,critcurve);
     }
 
     /// return true if x is strictly inside (entirely) the caustic curve
-    bool EntirelyinCausticCurve(Point_2d x, PosType sourceRadius)
+    bool EntirelyinCausticCurve(Point_2d &x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the caustic :
       bool IsInCurve = Utilities::incurve(x.x,caustic_curve_outline);
@@ -303,17 +306,18 @@ namespace ImageFinding{
     bool EntirelyinCriticalCurve(Point_2d x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the critical curve :
-      bool IsInCurve = Utilities::incurve(x.x,critical_curve);
-      
+      //bool IsInCurve = Utilities::incurve(x.x,critical_curve);
+      bool IsInCurve = Utilities::incurve(x.x,critcurve);
+
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the critical curve
       PosType DistSourceToCritCurve; // distance between the source center and the considered point of the critical line.
       
       if(IsInCurve == true) // center inside the critical line
       {
-        while(i<critical_curve.size()) // testing that the source size does not overlap with the critical line.
+        while(i<critcurve.size()) // testing that the source size does not overlap with the critical line.
         {
-          DistSourceToCritCurve = sqrt((critical_curve[i].x[0] - x.x[0])*(critical_curve[i].x[0] - x.x[0]) + (critical_curve[i].x[1] - x.x[1])*(critical_curve[i].x[1] - x.x[1]));
+          DistSourceToCritCurve = sqrt((critcurve[i].x[0] - x.x[0])*(critcurve[i].x[0] - x.x[0]) + (critcurve[i].x[1] - x.x[1])*(critcurve[i].x[1] - x.x[1]));
           if (DistSourceToCritCurve < sourceRadius) return false ; // source too close, we return false and don't consider the point.
           i++;
         }
@@ -345,23 +349,23 @@ namespace ImageFinding{
     
     /// find 3 measures of the critical curve radius
     void CriticalRadius(PosType &rmax,PosType &rmin,PosType &rave) const{
-      if(critical_curve.size() < 2){
+      if(critcurve.size() < 2){
         rave = rmax = rmin = 0.0;
         return;
       }
       
-      rave = rmin = rmax = (critical_center - critical_curve[0]).length();
+      rave = rmin = rmax = (critical_center - critcurve[0].x).length();
       PosType rad;
       
-      for(size_t ii=1; ii< critical_curve.size(); ++ii){
-        rad = (critical_center - critical_curve[ii]).length();
+      for(size_t ii=1; ii< critcurve.size(); ++ii){
+        rad = (critical_center - critcurve[ii].x).length();
         
         rave += rad;
         if(rad < rmin) rmin = rad;
         if(rad > rmax) rmax = rad;
       }
       
-      rave /= critical_curve.size();
+      rave /= critcurve.size();
     }
     /// find 3 measures of the caustic curve radius
     void CausticRadius(PosType &rmax,PosType &rmin,PosType &rave) const{

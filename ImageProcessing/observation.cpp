@@ -490,8 +490,7 @@ void Observation::fftpsf(){
   image_padded.resize(n_x*n_y);
   for(double &a :image_padded) a=0;
   
-  fftw_plan p_psf;
-  p_psf = fftw_plan_dft_r2c_2d(n_x ,n_y ,psf_padded.data()
+  fftw_plan p_psf = fftw_plan_dft_r2c_2d(n_x ,n_y ,psf_padded.data()
                                ,reinterpret_cast<fftw_complex*>(fft_psf.data()), FFTW_ESTIMATE);
   fftw_execute(p_psf);
   

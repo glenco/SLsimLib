@@ -1384,6 +1384,23 @@ void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
   
 }
 
+void PixelMap::AddCurve(std::vector<RAY> &curve,double value){
+  PosType x[2];
+  
+  if(curve.size() == 0 ) return;
+  
+  x[0] = curve[0].x[0];
+  x[1] = curve[0].x[1];
+  for(size_t ii=1;ii<curve.size();++ii){
+    drawline(x,curve[ii].x.x,value);
+    x[0] = curve[ii].x[0];
+    x[1] = curve[ii].x[1];
+  }
+  drawline(x,curve[0].x.x,value);
+  
+  return;
+  
+}
 
 /**
  *  \brief Fills in pixels where the image plane points in the grid are located with the value given.
