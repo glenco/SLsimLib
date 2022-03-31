@@ -1629,114 +1629,9 @@ public:
       q = 1/q;
     }
     
-    // make logorithmic
-    sigmas.resize(nn);
-    {
-      double tmp = pow(r_max/r_min,1.0/(nn-2));
-      sigmas[0] = r_min/5;
-      sigmas[1] = r_min;
-      for(int i=2 ; i < nn ; ++i){
-        sigmas[i] = tmp*sigmas[i-1];
-      }
-    }
-    
-    radii.resize(mm);
-    {
-      double tmp = pow(r_max/r_min,1.0/(mm-1));
-      radii[0] = r_min;
-      for(int i=1 ; i < mm ; ++i){
-        radii[i] = tmp*radii[i-1];
-      }
-    }
-    
-    Eigen::MatrixXd M(mm,nn);
-    
-    // first radius is fit to mass within radius
-    {
-      double cp = profile.cum(radii[0]);
-      for(int n=0 ; n < nn ; ++n){
-        M(0,n) = 2*PI*sigmas[n] * sigmas[n]
-        * ( 1 -exp(-radii[0]*radii[0] / 2 / sigmas[n] /sigmas[n]) )
-        / cp ;
-      }
-    }
-    
-    // all others are fit to relative density
-    for(int m=1 ; m < mm ; ++m){
-      double p = profile(radii[m]);
-      for(int n=0 ; n < nn ; ++n){
-        M(m,n) = exp( - radii[m]*radii[m] / 2 / sigmas[n] /sigmas[n])
-        / p ;
-      }
-    }
-    
-    // invert M
-    
-    A.resize(nn);
-    {
-      std::vector<double> b(mm,1);
-      Eigen::Map<Eigen::VectorXd> v(b.data(),mm);
-      Eigen::Map<Eigen::VectorXd> a(A.data(),nn);
-      
-      //M = M.inverse();
-      a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
-      
-      std::cout << "test " << std::endl << M*a << std::endl;
-    }
-    
-    // tests
-    {
-      rms_error=0;
-      for(int m=0 ; m < 1 ; ++m){
-        double surf=0;
-        for(int n=0 ; n < nn ; ++n){
-          surf += A[n] * sigmas[n] * sigmas[n]
-          * 2*PI*( 1 - exp(-radii[m]*radii[m] / 2 / sigmas[n] /sigmas[n]) );
-        }
-        double tmp = profile.cum(radii[m]);
-        if(verbose) std::cout << tmp << " "  << surf << std::endl;
-        
-        rms_error += (surf - tmp )*(surf - tmp) / tmp / tmp;
-      }
-      
-      for(int m=1 ; m < mm ; ++m){
-        double surf=0;
-        for(int n=0 ; n < nn ; ++n){
-          surf += A[n] * exp(-radii[m]*radii[m] / 2 / sigmas[n] /sigmas[n]) ;
-        }
-        double tmp = profile(radii[m]);
-        if(verbose) std::cout << tmp << " "  << surf << std::endl;
-        
-        rms_error += (surf - tmp )*(surf - tmp ) / tmp /tmp;
-      }
-      rms_error = sqrt(rms_error)/nn;
-      if(verbose) std::cout << " MSE error " << rms_error << std::endl;
-    }
-    
-    // find masses of Gaussian components
-    double totalmass = 0;
-    {
-      double total = 0,mass_tmp = 0;
-      for(int n=0 ; n<nn ; ++n){
-        total += sigmas[n]*sigmas[n]*A[n];
-        mass_tmp += sigmas[n]*sigmas[n]*A[n]
-        *( 1 - exp(-r_norm*r_norm / 2 / sigmas[n] /sigmas[n]) );
-      }
-      
-      {  // convert to mass units of each component
-        double tmp = (mass_norm/mass_tmp);
-        // rescale so total mass is correct
-        for(int n=0 ; n<nn ; ++n) A[n] *= tmp*sigmas[n]*sigmas[n];
-      }
-      
-      totalmass = 0;
-      for(int n=0 ; n<nn ; ++n) totalmass += A[n];
-      mass_tmp = 0;
-      //for(int n=0 ; n<nn ; ++n) mass_tmp += A[n]*( 1 - exp(-r_norm*r_norm / 2 / sigmas[n] /sigmas[n]) );
-      //std::cout << "total mass = " << totalmass<< std::endl
-      //<<  mass_tmp   << " = " << mass_norm
-      //<< std::endl;
-    }
+    double totalmass=0;
+    calc_masses_scales(profile,nn,mm,r_min,r_max,mass_norm,r_norm
+                       ,totalmass,sigmas,A,rms_error,verbose);
     
     LensHalo::setMass(totalmass);
   
@@ -1746,6 +1641,185 @@ public:
     }
     Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
     Rmax = Rsize = f*r_max;
+  }
+  
+  LensHaloMultiGauss(
+                     double my_mass
+                     ,double my_scale           // radial scale in units of the scale that was used to produce relative_scales
+                     ,const std::vector<double> &relative_scales
+                     ,const std::vector<double> &relative_masses
+                     ,PosType my_zlens /// redshift
+                     ,float my_fratio /// axis ratio
+                     ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                     ,const COSMOLOGY &cosmo  /// cosmology
+                     ,float f=10 /// cuttoff radius in units of truncation radius
+                     ,bool verbose = false
+  ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(0),r_norm(0)
+  
+  {
+
+    if(relative_scales.size() != relative_masses.size()){
+      throw std::runtime_error("arrays are wrong size.");
+    }
+    nn = relative_scales.size();
+    if(q > 1){
+      q = 1/q;
+    }
+
+   if(nn > mm){
+      std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
+      throw std::runtime_error("");
+    }
+    
+    A = relative_masses;
+    double tmp_mass = 0;
+    for(auto m : relative_masses) tmp_mass += m;
+    for(auto &a : A) a *= my_mass/tmp_mass;
+
+    sigmas = relative_scales;
+    for(double &s : sigmas) s *= my_scale;
+
+    LensHalo::setMass(my_mass);
+  
+    // construct Gaussian components
+    for(int i=0 ; i<nn ; ++i){
+      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
+    }
+    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+    Rmax = Rsize = f*sigmas.back();
+  }
+  
+  /***
+    This is a static function that can be used to find the masses and scales for the gaussians which can
+   then be fed into the scond constructor with a rescaling.  This avoids having to recalculate them when the same profile is used multiple times.
+   
+   For example, an NFW can be calculated here with a scale size 1 and an arbitrary mass.  Then it can be used in the constructor with different scale sizes and masses.
+   
+   <p>
+   MultiGauss::sersic profile(1,1);
+   double mass_out;
+   float rms_error;
+   std::vector<double> scales,masses;
+   LensHaloMultiGauss<MultiGauss::sersic>::calc_masses_scales(profile, 13, 25, 0.01,3,0.5,1,mass_out,scales,masses,rms_error);
+   LensHaloMultiGauss<MultiGauss::sersic> halo1(mass,rscale,scales,masses,zl,q,-pa,cosmo);
+   LensHaloMultiGauss<MultiGauss::sersic> halo2(mass/2,0.1*rscale,scales,masses,zl2,q2,-pa2,cosmo);
+   <\p>
+   */
+  static void calc_masses_scales(P &profile  /// cumulative profile
+                                 ,int Ngaussians    /// number of gausians
+                                 ,int Nradii    /// number of radii they are fit to
+                                 ,PosType r_min
+                                 ,PosType r_max
+                                 ,double mass_norm
+                                 ,double r_norm
+                                 ,double &totalmass_out
+                                 ,std::vector<double> &scales
+                                 ,std::vector<double> &masses
+                                 ,float &rms_error
+                                 ,bool verbose=false
+                                 ){
+    // make logorithmic
+    scales.resize(Ngaussians);
+    {
+      double tmp = pow(r_max/r_min,1.0/(Ngaussians-2));
+      scales[0] = r_min/5;
+      scales[1] = r_min;
+      for(int i=2 ; i < Ngaussians ; ++i){
+        scales[i] = tmp*scales[i-1];
+      }
+    }
+    
+    std::vector<double> radii(Nradii);
+    {
+      double tmp = pow(r_max/r_min,1.0/(Nradii-1));
+      radii[0] = r_min;
+      for(int i=1 ; i < Nradii ; ++i){
+        radii[i] = tmp*radii[i-1];
+      }
+    }
+    
+    Eigen::MatrixXd M(Nradii,Ngaussians);
+    
+    // first radius is fit to mass within radius
+    {
+      double cp = profile.cum(radii[0]);
+      for(int n=0 ; n < Ngaussians ; ++n){
+        M(0,n) = 2*PI*scales[n] * scales[n]
+        * ( 1 -exp(-radii[0]*radii[0] / 2 / scales[n] /scales[n]) )
+        / cp ;
+      }
+    }
+    
+    // all others are fit to relative density
+    for(int m=1 ; m < Nradii ; ++m){
+      double p = profile(radii[m]);
+      for(int n=0 ; n < Ngaussians ; ++n){
+        M(m,n) = exp( - radii[m]*radii[m] / 2 / scales[n] /scales[n])
+        / p ;
+      }
+    }
+    
+    // invert M
+    
+    masses.resize(Ngaussians);
+    {
+      std::vector<double> b(Nradii,1);
+      Eigen::Map<Eigen::VectorXd> v(b.data(),Nradii);
+      Eigen::Map<Eigen::VectorXd> a(masses.data(),Ngaussians);
+      
+      //M = M.inverse();
+      a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
+      
+      if(verbose) std::cout << "test " << std::endl << M*a << std::endl;
+    }
+    
+    // tests
+    {
+      rms_error=0;
+      for(int m=0 ; m < 1 ; ++m){
+        double surf=0;
+        for(int n=0 ; n < Ngaussians ; ++n){
+          surf += masses[n] * scales[n] * scales[n]
+          * 2*PI*( 1 - exp(-radii[m]*radii[m] / 2 / scales[n] /scales[n]) );
+        }
+        double tmp = profile.cum(radii[m]);
+        if(verbose) std::cout << tmp << " "  << surf << std::endl;
+        
+        rms_error += (surf - tmp )*(surf - tmp) / tmp / tmp;
+      }
+      
+      for(int m=1 ; m < Nradii ; ++m){
+        double surf=0;
+        for(int n=0 ; n < Ngaussians ; ++n){
+          surf += masses[n] * exp(-radii[m]*radii[m] / 2 / scales[n] /scales[n]) ;
+        }
+        double tmp = profile(radii[m]);
+        if(verbose) std::cout << tmp << " "  << surf << std::endl;
+        
+        rms_error += (surf - tmp )*(surf - tmp ) / tmp /tmp;
+      }
+      rms_error = sqrt(rms_error)/Ngaussians;
+      if(verbose) std::cout << " MSE error " << rms_error << std::endl;
+    }
+    
+    // find masses of Gaussian components
+   {
+      double total = 0,mass_tmp = 0;
+      for(int n=0 ; n<Ngaussians ; ++n){
+        total += scales[n]*scales[n]*masses[n];
+        mass_tmp += scales[n]*scales[n]*masses[n]
+        *( 1 - exp(-r_norm*r_norm / 2 / scales[n] /scales[n]) );
+      }
+      
+      {  // convert to mass units of each component
+        double tmp = (mass_norm/mass_tmp);
+        // rescale so total mass is correct
+        for(int n=0 ; n<Ngaussians ; ++n) masses[n] *= tmp*scales[n]*scales[n];
+      }
+     
+   }
+    totalmass_out = 0;
+    for(int n=0 ; n<Ngaussians ; ++n) totalmass_out += masses[n];
   }
   
   double profile(double r){
