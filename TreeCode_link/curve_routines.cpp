@@ -1865,7 +1865,7 @@ int windings(
       return wn;
     }
   
-  int incurve(PosType x[],std::vector<Point *> curve){
+  int incurve(PosType x[],std::vector<Point *> &curve){
     int number = 0;
     size_t i;
     
@@ -1891,7 +1891,7 @@ int windings(
     
     return number == 0 ? 0 : 1;
   }
-  int incurve(PosType x[],std::vector<Point_2d> curve){
+  int incurve(PosType x[],std::vector<Point_2d> &curve){
 
     if(curve.size() == 0) return 0;
 
@@ -1921,7 +1921,7 @@ int windings(
     return number == 0 ? 0 : 1;
   }
   
-int incurve(PosType x[],std::vector<RAY> curve){
+int incurve(PosType x[],std::vector<RAY> &curve){
 
   if(curve.size() == 0) return 0;
 

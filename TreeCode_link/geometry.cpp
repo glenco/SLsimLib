@@ -85,7 +85,7 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
   return atan2(y, x);
 }
 
-int Utilities::Geometry::incurve(PosType x[],std::vector<double *> curve){
+int Utilities::Geometry::incurve(PosType x[],std::vector<double *> &curve){
   int number = 0;
   size_t i;
   

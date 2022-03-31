@@ -854,11 +854,11 @@ int windings(Point_2d &x,std::vector<RAY> &point,PosType *area);
 int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
 int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<Point *> curve);
+int incurve(PosType x[],std::vector<Point *> &curve);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<Point_2d> curve);
+int incurve(PosType x[],std::vector<Point_2d> &curve);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<RAY> curve);
+int incurve(PosType x[],std::vector<RAY> &curve);
 
 unsigned long order_curve4(Point *curve,long Npoints);
 unsigned long order_curve4(Kist<Point> * curve);

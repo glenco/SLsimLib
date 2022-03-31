@@ -269,18 +269,18 @@ namespace ImageFinding{
     PosType ellipse_area;
     
     /// return true if x is inside or on the border of the caustic curve
-    bool inCausticCurve(Point_2d x){
+    bool inCausticCurve(Point_2d &x){
       return Utilities::incurve(x.x,caustic_curve_outline);
     }
     
     /// return true if x is inside or on the border of the critical curve
-    bool inCriticalCurve(Point_2d x){
+    bool inCriticalCurve(Point_2d &x){
       //return Utilities::incurve(x.x,critical_curve);
       return Utilities::incurve(x.x,critcurve);
     }
 
     /// return true if x is strictly inside (entirely) the caustic curve
-    bool EntirelyinCausticCurve(Point_2d x, PosType sourceRadius)
+    bool EntirelyinCausticCurve(Point_2d &x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the caustic :
       bool IsInCurve = Utilities::incurve(x.x,caustic_curve_outline);

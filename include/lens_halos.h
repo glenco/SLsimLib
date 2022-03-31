@@ -1681,7 +1681,7 @@ public:
       //M = M.inverse();
       a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
       
-      std::cout << "test " << std::endl << M*a << std::endl;
+      if(verbose) std::cout << "test " << std::endl << M*a << std::endl;
     }
     
     // tests
@@ -1807,8 +1807,9 @@ public:
 
 /// profiles that can be used in LensHeloMultiGauss
 namespace MultiGauss{
-struct powerlaw{
-  powerlaw(
+struct POWERLAW{
+
+  POWERLAW(
            float g  // power-law index of surfcae density
   ){
     if(g <= -2){
@@ -1820,15 +1821,15 @@ struct powerlaw{
   double operator()(double r){return pow(r,gamma);}
   double cum(double r){return 2*PI*pow(r,gamma + 2)/(gamma+2);}
   
+  void reset(float g){gamma = g;}
   float gamma;
 };
 
-struct sersic{
-  sersic(float nn,float Re):re(Re),n(nn){
-    bn = 1.9992*n - 0.3271;  // approximation valid for 0.5 < n < 8
-    t = 1.0/n;
-    cum_norm = 2*PI*n/pow(bn,2*n)*re*re;
-  }
+struct SERSIC{
+  SERSIC(){reset(0,0);}
+  SERSIC(float nn,float Re){
+     reset(nn,Re);
+   }
   double cum(double r){
     return cum_norm * boost::math::tgamma_lower(2*n, bn*pow(r/re,t) );
   }
@@ -1836,6 +1837,15 @@ struct sersic{
     return exp(-bn*pow(r/re,t) );
   }
   
+  void reset(float nn,float Re){
+    re = Re;
+    n = nn;
+    bn = 1.9992*n - 0.3271;  // approximation valid for 0.5 < n < 8
+    t = 1.0/n;
+    cum_norm = 2*PI*n/pow(bn,2*n)*re*re;
+  }
+  
+private:
   float t;
   float re;
   float n;
@@ -1843,8 +1853,8 @@ struct sersic{
   float cum_norm;
 };
 
-struct nfw{
-  nfw(float rs):rs(rs){
+struct NFW{
+  NFW(float rs):rs(rs){
   }
   double cum(double r){
     double x =r/rs;
@@ -1861,11 +1871,12 @@ struct nfw{
     
     if(x==1.0){return 1.0/3.0;}
     if(x>1.0) return (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1);
-    if(x<1.0) return (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1);
+    return (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1);
   }
   
+  void reset(double Rs){rs = Rs;}
+  
   float rs;
-  float cum_norm;
 };
 }
 #endif // eigen
