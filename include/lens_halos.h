@@ -1644,7 +1644,8 @@ public:
   }
   
   LensHaloMultiGauss(
-                     double my_mass
+                     double my_mass_norm
+                     ,double Rnorm
                      ,double my_scale           // radial scale in units of the scale that was used to produce relative_scales
                      ,const std::vector<double> &relative_scales
                      ,const std::vector<double> &relative_masses
@@ -1654,7 +1655,7 @@ public:
                      ,const COSMOLOGY &cosmo  /// cosmology
                      ,float f=10 /// cuttoff radius in units of truncation radius
                      ,bool verbose = false
-  ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(0),r_norm(0)
+  ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(my_mass_norm),r_norm(Rnorm)
   
   {
 
@@ -1671,15 +1672,22 @@ public:
       throw std::runtime_error("");
     }
     
-    A = relative_masses;
-    double tmp_mass = 0;
-    for(auto m : relative_masses) tmp_mass += m;
-    for(auto &a : A) a *= my_mass/tmp_mass;
-
     sigmas = relative_scales;
     for(double &s : sigmas) s *= my_scale;
 
-    LensHalo::setMass(my_mass);
+    
+    A = relative_masses;
+    double tmp_mass = 0;
+    
+    for(int n=0 ; n<nn ; ++n){
+      tmp_mass += relative_masses[n] * ( 1 - exp(-r_norm*r_norm / 2 / (sigmas[n]*sigmas[n]) ) );
+    }
+    for(auto &a : A) a *= my_mass_norm/tmp_mass;
+
+ 
+    double totalmass = 0;
+    for(auto a : A) totalmass += a;
+    LensHalo::setMass(totalmass);
   
     // construct Gaussian components
     for(int i=0 ; i<nn ; ++i){
