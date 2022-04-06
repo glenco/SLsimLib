@@ -1355,10 +1355,10 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
   ss = sqrt(2)*Rhight;
   if(q != 1.0){
     norm = - SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
-    norm_g = norm /ss /sqrt(q_prime) ;
+    norm_g = norm /ss /sqrt(q_prime);
   }else{
     // normalization
-    norm = mass / sqrt(PI);
+    norm = -mass / PI;
     norm_g = 0;
   }
   
@@ -1416,7 +1416,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
    
   if(q==1.0){
     a = norm / z * ( 1 - exp( - x_e2 ) );
-    g = a / z  + norm / z * exp( - x_e2 ) * (q*q*z.real() - I*z.imag());
+    g = a / z  - norm / z * exp( - x_e2 ) * (z.real() - I*z.imag())/ss/ss;
   }else{
     
     //std::complex<double> zz2 = zz*zz;
@@ -1429,7 +1429,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
     // this is the correct result in all quadrants
     //a =  norm * sqrt(z*z)/ z
     //* ( sqrt(-zz2)/sqrt(zz2)*wF(I*sqrt(-zz2)) - b/(sqrt(zz2 - x_e2))*wF(I*b) * exp(- x_e2 ));
-    a = - norm * I * ( wfzz - wfib * exp(- x_e2 ));
+    a = norm * I * ( wfzz - wfib * exp(- x_e2 ));
   
     std::complex<double> dx_e2dzz = q*q*zz.real() - I*zz.imag();
   
@@ -1448,6 +1448,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
       g = std::conj(g);
     }
   }
+  
 }
 
 std::complex<double> LensHaloGaussian::wF(std::complex<double> z) const{

@@ -681,23 +681,23 @@ protected:
   struct DMDR{
     DMDR(LensHalo *halo): halo(halo){};
     PosType operator()(PosType logR){
-       if(halo->get_flag_elliptical()){
+       //if(halo->get_flag_elliptical()){
         LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
         //std::cout << " R = " << exp(logR) << std::endl;
         
         if(exp(2*logR) == 0.0) return 0.0;
          return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*PI,1.0e-7)
          *exp(2*logR);
-      }else{
-        PosType alpha[2] = {0,0},x[2] = {0,0};
-        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
-        
-        x[0] = exp(logR);
-        x[1] = 0;
-        
-        halo->force_halo(alpha,&kappa,gamma,&phi,x);
-        return 2*PI*kappa*exp(2*logR);
-      }
+//      }else{
+//        PosType alpha[2] = {0,0},x[2] = {0,0};
+//        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+//
+//        x[0] = exp(logR);
+//        x[1] = 0;
+//
+//        halo->force_halo(alpha,&kappa,gamma,&phi,x);
+//        return 2*PI*kappa*exp(2*logR);
+//      }
     }
   protected:
     LensHalo *halo;
@@ -1406,7 +1406,7 @@ public:
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the horizontal axis and goes counter clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
-                ,float f=100 /// cuttoff radius in units of truncation radius
+                ,float f=10 /// cuttoff radius in units of truncation radius
   );
   
   LensHaloGaussian(const LensHaloGaussian &h):
