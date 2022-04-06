@@ -86,6 +86,9 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
 }
 
 int Utilities::Geometry::incurve(PosType x[],std::vector<double *> &curve){
+  
+  if(curve.size() < 3) return 0;
+  
   int number = 0;
   size_t i;
   
