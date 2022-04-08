@@ -1406,7 +1406,7 @@ public:
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the horizontal axis and goes counter clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
-                ,float f=10 /// cuttoff radius in units of truncation radius
+                ,float f=100 /// cuttoff radius in units of truncation radius
   );
   
   LensHaloGaussian(const LensHaloGaussian &h):
@@ -1648,14 +1648,14 @@ public:
   
   LensHaloMultiGauss(
                      double my_mass
-                     ,double my_scale           // radial scale in units of the scale that was used to produce relative_scales
+                     ,double my_scale      /// radial scale in units of the scale that was used to produce relative_scales
                      ,const std::vector<double> &relative_scales
                      ,const std::vector<double> &relative_masses
                      ,PosType my_zlens /// redshift
                      ,float my_fratio /// axis ratio
                      ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
                      ,const COSMOLOGY &cosmo  /// cosmology
-                     ,float f=10 /// cuttoff radius in units of truncation radius
+                     ,float f=100 /// cuttoff radius in units of truncation radius
                      ,bool verbose = false
   ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(0),r_norm(0)
   
