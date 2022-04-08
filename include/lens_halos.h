@@ -1423,7 +1423,8 @@ public:
     norm_g = h.norm_g;
     ss = h.ss;
     I = h.I;
-    I_sqpi = h. I_sqpi;
+    I_sqpi = h.I_sqpi;
+    one_sqpi = h.one_sqpi;
   }
   
   LensHaloGaussian &operator=(const LensHaloGaussian &h){
@@ -1441,7 +1442,8 @@ public:
     norm_g = h.norm_g;
     ss = h.ss;
     I = h.I;
-    I_sqpi = h. I_sqpi;
+    I_sqpi = h.I_sqpi;
+    one_sqpi = h.one_sqpi;
     
     return *this;
   }
@@ -1559,6 +1561,7 @@ protected:
   
   std::complex<double> I;
   std::complex<double> I_sqpi;
+  double one_sqpi;
 //  double U1[6] = {1.320522,35.7668,219.031,1540.787,3321.990,36183.31};
 //  double V1[7] = {1.841439,61.57037,364.2191,2186.181,9022.228,24322.84,32066.6};
 //

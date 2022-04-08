@@ -1339,6 +1339,7 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
 {
 
   I_sqpi = I / sqrt(PI);
+  one_sqpi = 1.0 / sqrt(PI);
   
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
@@ -1354,8 +1355,8 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
   
   ss = sqrt(2)*Rhight;
   if(q != 1.0){
-    norm = - SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
-    norm_g = norm /ss /sqrt(q_prime);
+    norm = SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
+    norm_g = norm /ss /sqrt(q_prime);  // norm x dzz/dz
   }else{
     // normalization
     norm = -mass / PI;
@@ -1405,6 +1406,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
   zz.imag(abs(zz.imag()));
 
   double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
+  double exp_x_e2 = exp(-x_e2);
 
   sigma = SigmaO * exp(- x_e2 );
   
@@ -1415,11 +1417,10 @@ void LensHaloGaussian::deflection(std::complex<double> &z
   }
    
   if(q==1.0){
-    a = norm / z * ( 1 - exp( - x_e2 ) );
-    g = a / z  - norm / z * exp( - x_e2 ) * (z.real() - I*z.imag())/ss/ss;
+    a = norm / z * ( 1 - exp_x_e2 );
+    g = a / z  - norm / z * exp_x_e2 * (z.real() - I*z.imag())/ss/ss;
   }else{
     
-    //std::complex<double> zz2 = zz*zz;
     std::complex<double> b = sqrt(x_e2 - zz*zz);
     
     std::complex<double> wfzz = wF(zz);
@@ -1429,16 +1430,18 @@ void LensHaloGaussian::deflection(std::complex<double> &z
     // this is the correct result in all quadrants
     //a =  norm * sqrt(z*z)/ z
     //* ( sqrt(-zz2)/sqrt(zz2)*wF(I*sqrt(-zz2)) - b/(sqrt(zz2 - x_e2))*wF(I*b) * exp(- x_e2 ));
-    a = norm * I * ( wfzz - wfib * exp(- x_e2 ));
+    a = norm * I * ( wfzz - wfib * exp_x_e2);
   
-    std::complex<double> dx_e2dzz = q*q*zz.real() - I*zz.imag();
+    std::complex<double> dx_e2dzz = (q*q*abs(z.real()) - I*abs(z.imag()))*sqrt(q_prime)/ss;
   
-    g = norm_g * I * ( 2.0*(I_sqpi - z*wfzz)
-                    - ( (I_sqpi - z*wfib) * I * (dx_e2dzz - 2.0*zz)/b
-                       + wfib*dx_e2dzz)*exp(- x_e2 )
+    g = -norm_g * I * ( 2.0*(I_sqpi - zz*wfzz)
+                    + ( (1/sqrt(PI) - b*wfib) * (dx_e2dzz - 2.0*zz)/b
+                    + wfib*dx_e2dzz ) * exp_x_e2
                     );
 
-    if(z.real() < 0 && z.imag() < 0) a *= -1.0;
+    if(z.real() < 0 && z.imag() < 0){
+      a *= -1.0;
+    }
     if(z.real() > 0 && z.imag() < 0){
       a = std::conj(a);
       g = std::conj(g);
