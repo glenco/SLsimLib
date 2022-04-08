@@ -681,23 +681,23 @@ protected:
   struct DMDR{
     DMDR(LensHalo *halo): halo(halo){};
     PosType operator()(PosType logR){
-       if(halo->get_flag_elliptical()){
+       //if(halo->get_flag_elliptical()){
         LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
         //std::cout << " R = " << exp(logR) << std::endl;
         
         if(exp(2*logR) == 0.0) return 0.0;
          return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*PI,1.0e-7)
          *exp(2*logR);
-      }else{
-        PosType alpha[2] = {0,0},x[2] = {0,0};
-        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
-        
-        x[0] = exp(logR);
-        x[1] = 0;
-        
-        halo->force_halo(alpha,&kappa,gamma,&phi,x);
-        return 2*PI*kappa*exp(2*logR);
-      }
+//      }else{
+//        PosType alpha[2] = {0,0},x[2] = {0,0};
+//        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+//
+//        x[0] = exp(logR);
+//        x[1] = 0;
+//
+//        halo->force_halo(alpha,&kappa,gamma,&phi,x);
+//        return 2*PI*kappa*exp(2*logR);
+//      }
     }
   protected:
     LensHalo *halo;
@@ -1406,7 +1406,7 @@ public:
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the horizontal axis and goes counter clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
-                ,float f=100 /// cuttoff radius in units of truncation radius
+                ,float f=10 /// cuttoff radius in units of truncation radius
   );
   
   LensHaloGaussian(const LensHaloGaussian &h):
@@ -1423,7 +1423,8 @@ public:
     norm_g = h.norm_g;
     ss = h.ss;
     I = h.I;
-    I_sqpi = h. I_sqpi;
+    I_sqpi = h.I_sqpi;
+    one_sqpi = h.one_sqpi;
   }
   
   LensHaloGaussian &operator=(const LensHaloGaussian &h){
@@ -1441,7 +1442,8 @@ public:
     norm_g = h.norm_g;
     ss = h.ss;
     I = h.I;
-    I_sqpi = h. I_sqpi;
+    I_sqpi = h.I_sqpi;
+    one_sqpi = h.one_sqpi;
     
     return *this;
   }
@@ -1559,6 +1561,7 @@ protected:
   
   std::complex<double> I;
   std::complex<double> I_sqpi;
+  double one_sqpi;
 //  double U1[6] = {1.320522,35.7668,219.031,1540.787,3321.990,36183.31};
 //  double V1[7] = {1.841439,61.57037,364.2191,2186.181,9022.228,24322.84,32066.6};
 //

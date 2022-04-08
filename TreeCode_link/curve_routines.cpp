@@ -1866,6 +1866,9 @@ int windings(
     }
   
   int incurve(PosType x[],std::vector<Point *> &curve){
+    
+    if(curve.size() < 3) return 0;
+    
     int number = 0;
     size_t i;
     
@@ -1893,7 +1896,7 @@ int windings(
   }
   int incurve(PosType x[],std::vector<Point_2d> &curve){
 
-    if(curve.size() == 0) return 0;
+    if(curve.size() < 3) return 0;
 
     int number = 0;
     size_t i;    
@@ -1920,10 +1923,11 @@ int windings(
     
     return number == 0 ? 0 : 1;
   }
-  
+
+  // in the critical curve, not the caustic
 int incurve(PosType x[],std::vector<RAY> &curve){
 
-  if(curve.size() == 0) return 0;
+  if(curve.size() < 3) return 0;
 
   int number = 0;
   size_t i;
