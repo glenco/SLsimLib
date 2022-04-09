@@ -1668,6 +1668,7 @@ public:
       throw std::runtime_error("arrays are wrong size.");
     }
     nn = relative_scales.size();
+    q = abs(q);
     if(q > 1){
       q = 1/q;
     }
@@ -1873,7 +1874,7 @@ public:
       *kappa += kappat;
     }
     
-    a = - std::conj(a) * Rotation;
+    a = std::conj(a) * Rotation;
     g = std::conj(g) * Rotation * Rotation;
     
     alpha[0] += a.real();

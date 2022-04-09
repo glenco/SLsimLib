@@ -1343,6 +1343,7 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
   
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
+  q = abs(q);
   if(q > 1){
     q = 1/q;
   }
