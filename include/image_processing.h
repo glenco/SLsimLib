@@ -377,7 +377,7 @@ public:
   void addheader(std::string label,double value,std::string comment){
     headers_float.push_back(std::make_tuple(label,value,comment));
   }
-  void addheader(std::string label,std::string &value,std::string comment){
+  void addheader(std::string label,std::string value,std::string comment){
       headers_string.push_back(std::make_tuple(label,value,comment));
   }
 
