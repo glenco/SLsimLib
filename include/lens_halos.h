@@ -1698,7 +1698,12 @@ public:
     Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
     Rmax = Rsize = f*sigmas.back();
   }
-  
+
+  /// reset the position angle
+  void set_pa(double my_pa){
+    pa = my_pa;
+    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+  }
   /***
     This is a static function that can be used to find the masses and scales for the gaussians which can
    then be fed into the scond constructor with a rescaling.  This avoids having to recalculate them when the same profile is used multiple times.
