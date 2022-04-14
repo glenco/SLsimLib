@@ -958,6 +958,11 @@ void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
   
   cpfits.writeKey("UNITS",to_string(units),"");
   
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+
   for(auto &h : headers_float){
     cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
   }
@@ -991,10 +996,10 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
-  cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
   //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
