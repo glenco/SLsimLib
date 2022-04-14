@@ -121,6 +121,7 @@ PosType SourceSersic::SurfaceBrightness(
 	x_new[1] = (x[0]-source_x[0])*sinPA-(x[1]-source_x[1])*cosPA;
 
 	PosType r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
+  if(r<4.848136811e-9) r = 4.848136811e-9;
 
 	PosType sb = flux_total * I_n * I_q * I_r * exp(-bn*pow(r/Reff,1./index));
   
