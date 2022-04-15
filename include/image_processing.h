@@ -366,19 +366,64 @@ public:
 
   /// add a heaader keyword that will appear in fits output
    void addheader(std::string label,long value,std::string comment){
-     headers_long.push_back(std::make_tuple(label,value,comment));
+     bool found = false;
+     for(auto  &a : headers_long){
+       if(std::get<0>(a) == label){
+         std::get<1>(a)=value;
+         std::get<2>(a)=comment;
+         found = true;
+         break;
+       }
+     }
+     if(!found) headers_long.push_back(std::make_tuple(label,value,comment));
    }
    void addheader(std::string label,size_t value,std::string comment){
-     headers_long.push_back(std::make_tuple(label,value,comment));
+     bool found = false;
+     for(auto  &a : headers_long){
+       if(std::get<0>(a) == label){
+         std::get<1>(a)=value;
+         std::get<2>(a)=comment;
+         found = true;
+         break;
+       }
+     }
+     if(!found) headers_long.push_back(std::make_tuple(label,value,comment));
    }
    void addheader(std::string label,float value,std::string comment){
-     headers_float.push_back(std::make_tuple(label,value,comment));
+     bool found = false;
+     for(auto  &a : headers_float){
+       if(std::get<0>(a) == label){
+         std::get<1>(a)=value;
+         std::get<2>(a)=comment;
+         found=true;
+         break;
+       }
+     }
+     if(!found) headers_float.push_back(std::make_tuple(label,value,comment));
    }
   void addheader(std::string label,double value,std::string comment){
-    headers_float.push_back(std::make_tuple(label,value,comment));
+    bool found = false;
+    for(auto  &a : headers_float){
+      if(std::get<0>(a) == label){
+        std::get<1>(a)=value;
+        std::get<2>(a)=comment;
+        found=true;
+        break;
+      }
+    }
+    if(!found) headers_float.push_back(std::make_tuple(label,value,comment));
   }
   void addheader(std::string label,std::string value,std::string comment){
-      headers_string.push_back(std::make_tuple(label,value,comment));
+    bool found = false;
+    for(auto  &a : headers_string){
+      if(std::get<0>(a) == label){
+        std::get<1>(a)=value;
+        std::get<2>(a)=comment;
+        found=true;
+        break;
+      }
+    }
+    if(!found) headers_string.push_back(std::make_tuple(label,value,comment));
   }
 
 private:
