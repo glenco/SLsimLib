@@ -281,10 +281,11 @@ void Grid::ReShoot(LensHndl lens){
 }
 
 
-/** Finding
+/**
  * \brief Recalculate surface brightness at every point without changing the positions of the grid or any lens properties.
  *
- *  Recalculate the surface brightness at all points on the grid.
+ * Whatever is in the image is replaced with the one input source.
+ * Recalculate the surface brightness at all points on the grid.
  * This is useful when changing the source model while preserving
  * changes in the grid.
  * Both i_tree and s_tree are both changed although only s_tree shows up here.
@@ -318,7 +319,7 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
  * \brief Recalculate surface brightness just like Grid::RefreshSurfaceBrightness but
  * the new source is added to any sources that were already there.  
  *
- * returns the sum of the surface brightnesses from the new source
+ * returns the total flux from new source
  */
 PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
@@ -334,7 +335,7 @@ PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
       tmp = source->SurfaceBrightness((*s_tree_pointlist_it)->x);
       (*s_tree_pointlist_it)->surface_brightness += tmp;
       (*s_tree_pointlist_it)->image->surface_brightness += tmp;
-      total += tmp;//*pow( s_tree->pointlist->current->gridsize,2);
+      total += tmp * pow( (*s_tree_pointlist_it)->gridsize,2);
       assert((*s_tree_pointlist_it)->surface_brightness >= 0.0);
       (*s_tree_pointlist_it)->in_image = (*s_tree_pointlist_it)->image->in_image
       = NO;

@@ -486,9 +486,9 @@ private:
   
 };
 
-typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;
+enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z};
 
-typedef enum {counts_x_sec, flux} unitType;
+enum class UnitType {counts_x_sec, flux} ;
 
 /** 
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -518,7 +518,7 @@ public:
     /// pixel size in radians
   float getPixelSize() const {return pix_size;}
   void setPixelSize(float pixel_size){pix_size=pixel_size;}
-  float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
+  float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
   void setNoiseCorrelation(std::string nc_file);

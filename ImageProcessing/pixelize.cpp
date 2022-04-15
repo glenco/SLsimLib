@@ -2163,11 +2163,12 @@ PosType PixelMap::AddSource(Source &source){
   PosType tmp = resolution*resolution;
   PosType total = 0;
   
-  
+  double sb;
   for(size_t index =0 ;index < map.size(); ++index){
     find_position(y,index);
-    map[index] += source.SurfaceBrightness(y)*tmp;
-    total += source.SurfaceBrightness(y)*tmp;
+    sb = source.SurfaceBrightness(y);
+    map[index] += sb*tmp;
+    total += sb*tmp;
   }
   
   return total;

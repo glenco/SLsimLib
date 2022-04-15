@@ -45,7 +45,7 @@ struct GridMap{
    * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
    * the new source is added to any sources that were already there.
    *
-   * returns the sum of the surface brightnesses from the new source
+   * returns total flux from the new source
    */
   double AddSurfaceBrightnesses(SourceHndl source);
 

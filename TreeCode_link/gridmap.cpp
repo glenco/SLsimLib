@@ -184,11 +184,12 @@ void GridMap::getPixelMapFlux(PixelMap &map) const{
 double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
   
+  double res2 = pow(getResolution(),2);
   for(size_t i=0;i <s_points[0].head;++i){
     tmp = source->SurfaceBrightness(s_points[i].x);
     s_points[i].surface_brightness = s_points[i].image->surface_brightness
     = tmp;
-    total += tmp;
+    total += tmp * res2;
     s_points[i].in_image = s_points[i].image->in_image = NO;
   }
   
@@ -197,11 +198,12 @@ double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
 double GridMap::AddSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
   
+  double res2 = pow(getResolution(),2);
   for(size_t i=0;i <s_points[0].head;++i){
     tmp = source->SurfaceBrightness(s_points[i].x);
     s_points[i].surface_brightness += tmp;
     s_points[i].image->surface_brightness += tmp;
-    total += tmp;
+    total += tmp * res2;
     s_points[i].in_image = s_points[i].image->in_image = NO;
   }
   
