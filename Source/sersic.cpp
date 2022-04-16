@@ -39,9 +39,10 @@ SourceSersic::SourceSersic(
         )
 : SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z)
 {
+  if(my_q > 1) my_q = 1/my_q;
     sed_type = 1;
     assert(my_Reff > 0);
-    ReSet(my_Reff,my_PA,my_index,my_q,my_z,0);
+    ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,0);
 }
 
 SourceSersic::SourceSersic(const SourceSersic &p):SourceColored(p){

@@ -25,7 +25,9 @@ SourceOverzier::SourceOverzier(
 		,unsigned long my_id          ///          id number
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
-		):Source(0,Point_2d(0,0),my_z){
+		):Source(0,Point_2d(0,0),my_z),
+ spheroid(my_mag_bulge,my_Reff,0,4,(1-0.5*sin(my_inclination)),my_z)
+{
 
       //std::cout << "SourceOverzier constructor" << std::endl;
   setInternals(my_mag,my_mag_bulge,my_Reff
@@ -33,6 +35,12 @@ SourceOverzier::SourceOverzier(
                ,my_id,my_z,my_theta);
 
   assert(current.Reff != 0 || current.Rdisk !=0 );
+  
+  // position
+  if(my_theta != NULL)
+    setTheta(my_theta[0], my_theta[1]);
+  else
+    setTheta(0, 0);
 }
 
 SourceOverzier::~SourceOverzier()
@@ -42,6 +50,7 @@ SourceOverzier::~SourceOverzier()
 SourceOverzier::SourceOverzier(const SourceOverzier &s)
 :Source(s){
   
+  spheroid = s.spheroid;
   current = s.current;
   sedtype = s.sedtype;
 }
@@ -50,6 +59,7 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   
   Source::operator=(s);
   
+  spheroid = s.spheroid;
   current = s.current;
   sedtype = s.sedtype;
   return *this;
@@ -60,6 +70,9 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 
 	haloID = my_id;
 
+  current.cosPA = cos(my_PA);
+  current.sinPA = sin(my_PA);
+  
   if(my_Reff < 0.05) my_Reff = 0.05; // ????
 	current.Reff = my_Reff*arcsecTOradians;
 	current.Rdisk = my_Rdisk*arcsecTOradians;
@@ -69,11 +82,12 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 	current.inclination = incl;
 
 	if(current.Rdisk > 0.0){
-		current.cxx = ( pow(cos(current.PA),2) + pow(sin(current.PA)/cos(incl),2) )/current.Rdisk/current.Rdisk;
-		current.cyy = ( pow(sin(current.PA),2) + pow(cos(current.PA)/cos(incl),2) )/current.Rdisk/current.Rdisk;
-		current.cxy = ( 2*cos(current.PA)*sin(current.PA)*(1-pow(1/cos(incl),2)) )/current.Rdisk/current.Rdisk;
-	}else{
-		current.cxx = current.cyy = current.cxy = 0.0;
+		//current.cxx = ( pow(cos(current.PA),2) + pow(sin(current.PA)/cos(incl),2) )/current.Rdisk/current.Rdisk;
+		//current.cyy = ( pow(sin(current.PA),2) + pow(cos(current.PA)/cos(incl),2) )/current.Rdisk/current.Rdisk;
+		//current.cxy = ( 2*cos(current.PA)*sin(current.PA)*(1-pow(1/cos(incl),2)) )/current.Rdisk/current.Rdisk;
+    current.cxx = 1.0/current.Rdisk/current.Rdisk;
+    current.cyy = 1.0/cos(incl)/cos(incl)/current.Rdisk/current.Rdisk;
+
 	}
 	
   renormalize_current();
@@ -101,17 +115,21 @@ PosType SourceOverzier::SurfaceBrightness(
 		){
 	// position relative to center
 	PosType x[2];
-	x[0] = y[0]-getTheta()[0];
-	x[1] = y[1]-getTheta()[1];
-	
-	PosType R = current.cxx*x[0]*x[0] + current.cyy*x[1]*x[1] + current.cxy*x[0]*x[1];
+	x[0] = (y[0]-getTheta()[0])*current.cosPA +
+      (y[1]-getTheta()[1])*current.sinPA;
+  x[1] = -(y[0]-getTheta()[0])*current.sinPA +
+      (y[1]-getTheta()[1])*current.cosPA;
+      
+  double sb = spheroid.SurfaceBrightness(x);
+      
+  PosType R = current.cxx*x[0]*x[0] + current.cyy*x[1]*x[1];
 	R = sqrt(R);
 
 	//sb = sbDo*exp(-(R)) + sbSo*exp(-7.6693*pow(R/Reff,0.25));
-	PosType sb = current.sbDo*exp(-R);
+  sb += current.sbDo*exp(-R);
       
-	if(current.Reff > 0.0) sb += current.sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])
-                                                            /current.Reff/current.Reff,0.125));
+	//if(current.Reff > 0.0) sb += current.sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])
+  //                                                          /current.Reff/current.Reff,0.125));
 
 	if(sb< sb_limit)
 		return 0.;
@@ -120,7 +138,7 @@ PosType SourceOverzier::SurfaceBrightness(
 }
 
 PosType SourceOverzier::getTotalFlux() const{
-	return pow(10,-(48.6 + current.mag)/2.5)*inv_hplanck;
+	return pow(10,-0.4*(48.6 + current.mag))*inv_hplanck;
 }
 
 void SourceOverzier::printSource(){
@@ -149,17 +167,18 @@ PosType SourceOverzier::getMagBulge(Band band) const {
 
 void SourceOverzier::renormalize_current(){
   float BtoT = getBtoT();
-  if(current.Rdisk > 0.0) current.sbDo = pow(10,-0.4*(current.mag + 48.6))*0.159148*(1-BtoT)*inv_hplanck
-    /pow(current.Rdisk,2);
+  if(current.Rdisk > 0.0){
+    double det = 2*PI/sqrt(current.cxx*current.cyy);
+    current.sbDo = pow(10,-0.4*(current.mag + 48.6))*(1-BtoT)*inv_hplanck/det;
+    //current.sbDo = pow(10,-0.4*(current.mag + 48.6))*0.159148*(1-BtoT)*inv_hplanck
+    // /pow(current.Rdisk,2);
+  }
   else current.sbDo = 0.0;
-  if(current.Reff > 0.0) current.sbSo = pow(10,-0.4*(current.mag + 48.6))*94.484376*BtoT*inv_hplanck
-    /pow(current.Reff,2);
-  else current.sbSo = 0.0;
 }
 
 
 SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
-SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,my_PA,inclination,my_id,my_z,theta)
+SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,theta)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -182,10 +201,11 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,my_PA,inclination,my_id,my_z
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
-  spheroid.ReSet(my_mag_bulge,my_Reff,my_PA + 10*(ran() - 0.5)*PI/180,index,q,my_z,theta);
+  spheroid.ReSet(my_mag_bulge,my_Reff,0,index,q,my_z,theta);
   
-  cospa = cos(current.PA);
-  sinpa = sin(-current.PA);
+  PA = my_PA;
+  cosPA = cos(my_PA );
+  sinPA = sin(-my_PA );
   cosi  = cos(current.inclination);
   
   modes.resize(6);
@@ -204,7 +224,7 @@ SourceOverzierPlus::~SourceOverzierPlus(){
 SourceOverzierPlus::SourceOverzierPlus(const SourceOverzierPlus &p):
 SourceOverzier(p),
 Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
-,disk_phase(p.disk_phase),cospa(p.cospa),sinpa(p.sinpa),cosi(p.cosi)
+,disk_phase(p.disk_phase),PA(p.PA),cosPA(p.cosPA),sinPA(p.sinPA),cosi(p.cosi)
 {
   //delete spheroid;
   /*spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff()
@@ -220,8 +240,6 @@ Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
   mctalpha=p.mctalpha;
   arm_alpha=p.arm_alpha;
   disk_phase=p.disk_phase;
-  cospa=p.cospa;
-  sinpa=p.sinpa;
   cosi=p.cosi;
   
   spheroid = p.spheroid;
@@ -238,8 +256,9 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
   mctalpha=p.mctalpha;
   arm_alpha=p.arm_alpha;
   disk_phase=p.disk_phase;
-  cospa=p.cospa;
-  sinpa=p.sinpa;
+  PA = p.PA;
+  cosPA=p.cosPA;
+  sinPA=p.sinPA;
   cosi=p.cosi;
   
   spheroid = p.spheroid;
@@ -253,17 +272,18 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
 PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   // position relative to center
   Point_2d x;
-  x[0] = y[0]-getTheta()[0];
-  x[1] = y[1]-getTheta()[1];
+  x[0] = (y[0]-getTheta()[0]) * cosPA -
+         (y[1]-getTheta()[1]) * sinPA;
+  x[1] = (y[0]-getTheta()[0]) * sinPA +
+         (y[1]-getTheta()[1]) * cosPA;
   
   PosType xlength = x.length();
-  
-  Point_2d z;
+
   PosType sb = 0;
 
   if(xlength > 0 && current.sbDo > 0){
-    z[0] = cospa*x[0] - sinpa*x[1];
-    z[1] = ( sinpa*x[0] + cospa*x[1] )/cosi;
+    Point_2d z=x;
+    z[1] /= cosi;
     
     //PosType R = sqrt( cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1] );
     PosType R = z.length()/current.Rdisk;
@@ -302,7 +322,7 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
       }
     }
     // spheroid contribution
-    sb += spheroid.SurfaceBrightness(y)*perturb;
+    sb += spheroid.SurfaceBrightness(x.x)*perturb;
     
     
     // !!!
@@ -366,19 +386,15 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
      */
     current.mag += tmp;
     
-    current.PA = PI*ran();
     current.inclination = ran()*0.90*PI/2;
     
-    cospa = cos(current.PA);
-    sinpa = sin(-current.PA);
     cosi  = cos(current.inclination);
 
     if(current.Rdisk > 0.0){
-      current.cxx = ( cospa*cospa + pow(sinpa/cosi,2) )/current.Rdisk/current.Rdisk;
-      current.cyy = ( sinpa*sinpa + pow(cospa/cosi,2) )/current.Rdisk/current.Rdisk;
-      current.cxy = ( 2*cospa*sinpa*(1-1./cosi/cosi) ) /current.Rdisk/current.Rdisk;
+      current.cxx = 1.0/current.Rdisk/current.Rdisk;
+      current.cyy = 1.0/cosi/cosi/current.Rdisk/current.Rdisk;
     }else{
-      current.cxx = current.cyy = current.cxy = 0.0;
+      current.cxx = current.cyy = 0.0;
     }
     
     SourceOverzier::renormalize_current();
@@ -415,9 +431,12 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   */
   
-  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,current.PA + 5*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
+  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,0,index,q,zsource,getTheta().x);
   
-  
+  PA = PI*ran();
+  cosPA = cos(PA);
+  sinPA = sin(-PA);
+
   for(PosType &mod : modes){
     mod = 5.0e-2*ran();
   }
