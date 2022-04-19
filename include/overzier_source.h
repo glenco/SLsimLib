@@ -210,16 +210,13 @@ public:
   virtual inline void setTheta(PosType *xx){
     source_x[0] = xx[0];
     source_x[1] = xx[1];
-    spheroid.setTheta(xx);
   }
   virtual void setTheta(PosType my_x,PosType my_y){
     source_x[0] = my_x;
     source_x[1] = my_y;
-    spheroid.setTheta(my_x,my_y);
   }
   virtual void setTheta(const Point_2d &p){
     source_x = p;
-    spheroid.setTheta(p[0],p[1]);
   }
   void setBulgeAxisRatio(PosType q){
     spheroid.setAxesRatio(q);

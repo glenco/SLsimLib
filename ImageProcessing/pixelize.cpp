@@ -614,6 +614,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
         map[*it] += sb*area;
       }
     }
+    
   }while(--listit);
   
   return;
@@ -1895,7 +1896,7 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy) const{
   return ix + Nx*iy;
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy) const{
+long PixelMap::find_index(PosType x,PosType y,long &ix,long &iy) const{
   
   //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
   //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
@@ -1920,7 +1921,7 @@ long PixelMap::find_index(PosType const x[]) const{
   return find_index(x,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y) const{
+long PixelMap::find_index(PosType x,PosType y) const{
   long ix,iy;
   return find_index(x,y,ix,iy);
 }
@@ -2154,10 +2155,10 @@ PosType PixelMap::AddSource(Source &source){
   Point_2d s_center;
   source.getTheta(s_center);
   
-  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
-  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
-  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
-  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+  if( (s_center[0] + source.getRadius()) < map_boundary_p1[0] ) return 0.0;
+  if( (s_center[0] - source.getRadius()) > map_boundary_p2[0] ) return 0.0;
+  if( (s_center[1] + source.getRadius()) < map_boundary_p1[1] ) return 0.0;
+  if( (s_center[1] - source.getRadius()) > map_boundary_p2[1] ) return 0.0;
 
   PosType y[2];
   PosType tmp = resolution*resolution;
@@ -2180,10 +2181,10 @@ PosType PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
   source.getTheta(s_center);
   
-  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
-  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
-  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
-  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+  if( (s_center[0] + source.getRadius()) < map_boundary_p1[0] ) return 0.0;
+  if( (s_center[0] - source.getRadius()) > map_boundary_p2[0] ) return 0.0;
+  if( (s_center[1] + source.getRadius()) < map_boundary_p1[1] ) return 0.0;
+  if( (s_center[1] - source.getRadius()) > map_boundary_p2[1] ) return 0.0;
 
   PosType y[2],x[2],bl;
   PosType tmp_res = resolution*1.0/oversample;

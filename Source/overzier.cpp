@@ -35,6 +35,7 @@ SourceOverzier::SourceOverzier(
                ,my_id,my_z,my_theta);
 
   assert(current.Reff != 0 || current.Rdisk !=0 );
+  spheroid.setTheta(0,0);
   
   // position
   if(my_theta != NULL)
@@ -115,10 +116,10 @@ PosType SourceOverzier::SurfaceBrightness(
 		){
 	// position relative to center
 	PosType x[2];
-	x[0] = (y[0]-getTheta()[0])*current.cosPA +
-      (y[1]-getTheta()[1])*current.sinPA;
-  x[1] = -(y[0]-getTheta()[0])*current.sinPA +
-      (y[1]-getTheta()[1])*current.cosPA;
+	x[0] = (y[0]-source_x[0])*current.cosPA +
+      (y[1]-source_x[1])*current.sinPA;
+  x[1] = -(y[0]-source_x[0])*current.sinPA +
+      (y[1]-source_x[1])*current.cosPA;
       
   double sb = spheroid.SurfaceBrightness(x);
       
@@ -178,7 +179,7 @@ void SourceOverzier::renormalize_current(){
 
 
 SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
-SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,theta)
+SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -201,7 +202,8 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,the
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
-  spheroid.ReSet(my_mag_bulge,my_Reff,0,index,q,my_z,theta);
+  spheroid.ReSet(my_mag_bulge,my_Reff,0,index,q,my_z,0);
+  spheroid.setTheta(0, 0);
   
   PA = my_PA;
   cosPA = cos(my_PA );
@@ -213,6 +215,8 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,the
     mod = 2.0e-2*ran();
   }
 
+  setTheta(theta);
+  
   assert(original.Rdisk != 0 || original.Reff != 0);
 }
 
@@ -272,10 +276,10 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
 PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
   // position relative to center
   Point_2d x;
-  x[0] = (y[0]-getTheta()[0]) * cosPA -
-         (y[1]-getTheta()[1]) * sinPA;
-  x[1] = (y[0]-getTheta()[0]) * sinPA +
-         (y[1]-getTheta()[1]) * cosPA;
+  x[0] = (y[0]-source_x[0]) * cosPA -
+         (y[1]-source_x[1]) * sinPA;
+  x[1] = (y[0]-source_x[0]) * sinPA +
+         (y[1]-source_x[1]) * cosPA;
   
   PosType xlength = x.length();
 
@@ -431,7 +435,8 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   spheroid = new SourceSersic(mag_bulge,Reff/arcsecTOradians,PA + 10*(ran() - 0.5)*PI/180,index,q,zsource,getTheta().x);
   */
   
-  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,0,index,q,zsource,getTheta().x);
+  spheroid.ReSet(current.mag_bulge,current.Reff/arcsecTOradians,0,index,q,zsource,0);
+  spheroid.setTheta(0, 0);
   
   PA = PI*ran();
   cosPA = cos(PA);

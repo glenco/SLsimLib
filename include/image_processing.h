@@ -231,9 +231,9 @@ public:
   long find_index(PosType const x[]) const;
   
   /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
-  long find_index(PosType const x,PosType const y,long &ix,long &iy) const;
+  long find_index(PosType x,PosType y,long &ix,long &iy) const;
   /// get the index for a position, returns -1 if out of map
-  long find_index(PosType const x,PosType const y) const;
+  long find_index(PosType x,PosType y) const;
   
   /// get the index for a position, returns -1 if out of map
   void find_position(PosType x[],std::size_t const index) const;
