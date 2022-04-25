@@ -38,13 +38,20 @@ struct Grid{
   
   double AddSurfaceBrightnesses(SourceHndl source);
   
-  double mark_point_source_images(
+  
+  double mark_closest_point_source_images(
                                 Point_2d y_source    /// angular position of source,
                                ,PosType r_source_max  /// points outside this radius on the source plane will not be considered as in the image
                                ,PosType luminosity
                                ,bool verbose=false
                          );
-   
+  void find_point_source_images(
+                               Point_2d y_source    /// angular position of source,
+                              ,PosType r_source  /// points outside this radius on the source plane will not be considered as in the image
+                              ,std::vector<RAY> &images /// returned image rays
+                              ,bool verbose=false
+                           );
+  
   double ClearSurfaceBrightnesses();
   
   unsigned long getNumberOfPoints() const;
@@ -462,7 +469,7 @@ namespace ImageFinding{
   void printCriticalCurves(std::string filename
                            ,const std::vector<ImageFinding::CriticalCurve> &critcurves);
   
-  /** \breaf Makes an image of the critical curves.  The map will encompose all curves found.  The
+  /** \brief Makes an image of the critical curves.  The map will encompose all curves found.  The
    pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
    */
   PixelMap mapCriticalCurves(
@@ -472,7 +479,7 @@ namespace ImageFinding{
                              int Nx
                              );
   
-  /** \breaf Makes an image of the caustic curves.  The map will encompose all curves found.  The
+  /** \brief Makes an image of the caustic curves.  The map will encompose all curves found.  The
    pixel values are the caustic type + 1 ( 2=radial,3=tangential,4=pseudo )
    */
   PixelMap mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves /// list of critical curves

@@ -299,7 +299,7 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
   
   if(sp){
     ClearSurfaceBrightnesses();
-    total = mark_point_source_images(sp->getTheta(),sp->getRadius(),sp->getTotalFlux());
+    total = mark_closest_point_source_images(sp->getTheta(),sp->getRadius(),sp->getTotalFlux());
   }else{
     PointList::iterator s_tree_pointlist_it;
     s_tree_pointlist_it.current = (s_tree->pointlist->Top());
@@ -327,7 +327,7 @@ PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
   SourcePoint *sp = dynamic_cast<SourcePoint *>(source);
  
   if(sp){
-    total = mark_point_source_images(sp->getTheta(),sp->getRadius(),sp->getTotalFlux());
+    total = mark_closest_point_source_images(sp->getTheta(),sp->getRadius(),sp->getTotalFlux());
   }else{
     PointList::iterator s_tree_pointlist_it;
     s_tree_pointlist_it.current = (s_tree->pointlist->Top());
