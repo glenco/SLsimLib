@@ -535,7 +535,11 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
   if( (B>=1) || (B<=0)) return false;
   return true;
 }
-
+/*** \brief Calculate the k nearest neighbors concave hull.
+ 
+ This algorithem is guarenteed to find a currve that serounds all the points.
+ If it at first fails with the k input, k will increase.  The final k relaces the input k.
+ */
 
 template <typename Ptype>
 std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
