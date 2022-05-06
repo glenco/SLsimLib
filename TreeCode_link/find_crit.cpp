@@ -253,16 +253,17 @@ void ImageFinding::find_crit(
       Utilities::concave(points,hull,critcurve[jj].gridrange[1]*3);
       
       crtcurve[ii].critcurve.resize(hull.size());
-      //crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
+      crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
       crtcurve[ii].critical_center[0] = 0;
       crtcurve[ii].critical_center[1] = 0;
 
       size_t kk=0;
       for(auto &p : hull){
-        crtcurve[ii].critcurve[kk++] = p;
-        //crtcurve[ii].caustic_curve_intersecting[kk++] = *(p.image);
+        crtcurve[ii].critcurve[kk] = p;
+        crtcurve[ii].caustic_curve_intersecting[kk] = *(p.image);
         crtcurve[ii].critical_center[0] += p[0];
         crtcurve[ii].critical_center[1] += p[1];
+        ++kk;
       }
       crtcurve[ii].critical_center /= crtcurve[ii].critcurve.size();
       

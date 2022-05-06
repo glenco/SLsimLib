@@ -1097,11 +1097,29 @@ void Grid::find_point_source_images(
   size_t Npoints=0;
   
   std::vector<ImageInfo> imageinfo;
+//  double r = r_source;
+//  int Nimages_max = 0;
+//  for(int n=0 ; n < 5 ; ++n){
+//    find_images(y_source.x,r,Nimages,imageinfo,Npoints);
+//    if(Nimages > Nimages_max){
+//      r_source = r;
+//      Nimages_max = Nimages;
+//    }
+//    r /= 2;
+//  }
+//  
   find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
-
+  
   images.resize(Nimages);
   for(int i=0 ; i<Nimages ; ++i){
-    images[i] = *(imageinfo[i].closestPoint(y_source));
+    if(imageinfo[i].imagekist->Nunits() > 0){
+      images[i] = *(imageinfo[i].closestPoint(y_source));
+    }else{
+      // case where the image had no points in it
+      --Nimages;
+      --i;
+      images.pop_back();
+    }
   }
   
   return;
