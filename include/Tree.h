@@ -325,6 +325,7 @@ void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
 template<typename D>
 void quicksort(unsigned long *particles,D *arr,unsigned long N){
   
+  if(N<2) return;
   std::vector<size_t> index(N);
   
   Utilities::sort_indexes(arr,index,N);

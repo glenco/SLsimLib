@@ -2513,6 +2513,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
                 std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << " -- "
                 << hull[ii+1]->x[0] << " " << hull[ii+1]->x[1] << std::endl;
               }
+              
               //move this point to back and try again with lower tmp_k
               std::swap(indexlist[i_min],indexlist[tmp_k-1]);
               --tmp_k;
