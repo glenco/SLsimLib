@@ -249,8 +249,10 @@ void ImageFinding::find_crit(
        --it;
        }
        // *******************************/
-      
-      Utilities::concave(points,hull,critcurve[jj].gridrange[1]*3);
+      {
+        int k=6;
+        hull = Utilities::concaveK(points,k);
+      }
       
       crtcurve[ii].critcurve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
@@ -284,8 +286,11 @@ void ImageFinding::find_crit(
       }
       
       //**** size scale ???
-      Utilities::concave(short_cac,short_cac,std::sqrt(scale)*4);
-
+      {
+        int k = 5;
+        short_cac = Utilities::concaveK(short_cac,k);
+      }
+      
       assert(short_cac.size() > 0);
 
       // center of caustic
@@ -614,8 +619,10 @@ void ImageFinding::find_crit(
       
       std::vector<Point> hull;
       
-      
-      Utilities::concave(points,hull,std::sqrt(scale)*4);
+      {
+        int k=6;
+        hull = Utilities::concaveK(points,k);
+      }
       
       crtcurve[ii].critcurve.resize(hull.size());
       crtcurve[ii].caustic_curve_intersecting.resize(hull.size());
@@ -646,7 +653,10 @@ void ImageFinding::find_crit(
         if(scale < tmp ) scale = tmp;
       }
     
-      Utilities::concave(short_cac,short_cac,std::sqrt(scale)*4);
+      {
+        int k=5;
+        short_cac = Utilities::concaveK<Point_2d>(short_cac,k);
+      }
       
       assert(short_cac.size() > 0);
       

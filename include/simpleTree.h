@@ -73,7 +73,7 @@ struct TreeNBStruct{
 //typedef struct TreeNBStruct * TreeNBHndl;
 
 /**
- * \brief A C++ class wrapper for the bianary treeNB used in the Nobody
+ * \brief A C++ class wrapper for the bianary treeNB used in the Nbody
  *  force calculation, but also useful for general purpose searches.
  *
  * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private

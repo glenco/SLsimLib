@@ -519,5 +519,221 @@ void concave(std::vector<T> &init_points
   }
 
 
+template <typename Ptype>
+bool segments_cross(const Ptype &a1,const Ptype &a2
+           ,const Ptype &b1,const Ptype &b2){
+  Ptype db= b2 - b1;
+  Ptype da= a2 - a1;
+  Ptype d1= b1 - a1;
+  
+  double tmp = (db^da);
+  if(tmp==0) return false; // parallel case
+  
+  double B = (da^d1) / tmp;
+  if( (B>=1) || (B<=0)) return false;
+  B = (db^d1) / tmp;
+  if( (B>=1) || (B<=0)) return false;
+  return true;
+}
+/*** \brief Calculate the k nearest neighbors concave hull.
+ 
+ This algorithem is guarenteed to find a currve that serounds all the points.
+ If it at first fails with the k input, k will increase.  The final k relaces the input k.
+ */
+
+template <typename Ptype>
+std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
+{
+  
+  if(points.size() <= 3){
+    return points;
+  }
+  
+  if(k  < 3) k =3;
+  
+  int f =0;
+  size_t npoints = points.size();
+ 
+//  {
+//    tree.pop(7);
+//    RandomNumbers_NR ran(123);
+//    std::vector<double> radii;
+//    std::vector<size_t> neighbors;
+//    Point_2d point;
+//    for(int i = 0 ; i<100; ++i){
+//      point[0] = (1-2*ran());
+//      point[1] = (1-2*ran());
+//      tree.NearestNeighbors(point.x,k,radii,neighbors);
+//    }
+//    for(auto p : points){
+//      tree.NearestNeighbors(p.x,k,radii,neighbors);
+//    }
+//  }
+  std::vector<Ptype> hull;
+
+  double xmin = points[0][0];
+  size_t j = 0;
+  for(size_t i=0 ; i<npoints ; ++i){
+    if(points[i][0] < xmin){
+      xmin = points[i][0];
+      j = i;
+    }
+  }
+
+  Ptype firstpoint = points[j];
+  
+  std::vector<size_t> remaining_index;
+  bool segmented = true;
+  while(segmented){
+    bool found=false;
+    while(!found){  // if hull leaves points out repeat with larger k
+      hull.resize(0);
+      TreeSimpleVec<Ptype> tree(points.data(),npoints,2);
+      
+      if(k>=points.size()){
+        convex_hull(points,hull);
+        return hull;
+      }
+      
+      hull.push_back(firstpoint);
+      // point is not popper frum the free so that it can be found at the end
+      
+      std::vector<double> radii;
+      std::vector<size_t> neighbors;
+      Ptype hull_end = hull.back();
+      
+      Ptype v1;
+      Ptype last_point = Ptype(hull[0][0],hull[0][1]-1);
+      Ptype v2;
+      
+      size_t new_index;
+      double theta_max,theta;
+      Ptype new_point;
+      std::vector<double> thetas;
+      std::vector<int> sorted_index(k);
+      
+      while((hull[0] != hull.back() && found) || hull.size()==1 ){
+        
+        tree.NearestNeighbors(hull_end.x,k,radii,neighbors);
+        
+        int Nneighbors = neighbors.size(); // incase there are not k left
+        thetas.resize(Nneighbors);
+        sorted_index.resize(Nneighbors);
+        
+        v1 = hull_end - last_point;
+        theta_max = 0;
+        for(int i=0; i<Nneighbors ; ++i){
+          v2 = points[neighbors[i]] - hull_end;
+          double cross = v1^v2,dot = (v1*v2);
+          if(cross == 0 && dot <= 0) thetas[i] = -PI;  // prevents backtracking at beginning
+          else thetas[i] = atan2( cross , dot );
+          sorted_index[i] = i;
+        }
+        
+        std::sort(sorted_index.begin(),sorted_index.end()
+                  ,[&thetas](int i,int j){return thetas[i] > thetas[j];} );
+        
+        int trial=0;
+        bool intersect = true;
+        while(intersect && trial < Nneighbors){
+          
+          new_index = neighbors[ sorted_index[trial] ];
+          new_point = points[ new_index ];
+          
+          // check that new edge doesn't cross earlier edge
+          for(long i = hull.size() - 2 ; i > 1 ; --i){
+            intersect = segments_cross(hull[i],hull[i-1]
+                                       ,hull.back(),new_point);
+            
+            if(intersect){
+              //std::cout << "Intersection." << std::endl;
+              break;
+            }
+          }
+          
+          if(hull.size() <= 3) intersect = false;
+          ++trial;
+        }
+        
+        if(intersect){
+          ++k;
+          found = false;
+        }else{
+          hull.push_back(new_point);
+          last_point = hull_end;
+          hull_end = hull.back();
+          //tree.print();
+          tree.pop(new_index);
+          //tree.print();
+          found = true;
+          
+//          {
+//            Ptype center;
+//            PixelMap map(center.x, 512, 3. / 512.);
+//
+//            map.drawCurve(hull,1);
+//            map.drawPoints(points,0,2);
+//            map.printFITS("!concavek_test"+ std::to_string(f) +".fits");
+//            std::cout << "Test plot : concavek_test" << f++ << ".fits" << std::endl;
+//          }
+        }
+      }
+      remaining_index = tree.get_index();
+    }
+    // test if all remaining points are in the hull
+    
+ 
+    segmented = false;
+    for(auto i : remaining_index){
+      if(!incurve(points[i].x,hull)){
+        segmented = true;
+        k *= 2;
+        break;
+      }
+    }
+ 
+  }
+  
+  //hull.pop_back();
+  
+  return hull;
+}
+
+template <typename Ptype>
+void testconcaveK(){
+  std::vector<Ptype> points(200);
+  RandomNumbers_NR ran(2312);
+  
+  for(Ptype &p : points){
+    p[0] = (1-ran());
+    p[1] = (1-2*ran());
+  }
+
+
+//  for(int i=0 ; i< points.size()/2 ; ++i){
+//    points[i][0] = (1-ran()) - 2;
+//    points[i][1] = (1-2*ran());
+//  }
+//
+//
+//  points[0][0] = 0; points[0][1] = -1;
+//  points[1][0] = -1; points[1][1] = 0;
+//  points[2][0] = 0; points[2][1] = 1;
+//  points[3][0] = 1; points[3][1] = 0;
+//
+//  points[4][0] = -1; points[4][1] = 1;
+//  points[5][0] = 1; points[5][1] = 1;
+
+  int k = 5;
+  std::vector<Ptype> hull = concaveK(points,k);
+  Ptype center;
+  PixelMap map(center.x, 512, 3. / 512.);
+ 
+  map.drawCurve(hull,1);
+  map.drawPoints(points,0,2);
+  map.printFITS("!concavek_test.fits");
+  std::cout << "Test plot : concavek_test.fits" << std::endl;
+}
+
 }
 #endif /* concave_hull_h */
