@@ -250,7 +250,7 @@ void ImageFinding::find_crit(
        }
        // *******************************/
       {
-        int k=6;
+        int k=10;
         hull = Utilities::concaveK(points,k);
       }
       
@@ -287,7 +287,7 @@ void ImageFinding::find_crit(
       
       //**** size scale ???
       {
-        int k = 5;
+        int k = 10;
         short_cac = Utilities::concaveK(short_cac,k);
       }
       
@@ -620,7 +620,7 @@ void ImageFinding::find_crit(
       std::vector<Point> hull;
       
       {
-        int k=6;
+        int k=10;
         hull = Utilities::concaveK(points,k);
       }
       
@@ -654,7 +654,7 @@ void ImageFinding::find_crit(
       }
     
       {
-        int k=5;
+        int k=10;
         short_cac = Utilities::concaveK<Point_2d>(short_cac,k);
       }
       
