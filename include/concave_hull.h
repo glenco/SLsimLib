@@ -535,10 +535,37 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
   if( (B>=1) || (B<=0)) return false;
   return true;
 }
+
+template <typename Ptype>
+bool inhull(Ptype &x,const std::vector<Ptype> &H){
+  
+  size_t n = H.size();
+  long w=0;
+  Ptype dH,dD;
+  for(size_t i=0 ; i<n-1 ; ++i){
+    dH = H[i+1]-H[i];
+    if(dH[1] == 0) continue;  // no horizontal segments contribute
+    dD = x-H[i];
+    double A = dD[1]/dH[1];
+    if( A > 1 || A <= 0) continue;
+    double B = (dH^dD)/dH[1];
+    if(B==0){               // on the boundary
+      return true;          // boundaries are always in
+    }else if(B>0){
+      if(dH[1] > 0) ++w;
+      else --w;
+    }
+  }
+
+  return w;
+}
+
 /*** \brief Calculate the k nearest neighbors concave hull.
  
- This algorithem is guarenteed to find a currve that serounds all the points.
+ This algorithem is guarenteed to find a currve that serounds an island of points, but not all islands.
  If it at first fails with the k input, k will increase.  The final k relaces the input k.
+ 
+ Warning: the final check for isolated islands has been deactivated.
  */
 
 template <typename Ptype>
@@ -572,15 +599,15 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
   std::vector<Ptype> hull;
 
   double xmin = points[0][0];
-  size_t j = 0;
+  size_t first_point_index = 0;
   for(size_t i=0 ; i<npoints ; ++i){
     if(points[i][0] < xmin){
       xmin = points[i][0];
-      j = i;
+      first_point_index = i;
     }
   }
 
-  Ptype firstpoint = points[j];
+  Ptype firstpoint = points[first_point_index];
   
   std::vector<size_t> remaining_index;
   bool segmented = true;
@@ -640,6 +667,8 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
           new_index = neighbors[ sorted_index[trial] ];
           new_point = points[ new_index ];
           
+          if(hull.size() <= 3) intersect = false;
+          
           // check that new edge doesn't cross earlier edge
           for(long i = hull.size() - 2 ; i > 1 ; --i){
             intersect = segments_cross(hull[i],hull[i-1]
@@ -651,7 +680,19 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
             }
           }
           
-          if(hull.size() <= 3) intersect = false;
+          if(new_index == first_point_index && !intersect){
+            // check that neighbors are in inside hull that would be closed
+            // this is to prevent pre-mature closing of the loop
+            hull.push_back(new_point);
+            for(size_t i : neighbors){
+              if(i != new_index && !inhull(points[i],hull)){
+                intersect = true;
+                break;
+              }
+            }
+            hull.pop_back();  /// will be added back later
+          }
+          
           ++trial;
         }
         
@@ -684,20 +725,36 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
     
  
     segmented = false;
-    for(auto i : remaining_index){
-      if(!incurve(points[i].x,hull)){
-        segmented = true;
-        k *= 2;
-        break;
-      }
-    }
- 
+//    for(auto i : remaining_index){
+//      bool test = inhull(points[i],hull);
+//      if(!inhull(points[i],hull)){
+//        segmented = true;
+//        k *= 2;
+//
+//        std::ofstream logfile("testpoint.csv");
+//        for(auto &p : points){
+//          logfile << p[0] <<","<< p[1] << std::endl;
+//        }
+//        logfile.close();
+//
+//        logfile.open("testhull.csv");
+//        for(auto &p : hull){
+//          logfile << p[0] <<","<< p[1] << std::endl;
+//        }
+//        logfile.close();
+//
+//
+//        break;
+//      }
+//    }
+//
   }
   
   //hull.pop_back();
   
   return hull;
 }
+
 
 template <typename Ptype>
 void testconcaveK(){
@@ -709,6 +766,30 @@ void testconcaveK(){
     p[1] = (1-2*ran());
   }
 
+  double x=-1;
+  for(int i=0 ; i< points.size()/4 ; ++i){
+    points[i][0] = 1;
+    points[i][1] = x;
+    x += 1/25.;
+  }
+  x=-1;
+  for(int i=points.size()/4 ; i< 2*points.size()/4 ; ++i){
+    points[i][0] = -1;
+    points[i][1] = x;
+    x += 1/25.;
+  }
+  x=-1;
+  for(int i=2*points.size()/4 ; i< 3*points.size()/4 ; ++i){
+    points[i][0] = x;
+    points[i][1] = 1;
+    x += 1/25.;
+  }
+  x=-1;
+  for(int i=3*points.size()/4 ; i< points.size() ; ++i){
+    points[i][0] = x;
+    points[i][1] = -1;
+    x += 1/25.;
+  }
 
 //  for(int i=0 ; i< points.size()/2 ; ++i){
 //    points[i][0] = (1-ran()) - 2;
