@@ -540,20 +540,28 @@ template <typename Ptype>
 bool inhull(Ptype &x,const std::vector<Ptype> &H){
   
   size_t n = H.size();
+  if(n <=2) return false;
   long w=0;
   Ptype dH,dD;
+  double B,A;
   for(size_t i=0 ; i<n-1 ; ++i){
     dH = H[i+1]-H[i];
-    if(dH[1] == 0) continue;  // no horizontal segments contribute
-    dD = x-H[i];
-    double A = dD[1]/dH[1];
-    if( A > 1 || A <= 0) continue;
-    double B = (dH^dD)/dH[1];
-    if(B==0){               // on the boundary
-      return true;          // boundaries are always in
-    }else if(B>0){
-      if(dH[1] > 0) ++w;
-      else --w;
+    if(dH[1] == 0){  // // horizontal segment
+      if(x[1] == H[i][1]){
+        B = (x[0]-H[i][0])/dH[0];
+        if( B>=0 && B<=1 ) return true;  // point on boundary
+      }
+    }else{
+      dD = x-H[i];
+      A = dD[1]/dH[1];
+      if( A > 1 || A <= 0) continue;
+      B = (dH^dD)/dH[1];
+      if(B==0){               // on the boundary
+        return true;          // boundaries are always in
+      }else if(B>0){
+        if(dH[1] > 0) ++w;
+        else --w;
+      }
     }
   }
 
@@ -562,14 +570,15 @@ bool inhull(Ptype &x,const std::vector<Ptype> &H){
 
 /*** \brief Calculate the k nearest neighbors concave hull.
  
- This algorithem is guarenteed to find a currve that serounds an island of points, but not all islands.
+ This algorithem is guarenteed to find a currve that serounds an island of points, but not all islands unless check==true.
+ 
  If it at first fails with the k input, k will increase.  The final k relaces the input k.
  
- Warning: the final check for isolated islands has been deactivated.
+ check determines whether a final check is done to determine whether all the raminaing points are inside the hull.  Otherwise it is possible to get multiple disconetcted clusteers and the hull will surround only one.
  */
 
 template <typename Ptype>
-std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
+std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
 {
   
   if(points.size() <= 3){
@@ -725,29 +734,30 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k)
     
  
     segmented = false;
-//    for(auto i : remaining_index){
-//      bool test = inhull(points[i],hull);
-//      if(!inhull(points[i],hull)){
-//        segmented = true;
-//        k *= 2;
+    if(check){
+      for(auto i : remaining_index){
+        bool test = inhull(points[i],hull);
+        if(!inhull(points[i],hull)){
+          segmented = true;
+          k *= 2;
+          
+//          std::ofstream logfile("testpoint.csv");
+//          for(auto &p : points){
+//            logfile << p[0] <<","<< p[1] << std::endl;
+//          }
+//          logfile.close();
 //
-//        std::ofstream logfile("testpoint.csv");
-//        for(auto &p : points){
-//          logfile << p[0] <<","<< p[1] << std::endl;
-//        }
-//        logfile.close();
+//          logfile.open("testhull.csv");
+//          for(auto &p : hull){
+//            logfile << p[0] <<","<< p[1] << std::endl;
+//          }
+//          logfile.close();
 //
-//        logfile.open("testhull.csv");
-//        for(auto &p : hull){
-//          logfile << p[0] <<","<< p[1] << std::endl;
-//        }
-//        logfile.close();
-//
-//
-//        break;
-//      }
-//    }
-//
+          
+          break;
+        }
+      }
+    }
   }
   
   //hull.pop_back();
