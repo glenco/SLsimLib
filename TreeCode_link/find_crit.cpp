@@ -655,8 +655,11 @@ void ImageFinding::find_crit(
       }
     
       {
-        int k=10;
-        short_cac = Utilities::concaveK<Point_2d>(short_cac,k);
+//        int k=10;
+//        short_cac = Utilities::concaveK<Point_2d>(short_cac,k);
+//        *** try deintersection instead
+        
+        Utilities::RemoveIntersections(short_cac);
       }
       
       assert(short_cac.size() > 0);

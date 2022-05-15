@@ -38,9 +38,7 @@ namespace Utilities{
           
           size_t k=i+1,l=j;
           while(k < l){
-            tmp = curve[k];
-            curve[k] = curve[l];
-            curve[l] = tmp;
+            std::swap(curve[k] , curve[l]);
             ++k;
             --l;
           }
