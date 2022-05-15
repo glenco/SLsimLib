@@ -530,9 +530,9 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
   if(tmp==0) return false; // parallel case
   
   double B = (da^d1) / tmp;
-  if( (B>=1) || (B<=0)) return false;
+  if( (B>1) || (B<0)) return false;
   B = (db^d1) / tmp;
-  if( (B>=1) || (B<=0)) return false;
+  if( (B>1) || (B<0)) return false;
   return true;
 }
 
@@ -643,7 +643,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
       Ptype v2;
       
       size_t new_index;
-      double theta_max,theta;
+      double theta_max;
       Ptype new_point;
       std::vector<double> thetas;
       std::vector<int> sorted_index(k);
@@ -684,13 +684,12 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
                                        ,hull.back(),new_point);
             
             if(intersect){
-              //std::cout << "Intersection." << std::endl;
-              break;
+             break;
             }
           }
           
           if(new_index == first_point_index && !intersect){
-            // check that neighbors are in inside hull that would be closed
+            // check that neighbors are inside hull that would be closed
             // this is to prevent pre-mature closing of the loop
             hull.push_back(new_point);
             for(size_t i : neighbors){
@@ -736,11 +735,10 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
     segmented = false;
     if(check){
       for(auto i : remaining_index){
-        bool test = inhull(points[i],hull);
         if(!inhull(points[i],hull)){
           segmented = true;
           k *= 2;
-          
+          std::cout << "point outside ... ";
 //          std::ofstream logfile("testpoint.csv");
 //          for(auto &p : points){
 //            logfile << p[0] <<","<< p[1] << std::endl;
