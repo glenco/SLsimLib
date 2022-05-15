@@ -631,9 +631,10 @@ void ImageFinding::find_crit(
       size_t kk=0;
       for(auto &p : hull){
         crtcurve[ii].critcurve[kk] = p;
-        crtcurve[ii].caustic_curve_intersecting[kk++] = *(p.image);
+        crtcurve[ii].caustic_curve_intersecting[kk] = *(p.image);
         crtcurve[ii].critical_center[0] += p[0];
         crtcurve[ii].critical_center[1] += p[1];
+        ++kk;
       }
       crtcurve[ii].critical_center /= crtcurve[ii].critcurve.size();
       
