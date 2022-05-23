@@ -130,6 +130,9 @@ public:
   Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist) const;
   
   
+  /// true is point is on the edge of the field
+  bool AtEdge(Point *point);
+  
   bool Test();
   
   Point *RemoveLeafFromTree(TreeStruct::iterator &current,unsigned long *Npoints);
@@ -284,7 +287,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo);
 
 // in image_finder_kist.c
 
-void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
+void findborders4(TreeHndl i_tree,ImageInfo *imageinfo,bool &touches_boundary);
 
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);

@@ -117,7 +117,8 @@ void ImageFinding::find_crit(
   
   std::vector<ImageInfo> critcurve(*Ncrits);     /// Structure to hold critical curve.  Must be pre-
   negimage.resize(*Ncrits);
-  
+  std::vector<bool> touches_edge(*Ncrits);
+  bool tmpbool;
   if(verbose) std::cout << *Ncrits << " negative islands found." << std::endl;
   
   
@@ -134,7 +135,9 @@ void ImageFinding::find_crit(
     if(verbose) std::cout << "  refining island " << ii << std::endl;
     for(;;){
       
-      findborders4(grid->i_tree,&negimage[ii]);
+      findborders4(grid->i_tree,&negimage[ii],tmpbool);
+      touches_edge[ii] = tmpbool;
+      
       /******* test *****************
        map.AddCurve(negimage[ii].outerborder,1);
        // *******************************/
@@ -153,20 +156,20 @@ void ImageFinding::find_crit(
       newpoint_kist.MoveToTop();
       negimage[ii].imagekist->MoveToBottom();
       if(newpoint_kist.Nunits()>0){
-      do{
-        if(newpoint_kist.getCurrent()->invmag() < invmag_min){
-          if(usingminpoint){
-           negimage[ii].imagekist->TakeOutCurrent()->in_image = NO;
-           usingminpoint = false;
+        do{
+          if(newpoint_kist.getCurrent()->invmag() < invmag_min){
+            if(usingminpoint){
+              negimage[ii].imagekist->TakeOutCurrent()->in_image = NO;
+              usingminpoint = false;
+            }
+            negimage[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
+            newpoint_kist.getCurrent()->in_image = YES;
           }
-          negimage[ii].imagekist->InsertAfterCurrent(newpoint_kist.getCurrent());
-          newpoint_kist.getCurrent()->in_image = YES;
-        }
-
-        // update minpoint
-        if(usingminpoint && newpoint_kist.getCurrent()->kappa() > minpoint->kappa()) minpoint = newpoint_kist.getCurrent();
-        
-       }while(newpoint_kist.Down());
+          
+          // update minpoint
+          if(usingminpoint && newpoint_kist.getCurrent()->kappa() > minpoint->kappa()) minpoint = newpoint_kist.getCurrent();
+          
+        }while(newpoint_kist.Down());
       }
       // if no negative island has been found update negimage to minpoint
       if(usingminpoint && minpoint != negimage[ii].imagekist->getCurrent()){
@@ -221,9 +224,10 @@ void ImageFinding::find_crit(
       grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
       Kist<Point>::iterator it = neighbors.TopIt();
       while((*it).invmag() < 0 && !it.atend() ) --it;
-      //if( 1 < ( (*it).kappa - sqrt( (*it).gamma[0]*(*it).gamma[0] + (*it).gamma2()*(*it).gamma2()) ) ) crtcurve[ii].type = CritType::radial;
       if( (*it).inverted()  ) crtcurve[ii].type = CritType::radial;
       else crtcurve[ii].type = CritType::tangential;
+      
+      crtcurve[ii].touches_edge = touches_edge[jj];
       
       /************ test line ****************
        std::cout << "neighbors" << std::endl;
@@ -239,7 +243,7 @@ void ImageFinding::find_crit(
         ++iter;
       }
       
-      std::vector<Point> hull;// = critcurve[jj].imagekist->copytovector();
+      std::vector<Point> hull;
       
       /******* test *****************
        it = critcurve[jj].imagekist->TopIt();
@@ -532,7 +536,10 @@ void ImageFinding::find_crit(
     int tmp;
     divide_images_kist(grid->i_tree,negimage,&tmp);
     negimage.resize(tmp);
-    for(int ii=0;ii<negimage.size();++ii) findborders4(grid->i_tree,&negimage[ii]);
+    for(int ii=0;ii<negimage.size();++ii){
+      findborders4(grid->i_tree,&negimage[ii],tmpbool);
+      touches_edge[ii]=tmpbool;
+    }
     if(verbose) std::cout << " found " << tmp << " negative islands in re-sorting." << std::endl;
     //******************************************************************************
     
@@ -1013,7 +1020,8 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
     pseudocurve.imagekist->copy(paritypoints);
     
     pseudocurve.imagekist->SetInImage(YES);
-    findborders4(grid->i_tree,&pseudocurve);
+    bool touches_edge;
+    findborders4(grid->i_tree,&pseudocurve,touches_edge);
     if(TEST){
       for(auto &p : *(pseudocurve.imagekist) ){
         assert( p.inverted());
@@ -1054,7 +1062,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         
       }while(newpoints.Down());
       
-      findborders4(grid->i_tree,&pseudocurve);
+      findborders4(grid->i_tree,&pseudocurve,touches_edge);
       
       if(TEST){
         for(auto &p : *(pseudocurve.outerborder) ){
@@ -1112,7 +1120,8 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
   //std::cout << "mumin = " << mumin << " pseudocurve size " << pseudocurve.imagekist->Nunits() << std::endl;
   
   pseudocurve.imagekist->SetInImage(YES);
-  findborders4(grid->i_tree,&pseudocurve);
+  bool touches_edge;
+  findborders4(grid->i_tree,&pseudocurve,touches_edge);
   
   while(
         paritypoints.Nunits() == 0 && pseudocurve.imagekist->Nunits() < 200 &&
@@ -1159,7 +1168,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         pseudocurve.ShouldNotRefine = 1;
       }
     }
-    findborders4(grid->i_tree,&pseudocurve);
+    findborders4(grid->i_tree,&pseudocurve,touches_edge);
   }  // refinement loop
   
   pseudocurve.imagekist->SetInImage(NO);
@@ -1207,7 +1216,8 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
 
     pseudocurve.imagekist->InsertAfterCurrent(pmin);
     pmin->in_image = YES;
-    findborders4(grid->i_tree,&pseudocurve);
+    bool touches_edge;
+    findborders4(grid->i_tree,&pseudocurve,touches_edge);
     
     while(eigmin >= 0 &&
           IF_routines::refine_edges(lens,grid,&pseudocurve,1,0.01*resolution,1,&newpoints)){
@@ -1235,7 +1245,7 @@ CritType ImageFinding::find_pseudo(ImageInfo &pseudocurve,ImageInfo &negimage
         
       }while(newpoints.Down());
       
-      findborders4(grid->i_tree,&pseudocurve);
+      findborders4(grid->i_tree,&pseudocurve,touches_edge);
     }
     
     pseudocurve.ShouldNotRefine = 0;
@@ -1607,6 +1617,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
   PosType maxgridsize,mingridsize,x[2];
   ImageInfo negimage,critcurve;
   Kist<Point> newpoint_kist;
+  bool touches_edge;
   
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
@@ -1630,7 +1641,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
     negimage.imagekist->MoveToTop();
     do{negimage.imagekist ->getCurrent()->in_image = YES;} while(negimage.imagekist->Down());
     
-    findborders4(grid->i_tree,&negimage);
+    findborders4(grid->i_tree,&negimage,touches_edge);
     
     // unmark image points
     negimage.imagekist->MoveToTop();
@@ -1652,7 +1663,7 @@ void ImageFinding::IF_routines::refine_crit_in_image(
       
       negimage.innerborder->Down();
     }
-    findborders4(grid->i_tree,&critcurve);
+    findborders4(grid->i_tree,&critcurve,touches_edge);
     
     refinements=ImageFinding::IF_routines::refine_grid_kist(lens,grid,&critcurve,1,resolution,2,&newpoint_kist);
     
@@ -1860,9 +1871,10 @@ void ImageFinding::find_contour(
   
   // divide into regions that are widely seporated
   if(critcurve[0].imagekist->Nunits() >1 ) divide_images_kist(grid->i_tree,critcurve,&Nregions);
+  bool touches_edge;
   for(int ii=0;ii<Nregions;++ii){
     critcurve[ii].imagekist->SetInImage(YES);
-    findborders4(grid->i_tree,&critcurve[ii]);
+    findborders4(grid->i_tree,&critcurve[ii],touches_edge);
   }
   
   // loop through seporated regions, this could be done in parrellel

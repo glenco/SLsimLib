@@ -1019,7 +1019,8 @@ void Grid::find_images(
     divide_images_kist(i_tree,images[par],&Nimages_par[par]);
  
     // find borders
-    for(int i=0;i<Nimages_par[par];++i) findborders4(i_tree,&images[par][i]);
+    bool touches_edge;
+    for(int i=0;i<Nimages_par[par];++i) findborders4(i_tree,&images[par][i],touches_edge);
   }
   
   // ?? copy both pairities into imageinfo
