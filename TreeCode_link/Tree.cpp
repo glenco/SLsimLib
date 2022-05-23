@@ -923,6 +923,7 @@ void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Po
   }
 }
 
+
 /**
  *  Returns N source positions which are not overlapping with the caustic lines.
  *  i.e. the distance between the caustic line and the center of the source is larger than radius of the source.

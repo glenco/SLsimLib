@@ -275,10 +275,35 @@ namespace ImageFinding{
       /// area of an ellipse with axis ratio contour_ell and major axis = max distance between center (as given by hull alg) and contour
     PosType ellipse_area;
     
+    /// touches the edge of the gridded region
+    bool touches_edge;
+    
     /// return true if x is inside or on the border of the caustic curve
     bool inCausticCurve(Point_2d &x){
       return Utilities::incurve(x.x,caustic_curve_outline);
     }
+    
+    
+    /// returns true if a circle of radius r around the point x intersects with the caustic curve
+    bool intersectingCausticCurve(Point_2d &x,double r){
+      
+      int n=caustic_curve_outline.size();
+      double rr,B;
+      Point_2d dx,dl;
+      for(int i=0 ; i<n-1 ; ++i){
+        dl = caustic_curve_outline[i]-x;
+        rr = dl.length();
+        if(rr <= r) return true;
+        dx = caustic_curve_outline[i+1]-caustic_curve_outline[i];
+        B = -(dx*dl)/dx.length_sqr();
+        if(B>0 && B<1){
+          if( dx*dx*B*B + dx*dl*2*B + rr*rr <= r*r) return true;
+        }
+      }
+      
+      return false;
+    }
+ 
     
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d &x){

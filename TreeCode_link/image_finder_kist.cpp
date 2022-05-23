@@ -1930,20 +1930,6 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
         
         if( neighborkist->getCurrent()->in_image != YES){  // point is a neighbor
           addinner=true;
-          /*
-           // check if point is already in list
-           MoveToTopKist(imageinfo->outerborder);
-           for(m=0;m<imageinfo->outerborder->Nunits();++m){
-           if( getCurrentKist(imageinfo->outerborder) == getCurrentKist(neighborkist) ) break;
-           MoveDownKist(imageinfo->outerborder);
-           }
-           
-           if(m == imageinfo->outerborder->Nunits()){
-           // add point to outerborder
-           InsertAfterCurrentKist(imageinfo->outerborder,getCurrentKist(neighborkist));
-           MoveDownKist(imageinfo->outerborder);
-           }
-           */
           
           if(neighborkist->getCurrent()->in_image == NO){  // if point is not yet in outerborder
             // add point to outerborder
