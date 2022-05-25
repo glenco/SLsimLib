@@ -19,6 +19,7 @@ LensHalo::LensHalo(){
   Dist = -1;
   //stars_N =0.0;
   zlens = 0.0;
+  tag=0;
 }
 
 LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
@@ -29,6 +30,7 @@ LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
   Dist = cosmo.angDist(z);
   //stars_N =0.0;
   zlens = z;
+  tag=0;
 }
 
 //LensHalo::LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize){
@@ -100,6 +102,8 @@ LensHalo::LensHalo(const LensHalo &h){
   elliptical_flag = h.elliptical_flag;
   switch_flag = h.switch_flag;
   //Nmod = h.Nmod;
+  
+  tag = h.tag;
 };
 
 LensHalo & LensHalo::operator=(LensHalo &&h){
@@ -156,6 +160,7 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     switch_flag = h.switch_flag;
     //Nmod = h.Nmod;
     
+    tag = h.tag;
   }
   return *this;
 };
@@ -216,6 +221,7 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   elliptical_flag = h.elliptical_flag;
   switch_flag = h.switch_flag;
   //Nmod = h.Nmod;
+  tag = h.tag;
   
   return *this;
 };

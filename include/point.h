@@ -187,6 +187,11 @@ struct Matrix2x2{
     return *this;
   }
   
+  bool operator==(const Matrix2x2<T> &F){
+    
+    return (a[0] == F.a[0]) * (a[1] == F.a[1]) * (a[2] == F.a[2]) * (a[3] == F.a[3]);
+  }
+
  
   Matrix2x2<T> operator*=(T f){
     a[0] *= f;

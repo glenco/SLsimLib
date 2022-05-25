@@ -263,7 +263,9 @@ public:
 
 	// status
 	/// Number of elements in list.
-	unsigned long Nunits() const {return Number;}
+  unsigned long Nunits() const {return Number;}
+  /// same as Nunits()
+  unsigned long size() const {return Number;}
 	bool AtTop();
 	bool AtBottom();
 	void Print();
