@@ -1,8 +1,9 @@
 
 
 #include "slsimlib.h"
-
 #include <nrutil.h>
+
+#include "concave_hull.h"
 
 //static const int NpointsRequired = 50;  // number of points required to be within an image
 static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
