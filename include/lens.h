@@ -342,14 +342,16 @@ public:
                           ,bool RSIverbose = false/// verbose option
                           );
 
-  void info_rayshooter(Point *i_point
+  void info_rayshooter(RAY &i_point
                       ,std::vector<Point_2d> & ang_positions
                       ,std::vector<KappaType> & kappa_on_planes
                       ,std::vector<std::vector<LensHalo*>> & halo_neighbors
-                      ,LensHalo **halo_max
+                      ,LensHalo &halo_max
                       ,KappaType &kappa_max
                       ,KappaType gamma_max[]
-                      ,PosType rmax,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
+                      ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
+                      ,int tag = 0   /// i f not 0, information on halos with this tag are gathered
+                      ,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
                       ,bool verbose = false
                                        );
   /** \brief  Find the image position of a source without grid refinement.

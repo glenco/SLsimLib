@@ -65,6 +65,7 @@ public:
   LensHalo & operator=(const LensHalo &h);
   LensHalo & operator=(LensHalo &&h);
 
+  int tag=0; /// this can be used to tag types of LensHalos
   
   /** get the Rmax which is larger than Rsize in Mpc.  This is the region exterior to which the
    halo will be considered a point mass.  Between Rsize and Rmax the deflection and shear are interpolated.
