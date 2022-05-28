@@ -14,6 +14,7 @@
 #include "source.h"
 #include <mutex>
 #include <utilities_slsim.h>
+#include "concave_hull.h"
 
 class LensHaloBaseNSIE;
 class LensHaloMassMap;
@@ -280,7 +281,7 @@ namespace ImageFinding{
     
     /// return true if x is inside or on the border of the caustic curve
     bool inCausticCurve(Point_2d &x){
-      return Utilities::incurve(x.x,caustic_curve_outline);
+      return Utilities::inhull(x.x,caustic_curve_outline);
     }
     
     
@@ -307,15 +308,14 @@ namespace ImageFinding{
     
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d &x){
-      //return Utilities::incurve(x.x,critical_curve);
-      return Utilities::incurve(x.x,critcurve);
+      return Utilities::inhull(x.x,critcurve);
     }
 
     /// return true if x is strictly inside (entirely) the caustic curve
     bool EntirelyinCausticCurve(Point_2d &x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the caustic :
-      bool IsInCurve = Utilities::incurve(x.x,caustic_curve_outline);
+      bool IsInCurve = Utilities::inhull2(x,caustic_curve_outline);
       
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the caustic curve
@@ -338,8 +338,7 @@ namespace ImageFinding{
     bool EntirelyinCriticalCurve(Point_2d x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the critical curve :
-      //bool IsInCurve = Utilities::incurve(x.x,critical_curve);
-      bool IsInCurve = Utilities::incurve(x.x,critcurve);
+      bool IsInCurve = Utilities::inhull(x.x,critcurve);
 
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the critical curve
