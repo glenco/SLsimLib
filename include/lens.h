@@ -389,7 +389,30 @@ public:
             ,PosType &dy2        /// final value of Delta y ^2
             ,bool use_image_guess  // if true p.x[] will be used as a guess for the image position
   );
+  /// This is the same, but the image is forced to stay within boundary
+  RAY find_image(
+            RAY &p       /// p[] is
+            ,PosType ytol2        /// target tolerance in source position squared
+            ,PosType &dy2        /// final value of Delta y ^2
+            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+  );
+  RAY find_image(
+            Point &p       /// p[] is
+            ,PosType ytol2        /// target tolerance in source position squared
+            ,PosType &dy2        /// final value of Delta y ^2
+            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+  );
 
+  void find_point_source_images(
+                              Grid &grid
+                              ,Point_2d y_source
+                              ,PosType r_source
+                              ,std::vector<RAY> &images
+                              ,double dytol2
+                              ,double dxtol
+                              ,bool verbose = false
+                                 );
+  
 	// methods used for use with implanted sources
 
   ///  reset the redshift of the source plane

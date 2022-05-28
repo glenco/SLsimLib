@@ -509,3 +509,91 @@ RAY Lens::find_image(
  
   return find_image(pp,ytol2,dy2,use_image_guess);
 }
+
+RAY Lens::find_image(
+          Point &p       /// p[] is
+          ,PosType ytol2        /// target tolerance in source position squared
+          ,PosType &dy2        /// final value of Delta y ^2
+          ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+){
+
+  if(p.image == nullptr){
+    std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
+  }
+
+  int MaxSteps = 100;
+  
+  Point_2d yo = *(p.image),dx;
+
+  if(! Utilities::inhull(p.x , boundary) ){
+    p.x[0] = boundary[0][0];
+    p.x[1] = boundary[0][1];
+  }
+
+  rayshooterInternal(1,&p);
+  
+  double invmago = p.invmag();
+  
+  Point_2d dy = *(p.image) - yo,dy_tmp;
+
+  dy2 = dy.length_sqr();
+ 
+  //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+ 
+  LinkedPoint pt;
+  
+  int steps = 0;
+  double f = 1 , dy2_tmp,ddy2=ytol2;
+  while(dy2 > ytol2 && f > 1.0e-5 && steps < MaxSteps){
+    
+    ++steps;
+    dx = p.A.inverse() * dy * f;
+
+    pt.x[0] = p.x[0] - dx[0];
+    pt.x[1] = p.x[1] - dx[1];
+
+    rayshooterInternal(1,&pt);
+    
+    if(pt.invmag()*invmago < 0){ // prevents image from changin pairity
+      f /= 2;
+    }else if( !Utilities::inhull(pt.x , boundary) ){
+      f /= 2;
+    }else{
+
+      dy_tmp = *(pt.image) - yo;
+      dy2_tmp = dy_tmp.length_sqr();
+            
+      if(dy2_tmp > dy2){
+        f /= 2;
+        //if(f < 0.01) break;
+      }else{
+        f = 1;
+        dy2= dy2_tmp;
+        dy = dy_tmp;
+        
+        ddy2 = (*(pt.image) -  *(p.image)).length_sqr();
+        p = pt;
+        //if(ddy2 < ytol2*1.0e-9) break;
+      }
+      
+      //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+    }
+  }
+  
+  return RAY(p);
+}
+
+RAY Lens::find_image(
+          RAY &ray       /// p[] is
+          ,PosType ytol2        /// target tolerance in source position squared
+          ,PosType &dy2        /// final value of Delta y ^2
+          ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+                     ){
+  LinkedPoint pp;
+  pp[0] = ray.x[0];
+  pp[1] = ray.x[1];
+  pp.image->x[0] = ray.y[0];
+  pp.image->x[1] = ray.y[1];
+ 
+  return find_image(pp,ytol2,dy2,boundary);
+}
