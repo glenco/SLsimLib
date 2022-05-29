@@ -518,7 +518,6 @@ void concave(std::vector<T> &init_points
     return hull;
   }
 
-
 template <typename Ptype>
 bool segments_cross(const Ptype &a1,const Ptype &a2
            ,const Ptype &b1,const Ptype &b2){
