@@ -9,6 +9,8 @@
 #ifndef concave_hull_h
 #define concave_hull_h
 
+#include "simpleTreeVec.h"
+
 namespace Utilities{
   
   template<typename T,typename P>
@@ -535,7 +537,7 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
 }
 
 template <typename Ptype>
-bool inhull(Ptype &x,const std::vector<Ptype> &H){
+bool inhull2(Ptype &x,const std::vector<Ptype> &H){
   
   size_t n = H.size();
   if(n <=2) return false;
@@ -565,6 +567,140 @@ bool inhull(Ptype &x,const std::vector<Ptype> &H){
 
   return w;
 }
+
+template <typename Ptype>
+bool inhull(PosType x[],const std::vector<Ptype> &H){
+  
+  size_t n = H.size();
+  if(n <=2) return false;
+  long w=0;
+  Ptype dH,dD;
+  double B,A;
+  for(size_t i=0 ; i<n-1 ; ++i){
+    dH = H[i+1]-H[i];
+    if(dH[1] == 0){  // // horizontal segment
+      if(x[1] == H[i][1]){
+        B = (x[0]-H[i][0])/dH[0];
+        if( B>=0 && B<=1 ) return true;  // point on boundary
+      }
+    }else{
+      dD[0] = x[0]-H[i][0];
+      dD[1] = x[1]-H[i][1];
+      A = dD[1]/dH[1];
+      if( A > 1 || A <= 0) continue;
+      B = (dH^dD)/dH[1];
+      if(B==0){               // on the boundary
+        return true;          // boundaries are always in
+      }else if(B>0){
+        if(dH[1] > 0) ++w;
+        else --w;
+      }
+    }
+  }
+
+  return w;
+}
+
+template <>
+inline bool inhull<Point *>(PosType x[],const std::vector<Point *> &H){
+  
+  size_t n = H.size();
+  if(n <=2) return false;
+  long w=0;
+  Point_2d dH,dD;
+  double B,A;
+  for(size_t i=0 ; i<n-1 ; ++i){
+    dH = *H[i+1]-*H[i];
+    if(dH[1] == 0){  // // horizontal segment
+      if(x[1] == H[i]->x[1]){
+        B = (x[0]-H[i]->x[0])/dH[0];
+        if( B>=0 && B<=1 ) return true;  // point on boundary
+      }
+    }else{
+      dD[0] = x[0]-H[i]->x[0];
+      dD[1] = x[1]-H[i]->x[1];
+      A = dD[1]/dH[1];
+      if( A > 1 || A <= 0) continue;
+      B = (dH^dD)/dH[1];
+      if(B==0){               // on the boundary
+        return true;          // boundaries are always in
+      }else if(B>0){
+        if(dH[1] > 0) ++w;
+        else --w;
+      }
+    }
+  }
+
+  return w;
+}
+
+template <>
+inline bool inhull<RAY>(PosType x[],const std::vector<RAY> &H){
+  
+  size_t n = H.size();
+  if(n <=2) return false;
+  long w=0;
+  Point_2d dH,dD;
+  double B,A;
+  for(size_t i=0 ; i<n-1 ; ++i){
+    dH = H[i+1].x-H[i].x;
+    if(dH[1] == 0){  // // horizontal segment
+      if(x[1] == H[i].x[1]){
+        B = (x[0]-H[i].x[0])/dH[0];
+        if( B>=0 && B<=1 ) return true;  // point on boundary
+      }
+    }else{
+      dD[0] = x[0]-H[i].x[0];
+      dD[1] = x[1]-H[i].x[1];
+      A = dD[1]/dH[1];
+      if( A > 1 || A <= 0) continue;
+      B = (dH^dD)/dH[1];
+      if(B==0){               // on the boundary
+        return true;          // boundaries are always in
+      }else if(B>0){
+        if(dH[1] > 0) ++w;
+        else --w;
+      }
+    }
+  }
+
+  return w;
+}
+
+template <>
+inline bool inhull<PosType *>(PosType x[],const std::vector<PosType *> &H){
+  
+  size_t n = H.size();
+  if(n <=2) return false;
+  long w=0;
+  Point_2d dH,dD;
+  double B,A;
+  for(size_t i=0 ; i<n-1 ; ++i){
+    dH[0] = H[i+1][0]-H[i][0];
+    dH[1] = H[i+1][1]-H[i][1];
+    if(dH[1] == 0){  // // horizontal segment
+      if(x[1] == H[i][1]){
+        B = (x[0]-H[i][0])/dH[0];
+        if( B>=0 && B<=1 ) return true;  // point on boundary
+      }
+    }else{
+      dD[0] = x[0]-H[i][0];
+      dD[1] = x[1]-H[i][1];
+      A = dD[1]/dH[1];
+      if( A > 1 || A <= 0) continue;
+      B = (dH^dD)/dH[1];
+      if(B==0){               // on the boundary
+        return true;          // boundaries are always in
+      }else if(B>0){
+        if(dH[1] > 0) ++w;
+        else --w;
+      }
+    }
+  }
+
+  return w;
+}
+
 
 /*** \brief Calculate the k nearest neighbors concave hull.
  
@@ -690,7 +826,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
             // this is to prevent pre-mature closing of the loop
             hull.push_back(new_point);
             for(size_t i : neighbors){
-              if(i != new_index && !inhull(points[i],hull)){
+              if(i != new_index && !inhull2(points[i],hull)){
                 intersect = true;
                 break;
               }
@@ -747,7 +883,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
     segmented = false;
     if(check){
       for(auto i : remaining_index){
-        if(!inhull(points[i],hull)){
+        if(!inhull2(points[i],hull)){
           segmented = true;
           k *= 2;
 //          std::cout << "point outside ... ";

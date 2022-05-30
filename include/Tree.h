@@ -859,11 +859,11 @@ int windings(Point_2d &x,std::vector<RAY> &point,PosType *area);
 int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
 int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<Point *> &curve);
+//int incurve(PosType x[],std::vector<Point *> &curve);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<Point_2d> &curve);
+//int incurve(PosType x[],std::vector<Point_2d> &curve);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<RAY> &curve);
+//int incurve(PosType x[],std::vector<RAY> &curve);
 
 unsigned long order_curve4(Point *curve,long Npoints);
 unsigned long order_curve4(Kist<Point> * curve);
@@ -903,35 +903,35 @@ bool testLeafs(TreeHndl tree);
 void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist);
 
 
-template <typename Ptype>
-int incurve(PosType x[],std::vector<Ptype> &curve){
-
-  if(curve.size() < 3) return 0;
-
-  int number = 0;
-  size_t i;
-  
-  // The reason this does not return the winding number is because horizontal
-  //  sections of the curve can be overcounted if they are colinear with x
-  
-  Ptype point;
-  for(i=0;i<curve.size()-1;++i){
-    
-    if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
-      if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) <= 1) ++number;
-    }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
-      if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) == 2) --number;
-    }
-    
-  }
-  
-  if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
-    if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) <= 1) ++number;
-  }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
-    if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) == 2) --number;
-  }
-  
-  return number == 0 ? 0 : 1;
-}
+//template <typename Ptype>
+//int incurve(PosType x[],std::vector<Ptype> &curve){
+//
+//  if(curve.size() < 3) return 0;
+//
+//  int number = 0;
+//  size_t i;
+//  
+//  // The reason this does not return the winding number is because horizontal
+//  //  sections of the curve can be overcounted if they are colinear with x
+//  
+//  Ptype point;
+//  for(i=0;i<curve.size()-1;++i){
+//    
+//    if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
+//      if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) <= 1) ++number;
+//    }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
+//      if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) == 2) --number;
+//    }
+//    
+//  }
+//  
+//  if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
+//    if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) <= 1) ++number;
+//  }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
+//    if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) == 2) --number;
+//  }
+//  
+//  return number == 0 ? 0 : 1;
+//}
 
 #endif
