@@ -1920,6 +1920,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo
     
     addinner=false;
     
+    // include edge points in innerbourder always
     if(i_tree->AtEdge(imagekist->getCurrent())){
       addinner = true;
       touches_boundary=true;

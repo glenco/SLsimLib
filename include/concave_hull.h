@@ -578,14 +578,13 @@ bool inhull(Ptype &x,const std::vector<Ptype> &H){
 template <typename Ptype>
 std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
 {
-  
+  //std::cout << "finding hull .... ";
   if(points.size() <= 3){
     return points;
   }
   
   if(k  < 3) k =3;
   
-  int f =0;
   size_t npoints = points.size();
  
 //  {
@@ -703,7 +702,22 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
         }
         
         if(intersect){
-          ++k;
+//          std::cout << "Intersection ..." << k << std::endl;
+//
+//          std::ofstream logfile("testpoint.csv");
+//          for(auto &p : points){
+//            logfile << p[0] <<","<< p[1] << std::endl;
+//          }
+//          logfile.close();
+//
+//          logfile.open("testhull.csv");
+//          for(auto &p : hull){
+//            logfile << p[0] <<","<< p[1] << std::endl;
+//          }
+//          logfile << new_point[0] <<","<< new_point[1] << std::endl;
+//          logfile.close();
+          
+          k *= 2;
           found = false;
         }else{
           hull.push_back(new_point);
@@ -736,7 +750,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
         if(!inhull(points[i],hull)){
           segmented = true;
           k *= 2;
-          std::cout << "point outside ... ";
+//          std::cout << "point outside ... ";
 //          std::ofstream logfile("testpoint.csv");
 //          for(auto &p : points){
 //            logfile << p[0] <<","<< p[1] << std::endl;
@@ -756,6 +770,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
     }
   }
   
+  //std::cout << "found hull" << std::endl;
   //hull.pop_back();
   
   return hull;
