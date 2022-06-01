@@ -41,7 +41,7 @@ SourceSersic::SourceSersic(
 {
     sed_type = 1;
     assert(my_Reff > 0);
-    ReSet(my_Reff,my_PA,my_index,my_q,my_z,0);
+    ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z);
 }
 
 SourceSersic::SourceSersic(const SourceSersic &p):SourceColored(p){
