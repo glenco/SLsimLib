@@ -97,6 +97,9 @@ public:
 
 protected:
   
+  SourceSersic spheroid;
+  
+  
   float sedtype = -1;
   // renormalize the disk and bulge to agree with current mag and mag_bulge
   void renormalize_current();
@@ -115,10 +118,12 @@ protected:
     //PosType BtoT;
     PosType PA=0;
     PosType inclination=0;
+    
+    double cosPA;
+    double sinPA;
 	
-    PosType cxx=0,cyy=0,cxy=0;
+    PosType cxx=0,cyy=0;
     PosType sbDo=0;
-    PosType sbSo=0;
     PosType mag=0;
     PosType mag_bulge=0;
     
@@ -133,7 +138,6 @@ protected:
       std::cout << "PA :" << PA << " ";
       std::cout << "inclination :" << inclination << " radians";
       std::cout << "sbDo :" << sbDo << " ";
-      std::cout << "sbSo :" << sbSo << " ";
       std::cout << "mag :" << mag << " ";
       std::cout << "mag_bulge :" << mag_bulge << " ";
       
@@ -189,12 +193,15 @@ public:
     original.bulge_mag_map[band] = my_mag;
   }
   
+  /// position angle in radians
+  PosType getPA() const { return PA; }
+  
   int getNarms() const {return Narms;}
   PosType getArmAmplitude() const {return Ad;}
   PosType getArmAlpha() const {return arm_alpha;}
   PosType getSphIndex() const {return spheroid.getSersicIndex();}
   PosType getSphAxisRatio() const {return spheroid.getAxesRatio();}
-  PosType getSphPA() const {return spheroid.getPA();}
+  //PosType getSphPA() const {return spheroid.getPA();}
   
   void changeBand(Band band);
   static PosType* getx(SourceOverzierPlus &sourceo){return sourceo.source_x.x;}
@@ -203,16 +210,13 @@ public:
   virtual inline void setTheta(PosType *xx){
     source_x[0] = xx[0];
     source_x[1] = xx[1];
-    spheroid.setTheta(xx);
   }
   virtual void setTheta(PosType my_x,PosType my_y){
     source_x[0] = my_x;
     source_x[1] = my_y;
-    spheroid.setTheta(my_x,my_y);
   }
   virtual void setTheta(const Point_2d &p){
     source_x = p;
-    spheroid.setTheta(p[0],p[1]);
   }
   void setBulgeAxisRatio(PosType q){
     spheroid.setAxesRatio(q);
@@ -225,7 +229,7 @@ private:
   SourceSersic spheroid;
   std::vector<PosType> modes;
   PosType disk_phase;
-  PosType cospa,sinpa,cosi;
+  PosType cosPA,sinPA,cosi,PA;
   
   SourceOverzier::Params original;  // original parameters
 };

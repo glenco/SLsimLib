@@ -1649,7 +1649,8 @@ void ImageFinding::image_finder_kist(LensHndl lens, PosType *y_source,PosType r_
   //for(i=0;i<*Nimages;++i) imageinfo[i].Npoints = 0;  // to make sure points array is not read beyond length
   
   // find borders
-  if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i]);
+  bool touches_edge;
+  if( splitparities == 0 ) for(i=0;i<*Nimages;++i) findborders4(i_tree,&imageinfo[i],touches_edge);
   
   for(i=0;i<*Nimages;++i){
     if(splitparities == -1){
@@ -1877,18 +1878,18 @@ int ImageFinding::IF_routines::refine_grid_kist(
  *   uses the in_image markers
  *   uses imaginfo->imagekist instead of imageinfo->points
  *
- *   In the case of the entire grid being within the image, the innerborders
- *   is the border points of the grid and the outerborder contains no points.
+ *   The innerboundary includes points that are on edge of i_tree region
  *
  *   Note:  Markers in_image must be preset to true for all image points and
  *   false for non-image points.
  */
-void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
+void findborders4(TreeHndl i_tree,ImageInfo *imageinfo
+                  ,bool &touches_boundary){
   int i;
   unsigned long j;
   bool addinner;
   bool allin = false;
-  
+  touches_boundary = false;
   
   if(i_tree->pointlist->size() == imageinfo->imagekist->Nunits()) allin = true;    // all points on the grid are in the image
   
@@ -1919,8 +1920,14 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
     
     addinner=false;
     
+    if(i_tree->AtEdge(imagekist->getCurrent())){
+      addinner = true;
+      touches_boundary=true;
+    }
+    
     i_tree->FindAllBoxNeighborsKist(imagekist->getCurrent(),neighborkist);
     
+        
     if( allin && neighborkist->Nunits() < 4){
       imageinfo->innerborder->InsertAfterCurrent(imagekist->getCurrent());
     }else{
@@ -1930,21 +1937,7 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo){
         
         if( neighborkist->getCurrent()->in_image != YES){  // point is a neighbor
           addinner=true;
-          /*
-           // check if point is already in list
-           MoveToTopKist(imageinfo->outerborder);
-           for(m=0;m<imageinfo->outerborder->Nunits();++m){
-           if( getCurrentKist(imageinfo->outerborder) == getCurrentKist(neighborkist) ) break;
-           MoveDownKist(imageinfo->outerborder);
-           }
            
-           if(m == imageinfo->outerborder->Nunits()){
-           // add point to outerborder
-           InsertAfterCurrentKist(imageinfo->outerborder,getCurrentKist(neighborkist));
-           MoveDownKist(imageinfo->outerborder);
-           }
-           */
-          
           if(neighborkist->getCurrent()->in_image == NO){  // if point is not yet in outerborder
             // add point to outerborder
             neighborkist->getCurrent()->in_image = MAYBE;

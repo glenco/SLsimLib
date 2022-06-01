@@ -46,6 +46,17 @@ bool TreeStruct::Test(){
   return true;
 }
 
+/// true is point is on the edge of the field
+bool TreeStruct::AtEdge(Point *point){
+  Branch *leaf = point->leaf;
+  if(leaf->boundary_p1[0] == top->boundary_p1[0]) return true;
+  if(leaf->boundary_p1[1] == top->boundary_p1[1]) return true;
+  if(leaf->boundary_p2[0] == top->boundary_p2[0]) return true;
+  if(leaf->boundary_p2[1] == top->boundary_p2[1]) return true;
+  
+  return false;
+}
+
 /** 
  *
  * \brief Finds all the leaves that are neighboring a point.

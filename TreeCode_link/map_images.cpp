@@ -465,14 +465,14 @@ void ImageFinding::map_images(
 	// link image points lists for each image
 	// and calculate surface brightness at each point
 	/////////////////////////////////////////////
-
+  bool touches_edge;
 	// ****** calculate surface brightnesses and flux of each image   ******
 	for(i=0,area_tot=0.0; i < *Nimages ; ++i){
 
 		imageinfo[i].ShouldNotRefine = 0;
 		imageinfo[i].uniform_mag = unchecked;
 
-		findborders4(grid->i_tree,&(imageinfo[i]));
+		findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
 
 		//assert(imageinfo[i].outerborder->Nunits() > 0);
 		/*/  ***** test lines ****
@@ -674,8 +674,9 @@ void ImageFinding::map_images_fixedgrid(
     }
   }
 
+    bool touches_edge;
   if(find_borders){
-    for(i=0;i<*Nimages;++i) findborders4(grid->i_tree,&(imageinfo[i]));
+    for(i=0;i<*Nimages;++i) findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
   }
 
   // find image centroids
@@ -735,7 +736,8 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
   Point *i_points;
   unsigned long Ncells,Nold,j,i;
   bool reborder=false,redivide=false;
-
+  bool touches_edge;
+  
   for(i=0,total_area=0;i<(*Nimages);++i) total_area += imageinfo[i].area;
   for(i=0,Nold=0;i<(*Nimages);++i) Nold += imageinfo[i].imagekist->Nunits();
   if(total_area == 0.0) return 0;
@@ -869,6 +871,7 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 		  }
 
 		  // If inner border point was refined re-do the borders
+ 
 		  if(reborder){
 			  if(imageinfo[i].outerborder->MoveToTop()){
 				  do{
@@ -877,7 +880,7 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 						//  point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
-			  findborders4(grid->i_tree,&(imageinfo[i]));
+			  findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
 
 			  reborder = false;
 		  }
@@ -968,7 +971,7 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
-			  findborders4(grid->i_tree,&(imageinfo[i]));
+			  findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
 			  assert(imageinfo[i].outerborder->Nunits() > 0);
 
 			  // re-set markers to MAYBE so overlaps can be detected
@@ -1011,7 +1014,7 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 		// find borders again and include them in the image
 		for(i=0 ; i < (*Nimages) ; ++i){
 
-			findborders4(grid->i_tree,&(imageinfo[i]));
+			findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
 
 			//assert(imageinfo[i].outerborder->Nunits() > 0);
 

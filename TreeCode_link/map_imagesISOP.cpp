@@ -335,6 +335,7 @@ int ImageFinding::IF_routines::refine_grid_on_imageISOP(Lens *lens,Source *sourc
   Point *i_points,*current;
   unsigned long Ncells,Nold,j,i;
   bool reborder=false,redivide=false;
+  bool touches_edge;
   
   for(i=0,total_area=0;i<(*Nimages);++i) total_area += imageinfo[i].area;
   for(i=0,Nold=0;i<(*Nimages);++i) Nold += imageinfo[i].imagekist->Nunits();
@@ -409,7 +410,7 @@ int ImageFinding::IF_routines::refine_grid_on_imageISOP(Lens *lens,Source *sourc
       ImageFinding::IF_routines::check_sb_add(source,&imageinfo[i],i_points,1.0,Nold,number_of_refined);
       points_to_refine.clear();
         
-      
+     
       // If inner border point was refined re-do the borders
       if(reborder){
         if(imageinfo[i].outerborder->MoveToTop()){
@@ -419,7 +420,7 @@ int ImageFinding::IF_routines::refine_grid_on_imageISOP(Lens *lens,Source *sourc
             //  point = imageinfo[i].outerborder->getCurrent();
           }while(imageinfo[i].outerborder->Down());
         }
-        findborders4(grid->i_tree,&(imageinfo[i]));
+        findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
         
         reborder = false;
       }
@@ -481,7 +482,7 @@ int ImageFinding::IF_routines::refine_grid_on_imageISOP(Lens *lens,Source *sourc
 					  //if(imageinfo[i].outerborder->getCurrent()->surface_brightness > 0) point = imageinfo[i].outerborder->getCurrent();
 				  }while(imageinfo[i].outerborder->Down());
 			  }
-			  findborders4(grid->i_tree,&(imageinfo[i]));
+			  findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
 			  assert(imageinfo[i].outerborder->Nunits() > 0);
         
 			  // re-set markers to MAYBE so overlaps can be detected
@@ -524,7 +525,7 @@ int ImageFinding::IF_routines::refine_grid_on_imageISOP(Lens *lens,Source *sourc
 		// find borders again and include them in the image
 		for(i=0 ; i < (*Nimages) ; ++i){
       
-			findborders4(grid->i_tree,&(imageinfo[i]));
+			findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
       
 			//assert(imageinfo[i].outerborder->Nunits() > 0);
       

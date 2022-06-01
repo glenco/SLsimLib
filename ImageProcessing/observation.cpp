@@ -27,7 +27,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
  
   float diameter,transmission;
   switch (tel_name) {
-    case Euclid_VIS:
+    case Telescope::Euclid_VIS:
       // from Eric
       // Equivalent gain is 11160 e-/ADU (Analog Digital Units)
       // Saturation is 71 ADU
@@ -44,7 +44,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.18;
       pix_size = .1*arcsecTOradians;
       break;
-   case Euclid_Y:
+    case Telescope::Euclid_Y:
       diameter = 119.;
       transmission = 0.0961;
       
@@ -58,7 +58,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case Euclid_J:
+    case Telescope::Euclid_J:
       diameter = 119.;
       transmission = 0.0814;
       
@@ -71,7 +71,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case Euclid_H:
+    case Telescope::Euclid_H:
       diameter = 119.;
       transmission = 0.1692;
       exp_time = 162.;
@@ -84,7 +84,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
 
       break;
-    case KiDS_u:
+    case Telescope::KiDS_u:
       diameter = 265.;
       transmission = 0.032;
       exp_time = 1000.;
@@ -96,7 +96,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
             
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case KiDS_g:
+    case Telescope::KiDS_g:
       diameter = 265.;
       transmission = 0.1220;
       exp_time = 900.;
@@ -108,7 +108,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case KiDS_r:
+    case Telescope::KiDS_r:
       diameter = 265.;
       transmission = 0.089;
       exp_time = 1800.;
@@ -120,7 +120,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case KiDS_i:
+    case Telescope::KiDS_i:
       diameter = 265.;
       transmission = 0.062;
       exp_time = 1200.;
@@ -132,7 +132,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case HST_ACS_I:
+    case Telescope::HST_ACS_I:
       diameter = 250.;
       transmission = 0.095;
       exp_time = 420.;
@@ -144,7 +144,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case CFHT_u:
+    case Telescope::CFHT_u:
       diameter = 358.;
       transmission = 0.0644;
       exp_time = 3000.;
@@ -156,7 +156,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case CFHT_g:
+    case Telescope::CFHT_g:
       diameter = 358.;
       transmission = 0.1736;
       exp_time = 2500.;
@@ -168,7 +168,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case CFHT_r:
+    case Telescope::CFHT_r:
       diameter = 358.;
       transmission = 0.0971;
       exp_time = 2000.;
@@ -180,7 +180,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       break;
-    case CFHT_i:
+    case Telescope::CFHT_i:
       diameter = 358.;
       transmission = 0.0861;
       exp_time = 4300.;
@@ -192,7 +192,7 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       
       mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
     break;
-    case CFHT_z:
+    case Telescope::CFHT_z:
       diameter = 358.;
       transmission = 0.0312;
       exp_time = 3600.;
@@ -490,8 +490,7 @@ void Observation::fftpsf(){
   image_padded.resize(n_x*n_y);
   for(double &a :image_padded) a=0;
   
-  fftw_plan p_psf;
-  p_psf = fftw_plan_dft_r2c_2d(n_x ,n_y ,psf_padded.data()
+  fftw_plan p_psf = fftw_plan_dft_r2c_2d(n_x ,n_y ,psf_padded.data()
                                ,reinterpret_cast<fftw_complex*>(fft_psf.data()), FFTW_ESTIMATE);
   fftw_execute(p_psf);
   
@@ -643,7 +642,7 @@ void Observation::CorrelateNoise(PixelMap &pmap)
 }
 /// Outputs rms of noise counts due to background and instrument
 /// in the unit decided by the user
-float Observation::getBackgroundNoise(float resolution, unitType unit)
+float Observation::getBackgroundNoise(float resolution, UnitType unit)
 {
     if (telescope==true && fabs(resolution-pix_size) > pix_size*1.0e-5)
     {
@@ -655,7 +654,7 @@ float Observation::getBackgroundNoise(float resolution, unitType unit)
     double back_mean = background_flux * res_in_arcsec*res_in_arcsec * exp_time ;
 
     double rms = sqrt(exp_num*ron*ron + back_mean) / exp_time;
-    if (unit==flux) rms /= e_per_s_to_ergs_s_cm2 * hplanck;
+    if (unit==UnitType::flux) rms /= e_per_s_to_ergs_s_cm2 * hplanck;
   
     return rms;
 }

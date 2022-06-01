@@ -92,7 +92,8 @@ short find_peaks(
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo[0].gridrange[2],imageinfo[0].gridrange[1]);
 
 		//printf("first pass in image %li\n",imageinfo[0].imagekist->Nunits);
-		findborders4(grid->i_tree,imageinfo.data());
+    bool touches_edge;
+		findborders4(grid->i_tree,imageinfo.data(),touches_edge);
 
 		//printf("restarget = %e gridrange[2] = %e  gridrange[1] = %e\n",res_target,imageinfo[0].gridrange[2],imageinfo[0].gridrange[1]);
 
@@ -121,7 +122,7 @@ short find_peaks(
 			}
 
 			// find borders
-			findborders4(grid->i_tree,imageinfo.data());
+			findborders4(grid->i_tree,imageinfo.data(),touches_edge);
 
 			// refine all image points and outer border
 

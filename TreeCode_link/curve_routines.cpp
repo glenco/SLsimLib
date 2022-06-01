@@ -1734,6 +1734,35 @@ namespace Utilities{
     //if(abs(wn) > 0) exit(0);
     return wn;
   }
+int windings(
+             Point_2d &x              /// Point for which the winding number is calculated
+             ,std::vector<RAY> &point         /// The points on the border.  These must be ordered.
+             ,PosType *area          /// returns absolute the area within the curve with oriented border
+){
+  int wn=0;
+  unsigned long k,i;
+  size_t Npoints = point.size();
+  
+  *area=0.0;
+  if(Npoints < 3) return 0;
+
+  for(i=0;i<Npoints;++i){
+    k= i < Npoints-1 ? i+1 : 0;
+    *area+=(point[i].x[0] + point[k].x[0])*(point[i].x[1] - point[k].x[1]);
+    
+    if(point[i].x[1] <= x[1]){
+      if(point[k].x[1] > x[1])
+        if( isLeft(point[i].x,point[k].x,x) > 0) ++wn;
+    }else{
+      if(point[k].x[1] <= x[1])
+        if( isLeft(point[i].x,point[k].x,x) < 0) --wn;
+    }
+  }
+  *area = fabs(*area)*0.5;
+  //std::printf("wn = %i\n",wn);
+  //if(abs(wn) > 0) exit(0);
+  return wn;
+}
   int windings(
                PosType *x              /// Point for which the winding number is calculated
                ,Kist<Point> * kist         /// Kist of points on the border.  These must be ordered.
@@ -1836,7 +1865,6 @@ namespace Utilities{
       return wn;
     }
   
-
 //  int incurve(PosType x[],std::vector<Point *> &curve){
 //    
 //    if(curve.size() < 3) return 0;
@@ -2485,6 +2513,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
                 std::cout << hull[ii]->x[0] << " " << hull[ii]->x[1] << " -- "
                 << hull[ii+1]->x[0] << " " << hull[ii+1]->x[1] << std::endl;
               }
+              
               //move this point to back and try again with lower tmp_k
               std::swap(indexlist[i_min],indexlist[tmp_k-1]);
               --tmp_k;
@@ -2630,6 +2659,30 @@ void Utilities::contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsig
       C[jj].x[1]=sin(pa)*mostdistant_contour_pnt*cos(t)+cos(pa)*nearest_contour_pnt*sin(t);
   }
 }
+void Utilities::contour_ellipse(std::vector<RAY> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area){
+  double nearest_contour_pnt=1E12;
+  double mostdistant_contour_pnt=0.0;
+  double tmp_dist=1E12;
+  double t,pa,farpoint[2],nearpoint[2];
+  
+  
+  for(size_t jj=0;jj<Npoints;++jj){
+    tmp_dist=sqrt((P[jj].x[0]-center.x[0])*(P[jj].x[0]-center.x[0])+(P[jj].x[1]-center.x[1])*(P[jj].x[1]-center.x[1]));
+    if (nearest_contour_pnt>tmp_dist && tmp_dist!=0){nearest_contour_pnt=tmp_dist;nearpoint[0]=P[jj].x[0];nearpoint[1]=P[jj].x[1];}
+    if (mostdistant_contour_pnt<tmp_dist){mostdistant_contour_pnt=tmp_dist;farpoint[0]=P[jj].x[0];farpoint[1]=P[jj].x[1];}
+  }
+  *ellipticity=nearest_contour_pnt/mostdistant_contour_pnt;
+  *ellipse_area=nearest_contour_pnt*mostdistant_contour_pnt*PI;
+  pa=atan2f(farpoint[1]-center.x[1],farpoint[0]-center.x[0]);
+  
+  C.resize(Npoints);
+  
+  for(size_t jj=0;jj<Npoints;++jj){
+      t=jj*2.*PI/Npoints;
+      C[jj].x[0]=cos(pa)*mostdistant_contour_pnt*cos(t)-sin(pa)*nearest_contour_pnt*sin(t);
+      C[jj].x[1]=sin(pa)*mostdistant_contour_pnt*cos(t)+cos(pa)*nearest_contour_pnt*sin(t);
+  }
+}
 
 /** \brief Returns the center of a contour defined as the midpoint between the two points in the contour that are farthest apart from one another.
  
@@ -2639,6 +2692,25 @@ void Utilities::contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsig
 
 
 Point_2d Utilities::contour_center(std::vector<Point_2d> &P, unsigned long Npoints){
+  double dPx,dPy,dist,jx[2],ix[2];
+  double maxdist=0.0;
+  Point_2d center;
+  
+  for(size_t jj=0;jj<Npoints;++jj){
+    for(size_t ii=0;ii<Npoints;++ii){
+      dPx=P[jj].x[0]-P[ii].x[0];
+      dPy=P[jj].x[1]-P[ii].x[1];
+      dist=sqrt(dPx*dPx+dPy*dPy);
+      if (dist>maxdist){maxdist=dist;jx[0]=P[jj].x[0];jx[1]=P[jj].x[1];ix[0]=P[ii].x[0];ix[1]=P[ii].x[1];}
+    }
+  }
+  
+  center.x[0]=0.5*(ix[0]+jx[0]);
+  center.x[1]=0.5*(ix[1]+jx[1]);
+  return center;
+}
+
+Point_2d Utilities::contour_center(std::vector<RAY> &P, unsigned long Npoints){
   double dPx,dPy,dist,jx[2],ix[2];
   double maxdist=0.0;
   Point_2d center;

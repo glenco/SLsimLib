@@ -1020,7 +1020,8 @@ void Grid::find_images(
     divide_images_kist(i_tree,images[par],&Nimages_par[par]);
  
     // find borders
-    for(int i=0;i<Nimages_par[par];++i) findborders4(i_tree,&images[par][i]);
+    bool touches_edge;
+    for(int i=0;i<Nimages_par[par];++i) findborders4(i_tree,&images[par][i],touches_edge);
   }
   
   // ?? copy both pairities into imageinfo
@@ -1050,11 +1051,11 @@ void Grid::find_images(
   return;
 }
 
-/** \breaf This function finds all the images for a circular source of radius r_source,
+/** \brief This function finds all the images for a circular source of radius r_source,
  then finds the points within each image that are closest to the center and then markes
  each surface brightness.  Only one pixel per image gets flux.
  */
-double Grid::mark_point_source_images(
+double Grid::mark_closest_point_source_images(
                              Point_2d y_source
                             ,PosType r_source
                             ,PosType luminosity
@@ -1069,12 +1070,59 @@ double Grid::mark_point_source_images(
   std::vector<ImageInfo> imageinfo;
   find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
 
-  std::cout << "centroids" << std::endl;
+  //std::cout << "magnifications" << std::endl;
   for(int i=0 ; i<Nimages ; ++i){
     pp = imageinfo[i].closestPoint(y_source);
-    
+    //std::cout << "   " << 1.0/fabs(pp->invmag()) << " " << images[i].x << " " << (y_source-images[i].y).length()/arcsecTOradians << std::endl;
     total += luminosity/fabs(pp->invmag());
     pp->surface_brightness += luminosity/pp->gridsize/pp->gridsize/fabs(pp->invmag());
   }
+  
   return total;
+};
+
+
+
+/** \brief This function finds all the images for a circular source of radius r_source,
+ then finds the points within each image that are closest to the center of the source.
+ Only one pixel per image gets flux.  Points are not marked
+ */
+
+void Grid::find_point_source_images(
+                             Point_2d y_source
+                            ,PosType r_source
+                            ,std::vector<RAY> &images
+                            ,bool verbose
+                            ){
+  
+  int Nimages = 0;
+  size_t Npoints=0;
+  
+  std::vector<ImageInfo> imageinfo;
+//  double r = r_source;
+//  int Nimages_max = 0;
+//  for(int n=0 ; n < 5 ; ++n){
+//    find_images(y_source.x,r,Nimages,imageinfo,Npoints);
+//    if(Nimages > Nimages_max){
+//      r_source = r;
+//      Nimages_max = Nimages;
+//    }
+//    r /= 2;
+//  }
+//  
+  find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
+  
+  images.resize(Nimages);
+  for(int i=0 ; i<Nimages ; ++i){
+    if(imageinfo[i].imagekist->Nunits() > 0){
+      images[i] = *(imageinfo[i].closestPoint(y_source));
+    }else{
+      // case where the image had no points in it
+      --Nimages;
+      --i;
+      images.pop_back();
+    }
+  }
+  
+  return;
 };

@@ -426,11 +426,11 @@ RAY Lens::find_image(
     std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
   }
 
-  int MaxSteps = 10;
+  int MaxSteps = 100;
   
   Point_2d yo = *(p.image),dx;
 
-  std::cout << " yo = " << yo << std::endl;
+  //std::cout << " yo = " << yo / arcsecTOradians << std::endl;
   if(!use_image_guess) p = yo;   // in this case the input image position is not used
   
   rayshooterInternal(1,&p);
@@ -449,38 +449,46 @@ RAY Lens::find_image(
 
     dy = *(p.image) - yo;
   }
-  std::cout << " dy = " << dy / arcsecTOradians << std::endl;
   
   dy2 = dy.length_sqr();
-
+ 
+  //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+ 
+  LinkedPoint pt;
+  
   int steps = 0;
-  double f = 1 , dy2_tmp;
+  double f = 1 , dy2_tmp,ddy2=ytol2;
   while(dy2 > ytol2 && steps < MaxSteps){
     
+    ++steps;
     dx = p.A.inverse() * dy * f;
 
-    p.x[0] = p.x[0] - dx[0];
-    p.x[1] = p.x[1] - dx[1];
+    pt.x[0] = p.x[0] - dx[0];
+    pt.x[1] = p.x[1] - dx[1];
 
-    rayshooterInternal(1,&p);
+    rayshooterInternal(1,&pt);
     
-    if(use_image_guess && p.invmag()*invmago < 0){ // prevents image from changin pairity
+    if(use_image_guess && pt.invmag()*invmago < 0){ // prevents image from changin pairity
       f /= 2;
     }else{
 
-      dy_tmp = *(p.image) - yo;
-      std::cout << " dy = " << dy / arcsecTOradians << std::endl;
-      
+      dy_tmp = *(pt.image) - yo;
       dy2_tmp = dy.length_sqr();
-      
+            
       if(dy2_tmp > dy2){
         f /= 2;
+        if(f < 0.01) break;
       }else{
         f = 1;
         dy2= dy2_tmp;
         dy = dy_tmp;
+        
+        ddy2 = (*(pt.image) -  *(p.image)).length_sqr();
+        p = pt;
+        //if(ddy2 < ytol2*1.0e-9) break;
       }
       
+      //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
     }
   }
   

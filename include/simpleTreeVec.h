@@ -64,8 +64,72 @@ public:
 	/// \brief Finds the points within an ellipse around center and puts their index numbers in a list
 	void PointsWithinEllipse(D center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
 	/// \brief Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
-	void NearestNeighbors(D *ray,int Nneighbors,float *radius,IndexType *neighbors);
+	void NearestNeighbors(D *ray,int Nneighbors,std::vector<D> &radii
+                        ,std::vector<IndexType> &neighbors);
+  void NearestNeighbor(D *ray,D &radius,IndexType &neighbor);
+  
+  /// pop this point out of the tree
+  void pop(IndexType index_of_point){
     
+    //print();
+    
+    size_t n = 0;
+    while(index[n] != index_of_point && n < Nparticles) ++n;
+    if(n == Nparticles) return; // particle not in tree
+    
+    BranchV *leaf;
+    
+    bool leaf_found = false;
+    moveTop();
+    do{
+      long p = current->branch_index - index.data();
+      if(atLeaf() && n >= p && n < p + current->nparticles ){
+         leaf=current;
+      }
+      if(p > n){
+        current->branch_index -= 1;
+      }
+    }while(TreeWalkStep(true));
+    
+    assert(leaf->child1==NULL);
+    assert(leaf->child2==NULL);
+
+    BranchV *tmp = leaf;
+    while(leaf != top){
+      if(leaf->nparticles > 0) leaf->nparticles -= 1;
+      leaf = leaf->prev;
+    }
+    leaf->nparticles -= 1;
+     
+    // remove from index
+    for(size_t i = n ; i < Nparticles - 1 ; ++i){
+      index[i] = index[i+1];
+    }
+    --Nparticles;
+    index.pop_back();
+    
+    //print();
+
+  }
+  
+  /// returns the index numbers of the remaining points which are less than the original if pop() was used.
+  std::vector<IndexType> get_index() const{
+    return index;
+  }
+  
+  void print(){
+    moveTop();
+    do{
+      for(int i=0 ; i<current->level ; ++i ) std::cout << "    ";
+      std::cout << current->level << " " << current->nparticles << " : ";
+      for(int i=0 ; i<current->nparticles ; ++i){
+        std::cout << *(current->branch_index+i) << " " ;
+      }
+      std::cout << std::endl;
+    }while(TreeWalkStep(true));
+    std::cout << std::endl;
+  }
+  
     /** \brief Box representing a branch in a tree.  It has four children.  Used in TreeNBStruct which is used in TreeForce.
      */
 
@@ -400,24 +464,90 @@ template <typename T,typename D>
 void TreeSimpleVec<T,D>::NearestNeighbors(
                                      D *ray       /// position
                                      ,int Nneighbors    /// number of neighbors to be found
-                                     ,float *radius     /// distance of furthest neighbor found from ray[]
-                                     ,IndexType *neighborsout  /// list of the indexes ofx the neighbors
+                                     ,std::vector<D> &radii     /// distance to neighbors
+                                     ,std::vector<IndexType> &neighbors  /// list of the indexes of the neighbors
+                                     ){
+    IndexType i;
+    short j;
+
+    
+    if(top->nparticles <= Nneighbors){
+  
+      std::vector<D> tmp(Nparticles);
+      std::vector<size_t> sort_index(Nparticles);
+      for(int i = 0 ; i< Nparticles ; ++i){
+        tmp[i] = pow(position(points[i])[0]-ray[0],2) + pow(position(points[i])[1]-ray[1],2);
+        sort_index[i]=i;
+      }
+      
+      std::sort(sort_index.begin(),sort_index.end(),[&tmp](size_t i,size_t j){return tmp[i] < tmp[j];});
+      
+      radii.resize(Nparticles);
+      neighbors.resize(Nparticles);
+
+      for(int i = 0 ; i< Nparticles ; ++i){
+        neighbors[i] = index[sort_index[i]];
+        radii[i] = tmp[sort_index[i]];
+      }
+      
+      return;
+    }
+                                       
+    radii.resize(Nneighbors+Nbucket);
+    neighbors.resize(Nneighbors+Nbucket);
+
+    
+    /* initalize distance to neighbors to a large number */
+    for(i=0;i<Nbucket+Nneighbors;++i){
+        radii[i] = (10*(top->boundary_p2[0]-top->boundary_p1[0]));
+        neighbors[i] = 0;
+    }
+    
+    for(j=0;j<Ndimensions;++j) realray[j]=ray[j];
+    
+    moveTop();
+    if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
+        //ERROR_MESSAGE();
+        
+        for(j=0;j<Ndimensions;++j){
+          ray[j] = (ray[j] > current->boundary_p1[j]) ? ray[j] : current->boundary_p1[j];
+          ray[j] = (ray[j] < current->boundary_p2[j]) ? ray[j] : current->boundary_p2[j];
+        }
+    }
+    incell = 1;
+    
+    _NearestNeighbors(ray,Nneighbors,neighbors.data(),radii.data());
+    
+    neighbors.resize(Nneighbors);
+    radii.resize(Nneighbors);
+                                       
+    return;
+}
+
+/**
+ *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
+ *  */
+template <typename T,typename D>
+void TreeSimpleVec<T,D>::NearestNeighbor(
+                                     D *ray       /// position
+                                     ,D &radius     /// distance of furthest neighbor found from ray[]
+                                     ,IndexType &neighbor  /// list of the indexes of the neighbors
                                      ){
     IndexType i;
     //static int count=0,oldNneighbors=-1;
     short j;
     
-    D rneighbors[Nneighbors+Nbucket];
-    IndexType neighbors[Nneighbors+Nbucket];
+    D rneighbors[1+Nbucket];
+    IndexType neighbors[1+Nbucket];
     
-    if(top->nparticles < Nneighbors){
+    if(top->nparticles < 1){
         ERROR_MESSAGE();
         printf("ERROR: in NearestNeighbors, number of neighbors > total number of particles\n");
       throw std::runtime_error("Asked for too many neighbors");
     }
     
     /* initalize distance to neighbors to a large number */
-    for(i=0;i<Nbucket+Nneighbors;++i){
+    for(i=0;i<Nbucket+1;++i){
         rneighbors[i] = (10*(top->boundary_p2[0]-top->boundary_p1[0]));
         neighbors[i] = 0;
     }
@@ -435,10 +565,10 @@ void TreeSimpleVec<T,D>::NearestNeighbors(
     }
     incell = 1;
     
-    _NearestNeighbors(ray,Nneighbors,neighbors,rneighbors);
+    _NearestNeighbors(ray,1,neighbors,rneighbors);
     
-    for(i=0;i<Nneighbors;++i) neighborsout[i] = neighbors[i];
-    *radius = rneighbors[Nneighbors-1];
+    neighbor = neighbors[0];
+    radius = rneighbors[0];
     
     return;
 }
@@ -512,7 +642,7 @@ void TreeSimpleVec<T,D>::_NearestNeighbors(D *ray,int Nneighbors,unsigned long *
                         rneighbors[i]+=pow(position(points[current->branch_index[i-Nneighbors]])[j]-ray[j],2);
                     }
                     rneighbors[i]=sqrt( rneighbors[i] );
-                    assert(rneighbors[i] < 10);
+                    //assert(rneighbors[i] < 10);
                     neighbors[i]=current->branch_index[i-Nneighbors];
                 }
                 

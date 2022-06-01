@@ -321,9 +321,9 @@ bool CausticDataStore::findNearestCrit(PosType *x,long &index){
     SetSearchTree();
   }
 
-  float radius;
+  PosType radius;
   size_t tmp_index;
-  searchtreevec->NearestNeighbors(x,1,&radius,&tmp_index);
+  searchtreevec->NearestNeighbor(x,radius,tmp_index);
   index = tmp_index;
 
 
@@ -362,7 +362,7 @@ bool CausticDataStore::findNearestCrit(PosType *x,long &index,CritType type){
     SetSearchTree();
   }
   
-  std::vector<float> radius(10);
+  std::vector<PosType> radius(10);
   std::vector<IndexType> neighbors(10);
   bool found_type = false;
   int i;
@@ -376,8 +376,7 @@ bool CausticDataStore::findNearestCrit(PosType *x,long &index,CritType type){
       radius.resize(N+10);
       neighbors.resize(N+10);
     }
-    searchtreevec->NearestNeighbors(x,N,radius.data(),neighbors.data());
-    rmin=1E12; //radius[0];
+    searchtreevec->NearestNeighbors(x,N,radius,neighbors);
     for(i=0;i<N;++i){
       if(data[neighbors[i]].crit_type == type){
         index = neighbors[i];
@@ -389,20 +388,6 @@ bool CausticDataStore::findNearestCrit(PosType *x,long &index,CritType type){
     }
   };
   
-  /*PosType rmin = 1.0e60,r;
-  size_t t_index;
-
-  for(size_t i=0;i<data.size();++i){
-    if(data[i].crit_type == type){
-      r = (data[i].crit_center[0]-x[0])*(data[i].crit_center[0]-x[0])
-      + (data[i].crit_center[1]-x[1])*(data[i].crit_center[1]-x[1]);
-      if(rmin > r){
-        rmin = r;
-        t_index = i;
-      }
-    }
-  }
-  assert(index == t_index);*/
   
   return (data[index].crit_radius[2] > radius[i]);
 }

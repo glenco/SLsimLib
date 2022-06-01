@@ -2292,7 +2292,7 @@ class SUMMER{
 
 public:
 
-  SUMMER():batch(100),n(0),current(0.0),ntotal(0){};
+  SUMMER():batch(1000),n(0),ntotal(0),current(0.0){};
   SUMMER(size_t batchsize)
   :batch(batchsize),n(0),current(0.0),ntotal(0){};
 

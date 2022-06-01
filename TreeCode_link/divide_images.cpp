@@ -213,9 +213,7 @@ void divide_images(TreeHndl i_tree,ImageInfo *imageinfo
 	return;
 }*/
 
-/** 
- *
- *  divide_images_kist
+/**
  *
  * \brief Divides the image points up into separate images that are linked by cell
  * neighbors.

@@ -804,7 +804,6 @@ void TreeQuadParticles<PType>::walkTree_iter(
             alpha[0] += tmp*xcm[0];
             alpha[1] += tmp*xcm[1];
             
-            
             tmp = -2.0*prefac/rcm2;
             
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
