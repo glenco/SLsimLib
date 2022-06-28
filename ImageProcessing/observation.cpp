@@ -56,8 +56,9 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.3;
       pix_size = .3*arcsecTOradians;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      break;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+  break;
     case Telescope::Euclid_J:
       diameter = 119.;
       transmission = 0.0814;
@@ -69,7 +70,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.3;
       pix_size = .3*arcsecTOradians;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::Euclid_H:
       diameter = 119.;
@@ -81,8 +83,9 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.3;
       pix_size = .3/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
-
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+ 
       break;
     case Telescope::KiDS_u:
       diameter = 265.;
@@ -94,7 +97,9 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 1.0;
       pix_size = .2/60./60./180.*PI;
             
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+ 
       break;
     case Telescope::KiDS_g:
       diameter = 265.;
@@ -106,7 +111,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.8;
       pix_size = .2/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::KiDS_r:
       diameter = 265.;
@@ -118,7 +124,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.7;
       pix_size = .2/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::KiDS_i:
       diameter = 265.;
@@ -130,7 +137,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 1.1;
       pix_size = .2/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::HST_ACS_I:
       diameter = 250.;
@@ -142,7 +150,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.1;
       pix_size = .05/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_u:
       diameter = 358.;
@@ -154,7 +163,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.85;
       pix_size = .187/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_g:
       diameter = 358.;
@@ -166,7 +176,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.78;
       pix_size = .187/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_r:
       diameter = 358.;
@@ -178,7 +189,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.71;
       pix_size = .187/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_i:
       diameter = 358.;
@@ -190,8 +202,9 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.64;
       pix_size = .187/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-    break;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
     case Telescope::CFHT_z:
       diameter = 358.;
       transmission = 0.0312;
@@ -202,9 +215,9 @@ Npix_x(Npix_x),Npix_y(Npix_y)
       seeing = 0.68;
       pix_size = .187/60./60./180.*PI;
       
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
       break;
-      
     default:
       throw std::runtime_error("The Telescope selected is not available.");
       break;
@@ -227,7 +240,8 @@ Npix_x(Npix_x),Npix_y(Npix_y)
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
 Npix_x(Npix_x),Npix_y(Npix_y),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),ron(ron),seeing(seeing)
 {
-  mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+  //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+  mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
   telescope = false;
  
   set_up();
@@ -247,7 +261,9 @@ Npix_x(Npix_x),Npix_y(Npix_y),exp_time(exp_time), exp_num(exp_num), back_mag(bac
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
 Npix_x(Npix_x),Npix_y(Npix_y), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , ron(ron), oversample(oversample)
 		{
-      mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+ 
 
       CPFITS_READ cpfits(psf_file);
 
@@ -661,7 +677,9 @@ float Observation::getBackgroundNoise(float resolution, UnitType unit)
 
 void Observation::set_up(){
   //zero_point_flux = pow(10,-0.4*mag_zeropoint);  // erg/s/Hz/cm**2
-  e_per_s_to_ergs_s_cm2 = pow(10,0.4*(mag_zeropoint-AB_zeropoint));
+  //e_per_s_to_ergs_s_cm2 = pow(10,0.4*(mag_zeropoint-AB_zeropoint));
+  e_per_s_to_ergs_s_cm2 = 1.0/(mag_to_flux(mag_zeropoint)*hplanck);
+  
   background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
  }
 

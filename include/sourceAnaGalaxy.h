@@ -44,7 +44,7 @@ public:
   }
 	
 	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
+	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag());}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
@@ -220,7 +220,7 @@ public:
   std::size_t size() const {return galaxies.size();}
 
     /// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	PosType getTotalFlux() const {return pow(10,-(48.6+galaxies[index].getMag())/2.5);}
+	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag());}
 
     /// Return angular position of current source.
 	Point_2d getTheta(){return galaxies[index].getTheta();}

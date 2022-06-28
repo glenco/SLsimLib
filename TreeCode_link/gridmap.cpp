@@ -518,6 +518,7 @@ PosType GridMap::EinsteinArea() const{
 }
 
 PosType GridMap::magnification() const{
+  
   double mag = 0,flux = 0;
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){
@@ -526,6 +527,7 @@ PosType GridMap::magnification() const{
   }
   return flux/mag;
 }
+
 
 PosType GridMap::magnification2() const{
   double mag = 0,flux = 0;

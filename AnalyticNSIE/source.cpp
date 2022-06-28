@@ -11,6 +11,16 @@
 
 using namespace std;
 
+double flux_to_mag(double flux){
+  if(flux <=0) return 100;
+  return -2.5 * log10(flux*hplanck) - 48.6;
+}
+
+double mag_to_flux(double m){
+  if(m == 100) return 0;
+  return pow(10,-0.4*(m+48.6))/hplanck;
+}
+
 //SourceUniform::SourceUniform(InputParams& params) : Source(){
 //  assignParams(params);
 //}
@@ -494,7 +504,7 @@ void SourceColored::setActiveBand(Band band)
   if (mag < 0.)
       flux_total = std::numeric_limits<PosType>::epsilon();
     else
-      flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+      flux_total = mag_to_flux(mag);
   
   assert(flux_total > 0);
   current_band = band;
@@ -737,7 +747,7 @@ SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folde
   if(sb_limit == -1)
     setSBlimit_magarcsec(30.);
   else
-    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
   
   readCatalog();
 }
@@ -757,7 +767,7 @@ void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_
   if(sb_limit == -1)
     setSBlimit_magarcsec(30.);
   else
-    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
   
   readCatalog();
 }
@@ -890,7 +900,7 @@ void SourceMultiShapelets::assignParams(InputParams& params){
   if(!params.get("source_sb_limit",sb_limit))
     setSBlimit_magarcsec(30.);
   else
-    sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
   
   if(!params.get("shapelets_folder",shapelets_folder)){
     std::cerr << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;

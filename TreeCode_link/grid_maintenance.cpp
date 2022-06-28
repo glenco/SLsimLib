@@ -375,29 +375,29 @@ PosType Grid::EinsteinArea() const {
 //  return flux/mag;
 //}
 
-PosType Grid::magnification() const {
+PosType Grid::magnification(double sblimit) const {
   
-  return LensedFlux()/UnlensedFlux();
+  return LensedFlux(sblimit)/UnlensedFlux(sblimit);
   
-  double mag = 0,flux = 0;
-  
-  PointList::iterator it;
-  it = (i_tree->pointlist->Top());
-  size_t N = i_tree->pointlist->size();
-  for(unsigned long i=0 ; i < N ; ++i,--it){
-    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
-    assert(f >= 0);
-    if(f > 0){
-      mag += f;
-      flux += f / mag_from_deflect((*it));
-    }
-  }
-
-  return mag / flux;
+//  double mag = 0,flux = 0;
+//
+//  PointList::iterator it;
+//  it = (i_tree->pointlist->Top());
+//  size_t N = i_tree->pointlist->size();
+//  for(unsigned long i=0 ; i < N ; ++i,--it){
+//    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+//    assert(f >= 0);
+//    if(f > 0){
+//      mag += f;
+//      flux += f / mag_from_deflect((*it));
+//    }
+//  }
+//
+//  return mag / flux;
 }
 
 
-//PosType Grid::magnification() const{
+//PosType Grid::magnification2() const{
 //  double mag = 0,flux = 0;
 //
 //  PointList::iterator it;
@@ -409,6 +409,24 @@ PosType Grid::magnification() const {
 //    if(f > 0){
 //      mag += f*fabs((*it)->invmag());
 //      flux += f;
+//    }
+//  }
+//
+//  return flux/mag;
+//}
+//
+//PosType Grid::magnification3() const{
+//  double mag = 0,flux = 0;
+//
+//  PointList::iterator it;
+//  it = (i_tree->pointlist->Top());
+//  size_t N = i_tree->pointlist->size();
+//  for(unsigned long i=0 ; i < N ; ++i,--it){
+//    double f = (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+//    assert(f >= 0);
+//    if(f > 0){
+//      mag += f;
+//      flux += f/fabs((*it)->invmag());
 //    }
 //  }
 //
@@ -431,26 +449,26 @@ Point_2d Grid::centroid() const{
   return centroid/flux;
 }
 
-PosType Grid::UnlensedFlux() const{
+PosType Grid::UnlensedFlux(double sblimit) const{
   
   double flux = 0;
   PointList::iterator s_tree_pointlist_it;
   s_tree_pointlist_it.current = (s_tree->pointlist->Top());
   for(unsigned long i=0;i<s_tree->pointlist->size();++i,--s_tree_pointlist_it){
-    flux += (*s_tree_pointlist_it)->surface_brightness*(*s_tree_pointlist_it)->leaf->area();
+    if((*s_tree_pointlist_it)->surface_brightness >= sblimit) flux += (*s_tree_pointlist_it)->surface_brightness*(*s_tree_pointlist_it)->leaf->area();
   }
   
   return flux;
 }
 
-PosType Grid::LensedFlux() const{
+PosType Grid::LensedFlux(double sblimit) const{
   
   double flux = 0;
   PointList::iterator it;
   it = (i_tree->pointlist->Top());
   size_t N = i_tree->pointlist->size();
   for(unsigned long i=0 ; i < N ; ++i,--it){
-    flux += (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
+    if((*it)->surface_brightness >= sblimit) flux += (*it)->surface_brightness * (*it)->gridsize * (*it)->gridsize;
   }
   
   return flux;

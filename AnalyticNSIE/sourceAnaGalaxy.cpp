@@ -315,7 +315,7 @@ void SourceMultiAnaGalaxy::assignParams(InputParams& params){
 	if(!params.get("source_sb_limit",sb_limit))
 		setSBlimit_magarcsec(30.);
 	else
-		sb_limit = pow(10,-0.4*(48.6+sb_limit))*pow(180*60*60/PI,2)/hplanck;
+		sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
 		/*{
 		std::cout << "ERROR: Must assign source_sb_limit in parameter file " << params.filename() << std::endl;
 		exit(1);*/

@@ -146,9 +146,9 @@ struct Grid{
   }
   
   /// flux weighted local magnification that does not take multiple imaging into effect
-  PosType magnification() const;
-  PosType UnlensedFlux() const;
-  PosType LensedFlux() const;
+  PosType magnification(double sblimit=-1.0e12) const;
+  PosType UnlensedFlux(double sblimit=-1.0e12) const;
+  PosType LensedFlux(double sblimit=-1.0e12) const;
   
   //PosType magnification2() const;
   //PosType magnification3() const;
