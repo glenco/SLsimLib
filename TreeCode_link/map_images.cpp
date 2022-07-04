@@ -1182,3 +1182,55 @@ void ImageFinding::IF_routines::UniformMagCheck(ImageInfo *imageinfo){
 }
 
 
+double Grid::refine_on_surfacebrightness(
+                                           Lens &lens
+                                           ,Source &source
+                                           ){
+
+  double f = 1.0e-3,grad;
+  double total_flux = RefreshSurfaceBrightnesses(&source),flux;
+  if(total_flux <= 0) return 0;
+  double init_flux = total_flux;
+  
+  std::vector<Point *> ps_to_refine;
+  std::list<Branch *>::iterator it;
+  Point *p;
+  size_t N;
+  Point *next;
+
+  int iterations = 0;
+  do{
+    p = i_tree->pointlist->Top();
+    N = i_tree->pointlist->size();
+    ps_to_refine.clear();
+    
+    while(p != nullptr){
+      it = p->leaf->neighbors.begin();
+      grad=0;
+      flux = p->flux();
+      while(it != p->leaf->neighbors.end()){
+        grad = MAX(grad,fabs(flux - (*it)->points->flux()));
+        if(grad > f*total_flux){
+          ps_to_refine.push_back(p);
+          total_flux -= 8./9.*p->flux(); // this leaves
+          break;
+        }
+        ++it;
+      }
+      p=p->next;
+    }
+    if(ps_to_refine.size() > 0){
+      Point *pp = RefineLeaves(&lens,ps_to_refine);
+      for(size_t i=0 ; i < pp->head ; ++i){
+        pp[i].surface_brightness = pp[i].image->surface_brightness = source.SurfaceBrightness(pp[i].image->x);
+        total_flux += pp[i].flux();
+      }
+    }
+    ++iterations;
+  }while(ps_to_refine.size() > 0);
+
+  //std::cout << (total_flux - init_flux)/init_flux << std::endl;
+  
+  return total_flux;
+}
+

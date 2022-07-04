@@ -42,6 +42,12 @@ struct GridMap{
    */
   double RefreshSurfaceBrightnesses(SourceHndl source);
   /**
+   Oversample some pixels where the usrface brightness is not smooth and update surface brighnesses to be the average inside the pixel.
+   
+   May be slow.
+   */
+  double AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source);
+ /**
    * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
    * the new source is added to any sources that were already there.
    *
@@ -136,6 +142,7 @@ private:
   Point *s_points;
   Point_2d center;
   
+  bool to_refine(long i,long j,double total,double f) const ;
   static std::mutex grid_mutex;
 };
 

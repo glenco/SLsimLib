@@ -55,6 +55,13 @@ struct Grid{
   
   double ClearSurfaceBrightnesses();
   
+  /*** Refine the gris based on the smoothness of the surface brightness.
+     Return new total flux.
+   
+   May be slow.
+   */
+  double refine_on_surfacebrightness(Lens &lens,Source &source);
+  
   unsigned long getNumberOfPoints() const;
   /// area of region with negative magnification
   PosType EinsteinArea() const;
@@ -102,7 +109,7 @@ struct Grid{
     map.Clean();
     map.AddGridBrightness(*this);
   }
-  /// map a map of the whole gridded area with given resolution
+  /// make a map of the whole gridded area with given resolution
   PixelMap MapSurfaceBrightness(double resolution);
 
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
@@ -110,12 +117,12 @@ struct Grid{
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
   void find_images(
-  PosType *y_source
-  ,PosType r_source
-  ,int &Nimages
-  ,std::vector<ImageInfo> &imageinfo
-  ,unsigned long &Nimagepoints
-  );
+                   PosType *y_source
+                   ,PosType r_source
+                   ,int &Nimages
+                   ,std::vector<ImageInfo> &imageinfo
+                   ,unsigned long &Nimagepoints
+                   );
  
  
   Grid(Grid &&grid){
