@@ -783,11 +783,6 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 			  if(
 					  ImageFinding::IF_routines::RefinePoint2(imageinfo[i].imagekist->getCurrent(),grid->i_tree
 					  	,imageinfo[i].area,total_area,maxflux,criterion,res_target,nearest)
-           //IF_routines::RefinePoint_sb(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-           //		,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
-           //IF_routines::RefinePoint_smallsize(getCurrentKist(imageinfo[i].imagekist),grid->i_tree
-           //		,imageinfo[i].area,total_area,source->,nearest)
-
 			  ){
 
 				  ++Ncells;
@@ -823,36 +818,6 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 				  }else{
 					  i_points = grid->RefineLeaf(lens,imageinfo[i].imagekist->getCurrent());
 					  ImageFinding::IF_routines::check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
-
-					  /*if(i_points != NULL){
-						  // link new points into image kist and calculate surface brightnesses
-						  for(k=0;k < i_points->head;++k){
-
-							  // put point into image imageinfo[i].imagekist
-
-							  //y[0] = i_points[k].image->x[0];// - source->getTheta()[0];
-							  //y[1] = i_points[k].image->x[1];// - source->getTheta()[1];
-							  i_points[k].surface_brightness = source->SurfaceBrightness(i_points[k].image->x);
-							  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
-
-							  // if new point has flux add to image
-							  if(i_points[k].surface_brightness > 0.0){
-								  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
-								  MoveDownKist(imageinfo[i].imagekist);
-
-								  i_points[k].in_image = YES;
-								  i_points[k].image->in_image = YES;
-
-								  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
-
-							  }else{
-								  i_points[k].in_image =  i_points[k].image->in_image = NO;
-							  }
-
-							  ++number_of_refined;
-						  }
-						  Nold += i_points->head;
-					  }*/
 
 					  imageinfo[i].area +=  pow(imageinfo[i].imagekist->getCurrent()->gridsize,2)
 							  *(imageinfo[i].imagekist->getCurrent()->surface_brightness/maxflux);
@@ -897,8 +862,6 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 			  if(
 					  ImageFinding::IF_routines::RefinePoint2(imageinfo[i].outerborder->getCurrent(),grid->i_tree
 					      ,imageinfo[i].area,total_area,maxflux,criterion,res_target,nearest)
-					  //IF_routines::RefinePoint_sb(getCurrentKist(imageinfo[i].outerborder),grid->i_tree
-					  //    ,imageinfo[i].area,total_area,2*source->getSBlimit(),nearest)
 			  ){
 
 				  if(imageinfo[i].outerborder->getCurrent()->in_image != MAYBE){
@@ -915,34 +878,6 @@ int ImageFinding::IF_routines::refine_grid_on_image(Lens *lens,Source *source,Gr
 						  i_points = grid->RefineLeaf(lens,imageinfo[i].outerborder->getCurrent());
 						  ImageFinding::IF_routines::check_sb_add(source,&imageinfo[i],i_points,maxflux,Nold,number_of_refined);
 					  }
-					  /*if(i_points != NULL){
-						  // link new points into image kist and calculate surface brightnesses
-						  for(k=0;k < i_points->head ;++k){
-
-							  // put point into image imageinfo[i].outerborder
-							  //y[0] = i_points[k].image->x[0] - source->getTheta()[0];
-							  //y[1] = i_points[k].image->x[1] - source->getTheta()[1];
-							  i_points[k].surface_brightness = source->SurfaceBrightness(i_points[k].image->x);
-							  i_points[k].image->surface_brightness  = i_points[k].surface_brightness;
-
-							  // if new point has flux add to image
-							  if(i_points[k].surface_brightness > 0.0){
-								  InsertAfterCurrentKist(imageinfo[i].imagekist,&(i_points[k]));
-								  MoveDownKist(imageinfo[i].imagekist);
-
-								  i_points[k].in_image = YES;
-								  i_points[k].image->in_image = YES;
-								  imageinfo[i].area += pow(i_points[k].gridsize,2)*(i_points[k].surface_brightness/maxflux);
-
-							  }else{
-								  i_points[k].in_image =  i_points[k].image->in_image = NO;
-							  }
-
-							  ++number_of_refined;
-						  }
-						  Nold += i_points->head;
-					  }*/
-
 					  imageinfo[i].ShouldNotRefine = 0;   // mark for another look next time
 
 				  }else{

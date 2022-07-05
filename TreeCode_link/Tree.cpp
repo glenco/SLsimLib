@@ -694,9 +694,8 @@ Point *NewPoint(PosType *x,unsigned long id){
 * pointers to prev and next
 * changes links of image points to follow */
 void SwapPointsInArray(Point *p1,Point *p2){
-  Point pt;
-
   if(p1==p2) return;
+  Point pt;
 
   PointCopy(&pt,p1);
   PointCopy(p1,p2);
