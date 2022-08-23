@@ -341,6 +341,11 @@ public:
                           ,std::vector<double> &source_zs /// source redshifts
                           ,bool RSIverbose = false/// verbose option
                           );
+  
+  void rayshooterInternal(unsigned long Npoints   /// number of points to be shot
+                         ,RAY *rays            /// points on the image plane
+                         );
+                          
 
   void info_rayshooter(RAY &i_point
                       ,std::vector<Point_2d> & ang_positions
@@ -376,30 +381,34 @@ public:
    This is useful for finding the position of weakly lensed images or for refining the image positions that are found on a finite grid.
    
   */
+
   RAY find_image(
             Point &p              ///  p.image->x should be set to source position
-            ,PosType ytol2       /// target tolerance in source position squared
-            ,PosType &dy2        /// final value of Delta y ^2
+            ,double zs            /// redhsift of source
+            ,PosType ytol2        /// target tolerance in source position squared
+            ,PosType &dy2         /// final value of Delta y ^2
             ,bool use_image_guess /// if true p.x[] will be used as a guess for the image position
   );
 
+  /// this version uses the redshift stored in the ray
   RAY find_image(
-            RAY &p       /// p.y[] should be set to source position
-            ,PosType ytol2        /// target tolerance in source position squared
+            RAY &p               /// p.y[] should be set to source position
+            ,PosType ytol2       /// target tolerance in source position squared
             ,PosType &dy2        /// final value of Delta y ^2
-            ,bool use_image_guess  // if true p.x[] will be used as a guess for the image position
+            ,bool use_image_guess  /// if true p.x[] will be used as a guess for the image position
   );
   /// This is the same, but the image is forced to stay within boundary
   RAY find_image(
-            RAY &p       /// p[] is
+            RAY &p                /// p[] is
             ,PosType ytol2        /// target tolerance in source position squared
-            ,PosType &dy2        /// final value of Delta y ^2
+            ,PosType &dy2         /// final value of Delta y ^2
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
   RAY find_image(
-            Point &p       /// p[] is
+            Point &p              /// p[] is
+            ,double zs            /// source redshift
             ,PosType ytol2        /// target tolerance in source position squared
-            ,PosType &dy2        /// final value of Delta y ^2
+            ,PosType &dy2         /// final value of Delta y ^2
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
 
@@ -585,12 +594,18 @@ private:
 	COSMOLOGY cosmo;
 
   template<typename P>
-  void compute_rays_parallel(int start
+  void compute_points_parallel(int start
                              ,int chunk_size
                              ,P *i_point
                              ,double *source_zs
                              ,bool multiZs
                              ,bool verbose = false);
+  
+  // this is a version that uses RAYs instead of Points or LinkedPoints and must be kept sinked with the above
+  void compute_rays_parallel(int start
+                                   ,int chunk_size
+                                   ,RAY *rays
+                                   ,bool verbose = false);
 	
 	//void readCosmology(InputParams& params);
 	//void assignParams(InputParams& params,bool verbose = false);
@@ -865,9 +880,9 @@ inline HaloType* Lens::getMainHalo(std::size_t i)
 
 typedef Lens* LensHndl;
 
-
+// P should be Point or LinkedPoint
 template <typename P>
-void Lens::compute_rays_parallel(int start
+void Lens::compute_points_parallel(int start
                                  ,int chunk_size
                                  ,P *i_points
                                  ,double *source_zs
