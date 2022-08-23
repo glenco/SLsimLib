@@ -1231,7 +1231,7 @@ public:
                 ,PosType r_trunc  /// elliptical truncation radius in Mpc
                 ,PosType gamma    /// power-law index
                 ,float my_fratio /// axis ratio
-                ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                ,float my_pa     /// position angle, 0 has long axis along the vertical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
                 ,float f=10 /// cuttoff radius in units of truncation radius
   );
@@ -1277,7 +1277,7 @@ public:
   float get_pa(){return pa;};
   /// get the truncation radius
   float get_rtrunc(){return x_T;};
-  /// get the pwer-law index
+  /// get the power-law index
   float get_t(){return tt;}
   
   void set_pa(double p){pa = p;}
@@ -1295,7 +1295,7 @@ protected:
   double x_T;       // truncation radius
   double q;
   double q_prime;
-  double SigmaT;   // SigmaT - surface density at trunction radius
+  double SigmaT;   // SigmaT - surface density at truncation radius
   double pa;
   double mass_pi;
   std::complex<double> R; // rotation
@@ -1364,9 +1364,9 @@ public:
   float get_rtrunc(){return rt;};
   /// get the break radius
   float get_rbreak(){return rb;};
-  /// get inner pwer-law index
+  /// get inner power-law index
   float get_t1(){return h1.get_t();}
-  /// get outer pwer-law index
+  /// get outer power-law index
   float get_t2(){return h2.get_t();}
 
   void set_pa(double p){pa = p;}

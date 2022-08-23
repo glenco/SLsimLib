@@ -221,12 +221,25 @@ void ImageFinding::find_crit(
       if(critcurve[jj].imagekist->Nunits() < 1) continue;
       // classify critical curve
       
-      grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
-      Kist<Point>::iterator it = neighbors.TopIt();
-      while((*it).invmag() < 0 && !it.atend() ) --it;
-      if( (*it).inverted()  ) crtcurve[ii].type = CritType::radial;
-      else crtcurve[ii].type = CritType::tangential;
-      
+      {
+        bool catagolized=false;
+        critcurve[jj].imagekist->MoveToTop();
+        while(!catagolized && !(critcurve[jj].imagekist->AtBottom()) ){
+          grid->i_tree->FindAllBoxNeighborsKist(critcurve[jj].imagekist->getCurrent(),&neighbors);
+          Kist<Point>::iterator it = neighbors.TopIt();
+          while(!it.atend() && (*it).invmag() < 0 ) --it;
+          if(it.atend()){ //case where point is on the edge of the field
+            critcurve[jj].imagekist->Down();
+          }else{
+            if( (*it).inverted() ){
+              crtcurve[ii].type = CritType::radial;
+            }else{
+              crtcurve[ii].type = CritType::tangential;
+            }
+            catagolized=true;
+          }
+        }
+      }
       crtcurve[ii].touches_edge = touches_edge[jj];
       
       /************ test line ****************

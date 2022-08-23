@@ -175,7 +175,7 @@ double QuasarLF::getRandomMag(Utilities::RandomNumbers_NR &rand)
 double QuasarLF::getRandomFlux(Band band,Utilities::RandomNumbers_NR &rand)
 {
 	double mag = getRandomMag(rand);
-	return pow(10, -0.4*(mag+48.6))*inv_hplanck*getFluxRatio(band);
+	return mag_to_flux(mag)*getFluxRatio(band);
 }
 
 /** \brief Returns mean color (band - i) for a quasar at the redshift equal to QuasarLF::red

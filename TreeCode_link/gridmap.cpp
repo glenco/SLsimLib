@@ -209,6 +209,81 @@ double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
   
   return total;
 }
+
+double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
+  PosType f=1.0e-4;
+  
+  double resolution = getResolution();
+  double res2 = resolution*resolution;
+  LinkedPoint point;
+
+  double total_flux = RefreshSurfaceBrightnesses(&source)/resolution/resolution;
+  double original_total_flux = total_flux; // ????
+  if(total_flux == 0) return 0;
+  
+  for(long j=0 ; j < Ngrid_init2 ; ++j){
+    size_t k = j*Ngrid_init;
+    for(long i=0 ; i < Ngrid_init ; ++i,++k){
+
+      if(to_refine(i,j,total_flux,f)){
+ 
+        Point_2d ll = *(i_points[k].image);
+        ll[0] -= resolution/2;
+        ll[1] -= resolution/2;
+
+        double new_flux = i_points[k].surface_brightness;
+        double old_flux=0;
+        int n = 1;
+        double original = new_flux;  // ????
+
+        total_flux -= new_flux;
+        while ( fabs(old_flux-new_flux) > 1.0e-3*new_flux ){
+          old_flux = new_flux;
+          n *= 3;
+          
+          double res = resolution/n;
+          new_flux = 0;
+
+          for(int u=0 ; u<n ; ++u){
+            point.x[0] = ll[0] + (0.5 + u)*res;
+            for(int v=0 ; v<n ; ++v){
+               point.x[1] = ll[1] + (0.5 + v)*res;
+
+               lens.rayshooterInternal(1,&point);
+               new_flux += source.SurfaceBrightness(point.image->x);
+            }
+          }
+          
+          new_flux /= n*n;
+        }
+        
+        std::cout << " change in pixel flux = " << (new_flux-original) / original << std::endl;
+        i_points[k].surface_brightness = new_flux;
+        total_flux += new_flux;
+      }
+      
+    }
+  }
+  
+  std::cout << " change in total flux = " << (total_flux-original_total_flux) / original_total_flux << std::endl;
+
+  assert( (total_flux-original_total_flux) <  0.1*original_total_flux);
+  return total_flux * resolution * resolution;
+}
+
+bool GridMap::to_refine(long i,long j,double total,double f) const {
+  double flux = i_points[i + j*Ngrid_init].surface_brightness;
+  
+  for(size_t ii=MAX(i-1,0) ; ii < MIN(i+2,Ngrid_init) ;++ii){
+    for(size_t jj=MAX(j-1,0) ; jj < MIN(j+2,Ngrid_init2) ;++jj){
+      size_t kk = ii + jj*Ngrid_init;
+      if( fabs(flux - i_points[kk].surface_brightness ) / total > f ) return true;
+    }
+  }
+  return false;
+}
+
+
 double GridMap::AddSurfaceBrightnesses(SourceHndl source){
   PosType total=0,tmp;
   
@@ -518,6 +593,7 @@ PosType GridMap::EinsteinArea() const{
 }
 
 PosType GridMap::magnification() const{
+  
   double mag = 0,flux = 0;
   size_t N = Ngrid_init*Ngrid_init2;
   for(size_t i=0;i<N;++i){
@@ -526,6 +602,7 @@ PosType GridMap::magnification() const{
   }
   return flux/mag;
 }
+
 
 PosType GridMap::magnification2() const{
   double mag = 0,flux = 0;

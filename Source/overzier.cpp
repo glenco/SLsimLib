@@ -139,7 +139,7 @@ PosType SourceOverzier::SurfaceBrightness(
 }
 
 PosType SourceOverzier::getTotalFlux() const{
-	return pow(10,-0.4*(48.6 + current.mag))*inv_hplanck;
+	return mag_to_flux(current.mag);
 }
 
 void SourceOverzier::printSource(){
@@ -170,9 +170,7 @@ void SourceOverzier::renormalize_current(){
   float BtoT = getBtoT();
   if(current.Rdisk > 0.0){
     double det = 2*PI/sqrt(current.cxx*current.cyy);
-    current.sbDo = pow(10,-0.4*(current.mag + 48.6))*(1-BtoT)*inv_hplanck/det;
-    //current.sbDo = pow(10,-0.4*(current.mag + 48.6))*0.159148*(1-BtoT)*inv_hplanck
-    // /pow(current.Rdisk,2);
+    current.sbDo = mag_to_flux(current.mag)*(1-BtoT)/det;
   }
   else current.sbDo = 0.0;
 }
@@ -287,7 +285,7 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
 
   if(xlength > 0 && current.sbDo > 0){
     Point_2d z=x;
-    z[1] /= cosi;
+    z[1] /= cosi; // tranformed into face-on
     
     //PosType R = sqrt( cxx*x[0]*x[0] + cyy*x[1]*x[1] + cxy*x[0]*x[1] );
     PosType R = z.length()/current.Rdisk;
@@ -327,12 +325,6 @@ PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
     }
     // spheroid contribution
     sb += spheroid.SurfaceBrightness(x.x)*perturb;
-    
-    
-    // !!!
-    //sb = sbSo*exp(-7.6693*pow((x[0]*x[0] + x[1]*x[1])/Reff/Reff,0.125))
-    //*pow(10,-0.4*48.6)*inv_hplanck;
-
    }
   
   //std::cout << "total sb " << sb << std::endl;

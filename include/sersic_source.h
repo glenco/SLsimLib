@@ -71,12 +71,6 @@ public:
 		updateRadius();
 	}
 	
-//	inline void setMag(PosType x)
-//	{
-//		mag = x;
-//		flux_total = pow(10, -0.4*(mag+48.6)) * inv_hplanck;
-//	}
-	
 	inline void setPA(PosType x)
 	{
 		PA = x;

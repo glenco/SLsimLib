@@ -429,6 +429,9 @@ struct Point: public Point_2d{
   KappaType kappa() const{
     return A.kappa();
   }
+  
+  /// surface_brightness * gridsize * gridsize
+  double flux(){return surface_brightness * gridsize * gridsize;}
 
   double gridsize;           // the size of the most refined grid the point is in
   float surface_brightness;  // the surface brightness at this points
@@ -594,7 +597,6 @@ struct Branch{
 	~Branch();
 
   struct Point *points;        /// pointer to first points in Branch
-  //Kist<Point>::iterator pointit;       /// Kist iterator pointing to first point in branch
   
   unsigned long npoints;
   double center[2];
