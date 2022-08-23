@@ -39,9 +39,10 @@ SourceSersic::SourceSersic(
         )
 : SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z)
 {
+  if(my_q > 1) my_q = 1/my_q;
     sed_type = 1;
     assert(my_Reff > 0);
-    ReSet(my_Reff,my_PA,my_index,my_q,my_z,0);
+    ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,0);
 }
 
 SourceSersic::SourceSersic(const SourceSersic &p):SourceColored(p){
@@ -102,8 +103,8 @@ void SourceSersic::ReSet(
   if(my_theta)
     setTheta(my_theta[0], my_theta[1]);
 
-  if(q > 1)
-    throw std::invalid_argument("Error: q must be < 1!");
+  if(q > 1) q = 1.0/q;
+    //throw std::invalid_argument("Error: q must be < 1!");
 }
 
 SourceSersic::~SourceSersic()
@@ -121,6 +122,7 @@ PosType SourceSersic::SurfaceBrightness(
 	x_new[1] = (x[0]-source_x[0])*sinPA-(x[1]-source_x[1])*cosPA;
 
 	PosType r = sqrt(x_new[0]*x_new[0]+x_new[1]*x_new[1]/q/q);
+  if(r<4.848136811e-9) r = 4.848136811e-9;
 
 	PosType sb = flux_total * I_n * I_q * I_r * exp(-bn*pow(r/Reff,1./index));
   

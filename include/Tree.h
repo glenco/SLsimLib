@@ -16,6 +16,7 @@
 #include "image_info.h"
 #include "utilities_slsim.h"
 #include <future>
+#include "geometry.h"
 
 
 /***** Exported Types *****/
@@ -128,6 +129,9 @@ public:
   void PointsWithinKist_iter(const PosType* center,float rmin,float rmax,Kist<Point> * neighborkist) const;
   Point *NearestNeighborKist(const PosType* center,int Nneighbors,Kist<Point> * neighborkist) const;
   
+  
+  /// true is point is on the edge of the field
+  bool AtEdge(Point *point);
   
   bool Test();
   
@@ -283,7 +287,7 @@ void findborders3(TreeHndl i_tree,OldImageInfo *imageinfo);
 
 // in image_finder_kist.c
 
-void findborders4(TreeHndl i_tree,ImageInfo *imageinfo);
+void findborders4(TreeHndl i_tree,ImageInfo *imageinfo,bool &touches_boundary);
 
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
@@ -325,6 +329,7 @@ void quicksortPoints(Point *pointarray,double (*func)(Point &),unsigned long N);
 template<typename D>
 void quicksort(unsigned long *particles,D *arr,unsigned long N){
   
+  if(N<2) return;
   std::vector<size_t> index(N);
   
   Utilities::sort_indexes(arr,index,N);
@@ -463,7 +468,9 @@ std::vector<double *> concave_hull(std::vector<double *> &P,int k);
 
 
 void contour_ellipse(std::vector<Point_2d> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
+void contour_ellipse(std::vector<RAY> &P, Point_2d center, unsigned long Npoints ,std::vector<Point_2d> &C, double *ellipticity, double *ellipse_area) ;
 Point_2d contour_center(std::vector<Point_2d> &P, unsigned long Npoints);
+Point_2d contour_center(std::vector<RAY> &P, unsigned long Npoints);
 
 long IndexFromPosition(PosType *x,long Npixels,PosType range,const PosType *center);
 void PositionFromIndex(unsigned long i,PosType *x,long Npixels,PosType range,PosType const *center);
@@ -847,12 +854,17 @@ unsigned long prevpower(unsigned long k);
 int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
 int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
 int windings(Point_2d &x,std::vector<Point_2d> &point,PosType *area);
+// this is for the image postions
+int windings(Point_2d &x,std::vector<RAY> &point,PosType *area);
 int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
 int windings2(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<Point *> curve);
+
+//int incurve(PosType x[],std::vector<Point *> &curve);
 /// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
-int incurve(PosType x[],std::vector<Point_2d> curve);
+//int incurve(PosType x[],std::vector<Point_2d> &curve);
+/// returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
+//int incurve(PosType x[],std::vector<RAY> &curve);
 
 unsigned long order_curve4(Point *curve,long Npoints);
 unsigned long order_curve4(Kist<Point> * curve);
@@ -890,5 +902,37 @@ bool tree_count_test(TreeHndl tree);
 bool testLeafs(TreeHndl tree);
 
 void NeighborsOfNeighbors(ListHndl neighbors,ListHndl wholelist);
+
+
+//template <typename Ptype>
+//int incurve(PosType x[],std::vector<Ptype> &curve){
+//
+//  if(curve.size() < 3) return 0;
+//
+//  int number = 0;
+//  size_t i;
+//  
+//  // The reason this does not return the winding number is because horizontal
+//  //  sections of the curve can be overcounted if they are colinear with x
+//  
+//  Ptype point;
+//  for(i=0;i<curve.size()-1;++i){
+//    
+//    if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
+//      if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) <= 1) ++number;
+//    }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
+//      if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) == 2) --number;
+//    }
+//    
+//  }
+//  
+//  if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
+//    if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) <= 1) ++number;
+//  }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
+//    if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) == 2) --number;
+//  }
+//  
+//  return number == 0 ? 0 : 1;
+//}
 
 #endif

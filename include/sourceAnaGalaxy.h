@@ -111,17 +111,17 @@ public:
   /** \brief Finds the closest source to the position theta[] on the sky in Cartesian distance.
    *   Returns the index of that source and its distance from theta[].
    */
-  std::size_t findclosestonsky(PosType theta[],float *radius){
+  std::size_t findclosestonsky(PosType theta[],PosType *radius){
     size_t index;
-    searchtree->NearestNeighbors(theta,1,radius,&index);
+    searchtree->NearestNeighbor(theta,*radius,index);
     return index;
   }
 
   /** \brief finds closest sources to theta on umlensed sky.  "radius" should have a size equal ti the number wanted
    */
-  void findclosestonsky(PosType theta[],std::vector<float> &radius,std::vector<size_t> &indexes){
+  void findclosestonsky(PosType theta[],std::vector<PosType> &radius,std::vector<size_t> &indexes){
     indexes.resize(radius.size());
-    searchtree->NearestNeighbors(theta,radius.size(),radius.data(),indexes.data());
+    searchtree->NearestNeighbors(theta,radius.size(),radius,indexes);
     return;
   }
  

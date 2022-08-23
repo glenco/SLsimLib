@@ -20,6 +20,12 @@
 #ifdef ENABLE_CERF
 #include <cerf.h>
 #endif
+#ifdef ENABLE_EIGEN
+//#include </usr/local/include/eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/StdVector>
+#include <boost/math/special_functions/gamma.hpp>
+#endif
 
 /**
  * \brief A base class for all types of lensing "halos" which are any mass distribution that cause lensing.
@@ -65,6 +71,7 @@ public:
   LensHalo & operator=(const LensHalo &h);
   LensHalo & operator=(LensHalo &&h);
 
+  int tag=0; /// this can be used to tag types of LensHalos
   
   /** get the Rmax which is larger than Rsize in Mpc.  This is the region exterior to which the
    halo will be considered a point mass.  Between Rsize and Rmax the deflection and shear are interpolated.
@@ -675,23 +682,23 @@ protected:
   struct DMDR{
     DMDR(LensHalo *halo): halo(halo){};
     PosType operator()(PosType logR){
-       if(halo->get_flag_elliptical()){
+       //if(halo->get_flag_elliptical()){
         LensHalo::DMDRDTHETA dmdrdtheta(exp(logR),halo);
         //std::cout << " R = " << exp(logR) << std::endl;
         
         if(exp(2*logR) == 0.0) return 0.0;
          return Utilities::nintegrate<LensHalo::DMDRDTHETA,PosType>(dmdrdtheta,0,2*PI,1.0e-7)
          *exp(2*logR);
-      }else{
-        PosType alpha[2] = {0,0},x[2] = {0,0};
-        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
-        
-        x[0] = exp(logR);
-        x[1] = 0;
-        
-        halo->force_halo(alpha,&kappa,gamma,&phi,x);
-        return 2*PI*kappa*exp(2*logR);
-      }
+//      }else{
+//        PosType alpha[2] = {0,0},x[2] = {0,0};
+//        KappaType kappa = 0,gamma[3] = {0,0,0} ,phi=0;
+//
+//        x[0] = exp(logR);
+//        x[1] = 0;
+//
+//        halo->force_halo(alpha,&kappa,gamma,&phi,x);
+//        return 2*PI*kappa*exp(2*logR);
+//      }
     }
   protected:
     LensHalo *halo;
@@ -744,7 +751,7 @@ public:
               ,PosType my_zlens   /// redshift
               ,float my_concentration
               ,float my_fratio    /// axis ratio
-              ,float my_pa        /// position angle, it is off by PI/2 and orientation from some others
+              ,float my_pa        /// position angle, 0 is horizontal
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=EllipMethod::Pseudo
               );
@@ -1385,10 +1392,11 @@ private:
 };
 
 #ifdef ENABLE_CERF
-/**
+/***
+\brief  A class for making elliptical Gaussian lenses.
  
  This class uses the libcerf library (https://jugit.fz-juelich.de/mlz/libcerf).
- It can be installed with homebreww.
+ It can be installed with homebrew and it must be linked by setting the cmake variable ENABLE_CERF = ON
  */
 class LensHaloGaussian : public LensHalo{
 public:
@@ -1416,7 +1424,8 @@ public:
     norm_g = h.norm_g;
     ss = h.ss;
     I = h.I;
-    I_sqpi = h. I_sqpi;
+    I_sqpi = h.I_sqpi;
+    one_sqpi = h.one_sqpi;
   }
   
   LensHaloGaussian &operator=(const LensHaloGaussian &h){
@@ -1434,7 +1443,8 @@ public:
     norm_g = h.norm_g;
     ss = h.ss;
     I = h.I;
-    I_sqpi = h. I_sqpi;
+    I_sqpi = h.I_sqpi;
+    one_sqpi = h.one_sqpi;
     
     return *this;
   }
@@ -1552,6 +1562,7 @@ protected:
   
   std::complex<double> I;
   std::complex<double> I_sqpi;
+  double one_sqpi;
 //  double U1[6] = {1.320522,35.7668,219.031,1540.787,3321.990,36183.31};
 //  double V1[7] = {1.841439,61.57037,364.2191,2186.181,9022.228,24322.84,32066.6};
 //
@@ -1559,7 +1570,408 @@ protected:
 //  double V2[7] = {10.479857,53.992907,170.35400,348.70392,457.33448,352.73063,122.60793};
 };
 
-#endif
+#ifdef ENABLE_EIGEN
+
+/***
+\brief  A class for constructing and approximation to any elliptical profile out of a series of elliptical gaussians.
+ 
+ The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
+ 
+ The profile is fit Nradii proints logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
+ Typically Nradii ~ 2 * Ngaussians.
+ 
+ The mass is normalized so that mass_norm is within the elliptical distance Rnorm.  The total mass with be calculated and can be recovered after construction.
+ 
+ This class uses both the libcerf library (https://jugit.fz-juelich.de/mlz/libcerf).
+ and the eigen library.  They must be installed and linked using the cmake variable ENABLE_CERF = ON and ENABLE_EIGEN=ON
+ */
+
+template <typename P>
+class LensHaloMultiGauss: public LensHalo{
+  
+private:
+  
+  int nn; // number of gaussians
+  int mm; // number of fit radii
+  double q;
+  double pa;
+  double mass_norm;
+  double r_norm;
+  std::vector<double> sigmas;
+  std::vector<double> radii;
+  std::complex<double> Rotation;
+  std::vector<LensHaloGaussian> gaussians;
+  std::vector<double> A;
+  float rms_error;
+  
+public:
+  
+  LensHaloMultiGauss(
+                     double mass_norm  /// mass in Msun at radius Rnorm
+                     ,double Rnorm       /// elliptical radius for normalization of mass
+                     ,P &profile  /// cumulative profile
+                     ,int Ngaussians    /// number of gausians
+                     ,int Nradii    /// number of radii they are fit to
+                     ,PosType r_min
+                     ,PosType r_max
+                     ,PosType my_zlens /// redshift
+                     ,float my_fratio /// axis ratio
+                     ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                     ,const COSMOLOGY &cosmo  /// cosmology
+                     ,float f=10 /// cuttoff radius in units of truncation radius
+                     ,bool verbose = false
+  ):LensHalo(my_zlens,cosmo),nn(Ngaussians),mm(Nradii),q(my_fratio),pa(my_pa)
+  ,mass_norm(mass_norm),r_norm(Rnorm)
+  {
+
+   if(q <= 0){throw std::runtime_error("bad axis ratio"); }
+   if(nn > mm){
+      std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
+      throw std::runtime_error("");
+    }
+    
+    if(q > 1){
+      q = 1/q;
+    }
+    
+    double totalmass=0;
+    calc_masses_scales(profile,nn,mm,r_min,r_max,mass_norm,r_norm
+                       ,totalmass,sigmas,A,rms_error,verbose);
+    
+    LensHalo::setMass(totalmass);
+  
+    // construct Gaussian components
+    for(int i=0 ; i<nn ; ++i){
+      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
+    }
+    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+    Rmax = Rsize = f*r_max;
+  }
+  
+  LensHaloMultiGauss(
+                     double my_mass_norm
+                     ,double Rnorm
+                     ,double my_scale           // radial scale in units of the scale that was used to produce relative_scales
+                     ,const std::vector<double> &relative_scales
+                     ,const std::vector<double> &relative_masses
+                     ,PosType my_zlens /// redshift
+                     ,float my_fratio /// axis ratio
+                     ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                     ,const COSMOLOGY &cosmo  /// cosmology
+                     ,float f=100 /// cuttoff radius in units of truncation radius
+                     ,bool verbose = false
+  ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(my_mass_norm),r_norm(Rnorm)
+  
+  {
+
+    if(q <= 0){throw std::runtime_error("bad axis ratio"); }
+    if(relative_scales.size() != relative_masses.size()){
+      throw std::runtime_error("arrays are wrong size.");
+    }
+    nn = relative_scales.size();
+    q = abs(q);
+    if(q > 1){
+      q = 1/q;
+    }
+    mm=0;
+    
+    sigmas = relative_scales;
+    for(double &s : sigmas) s *= my_scale;
+
+    
+    A = relative_masses;
+    double tmp_mass = 0;
+    
+    for(int n=0 ; n<nn ; ++n){
+      tmp_mass += relative_masses[n] * ( 1 - exp(-r_norm*r_norm / 2 / (sigmas[n]*sigmas[n]) ) );
+    }
+    for(auto &a : A) a *= my_mass_norm/tmp_mass;
+
+ 
+    double totalmass = 0;
+    for(auto a : A) totalmass += a;
+    LensHalo::setMass(totalmass);
+  
+    // construct Gaussian components
+    for(int i=0 ; i<nn ; ++i){
+      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
+    }
+    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+    Rmax = Rsize = f*sigmas.back();
+  }
+
+  /// reset the position angle
+  void set_pa(double my_pa){
+    pa = my_pa;
+    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+  }
+  /***
+    This is a static function that can be used to find the masses and scales for the gaussians which can
+   then be fed into the scond constructor with a rescaling.  This avoids having to recalculate them when the same profile is used multiple times.
+   
+   For example, an NFW can be calculated here with a scale size 1 and an arbitrary mass.  Then it can be used in the constructor with different scale sizes and masses.
+   
+   <p>
+   MultiGauss::sersic profile(1,1);
+   double mass_out;
+   float rms_error;
+   std::vector<double> scales,masses;
+   LensHaloMultiGauss<MultiGauss::sersic>::calc_masses_scales(profile, 13, 25, 0.01,3,0.5,1,mass_out,scales,masses,rms_error);
+   LensHaloMultiGauss<MultiGauss::sersic> halo1(mass,rscale,scales,masses,zl,q,-pa,cosmo);
+   LensHaloMultiGauss<MultiGauss::sersic> halo2(mass/2,0.1*rscale,scales,masses,zl2,q2,-pa2,cosmo);
+   <\p>
+   */
+  static void calc_masses_scales(P &profile  /// cumulative profile
+                                 ,int Ngaussians    /// number of gausians
+                                 ,int Nradii    /// number of radii they are fit to
+                                 ,PosType r_min
+                                 ,PosType r_max
+                                 ,double mass_norm
+                                 ,double r_norm
+                                 ,double &totalmass_out
+                                 ,std::vector<double> &scales
+                                 ,std::vector<double> &masses
+                                 ,float &rms_error
+                                 ,bool verbose=false
+                                 ){
+    // make logorithmic
+    scales.resize(Ngaussians);
+    {
+      double tmp = pow(r_max/r_min,1.0/(Ngaussians-2));
+      scales[0] = r_min/5;
+      scales[1] = r_min;
+      for(int i=2 ; i < Ngaussians ; ++i){
+        scales[i] = tmp*scales[i-1];
+      }
+    }
+    
+    std::vector<double> radii(Nradii);
+    {
+      double tmp = pow(r_max/r_min,1.0/(Nradii-1));
+      radii[0] = r_min;
+      for(int i=1 ; i < Nradii ; ++i){
+        radii[i] = tmp*radii[i-1];
+      }
+    }
+    
+    Eigen::MatrixXd M(Nradii,Ngaussians);
+    
+    // first radius is fit to mass within radius
+    {
+      double cp = profile.cum(radii[0]);
+      for(int n=0 ; n < Ngaussians ; ++n){
+        M(0,n) = 2*PI*scales[n] * scales[n]
+        * ( 1 -exp(-radii[0]*radii[0] / 2 / scales[n] /scales[n]) )
+        / cp ;
+      }
+    }
+    
+    // all others are fit to relative density
+    for(int m=1 ; m < Nradii ; ++m){
+      double p = profile(radii[m]);
+      for(int n=0 ; n < Ngaussians ; ++n){
+        M(m,n) = exp( - radii[m]*radii[m] / 2 / scales[n] /scales[n])
+        / p ;
+      }
+    }
+    
+    // invert M
+    
+    masses.resize(Ngaussians);
+    {
+      std::vector<double> b(Nradii,1);
+      Eigen::Map<Eigen::VectorXd> v(b.data(),Nradii);
+      Eigen::Map<Eigen::VectorXd> a(masses.data(),Ngaussians);
+      
+      //M = M.inverse();
+      a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
+      
+      if(verbose) std::cout << "test " << std::endl << M*a << std::endl;
+    }
+    
+    // tests
+    {
+      rms_error=0;
+      for(int m=0 ; m < 1 ; ++m){
+        double surf=0;
+        for(int n=0 ; n < Ngaussians ; ++n){
+          surf += masses[n] * scales[n] * scales[n]
+          * 2*PI*( 1 - exp(-radii[m]*radii[m] / 2 / scales[n] /scales[n]) );
+        }
+        double tmp = profile.cum(radii[m]);
+        if(verbose) std::cout << tmp << " "  << surf << std::endl;
+        
+        rms_error += (surf - tmp )*(surf - tmp) / tmp / tmp;
+      }
+      
+      for(int m=1 ; m < Nradii ; ++m){
+        double surf=0;
+        for(int n=0 ; n < Ngaussians ; ++n){
+          surf += masses[n] * exp(-radii[m]*radii[m] / 2 / scales[n] /scales[n]) ;
+        }
+        double tmp = profile(radii[m]);
+        if(verbose) std::cout << tmp << " "  << surf << std::endl;
+        
+        rms_error += (surf - tmp )*(surf - tmp ) / tmp /tmp;
+      }
+      rms_error = sqrt(rms_error)/Ngaussians;
+      if(verbose) std::cout << " MSE error " << rms_error << std::endl;
+    }
+    
+    // find masses of Gaussian components
+   {
+      double total = 0,mass_tmp = 0;
+      for(int n=0 ; n<Ngaussians ; ++n){
+        total += scales[n]*scales[n]*masses[n];
+        mass_tmp += scales[n]*scales[n]*masses[n]
+        *( 1 - exp(-r_norm*r_norm / 2 / scales[n] /scales[n]) );
+      }
+      
+      {  // convert to mass units of each component
+        double tmp = (mass_norm/mass_tmp);
+        // rescale so total mass is correct
+        for(int n=0 ; n<Ngaussians ; ++n) masses[n] *= tmp*scales[n]*scales[n];
+      }
+     
+   }
+    totalmass_out = 0;
+    for(int n=0 ; n<Ngaussians ; ++n) totalmass_out += masses[n];
+  }
+  
+  double profile(double r){
+    double sigma=0;
+    for(int n=0 ; n < nn ; ++n){
+      sigma += A[n] * exp(-r*r / 2 / sigmas[n] /sigmas[n]) /2/PI/sigmas[n] /sigmas[n];
+    }
+    
+    return sigma;
+  }
+  
+  /// mass within elliptical radius
+  double mass_cum(double r){
+    double mass_tmp=0;
+    for(int n=0 ; n<nn ; ++n) mass_tmp += A[n]*( 1 - exp(-r*r / 2 / sigmas[n] /sigmas[n]) );
+    
+    return mass_tmp;
+  }
+  
+  /// returns the RMS relative error for the fit points in the profile
+  float error(){
+    return rms_error;
+  }
+  
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1){
+    
+    std::complex<PosType> z(xcm[0],xcm[1]);
+    
+    if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
+                   ,subtract_point,screening)) return;
+    
+    z = z * std::conj(Rotation);
+    
+    std::complex<PosType> a=0,g=0;
+    std::complex<PosType> at,gt;
+    double kappat;
+    
+    for(auto &h : gaussians){
+      h.deflection(z,at,gt,kappat);
+      a += at;
+      g += gt;
+      *kappa += kappat;
+    }
+    
+    a = std::conj(a) * Rotation;
+    g = std::conj(g) * Rotation * Rotation;
+    
+    alpha[0] += a.real();
+    alpha[1] += a.imag();
+    gamma[0] += g.real();
+    gamma[1] += g.imag();
+    
+    assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+    assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+  }
+  
+
+};
+
+/// profiles that can be used in LensHeloMultiGauss
+namespace MultiGauss{
+struct POWERLAW{
+
+  POWERLAW(
+           float g  // power-law index of surfcae density
+  ){
+    if(g <= -2){
+      std::cerr << "power-law index <= 2 give unbounded mass!" << std::endl;
+      throw std::runtime_error("bad mass");
+    }
+    gamma = g;
+  }
+  double operator()(double r){return pow(r,gamma);}
+  double cum(double r){return 2*PI*pow(r,gamma + 2)/(gamma+2);}
+  
+  void reset(float g){gamma = g;}
+  float gamma;
+};
+
+struct SERSIC{
+  SERSIC(){reset(0,0);}
+  SERSIC(float nn,float Re){
+     reset(nn,Re);
+   }
+  double cum(double r){
+    return cum_norm * boost::math::tgamma_lower(2*n, bn*pow(r/re,t) );
+  }
+  double operator()(double r){ //check that these are consistant
+    return exp(-bn*pow(r/re,t) );
+  }
+  
+  void reset(float nn,float Re){
+    re = Re;
+    n = nn;
+    bn = 1.9992*n - 0.3271;  // approximation valid for 0.5 < n < 8
+    t = 1.0/n;
+    cum_norm = 2*PI*n/pow(bn,2*n)*re*re;
+  }
+  
+private:
+  float t;
+  float re;
+  float n;
+  float bn;
+  float cum_norm;
+};
+
+struct NFW{
+  NFW(float rs):rs(rs){
+  }
+  double cum(double r){
+    double x =r/rs;
+    
+    double ans=log(x/2);
+    if(x==1.0) ans += 1.0;
+    if(x>1.0) ans += 2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);
+    if(x<1.0) ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);
+    
+    return 2*PI*rs*rs*ans;
+  }
+  double operator()(double r){ //check that these are consistant
+    double x =r/rs;
+    
+    if(x==1.0){return 1.0/3.0;}
+    if(x>1.0) return (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1);
+    return (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1);
+  }
+  
+  void reset(double Rs){rs = Rs;}
+  
+  float rs;
+};
+}
+#endif // eigen
+
+#endif // libcerf
 
 
 /**

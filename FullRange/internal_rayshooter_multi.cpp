@@ -185,22 +185,21 @@ void Lens::rayshooterInternal(
  
  */
 void Lens::info_rayshooter(
-                           Point *i_point     /// point to be shot, must have image point linked
-                           ,std::vector<Point_2d> & ang_positions  /// angular positions on each plane
-                           ,std::vector<KappaType> & kappa_on_planes          /// convergence on each plane
+                           RAY &ray     /// ray, ray.x needs to be set, all other quantities will be calculated
+                           ,std::vector<Point_2d> &ang_positions  /// angular positions on each plane
+                           ,std::vector<KappaType> &kappa_on_planes          /// convergence on each plane
                            ,std::vector<std::vector<LensHalo*>> & halo_neighbors  /// neighboring halos within rmax of ray on each plane
-                           ,LensHalo **halo_max
-                           ,KappaType &kappa_max
-                           ,KappaType gamma_max[]
-                           ,PosType rmax  /// distance from ray on each plane, units depend on mode parameter
+                           ,LensHalo &halo_max                /// halo with the larges kappa
+                           ,KappaType &kappa_max              /// the kappa from that halo
+                           ,KappaType gamma_max[]             /// shear from that halo
+                           ,PosType rmax
+                           ,int tag
                            ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
                            ,bool verbose
 )
 {
-  
+ 
   // !!! would like to find the maximum contributing halo so that its contribution can be subtracted from the total
-  
-  std::cout << " Warning : Lens::info_rayshooter() has not been fully tested. " << std::endl;
   
   double source_z;
   
@@ -251,15 +250,18 @@ void Lens::info_rayshooter(
   
   PosType *theta;
  
-  kappa_max = -1.0;
+  kappa_max = -100.0;
+  gamma_max[0] = 0;
+  gamma_max[1] = 0;
   
   // find angular position on first lens plane
-  i_point->image->x[0] = i_point->x[0] ;
-  i_point->image->x[1] = i_point->x[1] ;
+  ray.y = ray.x;
+  //i_point.image->x[0] = i_point.x[0] ;
+  //i_point.image->x[1] = i_point.x[1] ;
   
-  theta = i_point->image->x;
-  theta[0] = i_point->x[0];
-  theta[1] = i_point->x[1];
+  theta = ray.y.x;
+  theta[0] = ray.x[0];
+  theta[1] = ray.x[1];
 
   // Initializing SumPrevAlphas :
   SumPrevAlphas[0] = theta[0];
@@ -272,11 +274,14 @@ void Lens::info_rayshooter(
   phi = 0.0;
   
   // Default values :
-  i_point->A.setToI();
-  i_point->dt = 0;
+  ray.A.setToI();
+  ray.dt = 0;
   
+ 
   // Begining of the loop through the planes :
   // Each iteration leaves i_point[i].image on plane (j+1)
+  
+  long imax_halo=-1,jmax_halo=-1;
   
   for(j = 0; j < jmax ; ++j)
   {
@@ -307,12 +312,13 @@ void Lens::info_rayshooter(
     
     lensing_planes[j]->getNeighborHalos(xx,tmp_r,halo_neighbors[j]);
     
-    ang_positions[j][0] = i_point->image->x[0];
-    ang_positions[j][1] = i_point->image->x[1];
+    ang_positions[j][0] = ray.y[0];
+    ang_positions[j][1] = ray.y[1];
  
    
     // Find the halo with the largest kappa
     for(int ii=0;ii<halo_neighbors[j].size();++ii){
+      
       alpha_tmp[0] = alpha_tmp[1] = 0.0;
       kappa_tmp = 0.0;
       gamma_tmp[0] = gamma_tmp[1] = gamma_tmp[2] = 0.0;
@@ -327,11 +333,15 @@ void Lens::info_rayshooter(
       
       halo_neighbors[j][ii]->force_halo(alpha_tmp,&kappa_tmp,gamma_tmp,&phi_tmp,x_tmp,false);
       kappa_tmp /= SigmaCrit;
-      if(kappa_tmp > kappa_max){
-        kappa_max = kappa_tmp;
-        *halo_max = halo_neighbors[j][ii];
-        gamma_max[0] = gamma_tmp[0]/SigmaCrit;
-        gamma_max[1] = gamma_tmp[1]/SigmaCrit;
+      
+      if(tag==0 || halo_neighbors[j][ii]->tag == tag ){
+        if(kappa_tmp > kappa_max){
+          kappa_max = kappa_tmp;
+          imax_halo=ii;
+          jmax_halo=j;
+          gamma_max[0] = gamma_tmp[0]/SigmaCrit;
+          gamma_max[1] = gamma_tmp[1]/SigmaCrit;
+        }
       }
     }
   
@@ -350,15 +360,17 @@ void Lens::info_rayshooter(
     theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
 
     // Sum_{k=1}^{j} Dl[k] A^k.G^k
-    SumPrevAG -= (G * (i_point->A)) ;
+    SumPrevAG -= (G * (ray.A)) ;
     
     // Computation of the "plus quantities", i.e. the  next plane quantities :
-    i_point->A = i_point->A * bb + SumPrevAG * aa;
+    ray.A = ray.A * bb + SumPrevAG * aa;
     
   } // End of the loop going through the planes
   
+  if(imax_halo !=-1 && jmax_halo != -1)
+    halo_max = *(halo_neighbors[jmax_halo][imax_halo]);
+
   return;
-  
 }
 
 /**  \brief Find an image position for a source position.
@@ -414,11 +426,11 @@ RAY Lens::find_image(
     std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
   }
 
-  int MaxSteps = 10;
+  int MaxSteps = 100;
   
   Point_2d yo = *(p.image),dx;
 
-  std::cout << " yo = " << yo << std::endl;
+  //std::cout << " yo = " << yo / arcsecTOradians << std::endl;
   if(!use_image_guess) p = yo;   // in this case the input image position is not used
   
   rayshooterInternal(1,&p);
@@ -437,38 +449,46 @@ RAY Lens::find_image(
 
     dy = *(p.image) - yo;
   }
-  std::cout << " dy = " << dy / arcsecTOradians << std::endl;
   
   dy2 = dy.length_sqr();
-
+ 
+  //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+ 
+  LinkedPoint pt;
+  
   int steps = 0;
-  double f = 1 , dy2_tmp;
+  double f = 1 , dy2_tmp,ddy2=ytol2;
   while(dy2 > ytol2 && steps < MaxSteps){
     
+    ++steps;
     dx = p.A.inverse() * dy * f;
 
-    p.x[0] = p.x[0] - dx[0];
-    p.x[1] = p.x[1] - dx[1];
+    pt.x[0] = p.x[0] - dx[0];
+    pt.x[1] = p.x[1] - dx[1];
 
-    rayshooterInternal(1,&p);
+    rayshooterInternal(1,&pt);
     
-    if(use_image_guess && p.invmag()*invmago < 0){ // prevents image from changin pairity
+    if(use_image_guess && pt.invmag()*invmago < 0){ // prevents image from changin pairity
       f /= 2;
     }else{
 
-      dy_tmp = *(p.image) - yo;
-      std::cout << " dy = " << dy / arcsecTOradians << std::endl;
-      
+      dy_tmp = *(pt.image) - yo;
       dy2_tmp = dy.length_sqr();
-      
+            
       if(dy2_tmp > dy2){
         f /= 2;
+        if(f < 0.01) break;
       }else{
         f = 1;
         dy2= dy2_tmp;
         dy = dy_tmp;
+        
+        ddy2 = (*(pt.image) -  *(p.image)).length_sqr();
+        p = pt;
+        //if(ddy2 < ytol2*1.0e-9) break;
       }
       
+      //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
     }
   }
   

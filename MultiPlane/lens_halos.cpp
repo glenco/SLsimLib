@@ -19,6 +19,7 @@ LensHalo::LensHalo(){
   Dist = -1;
   //stars_N =0.0;
   zlens = 0.0;
+  tag=0;
 }
 
 LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
@@ -29,6 +30,7 @@ LensHalo::LensHalo(PosType z,const COSMOLOGY &cosmo){
   Dist = cosmo.angDist(z);
   //stars_N =0.0;
   zlens = z;
+  tag=0;
 }
 
 //LensHalo::LensHalo(InputParams& params,COSMOLOGY &cosmo,bool needRsize){
@@ -100,6 +102,8 @@ LensHalo::LensHalo(const LensHalo &h){
   elliptical_flag = h.elliptical_flag;
   switch_flag = h.switch_flag;
   //Nmod = h.Nmod;
+  
+  tag = h.tag;
 };
 
 LensHalo & LensHalo::operator=(LensHalo &&h){
@@ -156,6 +160,7 @@ LensHalo & LensHalo::operator=(LensHalo &&h){
     switch_flag = h.switch_flag;
     //Nmod = h.Nmod;
     
+    tag = h.tag;
   }
   return *this;
 };
@@ -216,6 +221,7 @@ LensHalo & LensHalo::operator=(const LensHalo &h){
   elliptical_flag = h.elliptical_flag;
   switch_flag = h.switch_flag;
   //Nmod = h.Nmod;
+  tag = h.tag;
   
   return *this;
 };
@@ -382,14 +388,15 @@ LensHaloNFW::LensHaloNFW()
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration
                          ,float my_fratio,float my_pa,const COSMOLOGY &cosmo
                          ,EllipMethod my_ellip_method
-                         ){
+                         ):LensHalo(my_zlens,cosmo)
+{
 
   LensHalo::setRsize(my_Rsize);
   LensHalo::setMass(my_mass);
-  LensHalo::setZlens(my_zlens,cosmo);
 
-
-  fratio=my_fratio, pa=my_pa, main_ellip_method=my_ellip_method;
+  fratio=my_fratio;
+  pa= PI/2 - my_pa;
+  main_ellip_method=my_ellip_method;
   rscale = LensHalo::getRsize()/my_concentration;
   xmax = LensHalo::getRsize()/rscale;
   make_tables();
@@ -1338,9 +1345,11 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
 {
 
   I_sqpi = I / sqrt(PI);
+  one_sqpi = 1.0 / sqrt(PI);
   
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
+  q = abs(q);
   if(q > 1){
     q = 1/q;
   }
@@ -1353,11 +1362,11 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
   
   ss = sqrt(2)*Rhight;
   if(q != 1.0){
-    norm = - SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
-    norm_g = norm /ss /sqrt(q_prime) ;
+    norm = SigmaO * sqrt(2*PI / q_prime) * Rhight / q;
+    norm_g = norm /ss /sqrt(q_prime);  // norm x dzz/dz
   }else{
     // normalization
-    norm = mass / sqrt(PI);
+    norm = -mass / PI;
     norm_g = 0;
   }
   
@@ -1404,6 +1413,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
   zz.imag(abs(zz.imag()));
 
   double x_e2 = (q*q*z.real()*z.real() + z.imag()*z.imag()) / ss / ss;
+  double exp_x_e2 = exp(-x_e2);
 
   sigma = SigmaO * exp(- x_e2 );
   
@@ -1414,11 +1424,10 @@ void LensHaloGaussian::deflection(std::complex<double> &z
   }
    
   if(q==1.0){
-    a = norm / z * ( 1 - exp( - x_e2 ) );
-    g = a / z  + norm / z * exp( - x_e2 ) * (q*q*z.real() - I*z.imag());
+    a = norm / z * ( 1 - exp_x_e2 );
+    g = a / z  - norm / z * exp_x_e2 * (z.real() - I*z.imag())/ss/ss;
   }else{
     
-    //std::complex<double> zz2 = zz*zz;
     std::complex<double> b = sqrt(x_e2 - zz*zz);
     
     std::complex<double> wfzz = wF(zz);
@@ -1428,16 +1437,18 @@ void LensHaloGaussian::deflection(std::complex<double> &z
     // this is the correct result in all quadrants
     //a =  norm * sqrt(z*z)/ z
     //* ( sqrt(-zz2)/sqrt(zz2)*wF(I*sqrt(-zz2)) - b/(sqrt(zz2 - x_e2))*wF(I*b) * exp(- x_e2 ));
-    a = - norm * I * ( wfzz - wfib * exp(- x_e2 ));
+    a = norm * I * ( wfzz - wfib * exp_x_e2);
   
-    std::complex<double> dx_e2dzz = q*q*zz.real() - I*zz.imag();
+    std::complex<double> dx_e2dzz = (q*q*abs(z.real()) - I*abs(z.imag()))*sqrt(q_prime)/ss;
   
-    g = norm_g * I * ( 2.0*(I_sqpi - z*wfzz)
-                    - ( (I_sqpi - z*wfib) * I * (dx_e2dzz - 2.0*zz)/b
-                       + wfib*dx_e2dzz)*exp(- x_e2 )
+    g = -norm_g * I * ( 2.0*(I_sqpi - zz*wfzz)
+                    + ( (1/sqrt(PI) - b*wfib) * (dx_e2dzz - 2.0*zz)/b
+                    + wfib*dx_e2dzz ) * exp_x_e2
                     );
 
-    if(z.real() < 0 && z.imag() < 0) a *= -1.0;
+    if(z.real() < 0 && z.imag() < 0){
+      a *= -1.0;
+    }
     if(z.real() > 0 && z.imag() < 0){
       a = std::conj(a);
       g = std::conj(g);
@@ -1447,6 +1458,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
       g = std::conj(g);
     }
   }
+  
 }
 
 std::complex<double> LensHaloGaussian::wF(std::complex<double> z) const{

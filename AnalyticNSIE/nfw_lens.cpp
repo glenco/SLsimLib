@@ -42,15 +42,14 @@ KappaType LensHaloNFW::kappaNFW(PosType *x,PosType Rtrunc,PosType mass,PosType r
 	if(r>=Rtrunc) return 0.0;
 	if(r < 1.0e-4) r=1.0e-4;
 
-	PosType y,b;
+	PosType b=1.0;
 
-	b=1.0;
-	y = Rtrunc/r_scale;
-	b/= gfunction(y);
-	y = r/r_scale;
-	b*= ffunction(y);
+	b /= gfunction(Rtrunc/r_scale);
+	b *= ffunction(r/r_scale);
 
-	return b*mass/(2*PI*pow(r_scale,2)*Sigma_crit);
+	double tmp = b*mass/(2*PI*pow(r_scale,2)*Sigma_crit);
+  if(tmp < 0) return 0;  // why is this necessary ???
+  return tmp;
 }
 
 /// Shear for and NFW halo. this might have a flaw in it

@@ -164,6 +164,7 @@ public:
   void AddCurve(ImageInfo *curve,double value);
   void AddCurve(Kist<Point> *imagekist,PosType value);
   void AddCurve(std::vector<Point_2d> &curve,double value);
+  void AddCurve(std::vector<RAY> &curve,double value);
   
 	void drawline(double x1[],double x2[],double value);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
@@ -230,9 +231,9 @@ public:
   long find_index(PosType const x[]) const;
   
   /// get the index for a position, returns -1 if out of map, this version returns the 2D grid coordinates
-  long find_index(PosType const x,PosType const y,long &ix,long &iy) const;
+  long find_index(PosType x,PosType y,long &ix,long &iy) const;
   /// get the index for a position, returns -1 if out of map
-  long find_index(PosType const x,PosType const y) const;
+  long find_index(PosType x,PosType y) const;
   
   /// get the index for a position, returns -1 if out of map
   void find_position(PosType x[],std::size_t const index) const;
@@ -365,19 +366,64 @@ public:
 
   /// add a heaader keyword that will appear in fits output
    void addheader(std::string label,long value,std::string comment){
-     headers_long.push_back(std::make_tuple(label,value,comment));
+     bool found = false;
+     for(auto  &a : headers_long){
+       if(std::get<0>(a) == label){
+         std::get<1>(a)=value;
+         std::get<2>(a)=comment;
+         found = true;
+         break;
+       }
+     }
+     if(!found) headers_long.push_back(std::make_tuple(label,value,comment));
    }
    void addheader(std::string label,size_t value,std::string comment){
-     headers_long.push_back(std::make_tuple(label,value,comment));
+     bool found = false;
+     for(auto  &a : headers_long){
+       if(std::get<0>(a) == label){
+         std::get<1>(a)=value;
+         std::get<2>(a)=comment;
+         found = true;
+         break;
+       }
+     }
+     if(!found) headers_long.push_back(std::make_tuple(label,value,comment));
    }
    void addheader(std::string label,float value,std::string comment){
-     headers_float.push_back(std::make_tuple(label,value,comment));
+     bool found = false;
+     for(auto  &a : headers_float){
+       if(std::get<0>(a) == label){
+         std::get<1>(a)=value;
+         std::get<2>(a)=comment;
+         found=true;
+         break;
+       }
+     }
+     if(!found) headers_float.push_back(std::make_tuple(label,value,comment));
    }
   void addheader(std::string label,double value,std::string comment){
-    headers_float.push_back(std::make_tuple(label,value,comment));
+    bool found = false;
+    for(auto  &a : headers_float){
+      if(std::get<0>(a) == label){
+        std::get<1>(a)=value;
+        std::get<2>(a)=comment;
+        found=true;
+        break;
+      }
+    }
+    if(!found) headers_float.push_back(std::make_tuple(label,value,comment));
   }
-  void addheader(std::string label,std::string &value,std::string comment){
-      headers_string.push_back(std::make_tuple(label,value,comment));
+  void addheader(std::string label,std::string value,std::string comment){
+    bool found = false;
+    for(auto  &a : headers_string){
+      if(std::get<0>(a) == label){
+        std::get<1>(a)=value;
+        std::get<2>(a)=comment;
+        found=true;
+        break;
+      }
+    }
+    if(!found) headers_string.push_back(std::make_tuple(label,value,comment));
   }
 
 private:
@@ -440,9 +486,9 @@ private:
   
 };
 
-typedef enum {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z} Telescope;
+enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z};
 
-typedef enum {counts_x_sec, flux} unitType;
+enum class UnitType {counts_x_sec, flux} ;
 
 /** 
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -472,7 +518,7 @@ public:
     /// pixel size in radians
   float getPixelSize() const {return pix_size;}
   void setPixelSize(float pixel_size){pix_size=pixel_size;}
-  float getBackgroundNoise(float resolution, unitType unit = counts_x_sec);
+  float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec);
 	std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file, float os = 1.);
   void setNoiseCorrelation(std::string nc_file);

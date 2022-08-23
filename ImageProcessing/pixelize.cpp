@@ -614,6 +614,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
         map[*it] += sb*area;
       }
     }
+    
   }while(--listit);
   
   return;
@@ -958,6 +959,11 @@ void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
   
   cpfits.writeKey("UNITS",to_string(units),"");
   
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+
   for(auto &h : headers_float){
     cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
   }
@@ -991,10 +997,10 @@ void PixelMap::printFITS(std::string filename
   cpfits.writeKey("CRPIX2", 0.5*(naxex[1]+1), "y-coordinate of reference pixel");
   cpfits.writeKey("CRVAL1", center[0]/degreesTOradians, "RA, degrees");
   cpfits.writeKey("CRVAL2", center[1]/degreesTOradians, "DEC, degrees");
-  cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
   //cpfits.writeKey("CDELT1", 180*resolution/PI, "partial of first axis coordinate w.r.t. x");
   //cpfits.writeKey("CDELT2", 180*resolution/PI, "partial of second axis coordinate w.r.t. y");
   cpfits.writeKey("CROTA2", 0.0, "");
@@ -1384,6 +1390,23 @@ void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
   
 }
 
+void PixelMap::AddCurve(std::vector<RAY> &curve,double value){
+  PosType x[2];
+  
+  if(curve.size() == 0 ) return;
+  
+  x[0] = curve[0].x[0];
+  x[1] = curve[0].x[1];
+  for(size_t ii=1;ii<curve.size();++ii){
+    drawline(x,curve[ii].x.x,value);
+    x[0] = curve[ii].x[0];
+    x[1] = curve[ii].x[1];
+  }
+  drawline(x,curve[0].x.x,value);
+  
+  return;
+  
+}
 
 /**
  *  \brief Fills in pixels where the image plane points in the grid are located with the value given.
@@ -1873,7 +1896,7 @@ long PixelMap::find_index(PosType const x[],long &ix,long &iy) const{
   return ix + Nx*iy;
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y,long &ix,long &iy) const{
+long PixelMap::find_index(PosType x,PosType y,long &ix,long &iy) const{
   
   //ix = (long)((x - map_boundary_p1[0])/resolution + 0.5);
   //iy = (long)((y - map_boundary_p1[1])/resolution + 0.5);
@@ -1898,7 +1921,7 @@ long PixelMap::find_index(PosType const x[]) const{
   return find_index(x,ix,iy);
 }
 /// get the index for a position, returns -1 if out of map
-long PixelMap::find_index(PosType const x,PosType const y) const{
+long PixelMap::find_index(PosType x,PosType y) const{
   long ix,iy;
   return find_index(x,y,ix,iy);
 }
@@ -2132,20 +2155,21 @@ PosType PixelMap::AddSource(Source &source){
   Point_2d s_center;
   source.getTheta(s_center);
   
-  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
-  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
-  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
-  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+  if( (s_center[0] + source.getRadius()) < map_boundary_p1[0] ) return 0.0;
+  if( (s_center[0] - source.getRadius()) > map_boundary_p2[0] ) return 0.0;
+  if( (s_center[1] + source.getRadius()) < map_boundary_p1[1] ) return 0.0;
+  if( (s_center[1] - source.getRadius()) > map_boundary_p2[1] ) return 0.0;
 
   PosType y[2];
   PosType tmp = resolution*resolution;
   PosType total = 0;
   
-  
+  double sb;
   for(size_t index =0 ;index < map.size(); ++index){
     find_position(y,index);
-    map[index] += source.SurfaceBrightness(y)*tmp;
-    total += source.SurfaceBrightness(y)*tmp;
+    sb = source.SurfaceBrightness(y);
+    map[index] += sb*tmp;
+    total += sb*tmp;
   }
   
   return total;
@@ -2157,10 +2181,10 @@ PosType PixelMap::AddSource(Source &source,int oversample){
   Point_2d s_center;
   source.getTheta(s_center);
   
-  if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
-  if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
-  if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
-  if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+  if( (s_center[0] + source.getRadius()) < map_boundary_p1[0] ) return 0.0;
+  if( (s_center[0] - source.getRadius()) > map_boundary_p2[0] ) return 0.0;
+  if( (s_center[1] + source.getRadius()) < map_boundary_p1[1] ) return 0.0;
+  if( (s_center[1] - source.getRadius()) > map_boundary_p2[1] ) return 0.0;
 
   PosType y[2],x[2],bl;
   PosType tmp_res = resolution*1.0/oversample;
