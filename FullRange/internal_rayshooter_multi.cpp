@@ -687,6 +687,10 @@ RAY Lens::find_image(
     
     ++steps;
     dx = p.A.inverse() * dy * f;
+    while(dx.length_sqr() > dy2*1.0e2 ){ // don't take too big a step at once
+      dx /= 2;
+      f /= 2;
+    }
 
     pt.x[0] = p.x[0] - dx[0];
     pt.x[1] = p.x[1] - dx[1];
@@ -776,6 +780,10 @@ RAY Lens::find_image(
     
     ++steps;
     dx = p.A.inverse() * dy * f;
+    while(dx.length_sqr() > dy2*1.0e2 ){ // don't take too big a step at once
+      dx /= 2;
+      f /= 2;
+    }
 
     pt.x[0] = p.x[0] - dx[0];
     pt.x[1] = p.x[1] - dx[1];
