@@ -722,7 +722,7 @@ RAY Lens::find_image(
     }
   }
   
-  return RAY(p);
+  return RAY(p,zs);
 }
 
 RAY Lens::find_image(
@@ -817,7 +817,7 @@ RAY Lens::find_image(
     }
   }
   
-  return RAY(p);
+  return RAY(p,zs);
 }
 
 RAY Lens::find_image(

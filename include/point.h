@@ -489,7 +489,7 @@ struct RAY{
 
   };
   
-  RAY(const Point &p){
+  RAY(const Point &p,double zs = -1){
     x[0] = p.x[0];
     x[1] = p.x[1];
     y[0] = p.image->x[0];
@@ -498,8 +498,9 @@ struct RAY{
     dt = p.dt;
         
     A = p.A;
+    z = zs;
   };
-  RAY(const LinkedPoint &p){
+  RAY(const LinkedPoint &p,double zs = -1){
     x[0] = p.x[0];
     x[1] = p.x[1];
     y[0] = p.image->x[0];
@@ -508,9 +509,9 @@ struct RAY{
     dt = p.dt;
         
     A = p.A;
-    z = -1;
-
+    z = zs;
   };
+  
   RAY(const RAY &p){
     x = p.x;
     y = p.y;
