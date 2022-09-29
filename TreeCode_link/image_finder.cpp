@@ -1093,6 +1093,7 @@ double Grid::mark_closest_point_source_images(
 void Grid::find_point_source_images(
                              Point_2d y_source
                             ,PosType r_source
+                            ,PosType z_source
                             ,std::vector<RAY> &images
                             ,bool verbose
                             ){
@@ -1108,6 +1109,7 @@ void Grid::find_point_source_images(
   for(int i=0 ; i<Nimages ; ++i){
     if(imageinfo[i].imagekist->Nunits() > 0){
       images[i] = *(imageinfo[i].closestPoint(y_source));
+      images[i].z = z_source;
     }else{
       // case where the image had no points in it
       --Nimages;
@@ -1123,6 +1125,7 @@ void Lens::find_point_source_images(
                             Grid &grid
                             ,Point_2d y_source
                             ,PosType r_source
+                            ,PosType z_source
                             ,std::vector<RAY> &images
                             ,double dytol2
                             ,double dxtol
@@ -1140,6 +1143,7 @@ void Lens::find_point_source_images(
   for(int i=0 ; i<Nimages ; ++i){
     if(imageinfo[i].imagekist->Nunits() > 0){
       images[i] = *(imageinfo[i].closestPoint(y_source));
+      images[i].z = z_source;
     }else{
       // case where the image had no points in it
       --Nimages;

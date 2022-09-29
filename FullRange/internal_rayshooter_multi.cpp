@@ -776,7 +776,7 @@ RAY Lens::find_image(
   
   int steps = 0;
   double f = 1 , dy2_tmp,ddy2=ytol2;
-  while(dy2 > ytol2 && f > 1.0e-5 && steps < MaxSteps){
+  while(dy2 > ytol2 && f > 1.0e-4 && steps < MaxSteps){
     
     ++steps;
     dx = p.A.inverse() * dy * f;
@@ -791,7 +791,7 @@ RAY Lens::find_image(
     //rayshooterInternal(1,&pt);
     compute_points_parallel<Point>(0,1,&pt,&zs,true);
   
-    if(pt.invmag()*invmago < 0){ // prevents image from changin pairity
+    if(pt.invmag()*invmago < 0){ // prevents image from changing pairity
       f /= 2;
     }else if( !Utilities::inhull(pt.x , boundary) ){
       f /= 2;

@@ -257,7 +257,7 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
           new_flux /= n*n;
         }
         
-        std::cout << " change in pixel flux = " << (new_flux-original) / original << std::endl;
+        //std::cout << " change in pixel flux = " << (new_flux-original) / original << std::endl;
         i_points[k].surface_brightness = new_flux;
         total_flux += new_flux;
       }

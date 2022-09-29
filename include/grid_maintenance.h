@@ -49,6 +49,7 @@ struct Grid{
   void find_point_source_images(
                                Point_2d y_source    /// angular position of source,
                               ,PosType r_source  /// points outside this radius on the source plane will not be considered as in the image
+                              ,PosType z_source  /// redhsift of source
                               ,std::vector<RAY> &images /// returned image rays
                               ,bool verbose=false
                            );

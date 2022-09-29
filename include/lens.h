@@ -416,6 +416,7 @@ public:
                               Grid &grid
                               ,Point_2d y_source
                               ,PosType r_source
+                              ,PosType z_source
                               ,std::vector<RAY> &images
                               ,double dytol2
                               ,double dxtol
