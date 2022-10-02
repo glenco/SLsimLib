@@ -11,12 +11,12 @@
 
 using namespace std;
 
-double flux_to_mag(double flux){
+double flux_to_mag_AB(double flux){
   if(flux <=0) return 100;
   return -2.5 * log10(flux*hplanck) - 48.6;
 }
 
-double mag_to_flux(double m){
+double mag_to_flux_AB(double m){
   if(m == 100) return 0;
   return pow(10,-0.4*(m+48.6))/hplanck;
 }

@@ -63,19 +63,19 @@ void swap(PixelMap& x, PixelMap& y)
 
 std::string to_string(PixelMapUnits unit){
   switch (unit) {
-    case ndef:
+    case PixelMapUnits::ndef:
       return "not defined";
       break;
-    case surfb:
+    case PixelMapUnits::surfb:
       return "surface brightness (ergs / s / cm**2) ";
       break;
-    case count_per_sec:
+    case PixelMapUnits::count_per_sec:
       return "counts per sec";
       break;
-    case mass:
+    case PixelMapUnits::mass:
       return "mass";
       break;
-    case mass_density:
+    case PixelMapUnits::mass_density:
       return "mass density";
       break;
 
@@ -85,7 +85,7 @@ std::string to_string(PixelMapUnits unit){
 };
 
 PixelMap::PixelMap()
-: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(ndef)
+: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(PixelMapUnits::ndef)
 {
   center[0] = 0;
   center[1] = 0;
@@ -552,7 +552,7 @@ void PixelMap::AddImages(
 
 ){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -622,7 +622,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
 
 void PixelMap::AddGridMapBrightness(const GridMap &grid){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
     grid.getPixelMapFlux(*this);
@@ -666,7 +666,7 @@ void PixelMap::AddUniformImages(
                       ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
                       ,int Nimages,double value){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -2151,7 +2151,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 PosType PixelMap::AddSource(Source &source){
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   Point_2d s_center;
   source.getTheta(s_center);
   
@@ -2176,7 +2176,7 @@ PosType PixelMap::AddSource(Source &source){
 }
 
 PosType PixelMap::AddSource(Source &source,int oversample){
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
 
   Point_2d s_center;
   source.getTheta(s_center);
