@@ -19,17 +19,18 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		,PosType inclination     /// inclination of disk (radians)
 		,PosType my_z               /// redshift of source
 		,PosType *my_theta          /// position on the sky
+    ,PosType zero_point          /// magnitude zero point
     ,Utilities::RandomNumbers_NR &ran
-		): Source(0,Point_2d(0,0),0),index(0){
+		): Source(0,Point_2d(0,0),0,-1,zero_point),index(0){
 	
-	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rdisk,PA,inclination,0,my_z,my_theta,ran));
+	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rdisk,PA,inclination,0,my_z,my_theta,zero_point,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
 */
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		SourceOverzierPlus *my_galaxy
-		): Source(0,Point_2d(0,0),0),index(0){
+		): Source(0,Point_2d(0,0),0,-1,my_galaxy->getMagZeroPoint()),index(0){
 	
 	galaxies.push_back(*my_galaxy);
 }
@@ -243,7 +244,7 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
 			/***************************/
     
     SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge,Ref,Rdisk
-                                ,pa,inclination,HaloID,z_cosm,theta,ran);
+                                ,pa,inclination,HaloID,z_cosm,theta,getMagZeroPoint(),ran);
      //std::cout << "filling last galaxy" << std::endl;
 
     galaxy.setMag(Band::SDSS_U,SDSS_u);
@@ -313,7 +314,7 @@ void SourceMultiAnaGalaxy::assignParams(InputParams& params){
 	}
 
 	if(!params.get("source_sb_limit",sb_limit))
-		setSBlimit_magarcsec(30.);
+    sb_limit = -100;
 	else
 		sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
 		/*{
@@ -352,9 +353,10 @@ void SourceMultiAnaGalaxy::multiplier(
 				theta[0] = x1[0] + (x2[0] - x1[0])*ran();
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
-				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag(),galaxies[i].getMagBulge()
+				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag()
+                                              ,galaxies[i].getMagBulge()
                 ,galaxies[i].getReff(),galaxies[i].getRdisk(),ran()*PI,ran()*2*PI
-					,Nold+NtoAdd,galaxies[i].getZ(),theta,ran));
+					,Nold+NtoAdd,galaxies[i].getZ(),theta, getMagZeroPoint(), ran));
 
 				++NtoAdd;
 			}

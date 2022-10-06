@@ -27,7 +27,6 @@ class Source;
 enum class PixelMapUnits {
   ndef     // not defined
   ,surfb   // ergs / s / cm**2
-  //,photon_flux // surfb / hplanck
   ,count_per_sec
   ,ADU   // Analogue-to-Digital Units
   ,mass
@@ -495,30 +494,36 @@ enum class UnitType {counts_x_sec, flux} ;
 class Obs{
 public:
   
-  Obs(size_t Npix_xx,size_t Npix_yy
-      ,double pix_size // pixel size (in rad)
-      ,float oversample = 1
+  Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
+      ,double pix_size               /// pixel size (in rad)
+      ,int oversample          /// oversampling for input image
       ,float seeing = 0 // seeing in arcsec
-      ):
-   Npix_x(Npix_xx)
-  ,Npix_y(Npix_yy)
-  ,pix_size(pix_size)
-  ,oversample(oversample)
-  ,seeing(seeing){}
+  );
   
-  size_t getNx(){ return Npix_x;}
-  size_t getNy(){ return Npix_y;}
+  size_t getNxInput(){ return Npix_x_input;}
+  size_t getNyInput(){ return Npix_y_input;}
+
+  size_t getNxOutput(){ return Npix_x_output;}
+  size_t getNyOutput(){ return Npix_y_output;}
+
   std::valarray<double> getPSF(){return map_psf;}
-  void setPSF(std::string psf_file, float os = 1.);
-  void ApplyPSF(PixelMap &pmap);
+  void setPSF(std::string psf_file);
+  void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
   void setNoiseCorrelation(std::string nc_file);
   
   // virtual methods
 
-  virtual PixelMap AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran) = 0;
+  virtual void AddNoise(PixelMap &pmap
+                        ,PixelMap &error_map
+                        ,Utilities::RandomNumbers_NR &ran) = 0;
   
-  virtual PixelMap Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran) = 0;
+  virtual void Convert(PixelMap &map_in
+                           ,PixelMap &map_out
+                           ,PixelMap &error_map
+                           ,bool psf
+                           ,bool noise
+                           ,Utilities::RandomNumbers_NR &ran) = 0;
   
   virtual float getBackgroundNoise() = 0;
 
@@ -532,10 +537,18 @@ protected:
   void CorrelateNoise(PixelMap &pmap);
   float seeing;  // full-width at half maximum of the gaussian smoothing
   
-private:
-  
-  size_t Npix_x,Npix_y;
+  // the number of pixels in the real image
+  size_t Npix_x_output,Npix_y_output;
+  // the number of pixels in the oversamples image
+  size_t Npix_x_input,Npix_y_input;
+ 
   float oversample; // psf oversampling factor
+  void downsample(PixelMap &map_in,PixelMap &map_out);  // downsize from Npix_input to Npix_output
+  
+  PixelMap map_scratch;
+ 
+private:
+  double input_psf_pixel_size;
   size_t side_ncorr; // pixels on a side of input noise correlation function
 
   void fftpsf();  // FFT the psf for later use
@@ -569,7 +582,7 @@ private:
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
- * Input must be in ergs/(s*cm^2*Hz*hplanck).
+ * Input must be in ergs/(s*cm^2*Hz).
  *
  *  see https://www.ucolick.org/~bolte/AY257/s_n.pdf
  */
@@ -588,20 +601,28 @@ private:
   //double seeing = 0.18;
   
   // derived parameters;
-  double sigma_background;  // background var in ergs / cm^2 / s
+  double sigma_background;  // background var in ergs / cm^2 / s / Hz
   double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
   
   /// Applies  noise (read-out + Poisson) on an image, returns noise map
-  PixelMap AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran);
+  void AddNoise(PixelMap &pmap
+                ,PixelMap &error_map
+                ,Utilities::RandomNumbers_NR &ran);
  
 public:
 
   ObsVIS(size_t Npix_x,size_t Npix_y
+         ,int oversample
          ,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
   );
   
-  PixelMap Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran);
-
+  void Convert(PixelMap &map_in
+               ,PixelMap &map_out
+               ,PixelMap &error_map
+               ,bool psf
+               ,bool noise
+               ,Utilities::RandomNumbers_NR &ran);
+ 
   double mag_to_flux(double m){
     if(m == 100) return 0;
     return pow(10,-0.4*(m - mag_zeropoint));
@@ -610,7 +631,12 @@ public:
     if(flux <=0) return 100;
     return -2.5 * log10(flux) + mag_zeropoint;
   }
-  
+ 
+  double flux_to_counts(double flux){
+    if(flux <=0) return 100;
+    return -2.5 * log10(flux) + mag_zeropoint;
+  }
+ 
   // returns std of pixels in surface brightness
   float getBackgroundNoise(){return sigma_background;}
 };
@@ -620,7 +646,7 @@ public:
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
  *
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
- * Input must be in ergs/(s*cm^2*Hz*hplanck).
+ * Input must be in ergs/(s*cm^2*Hz).
  *
  *  see https://www.ucolick.org/~bolte/AY257/s_n.pdf
  */
@@ -646,7 +672,13 @@ public:
     /// pixel size in radians
   float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec);
 	
-	PixelMap Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran);
+  void Convert(PixelMap &map_in
+               ,PixelMap &map_out
+               ,PixelMap &error_map
+               ,bool psf
+               ,bool noise
+               ,Utilities::RandomNumbers_NR &ran);
+ 
   /// returns factor by which code image units need to be multiplied by to get flux units
   //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
 
@@ -679,7 +711,10 @@ private:
 
   void set_up();
   
-  PixelMap AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran);
+  void AddNoise(
+                PixelMap &pmap
+                ,PixelMap &error_map
+                ,Utilities::RandomNumbers_NR &ran);
   
   void ToCounts(PixelMap &pmap);
   void ToSurfaceBrightness(PixelMap &pmap);

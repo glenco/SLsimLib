@@ -31,7 +31,7 @@
  */
 class SourceMultiAnaGalaxy: public Source{
 public:
-	SourceMultiAnaGalaxy(PosType mag, PosType mag_bulge, PosType Reff, PosType Rdisk, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,Utilities::RandomNumbers_NR &ran);
+	SourceMultiAnaGalaxy(PosType mag, PosType mag_bulge, PosType Reff, PosType Rdisk, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,PosType zero_point,Utilities::RandomNumbers_NR &ran);
 	SourceMultiAnaGalaxy(SourceOverzierPlus *my_galaxy);
 	//SourceMultiAnaGalaxy(InputParams& params,Utilities::RandomNumbers_NR &ran);
 	~SourceMultiAnaGalaxy();
@@ -185,24 +185,26 @@ public:
   
   //SourceMultiShapelets(InputParams& params);
   
-  SourceMultiShapelets():Source(0,Point_2d(0,0),0){};
+  SourceMultiShapelets():Source(0,Point_2d(0,0),0,-1,-48.6){};
   
   /// Reads in sources from a catalog.
   SourceMultiShapelets(const std::string &my_shapelets_folder  /// directory where shapelet files are located
                        ,Band my_band  /// band that will be used as default
                        ,double my_max_mag_limit  /// magnitude limit in that band
                        ,double my_min_mag_limit  /// magnitude limit in that band
-                       ,double my_sb_limit = -1 /// surface brightness limit
-                       ,double maximum_radius = 1.0e100  /// maximum radius (as defined in shapelet expansion) in radians
+                       ,double my_sb_limit       /// surface brightness limit
+                       ,double maximum_radius   /// maximum radius (as defined in shapelet expansion) in radians
+                       ,double zero_point        /// magnitude zreo point
                        );
 
   void input(const std::string &my_shapelets_folder  /// directory where shapelet files are located
                        ,Band my_band  /// band that will be used as default
                        ,double my_max_mag_limit  /// magnitude limit in that band
                        ,double my_min_mag_limit  /// magnitude limit in that band
-                       ,double my_sb_limit = -1 /// surface brightness limit
-                       ,double maximum_radius = 1.0e100  /// maximum radius (as defined in shapelet expansion) in radians
-                       );
+                       ,double my_sb_limit     /// surface brightness limit
+                       ,double maximum_radius   /// maximum radius (as defined in shapelet expansion) in radians
+                       ,double zero_point        /// magnitude zreo point
+                     );
 
   ~SourceMultiShapelets();
   void sortInRedshift();

@@ -23,13 +23,13 @@ class SourceOverzier : public Source
 {
 public:
 	//SourceOverzier();
-	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
+	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,double zero_point);
   
   SourceOverzier(const SourceOverzier &s);
   SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
-	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
+	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *my_theta);
   virtual PosType SurfaceBrightness(PosType *x);
 	PosType getTotalFlux() const;
 	void printSource();
@@ -159,16 +159,17 @@ class SourceOverzierPlus : public SourceOverzier
 public:
   //SourceOverzierPlus();
   SourceOverzierPlus(
-                                         PosType my_mag         /// total magnitude
-                                         ,PosType my_mag_bulge  /// magnitude of bulge
-                                         ,PosType my_Reff       /// effective radius of bulge
-                                         ,PosType my_Rdisk      /// scale hight of disk
-                                         ,PosType my_PA         /// position angle
-                                         ,PosType inclination   /// inclination in radians
-                                         ,unsigned long my_id
-                                         ,PosType my_z
-                                         ,const PosType *theta
-                                         ,Utilities::RandomNumbers_NR &ran
+                     PosType my_mag         /// total magnitude
+                     ,PosType my_mag_bulge  /// magnitude of bulge
+                     ,PosType my_Reff       /// effective radius of bulge
+                     ,PosType my_Rdisk      /// scale hight of disk
+                     ,PosType my_PA         /// position angle
+                     ,PosType inclination   /// inclination in radians
+                     ,unsigned long my_id
+                     ,PosType my_z
+                     ,const PosType *theta
+                     ,PosType mag_zero      /// magnitude zero point
+                     ,Utilities::RandomNumbers_NR &ran
                                          );
 
   ~SourceOverzierPlus();

@@ -265,7 +265,7 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
     }
   }
   
-  std::cout << " change in total flux = " << (total_flux-original_total_flux) / original_total_flux << std::endl;
+  //std::cout << " change in total flux = " << (total_flux-original_total_flux) / original_total_flux << std::endl;
 
   assert( (total_flux-original_total_flux) <  0.1*original_total_flux);
   return total_flux * resolution * resolution;

@@ -1,8 +1,6 @@
 /*
  * source.h
  *
- *  Created on: Feb 6, 2012
- *      Author: mpetkova
  */
 
 #ifndef SOURCE_H_
@@ -13,10 +11,8 @@
 #include "image_processing.h"
 #include "utilities_slsim.h"
 
-double flux_to_mag(double flux);
-double mag_to_flux(double m);
-
 class PixelMap;
+double mag_to_flux_AB(double);
 
 /** \brief Base class for all sources.
  *
@@ -29,10 +25,11 @@ public:
 	Source(PosType r
          ,Point_2d x
          ,PosType z
-         ,PosType SBlimit=100  // surface brightness limit in mags per arcsecond
-         ):source_r(r),source_x(x),zsource(z)
+         ,PosType SBlimit  // surface brightness limit in mags per arcsecond
+         ,PosType zero_point // the magnitude zero point
+         ):source_r(r),source_x(x),zsource(z),sb_limit(SBlimit),mag_zero_point(zero_point)
   {
-    setSBlimit_magarcsec(SBlimit);
+    //setSBlimit_magarcsec(SBlimit);
   };
   
   virtual ~Source();
@@ -41,7 +38,8 @@ public:
     source_r(s.source_r),
     source_x(s.source_x),
     zsource(s.zsource),
-    sb_limit(s.sb_limit){}
+    sb_limit(s.sb_limit),
+    mag_zero_point(s.mag_zero_point) {}
   
   Source & operator=(const Source &s){
     if(this == &s) return *this;
@@ -49,6 +47,7 @@ public:
     source_x = s.source_x;
     zsource = s.zsource;
     sb_limit = s.sb_limit;
+    mag_zero_point = s.mag_zero_point;
     
     return *this;
   }
@@ -56,17 +55,19 @@ public:
 	// in lens.cpp
 	/** Surface brightness of source in grid coordinates not source centered coordinates.
    
-   * The units shuld be ergs / s / Hz / cm^2 / hplanck
+   * The units shuld be ergs / s / Hz / cm^2 
    */
   virtual PosType SurfaceBrightness(PosType *y) = 0;
   virtual PosType getTotalFlux() const = 0;
   virtual void printSource() = 0;
 
-  
+  /// convert mag/arcsec^2 to flux units
+  double SBlimit_magarcsec(float limit) {return mag_to_flux(limit)*pow(180*60*60/PI,2);}
+ 
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
 	/// Gets sb_limit in mag/arcsec^2
-  PosType getSBlimit_magarcsec(){return flux_to_mag(sb_limit/pow((180*60*60/PI),2));}
+  PosType getSBlimit_magarcsec(){return SBlimit_magarcsec(sb_limit);}
 
 	// accessor functions that will sometimes be over ridden in class derivatives
 	/// Redshift of source
@@ -90,8 +91,9 @@ public:
 
 	/// Sets sb_limit in erg/cm^2/sec/rad^2/Hz
 	void setSBlimit(float limit) {sb_limit = limit;}
-	/// Sets sb_limit in mag/arcsec^2
-  void setSBlimit_magarcsec(float limit) {sb_limit = mag_to_flux(limit)*pow(180*60*60/PI,2);}
+ 
+  void setMagZeroPoint(float zeropoint){mag_zero_point=zeropoint;}
+  double getMagZeroPoint(){return mag_zero_point;}
 
 	PosType changeFilter(std::string filter_in, std::string filter_out, std::string sed);
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
@@ -145,6 +147,19 @@ protected:
 	PosType zsource;
 	PosType sb_limit;
   
+  double flux_to_mag(double flux) const {
+    if(flux <=0) return 100;
+    return -2.5 * log10(flux) + mag_zero_point;
+  }
+  
+  double mag_to_flux(double mag) const {
+    if(mag == 100) return 0;
+    return pow(10,-0.4*(mag - mag_zero_point));
+  }
+  
+private:
+  double mag_zero_point;
+  
 };
 
 typedef Source *SourceHndl;
@@ -152,7 +167,8 @@ typedef Source *SourceHndl;
 class SourceColored : public Source{
 public:
   SourceColored(PosType magnitude,PosType r,Point_2d x,PosType z
-                ,PosType SBlimit=40):Source(r,x,z,SBlimit)
+                ,PosType SBlimit,double zero_point)
+  :Source(r,x,z,SBlimit,zero_point)
   {
     current_band = Band::NoBand;
     setMag(magnitude);
@@ -247,8 +263,8 @@ protected:
  */
 class SourcePixelled: public Source{
 public:
-	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val);
-	SourcePixelled(const PixelMap& gal_map, PosType z, PosType factor = 1.);
+	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val,PosType zero_point);
+	SourcePixelled(const PixelMap& gal_map, PosType z, PosType factor, PosType zero_point);
 	//SourcePixelled(InputParams& params);
   
 	~SourcePixelled();
@@ -292,9 +308,9 @@ public:
   
   friend SourceMultiShapelets;
     //SourceShapelets();
-	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center = 0, PosType my_ang = 0.);
-	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center = 0, PosType my_ang = 0.);
-  SourceShapelets(std::string shap_file, PosType my_ang = 0.);//, PosType* my_center = 0);
+	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center, PosType my_ang,PosType zero_point);
+	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center, PosType my_ang, PosType zero_point);
+  SourceShapelets(std::string shap_file, PosType my_ang, PosType zero_point);
   
   ~SourceShapelets(){--count;}
   
@@ -400,7 +416,7 @@ private:
 /// A uniform surface brightness circular source.
 class SourceUniform : public Source{
 public:
-  //SourceUniform(InputParams& params);
+  
   SourceUniform(Point_2d position   /// postion on the sky in radians
                 ,PosType z          /// redshift of source
                 ,PosType radius_in_radians  /// radius of source in radians
@@ -426,9 +442,11 @@ public:
                            Point_2d position           /// postion on the sky in radians
                            ,PosType z                  /// redshift of source
                            ,PosType magnitude         /// unlensed brightness
-                           ,PosType radius_in_radians  /// radius of source in radians
-                  ):SourceColored(magnitude,radius_in_radians,position,z)
-  {
+              ,PosType radius_in_radians  /// radius of source in radians
+              ,double SBlimit      /// minimum surface brightness limit
+              ,PosType zero_point  /// radius of source in radians
+):SourceColored(magnitude,radius_in_radians,position,z,SBlimit,zero_point)
+{
     sed_type = 1;
   };
 
@@ -450,12 +468,15 @@ public:
   SourceGaussian(
                  Point_2d position  /// postion of source (radians)
                  ,double r_size  /// angular scale size (radians)
-                 ,double z):    /// redshift
-  Source(0,position,z),source_gauss_r2(r_size*r_size)
+                 ,double z
+                 ,double SBlimit
+                 ,double zero_point
+                 ):    /// redshift
+  Source(0,position,z,SBlimit,zero_point),source_gauss_r2(r_size*r_size)
   {
     zsource = z;
     source_r = 5*sqrt(source_gauss_r2);
-    setSBlimit_magarcsec(100.);
+    //setSBlimit_magarcsec(100.);
   }
 
 	~SourceGaussian();

@@ -29,6 +29,7 @@ public:
                ,double my_index         /// Sersic index
                ,double my_q             /// axes ratio
                ,double my_z             /// redshift
+               ,double my_zeropoint     /// magnitude zero point
                //,const double *my_theta=0  /// optional angular position on the sky
   );
 	~SourceSersic();

@@ -7,27 +7,12 @@
 #include "slsimlib.h"
 
 SourceSersic::SourceSersic()
-: SourceColored(0,0,Point_2d(0,0),0)
+: SourceColored(0,0,Point_2d(0,0),0,-1,-48.6)
 {
   /// set to values that hopefully will cause an error if it is used
   ReSet(1,0,0,-1,-1,0);
   sed_type = 1;
 }
-
-//SourceSersic::SourceSersic(
-//	double my_mag            /// Total magnitude
-//	,double my_Reff          /// Bulge half light radius (arcs)
-//	,double my_PA            /// Position angle (radians)
-//	,double my_index         /// Sersic index
-//	,double my_q             /// axes ratio
-//	,double my_z             /// redshift
-//	,const double *my_theta  /// optional angular position on the sky
-//)
-//: Source(0,Point_2d(0,0),my_z)
-//{
-//  assert(my_Reff > 0);
-//  ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,my_theta);
-//}
 
 SourceSersic::SourceSersic(
               double my_mag            /// Total magnitude
@@ -36,8 +21,9 @@ SourceSersic::SourceSersic(
               ,double my_index         /// Sersic index
               ,double my_q             /// axes ratio
               ,double my_z             /// redshift
+              ,double my_zeropoint     /// redshift
         )
-: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z)
+: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z, -1,my_zeropoint)
 {
   if(my_q > 1) my_q = 1/my_q;
     sed_type = 1;
