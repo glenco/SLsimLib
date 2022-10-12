@@ -13,7 +13,7 @@ bool TreeStruct::Test(){
   
   std::cout << "Running Test on tree ..." << std::endl;
   PointList::iterator pl_current;
-  TreeStruct::iterator treeit(top);
+  TreeStruct::iterator treeit(top_ptr.get());
 
   pl_current.current = (*treeit)->points;
   for(int k = 0; k < (*treeit)->npoints ; ++k,--pl_current){
@@ -49,10 +49,10 @@ bool TreeStruct::Test(){
 /// true is point is on the edge of the field
 bool TreeStruct::AtEdge(Point *point){
   Branch *leaf = point->leaf;
-  if(leaf->boundary_p1[0] == top->boundary_p1[0]) return true;
-  if(leaf->boundary_p1[1] == top->boundary_p1[1]) return true;
-  if(leaf->boundary_p2[0] == top->boundary_p2[0]) return true;
-  if(leaf->boundary_p2[1] == top->boundary_p2[1]) return true;
+  if(leaf->boundary_p1[0] == top_ptr->boundary_p1[0]) return true;
+  if(leaf->boundary_p1[1] == top_ptr->boundary_p1[1]) return true;
+  if(leaf->boundary_p2[0] == top_ptr->boundary_p2[0]) return true;
+  if(leaf->boundary_p2[1] == top_ptr->boundary_p2[1]) return true;
   
   return false;
 }
@@ -277,7 +277,7 @@ PosType TreeStruct::PointsWithinKist(
   globs.ray[1] = globs.realray[1] = center[1];
   
 	//moveTop();
-  TreeStruct::iterator current(top);
+  TreeStruct::iterator current(top_ptr.get());
 	if( inbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
     //ray is not inside the simulation
     
@@ -478,7 +478,7 @@ void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rm
 	bool decend;
 	unsigned long i;
 
-  TreeStruct::iterator current(top);
+  TreeStruct::iterator current(top_ptr.get());
   PointList::iterator pl_it;
   
 	neighborkist->Empty();
@@ -487,7 +487,7 @@ void TreeStruct::PointsWithinKist_iter(const PosType* center,float rmin,float rm
 	assert(rmax >= rmin);
 	if(rmax <= rmin) return;
 
-	if( CircleInBox(center,rmax,top->boundary_p1,top->boundary_p2) ){
+	if( CircleInBox(center,rmax,top_ptr->boundary_p1,top_ptr->boundary_p2) ){
 		_FindLeaf(current,center,0);
 		// Move up the tree till the whole circle is inside the box
 		while(!CircleInBox(center,rmax,(*current)->boundary_p1,(*current)->boundary_p2) && current.up());

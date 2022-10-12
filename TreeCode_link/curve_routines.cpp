@@ -221,7 +221,8 @@ namespace Utilities{
     
     if(Npoints < 3) return Npoints;
     
-    Point *tmpcurve = NewPointArray(curve->Nunits());
+    MemmoryBank<Point> pointfactory;
+    Point *tmpcurve = pointfactory(curve->Nunits());
     
     curve->MoveToTop();
     do{
@@ -241,7 +242,7 @@ namespace Utilities{
       }while(curve->Down());
     }
     
-    FreePointArray(tmpcurve,false);
+    //FreePointArray(tmpcurve,false);
     
     return newnumber;
   }
@@ -1465,9 +1466,9 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
  */
 void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   long i,m,j;
-  ListHndl imagelist= new PointList;
+  PointList imagelist;
   unsigned long NpointsTotal=0;
-  Point *point,*newpointarray;
+  Point *newpointarray;
   
   //assert(images[0].Npoints);
   
@@ -1479,22 +1480,23 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   NpointsTotal = images[0].Npoints;
   
   PointList::iterator imagelist_it;
-  imagelist_it.current = imagelist->Bottom();
+  imagelist_it.current = imagelist.Bottom();
   // copy image points into a list
-  for(i=0;i<images[0].Npoints;++i) imagelist->InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
+  for(i=0;i<images[0].Npoints;++i) imagelist.InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
   
-  assert(imagelist->size() == images[0].Npoints);
+  assert(imagelist.size() == images[0].Npoints);
   //std::printf("imagelist = %il\n",imagelist->Npoints);
   
-  splitlist(imagelist,images,Nimages,Maximages);
+  splitlist(&imagelist,images,Nimages,Maximages);
   //std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
-  assert(imagelist->size() == NpointsTotal);
+  assert(imagelist.size() == NpointsTotal);
   
   // copy list back into array
-  point = images[0].points;
-  newpointarray = NewPointArray(NpointsTotal);
-  
-  imagelist_it.current = imagelist->Top();
+  MemmoryBank<Point> factory;
+  //newpointarray = NewPointArray(NpointsTotal);
+  newpointarray = factory(NpointsTotal);
+
+  imagelist_it.current = imagelist.Top();
   m=0;
   i=0;
   do{
@@ -1507,9 +1509,6 @@ void splitter(OldImageInfo *images,int Maximages,int *Nimages){
   }while(--imagelist_it);
   
   assert(m == NpointsTotal);
-  
-  free(imagelist);
-  free(point);
   
   // take out images that have no points in them
   for(i=0;i<*Nimages;++i){

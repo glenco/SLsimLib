@@ -22,12 +22,12 @@ const bool verbose = false;
  *
  *  map_images is intended for mapping images of sources more complicated than simple circles.
  *
+ *  No Grid refinement is done.
  */
-void ImageFinding::map_images(
+void Grid::map_images(
 	    /// model
 		LensHndl lens
 		,Source *source
-		,GridHndl grid          /// Tree of grid points
 		,int *Nimages           /// number of images found
     ,std::vector<ImageInfo> &imageinfo   /// information on each image
 		,PosType xmax            /// Maximum size of source on image plane.  The entire source must be within this distance from
@@ -38,7 +38,6 @@ void ImageFinding::map_images(
 		                        /// If < 0 no telescoping is used and only the already existing points are used to
 		                        /// to initiate the image finding.
 		,ExitCriterion criterion  /// see data type
-		//,bool kappa_off         /// turns off calculation of surface density, shear, magnification and time delay
 		,bool FindCenter        /// if the center of the source is not known this can be set to true and it will attempt to
 		                        /// find the center, find the size of the source and determine if there is more than one source
 			                    /// The entire source must be within xmax of source->getTheta() because this is the only
@@ -47,10 +46,10 @@ void ImageFinding::map_images(
 		){
 
 	assert(lens);
-	assert(grid->s_tree);
-	assert(grid->i_tree);
+	assert(s_tree);
+	assert(i_tree);
 
-  grid->RefreshSurfaceBrightnesses(source);
+  RefreshSurfaceBrightnesses(source);
       
   if(imageinfo.size() < 10) imageinfo.resize(10);
   assert(imageinfo[0].imagekist);
@@ -60,10 +59,7 @@ void ImageFinding::map_images(
 	static PosType oldy[2],oldr=0;
 	//short moved;
 	long i,j;
-	//Point *i_points,*s_points;
-	//Point *point;
-	//time_t to;
-	//ListHndl tmp_border_pointer;
+
 	static int oldNimages=0;
 	bool go;
 	PosType center[2],y[2],sb,xx[2],source_flux = 0;
@@ -73,7 +69,7 @@ void ImageFinding::map_images(
 	assert(xmin > 0);
 	assert(xmax > 0);
 
-	if(initial_size == 0) initial_size = 3*(grid->i_tree->getTop()->boundary_p2[0] - grid->i_tree->getTop()->boundary_p1[0])/grid->getInitNgrid();
+	if(initial_size == 0) initial_size = 3*(i_tree->getTop()->boundary_p2[0] - i_tree->getTop()->boundary_p1[0])/getInitNgrid();
 
 	unsigned long tmp_count = 0;
 
@@ -94,6 +90,7 @@ void ImageFinding::map_images(
 			if(sb > 0.0){
 
 				newpoint = NewPointArray(1);
+        //newpoint = point_factory(1);
 				newpoint->x[0] = y[0] + source->getTheta()[0];
 				newpoint->x[1] = y[1] + source->getTheta()[1];
 				newpoint->image = newpoint;
@@ -119,16 +116,15 @@ void ImageFinding::map_images(
 		}
 		if(verbose) printf(" number of source points found %li in %i sources\n",sourceinfo[0].imagekist->Nunits(),Nsources);
 
-		// brakes source into four if there is only one
-		//if(Nsources == 1 && sourceinfo->imagekist->Nunits() > 100) DirtyDivider(sourceinfo,&Nsources,NimageMax,(sourceinfo->imagekist->Nunits()/4+1));
-
 		if(verbose) printf(" number of source points found %li in %i sources divided\n",sourceinfo[0].imagekist->Nunits(),Nsources);
 
 		// split source into groups
 
 		// calculate centroids and sizes of sources
-		PosType *rs = new PosType[Nsources+1];
-		for(i=0;i<Nsources; ++i){
+    //PosType *rs = new PosType[Nsources+1];
+    PosType rs[Nsources+1];
+
+    for(i=0;i<Nsources; ++i){
 			sourceinfo[i].centroid[0] = sourceinfo[i].centroid[1] = 0;
 			sourceinfo[i].imagekist->MoveToTop();
 			do{
@@ -144,8 +140,6 @@ void ImageFinding::map_images(
 			do{
 				rs[i] = MAX(rs[i],pow(sourceinfo[i].imagekist->getCurrent()->x[0] - sourceinfo[i].centroid[0],2)
 						+ pow(sourceinfo[i].imagekist->getCurrent()->x[1] - sourceinfo[i].centroid[1],2) );
-				//xx[0] = getCurrentKist(sourceinfo[i].imagekist)->x[0] - source->getTheta()[0];
-				//xx[1] = getCurrentKist(sourceinfo[i].imagekist)->x[1] - source->getTheta()[1];
 				sourceinfo[i].area += source->SurfaceBrightness(sourceinfo[i].imagekist->getCurrent()->x)*pow(2*xmax/(Ntmp-1),2);
 
 			}while(sourceinfo[i].imagekist->Down());
@@ -171,7 +165,7 @@ void ImageFinding::map_images(
 			center[0] = source->getTheta()[0];
 			center[1] = source->getTheta()[1];
 		}
-		ImageFinding::find_images_kist(lens,center,rs[0],grid,Nimages,imageinfo,&Nimagepoints,initial_size,true,0,false);
+		ImageFinding::find_images_kist(lens,center,rs[0],this,Nimages,imageinfo,&Nimagepoints,initial_size,true,0,false);
 		for(i=1;i<Nsources;++i){
 			if(sourceinfo[i].imagekist->Nunits() > 0){
 				center[0] = sourceinfo[i].centroid[0];
@@ -180,18 +174,18 @@ void ImageFinding::map_images(
 				center[0] = source->getTheta()[0];
 				center[1] = source->getTheta()[1];
 			}
-			ImageFinding::find_images_kist(lens,center,rs[i],grid,Nimages,imageinfo,&Nimagepoints,xmax,true,0,false);
+			ImageFinding::find_images_kist(lens,center,rs[i],this,Nimages,imageinfo,&Nimagepoints,xmax,true,0,false);
 		}
 
 		// free array of sourceinfo's'
-		delete[] rs;
+		//delete[] rs;
 	}else{
-		if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		if(verbose) std::cout << "number of grid points before ImageFinding::find_images_kist: "<< getNumberOfPoints() << std::endl;
 		//ImageFinding::find_images_kist(lens,source->getTheta(),xmin,grid,Nimages,imageinfo,NimageMax,&Nimagepoints
 		//		,0,true,0,false,true);
-		ImageFinding::find_images_kist(lens,source->getTheta().x,xmin,grid,Nimages,imageinfo,&Nimagepoints
+		ImageFinding::find_images_kist(lens,source->getTheta().x,xmin,this,Nimages,imageinfo,&Nimagepoints
 				,0,false,0,verbose);
-		if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "<< grid->getNumberOfPoints() << std::endl;
+		if(verbose) std::cout << "number of grid points after ImageFinding::find_images_kist: "<< getNumberOfPoints() << std::endl;
 		Nsources = 1;
 		sourceinfo[0].centroid[0] = source->getTheta()[0];
 		sourceinfo[0].centroid[1] = source->getTheta()[1];
@@ -380,14 +374,14 @@ void ImageFinding::map_images(
 
 	}*/
 
-	if(verbose) printf("total number of points after telescope: %li\n",grid->getNumberOfPoints());
+	if(verbose) printf("total number of points after telescope: %li\n",getNumberOfPoints());
 
 	// Set all in_image flags to false.  This should not be necessary.  !!!!!!
-	grid->ClearAllMarks();
+	ClearAllMarks();
 
 	//freeKist(subkist);
 
-	tmp = grid->RefreshSurfaceBrightnesses(source);
+	tmp = RefreshSurfaceBrightnesses(source);
 
 	if(tmp == 0.0){  // no flux was found
 	  imageinfo[0].imagekist->Empty();
@@ -418,7 +412,7 @@ void ImageFinding::map_images(
 	/ *******************************************************/
 
 	//PointsWithinKist(grid->s_tree,source->getTheta(),source->source_r_out,imageinfo->imagekist,0);
-	grid->s_tree->PointsWithinKist_iter(source->getTheta().x,0,source->getRadius(),imageinfo[0].imagekist);
+	s_tree->PointsWithinKist_iter(source->getTheta().x,0,source->getRadius(),imageinfo[0].imagekist);
 
 
 	// move from source plane to image plane
@@ -457,7 +451,7 @@ void ImageFinding::map_images(
 	}
 
 	// divide up images
-	if(divide_images) divide_images_kist(grid->i_tree,imageinfo,Nimages);
+	if(divide_images) divide_images_kist(i_tree,imageinfo,Nimages);
 	else *Nimages = 1;
 	if(verbose) printf("number of images after first division is %i\n",*Nimages);
 
@@ -472,7 +466,7 @@ void ImageFinding::map_images(
 		imageinfo[i].ShouldNotRefine = 0;
 		imageinfo[i].uniform_mag = unchecked;
 
-		findborders4(grid->i_tree,&(imageinfo[i]),touches_edge);
+		findborders4(i_tree,&(imageinfo[i]),touches_edge);
 
 		//assert(imageinfo[i].outerborder->Nunits() > 0);
 		/*/  ***** test lines ****
@@ -520,7 +514,7 @@ void ImageFinding::map_images(
 	 ******* refine images based on flux in each pixel ******
 	 *******************************************************/
 	i=0;
-	while( ImageFinding::IF_routines::refine_grid_on_image(lens,source,grid,maxflux,imageinfo,Nimages
+	while( ImageFinding::IF_routines::refine_grid_on_image(lens,source,this,maxflux,imageinfo,Nimages
                                             ,sourceinfo,Nsources,FracResTarget
                                             ,criterion,divide_images) > 0 ) ++i;
 
@@ -1200,8 +1194,8 @@ double Grid::refine_on_surfacebrightness(
 
   int iterations = 0;
   do{
-    p = i_tree->pointlist->Top();
-    N = i_tree->pointlist->size();
+    p = i_tree->pointlist.Top();
+    N = i_tree->pointlist.size();
     ps_to_refine.clear();
     
     while(p != nullptr){

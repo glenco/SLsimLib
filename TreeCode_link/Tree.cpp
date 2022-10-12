@@ -156,8 +156,13 @@ Branch::Branch(Point *my_points,unsigned long my_npoints
     prev = NULL;
     refined = false;
 }
-Branch::~Branch(){
-	neighbors.clear();
+Branch::~Branch(){  // iterative delete, only need to delete the root
+  
+  //std::cout << "By Branch"<< std::endl;
+	//neighbors.clear();
+  
+  if(child1 != NULL) delete child1;
+  if(child2 != NULL) delete child2;
 }
 /// print out all member data for testing purposes
 void Branch::print(){
@@ -176,18 +181,7 @@ void Branch::print(){
 	 std::cout << "  refined " << refined << std::endl;
 }
 
-/** 
-*
-void FreeBranch(Branch *branch){
-
-    assert( branch != NULL);
-    free(branch);
-
-    return;
-}*/
-
-  /** 
- **/
+/*
 Point *NewPointArray(
 		unsigned long N  /// number of points in array
 		){
@@ -202,6 +196,7 @@ Point *NewPointArray(
 
   return points;
 }
+*/
 
 /** 
  *
@@ -231,7 +226,8 @@ TreeStruct::TreeStruct(
 		,PosType boundary_p2[2]   /// upper right hand corner of root
 		,PosType center[2]        /// center of root (this could be the center of mass)
 		,int my_Nbucket             /// maximum number of points allowed in a leaf
-		){
+		):top_ptr(nullptr)
+{
 	construct_root(xp,npoints,boundary_p1,boundary_p2,center,my_Nbucket);
 }
 /// Basic construction of root with all particles in it but no children
@@ -244,30 +240,21 @@ void TreeStruct::construct_root(
 		,int my_Nbucket             /// maximum number of points allowed in a leaf
 		){
   unsigned long i;
-
-  /*TreeStruct *tree;
-  tree = (TreeStruct *)malloc(sizeof(TreeStruct));
-  if (!tree){
-    ERROR_MESSAGE();
-    std::cout << "ERROR: allocation failure in NewTree()" << std::endl;
-    exit(1);
-  }*/
-
-    /* make linked list of points */
-      //pointlist=NewList();
-      pointlist= new PointList;
-   //EmptyList(pointlist);
-      PointList::iterator pl_it;
+      
+    // make linked list of points
+  PointList::iterator pl_it;
   for(i=0;i<npoints;++i){
-    pointlist->InsertPointAfterCurrent(pl_it,&xp[i]);
+    pointlist.InsertPointAfterCurrent(pl_it,&xp[i]);
     --pl_it;
   }
 
-  top = new Branch(pointlist->Top(),npoints,boundary_p1,boundary_p2
-		      ,center,0);
-
+  //top_ptr = std::move(std::unique_ptr<Branch>(new Branch(pointlist.Top(),npoints,boundary_p1,boundary_p2,center,0)));
+      
+  top_ptr.reset( new Branch(pointlist.Top(),npoints,boundary_p1,boundary_p2
+              ,center,0) );
+  
   Nbranches = 1;
-  //current = top;
+  //current = top_ptr;
 
   Nbucket = my_Nbucket;
   //return(tree);
@@ -278,12 +265,14 @@ void TreeStruct::construct_root(
  */
 TreeStruct::~TreeStruct(){
 
-	emptyTree();
-  assert(Nbranches==1);
-  free(top);
-	--Nbranches;
+  //delete top_ptr;  // iterative delete
+  
+	//emptyTree();
+  //assert(Nbranches==1);
+  //free(top_ptr);
+	//--Nbranches;
 
-	free(pointlist);
+	//free(pointlist);
 }
 
 
@@ -385,7 +374,7 @@ bool TreeStruct::moveToChild(int child){
 
     assert(!offEnd());
 
-    if( current == top ) return false;
+    if( current == top_ptr ) return false;
     assert(current->prev);
     current = current->prev;  // can move off end
     return true;
@@ -599,7 +588,7 @@ void TreeStruct::checkTree(){
 
 	unsigned long count=0;
 
-  TreeStruct::iterator current(top);
+  TreeStruct::iterator current(top_ptr.get());
 
 	_checkTree(current,&count);
 
@@ -641,32 +630,33 @@ int checkBranch(Branch *branch){
    	}
    	return 0;
 }
-
-Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold){
+/*
+Point *AddPointToArray(Point *points
+                       ,unsigned long N
+                       ,unsigned long Nold
+                       ){
 
   if(N==Nold) return points;
 
   unsigned long i;
   Point *newpoints;
-
-  if(Nold==0){
-	  newpoints = NewPointArray(N);
-  }else{
+ 
+  newpoints = pointfactory(N);
+  
+  if(Nold>0){
 	  if(points[0].head != Nold){ ERROR_MESSAGE(); std::cout << "ERROR: AddPointToArray head not set correctly" << std::endl; exit(0);}
-	  newpoints = NewPointArray(N);
-	  //for(i=N;i<Nold;++i) free(points[i].x);
 
 	  assert(points);
 	  for(i=0;(i<N && i<Nold);++i){
 		  PointCopy(&newpoints[i],&points[i]);
 	  }
-	  //for(i=Nold;i<N;++i) newpoints[i].x = (PosType *) malloc(2*sizeof(PosType));
   }
-
-  FreePointArray(points,false);
+  
   return newpoints;
 }
+*/
 
+/*
 Point *NewPoint(PosType *x,unsigned long id){
   Point *point;
 
@@ -676,8 +666,8 @@ Point *NewPoint(PosType *x,unsigned long id){
   point->head = 1;
   point->id=id;
   //point->x=x;
-    point->x[0] = x[0];
-    point->x[1] = x[1];
+  point->x[0] = x[0];
+  point->x[1] = x[1];
   point->in_image=NO;
 
   if (!point){
@@ -689,6 +679,7 @@ Point *NewPoint(PosType *x,unsigned long id){
 
   return(point);
 }
+*/
 
 /** SWAPS information in points without changing
 * pointers to prev and next

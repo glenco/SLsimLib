@@ -58,10 +58,10 @@ void ImageFinding::find_crit(
   // find kist of points with 1/magnification less than invmag_min
   negimage[0].imagekist->Empty();
   PointList::iterator i_tree_pointlist_it;
-  i_tree_pointlist_it.current = (grid->i_tree->pointlist->Top());
+  i_tree_pointlist_it.current = (grid->i_tree->pointlist.Top());
   Point *minpoint = *i_tree_pointlist_it;
   
-  for(i=0;i<grid->i_tree->pointlist->size();++i){
+  for(i=0;i<grid->i_tree->pointlist.size();++i){
     if((*i_tree_pointlist_it)->invmag() < invmag_min){
       negimage[0].imagekist->InsertAfterCurrent(*i_tree_pointlist_it);
       negimage[0].imagekist->Down();
@@ -75,7 +75,7 @@ void ImageFinding::find_crit(
   }
   
   // case where all the points have negative magnification
-  if(negimage[0].imagekist->Nunits() == grid->i_tree->pointlist->size()){
+  if(negimage[0].imagekist->Nunits() == grid->i_tree->pointlist.size()){
     crtcurve.resize(0);
     *Ncrits=0;
     
@@ -1635,8 +1635,8 @@ void ImageFinding::IF_routines::refine_crit_in_image(
   // find kist of points with negative magnification
   negimage.imagekist->Empty();
   PointList::iterator i_tree_pointlist_it;
-  i_tree_pointlist_it.current = (grid->i_tree->pointlist->Top());
-  for(i=0;i<grid->i_tree->pointlist->size();++i){
+  i_tree_pointlist_it.current = (grid->i_tree->pointlist.Top());
+  for(i=0;i<grid->i_tree->pointlist.size();++i){
     x[0] = (*i_tree_pointlist_it)->image->x[0] - x_source[0];
     x[1] = (*i_tree_pointlist_it)->image->x[1] - x_source[1];
     
@@ -1835,12 +1835,12 @@ void ImageFinding::find_contour(
   // find kist of points with negative magnification
   critcurve[0].imagekist->Empty();
   PointList::iterator i_tree_pointlist_it;
-  i_tree_pointlist_it.current = (grid->i_tree->pointlist->Top());
+  i_tree_pointlist_it.current = (grid->i_tree->pointlist.Top());
   Point *minpoint = *i_tree_pointlist_it;
   
   KappaType value,maxval=0;
   
-  for(i=0;i<grid->i_tree->pointlist->size();++i){
+  for(i=0;i<grid->i_tree->pointlist.size();++i){
     
     switch (contour_type) {
       case LensingVariable::KAPPA:

@@ -33,21 +33,21 @@ short find_peaks(
     ,std::vector<ImageInfo> &imageinfo /// the image
 		,int *Nimages		/// number of peaks
 		){
-
-
 	//Point **i_points,*s_points,*dummy;
 	PosType res_target = 0,threshold;
 	long Nnewpoints = 0,Ntemp;
 	unsigned long i;
 	//ImageInfo *imageinfo = new ImageInfo;
 	Kist<Point> * newpointskist = new Kist<Point>;
-
-	if(grid->getInitRange() != grid->getNumberOfPoints() ) grid->ReInitializeGrid(lens);
+      
+      if(grid->getInitRange() != grid->getNumberOfPoints() ){
+        *grid = grid->ReInitialize(lens);
+      }
 
 	// Add all points to imageinfo
 	//MoveToTopList(grid->i_tree->pointlist);
       PointList::iterator i_tree_pl_current;
-      i_tree_pl_current.current = (grid->i_tree->pointlist->Top());
+      i_tree_pl_current.current = (grid->i_tree->pointlist.Top());
 	do{
 		imageinfo[0].imagekist->InsertAfterCurrent(*i_tree_pl_current);
 	}while(--i_tree_pl_current);

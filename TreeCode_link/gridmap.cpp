@@ -51,7 +51,8 @@ GridMap::GridMap(
   //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init2);
-  
+  //i_points = point_factory(Ngrid_init*Ngrid_init2);
+ 
   int i;
   // set grid of positions
   for(int ii=0;ii<Ngrid_init;++ii){
@@ -70,7 +71,9 @@ GridMap::GridMap(
   
   assert(i == Ngrid_init*Ngrid_init2-1);
   
-  s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
+  s_points = NewPointArray(Ngrid_init*Ngrid_init2);
+  //s_points = point_factory(Ngrid_init*Ngrid_init2);
+  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init2);
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points);
@@ -100,8 +103,11 @@ GridMap::GridMap(
   if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init);
+  //i_points = point_factory(Ngrid_init*Ngrid_init);
   xygridpoints(i_points,range,center.x,Ngrid_init,0);
-  s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+  s_points = NewPointArray(Ngrid_init*Ngrid_init);
+  //s_points = point_factory(Ngrid_init*Ngrid_init);
+  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
     
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
@@ -111,17 +117,22 @@ GridMap::GridMap(
 }
 
 GridMap::~GridMap(){
-  FreePointArray(i_points);
-  FreePointArray(s_points);
+  //FreePointArray(i_points);
+  //FreePointArray(s_points);
 }
 
-void GridMap::ReInitializeGrid(LensHndl lens){
+GridMap GridMap::ReInitialize(LensHndl lens){
   
+  GridMap newgrid(lens,Ngrid_init,center.x,x_range,getYRange());
+  
+  return newgrid;
+  /*
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
   }
   ClearSurfaceBrightnesses();
+   */
 }
 
 /// Output a PixelMap of the surface brightness with same res as the GridMap
@@ -559,7 +570,6 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
   long i,j;
   
   if(remove_center && (Ngrid_1d%2 == 1)){
-    /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/
     for(i=0,j=0;i<Ngrid_1d*Ngrid_1d;++i){
       
       if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;
@@ -570,7 +580,6 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
     }
     
   }else{
-    /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d);*/
     for(i=0;i<Ngrid_1d*Ngrid_1d;++i){
       i_points[i].id=pointID;
       ++pointID;

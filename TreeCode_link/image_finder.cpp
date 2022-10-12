@@ -975,7 +975,7 @@ void Grid::find_images(
     return;
   }
   // case where image fills all of the grid
-  if( allpoints.imagekist->Nunits() >= i_tree->pointlist->size()){
+  if( allpoints.imagekist->Nunits() >= i_tree->pointlist.size()){
     imageinfo.push_back(allpoints);
     Nimages = 1;
     imageinfo[0].area = 0.0;

@@ -36,34 +36,15 @@ Point *TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist
 
   /*std::printf("entering NN\n");*/
 
-  if(top->npoints <= Nneighbors){
+  if(top_ptr->npoints <= Nneighbors){
 	  //ERROR_MESSAGE();
 	  //std::printf("ERROR: in NearestNeighbor, number of neighbors > total number of points\n");
 	  //throw std::out_of_range(std::string() + "ERROR: in NearestNeighbor, number of neighbors > total number of points");
-    Nneighbors = top->npoints-1;
+    Nneighbors = top_ptr->npoints-1;
   }
 //  EmptyList(neighborlist);
     neighborkist->Empty();
   if(Nneighbors <= 0) return NULL;
-/*
-  if(count==0){
-    rneighbors= (PosType *)malloc((Nneighbors+Nbucket)*sizeof(PosType));
-    assert(rneighbors);
-    neighborpoints=(Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
-    assert(neighborpoints);
-    //temp_points = (Point **)malloc((Nneighbors+Nbucket)*sizeof(Point *));
-    assert(temp_points);
-    
-    ++count;
-    oldNneighbors=Nneighbors;
-
-  }else if(oldNneighbors < Nneighbors){ // if the number of nearest neighbors goes up get more mem
-    rneighbors = (PosType *)realloc(rneighbors,(Nneighbors+Nbucket)*sizeof(PosType));
-    neighborpoints=(Point **)realloc(neighborpoints,(Nneighbors+Nbucket)*sizeof(Point *));
-    //temp_points = (Point **)realloc(temp_points,(Nneighbors+Nbucket)*sizeof(Point *));
-    oldNneighbors=Nneighbors;
-  }
-  */
   
   PosType rneighbors[Nneighbors+Nbucket];
   Point *neighborpoints[Nneighbors+Nbucket];
@@ -73,11 +54,8 @@ Point *TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist
 
   /* initalize distance to neighbors to a large number */
   for(i=0;i<(Nbucket+Nneighbors);++i){
-    rneighbors[i]=10*(top->boundary_p2[0]-top->boundary_p1[0]);
+    rneighbors[i]=10*(top_ptr->boundary_p2[0]-top_ptr->boundary_p1[0]);
   }
-
-  //   std::printf("p1= [%f,%f]\n", current->boundary_p1[0],current->boundary_p1[1]);
-  //   std::printf("p2= [%f,%f]\n", current->boundary_p2[0],current->boundary_p2[1]);
 
   TreeStruct::Globals globs;
   globs.ray[0] = globs.realray[0] = center[0];
@@ -85,7 +63,7 @@ Point *TreeStruct::NearestNeighborKist(const PosType* center,int Nneighbors,Kist
   globs.tmp_point.resize(Nneighbors+Nbucket);
 
 
-  TreeStruct::iterator current(top);
+  TreeStruct::iterator current(top_ptr.get());
   if( inbox(globs.ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
     std::printf("Warning: in NearestNeighbor, ray is not inside the simulation box\n    should work in any case\n      ray= %e %e\n"
                 ,globs.ray[0],globs.ray[1]);
@@ -174,14 +152,12 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
     			}
 
      			index[i]=i;
-    			//temp_points[i]=pointlist->current;
           globs.tmp_point[i] = (*pl_it);
           --pl_it;
     		}
 
     		if((*current)->npoints > 0){
     			Utilities::double_sort((*current)->npoints,rneighbors-1,index-1);
-    			//for(i=0;i<(*current)->npoints;++i) neighborpoints[i] = temp_points[index[i]];
     			for(i=0;i<(*current)->npoints;++i) neighborpoints[i] = globs.tmp_point[index[i]];
     		}
 
@@ -225,7 +201,6 @@ void TreeStruct::_NearestNeighbor(TreeStruct::iterator &current,int Nneighbors,P
 
 			  for(i=0;i<Nneighbors;++i){
 				  index[i]=i;
-				  //temp_points[i]=neighborpoints[i];
 				  globs.tmp_point[i]=neighborpoints[i];
 			  }
 
@@ -442,7 +417,7 @@ bool AreBoxNeighbors(Branch *branch1,Branch *branch2){
 Point * TreeStruct::FindBoxPoint(const PosType* ray) const{
 	Branch *branch;
 
-  TreeStruct::iterator current(branch = top);
+  TreeStruct::iterator current(branch = top_ptr.get());
 	   // check if ray is outside initial box
 	if( inbox(ray,(*current)->boundary_p1,(*current)->boundary_p2) == 0 ){
 		std::printf("FindBox: ray outside of grided range\n");
@@ -1149,10 +1124,10 @@ void TreeStruct::_PointsWithin2(PosType *ray,float *rmax,ListHndl neighborlist
 }
 */
 
-/** tranforms between image and source planes
+/* tranforms between image and source planes
 * the image pointers in listin must be set properly
 * the image pointers of listout will be set to listin members - it would be better to fix this
-*/
+*
 void TransformPoints(ListHndl listout,ListHndl listin){
 
   unsigned long i;
@@ -1169,7 +1144,7 @@ void TransformPoints(ListHndl listout,ListHndl listin){
   }
   
 }
-
+*/
 /*
 bool ArePointsUniqueList(ListHndl list){
 	long i,j;

@@ -590,7 +590,7 @@ void PixelMap::AddImages(
 void PixelMap::AddGridBrightness(Grid &grid){
   
   //if(units != photon_flux) throw std::invalid_argument("wrong units");
-  PointList *plist = grid.i_tree->pointlist;
+  PointList *plist = &(grid.i_tree->pointlist);
   
   if(plist->size() == 0) return;
   
@@ -602,7 +602,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
   std::list <unsigned long> neighborlist;
   std::list<unsigned long>::iterator it;
   //for(long ii=0;ii<Nimages;++ii){
-  
+
   do{
     //for(listit = plist->begin() ; listit != plist->end() ; ++listit ){
     sb = (*listit)->surface_brightness;
@@ -1416,7 +1416,7 @@ void PixelMap::AddCurve(std::vector<RAY> &curve,double value){
 void PixelMap::AddGrid(const Grid &grid,PosType value){
   if(grid.getNumberOfPoints() == 0) return;
 
-  PointList* list = grid.i_tree->pointlist;
+  PointList* list = &(grid.i_tree->pointlist);
   size_t index;
   
   PointList::iterator list_current = list->Top();
@@ -1443,7 +1443,7 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
   
   if(grid.getNumberOfPoints() == 0 ) return;
   
-  AddGrid_(*(grid.i_tree->pointlist),val);
+  AddGrid_(grid.i_tree->pointlist,val);
   
   return;
   //***********************************************************************

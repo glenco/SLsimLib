@@ -11,13 +11,13 @@
 #include <random>
 
 
-Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
-  Point *s_points;
+void LinkToSourcePoints(Point *i_points,Point *s_points,unsigned long Npoints){
+  //Point *s_points;
   long i;
 
   if(Npoints < 1) return NULL;
 
-  s_points = NewPointArray(Npoints);
+  //s_points = NewPointArray(Npoints);
 
   for(i=0;i<Npoints;++i){
     s_points[i].id=i_points[i].id;
@@ -28,7 +28,7 @@ Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints){
     s_points[i].gridsize = i_points[i].gridsize;
   }
 
-  return s_points;
+  return;
 }
 
 // Calculates the area in the image by simply adding up all the cells in the imageinfo->point array

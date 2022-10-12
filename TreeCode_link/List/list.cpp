@@ -9,11 +9,11 @@
 /***********************************************************
    routines for linked list of points
 ************************************************************/
-
+/*
 void PointList::InsertAfterCurrent(iterator &current,PosType *x,unsigned long id,Point *image){
 
 	Point *point;
-  /* leaves current unchanged */
+  // leaves current unchanged
 
   point=NewPoint(x,id);
   point->image=image;
@@ -21,7 +21,7 @@ void PointList::InsertAfterCurrent(iterator &current,PosType *x,unsigned long id
   InsertPointAfterCurrent(current,point);
     return;
 }
-
+*/
 void PointList::InsertPointAfterCurrent(PointList::iterator &it,Point *point){
   // leaves current unchanged
   // changes only list and links in point
@@ -46,17 +46,18 @@ void PointList::InsertPointAfterCurrent(PointList::iterator &it,Point *point){
   Npoints++;
   return;
 }
-
+/*
 void PointList::InsertBeforeCurrent(iterator &current,PosType *x,unsigned long id,Point *image){
     Point *point;
-  /* leaves current unchanged */
+  // leaves current unchanged
 
     point=NewPoint(x,id);
     point->image=image;
 
-  InsertPointBeforeCurrent(current,point);
+    InsertPointBeforeCurrent(current,point);
     return;
 }
+*/
 
 void PointList::InsertPointBeforeCurrent(iterator &it,Point *point){
   
@@ -215,18 +216,17 @@ void PointList::InsertListBeforeCurrent(iterator &current,ListHndl list2){
 	return;
 }
 
-/* This function should properly release the memory for all the
- * points in a list leaving the list with NULL pointers
- *  points need to have been allocated in blocks of 1
+/* This function should empty the PointList without deleting the points
  */
 void PointList::EmptyList(){
 
 	if(Npoints==0) return;
-
+/*
 	assert(top);
 	assert(bottom);
 
-	Point **point;
+	//Point **point;
+  std::vector<Point *> point;
 	unsigned long blocks=0,i=0,Nfreepoints=0;
 
   iterator it;
@@ -239,41 +239,21 @@ void PointList::EmptyList(){
 	assert(blocks <= Npoints);
 	assert(Nfreepoints == Npoints);
 
-	point=(Point **)malloc(blocks*sizeof(Point*));
-
+	//point=(Point **)malloc(blocks*sizeof(Point*));
+  point.resize(blocks);
+  
   it.current = top;
 	do{
 	  if((*it)->head > 0){ point[i] = *it; ++i;}
 	}while(it--);
 
 	for(i=0;i<blocks;++i) free(point[i]);
-	free(point);
-
+	//free(point);
+*/
 	Npoints = 0;
 	top = NULL;
 	bottom = NULL;
-
-  /*
-  Point *point;
-
-  while(list->Npoints > 0 ){
-    point = TakeOutCurrent(list);
-    assert(point->head == 1);
-
-    free(point);
-  }
-*/
 }
-
-
-/*bool MoveDownList(ListHndl list){
-
-	if(list->Npoints == 0) return false;
-	if(list->current==list->bottom) return false;
-	list->current=list->current->next;
-
-	return true;
-}*/
 
 
 void PointList::ShiftList(iterator &current){
@@ -292,12 +272,13 @@ void PointList::ShiftList(iterator &current){
 	top->prev=NULL;
 }
 
+/*
 void PointList::FillList(PosType **x,unsigned long N
 	      ,unsigned long idmin){
   unsigned long i;
-  /* add N points to to end of list */
-  /* id numbers are given in order from idmin */
-  /* this is used to initialize list */
+  // add N points to to end of list
+  // id numbers are given in order from idmin
+  // this is used to initialize list
 
 
   iterator it;
@@ -308,6 +289,7 @@ void PointList::FillList(PosType **x,unsigned long N
     InsertAfterCurrent(it,x[i],i+idmin,NULL);
   }
 }
+*/
 
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2){
   Point pt;

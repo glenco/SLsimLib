@@ -11,6 +11,6 @@
 #include "Tree.h"
 
 //unsigned long PruneTrees(TreeHndl i_tree,TreeHndl s_tree,double resolution,bool useSB);
-unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashlist);
+//unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashlist);
 
 #endif

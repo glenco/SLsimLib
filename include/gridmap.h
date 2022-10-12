@@ -33,7 +33,7 @@ struct GridMap{
 	~GridMap();
   
     /// reshoot the rays for example when the source plane has been changed
-  void ReInitializeGrid(LensHndl lens);
+  GridMap ReInitialize(LensHndl lens);
   /**
    * \brief Recalculate surface brightness at every point without changing the positions of the gridmap or any lens properties.
    *
@@ -124,11 +124,22 @@ struct GridMap{
     grid.s_points = nullptr;
     
     center = grid.center;
+    
+    point_factory = std::move(grid.point_factory);
 
     return *this;
   }
 
 private:
+  
+  // cluge to make compatible with old method of producing points
+  Point * NewPointArray(size_t N){
+    Point * p = point_factory(N);
+    p[0].head = N;
+    for(size_t i=1; i < N ; ++i) p[i].head = 0;
+    return p;
+  }
+  
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   
@@ -147,6 +158,8 @@ private:
   
   bool to_refine(long i,long j,double total,double f) const ;
   static std::mutex grid_mutex;
+  
+  MemmoryBank<Point> point_factory;
 };
 
 #endif // defined(__GLAMER__gridmap__)
