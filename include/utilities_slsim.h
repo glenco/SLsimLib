@@ -1098,7 +1098,7 @@ void shuffle(
              std::vector<T> &vec   /// The vector to be shuffled
              ,R &ran               /// a random number generator so that ran() gives a number between 0 and 1
 ){
-  T tmp;
+
   size_t ran_t;
   if(vec.size() < 2) return;
   for (size_t i = vec.size()-1; i>0; --i) {

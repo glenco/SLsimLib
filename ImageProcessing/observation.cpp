@@ -7,6 +7,7 @@
 
 #include <complex>
 #include "slsimlib.h"
+#include "image_processing.h"
 
 #include "cpfits.h"
 
@@ -16,7 +17,6 @@
 
 #include <fstream>
 #include <limits>
-
 
 
 ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample,double t)

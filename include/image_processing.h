@@ -500,6 +500,8 @@ public:
       ,float seeing = 0 // seeing in arcsec
   );
   
+  virtual ~Obs(){};
+  
   size_t getNxInput(){ return Npix_x_input;}
   size_t getNyInput(){ return Npix_y_input;}
 
@@ -604,11 +606,7 @@ private:
   double sigma_background;  // background var in ergs / cm^2 / s / Hz
   double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
   
-  /// Applies  noise (read-out + Poisson) on an image, returns noise map
-  void AddNoise(PixelMap &pmap
-                ,PixelMap &error_map
-                ,Utilities::RandomNumbers_NR &ran);
- 
+  
 public:
 
   ObsVIS(size_t Npix_x,size_t Npix_y
@@ -616,6 +614,14 @@ public:
          ,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
   );
   
+  ~ObsVIS(){};
+  
+  
+  /// Applies  noise (read-out + Poisson) on an image, returns noise map
+  void AddNoise(PixelMap &pmap
+                 ,PixelMap &error_map
+                 ,Utilities::RandomNumbers_NR &ran);
+
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
                ,PixelMap &error_map
@@ -661,6 +667,8 @@ public:
   Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise, size_t Npix_x,size_t Npix_y,double pix_size,float seeing=0);
   Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise ,std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample = 1.);
   
+  ~Observation(){};
+  
   float getExpTime() const {return exp_time;}
 	int getExpNum() const {return exp_num;}
 	float getBackMag() const {return back_mag;}
@@ -671,7 +679,10 @@ public:
 	float getZeropoint() const {return mag_zeropoint;}
     /// pixel size in radians
   float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec);
-	
+  float getBackgroundNoise(){return 0;};
+
+  void AddNoise(PixelMap &pmap,PixelMap &error_map,Utilities::RandomNumbers_NR &ran);
+
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
                ,PixelMap &error_map
@@ -710,12 +721,7 @@ private:
   float background_flux;  // e- / s / arcsec
 
   void set_up();
-  
-  void AddNoise(
-                PixelMap &pmap
-                ,PixelMap &error_map
-                ,Utilities::RandomNumbers_NR &ran);
-  
+    
   void ToCounts(PixelMap &pmap);
   void ToSurfaceBrightness(PixelMap &pmap);
   void ToADU(PixelMap &pmap);
