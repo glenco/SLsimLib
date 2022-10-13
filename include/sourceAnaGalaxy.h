@@ -185,7 +185,7 @@ public:
   
   //SourceMultiShapelets(InputParams& params);
   
-  SourceMultiShapelets():Source(0,Point_2d(0,0),0,-1,-48.6){};
+  SourceMultiShapelets(double mag_zero_point):Source(0,Point_2d(0,0),0,-1,mag_zero_point){};
   
   /// Reads in sources from a catalog.
   SourceMultiShapelets(const std::string &my_shapelets_folder  /// directory where shapelet files are located

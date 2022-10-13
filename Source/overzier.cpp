@@ -9,11 +9,6 @@
  */
 #include "slsimlib.h"
 
-/// sets everything to zero
-//SourceOverzier::SourceOverzier()
-//: haloID(0)
-//{
-//}
 
 SourceOverzier::SourceOverzier(
 		PosType my_mag          /// Total magnitude
@@ -51,9 +46,8 @@ SourceOverzier::~SourceOverzier()
 }
 
 SourceOverzier::SourceOverzier(const SourceOverzier &s)
-:Source(s){
-  
-  spheroid = s.spheroid;
+:Source(s),spheroid(s.spheroid){
+  //spheroid = s.spheroid;
   current = s.current;
   sedtype = s.sedtype;
 }
@@ -178,9 +172,11 @@ void SourceOverzier::renormalize_current(){
 }
 
 
-SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,PosType zeropoint
+SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA
+                                       ,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,PosType zeropoint
                                        ,Utilities::RandomNumbers_NR &ran):
 SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0,zeropoint)
+,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -229,7 +225,7 @@ SourceOverzierPlus::~SourceOverzierPlus(){
 SourceOverzierPlus::SourceOverzierPlus(const SourceOverzierPlus &p):
 SourceOverzier(p),
 Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
-,disk_phase(p.disk_phase),PA(p.PA),cosPA(p.cosPA),sinPA(p.sinPA),cosi(p.cosi)
+,disk_phase(p.disk_phase),PA(p.PA),cosPA(p.cosPA),sinPA(p.sinPA),cosi(p.cosi),spheroid(p.spheroid)
 {
   //delete spheroid;
   /*spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff()

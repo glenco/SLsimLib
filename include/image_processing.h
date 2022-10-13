@@ -605,10 +605,10 @@ private:
   // derived parameters;
   double sigma_background;  // background var in ergs / cm^2 / s / Hz
   double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
-  
+
   
 public:
-
+  
   ObsVIS(size_t Npix_x,size_t Npix_y
          ,int oversample
          ,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
