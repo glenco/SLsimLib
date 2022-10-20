@@ -309,7 +309,7 @@ namespace ImageFinding{
     
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d &x){
-      return Utilities::inhull2(x,caustic_curve_outline);
+      return Utilities::inhull(x.x,critcurve);
     }
 
     /// return true if x is strictly inside (entirely) the caustic curve
