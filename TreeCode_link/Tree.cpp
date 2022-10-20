@@ -125,8 +125,8 @@ std::ostream &operator<<(std::ostream &os, Point const &p) {
 }
 
 std::ostream &operator<<(std::ostream &os, RAY const &r) {
-  return os << r.x[0] << "," << r.x[1]<< "," << r.y[0] << "," << r.y[1]
-  << "," << r.z << "," << r.kappa()<< "," << r.gamma1() << "," << r.gamma2() << "," << r.gamma3() << "," << r.dt;
+  return os << "[" << r.x[0] << "," << r.x[1]<< "],[" << r.y[0] << "," << r.y[1]
+  << "]," << r.z << "," << r.kappa()<< "," << r.gamma1() << "," << r.gamma2() << "," << r.gamma3() << "," << r.dt;
 }
 
 
