@@ -347,7 +347,7 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
   }
 }
 
-/** * \brief Smooths the image with a PSF map.
+/** * \brief Correlate a noise map
  *
  */
 void Obs::CorrelateNoise(PixelMap &pmap)
