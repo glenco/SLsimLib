@@ -1401,9 +1401,9 @@ private:
 class LensHaloGaussian : public LensHalo{
 public:
 
-  LensHaloGaussian(float my_mass  /// total mass in Msun
+  LensHaloGaussian(float my_mass  /// total mass in Msun without cutoff
                 ,PosType my_zlens /// redshift
-                ,PosType r_scale  /// scale hight along the largest dimension
+                ,PosType r_scale  /// scale high so major axis of a kappa contour is rscale / sqrt(q) and minor axis is rscale sqrt(q)
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the horizontal axis and goes counter clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
@@ -1593,8 +1593,8 @@ private:
   
   int nn; // number of gaussians
   int mm; // number of fit radii
-  double q;
-  double pa;
+  double q; // axis ratio
+  double pa; // position angle
   double mass_norm;
   double r_norm;
   std::vector<double> sigmas;
@@ -1604,6 +1604,7 @@ private:
   std::vector<double> A;
   float rms_error;
   
+
 public:
   
   LensHaloMultiGauss(
@@ -1637,8 +1638,6 @@ public:
     double totalmass=0;
     calc_masses_scales(profile,nn,mm,r_min,r_max,mass_norm,r_norm
                        ,totalmass,sigmas,A,rms_error,verbose);
-    
-    LensHalo::setMass(totalmass);
   
     // construct Gaussian components
     for(int i=0 ; i<nn ; ++i){
@@ -1646,19 +1645,26 @@ public:
     }
     Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
     Rmax = Rsize = f*r_max;
+    
+    totalmass = 0;
+    for(int n=0 ; n<nn ; ++n){
+      totalmass += A[n] * ( 1 - exp(-Rmax*Rmax / 2 / (sigmas[n]*sigmas[n]) ) );
+    }
+    LensHalo::setMass(totalmass);
   }
   
+  /// This constructor can be used when the scales and masses of the component Gaussians have already been calculated.
   LensHaloMultiGauss(
                      double my_mass_norm
                      ,double Rnorm
-                     ,double my_scale           // radial scale in units of the scale that was used to produce relative_scales
+                     ,double my_scale   // radial scale in units of the scale that was used to produce relative_scales
                      ,const std::vector<double> &relative_scales
                      ,const std::vector<double> &relative_masses
                      ,PosType my_zlens /// redshift
                      ,float my_fratio /// axis ratio
                      ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
                      ,const COSMOLOGY &cosmo  /// cosmology
-                     ,float f=100 /// cuttoff radius in units of truncation radius
+                     ,float f=100 /// cuttoff radius in units of the larges scale
                      ,bool verbose = false
   ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(my_mass_norm),r_norm(Rnorm)
   
@@ -1687,17 +1693,36 @@ public:
     }
     for(auto &a : A) a *= my_mass_norm/tmp_mass;
 
- 
-    double totalmass = 0;
-    for(auto a : A) totalmass += a;
-    LensHalo::setMass(totalmass);
-  
-    // construct Gaussian components
-    for(int i=0 ; i<nn ; ++i){
-      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
-    }
     Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
     Rmax = Rsize = f*sigmas.back();
+
+    double totalmass = 0;
+    for(int n=0 ; n<nn ; ++n){
+      totalmass += A[n] * ( 1 - exp(-Rmax*Rmax / 2 / (sigmas[n]*sigmas[n]) ) );
+    }
+    LensHalo::setMass(totalmass);
+    
+    // construct Gaussian components
+    for(int i=0 ; i<nn ; ++i){
+      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo
+                             ,Rmax/sigmas[i]);
+    }
+
+    if(verbose){
+      double mass=0;
+      for(int n=0 ; n<nn ; ++n){
+        mass += A[n] * ( 1 - exp(-r_norm*r_norm / 2 / (sigmas[n]*sigmas[n]) ) );
+      }
+      std::cout << " total mass at r_norm : " << mass << " mass / mass_in = " << mass/my_mass_norm << std::endl;
+      
+      mass=0;
+      for(int n=0 ; n<nn ; ++n){
+        mass += A[n] * ( 1 - exp(-Rmax*Rmax / 2 / (sigmas[n]*sigmas[n]) ) );
+      }
+      std::cout << " total mass at Rmax : " << mass << " mass / mass_in = " << mass/my_mass_norm << std::endl;
+ 
+    }
+ 
   }
 
   /// reset the position angle
@@ -1786,7 +1811,7 @@ public:
       //M = M.inverse();
       a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
       
-      if(verbose) std::cout << "test " << std::endl << M*a << std::endl;
+      if(verbose) std::cout << "test in LensHaloMultiGauss::calc_masses_scales()" << std::endl << M*a << std::endl;
     }
     
     // tests
