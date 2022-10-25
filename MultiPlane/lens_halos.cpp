@@ -1247,6 +1247,7 @@ void LensHaloTEPL::deflection(std::complex<double> &z
   }
 }
 
+// for calculating exterior solution
 std::complex<double> LensHaloTEPL::F(double r_e,double t,std::complex<double> z) const{
 
   std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
@@ -1334,13 +1335,14 @@ void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,
 
 #ifdef ENABLE_CERF
 
-LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
-              ,PosType my_zlens /// redshift
-              ,PosType r_scale  /// scale hight along the largest dimension
-              ,float my_fratio /// axis ratio
-              ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
-              ,const COSMOLOGY &cosmo  /// cosmology
-              ,float f /// cuttoff radius in units of truncation radius
+LensHaloGaussian::LensHaloGaussian(
+              float my_mass
+              ,PosType my_zlens
+              ,PosType r_scale
+              ,float my_fratio
+              ,float my_pa
+              ,const COSMOLOGY &cosmo
+              ,float f
 ):LensHalo(),q(my_fratio),pa(my_pa),I(0,1)
 {
 
@@ -1353,7 +1355,7 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
   if(q > 1){
     q = 1/q;
   }
-  Rhight = r_scale*q;
+  Rhight = r_scale*sqrt(q);
   q_prime = (1-q*q)/q/q;
   
   R = std::complex<double>(cos(pa),sin(pa));
@@ -2465,16 +2467,17 @@ double LensHalo::test_average_kappa(PosType R){
 
 /// Three tests: 1st - Mass via 1D integration vs mass via 2D integration. 2nd: gamma_t=alpha/r - kappa(R) which can be used for spherical distributions. Deviations are expected for axis ratios <1. For the latter case we use the next test. 3rd: The average along a circular aperture of gamma_t should be equal to <kappa(<R)> minus the average along a circular aperture over kappa. Note that also  alpha/r - kappa is checked for consistency with kappa(<R)-<kappa(R)>. For axis ratios < 1 the factor between the two is expected to be of order O(10%).
 bool LensHalo::test(){
+  std::cout << " LensHalo test :" << std::endl;
   std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl << "  The total internal mass is " << mass << std::endl;
   
-  std::cout << "R/Rmax     R/Rsize     Mass 1 D (from alpha)     Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
+  std::cout << "R            R/Rmax     R/Rsize     Mass 1 D (from alpha)     Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
   
-  int N=25;
+  int N=100;
   PosType m1,m2;
   for(int i=1;i<N;++i){
     m1 = MassBy1DIntegation(LensHalo::getRsize()*i/(N-4));
     m2 = MassBy2DIntegation(LensHalo::getRsize()*i/(N-4));
-    std::cout <<  i*1./(N-4) << "      " << i/(N-4) << "      " << m1 << "       "
+    std::cout << LensHalo::getRsize()*i*1./(N-4) << "      " <<  i*1./(N-4) << "      " << i*1./(N-4) << "      " << m1 << "       "
     << m2 << "        "<< (m1-m2)/m1 << "         " << m2/m1  << std::endl;
     
   }

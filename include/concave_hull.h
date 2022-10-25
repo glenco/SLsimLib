@@ -633,6 +633,7 @@ inline bool inhull<Point *>(PosType x[],const std::vector<Point *> &H){
   return w;
 }
 
+/// finds in x is within the curve discribed by the H[].x points ie image points
 template <>
 inline bool inhull<RAY>(PosType x[],const std::vector<RAY> &H){
   
