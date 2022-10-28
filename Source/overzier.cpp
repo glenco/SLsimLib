@@ -172,9 +172,18 @@ void SourceOverzier::renormalize_current(){
 }
 
 
-SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA
-                                       ,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,PosType zeropoint
-                                       ,Utilities::RandomNumbers_NR &ran):
+SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
+                                       ,PosType my_mag_bulge
+                                       ,PosType my_Reff
+                                       ,PosType my_Rdisk
+                                       ,PosType my_PA
+                                       ,PosType inclination
+                                       ,unsigned long my_id
+                                       ,PosType my_z
+                                       ,const PosType *theta
+                                       ,PosType zeropoint
+                                       ,Utilities::RandomNumbers_NR &ran
+                                       ):
 SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0,zeropoint)
 ,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint)
 {

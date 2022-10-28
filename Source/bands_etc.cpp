@@ -11,7 +11,6 @@
 #include "bands_etc.h"
 #include "source.h"
 
-
 double BandInfo::lambda_central(Band band){   /// central wavelength in Angstroms
   
   int i=0;
