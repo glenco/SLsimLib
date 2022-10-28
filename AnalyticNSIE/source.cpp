@@ -738,12 +738,13 @@ SourceMultiShapelets::SourceMultiShapelets(
                                            const std::string &my_shapelets_folder,Band my_band
                                            ,double my_max_mag_limit
                                            ,double my_min_mag_limit
+                                           ,double my_z_max
                                            ,double my_sb_limit
                                            ,double maximum_radius
                                            ,double zeropoint
                                            )
 : Source(0,Point_2d(0,0),0,my_sb_limit,zeropoint),index(0),max_mag_limit(my_max_mag_limit),min_mag_limit(my_min_mag_limit)
-,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
+,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder),z_max(my_z_max)
 {
   
 //  if(sb_limit == -1)
@@ -755,7 +756,7 @@ SourceMultiShapelets::SourceMultiShapelets(
 }
 
 void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_band
-                                 ,double my_max_mag_limit,double my_min_mag_limit
+                                 ,double my_max_mag_limit,double my_min_mag_limit,double my_z_max
                                  ,double my_sb_limit,double maximum_radius,double zero_point
 )
 {
@@ -767,6 +768,8 @@ void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_
   radius_max = maximum_radius;
   shapelets_folder = my_shapelets_folder;
   setMagZeroPoint(zero_point);
+  z_max = my_z_max;          /// maximum redshift
+
   
  // if(sb_limit == -1)
  //   setSBlimit_magarcsec(30.);
@@ -870,9 +873,13 @@ void SourceMultiShapelets::readCatalog()
       s.setBand(Band::EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag(Band::EUC_VIS) < max_mag_limit && s.getMag(Band::EUC_VIS) > min_mag_limit
-          && s.getMag(Band::EUC_J) > 0 && s.getMag(Band::EUC_H) > 0
-          && s.getRadius() < radius_max){
+      if (s.getMag() > 0.
+          && s.getMag(Band::EUC_VIS) < max_mag_limit
+          && s.getMag(Band::EUC_VIS) > min_mag_limit
+          && s.getMag(Band::EUC_J) > 0
+          && s.getMag(Band::EUC_H) > 0
+          && s.getRadius() < radius_max
+          && s.getZ() < z_max){
         galaxies.push_back(s);
         shap_input.close();
       }

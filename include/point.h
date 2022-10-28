@@ -584,7 +584,7 @@ struct RAY{
   /// inverse of the magnification
   KappaType invmag(){return A.det();}
   
-  /// deflection angle
+  /// deflection angle, x-y
   Point_2d alpha(){return x - y;}
 };
 

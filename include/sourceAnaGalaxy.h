@@ -192,6 +192,7 @@ public:
                        ,Band my_band  /// band that will be used as default
                        ,double my_max_mag_limit  /// magnitude limit in that band
                        ,double my_min_mag_limit  /// magnitude limit in that band
+                       ,double my_z_max          /// maximum redshift
                        ,double my_sb_limit       /// surface brightness limit
                        ,double maximum_radius   /// maximum radius (as defined in shapelet expansion) in radians
                        ,double zero_point        /// magnitude zreo point
@@ -201,6 +202,7 @@ public:
                        ,Band my_band  /// band that will be used as default
                        ,double my_max_mag_limit  /// magnitude limit in that band
                        ,double my_min_mag_limit  /// magnitude limit in that band
+                       ,double my_z_max          /// maximum redshift
                        ,double my_sb_limit     /// surface brightness limit
                        ,double maximum_radius   /// maximum radius (as defined in shapelet expansion) in radians
                        ,double zero_point        /// magnitude zreo point
@@ -293,6 +295,7 @@ private:
  	std::size_t index;
   float max_mag_limit;
   float min_mag_limit;
+  float z_max;  // maximum redshift allowed
   Band band;
   double radius_max;
  
