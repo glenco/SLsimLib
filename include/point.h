@@ -588,6 +588,11 @@ struct RAY{
   Point_2d alpha(){return x - y;}
 };
 
+//inline std::string to_string(RAY &r) {
+//  std::string s = "[" + std::to_string(r.x[0]) + "," + r.x[1] + ",[" + r.y[0] + "," + r.y[1]
+//  + "]," + r.z + "," + r.kappa() + ",[" + r.gamma1() + "," + r.gamma2() + "," + r.gamma3() + "]," << r.dt;
+//  return s;
+//}
 std::ostream &operator<<(std::ostream &os, RAY const &r);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
