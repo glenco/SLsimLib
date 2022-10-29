@@ -13,14 +13,22 @@ using namespace std;
 
 double flux_to_mag_AB(double flux){
   if(flux <=0) return 100;
-  //return -2.5 * log10(flux) - 24.4;
   return -2.5 * log10(flux) - 48.6;
 }
 
 double mag_to_flux_AB(double m){
   if(m == 100) return 0;
-  //return pow(10,-0.4*(m+24.4));
   return pow(10,-0.4*(m+48.6));
+}
+
+double flux_to_mag(double flux,double zeropoint){
+  if(flux <=0) return 100;
+  return -2.5 * log10(flux) + zeropoint;
+}
+
+double mag_to_flux(double m,double zeropoint){
+  if(m == 100) return 0;
+  return pow(10,-0.4*(m - zeropoint));
 }
 
 //SourceUniform::SourceUniform(InputParams& params) : Source(){

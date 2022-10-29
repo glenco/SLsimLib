@@ -14,6 +14,8 @@
 class PixelMap;
 double mag_to_flux_AB(double);
 double flux_to_mag_AB(double flux);
+double mag_to_flux(double m,double zeropoint);
+double flux_to_mag(double flux,double zeropoint);
 
 
 /** \brief Base class for all sources.
