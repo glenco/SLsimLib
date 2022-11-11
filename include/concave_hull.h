@@ -597,7 +597,7 @@ bool inhull(PosType x[],const std::vector<Ptype> &H){
     }
   }
 
-  return w;
+  return abs(w);
 }
 
 template <>

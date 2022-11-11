@@ -2658,6 +2658,13 @@ short Lens::ResetSourcePlane(
 void Lens::FindSourcePlane(PosType zs,long &jmax,double &Dls,double &Ds){
                           
   Ds = cosmo.coorDist(zs);
+  
+  if(zs <=  plane_redshifts[0]){
+    jmax=0;
+    Dls=Ds;
+    return;
+  }
+  
   jmax = plane_redshifts.size() - 1;  // the last plane is the source plane
   
   if(jmax <= 0){ // case where there is just a source plane
@@ -2667,7 +2674,7 @@ void Lens::FindSourcePlane(PosType zs,long &jmax,double &Dls,double &Ds){
   while( plane_redshifts[jmax-1] > zs  ){
     --jmax;
   }
-  
+    
   Dls = cosmo.coorDist(plane_redshifts[jmax-1],zs);
 }
 
