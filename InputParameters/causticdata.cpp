@@ -183,7 +183,7 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
   
   
   size_t pos;
-  CausticStructure tmp_data;
+  CausticSummary tmp_data;
   // read in data
   while(getline(file_in,myline)){
     
@@ -306,7 +306,7 @@ void CausticDataStore::SetSearchTree(){
   //searchtree = new TreeSimple(xp,data.size(),1);
   //searchtreevec = new TreeSimpleVec<CausticStructure>(data.data(),data.size(),1,2,true,crit_center);
   
-  searchtreevec = new TreeSimpleVec<CausticStructure>(data.data(),data.size(),1,2,true,[](CausticStructure &c){return c.crit_center.x;});
+  searchtreevec = new TreeSimpleVec<CausticSummary>(data.data(),data.size(),1,2,true,[](CausticSummary &c){return c.crit_center.x;});
   Nxp = data.size();
 }
 
@@ -540,7 +540,7 @@ int CausticDataStore::RandomLens(Utilities::RandomNumbers_NR &ran){
 }
 
 
-std::ostream &operator<<(std::ostream &os, CausticStructure const &caust) {
+std::ostream &operator<<(std::ostream &os, CausticSummary const &caust) {
   return os << " crit center: " << caust.crit_center << " caustic center: "
   << caust.caustic_center << " type : " << to_string(caust.crit_type);
 }

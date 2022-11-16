@@ -17,9 +17,9 @@
 #include "grid_maintenance.h"
 
 
-struct CausticStructure{
-  CausticStructure(){}
-  CausticStructure(const CausticStructure &tmp){
+struct CausticSummary{
+  CausticSummary(){}
+  CausticSummary(const CausticSummary &tmp){
     redshift = tmp.redshift;
     crit_center = tmp.crit_center;
     crit_radius[0] = tmp.crit_radius[0];
@@ -35,6 +35,26 @@ struct CausticStructure{
     caustic_area = tmp.caustic_area;
     
   };
+  
+  CausticSummary &operator=(CausticSummary &tmp){
+    if(&tmp==this) return *this;
+    
+    redshift = tmp.redshift;
+    crit_center = tmp.crit_center;
+    crit_radius[0] = tmp.crit_radius[0];
+    crit_radius[1] = tmp.crit_radius[1];
+    crit_radius[2] = tmp.crit_radius[2];
+    crit_area = tmp.crit_area;
+    crit_type = tmp.crit_type;
+    
+    caustic_center = tmp.caustic_center;
+    caustic_radius[0] = tmp.caustic_radius[0];
+    caustic_radius[1] = tmp.caustic_radius[1];
+    caustic_radius[2] = tmp.caustic_radius[2];
+    caustic_area = tmp.caustic_area;
+    
+    return *this;
+  }
   /// redshift of source plane
   double redshift;
   /// center of critical line in radians
@@ -86,14 +106,14 @@ public:
   size_t numberOfCaustics(){return data.size();}
   
   /// returns in no particular order
-  CausticStructure & operator[](size_t index){return data[index];}
+  CausticSummary & operator[](size_t index){return data[index];}
   
   /// returns the CausticStructure with n'th largest cirtical curve area
-  CausticStructure & CritAreaOrder(size_t n){return data[crit_area_index[n]];}
+  CausticSummary & CritAreaOrder(size_t n){return data[crit_area_index[n]];}
   /// returns the CausticStructure with n'th largest caustic curve area
-  CausticStructure & CausticAreaOrder(size_t n){return data[caus_area_index[n]];}
+  CausticSummary & CausticAreaOrder(size_t n){return data[caus_area_index[n]];}
   /// returns the CausticStructure with n'th largest critical curve radius
-  CausticStructure & CritRadiusOrder(size_t n){return data[caus_area_index[n]];}
+  CausticSummary & CritRadiusOrder(size_t n){return data[caus_area_index[n]];}
   
   /// returns the index of the n'th largest critical curve area
   size_t getNthIndexCritArea(size_t n){return crit_area_index[n];}
@@ -131,7 +151,7 @@ public:
   bool findNearestCrit(PosType *x,long &index);
   bool findNearestCrit(PosType *x,long &index,CritType type);
   
-  std::vector<CausticStructure> data;
+  std::vector<CausticSummary> data;
 private:
   void readfile(std::string filename,bool verbose);
 
@@ -147,7 +167,7 @@ private:
 
   void SetSearchTree();
   //TreeSimple *searchtree;
-  TreeSimpleVec<CausticStructure> *searchtreevec;
+  TreeSimpleVec<CausticSummary> *searchtreevec;
   //PosType **xp;
   size_t Nxp;
   
@@ -155,6 +175,6 @@ private:
   
 };
 
-std::ostream &operator<<(std::ostream &os, CausticStructure const &caust);
+std::ostream &operator<<(std::ostream &os, CausticSummary const &caust);
 
 #endif /* defined(__SLsimLib__causticdata__) */
