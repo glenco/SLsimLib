@@ -30,6 +30,10 @@
 typedef enum {NO, YES, MAYBE} Boo;
 #endif
 
+/// returns sign of a number
+template <typename T>
+int sign(T val){return (T(0) < val) - (val < T(0));}
+
 /**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
  
  */

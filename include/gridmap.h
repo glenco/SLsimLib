@@ -50,6 +50,7 @@ struct GridMap{
    May be slow.
    */
   double AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source);
+  
  /**
    * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
    * the new source is added to any sources that were already there.
@@ -58,6 +59,11 @@ struct GridMap{
    */
   double AddSurfaceBrightnesses(SourceHndl source);
 
+  /// get the image point for a index number
+  Point_2d image_point(size_t index){return i_points[index];}
+  /// get the image point for a index number
+  Point_2d source_point(size_t index){return s_points[index];}
+ 
   void ClearSurfaceBrightnesses();
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
@@ -130,6 +136,127 @@ struct GridMap{
     return *this;
   }
 
+  struct Triangle{
+    Triangle(size_t i,size_t j,size_t k){
+      index[0] = i;
+      index[1] = j;
+      index[2] = k;
+    }
+    size_t index[3];
+    size_t & operator[](int i){return index[i];}
+  };
+  /** find all images by triangle method
+   */
+  void find_images(Point_2d y
+                   ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
+                   ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+                   ) const {
+    
+    image_points.clear();
+    triangles.clear();
+    
+    size_t k;
+    size_t k1;
+    size_t k2;
+    size_t k3;
+    
+    int sig1,sig2,sig3,sig_sum;
+
+    for(size_t i=0 ; i< Ngrid_init-1 ; i++){
+      for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
+        k = i + j*Ngrid_init;
+        k1 = k + Ngrid_init + 1;
+        
+        k2 = k + 1;
+        k3 = k + Ngrid_init;
+
+        sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+        sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
+        sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
+        
+        sig_sum = sig1 + sig2 + sig3;
+        if(abs(sig_sum) == 3){ // inside
+          image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
+          triangles.push_back(Triangle(k,k1,k2));
+        }else if(abs(sig_sum) == 2){ // on edge
+          if(sig_sum > 0){
+            if(sig1 == 0){
+              image_points.push_back( ( i_points[k] + i_points[k1])/2  );
+              triangles.push_back(Triangle(k,k1,k2));
+            }else if(sig2 == 0){
+              image_points.push_back( ( i_points[k1] + i_points[k2])/2  );
+              triangles.push_back(Triangle(k,k1,k2));
+            }else{
+              image_points.push_back( ( i_points[k2] + i_points[k])/2  );
+              triangles.push_back(Triangle(k,k1,k2));
+            }
+          }
+        }else if (sig1 == 0 && sig3 == 0){ // a vertex
+          image_points.push_back( i_points[k] );
+        }
+       
+        sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+        sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
+        sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
+        
+        sig_sum = sig1 + sig2 + sig3;
+        if(abs(sig_sum) == 3){ // inside
+          image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k3] )/3  );
+          triangles.push_back(Triangle(k,k1,k3));
+        }else if(abs(sig_sum) == 2){ // on edge
+          if(sig_sum > 0){
+            if(sig1 == 0){
+              image_points.push_back( ( i_points[k] + i_points[k1] )/2  );
+              triangles.push_back(Triangle(k,k1,k3));
+            }else if(sig2 == 0){
+              image_points.push_back( ( i_points[k1] + i_points[k3] )/2  );
+              triangles.push_back(Triangle(k,k1,k3));
+            }else{
+              image_points.push_back( ( i_points[k3] + i_points[k] )/2  );
+              triangles.push_back(Triangle(k,k1,k3));
+            }
+          }
+        }
+      }
+    }
+    
+    return;
+  }
+  
+  /** \brief add flux to the rays that are nearest to the source on the source plane for each image
+  *
+   * This uses GridMap::find_images to find the images.  It then finds the point that is closest to the source position.
+   *  The flux is added to one point per image.  The total flux added is returned.  No further refinement of the grid is done
+   *  so it is limited by the resolution of the GridMap.  Some spurious low magnification images can be found.
+   */
+  double AddPointSource(const Point_2d &y,double flux){
+    std::vector<Point_2d> images;
+    std::vector<Triangle> tri;
+
+    find_images(y,images,tri);
+    
+    int n = images.size();
+    
+    double total_flux = 0;
+    for(int i = 0 ; i<n ; ++i){
+      
+      int closest = 0;
+      double d = (s_points[ tri[i][0] ] - y).length_sqr();
+      double tmp = (s_points[ tri[i][1] ] - y).length_sqr();
+      if(tmp < d){ d=tmp; closest = 1;}
+      tmp = (s_points[ tri[i][2] ] - y).length_sqr();
+      if(tmp < d){ d=tmp; closest = 2;}
+ 
+      size_t ii = tri[i][closest];
+      total_flux += flux / fabs(i_points[ii].invmag());
+      d = flux / fabs(i_points[ii].invmag()) / getResolution() / getResolution() ;
+      i_points[ii].surface_brightness += d;
+      s_points[ii].surface_brightness += d;
+    }
+    
+    return total_flux;
+  }
+  
 private:
   
   // cluge to make compatible with old method of producing points
