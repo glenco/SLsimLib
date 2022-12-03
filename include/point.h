@@ -12,7 +12,7 @@
 
 #ifndef pointtypes_declare
 #define pointtypes_declare
-
+#include <complex>
 #include <standard.h>
 #include "Kist.h"
 
@@ -29,6 +29,10 @@
 #define boo_declare
 typedef enum {NO, YES, MAYBE} Boo;
 #endif
+
+/// enumerates the types of critical curves. ND is "not defined".
+enum class CritType {ND,radial,tangential,pseudo};
+
 
 /// returns sign of a number
 template <typename T>
@@ -385,6 +389,15 @@ struct Matrix2x2{
     std::cout << a[0] << "  " << a[1] << std::endl;
     std::cout << a[2] << "  " << a[3] << std::endl;
   }
+  
+  // this assumes that the eigenvalues are real
+  void eigenv(T lambda[]){
+    T m = (a[0] + a[3])/2;
+    T determinent = det();
+    
+    lambda[0] = m + sqrt( abs(m*m - determinent));
+    lambda[1] = m - sqrt( abs(m*m - determinent));
+  }
 };
 
 
@@ -459,8 +472,13 @@ struct Point: public Point_2d{
     return (p1->x[1] > p2->x[1]);
   }
 
-  /// returns true if the image is double inverted,  At very low magnification this can fail.
-  bool inverted(){ return 0 > (A.a[0] + sqrt( fabs(A.a[0]*A.a[0] - invmag()) ) ); }
+  /// returns true if the image is double inverted,  At very low magnification or when there is a rotation this can fail.
+  bool inverted(){
+    KappaType eigens[2];
+    A.eigenv(eigens);
+    
+    return (eigens[0] < 0)*(eigens[1] < 0);
+  }
 };
 
 std::ostream &operator<<(std::ostream &os, Point const &p);
