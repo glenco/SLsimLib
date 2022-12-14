@@ -198,12 +198,13 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0,z
   disk_phase = PI*ran(); // add phase of arms
   Ad = minA + (maxA-minA)*ran();
   
-  // extra cersic component
+  // extra sersic component
   //double index = 4 + 3*(ran()-0.5)*2;
   
   //double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
   //double index = ran() + 3.5 ;
   double index = 3.5 + 0.5*ran();  // ????
+  //double index = 4;  // ????
 
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);

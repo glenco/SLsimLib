@@ -704,11 +704,11 @@ inline bool inhull<PosType *>(PosType x[],const std::vector<PosType *> &H){
 
 /*** \brief Calculate the k nearest neighbors concave hull.
  
- This algorithem is guarenteed to find a currve that serounds an island of points, but not all islands unless check==true.
+ This algorithem is guarenteed to find a curve that serounds an island of points, but not all islands unless check==true.
  
  If it at first fails with the k input, k will increase.  The final k relaces the input k.
  
- check determines whether a final check is done to determine whether all the raminaing points are inside the hull.  Otherwise it is possible to get multiple disconetcted clusteers and the hull will surround only one.
+ check determines whether a final check is done to determine whether all the raminaing points are inside the hull.  Otherwise it is possible to get multiple disconnected clusters and the hull will surround only one.
  */
 
 template <typename Ptype>
