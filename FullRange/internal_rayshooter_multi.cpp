@@ -109,7 +109,7 @@ void Lens::rayshooterInternal(
       size = (int)Npoints - (nthreads-1)*chunk_size;
     int start = i*chunk_size;
     
-    thr[i] = std::thread(&Lens::compute_rays_parallel<Point>,this,start,size,i_points,&source_z,false,false);
+    thr[i] = std::thread(&Lens::compute_points_parallel<Point>,this,start,size,i_points,&source_z,false,false);
   }
  
   for(int i = 0; i < nthreads; i++) thr[i].join();
@@ -137,6 +137,7 @@ void Lens::rayshooterInternal(
     
       i_points[ii].image->x[0] = i_points[ii].x[0];
       i_points[ii].image->x[1] = i_points[ii].x[1];
+      
       i_points[ii].dt = 0;
       i_points[ii].image->dt = i_points[ii].dt;
       
@@ -171,8 +172,61 @@ void Lens::rayshooterInternal(
       size = (int)Npoints - (nthreads-1)*chunk_size;
     int start = i*chunk_size;
     
-    thr[i] = std::thread(&Lens::compute_rays_parallel<LinkedPoint>,this,start,size,i_points
+    thr[i] = std::thread(&Lens::compute_points_parallel<LinkedPoint>,this,start,size,i_points
                          ,source_zs.data(),true,false);
+  }
+ 
+  for(int i = 0; i < nthreads; i++) thr[i].join();
+}
+
+void Lens::rayshooterInternal(
+                                unsigned long Npoints
+                              , RAY *rays
+){
+  
+  // To force the computation of convergence, shear... -----
+  // -------------------------------------------------------
+  
+  assert(plane_redshifts.size() > 0);
+  if(plane_redshifts.size() == 1){  // case of no lens plane
+    
+    for(int ii = 0; ii < Npoints; ++ii){
+    
+      rays[ii].y[0] = rays[ii].x[0];
+      rays[ii].y[1] = rays[ii].x[1];
+      rays[ii].dt = 0;
+      rays[ii].A.setToI();
+    }
+    
+    return;
+  }
+  
+  // If there are no points to shoot, then we quit.
+  if(Npoints == 0) return;
+  
+  // For refining the grid and shoot new rays.
+  int nthreads, rc;
+  nthreads = Utilities::GetNThreads();
+  
+  int chunk_size;
+  do{
+    chunk_size = (int)Npoints/nthreads;
+    if(chunk_size == 0) nthreads /= 2;
+  }while(chunk_size == 0);
+  
+  std::thread thr[nthreads];
+  
+  // This is for multi-threading :
+  for(int i=0; i<nthreads;i++)
+  {
+    
+    int size = chunk_size;
+    if(i == nthreads-1)
+      size = (int)Npoints - (nthreads-1)*chunk_size;
+    int start = i*chunk_size;
+    
+    thr[i] = std::thread(&Lens::compute_rays_parallel,this,start,size,rays
+                         ,false);
   }
  
   for(int i = 0; i < nthreads; i++) thr[i].join();
@@ -373,6 +427,174 @@ void Lens::info_rayshooter(
   return;
 }
 
+
+void Lens::compute_rays_parallel(int start
+                                 ,int chunk_size
+                                 ,RAY *rays
+                                 ,bool verbose)
+{
+  int end        = start + chunk_size;
+
+  int i, j;
+  
+  PosType xx[2];
+  PosType aa,bb;
+  PosType alpha[2];
+  
+  KappaType kappa,gamma[3];
+  KappaType phi;
+  
+  Matrix2x2<PosType> G;
+
+  PosType SumPrevAlphas[2];
+  Matrix2x2<PosType> SumPrevAG;
+  
+  PosType *theta;
+  
+  long jmax = lensing_planes.size();
+  double Dls_Ds; // this is the ratio between of the distance between the last lens plane and the source to the distance to the source
+  double D_Ds; // this is the ratio between of the distance to the last lens plane and the source to the distance to the source
+  {
+    PosType Dls,Ds;
+    FindSourcePlane(rays[0].z,jmax,Dls,Ds);
+    Dls_Ds = Dls / Ds;
+    if(jmax > 0) D_Ds = Dl[jmax-1] / Ds;
+  }
+  
+  // Main loop : loop over the points of the image
+  for(i = start; i < end; i++)
+  {
+    //theta = i_points[i].image->x;
+    theta = rays[i].ptr_y();
+    
+    theta[0] = rays[i].x[0];
+    theta[1] = rays[i].x[1];
+
+    // Initializing SumPrevAlphas :
+    SumPrevAlphas[0] = theta[0];
+    SumPrevAlphas[1] = theta[1];
+
+    // Initializing SumPrevAG :
+    SumPrevAG.setToI();
+    
+    // Setting phi on the first plane.
+    phi = 0.0;
+    
+    // Default values :
+    rays[i].A.setToI();
+    rays[i].dt = 0;
+    
+    // Time delay at first plane : position on the observer plane is (0,0) => no need to take difference of positions.
+    rays[i].dt = 0;
+    
+    //0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
+    
+    {
+      PosType Dls,Ds;
+      FindSourcePlane(rays[i].z,jmax,Dls,Ds);
+      Dls_Ds = Dls / Ds;
+      if(jmax > 0) D_Ds = Dl[jmax-1]/Ds;
+    }
+    
+    // Begining of the loop through the planes :
+    // Each iteration leaves i_point[i].image on plane (j+1)
+
+    for(j = 0; j < jmax ; ++j)
+      {
+      
+      double Dphysical = Dl[j]/(1 + plane_redshifts[j]);
+      // convert to physical coordinates on the plane j, just for force calculation
+      xx[0] = theta[0] *  Dphysical;
+      xx[1] = theta[1] *  Dphysical;
+      // PhysMpc = ComMpc / (1+z)
+      
+      assert(xx[0] == xx[0] && xx[1] == xx[1]);
+      
+      ////////////////////////////////////////////////////////
+      
+      lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx);
+      // Computed in physical coordinates, xx is in PhysMpc.
+      
+      ////////////////////////////////////////////////////////
+      
+      assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      if(std::isinf(kappa)) { std::cout << "xx = " << xx[0] << " " << xx[1] << std::endl ;}
+      assert(!std::isinf(kappa));
+      
+      G[0] = kappa + gamma[0];    G[1] = gamma[1];
+      G[2] = gamma[1]; G[3] = kappa - gamma[0];
+  
+      /* multiply by fac to obtain 1/comoving_distance/physical_distance
+       * such that a multiplication with the charge (in units of physical distance)
+       * will result in a 1/comoving_distance quantity */
+      
+      G *= charge * Dl[j] / (1 + plane_redshifts[j]);
+        
+      assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+      assert(kappa == kappa);
+      assert(phi == phi);
+      
+      // This computes \vec{x}^{j+1} in terms of \vec{x}^{j}
+      // according to the corrected Eq. (18) of paper GLAMER II ---------------------------------
+      
+      // Adding the j-plane alpha contribution to the sum \Sum_{k=1}^{j} \vec{alpha_j} :
+      SumPrevAlphas[0] -= charge * alpha[0] ;
+      SumPrevAlphas[1] -= charge * alpha[1] ;
+      
+      if(j < jmax-1 ){
+        aa = dDl[j+1] / Dl[j+1];
+        bb = Dl[j] / Dl[j+1];
+      }else{
+        aa = Dls_Ds;
+        bb = D_Ds;
+      }
+      
+        if(!flag_switch_deflection_off){
+          theta[0] = bb * theta[0] + aa * SumPrevAlphas[0];
+          theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
+        }
+   
+      // ----------------------------------------------------------------------------------------
+            
+      // Sum_{k=1}^{j} Dl[k] A^k.G^k
+      SumPrevAG -= (G * (rays[i].A)) ;
+      
+      // Computation of the "plus quantities", i.e. the  next plane quantities :
+      rays[i].A = rays[i].A * bb + SumPrevAG * aa;
+      
+      // ----------------------------------------------
+      
+      // Geometric time delay with added potential
+      //p->i_points[i].dt += 0.5*( (xplus[0] - xminus[0])*(xplus[0] - xminus[0]) + (xplus[1] - xminus[1])*(xplus[1] - xminus[1]) ) * p->dTl[j+1] /p->dDl[j+1] /p->dDl[j+1] - phi * p->charge ; /// in Mpc  ???
+      
+      // Check that the 1+z factor must indeed be there (because the x positions have been rescaled, so it may be different compared to the draft).
+      // Remark : Here the true lensing potential is not "phi" but "phi * p->charge = phi * 4 pi G".
+      
+      
+    } // End of the loop going through the planes
+    
+    if(flag_switch_deflection_off){
+      rays[i].A = Matrix2x2<KappaType>::I() - SumPrevAG;
+    }
+    
+    // Subtracting off a term that makes the unperturbed ray to have zero time delay
+    //p->i_points[i].dt -= 0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] ) / p->Dl[NLastPlane];
+    
+    // Conversion of dt from Mpc (physical Mpc) to Years -----------------
+    rays[i].dt *= MpcToSeconds * SecondToYears ;
+        
+    
+    // TEST : showing final quantities
+    // ------------------------------=
+    if(verbose)  std::cout << "RSI final : X X | " << i << "  " << rays[i].z << " | " << rays[i].kappa() << " " << rays[i].gamma1() << " " << rays[i].gamma2() << " " << rays[i].gamma3() << " " << rays[i].invmag() << " | " << rays[i].dt << std::endl ;
+    
+  } // End of the main loop.
+
+}
+
+
 /**  \brief Find an image position for a source position.
  
  This routine finds the image position by minimizing the seporation on the source plane with Powell's method of minimization.  This will not find all images.  For that you must use another routine.  In the weak lensing regiam this should be sufficient.
@@ -416,9 +638,10 @@ RAY Lens::find_image(
 
 
 RAY Lens::find_image(
-          Point &p       /// p[] is
+          Point &p              /// p[] is
+          ,double zs           ///
           ,PosType ytol2        /// target tolerance in source position squared
-          ,PosType &dy2        /// final value of Delta y ^2
+          ,PosType &dy2         /// final value of Delta y ^2
           ,bool use_image_guess
 ){
 
@@ -433,7 +656,8 @@ RAY Lens::find_image(
   //std::cout << " yo = " << yo / arcsecTOradians << std::endl;
   if(!use_image_guess) p = yo;   // in this case the input image position is not used
   
-  rayshooterInternal(1,&p);
+  //rayshooterInternal(1,&p);
+  compute_points_parallel<Point>(0,1,&p,&zs,true);
   
   double invmago = p.invmag();
   
@@ -445,7 +669,8 @@ RAY Lens::find_image(
     p.x[0] = p.x[0] + dy[0];
     p.x[1] = p.x[1] + dy[1];
   
-    rayshooterInternal(1,&p);
+    //rayshooterInternal(1,&p);
+    compute_points_parallel<Point>(0,1,&p,&zs,true);
 
     dy = *(p.image) - yo;
   }
@@ -462,11 +687,16 @@ RAY Lens::find_image(
     
     ++steps;
     dx = p.A.inverse() * dy * f;
+    while(dx.length_sqr() > dy2*1.0e2 ){ // don't take too big a step at once
+      dx /= 2;
+      f /= 2;
+    }
 
     pt.x[0] = p.x[0] - dx[0];
     pt.x[1] = p.x[1] - dx[1];
 
-    rayshooterInternal(1,&pt);
+    //rayshooterInternal(1,&pt);
+    compute_points_parallel<Point>(0,1,&pt,&zs,true);
     
     if(use_image_guess && pt.invmag()*invmago < 0){ // prevents image from changin pairity
       f /= 2;
@@ -492,12 +722,12 @@ RAY Lens::find_image(
     }
   }
   
-  return RAY(p);
+  return RAY(p,zs);
 }
 
 RAY Lens::find_image(
-          RAY &ray       /// p[] is
-          ,PosType ytol2        /// target tolerance in source position squared
+          RAY &ray             /// p[] is
+          ,PosType ytol2       /// target tolerance in source position squared
           ,PosType &dy2        /// final value of Delta y ^2
           ,bool use_image_guess
                      ){
@@ -507,5 +737,100 @@ RAY Lens::find_image(
   pp.image->x[0] = ray.y[0];
   pp.image->x[1] = ray.y[1];
  
-  return find_image(pp,ytol2,dy2,use_image_guess);
+  return find_image(pp,ray.z,ytol2,dy2,use_image_guess);
+}
+
+RAY Lens::find_image(
+          Point &p             /// p[] is
+          ,double zs           /// source redshift
+          ,PosType ytol2        /// target tolerance in source position squared
+          ,PosType &dy2        /// final value of Delta y ^2
+          ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+){
+
+  if(p.image == nullptr){
+    std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
+  }
+
+  int MaxSteps = 100;
+  
+  Point_2d yo = *(p.image),dx;
+
+  if(! Utilities::inhull(p.x , boundary) ){
+    p.x[0] = boundary[0][0];
+    p.x[1] = boundary[0][1];
+  }
+
+  //rayshooterInternal(1,&p);
+  compute_points_parallel<Point>(0,1,&p,&zs,true);
+  
+  double invmago = p.invmag();
+  
+  Point_2d dy = *(p.image) - yo,dy_tmp;
+
+  dy2 = dy.length_sqr();
+ 
+  //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+ 
+  LinkedPoint pt;
+  
+  int steps = 0;
+  double f = 1 , dy2_tmp,ddy2=ytol2;
+  while(dy2 > ytol2 && f > 1.0e-4 && steps < MaxSteps){
+    
+    ++steps;
+    dx = p.A.inverse() * dy * f;
+    while(dx.length_sqr() > dy2*1.0e2 ){ // don't take too big a step at once
+      dx /= 2;
+      f /= 2;
+    }
+
+    pt.x[0] = p.x[0] - dx[0];
+    pt.x[1] = p.x[1] - dx[1];
+
+    //rayshooterInternal(1,&pt);
+    compute_points_parallel<Point>(0,1,&pt,&zs,true);
+  
+    if(pt.invmag()*invmago < 0){ // prevents image from changing pairity
+      f /= 2;
+    }else if( !Utilities::inhull(pt.x , boundary) ){
+      f /= 2;
+    }else{
+
+      dy_tmp = *(pt.image) - yo;
+      dy2_tmp = dy_tmp.length_sqr();
+            
+      if(dy2_tmp > dy2){
+        f /= 2;
+        //if(f < 0.01) break;
+      }else{
+        f = 1;
+        dy2= dy2_tmp;
+        dy = dy_tmp;
+        
+        ddy2 = (*(pt.image) -  *(p.image)).length_sqr();
+        p = pt;
+        //if(ddy2 < ytol2*1.0e-9) break;
+      }
+      
+      //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+    }
+  }
+  
+  return RAY(p,zs);
+}
+
+RAY Lens::find_image(
+          RAY &ray       /// p[] is
+          ,PosType ytol2        /// target tolerance in source position squared
+          ,PosType &dy2        /// final value of Delta y ^2
+          ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+                     ){
+  LinkedPoint pp;
+  pp[0] = ray.x[0];
+  pp[1] = ray.x[1];
+  pp.image->x[0] = ray.y[0];
+  pp.image->x[1] = ray.y[1];
+ 
+  return find_image(pp,ray.z,ytol2,dy2,boundary);
 }

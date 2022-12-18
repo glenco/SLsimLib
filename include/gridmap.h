@@ -21,6 +21,9 @@
  *
  *  GripMap is faster and uses less memory than Grid.  It does not construct the tree structures for the points 
  *  and thus cannot be used for adaptive mapping or image finding.
+ *
+ *  The distance between the left (lower) most and right (upper) most ray is range so the resolution is range/(N-1).
+ *  The lower left pixel is at center[]-0.5*range and the upper right is at center[]+0.5*range
  */
 
 struct GridMap{
@@ -42,6 +45,12 @@ struct GridMap{
    */
   double RefreshSurfaceBrightnesses(SourceHndl source);
   /**
+   Oversample some pixels where the usrface brightness is not smooth and update surface brighnesses to be the average inside the pixel.
+   
+   May be slow.
+   */
+  double AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source);
+ /**
    * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
    * the new source is added to any sources that were already there.
    *
@@ -136,6 +145,7 @@ private:
   Point *s_points;
   Point_2d center;
   
+  bool to_refine(long i,long j,double total,double f) const ;
   static std::mutex grid_mutex;
 };
 

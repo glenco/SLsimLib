@@ -551,8 +551,6 @@ private:
 	bool telescope; // was the observation created from a default telescope?
   float e_per_s_to_ergs_s_cm2;  // e- / s   for zero magnitudes
   float background_flux;  // e- / s / arcsec
-  
-  const float AB_zeropoint = - 48.6;
 
   void set_up();
   

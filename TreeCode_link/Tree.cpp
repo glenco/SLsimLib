@@ -694,9 +694,8 @@ Point *NewPoint(PosType *x,unsigned long id){
 * pointers to prev and next
 * changes links of image points to follow */
 void SwapPointsInArray(Point *p1,Point *p2){
-  Point pt;
-
   if(p1==p2) return;
+  Point pt;
 
   PointCopy(&pt,p1);
   PointCopy(p1,p2);
@@ -978,7 +977,7 @@ void ImageFinding::printCriticalCurves(std::string filename
   
   filename = filename + ".csv";
   std::ofstream myfile(filename);
-  myfile << "caustic_center_x,caustic_center_y,caustic_area,critical_center_x,critical_center_y,critical_area,z_source,type"
+  myfile << "caustic_center_x,caustic_center_y,caustic_area,critical_center_x,critical_center_y,critical_area,z_source,type,touches_edge"
   << std::endl;
   for(auto cr : critcurves){
     myfile << cr << std::endl;
@@ -990,7 +989,7 @@ std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p)
   // caustic_center,caustic_area,critical_center,critical_area,z_source,type
   os << p.caustic_center[0] << "," << p.caustic_center[1] << "," << p.caustic_area
   << "," << p.critical_center[0] << "," << p.critical_center[1] << ","
-  << p.critical_area << "," << p.z_source << "," << to_string(p.type);
+  << p.critical_area << "," << p.z_source << "," << to_string(p.type) << "," << p.touches_edge;
   
   return os;
 }

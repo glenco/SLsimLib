@@ -565,9 +565,8 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
   }
 }
 
-
 bool LensMap::evaluate(const PosType *x,KappaType &sigma,KappaType *gamma,PosType *alpha) {
-  
+
   double fx = (x[0] - lowerleft[0]) / x_resolution();
   double fy = (x[1] - lowerleft[1]) / y_resolution();
   
@@ -657,6 +656,10 @@ void LensHaloMultiMap::force_halo(double *alpha
       *kappa += t_kappa;
     }else{
       std::cerr << "ray is off pane!" << std::endl;
+      std::cerr << "    rays : " << xx[0] << "  " << xx[1] << std::endl;
+      std::cerr << "   range : " << smap.lowerleft[0] << "  " << smap.upperright[0] << std::endl;
+      std::cerr << "           " << smap.lowerleft[1] << "  " << smap.upperright[1] << std::endl;
+
       throw std::runtime_error("out of bounds");
     }
   }

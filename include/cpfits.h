@@ -795,6 +795,9 @@ public:
   }
 };
 
+/*** \brief Data frame for reading fits tables and minipulating the results.
+ */
+
   template< typename T>
   class DataFrameFits{
  
@@ -809,9 +812,10 @@ public:
     std::vector<int> column_index;
   
   public:
+    /// The data frame is atached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a seporate function.
     DataFrameFits(
                   std::string datafile   /// input catalog file in fits format
-                  ,std::vector<std::string> &columns
+                  ,std::vector<std::string> &columns  /// if empty all columns are read and this will contain thier names, if not, only the listed columns are read
     ):filename(datafile),cpfits(filename,true),n0(1){
    
       all_column_names = cpfits.get_colnames();

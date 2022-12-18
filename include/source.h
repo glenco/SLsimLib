@@ -13,6 +13,9 @@
 #include "image_processing.h"
 #include "utilities_slsim.h"
 
+double flux_to_mag(double flux);
+double mag_to_flux(double m);
+
 class PixelMap;
 
 /** \brief Base class for all sources.
@@ -63,8 +66,8 @@ public:
 	/// Gets sb_limit in erg/cm^2/sec/rad^2/Hz
 	PosType getSBlimit(){return sb_limit;}
 	/// Gets sb_limit in mag/arcsec^2
-	PosType getSBlimit_magarcsec(){return -2.5*log10(sb_limit*hplanck/pow((180*60*60/PI),2))-48.6;}
-	
+  PosType getSBlimit_magarcsec(){return flux_to_mag(sb_limit/pow((180*60*60/PI),2));}
+
 	// accessor functions that will sometimes be over ridden in class derivatives
 	/// Redshift of source
 	PosType getZ() const {return zsource;}
@@ -88,13 +91,46 @@ public:
 	/// Sets sb_limit in erg/cm^2/sec/rad^2/Hz
 	void setSBlimit(float limit) {sb_limit = limit;}
 	/// Sets sb_limit in mag/arcsec^2
-	void setSBlimit_magarcsec(float limit) {sb_limit = pow(10,-0.4*(48.6+limit))*pow(180*60*60/PI,2)/hplanck;}
+  void setSBlimit_magarcsec(float limit) {sb_limit = mag_to_flux(limit)*pow(180*60*60/PI,2);}
 
 	PosType changeFilter(std::string filter_in, std::string filter_out, std::string sed);
 	PosType integrateFilter(std::vector<PosType> wavel_fil, std::vector<PosType> fil);
 	PosType integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<PosType> fil, std::vector<PosType> wavel_sed, std::vector<PosType> sed);
 
   static PosType *getx(Source &source){return source.source_x.x;}
+  
+  /// test if flux in pixels matches total flux
+  double TEST_surface_brightness(double res,int N){
+    
+    Point_2d x = source_x;
+    x[0] -= res*N/2.;
+    x[1] -= res*N/2.;
+    double total_flux = 0;
+    
+    for(size_t i=0 ; i<N ; ++i){
+      for(size_t j=0 ; j<N ; ++j){
+        total_flux += SurfaceBrightness(x.x);
+        x[1] += res;
+      }
+      x[0] += res;
+      x[1] = source_x[1] - res*N/2.;
+    }
+    total_flux *= res*res;
+    
+    std::cout << "------- check flux ----------" << std::endl;
+    std::cout << " total flux in pixels : " << total_flux << std::endl;
+    std::cout << " getTotalFlux() : " << getTotalFlux() << std::endl;
+    std::cout << " fractional difference : " << (total_flux - getTotalFlux()) / getTotalFlux() << std::endl;
+    std::cout << " magnitude from flux in pixels : " << flux_to_mag(total_flux) << std::endl;
+    std::cout << " mag from getTotalFlux() : " <<  flux_to_mag(getTotalFlux()) << std::endl;
+    std::cout << "-----------------------------" << std::endl;
+     
+    if(abs( (total_flux - getTotalFlux()) / getTotalFlux() ) > 0.1 ){
+      //assert( abs( (total_flux - getTotalFlux()) / getTotalFlux() ) < 0.1 );
+    }
+    
+    return total_flux;
+  }
   
 protected:
   virtual void assignParams(InputParams& params){};
@@ -118,8 +154,6 @@ public:
   SourceColored(PosType magnitude,PosType r,Point_2d x,PosType z
                 ,PosType SBlimit=40):Source(r,x,z,SBlimit)
   {
-    //mag=magnitude;
-    //flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
     current_band = Band::NoBand;
     setMag(magnitude);
     id = -1;
@@ -179,7 +213,7 @@ public:
   void setMag(float magnitude){
     if(current_band == Band::NoBand){
       mag=magnitude;
-      flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+      flux_total = mag_to_flux(mag);
     }else{
       std::cerr << "Cannot change mag of source that has multiple bands." << std::endl;
       throw std::runtime_error("source has ");
@@ -192,7 +226,7 @@ public:
   /// shift all magnitudes my delta_mag and update flux_total, keeps color
   void shiftmag(float delta_mag){
     mag += delta_mag;
-    flux_total = pow(10,-0.4*(mag+48.6))*inv_hplanck;
+    flux_total = mag_to_flux(mag);
     for(auto &b : mag_map) b.second += delta_mag;
   }
 protected:
@@ -226,7 +260,7 @@ public:
 	inline PosType getQuad(int i, int j){return quad[i][j];};
 	inline PosType getSize(){return size;};
 	inline PosType* getCentroid(){return centroid;};
-	inline PosType getMag(){return -2.5*log10(flux)-48.6;};
+	inline PosType getMag(){return flux_to_mag(flux);};
 private:
 	void assignParams(InputParams& params);
 	void calcEll();

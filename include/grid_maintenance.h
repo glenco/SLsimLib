@@ -49,11 +49,19 @@ struct Grid{
   void find_point_source_images(
                                Point_2d y_source    /// angular position of source,
                               ,PosType r_source  /// points outside this radius on the source plane will not be considered as in the image
+                              ,PosType z_source  /// redhsift of source
                               ,std::vector<RAY> &images /// returned image rays
                               ,bool verbose=false
                            );
   
   double ClearSurfaceBrightnesses();
+  
+  /*** Refine the gris based on the smoothness of the surface brightness.
+     Return new total flux.
+   
+   May be slow.
+   */
+  double refine_on_surfacebrightness(Lens &lens,Source &source);
   
   unsigned long getNumberOfPoints() const;
   /// area of region with negative magnification
@@ -102,7 +110,7 @@ struct Grid{
     map.Clean();
     map.AddGridBrightness(*this);
   }
-  /// map a map of the whole gridded area with given resolution
+  /// make a map of the whole gridded area with given resolution
   PixelMap MapSurfaceBrightness(double resolution);
 
   PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
@@ -110,12 +118,12 @@ struct Grid{
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
   
   void find_images(
-  PosType *y_source
-  ,PosType r_source
-  ,int &Nimages
-  ,std::vector<ImageInfo> &imageinfo
-  ,unsigned long &Nimagepoints
-  );
+                   PosType *y_source
+                   ,PosType r_source
+                   ,int &Nimages
+                   ,std::vector<ImageInfo> &imageinfo
+                   ,unsigned long &Nimagepoints
+                   );
  
  
   Grid(Grid &&grid){
@@ -146,9 +154,9 @@ struct Grid{
   }
   
   /// flux weighted local magnification that does not take multiple imaging into effect
-  PosType magnification() const;
-  PosType UnlensedFlux() const;
-  PosType LensedFlux() const;
+  PosType magnification(double sblimit=-1.0e12) const;
+  PosType UnlensedFlux(double sblimit=-1.0e12) const;
+  PosType LensedFlux(double sblimit=-1.0e12) const;
   
   //PosType magnification2() const;
   //PosType magnification3() const;

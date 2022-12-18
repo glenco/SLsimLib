@@ -85,7 +85,6 @@ struct LensMap{
   double y_range(){return (upperright[1]-lowerleft[1]);}
 
   bool evaluate(const PosType *x,KappaType &sigma,KappaType *gamma,PosType *alpha);
-  
 
   LensMap(std::string fits_input_file,double angDist){
     read(fits_input_file,angDist);
