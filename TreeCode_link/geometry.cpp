@@ -225,3 +225,45 @@ std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d>
   
   return hull;
 }
+
+/** test code for MagicHull
+ 
+ {
+   //Utilities::RandomNumbers_NR ran(128234);
+   //Utilities::RandomNumbers_NR ran(2328234);
+   //Utilities::RandomNumbers_NR ran(231277);
+   //Utilities::RandomNumbers_NR ran(123477);
+   //Utilities::RandomNumbers_NR ran(1233223477);
+   Utilities::RandomNumbers_NR ran(1233127);
+
+   std::vector<Point_2d> points(10);
+   for(Point_2d &p : points){
+     p[0] = ran();
+     p[1] = ran();
+   }
+   //points.push_back(points[0]);
+   
+   /////////////////////////////////////////////////////////////////////////////////////
+   
+   //std::vector<Point_2d> hull = points;
+   //std::vector<Point_2d> intersections;
+   //std::vector<std::pair<int,int> > segments;
+   
+   //Utilities::Geometry::intersections(points,intersections,segments);
+   
+   assert(points[0] != points.back());
+   // orientation == 1 is clockwise
+ 
+   std::vector<Point_2d> hull = Utilities::Geometry::MagicHull(points);
+   
+   std::ofstream file("original.csv");
+   file << "x,y" << std::endl;
+   for(Point_2d &p : points) file << p[0] <<"," << p[1] << std::endl;
+   
+   std::ofstream file2("hull.csv");
+   file2 << "x,y" << std::endl;
+   for(Point_2d &p : hull) file2 << p[0] <<"," << p[1] << std::endl;
+
+   exit(0);
+ }
+ */
