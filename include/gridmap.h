@@ -306,7 +306,7 @@ struct GridMap{
    This can be used to find critical curves or contours.
    `bitmap` should be the same size as the `Gridmap`
    If the boundary curve  touches the edge of the `GridMap` it will be indicated in `hits_boundary` as
-   `true`.  `crit_type` will classify critical curves if `bitmap` is a map of necative magnification regions.  Otherwise it should be ignored.
+   `true`.
    
    Boundaries will never cross or lead off the grid.  On the edges they will leave the edge pixels out even if they should be in.  This is a technical comprimise.
   */
