@@ -353,6 +353,7 @@ bool intersect(const PosType a1[],const PosType a2[]
                ,const PosType b1[],const PosType b2[]);
 /// returns the number of times a closed curve intersects itself
 int intersect(const std::vector<Point_2d> &curve);
+int intersections(const std::vector<Point_2d> &curve,std::vector<Point_2d> &intersections,std::vector<std::pair<int,int> > &segments);
 
 /** \brief To find orientation of the triangle formed by the ordered triplet (p, q, r).
  
@@ -595,6 +596,26 @@ T AngleSeporation(const SphericalPoint<T> &p1
   return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
 }
 
+
+// used so that an index will not go out of bounds
+struct CYCLIC{
+  CYCLIC(long n):n(n){}
+  
+  // returns the integer in bounds
+  long operator[](long i){
+    while(i<0) i+=n;
+    return i%n;
+  }
+  
+  long n;
+};
+
+/*** \brief finds the edge-wise concave hull of a complex curve
+ 
+ The returned curve will consist of segments of the edges of the original curve that form a closed
+ curve that does not cross itself and will enclose all the verticies.
+ */
+std::vector<Point_2d> MagicHull(const std::vector<Point_2d> &points);
 }
 }
 
