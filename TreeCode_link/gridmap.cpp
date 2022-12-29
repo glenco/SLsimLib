@@ -635,3 +635,4 @@ Point_2d GridMap::centroid() const{
   return centroid/flux;
 }
 
+

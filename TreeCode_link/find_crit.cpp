@@ -8,6 +8,8 @@
 #include "slsimlib.h"
 #include "map_images.h"
 #include "concave_hull.h"
+#include "gridmap.h"
+
 
 #define NMAXCRITS 1000
 
@@ -662,10 +664,11 @@ void ImageFinding::find_crit(
       
       //***************** move to source plane ************/
       
+      
+      crtcurve[ii].caustic_curve_outline = Utilities::Geometry::MagicHull(crtcurve[ii].caustic_curve_intersecting);
       std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
-      
+      /*
       short_cac.resize(points.size());
-      
       kk=0;
       scale = 0;
       for(Point &p : points){
@@ -681,6 +684,8 @@ void ImageFinding::find_crit(
         
         Utilities::RemoveIntersections(short_cac);
       }
+      */
+      
       
       assert(short_cac.size() > 0);
       
@@ -1017,6 +1022,62 @@ void ImageFinding::find_crit(
   
   return;
 }
+
+void ImageFinding::find_crit(
+                             Lens &lens             /// The lens model.
+                             ,GridMap &gridmap            /// The grid.  It must be initialized.
+                             ,std::vector<CriticalCurve> &critcurves     /// Structure to hold critical curve.
+                             ,bool verbose
+                             ){
+  
+  double z_source = lens.getSourceZ();
+  
+  std::vector<std::vector<Point_2d> > crits;
+  std::vector<bool> hits_boundary;
+  std::vector<CritType> crit_type;
+  
+  gridmap.find_crit(crits,hits_boundary,crit_type);
+  
+  int Ncrit=crits.size();
+  critcurves.resize(Ncrit);
+  for(size_t i=0 ; i < Ncrit ; ++i){
+    critcurves[i].type = crit_type[i];
+    critcurves[i].touches_edge = hits_boundary[i];
+    critcurves[i].z_source = z_source;
+ 
+    size_t Npoints = crits[i].size();
+    
+    critcurves[i].critcurve.resize(Npoints);
+    critcurves[i].critical_center *= 0;
+    for(size_t j=0 ; j < Npoints ; ++j){
+      critcurves[i].critcurve[j].x = crits[i][j];
+      critcurves[i].critical_center += crits[i][j];
+      critcurves[i].critcurve[j].z = z_source;
+    }
+    critcurves[i].critical_center /= Npoints;
+ 
+    Utilities::windings(critcurves[i].critical_center,critcurves[i].critcurve,&(critcurves[i].critical_area));
+   
+    
+    lens.rayshooterInternal(Npoints,critcurves[i].critcurve.data());
+    
+    critcurves[i].caustic_center *= 0;
+    critcurves[i].caustic_curve_intersecting.resize(Npoints);
+    for(size_t j=0 ; j < Npoints ; ++j){
+      critcurves[i].caustic_curve_intersecting[j] = critcurves[i].critcurve[j].y;
+      critcurves[i].caustic_center += critcurves[i].critcurve[j].y;
+    }
+    critcurves[i].caustic_center /= Npoints;
+    
+    critcurves[i].caustic_curve_outline = Utilities::Geometry::MagicHull(critcurves[i].caustic_curve_intersecting);
+
+    Utilities::windings(critcurves[i].caustic_center,critcurves[i].caustic_curve_outline,&(critcurves[i].caustic_area));
+    critcurves[i].caustic_intersections = -1;
+    
+  }
+
+}
+
 /*  This function is not meant for an external user.  It is only used by
  find_crit(). paritypoints must be empty on first entry.
  */
