@@ -139,10 +139,13 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
 
 std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d> &points){
  
+  std::vector<Point_2d> hull;
+  if(points.size() == 0) return hull;
+  
   // find left most point
-  size_t init = 0,Npoints=points.size();
+  long init = 0,Npoints=points.size();
   double pmin = points[0][0];
-  for(int i=0 ; i<Npoints ; ++i){
+  for(int i=1 ; i<Npoints ; ++i){
     if(points[i][0] < pmin){
       init = i;
       pmin = points[i][0];
@@ -152,19 +155,18 @@ std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d>
   CYCLIC cyc(Npoints);
   int orientation = sign( (points[cyc[init-1]] - points[init])^(points[cyc[init+1]] - points[init])  );
   
-  std::vector<Point_2d> hull;
-  hull.reserve(2*Npoints);
+  hull.reserve(3*Npoints);
   
-  size_t k=init,count=0;
+  long k=init,count=0;
   int direction = 1;
   Point_2d intersection_point;
   long next_segment;
   Point_2d current_point = points[init];
   hull.push_back(points[init]);
   
-  k = cyc[k+1];
+  k = cyc[init + 1];
   long current_segment = init;
-  while(count < 2*Npoints ) {
+  while(count < 3*Npoints ) {
     
     int Nintersect = 0;
     
@@ -184,7 +186,7 @@ std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d>
           
           Point_2d p = dp*u + current_point;
           
-          if (abs(u)/dp.length() > 1.0e-10){ // requires the current_point not be on the next edge
+          if (abs(u) > 1.0e-10){ // requires the current_point not be on the next edge
             if ( u < minimum ){
               intersection_point = p;
               minimum = u;

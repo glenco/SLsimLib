@@ -225,7 +225,6 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
   PosType f=1.0e-4;
   
   double resolution = getResolution();
-  double res2 = resolution*resolution;
   LinkedPoint point;
 
   double total_flux = RefreshSurfaceBrightnesses(&source)/resolution/resolution;
@@ -245,7 +244,6 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
         double new_flux = i_points[k].surface_brightness;
         double old_flux=0;
         int n = 1;
-        double original = new_flux;  // ????
 
         total_flux -= new_flux;
         while ( fabs(old_flux-new_flux) > 1.0e-3*new_flux ){
@@ -317,7 +315,15 @@ void GridMap::ClearSurfaceBrightnesses(){
     = 0.0;
     s_points[i].in_image = s_points[i].image->in_image = NO;
   }
-  
+}
+
+void GridMap::assertNAN(){
+  for(size_t i=0;i <s_points[0].head;++i){
+    assert(!isnan(s_points[i].surface_brightness));
+  }
+  for(size_t i=0;i <i_points[0].head;++i){
+     assert(!isnan(i_points[i].surface_brightness));
+   }
 }
 
 /** \brief Make a Pixel map of the without distribution the pixels.

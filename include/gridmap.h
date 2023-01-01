@@ -65,6 +65,7 @@ struct GridMap{
   Point_2d source_point(size_t index){return s_points[index];}
  
   void ClearSurfaceBrightnesses();
+  void assertNAN(); // check for nan in surface prightness
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
 	/// return initial number of grid points in each direction
