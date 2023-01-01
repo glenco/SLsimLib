@@ -81,11 +81,11 @@ Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
     ,int oversample          /// oversampling for input image
     ,float seeing // seeing in arcsec
     ):
- Npix_x_output(Npix_xx)
-,Npix_y_output(Npix_yy)
-,pix_size(pix_size)
-,oversample(oversample)
+  pix_size(pix_size)
 ,seeing(seeing)
+,Npix_x_output(Npix_xx)
+,Npix_y_output(Npix_yy)
+,oversample(oversample)
 ,map_scratch(Point_2d(0,0).x, oversample * Npix_xx,  oversample * Npix_yy, pix_size){
   Npix_x_input = oversample * Npix_x_output;
   Npix_y_input = oversample * Npix_y_output;
@@ -208,21 +208,22 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out){
   assert(map_in.getNy() == Npix_y_input);
   assert(map_out.getNx() == Npix_x_output);
   assert(map_out.getNy() == Npix_y_output);
-
+  
   if(oversample == 1){
     map_out = map_in;
     return;
   }
  
+  map_out.Clean();
   for(size_t i=0 ; i<Npix_x_input ; ++i){
-    size_t ii = i / oversample + 0.5;
+    size_t ii = MIN(i / oversample + 0.5, Npix_x_output - 1 ) ;
     for(size_t j=0 ; j<Npix_y_input ; ++j){
-      size_t jj = j / oversample + 0.5;
+      size_t jj = MIN(j / oversample + 0.5, Npix_y_output - 1 ) ;
       
       map_out(ii,jj) += map_in(i,j);
     }
   }
-  
+
   return;
 }
 

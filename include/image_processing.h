@@ -89,7 +89,7 @@ public:
   }
   
   // Zero the whole map
-  void Clean(){map *= 0;}
+  void Clean(){for(auto &a : map) a = 0;}
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
