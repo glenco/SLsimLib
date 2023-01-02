@@ -631,6 +631,7 @@ void PixelMap::AddGridMapBrightness(const GridMap &grid){
     PixelMap newmap = grid.getPixelMapFlux(1);
     copy_in(newmap);
   }
+  
   return;
 }
 
@@ -2243,7 +2244,8 @@ void PixelMap::copy_in(
   double halfpixel = res_ratio/2;
   PosType x[2];
   size_t NNx = pmap.getNx(),NNy = pmap.getNy();
-
+  size_t Npmap = NNx*NNy;
+  
   for(size_t ii=0 ; ii < map.size() ; ++ii){
     
     find_position(x,ii);
@@ -2259,17 +2261,19 @@ void PixelMap::copy_in(
     double ymax = MIN(NNy,iy + halfpixel);
     if(ymin >= ymax) continue;
     
-    long imin = (long)(xmin);
-    long imax = (long)(xmax);
-    long jmin = (long)(ymin);
-    long jmax = (long)(ymax);
-
+    long imin = MIN((long)(xmin),NNx-1);
+    long imax = MIN((long)(xmax),NNx-1);
+    long jmin = MIN((long)(ymin),NNy-1);
+    long jmax = MIN((long)(ymax),NNy-1);
+    long jj;
+    
     for(size_t j = jmin ; j <= jmax ; ++j ){
       double area1 = MIN(ymax,j+1) -  MAX(ymin,j);
       if(area1 <= 0.0) continue;
+      jj = NNx*j;
       for(size_t i = imin ; i <= imax ; ++i ){
         double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
-        map[ii] += pmap.map[i + NNx*j]*area/res_ratio2;
+        map[ii] += pmap.map[i + jj]*area/res_ratio2;
       }
     }
   }
