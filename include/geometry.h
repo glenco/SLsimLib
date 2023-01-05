@@ -597,7 +597,7 @@ T AngleSeporation(const SphericalPoint<T> &p1
 }
 
 
-// used so that an index will not go out of bounds
+/// used so that an index will not go out of bounds,  ie. CYCLIC[0]=0,  CYCLIC[n]=0,  CYCLIC[-1]=n-1, etc.
 struct CYCLIC{
   CYCLIC(long n):n(n){}
   
