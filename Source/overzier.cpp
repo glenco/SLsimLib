@@ -450,4 +450,11 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   //SourceOverzier::printSource();
 }
 
+void SourceOverzierPlus::setPA(double pa){
+  
+  PA = pa;
+  cosPA = cos(PA);
+  sinPA = sin(-PA);
 
+  spheroid.setPA(pa);
+}

@@ -1735,7 +1735,7 @@ namespace Utilities{
   }
 int windings(
              Point_2d &x              /// Point for which the winding number is calculated
-             ,std::vector<RAY> &point         /// The points on the border.  These must be ordered.
+             ,std::vector<RAY> &point         /// The points on the border.  Uses image plane points
              ,PosType *area          /// returns absolute the area within the curve with oriented border
 ){
   int wn=0;
