@@ -196,7 +196,8 @@ public:
   
   /// position angle in radians
   PosType getPA() const { return PA; }
-  
+  void setPA(double pa); // in radians
+
   int getNarms() const {return Narms;}
   PosType getArmAmplitude() const {return Ad;}
   PosType getArmAlpha() const {return arm_alpha;}
