@@ -166,7 +166,11 @@ public:
   void AddCurve(std::vector<Point_2d> &curve,double value);
   void AddCurve(std::vector<RAY> &curve,double value);
   
-	void drawline(double x1[],double x2[],double value);
+  /// simple line
+	void drawline(double x1[],double x2[],double value,bool add);
+  /// line by Bresenham's line algorithm
+  void DrawLine(long x0,long x1,long y0,long y1,double value,bool add);
+  void DrawLineGS(long x0,long x1,long y0,long y1,double value,bool add);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
   void drawdisk(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
@@ -250,14 +254,14 @@ public:
   void drawPoints(std::vector<Point> points,PosType size,PosType value);
   
   void drawCurve(std::vector<Point *> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
+    for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value,false);
   }
   void drawCurve(std::vector<Point> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value,false);
   }
   void drawPoints(std::vector<Point_2d> points,PosType size,PosType value);
   void drawCurve(std::vector<Point_2d> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value,false);
   }
   /// Draw a rectangle
   void drawSquare(PosType p1[],PosType p2[],PosType value);
@@ -502,11 +506,11 @@ public:
   
   virtual ~Obs(){};
   
-  size_t getNxInput(){ return Npix_x_input;}
-  size_t getNyInput(){ return Npix_y_input;}
+  size_t getNxInput() const { return Npix_x_input;}
+  size_t getNyInput() const { return Npix_y_input;}
 
-  size_t getNxOutput(){ return Npix_x_output;}
-  size_t getNyOutput(){ return Npix_y_output;}
+  size_t getNxOutput() const { return Npix_x_output;}
+  size_t getNyOutput() const { return Npix_y_output;}
 
   std::valarray<double> getPSF(){return map_psf;}
   void setPSF(std::string psf_file);
@@ -518,20 +522,20 @@ public:
 
   virtual void AddNoise(PixelMap &pmap
                         ,PixelMap &error_map
-                        ,Utilities::RandomNumbers_NR &ran) = 0;
+                        ,Utilities::RandomNumbers_NR &ran,bool cosmics) = 0;
   
   virtual void Convert(PixelMap &map_in
                            ,PixelMap &map_out
                            ,PixelMap &error_map
                            ,bool psf
                            ,bool noise
-                           ,Utilities::RandomNumbers_NR &ran) = 0;
+                           ,Utilities::RandomNumbers_NR &ran,bool cosmics) = 0;
   
-  virtual float getBackgroundNoise() = 0;
+  virtual float getBackgroundNoise() const = 0;
 
   /// convert using stan
-  virtual double mag_to_flux(double m) = 0;
-  virtual double flux_to_mag(double flux) = 0;
+  virtual double mag_to_flux(double m) const = 0;
+  virtual double flux_to_mag(double flux) const = 0;
   
 protected:
 
@@ -545,7 +549,7 @@ protected:
   size_t Npix_x_input,Npix_y_input;
  
   float oversample; // psf oversampling factor
-  void downsample(PixelMap &map_in,PixelMap &map_out);  // downsize from Npix_input to Npix_output
+  void downsample(PixelMap &map_in,PixelMap &map_out) const;  // downsize from Npix_input to Npix_output
   
   PixelMap map_scratch;
  
@@ -593,7 +597,7 @@ private:
   
   // standard erg s−1 cm−2 Hz−1
   double mag_zeropoint = -24.4;
-  double sigma_back_per_qsrttime = 0.00267 / sqrt(5.085000000000E+03);
+  double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
   
   double gain = 11160; // e-/ADU (Analog Digital Units)
   //double exp_num = 4;
@@ -606,12 +610,17 @@ private:
   double sigma_background;  // background var in ergs / cm^2 / s / Hz
   double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
 
+  // adds random cosmic rays to the noise map
+  void cosmics(PixelMap &error_map
+                ,double inv_sigma2 // for one dither
+                ,int nc // number of cosmics to be added
+                ,Utilities::RandomNumbers_NR &ran) const ;
   
 public:
   
   ObsVIS(size_t Npix_x,size_t Npix_y
          ,int oversample
-         ,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
+         //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
   );
   
   ~ObsVIS(){};
@@ -620,31 +629,32 @@ public:
   /// Applies  noise (read-out + Poisson) on an image, returns noise map
   void AddNoise(PixelMap &pmap
                  ,PixelMap &error_map
-                 ,Utilities::RandomNumbers_NR &ran);
+                 ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
 
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
-               ,PixelMap &error_map
+               ,PixelMap &error_map  // this is 1/sigma^2
                ,bool psf
                ,bool noise
-               ,Utilities::RandomNumbers_NR &ran);
+               ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+  
  
-  double mag_to_flux(double m){
+  double mag_to_flux(double m) const{
     if(m == 100) return 0;
     return pow(10,-0.4*(m - mag_zeropoint));
   }
-  double flux_to_mag(double flux){
+  double flux_to_mag(double flux) const{
     if(flux <=0) return 100;
     return -2.5 * log10(flux) + mag_zeropoint;
   }
  
-  double flux_to_counts(double flux){
+  double flux_to_counts(double flux) const{
     if(flux <=0) return 100;
     return -2.5 * log10(flux) + mag_zeropoint;
   }
  
   // returns std of pixels in surface brightness
-  float getBackgroundNoise(){return sigma_background;}
+  float getBackgroundNoise() const {return sigma_background;}
 };
 
 

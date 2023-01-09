@@ -1,8 +1,6 @@
 /*
  * observation.cpp
  *
- *  Created on: Apr 29, 2013
- *      Author: F. Bellagamba
  */
 
 #include <complex>
@@ -19,31 +17,106 @@
 #include <limits>
 
 
-ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample,double t)
+ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
 :Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1)
 {
-  sigma_background = sigma_back_per_qsrttime * sqrt(t);
-  sb_to_e = (119.*119.*PI/4.) * t * dl / l / hplanck;
+  sigma_background = 0.00365150 * sqrt(2366.) ;
+  //sb_to_e = (119.*119.*PI/4.) * t * dl / l / hplanck;
 }
 
 void ObsVIS::AddNoise(PixelMap &pmap
                       ,PixelMap &error_map
-                      ,Utilities::RandomNumbers_NR &ran)
-{
+                      ,Utilities::RandomNumbers_NR &ran,bool cosmic
+                      ){
   if(pmap.getNx() != pmap.getNy()){
     std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
   }
   
+  double t1 = 565;
+  double t2 = 106;
+  
+  double sigma2 = sigma_background*sigma_background;
+  //  + pmap[i] / sb_to_e );
+  
+  int exposures = 4;
+  if(ran() < 0.5){
+    exposures = 3;
+  }
+  
+  double dt = exposures * t1 + t2;
+  double inv_sigma2 = (dt)/sigma2;
   size_t N = pmap.size();
+  for (unsigned long i = 0; i < N ; i++) error_map[i] = inv_sigma2;
+  
+  double p = exposures*t1/dt;
+  if(cosmic){
+    if(ran() < p ){
+      cosmics(error_map,t1/sigma2,ran.poisson(100),ran);
+    }else{
+      cosmics(error_map,t2/sigma2,ran.poisson(100*(dt-t1)/dt),ran);
+    }
+  }
   for (unsigned long i = 0; i < N ; i++){
-    error_map[i] = ran.gauss()*sqrt(sigma_background*sigma_background);
-                                  //  + pmap[i] / sb_to_e );
+    error_map[i] = 1.0 / sqrt(error_map[i]);
+    pmap[i] += ran.gauss() * error_map[i];
   }
 
-  pmap += error_map;
-
   return;
+}
+
+void  ObsVIS::cosmics(
+                      PixelMap &error_map
+                      ,double inv_sigma2 // for one dither
+                      ,int nc // number of cosmics to be added
+                      ,Utilities::RandomNumbers_NR &ran
+                      ) const {
+  size_t N = error_map.size();
+  size_t Nx = error_map.getNx();
+  size_t Ny = error_map.getNy();
+  
+  int length = 2;
+  size_t ic=0;
+  
+  while (ic < nc) {
+  
+    size_t no = (size_t)(N*ran());
+    double theta = 2*PI*ran();
+    double c=cos(theta),s=sin(theta);
+  
+    size_t io = no % Nx;
+    size_t jo = no / Nx;
+ 
+    double L = MAX(length/tan(PI*ran()/2),1);
+    //error_map.DrawLine(io, io + L * c, jo, jo + L * s, -inv_sigma2, true); // ???
+    //error_map.DrawLine(io + 0.5*s, io + L * c + 0.5*s, jo - 0.5*c, jo + L * s - 0.5*c, -inv_sigma2, true);
+
+    double t = tan(theta),x,y;
+    if(abs(t) < 1){
+      long x1 = (long)(io + L * c );
+      int sgn = sign(c);
+      x1 = MAX(0,x1);
+      x1 = MIN(Nx-1,x1);
+      for(x = io ; x !=  x1 ; x = x + sgn){
+        y = MAX((long)(t*(x-io) + jo),0);
+        y= MIN(y,Ny-2);
+        error_map(x,y) += -inv_sigma2;
+        error_map(x,y+1) += -inv_sigma2;
+      }
+    }else{
+      long y1 = (long)(jo + L * s );
+      int sgn = sign(s);
+      y1 = MAX(0,y1);
+      y1 = MIN(Ny-1,y1);
+      for(y = jo ; y !=  y1 ; y = y + sgn){
+        x = MAX((long)((y-jo)/t + io),0);
+        x = MIN(x,Nx-2);
+        error_map(x,y) += -inv_sigma2;
+        error_map(x+1,y) += -inv_sigma2;
+      }
+    }
+    ++ic;
+  }
 }
 
 void ObsVIS::Convert(
@@ -52,8 +125,9 @@ void ObsVIS::Convert(
              ,PixelMap &error_map
              ,bool psf
              ,bool noise
-             ,Utilities::RandomNumbers_NR &ran)
-{
+             ,Utilities::RandomNumbers_NR &ran
+             ,bool cosmic
+                     ){
   assert(map_in.getNx() == Npix_x_input);
   assert(map_in.getNy() == Npix_y_input);
   
@@ -71,7 +145,7 @@ void ObsVIS::Convert(
     downsample(map_in,map_out);
   }
  
-  if (noise == true) AddNoise(map_out,error_map,ran);
+  if (noise == true) AddNoise(map_out,error_map,ran,cosmic);
   
   return;
 }
@@ -202,7 +276,7 @@ void Obs::setNoiseCorrelation(std::string nc_file  /// name of fits file with no
                                      , FFTW_ESTIMATE);
 }
 
-void Obs::downsample(PixelMap &map_in,PixelMap &map_out){
+void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
   
   assert(map_in.getNx() == Npix_x_input);
   assert(map_in.getNy() == Npix_y_input);
