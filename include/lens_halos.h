@@ -946,10 +946,8 @@ private:
 /** \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
+ * The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
  */
 class LensHaloPowerLaw: public LensHalo{
 public:
@@ -1303,6 +1301,9 @@ protected:
   std::complex<double> F(double r_e,double t,std::complex<double> z) const;
 };
 
+/*** \brief Truncated eliptical double power-law
+ 
+ */
 class LensHaloTEBPL : public LensHalo{
 public:
   

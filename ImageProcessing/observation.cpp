@@ -45,9 +45,12 @@ void ObsVIS::AddNoise(PixelMap &pmap
   }
   
   double dt = exposures * t1 + t2;
+  
   double inv_sigma2 = (dt)/sigma2;
   size_t N = pmap.size();
-  for (unsigned long i = 0; i < N ; i++) error_map[i] = inv_sigma2;
+  for (unsigned long i = 0; i < N ; i++){
+    error_map[i] = inv_sigma2;
+  }
   
   double p = exposures*t1/dt;
   if(cosmic){
@@ -58,7 +61,7 @@ void ObsVIS::AddNoise(PixelMap &pmap
     }
   }
   for (unsigned long i = 0; i < N ; i++){
-    error_map[i] = 1.0 / sqrt(error_map[i]);
+    error_map[i] = sqrt( 1.0 / error_map[i] + pmap[i] / dt ) ;
     pmap[i] += ran.gauss() * error_map[i];
   }
 
@@ -66,7 +69,7 @@ void ObsVIS::AddNoise(PixelMap &pmap
 }
 
 void  ObsVIS::cosmics(
-                      PixelMap &error_map
+                      PixelMap &error_map  // inverse error
                       ,double inv_sigma2 // for one dither
                       ,int nc // number of cosmics to be added
                       ,Utilities::RandomNumbers_NR &ran
