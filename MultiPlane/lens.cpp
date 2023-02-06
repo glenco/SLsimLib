@@ -80,6 +80,12 @@ Lens::~Lens()
 {
 	Utilities::delete_container(lensing_planes);
 	Utilities::delete_container(field_halos);
+  
+  for(auto ph=main_halos.begin() ; ph!=main_halos.end() ; ++ph){
+    delete *ph;
+  }
+  main_halos.clear();
+  
   //Utilities::delete_container(substructure.halos);
   //std::cout << "In Lens destructor" << std::endl;
 }

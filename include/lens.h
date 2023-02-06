@@ -243,7 +243,9 @@ public:
   template <typename T>
   void replaceMainHalos(std::vector<T> &my_halos,bool verbose)
   {
-    Utilities::delete_container(main_halos);   // ????
+    
+    for(auto pt=main_halos.begin() ; pt!=main_halos.end() ; ++pt) delete *pt;
+    main_halos.clear();
 
     T* ptr;
     //for(std::size_t i = 0; i < my_halos.size() ; ++i)

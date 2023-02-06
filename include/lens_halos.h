@@ -1608,6 +1608,7 @@ private:
 
 public:
   
+   
   LensHaloMultiGauss(
                      double mass_norm  /// mass in Msun at radius Rnorm
                      ,double Rnorm       /// elliptical radius for normalization of mass
@@ -1724,6 +1725,81 @@ public:
  
     }
  
+  }
+
+  LensHaloMultiGauss(LensHaloMultiGauss &&halo):
+  LensHalo(std::move(halo))
+  {
+    nn=halo.nn; // number of gaussians
+    mm=halo.mm; // number of fit radii
+    q=halo.q; // axis ratio
+    pa=halo.pa; // position angle
+    mass_norm=halo.mass_norm;
+    r_norm=halo.r_norm;
+    sigmas=std::move(halo.sigmas);
+    radii=std::move(halo.radii);
+    Rotation=std::move(halo.Rotation);
+    gaussians=std::move(halo.gaussians);
+    A=std::move(halo.A);
+    rms_error=halo.rms_error;
+  }
+  LensHaloMultiGauss(const LensHaloMultiGauss &halo):
+  LensHalo(halo)
+  {
+    nn=halo.nn; // number of gaussians
+    mm=halo.mm; // number of fit radii
+    q=halo.q; // axis ratio
+    pa=halo.pa; // position angle
+    mass_norm=halo.mass_norm;
+    r_norm=halo.r_norm;
+    sigmas=halo.sigmas;
+    radii=halo.radii;
+    Rotation=halo.Rotation;
+    gaussians=halo.gaussians;
+    A=halo.A;
+    rms_error=halo.rms_error;
+  }
+
+  LensHaloMultiGauss & operator=(const LensHaloMultiGauss &&halo){
+   
+    LensHalo::operator= (std::move(halo));
+    nn=halo.nn; // number of gaussians
+    mm=halo.mm; // number of fit radii
+    q=halo.q; // axis ratio
+    pa=halo.pa; // position angle
+    mass_norm=halo.mass_norm;
+    r_norm=halo.r_norm;
+    sigmas=std::move(halo.sigmas);
+    radii=std::move(halo.radii);
+    Rotation=std::move(halo.Rotation);
+    gaussians=std::move(halo.gaussians);
+    A=std::move(halo.A);
+    rms_error=halo.rms_error;
+    
+    return *this;
+  }
+  LensHaloMultiGauss & operator=(const LensHaloMultiGauss &halo){
+    if(this==&halo) return *this;
+    
+    LensHalo::operator= (halo);
+    nn=halo.nn; // number of gaussians
+    mm=halo.mm; // number of fit radii
+    q=halo.q; // axis ratio
+    pa=halo.pa; // position angle
+    mass_norm=halo.mass_norm;
+    r_norm=halo.r_norm;
+    sigmas=halo.sigmas;
+    radii=halo.radii;
+    Rotation=halo.Rotation;
+    gaussians=halo.gaussians;
+    A=halo.A;
+    rms_error=halo.rms_error;
+    
+    return *this;
+  }
+  
+  ~LensHaloMultiGauss(){
+    std::cout << "I'm here!" <<std::endl; /// ??????
   }
 
   /// reset the position angle
