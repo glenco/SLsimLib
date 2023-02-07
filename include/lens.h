@@ -193,7 +193,7 @@ public:
   template <typename T>
   void replaceMainHalo(const T &halo_in,bool addplanes,bool verbose=false)
   {
-    main_halos.clear();  // ???? is this a memory leak ????
+    main_halos.clear();
     
     T * halo = new T(halo_in);
     halo->setCosmology(cosmo);
@@ -244,7 +244,6 @@ public:
   void replaceMainHalos(std::vector<T> &my_halos,bool verbose)
   {
     
-    for(auto pt=main_halos.begin() ; pt!=main_halos.end() ; ++pt) delete *pt;
     main_halos.clear();
 
     T* ptr;

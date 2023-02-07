@@ -330,9 +330,9 @@ public:
     return *this;
   }
   
-  /// add an object of type SubclassT to the vector
+  /// add a copy of an object of type SubclassT to the vector, in contrast push_back() deos not copy and will take possession of the object
   template<typename SubclassT>
-  void push_back(const SubclassT& obj)
+  void copy_back(const SubclassT& obj)
   {
     // make sure this is a subclass of BaseT
     check_subclass(obj);
@@ -346,7 +346,8 @@ public:
     // add the copy to type map
     tmap[typeid(SubclassT)].push_back(copy);
   }
-  
+
+
   /// pop element from back of vector
   void pop_back()
   {
@@ -701,13 +702,13 @@ public:
     return items.back();
   }
   
-  /// add an object of type SubclassT to the vector
+  /// add an object of type SubclassT to the vector, this does not copy the object but will delete is when the MixedVector is destroyed, or pop_back() is called
   void push_back(BaseT* obj)
   {
     // make sure this is a subclass of BaseT
     check_subclass(obj);
     
-    // add the copy of the object to the list of items
+    // add the copy of the object pointer to the list of items
     items.push_back(obj);
     
     // add the copy to type map
@@ -725,6 +726,8 @@ public:
     
     // remove from items
     items.pop_back();
+    
+    delete back; // delete object
   }
   
   /// erase the last element of a specific type

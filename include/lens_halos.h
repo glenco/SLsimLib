@@ -1626,7 +1626,7 @@ public:
   ):LensHalo(my_zlens,cosmo),nn(Ngaussians),mm(Nradii),q(my_fratio),pa(my_pa)
   ,mass_norm(mass_norm),r_norm(Rnorm)
   {
-
+    ++count;
    if(q <= 0){throw std::runtime_error("bad axis ratio"); }
    if(nn > mm){
       std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
@@ -1671,7 +1671,8 @@ public:
   ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(my_mass_norm),r_norm(Rnorm)
   
   {
-
+    ++count;
+    
     if(q <= 0){throw std::runtime_error("bad axis ratio"); }
     if(relative_scales.size() != relative_masses.size()){
       throw std::runtime_error("arrays are wrong size.");
@@ -1730,6 +1731,7 @@ public:
   LensHaloMultiGauss(LensHaloMultiGauss &&halo):
   LensHalo(std::move(halo))
   {
+    ++count;
     nn=halo.nn; // number of gaussians
     mm=halo.mm; // number of fit radii
     q=halo.q; // axis ratio
@@ -1746,6 +1748,7 @@ public:
   LensHaloMultiGauss(const LensHaloMultiGauss &halo):
   LensHalo(halo)
   {
+    ++count;
     nn=halo.nn; // number of gaussians
     mm=halo.mm; // number of fit radii
     q=halo.q; // axis ratio
@@ -1799,9 +1802,13 @@ public:
   }
   
   ~LensHaloMultiGauss(){
-    std::cout << "I'm here!" <<std::endl; /// ??????
+    --count;
+    //std::cout << "   Number of MultiGausses " <<  count <<std::endl;
   }
 
+  
+  static int count;
+  
   /// reset the position angle
   void set_pa(double my_pa){
     pa = my_pa;
@@ -1996,6 +2003,9 @@ public:
   
 
 };
+
+template<typename T>
+int LensHaloMultiGauss<T>::count = 0;
 
 /// profiles that can be used in LensHeloMultiGauss
 namespace MultiGauss{
@@ -2268,6 +2278,5 @@ typedef LensHalo* LensHaloHndl;
 
 //bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh2->getZlens());}
 //bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh2.getZlens());}
-
 
 #endif /* LENS_HALOS_H_ */
