@@ -170,7 +170,8 @@ Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Obs::setPSF(std::string psf_file  /// name of fits file with psf
-                         ){
+                         )
+{
  
   CPFITS_READ cpfits(psf_file);
 
@@ -184,6 +185,37 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
                            
   std::vector<long> size;
   cpfits.read(map_psf, size);
+  
+  long max_x,max_y;
+  
+  {
+    long i=0,imax=0;
+    double amax = map_psf[0];
+    for(auto &a : map_psf){
+      if(a > amax){imax=i;amax=a;}
+      ++i;
+    }
+    max_x = imax % size[0];
+    max_y = imax / size[0];
+  }
+
+  long Lx;
+  long Ly = Lx = 2*MIN( MIN(max_y,size[1]-max_y),MIN(max_x,size[0]-max_x));
+  
+  std::valarray<double> tmp(Lx*Ly);
+  long ii=0;
+  for(long i=max_x - Lx/2 ; i<max_x + Lx/2 ;++i){
+    assert(i<size[0]);
+    long jj=0;
+    for(long j=max_y - Ly/2 ; j<max_y + Ly/2 ;++j){
+      assert(j<size[1]);
+      tmp[ii + Lx*jj] = map_psf[i + size[0] * j];
+      ++jj;
+    }
+    ++ii;
+  }
+  
+  std::swap(tmp,map_psf);
   
   fftpsf();
 }
@@ -321,22 +353,51 @@ void Obs::fftpsf(){
   
   // make extended map of psf
   std::vector<double> psf_padded(n_x * n_y,0);
+  std::vector<int> psf_count(n_x * n_y,0);
+
+  // find maximum of psf
+  long half_psf_x,half_psf_y;
+  {
+    long i=0,imax=0;
+    double amax =map_psf[0];
+    for(auto &a : map_psf){
+      if(a > amax){imax=i;amax=a;}
+      ++i;
+    }
+    half_psf_x = imax % n_side_psf;
+    half_psf_y = imax / n_side_psf;
+  }
   
-  double psf_norm = 0.;
+  
+  
+  long n_side_psf_x = MIN(2*half_psf_x , n_side_psf);
+  long n_side_psf_y = MIN(2*half_psf_y , n_side_psf);
+ 
   // shift center of psf to bottom left with a rap and down sample
-  long half_psf = n_side_psf/2;
-  for(long i=0 ; i< n_side_psf ; ++i){
-    size_t ii = (i >= half_psf) ? (i - half_psf)/oversample_factor :
-                                   n_x + (i - half_psf)/oversample_factor;
+  //long half_psf = n_side_psf/2;
+  for(long i=0 ; i< n_side_psf_x ; ++i){
+    size_t ii = (i >= half_psf_x) ? (i - half_psf_x)/oversample_factor + 0.5 :
+                                   n_x + (i - half_psf_x)/oversample_factor + 0.5;
     
-    for(long j=0 ; j< n_side_psf ; ++j){
-      size_t jj = (j >= half_psf) ? (j - half_psf)/oversample_factor :
-                                   n_y + (j - half_psf)/oversample_factor;
+    for(long j=0 ; j< n_side_psf_y ; ++j){
+      size_t jj = (j >= half_psf_y) ? (j - half_psf_y)/oversample_factor + 0.5 :
+                                   n_y + (j - half_psf_y)/oversample_factor + 0.5;
       
-      psf_norm += map_psf[i*n_side_psf + j];
       psf_padded[ii*n_x + jj] += map_psf[i*n_side_psf + j];
+      psf_count[ii*n_x + jj] += 1;
     }
   }
+  
+  double psf_norm = 0.;
+  for(long i=0;i<psf_count.size();++i){
+    if(psf_count[i] >0){
+      psf_padded[i] /= psf_count[i];
+      psf_norm += psf_padded[i];
+    }else{
+      psf_padded[i] = 0;
+    }
+  }
+  
   for(double &p : psf_padded) p /= psf_norm;
   
   fft_psf.resize(n_x*(n_y/2+1));
@@ -347,6 +408,8 @@ void Obs::fftpsf(){
   fftw_plan p_psf = fftw_plan_dft_r2c_2d(n_x ,n_y ,psf_padded.data()
                                ,reinterpret_cast<fftw_complex*>(fft_psf.data()), FFTW_ESTIMATE);
   fftw_execute(p_psf);
+  
+  //std::complex<double> phase = std::polar(1, i*half_psf_x / n_x + j*half_psf_y / n_y ); *****
   
   image_to_fft = fftw_plan_dft_r2c_2d(n_x,n_y ,image_padded.data()
                                       ,reinterpret_cast<fftw_complex*>(fft_padded.data()), FFTW_ESTIMATE);
@@ -394,7 +457,7 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
     for(double &a :image_padded) a=0;
     for(int i=0 ; i<Npix_x_input ; ++i){
       for(int j=0 ; j<Npix_y_input ; ++j){
-        image_padded[(i+nborder_x)*n_x + j+nborder_y] = map_in(i,j);
+        image_padded[ (i+nborder_x)*n_x + j + nborder_y] = map_in(i,j);
       }
     }
  
@@ -412,7 +475,7 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
     size_t N = n_x*n_y;
     for(int i=0 ; i< Npix_x_input ; ++i){
       for(int j=0 ; j< Npix_y_input ; ++j){
-        map_out(i,j) = image_padded[ (i+nborder_x)*n_x + j+nborder_y ]/N;
+        map_out(i,j) = image_padded[ (i+nborder_x)*n_x + j + nborder_y]/N;
       }
     }
 
