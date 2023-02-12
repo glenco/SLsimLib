@@ -94,8 +94,8 @@ GridMap::GridMap(
   
   pointID = 0;
   
-  assert(N1d > 0);
-  assert(range > 0);
+  if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
+  if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
   
   center = my_center;
   

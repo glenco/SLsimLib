@@ -27,10 +27,10 @@ Grid::Grid(
            ): Ngrid_init(N1d),Ngrid_init2(N1d),Ngrid_block(3),axisratio(1.0){
 
 	Point *i_points,*s_points;
-    pointID = 0;
+  pointID = 0;
 
-	assert(N1d > 0);
-	assert(range > 0);
+  if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
+  if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
 
 	if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no points" << std::endl; exit(1);}
 	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no range" << std::endl; exit(1);}
