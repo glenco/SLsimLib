@@ -378,11 +378,12 @@ void Obs::fftpsf(){
   for(long i=0 ; i< n_side_psf_x ; ++i){
     size_t ii = (i >= half_psf_x) ? (i - half_psf_x)/oversample_factor + 0.5 :
                                    n_x + (i - half_psf_x)/oversample_factor + 0.5;
-    
+    if(ii >=n_x) ii=n_x-1;
     for(long j=0 ; j< n_side_psf_y ; ++j){
       size_t jj = (j >= half_psf_y) ? (j - half_psf_y)/oversample_factor + 0.5 :
                                    n_y + (j - half_psf_y)/oversample_factor + 0.5;
       
+      if(jj >= n_y) jj=n_y-1;
       psf_padded[ii*n_x + jj] += map_psf[i*n_side_psf + j];
       psf_count[ii*n_x + jj] += 1;
     }
