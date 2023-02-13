@@ -103,10 +103,8 @@ GridMap::GridMap(
   if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init);
-  //i_points = point_factory(Ngrid_init*Ngrid_init);
   xygridpoints(i_points,range,center.x,Ngrid_init,0);
   s_points = NewPointArray(Ngrid_init*Ngrid_init);
-  //s_points = point_factory(Ngrid_init*Ngrid_init);
   LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
     
   {
@@ -116,10 +114,7 @@ GridMap::GridMap(
   
 }
 
-GridMap::~GridMap(){
-  //FreePointArray(i_points);
-  //FreePointArray(s_points);
-}
+GridMap::~GridMap(){}
 
 GridMap GridMap::ReInitialize(LensHndl lens){
   
