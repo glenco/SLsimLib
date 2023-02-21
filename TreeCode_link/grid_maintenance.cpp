@@ -36,10 +36,8 @@ Grid::Grid(
 	if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make Grid with no range" << std::endl; exit(1);}
  
 	i_points = NewPointArray(Ngrid_init*Ngrid_init);
-  //i_points = point_factory(Ngrid_init*Ngrid_init);
   xygridpoints(i_points,range,center,Ngrid_init,0);
   s_points = NewPointArray(Ngrid_init*Ngrid_init);
-  //s_points = point_factory(Ngrid_init*Ngrid_init);
 	LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
 
   {

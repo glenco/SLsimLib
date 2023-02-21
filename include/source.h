@@ -34,6 +34,7 @@ public:
          ):source_r(r),source_x(x),zsource(z),sb_limit(SBlimit),mag_zero_point(zero_point)
   {
     //setSBlimit_magarcsec(SBlimit);
+    id=-1;
   };
   
   virtual ~Source();
@@ -43,7 +44,8 @@ public:
     source_x(s.source_x),
     zsource(s.zsource),
     sb_limit(s.sb_limit),
-    mag_zero_point(s.mag_zero_point) {}
+    id(s.id),
+    mag_zero_point(s.mag_zero_point){ }
   
   Source & operator=(const Source &s){
     if(this == &s) return *this;
@@ -51,6 +53,7 @@ public:
     source_x = s.source_x;
     zsource = s.zsource;
     sb_limit = s.sb_limit;
+    id = s.id;
     mag_zero_point = s.mag_zero_point;
     
     return *this;
@@ -138,6 +141,9 @@ public:
     return total_flux;
   }
   
+  long getID() const {return id;}
+  void setID(long i){id=i;}
+  
 protected:
   virtual void assignParams(InputParams& params){};
 	
@@ -161,6 +167,7 @@ protected:
     return pow(10,-0.4*(mag - mag_zero_point));
   }
   
+  long id;
 private:
   double mag_zero_point;
   
@@ -176,7 +183,7 @@ public:
   {
     current_band = Band::NoBand;
     setMag(magnitude);
-    id = -1;
+    setID(-1);
   }
   
   SourceColored(const SourceColored &s):Source(s){
@@ -184,7 +191,6 @@ public:
     mag_map = s.mag_map;
     current_band = s.current_band;
     sed_type = s.sed_type;
-    id = s.id;
     flux_total = s.flux_total;
   }
 
@@ -196,7 +202,6 @@ public:
     mag_map = s.mag_map;
     current_band = s.current_band;
     sed_type = s.sed_type;
-    id = s.id;
     flux_total = s.flux_total;
     
     return *this;
@@ -211,7 +216,6 @@ public:
     mag_map = s.mag_map;
     current_band = s.current_band;
     sed_type = s.sed_type;
-    id = s.id;
     flux_total = s.flux_total;
     
     return *this;
@@ -222,7 +226,6 @@ public:
   PosType getMag() const { assert(current_band != Band::NoBand); return mag;}
   PosType getMag(Band band) const {return (mag_map.size() > 0) ? mag_map.at(band) : mag;}
   Band getBand() const{return current_band;}
-  long getID() const {return id;}
   float getSEDtype() const {return sed_type;}
   
   void setSEDtype(float sed) {sed_type = sed;}
@@ -254,7 +257,6 @@ protected:
   Band current_band;
   float sed_type;
   PosType mag;
-  int id;
   PosType flux_total;
 };
 
