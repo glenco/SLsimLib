@@ -204,6 +204,7 @@ public:
 	PixelMap& operator*=(const PixelMap& rhs);
 	//friend PixelMap operator*(const PixelMap&, const PixelMap&);
   PixelMap operator*(const PixelMap& a) const;
+  PixelMap operator/(const PixelMap& a) const;
 
 	PixelMap& operator*=(PosType b);
 

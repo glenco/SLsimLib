@@ -156,12 +156,13 @@ PixelMap::PixelMap(
                    const PosType* center,  /// The location of the center of the map
                    std::size_t Nx,  /// Number of pixels in x dimension of map.
                    std::size_t Ny,  /// Number of pixels in y dimension of map.
-                   PosType resolution        /// One dimensional range of map in whatever units the point positions are in
+                   PosType resolution  /// One dimensional range of map in whatever units the point positions are in
                    ,PixelMapUnits u
 )
 : map(0.0, Nx*Ny),
 Nx(Nx), Ny(Ny), resolution(resolution),units(u)
 {
+  
   std::copy(center, center + 2, this->center);
   rangeX = resolution*Nx;
   rangeY = resolution*Ny;
@@ -523,6 +524,14 @@ PixelMap PixelMap::operator*(const PixelMap& a) const
 {
   PixelMap diff(a);
   diff *= *this;
+  return diff;
+}
+
+/// Multiply two PixelMaps.
+PixelMap PixelMap::operator/(const PixelMap& a) const
+{
+  PixelMap diff(a);
+  for(size_t i=0;i<map.size();++i) diff[i] = map[i]/a.map[i];
   return diff;
 }
 
