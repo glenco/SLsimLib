@@ -549,7 +549,6 @@ SourceShapelets::SourceShapelets(
   NormalizeFlux();
   
   ++count;
-  id = 0;
 }
 
 SourceShapelets::SourceShapelets(
@@ -591,7 +590,6 @@ SourceShapelets::SourceShapelets(
   
   current_band = Band::NoBand;
   ++count;
-  id = 0;
 }
 
 SourceShapelets::SourceShapelets(
@@ -633,7 +631,6 @@ SourceShapelets::SourceShapelets(
   
   cpfits.readKey("REDSHIFT", zsource);
   //cpfits.readKey("ID", id); // I'm not sure what this is.
-  id = -1;
   cpfits.readKey("DIM", n1);
   
   n2 = n1;
@@ -649,7 +646,6 @@ SourceShapelets::SourceShapelets(
   
   NormalizeFlux();
   ++count;
-  id = 0;
 }
 
 /// Returns surface brightness in erg/cm2/sec/Hz, normalized by hplanck.
@@ -867,7 +863,7 @@ void SourceMultiShapelets::readCatalog()
     {
       SourceShapelets s(shap_file.c_str(),0,getMagZeroPoint());
       
-      s.id = i;
+      s.setID(i);
 
       s.sed_type = viz_cat[j][4];
       

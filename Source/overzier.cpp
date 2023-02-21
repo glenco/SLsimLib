@@ -59,13 +59,14 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   spheroid = s.spheroid;
   current = s.current;
   sedtype = s.sedtype;
+
   return *this;
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
 void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Reff,double my_Rdisk,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
-	haloID = my_id;
+  setID(my_id);
 
   current.cosPA = cos(my_PA);
   current.sinPA = sin(my_PA);

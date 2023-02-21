@@ -33,10 +33,7 @@ public:
   virtual PosType SurfaceBrightness(PosType *x);
 	PosType getTotalFlux() const;
 	void printSource();
-	
-	/// Halo ID.
-	unsigned long getID() { return haloID; }
-	
+  
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
   PosType getMag() const { return current.mag; }
   PosType getMag(Band band) const ;
@@ -104,9 +101,6 @@ protected:
   // renormalize the disk and bulge to agree with current mag and mag_bulge
   void renormalize_current();
 	void assignParams(InputParams& params);
-	
-	/// haloID
-	unsigned long haloID;
 
   struct Params{
 
