@@ -209,7 +209,7 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
     long jj=0;
     for(long j=max_y - Ly/2 ; j<max_y + Ly/2 ;++j){
       assert(j<size[1]);
-      tmp[ii + Lx*jj] = map_psf[i + size[0] * j];
+      tmp[ii + Lx*jj] = map_psf[j + size[0] * i];
       ++jj;
     }
     ++ii;
