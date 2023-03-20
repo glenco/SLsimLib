@@ -146,6 +146,47 @@ struct GridMap{
     size_t index[3];
     size_t & operator[](int i){return index[i];}
   };
+  
+    
+  /*** \brief Returns a list of  RAYs from a set of source positions.
+   
+   The image positions are found in parallel by the triangle method.  The order of the
+   output rays will be the same as the sources with multiple images consecutive.
+   */
+  std::list<RAY> find_images(std::vector<Point_2d> &ys) const{
+    int nthreads = Utilities::GetNThreads();
+ 
+    long N =  ys.size();
+    long n = (int)(N/nthreads + 1);
+    
+    std::vector<std::list<RAY>> v_of_lists(nthreads);
+    
+    std::vector<std::thread> thr;
+    long m = 0,i=0;
+    //for(int i = 0; i < nthreads ;++i){
+    for(int i=0 ; i<nthreads ; ++i ){
+ 
+      if(m > N-n ) n = N-m;
+      thr.push_back(std::thread(
+                                &GridMap::_find_images_
+                                ,this
+                                ,ys.data() + m
+                                ,n
+                                ,std::ref(v_of_lists[i])
+                                )
+                    );
+      
+      m += n;
+    }
+ 
+    for(auto &t : thr) t.join();
+  
+    //join ray lists
+    for(int i = 1 ; i<nthreads ; ++i) v_of_lists[0].splice(v_of_lists[0].end(),v_of_lists[i]);
+  
+    return v_of_lists[0];
+  }
+
   /** find all images by triangle method
    */
   void find_images(Point_2d y
@@ -567,6 +608,31 @@ private:
   static std::mutex grid_mutex;
   
   MemmoryBank<Point> point_factory;
+  
+  void _find_images_(Point_2d *ys,long Nys,std::list<RAY> &rays) const{
+    
+    std::vector<Point_2d> x;
+    std::vector<Triangle> triangles;
+    rays.resize(0);
+    auto itr = rays.begin();
+    for(long k=0 ; k<Nys ; ++k){
+      find_images(ys[k],x,triangles);
+      rays.emplace_back();
+      RAY &ray = rays.back();
+      for(int i=0 ; i < x.size() ; ++i){
+        ray.x=x[i];
+        ray.y = ys[k];
+        ray.A *= 0;
+        for(int j=0 ; j<3 ; ++j){
+          ray.A = ray.A  + i_points[triangles[i][j]].A;
+        }
+        ray.A /= 3;
+      }
+    }
+    
+    return;
+  }
+
 };
 
 #endif // defined(__GLAMER__gridmap__)
