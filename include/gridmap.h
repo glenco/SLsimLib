@@ -28,6 +28,8 @@
 
 struct GridMap{
   
+  friend class Lens;
+  
 	GridMap(LensHndl lens,unsigned long N1d,const double center[2],double range);
   GridMap(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
 	~GridMap();
@@ -224,20 +226,19 @@ struct GridMap{
           if(sig_sum > 0){
             if(sig1 == 0){
               image_points.push_back( ( i_points[k] + i_points[k1])/2  );
-              triangles.push_back(Triangle(k,k1,k2));
             }else if(sig2 == 0){
               image_points.push_back( ( i_points[k1] + i_points[k2])/2  );
-              triangles.push_back(Triangle(k,k1,k2));
             }else{
               image_points.push_back( ( i_points[k2] + i_points[k])/2  );
-              triangles.push_back(Triangle(k,k1,k2));
             }
+            triangles.push_back(Triangle(k,k1,k2));
           }
         }else if (sig1 == 0 && sig3 == 0){ // a vertex
           image_points.push_back( i_points[k] );
+          triangles.push_back(Triangle(k,k1,k2));
         }
        
-        sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+        //sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
         sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
         sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
         
@@ -249,14 +250,12 @@ struct GridMap{
           if(sig_sum > 0){
             if(sig1 == 0){
               image_points.push_back( ( i_points[k] + i_points[k1] )/2  );
-              triangles.push_back(Triangle(k,k1,k3));
             }else if(sig2 == 0){
               image_points.push_back( ( i_points[k1] + i_points[k3] )/2  );
-              triangles.push_back(Triangle(k,k1,k3));
             }else{
               image_points.push_back( ( i_points[k3] + i_points[k] )/2  );
-              triangles.push_back(Triangle(k,k1,k3));
             }
+            triangles.push_back(Triangle(k,k1,k3));
           }
         }
       }

@@ -413,6 +413,14 @@ public:
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
 
+  std::vector<Point_2d> find_images(Point_2d y_source
+                   ,double z_source
+                   ,Point_2d &center
+                   ,double range
+                   ,double stop_res
+                   );
+   
+  
   void find_point_source_images(
                               Grid &grid
                               ,Point_2d y_source
@@ -423,6 +431,7 @@ public:
                               ,double dxtol
                               ,bool verbose = false
                                  );
+  
   
 	// methods used for use with implanted sources
 
@@ -585,7 +594,14 @@ protected:
 
 private:
 	GLAMER_TEST_FRIEND(LensTest)
-	
+  
+  void _find_images_(std::vector<Point_2d> &images
+                     ,const Point_2d &y_source
+                     ,Point_2d &center
+                     ,double range
+                     ,double stop_res
+                     );
+  
 	// seed for random field generation
 	long *seed;
   
