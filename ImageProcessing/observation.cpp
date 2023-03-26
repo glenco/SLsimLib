@@ -893,7 +893,7 @@ void Observation::Convert(PixelMap &map_in
   map_out.Clean();
   downsample(map_scratch,map_out);
   ToCounts(map_out);
-  if (noise == true) AddNoise(map_out,error_map,ran);
+  if (noise == true) AddNoise(map_out,error_map,ran,true);
   ToSurfaceBrightness(map_out);
   
   return;
@@ -903,7 +903,7 @@ void Observation::Convert(PixelMap &map_in
 /// Outputs rms of noise counts due to background and instrument
 /// in the unit decided by the user
 float Observation::getBackgroundNoise(float resolution, UnitType unit)
-{
+const {
     if (telescope==true && fabs(resolution-pix_size) > pix_size*1.0e-5)
     {
         std::cout << "The resolution is different from the one of the simulated instrument in Observation::getBackgroundNoise!" << std::endl;
@@ -932,7 +932,7 @@ void Observation::set_up(){
 void Observation::AddNoise(
                            PixelMap &pmap
                            ,PixelMap &error_map
-                           ,Utilities::RandomNumbers_NR &ran)
+                           ,Utilities::RandomNumbers_NR &ran,bool dummy)
 {
   if(pmap.getNx() != pmap.getNy()){
     std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;

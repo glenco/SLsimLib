@@ -2592,18 +2592,18 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
 //int LensHaloMultiGauss::count = 0;
 
 LensHaloMultiGauss::LensHaloMultiGauss(
-                   double mass_norm  /// mass in Msun at radius Rnorm
-                   ,double Rnorm       /// elliptical radius for normalization of mass
-                   ,MultiGauss::PROFILE &profile  /// one of several profiles
-                   ,int Ngaussians    /// number of gausians
-                   ,int Nradii    /// number of radii they are fit to
+                   double mass_norm
+                   ,double Rnorm
+                   ,MultiGauss::PROFILE &profile
+                   ,int Ngaussians
+                   ,int Nradii
                    ,PosType r_min
                    ,PosType r_max
-                   ,PosType my_zlens /// redshift
-                   ,float my_fratio /// axis ratio
-                   ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
-                   ,const COSMOLOGY &cosmo  /// cosmology
-                   ,float f /// cuttoff radius in units of truncation radius
+                   ,PosType my_zlens
+                   ,float my_fratio
+                   ,float my_pa
+                   ,const COSMOLOGY &cosmo
+                   ,float f
                    ,bool verbose
 ):LensHalo(my_zlens,cosmo),nn(Ngaussians),mm(Nradii),q(my_fratio),pa(my_pa)
 ,mass_norm(mass_norm),r_norm(Rnorm)

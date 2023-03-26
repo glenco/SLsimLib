@@ -689,10 +689,10 @@ public:
 	float getSeeing() const {return seeing;}
 	float getZeropoint() const {return mag_zeropoint;}
     /// pixel size in radians
-  float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec);
-  float getBackgroundNoise(){return 0;};
+  float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec) const;
+  float getBackgroundNoise() const {return 0;};
 
-  void AddNoise(PixelMap &pmap,PixelMap &error_map,Utilities::RandomNumbers_NR &ran);
+  void AddNoise(PixelMap &pmap,PixelMap &error_map,Utilities::RandomNumbers_NR &ran,bool dummy);
 
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
@@ -707,11 +707,11 @@ public:
   void setExpTime(float time){exp_time = time;}
   void setPixelSize(float pixel_size){pix_size=pixel_size;}
  
-  double mag_to_flux(double m){
+  double mag_to_flux(double m) const {
     if(m == 100) return 0;
     return pow(10,-0.4*(m - mag_zeropoint));
   }
-  double flux_to_mag(double flux){
+  double flux_to_mag(double flux) const{
     if(flux <=0) return 100;
     return -2.5 * log10(flux) + mag_zeropoint;
   }
