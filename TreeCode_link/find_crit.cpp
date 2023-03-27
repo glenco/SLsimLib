@@ -2184,7 +2184,7 @@ std::string to_string(CritType crit){
   std::string s;
   switch (crit) {
     case CritType::ND:
-      s = "NotDefined";neighbor_mag_limit  const float  26
+      s = "NotDefined";
       break;
     case CritType::radial:
       s = "radial";
