@@ -49,6 +49,7 @@ public:
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
                     ,bool my_multimass       /// set to true is particles have different sizes
+                    ,double inv_area           /// inverse area for mass compensation
                     ,PosType MinPSize=0        /// minimum particle size in Mpc, overrides nearest neighbors aor input sizes for small particle sizes
                     ,PosType rescale_mass = 1.0   /// rescale particle masses
                     ,bool verbose=false
@@ -59,10 +60,11 @@ public:
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
+                    ,double my_inv_area           /// inverse area for mass compensation
                     ,float MinPSize = 0        /// minimum particle size
                     ,double max_range = -1/// if set this will cause the tree not be fully construct down to the bucket size outside this range
                     ,bool verbose=false
-  ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true)
+  ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true),inv_area(my_inv_area)
   {
     Npoints = pvector.size();
    
@@ -80,12 +82,12 @@ public:
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
+                    ,double my_inv_area           /// inverse area for mass compensation
                     ,float MinPSize = 0        /// minimum particle size
                     ,double max_range = -1/// if set this will cause the tree not be fully construct down to the bucket size outside this range
                     ,bool verbose=false
-  ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true)
+  ):LensHalo(redshift,cosmo),min_size(MinPSize),multimass(true),inv_area(my_inv_area),Npoints(n)
   {
-    Npoints = n;
     pp = begin;
     set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
   }
@@ -104,6 +106,7 @@ public:
     Npoints = h.Npoints;
     simfile = h.simfile;
     sizefile = h.sizefile;
+    inv_area = h.inv_area;
     
     qtree = h.qtree;
     h.qtree = nullptr;
@@ -188,12 +191,13 @@ protected:
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
                     ,bool recenter           /// center on center of mass
-                    ,float MinPSize = 0       /// minimum particle size
+                    ,double my_inv_area           /// inverse area for mass compensation
                     ,bool verbose = false
-  ):LensHalo(redshift,cosmo),pp(pdata),min_size(MinPSize),multimass(true),Npoints(Nparticles)
+  ):LensHalo(redshift,cosmo),pp(pdata),min_size(0),multimass(true),Npoints(Nparticles),inv_area(my_inv_area)
   {
     set_up(redshift,cosmo,theta_rotate,-1,recenter,verbose);
   }
+  
   void rotate_particles(PosType theta_x,PosType theta_y);
   static void smooth_(TreeSimple<PType> *tree3d,PType *xp,size_t N,int Nsmooth);
   void assignParams(InputParams& params);
@@ -210,9 +214,11 @@ protected:
   Utilities::Geometry::SphericalPoint<> center;
   
   size_t Npoints;
+  PosType inv_area;
   
   std::string simfile;
   std::string sizefile;
+  
   
   TreeQuadParticles<PType> * qtree;
   void set_up(float redshift,const COSMOLOGY& cosmo,Point_2d theta_rotate,double max_range,bool recenter,bool verbose);
@@ -227,11 +233,12 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
                                             ,Point_2d theta_rotate
                                             ,bool recenter
                                             ,bool my_multimass
+                                            ,double my_inv_area
                                             ,PosType MinPSize
                                             ,PosType massscaling
                                             ,bool verbose
                                             )
-:LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename)
+:LensHalo(redshift,cosmo),min_size(MinPSize),multimass(my_multimass),simfile(simulation_filename),inv_area(my_inv_area)
 {
   
   LensHalo::setZlens(redshift,cosmo);
@@ -327,7 +334,8 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
-  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,0,20);
+  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,inv_area,20);
+  
 }
 
 template<typename PType>
@@ -405,7 +413,7 @@ void LensHaloParticles<PType>::set_up(
   // rotate positions
   rotate_particles(theta_rotate[0],theta_rotate[1]);
   
-  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,0,20,0.1,false,0,max_range);
+  qtree = new TreeQuadParticles<PType>(pp,Npoints,-1,-1,inv_area,20,0.1,false,max_range);
 }
 
 
@@ -431,7 +439,7 @@ void LensHaloParticles<PType>::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
   delete qtree;
 
-  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,0,20);
+  qtree = new TreeQuadParticles<ParticleType<float> >(pp,Npoints,-1,-1,inv_area,20);
 }
 
 /** \brief Reads number of particle and particle positons into Npoint and xp from a ASCII file.
@@ -835,7 +843,7 @@ void LensHaloParticles<PType>::makeSIE(
     LensHaloParticles<ParticleTypeSimple> ::calculate_smoothing(Nneighbors,parts.data(),Npoints);
 
     return LensHaloParticles<ParticleTypeSimple>(parts,redshift
-                            ,cosmo,Point_2d(0,0),false);
+                            ,cosmo,Point_2d(0,0),false,0);
   }
 
 template<typename PType>
@@ -854,6 +862,7 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
   Npoints = h.Npoints;
   simfile = h.simfile;
   sizefile = h.sizefile;
+  inv_area = h.inv_area;
   
   qtree = h.qtree;
   h.qtree = nullptr;
@@ -972,12 +981,14 @@ public:
                      ,SimFileFormat format
                      ,int Nsmooth   /// number of nearest neighbors used for smoothing
                      ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
+                     //,bool compensate=false  /// if true a negative mass will be included so that  the region wil have zero massl
                      ,bool ignore_type_in_smoothing = false /// used only when format == gadget2, nearest neighbour smoothing is done amongst particles by type if set to false
                      );
   
   MakeParticleLenses(const std::string &filename  /// path / name of glmb file
                      ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
-                     );
+                     //,bool compensate=false  /// if true a negative mass will be included so that  the region wil have zero massl
+                    );
   
   ~MakeParticleLenses(){
     for(auto p : halos) delete p;
@@ -987,7 +998,7 @@ public:
 
   void Recenter(Point_3d<> x);
 
-  void CreateHalos(const COSMOLOGY &cosmo,double redshift);
+  void CreateHalos(const COSMOLOGY &cosmo,double redshift,double inv_area);
   
   /// remove particles that are beyond radius (Mpc/h) from center
   void radialCut(Point_3d<> center,double radius);
@@ -1012,6 +1023,7 @@ public:
 private:
   const std::string filename;
   int Nsmooth;
+  //bool compensate;
   
   Point_3d<> bbox_ll;  // minumum coordinate values of particles
   Point_3d<> bbox_ur;  // maximim coordinate values of particles
@@ -1084,8 +1096,9 @@ public:
   LensHaloHalos(std::vector<HType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
+                    ,float inv_area
                     ,bool verbose=false
-  ):LensHalo(redshift,cosmo)
+  ):LensHalo(redshift,cosmo),inv_area(inv_area)
   {
     std::swap(pvector,trash_collector);
     Nhalos = trash_collector.size();
@@ -1106,6 +1119,8 @@ public:
     
     qtree = h.qtree;
     h.qtree = nullptr;
+    
+    inv_area = h.inv_area;
   }
   LensHaloHalos & operator=(LensHaloHalos &&h);
 
@@ -1121,6 +1136,7 @@ public:
   
 protected:
   Point_2d mcenter;
+  double inv_area;
   
   std::vector<HType *> vpp;
   std::vector<HType> trash_collector;
@@ -1168,7 +1184,7 @@ void LensHaloHalos<HType>::set_up(
   
   if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
   
-  qtree = new TreeQuadHalos<HType>(vpp.data(),Nhalos);
+  qtree = new TreeQuadHalos<HType>(vpp.data(),Nhalos,inv_area);
   //qtree = new TreeQuadParticles<HType>(pp.data(),Nhalos,-1,-1,0,20);
 }
 

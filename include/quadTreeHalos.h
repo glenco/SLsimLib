@@ -9,7 +9,7 @@
 #define quadTreeHalos_h
 /**
  * \brief TreeQuadHalo is a class for calculating the deflection, kappa and gamma by tree method.
- *
+ *<pre>
  * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
  * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
  * the tree is built in such a way the large particles are stored in branches that are no smaller
@@ -18,7 +18,7 @@
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
- *
+ *<\pre>
  */
 
 
@@ -31,7 +31,7 @@ public:
   TreeQuadHalos(
            LensHaloType **my_halos
            ,IndexType Npoints
-           ,PosType my_sigma_background = 0
+           ,PosType my_inv_area = 0
            ,int bucket = 5
            ,PosType theta_force = 0.1
            ,bool my_periodic_buffer = false
@@ -61,11 +61,9 @@ protected:
   PosType **xp;
   bool MultiMass;
   bool MultiRadius;
-  //float *masses;
-  //float *sizes;
   
   IndexType Nparticles;
-  PosType sigma_background;
+  PosType inv_area;
   int Nbucket;
   
   PosType force_theta;
@@ -125,7 +123,7 @@ template <typename LensHaloType>
 TreeQuadHalos<LensHaloType>::TreeQuadHalos(
                    LensHaloType **my_halos     /// list of halos to be put in tree
                    ,IndexType Npoints          /// number of halos
-                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,PosType my_inv_area /// background kappa that is subtracted
                    ,int bucket                  /// maximum number of halos in each leaf of the tree
                    ,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
                    ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadHalos::force2D() for details. See note for TreeQuadHalos::force2D_recur().
@@ -133,7 +131,7 @@ TreeQuadHalos<LensHaloType>::TreeQuadHalos(
                    ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
 ):
 MultiMass(true),MultiRadius(true)//,masses(NULL),sizes(NULL)
-,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
+,Nparticles(Npoints),inv_area(my_inv_area),Nbucket(bucket)
 ,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
 ,max_range(max_range)
@@ -572,10 +570,10 @@ void TreeQuadHalos<LensHaloType>::force2D(const PosType *ray,PosType *alpha,Kapp
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
-  *kappa -= sigma_background;
+  //*kappa -= sigma_background;
   
   return;
 }
@@ -701,22 +699,21 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
             
             tmp_index = MultiMass*(*treeit)->particles[i];
             
-            prefac = halos[tmp_index]->get_mass();
-            prefac /= rcm2*PI/screening;
+            double mass = halos[tmp_index]->get_mass();
+            prefac = mass * (inv_area - screening/rcm2/PI) ;
+            //prefac /= rcm2*PI/screening;
+            //tmp = -1.0*prefac;
             
-            tmp = -1.0*prefac;
+            alpha[0] += prefac*xcm[0];
+            alpha[1] += prefac*xcm[1];
             
-            alpha[0] += tmp*xcm[0];
-            alpha[1] += tmp*xcm[1];
-            
-            
-            tmp = -2.0*prefac/rcm2;
+            tmp = -2.0*mass*screening/PI/rcm2/rcm2;
             
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += prefac*rcm2*0.5*log(rcm2);
-            
+            *phi += (screening*log(rcm2)/PI - inv_area*rcm2) *mass*0.5;
+            *kappa -=  mass * inv_area;
           } // end of for
         } // end of if(tree->atLeaf())
         
@@ -747,7 +744,7 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
         allowDescent=false;
         
         double screening = exp(-rcm2cell*inv_screening_scale2);
-        double tmp = -1.0*(*treeit)->mass/rcm2cell/PI*screening;
+        double tmp = (*treeit)->mass*(inv_area - screening/rcm2cell/PI);
         
         alpha[0] += tmp*xcm[0];
         alpha[1] += tmp*xcm[1];
@@ -774,6 +771,8 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
         alpha[0] += tmp*xcm[0];
         alpha[1] += tmp*xcm[1];
         
+        *kappa -= (*treeit)->mass*inv_area;
+        *phi -= (*treeit)->mass*inv_area*rcm2cell;
       }
     }
   }while(treeit.TreeWalkStep(allowDescent));
@@ -781,12 +780,12 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
-  {      //  taken out to speed up
-    *kappa -= sigma_background;
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
+  //{      //  taken out to speed up
+  //  *kappa -= sigma_background;
     // *phi -= sigma_background * sigma_background ;
-  }
+  //}
   
   return;
 }
@@ -864,10 +863,10 @@ void TreeQuadHalos<LensHaloType>::force2D_recur(const PosType *ray,PosType *alph
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
-  *kappa -= sigma_background;
+  //*kappa -= sigma_background;
   
   return;
 }
@@ -909,24 +908,19 @@ void TreeQuadHalos<LensHaloType>::walkTree_recur(QBranchNB *branch,PosType const
           if(rcm2 < 1e-20) rcm2 = 1e-20;
           
           tmp_index = MultiMass*branch->particles[i];
+       
+          double mass = halos[tmp_index]->get_mass();
+          prefac = mass * (inv_area - screening/rcm2/PI);
           
+          alpha[0] += prefac*xcm[0];
+          alpha[1] += prefac*xcm[1];
           
-          prefac = halos[tmp_index]->get_mass();
-          prefac /= rcm2*PI/screening;
-          
-          
-          alpha[0] += -1.0*prefac*xcm[0];
-          alpha[1] += -1.0*prefac*xcm[1];
-          
-          {
-            tmp = -2.0*prefac/rcm2;
+          tmp = -2.0 * mass * screening/rcm2/rcm2/PI;
+          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+          gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            
-            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-            gamma[1] += xcm[0]*xcm[1]*tmp;
-            
-            *phi += prefac*rcm2*0.5*log(rcm2);
-          }
+          *phi += (log(rcm2)/PI - inv_area*rcm2)*0.5*mass;
+          *kappa -= mass*inv_area;
         }
       }
       
@@ -963,8 +957,9 @@ void TreeQuadHalos<LensHaloType>::walkTree_recur(QBranchNB *branch,PosType const
     { // use whole cell
       
       double screening = exp(-rcm2cell*inv_screening_scale2);
-      double tmp = -1.0*branch->mass/rcm2cell/PI*screening;
-      
+      //double tmp = -1.0*branch->mass/rcm2cell/PI*screening;
+      double tmp = branch->mass*(inv_area - screening/rcm2cell/PI);
+   
       alpha[0] += tmp*xcm[0];
       alpha[1] += tmp*xcm[1];
       
@@ -990,6 +985,8 @@ void TreeQuadHalos<LensHaloType>::walkTree_recur(QBranchNB *branch,PosType const
       alpha[0] += tmp*xcm[0];
       alpha[1] += tmp*xcm[1];
       
+      *kappa -= branch->mass * inv_area;
+      *phi -= 0.5 * rcm2cell * inv_area * branch->mass;
       return;
     }
     

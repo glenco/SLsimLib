@@ -286,7 +286,7 @@ void ImageFinding::find_crit(
         crtcurve[ii].critical_center[1] += p[1];
         ++kk;
       }
-      crtcurve[ii].critical_center /= crtcurve[ii].critcurve.size();
+      crtcurve[ii].critical_center /= kk;
       
       Utilities::windings(crtcurve[ii].critical_center,crtcurve[ii].critcurve,&(crtcurve[ii].critical_area));
       
@@ -658,7 +658,7 @@ void ImageFinding::find_crit(
         crtcurve[ii].critical_center[1] += p[1];
         ++kk;
       }
-      crtcurve[ii].critical_center /= crtcurve[ii].critcurve.size();
+      crtcurve[ii].critical_center /= kk;
       
       Utilities::windings(crtcurve[ii].critical_center,crtcurve[ii].critcurve,&(crtcurve[ii].critical_area));
       
@@ -2174,9 +2174,6 @@ void ImageFinding::find_contour(
     crtcurve[ii].caustic_center[1] /= hull.size();
     
     Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
-    
-    
-    
   }
   
   
