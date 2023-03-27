@@ -4,6 +4,7 @@
 #include <nrutil.h>
 
 #include "concave_hull.h"
+#include "gridmap.h"
 
 //static const int NpointsRequired = 50;  // number of points required to be within an image
 static const int Ngrid_block = 3;       // each cell is divided into Ngrid_block^2 subcells
@@ -1120,6 +1121,60 @@ void Grid::find_point_source_images(
   
   return;
 };
+
+
+std::vector<Point_2d> Lens::find_images(Point_2d y_source
+                       ,double z_source
+                       ,Point_2d &center
+                       ,double range
+                       ,double stop_res
+                       ){
+  double ztmp = getSourceZ();
+  ResetSourcePlane(z_source);
+  std::vector<Point_2d> images;
+  
+  _find_images_(images,y_source,center,range,stop_res);
+  
+  ResetSourcePlane(ztmp);
+  
+  return images;
+}
+
+void Lens::_find_images_(
+                        std::vector<Point_2d> &images
+                       ,const Point_2d &y_source
+                       ,Point_2d &center
+                       ,double range
+                       ,double stop_resolution
+                       ){
+  
+  if(range <= stop_resolution){
+    for(auto &p : images){  // check that this point hasn't been found already
+      if( (p-center).length() < stop_resolution ) return;
+    }
+    images.push_back(center);
+    return;
+  }
+  
+  int n = 9;
+  GridMap gridmap(this,n,center.x,range);
+  std::vector<Point_2d> image_points;
+  std::vector<GridMap::Triangle> tr;
+  
+  gridmap.find_images(y_source,image_points,tr);
+  
+  for(int i=0 ; i < image_points.size() ; ++i){
+    center = gridmap.i_points[ tr[i][2] ].x;
+    _find_images_(images
+                  ,y_source
+                  ,center
+                  ,3*gridmap.getResolution()
+                  ,stop_resolution
+                  );
+  }
+  
+  
+}
 
 void Lens::find_point_source_images(
                             Grid &grid

@@ -548,7 +548,6 @@ T SphericalPoint<T>::OrthographicAnglePhi(
 }
 
 //// deprojection where this is the center of the projection
-
 template <typename T>
 SphericalPoint<T> SphericalPoint<T>::InverseOrthographicProjection(
                                                                    const Point_2d &x             /// 2D coordinate on projection
