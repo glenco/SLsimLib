@@ -364,7 +364,7 @@ public:
   
   This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
   */
-  /*RAY find_image(
+  /*RAY find_image_min(
           Point_2d y_source    /// input position of source (radians)
           ,Point_2d &x_image    /// initial guess for image postion (radians)
           ,PosType z_source     /// redshift of source
@@ -383,29 +383,28 @@ public:
    
   */
 
-  RAY find_image(
+  RAY find_image_min(
             Point &p              ///  p.image->x should be set to source position
             ,double zs            /// redhsift of source
             ,PosType ytol2        /// target tolerance in source position squared
             ,PosType &dy2         /// final value of Delta y ^2
             ,bool use_image_guess /// if true p.x[] will be used as a guess for the image position
   );
-
   /// this version uses the redshift stored in the ray
-  RAY find_image(
+  RAY find_image_min(
             RAY &p               /// p.y[] should be set to source position
             ,PosType ytol2       /// target tolerance in source position squared
             ,PosType &dy2        /// final value of Delta y ^2
             ,bool use_image_guess  /// if true p.x[] will be used as a guess for the image position
   );
   /// This is the same, but the image is forced to stay within boundary
-  RAY find_image(
+  RAY find_image_min(
             RAY &p                /// p[] is
             ,PosType ytol2        /// target tolerance in source position squared
             ,PosType &dy2         /// final value of Delta y ^2
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
-  RAY find_image(
+  RAY find_image_min(
             Point &p              /// p[] is
             ,double zs            /// source redshift
             ,PosType ytol2        /// target tolerance in source position squared
@@ -413,24 +412,32 @@ public:
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
 
-  std::vector<Point_2d> find_images(Point_2d y_source
-                   ,double z_source
-                   ,Point_2d &center
-                   ,double range
-                   ,double stop_res
-                   );
-   
+  std::vector<RAY> find_images(Point_2d y_source
+                                    ,double z_source
+                                    ,Point_2d &center
+                                    ,double range
+                                    ,double stop_res
+                                    );
   
-  void find_point_source_images(
-                              Grid &grid
-                              ,Point_2d y_source
-                              ,PosType r_source
-                              ,PosType z_source
-                              ,std::vector<RAY> &images
-                              ,double dytol2
-                              ,double dxtol
-                              ,bool verbose = false
-                                 );
+  std::vector<RAY> find_images(
+                                    GridMap &init_grid
+                                    ,Point_2d y_source
+                                    ,double z_source
+                                    ,Point_2d &center
+                                    ,double range
+                                    ,double stop_res
+                                    );
+  
+//  void find_point_source_images(
+//                              Grid &grid
+//                              ,Point_2d y_source
+//                              ,PosType r_source
+//                              ,PosType z_source
+//                              ,std::vector<RAY> &images
+//                              ,double dytol2
+//                              ,double dxtol
+//                              ,bool verbose = false
+//                                 );
   
   
 	// methods used for use with implanted sources
@@ -595,9 +602,8 @@ protected:
 private:
 	GLAMER_TEST_FRIEND(LensTest)
   
-  void _find_images_(std::vector<Point_2d> &images
-                     ,const Point_2d &y_source
-                     ,Point_2d &center
+  void _find_images_(std::vector<RAY> &images
+                     ,RAY &center
                      ,double range
                      ,double stop_res
                      );

@@ -1122,166 +1122,232 @@ void Grid::find_point_source_images(
   return;
 };
 
-
-std::vector<Point_2d> Lens::find_images(Point_2d y_source
-                       ,double z_source
-                       ,Point_2d &center
-                       ,double range
-                       ,double stop_res
-                       ){
+std::vector<RAY> Lens::find_images(
+                                        Point_2d y_source
+                                        ,double z_source
+                                        ,Point_2d &center
+                                        ,double range
+                                        ,double stop_res
+                                        ){
   double ztmp = getSourceZ();
   ResetSourcePlane(z_source);
-  std::vector<Point_2d> images;
-  
-  _find_images_(images,y_source,center,range,stop_res);
+  std::vector<RAY> images;
+  RAY center_ray;
+  center_ray.x = center;
+  center_ray.y = y_source;
+ 
+  _find_images_(images,center_ray,range,stop_res);
   
   ResetSourcePlane(ztmp);
   
   return images;
 }
 
+std::vector<RAY> Lens::find_images(
+                                        GridMap &init_grid
+                                        ,Point_2d y_source
+                                        ,double z_source
+                                        ,Point_2d &center
+                                        ,double range
+                                        ,double stop_res
+                                        ){
+  double ztmp = getSourceZ();
+  ResetSourcePlane(z_source);
+  std::vector<RAY> images;
+
+  {
+    std::vector<Point_2d> image_points;
+    std::vector<GridMap::Triangle> tr;
+  
+    init_grid.find_images(y_source,image_points,tr);
+   
+    RAY center_ray;
+    center_ray.y = y_source;
+   
+    for(Point_2d center : image_points){
+      center_ray.x = center;
+      _find_images_(images,center_ray,3*init_grid.getResolution(),stop_res);
+    }
+  }
+  
+  ResetSourcePlane(ztmp);
+  
+  return images;
+}
+
+//void Lens::_find_images_(
+//                        std::vector<Point_2d> &images
+//                       ,const Point_2d &y_source
+//                       ,Point_2d &center
+//                       ,double range
+//                       ,double stop_resolution
+//                       ){
+//
+//  if(range <= stop_resolution){
+//    for(auto &p : images){  // check that this point hasn't been found already
+//      if( (p-center).length() < stop_resolution ) return;
+//    }
+//    images.push_back(center);
+//    return;
+//  }
+//
+//  int n = 9;
+//  GridMap gridmap(this,n,center.x,range);
+//  std::vector<Point_2d> image_points;
+//  std::vector<GridMap::Triangle> tr;
+//
+//  gridmap.find_images(y_source,image_points,tr);
+//
+//  for(int i=0 ; i < image_points.size() ; ++i){
+//    center = gridmap.i_points[ tr[i][2] ].x;
+//    _find_images_(images
+//                  ,y_source
+//                  ,center
+//                  ,3*gridmap.getResolution()
+//                  ,stop_resolution
+//                  );
+//  }
+//}
+
 void Lens::_find_images_(
-                        std::vector<Point_2d> &images
-                       ,const Point_2d &y_source
-                       ,Point_2d &center
+                        std::vector<RAY> &images
+                       ,RAY &center
                        ,double range
                        ,double stop_resolution
                        ){
   
   if(range <= stop_resolution){
     for(auto &p : images){  // check that this point hasn't been found already
-      if( (p-center).length() < stop_resolution ) return;
+      if( (p.x-center.x).length() < stop_resolution ) return;
     }
     images.push_back(center);
     return;
   }
   
   int n = 9;
-  GridMap gridmap(this,n,center.x,range);
+  GridMap gridmap(this,n,center.x.x,range);
   std::vector<Point_2d> image_points;
   std::vector<GridMap::Triangle> tr;
   
-  gridmap.find_images(y_source,image_points,tr);
+  gridmap.find_images(center.y,image_points,tr);
   
   for(int i=0 ; i < image_points.size() ; ++i){
-    center = gridmap.i_points[ tr[i][2] ].x;
+    center.x = gridmap.i_points[ tr[i][2] ];
+    center.A = gridmap.i_points[ tr[i][2] ].A;
     _find_images_(images
-                  ,y_source
                   ,center
                   ,3*gridmap.getResolution()
                   ,stop_resolution
                   );
   }
-  
-  
 }
 
-void Lens::find_point_source_images(
-                            Grid &grid
-                            ,Point_2d y_source
-                            ,PosType r_source
-                            ,PosType z_source
-                            ,std::vector<RAY> &images
-                            ,double dytol2
-                            ,double dxtol
-                            ,bool verbose
-                            ){
-  
-  int Nimages = 0;
-  size_t Npoints=0;
-  
-  std::vector<ImageInfo> imageinfo;
-
-  grid.find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
-  
-  images.resize(Nimages);
-  for(int i=0 ; i<Nimages ; ++i){
-    if(imageinfo[i].imagekist->Nunits() > 0){
-      images[i] = *(imageinfo[i].closestPoint(y_source));
-      images[i].z = z_source;
-    }else{
-      // case where the image had no points in it
-      --Nimages;
-      --i;
-      images.pop_back();
-    }
-  }
-  
-  double dy2;
-
-  std::vector<Point_2d> boundaries;
-  for(int i=0 ; i<Nimages ; ++i){
-    int n = imageinfo[i].outerborder->size();
-    boundaries.resize(n);
-    size_t k=0;
-    for(Kist<Point>::iterator it=imageinfo[i].outerborder->begin() ;
-        it != imageinfo[i].outerborder->end() ; ++it){
-      boundaries[k++] = *it;
-    }
-
-    int kk=3;
-    boundaries = Utilities::concaveK(boundaries,kk);
-   
-    if(!Utilities::inhull(images[i].x.x,boundaries)){
- 
-      std::cout << "this shouldn't happen!" << std::endl;
-      std::ofstream file("test_outer.csv");
-      
-      file << "x,y" << std::endl;
-      for(auto &p : boundaries){
-        file << p[0] << "," << p[1] << std::endl;
-      }
-      file.close();
-      
-      file.open("test_inner.csv");
-      
-      file << "x,y,in" << std::endl;
-      for(Kist<Point>::iterator it=imageinfo[i].innerborder->begin();
-          it != imageinfo[i].innerborder->end() ; ++it){
-        
-        bool in = Utilities::inhull((*it).x,boundaries);
-        
-        file << (*it)[0] <<","<< (*it)[1] <<"," << in << std::endl;
-     
-        //assert(Utilities::inhull((*it).x,boundaries));
-      }
-    
-      assert(Utilities::inhull(images[i].x.x,boundaries) );
-    }
-    
-    images[i].y = y_source;
-    images[i] = find_image(images[i],dytol2,dy2,boundaries);
-
-    // find minimum distance between images of the same pairity
-    double rmin = HUGE_VAL,mu = images[i].invmag();
-    for(int j=0 ; j<i ; ++j){
-      if(mu*images[j].invmag() > 0)
-      rmin = MIN(rmin,(images[i].x - images[j].x).length());
-    }
-    
-//    { // ?????
-//      RAY tmp_ray = images[i];
+//void Lens::find_point_source_images(
+//                            Grid &grid
+//                            ,Point_2d y_source
+//                            ,PosType r_source
+//                            ,PosType z_source
+//                            ,std::vector<RAY> &images
+//                            ,double dytol2
+//                            ,double dxtol
+//                            ,bool verbose
+//                            ){
+//  
+//  int Nimages = 0;
+//  size_t Npoints=0;
+//  
+//  std::vector<ImageInfo> imageinfo;
 //
-//      rayshooter(tmp_ray);
-//
-//      //assert(tmp_ray.y == images[i].y);
-//      //assert(tmp_ray.A == images[i].A);
+//  grid.find_images(y_source.x,r_source,Nimages,imageinfo,Npoints);
+//  
+//  images.resize(Nimages);
+//  for(int i=0 ; i<Nimages ; ++i){
+//    if(imageinfo[i].imagekist->Nunits() > 0){
+//      images[i] = *(imageinfo[i].closestPoint(y_source));
+//      images[i].z = z_source;
+//    }else{
+//      // case where the image had no points in it
+//      --Nimages;
+//      --i;
+//      images.pop_back();
 //    }
-    
-    // remove images if not close enough to source or are duplicates
-    if(dy2 > dytol2 || rmin < dxtol ){
-//      //std::cout << "   FAILED to converge." << std::endl;
-      std::swap(images[i],images.back());
-      images.pop_back();
-      std::swap(imageinfo[i],imageinfo.back());
-      imageinfo.pop_back();
-      --i;
-      --Nimages;
-    }else{
-      std::cout << "   " << (images[i].y-y_source).length()/arcsecTOradians << " arcsec mag = " << 1.0/images[i].invmag() << std::endl;
-    }
-
-  }
-  
-  return;
-};
+//  }
+//  
+//  double dy2;
+//
+//  std::vector<Point_2d> boundaries;
+//  for(int i=0 ; i<Nimages ; ++i){
+//    int n = imageinfo[i].outerborder->size();
+//    boundaries.resize(n);
+//    size_t k=0;
+//    for(Kist<Point>::iterator it=imageinfo[i].outerborder->begin() ;
+//        it != imageinfo[i].outerborder->end() ; ++it){
+//      boundaries[k++] = *it;
+//    }
+//
+//    int kk=3;
+//    boundaries = Utilities::concaveK(boundaries,kk);
+//   
+//    if(!Utilities::inhull(images[i].x.x,boundaries)){
+// 
+//      std::cout << "this shouldn't happen!" << std::endl;
+//      std::ofstream file("test_outer.csv");
+//      
+//      file << "x,y" << std::endl;
+//      for(auto &p : boundaries){
+//        file << p[0] << "," << p[1] << std::endl;
+//      }
+//      file.close();
+//      
+//      file.open("test_inner.csv");
+//      
+//      file << "x,y,in" << std::endl;
+//      for(Kist<Point>::iterator it=imageinfo[i].innerborder->begin();
+//          it != imageinfo[i].innerborder->end() ; ++it){
+//        
+//        bool in = Utilities::inhull((*it).x,boundaries);
+//        
+//        file << (*it)[0] <<","<< (*it)[1] <<"," << in << std::endl;
+//     
+//        //assert(Utilities::inhull((*it).x,boundaries));
+//      }
+//    
+//      assert(Utilities::inhull(images[i].x.x,boundaries) );
+//    }
+//    
+//    images[i].y = y_source;
+//    images[i] = find_image_min(images[i],dytol2,dy2,boundaries);
+//
+//    // find minimum distance between images of the same pairity
+//    double rmin = HUGE_VAL,mu = images[i].invmag();
+//    for(int j=0 ; j<i ; ++j){
+//      if(mu*images[j].invmag() > 0)
+//      rmin = MIN(rmin,(images[i].x - images[j].x).length());
+//    }
+//    
+////    { // ?????
+////      RAY tmp_ray = images[i];
+////
+////      rayshooter(tmp_ray);
+////
+////      //assert(tmp_ray.y == images[i].y);
+////      //assert(tmp_ray.A == images[i].A);
+////    }
+//    
+//    // remove images if not close enough to source or are duplicates
+//    if(dy2 > dytol2 || rmin < dxtol ){
+////      //std::cout << "   FAILED to converge." << std::endl;
+//      std::swap(images[i],images.back());
+//      images.pop_back();
+//      std::swap(imageinfo[i],imageinfo.back());
+//      imageinfo.pop_back();
+//      --i;
+//      --Nimages;
+//    }else{
+//      std::cout << "   " << (images[i].y-y_source).length()/arcsecTOradians << " arcsec mag = " << 1.0/images[i].invmag() << std::endl;
+//    }
+//
+//  }
+//  
+//  return;
+//};

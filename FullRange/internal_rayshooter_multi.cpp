@@ -600,7 +600,7 @@ void Lens::compute_rays_parallel(int start
  This routine finds the image position by minimizing the seporation on the source plane with Powell's method of minimization.  This will not find all images.  For that you must use another routine.  In the weak lensing regiam this should be sufficient.
  */
 /*
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           Point_2d y_source     /// input position of source (radians)
           ,Point_2d &x_image    /// initialized with guess for image postion (radians)
           ,PosType z_source     /// redshift of source
@@ -637,7 +637,7 @@ RAY Lens::find_image(
 */
 
 
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           Point &p              /// p[] is
           ,double zs           ///
           ,PosType ytol2        /// target tolerance in source position squared
@@ -646,7 +646,7 @@ RAY Lens::find_image(
 ){
 
   if(p.image == nullptr){
-    std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
+    std::cerr << " point in Lens::find_image_min() must have an attached image point" << std::endl;
   }
 
   int MaxSteps = 100;
@@ -726,7 +726,7 @@ RAY Lens::find_image(
   return RAY(p,zs);
 }
 
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           RAY &ray             /// p[] is
           ,PosType ytol2       /// target tolerance in source position squared
           ,PosType &dy2        /// final value of Delta y ^2
@@ -738,10 +738,10 @@ RAY Lens::find_image(
   pp.image->x[0] = ray.y[0];
   pp.image->x[1] = ray.y[1];
  
-  return find_image(pp,ray.z,ytol2,dy2,use_image_guess);
+  return find_image_min(pp,ray.z,ytol2,dy2,use_image_guess);
 }
 
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           Point &p             /// p[] is
           ,double zs           /// source redshift
           ,PosType ytol2        /// target tolerance in source position squared
@@ -750,7 +750,7 @@ RAY Lens::find_image(
 ){
 
   if(p.image == nullptr){
-    std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
+    std::cerr << " point in Lens::find_image_min() must have an attached image point" << std::endl;
   }
 
   int MaxSteps = 100;
@@ -821,7 +821,7 @@ RAY Lens::find_image(
   return RAY(p,zs);
 }
 
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           RAY &ray       /// p[] is
           ,PosType ytol2        /// target tolerance in source position squared
           ,PosType &dy2        /// final value of Delta y ^2
@@ -833,5 +833,5 @@ RAY Lens::find_image(
   pp.image->x[0] = ray.y[0];
   pp.image->x[1] = ray.y[1];
  
-  return find_image(pp,ray.z,ytol2,dy2,boundary);
+  return find_image_min(pp,ray.z,ytol2,dy2,boundary);
 }
