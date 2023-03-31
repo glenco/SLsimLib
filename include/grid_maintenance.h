@@ -241,6 +241,7 @@ namespace ImageFinding{
       z_source = 0.0;
       type = CritType::ND;
       caustic_intersections = -1;
+      touches_edge = false;
     };
     
     CriticalCurve(const CriticalCurve &p){
@@ -258,6 +259,7 @@ namespace ImageFinding{
       z_source = p.z_source;
       type = p.type;
       caustic_intersections = p.caustic_intersections;
+      touches_edge = p.touches_edge;
    }
 
     CriticalCurve & operator=(const CriticalCurve &p){
@@ -277,6 +279,7 @@ namespace ImageFinding{
       z_source = p.z_source;
       type = p.type;
       caustic_intersections = p.caustic_intersections;
+      touches_edge = p.touches_edge;
       return *this;
     }
     
