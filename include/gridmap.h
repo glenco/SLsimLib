@@ -164,8 +164,7 @@ struct GridMap{
     std::vector<std::list<RAY>> v_of_lists(nthreads);
     
     std::vector<std::thread> thr;
-    long m = 0,i=0;
-    //for(int i = 0; i < nthreads ;++i){
+    long m = 0;
     for(int i=0 ; i<nthreads ; ++i ){
  
       if(m > N-n ) n = N-m;

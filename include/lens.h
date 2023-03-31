@@ -346,7 +346,7 @@ public:
   void rayshooterInternal(unsigned long Npoints   /// number of points to be shot
                          ,RAY *rays            /// points on the image plane
                          );
-                          
+  void rayshooterInternal(RAY &ray);  /// single ray 
 
   void info_rayshooter(RAY &i_point
                       ,std::vector<Point_2d> & ang_positions
@@ -390,20 +390,21 @@ public:
             ,PosType &dy2         /// final value of Delta y ^2
             ,bool use_image_guess /// if true p.x[] will be used as a guess for the image position
   );
-  /// this version uses the redshift stored in the ray
-  RAY find_image_min(
-            RAY &p               /// p.y[] should be set to source position
-            ,PosType ytol2       /// target tolerance in source position squared
-            ,PosType &dy2        /// final value of Delta y ^2
-            ,bool use_image_guess  /// if true p.x[] will be used as a guess for the image position
+  /** this version uses the redshift stored in the ray,
+  
+   Tthe ray is replaced with the best guess so the source position is replaced.
+   */
+  RAY find_image_min(const RAY &in_ray    /// p.y[] should be set to source position
+                     ,PosType ytol2       /// target tolerance in source position squared
   );
+  
   /// This is the same, but the image is forced to stay within boundary
-  RAY find_image_min(
-            RAY &p                /// p[] is
-            ,PosType ytol2        /// target tolerance in source position squared
-            ,PosType &dy2         /// final value of Delta y ^2
-            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
-  );
+//  RAY find_image_min(
+//            RAY &p                /// p[] is
+//            ,PosType ytol2        /// target tolerance in source position squared
+//            ,PosType &dy2         /// final value of Delta y ^2
+//            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+//  );
   RAY find_image_min(
             Point &p              /// p[] is
             ,double zs            /// source redshift
@@ -428,6 +429,10 @@ public:
                                     ,double stop_res
                                     );
   
+  void find_images_min_parallel(std::vector<RAY> &rays
+                                        ,double ytol2
+                                        ,std::vector<bool> &success
+                                      );
 //  void find_point_source_images(
 //                              Grid &grid
 //                              ,Point_2d y_source
@@ -607,6 +612,13 @@ private:
                      ,double range
                      ,double stop_res
                      );
+  
+  void _find_images_min_parallel_(RAY *rays
+                                  ,size_t begin
+                                  ,size_t end
+                                  ,double ytol2
+                                  ,std::vector<bool> &success
+                                  );
   
 	// seed for random field generation
 	long *seed;

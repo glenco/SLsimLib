@@ -1133,8 +1133,8 @@ std::vector<RAY> Lens::find_images(
   ResetSourcePlane(z_source);
   std::vector<RAY> images;
   RAY center_ray;
-  center_ray.x = center;
   center_ray.y = y_source;
+  center_ray.z = z_source;
  
   _find_images_(images,center_ray,range,stop_res);
   
@@ -1163,7 +1163,8 @@ std::vector<RAY> Lens::find_images(
    
     RAY center_ray;
     center_ray.y = y_source;
-   
+    center_ray.z = z_source;
+ 
     for(Point_2d center : image_points){
       center_ray.x = center;
       _find_images_(images,center_ray,3*init_grid.getResolution(),stop_res);
