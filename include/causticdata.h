@@ -36,7 +36,7 @@ struct CausticSummary{
     
   };
   
-  CausticSummary &operator=(CausticSummary &tmp){
+  CausticSummary &operator=(const CausticSummary &tmp){
     if(&tmp==this) return *this;
     
     redshift = tmp.redshift;
@@ -76,7 +76,7 @@ struct CausticSummary{
 
 /** \brief A class for holding, printing and reading the information about the caustics and critical curves in an image.
  *
- *  Information about individual caustics/critical curves are stored in a CausticStructure class that can be obtaine
+ *  Information about individual caustics/critical curves are stored in a CausticStructure class that can be obtained
  *  with the [] operator.
  */
 class CausticDataStore{

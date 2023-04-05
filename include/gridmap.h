@@ -32,6 +32,8 @@ struct GridMap{
   
 	GridMap(LensHndl lens,unsigned long N1d,const double center[2],double range);
   GridMap(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
+  /// this makes a dumy GridMap that has no lensing
+  GridMap(unsigned long N1d,const double center[2],double range);
 	~GridMap();
   
     /// reshoot the rays for example when the source plane has been changed

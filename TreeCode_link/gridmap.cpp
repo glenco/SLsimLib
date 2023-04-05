@@ -111,7 +111,29 @@ GridMap::GridMap(
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
   }
+}
+
+GridMap::GridMap(
+                 unsigned long N1d          /// Initial number of grid points in each dimension.
+                 ,const PosType my_center[2]    /// Center of grid.
+                 ,PosType range              /// Full width of grid in whatever units will be used.
+): Ngrid_init(N1d),Ngrid_init2(N1d),axisratio(1.0),x_range(range){
   
+  pointID = 0;
+  
+  if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
+  if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
+  
+  center = my_center;
+  
+  if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
+  if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
+  
+  i_points = NewPointArray(Ngrid_init*Ngrid_init);
+  xygridpoints(i_points,range,center.x,Ngrid_init,0);
+  s_points = NewPointArray(Ngrid_init*Ngrid_init);
+  xygridpoints(s_points,range,center.x,Ngrid_init,0);
+  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
 }
 
 GridMap::~GridMap(){}
