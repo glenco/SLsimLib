@@ -1534,6 +1534,7 @@ bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,Kapp
 {
   
   if(rcm2 < Rmax*Rmax){
+    if(rcm2==0) return false;
     if(subtract_point){
     
       PosType fac = screening*mass/rcm2/PI;
@@ -1548,12 +1549,6 @@ bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,Kapp
       
       *phi += -0.5*mass*log(rcm2) / PI;
     }
-//    else{
-//      alpha[0] = alpha[1] = 0.0;
-//      gamma[0] = gamma[1] = gamma[2] = 0.0;
-//      *kappa = 0.0;
-//      *phi = 0.0 ;
-//    }
     return false;
   }
   if(!subtract_point){

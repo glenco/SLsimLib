@@ -355,7 +355,6 @@ struct GridMap{
   void find_boundaries(std::vector<bool> &bitmap  // = true inside
                        ,std::vector<std::vector<Point_2d> > &points
                        ,std::vector<bool> &hits_edge
-                       //,std::vector<CritType> &crit_type
                        ,bool add_to_vector=false
                        ){
     

@@ -837,6 +837,7 @@ void Lens::find_images_min_parallel(std::vector<RAY> &rays
   std::vector<std::thread> thr;
   long m = 0,N = rays.size();
   long n = (int)(N/nthreads + 1);
+  success.resize(N);
   
   for(int i=0 ; i<nthreads ; ++i ){
 
