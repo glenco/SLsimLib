@@ -24,11 +24,11 @@ struct GridMap;
 class Source;
 
 /// These are partial units for the pixel map that can be used to ensure consistency.  For example, maps with different units cannot be added together.  default: ndef
-enum PixelMapUnits {
+enum class PixelMapUnits {
   ndef     // not defined
   ,surfb   // ergs / s / cm**2
-  //,photon_flux // surfb / hplanck
   ,count_per_sec
+  ,ADU   // Analogue-to-Digital Units
   ,mass
   ,mass_density
 };
@@ -48,10 +48,10 @@ public:
   PixelMap(const PixelMap& other);
   PixelMap(PixelMap&& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
-	PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = ndef);
-	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = ndef);
+	PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
+	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
 	PixelMap(std::string fitsfilename
-           ,double resolution = -1,PixelMapUnits u = ndef);
+           ,double resolution = -1,PixelMapUnits u = PixelMapUnits::ndef);
   ~PixelMap(){
     map.resize(0);
   };
@@ -166,7 +166,11 @@ public:
   void AddCurve(std::vector<Point_2d> &curve,double value);
   void AddCurve(std::vector<RAY> &curve,double value);
   
-	void drawline(double x1[],double x2[],double value);
+  /// simple line
+	void drawline(double x1[],double x2[],double value,bool add);
+  /// line by Bresenham's line algorithm
+  void DrawLine(long x0,long x1,long y0,long y1,double value,bool add);
+  void DrawLineGS(long x0,long x1,long y0,long y1,double value,bool add);
   void drawcircle(PosType r_center[],PosType radius,PosType value);
   void drawdisk(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
@@ -200,6 +204,7 @@ public:
 	PixelMap& operator*=(const PixelMap& rhs);
 	//friend PixelMap operator*(const PixelMap&, const PixelMap&);
   PixelMap operator*(const PixelMap& a) const;
+  PixelMap operator/(const PixelMap& a) const;
 
 	PixelMap& operator*=(PosType b);
 
@@ -250,14 +255,14 @@ public:
   void drawPoints(std::vector<Point> points,PosType size,PosType value);
   
   void drawCurve(std::vector<Point *> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value);
+    for(int i=0;i<points.size()-1;++i) drawline(points[i]->x,points[i+1]->x,value,false);
   }
   void drawCurve(std::vector<Point> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value,false);
   }
   void drawPoints(std::vector<Point_2d> points,PosType size,PosType value);
   void drawCurve(std::vector<Point_2d> points,PosType value){
-    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value);
+    for(int i=0;i<points.size()-1;++i) drawline(points[i].x,points[i+1].x,value,false);
   }
   /// Draw a rectangle
   void drawSquare(PosType p1[],PosType p2[],PosType value);
@@ -437,7 +442,7 @@ private:
   double resolution,rangeX,rangeY,center[2];
   double RA=0,DEC=0; // optional coordinates of center
 	double map_boundary_p1[2],map_boundary_p2[2];
-  PixelMapUnits units=ndef;
+  PixelMapUnits units= PixelMapUnits::ndef;
   
   void AddGrid_(const PointList &list,LensingVariable val);
 
@@ -490,80 +495,77 @@ enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r
 
 enum class UnitType {counts_x_sec, flux} ;
 
-/** 
- * \brief It creates a realistic image from the output of a ray-tracing simulation.
- *
- * It translates pixel values in observed units (counts/sec), applies PSF and noise.
- * Input must be in ergs/(s*cm^2*Hz*hplanck).
- */
-class Observation
-{
+
+class Obs{
 public:
-	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron
-              ,size_t Npix_x,size_t Npix_y,float seeing = 0.);
-	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
   
-  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing=0);
-  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron ,std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample = 1.);
+  Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
+      ,double pix_size               /// pixel size (in rad)
+      ,int oversample          /// oversampling for input image
+      ,float seeing = 0 // seeing in arcsec
+  );
   
-  float getExpTime() const {return exp_time;}
-	int getExpNum() const {return exp_num;}
-	float getBackMag() const {return back_mag;}
-   /// read-out noise in electrons/pixel
-	float getRon() const {return ron;}
-  /// seeing in arcsecs
-	float getSeeing() const {return seeing;}
-	float getZeropoint() const {return mag_zeropoint;}
-    /// pixel size in radians
+  virtual ~Obs(){};
+  
+  size_t getNxInput() const { return Npix_x_input;}
+  size_t getNyInput() const { return Npix_y_input;}
+
+  size_t getNxOutput() const { return Npix_x_output;}
+  size_t getNyOutput() const { return Npix_y_output;}
+
+  std::valarray<double> getPSF(){return map_psf;}
+  void setPSF(std::string psf_file);
+  void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
-  void setPixelSize(float pixel_size){pix_size=pixel_size;}
-  float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec);
-	std::valarray<double> getPSF(){return map_psf;}
-  void setPSF(std::string psf_file, float os = 1.);
   void setNoiseCorrelation(std::string nc_file);
-	PixelMap Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran);
-  /// returns factor by which code image units need to be multiplied by to get flux units
-  //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
-
-  void setExpTime(float time){exp_time = time;}
-
-  size_t getNx(){ return Npix_x;}
-  size_t getNy(){ return Npix_y;}
-
-private:
   
-  size_t Npix_x,Npix_y;
-  std::vector<double> sqrt_noise_power;  // stores sqrt root of power noise spectrum
+  // virtual methods
+
+  virtual void AddNoise(PixelMap &pmap
+                        ,PixelMap &error_map
+                        ,Utilities::RandomNumbers_NR &ran,bool cosmics) = 0;
+  
+  virtual void Convert(PixelMap &map_in
+                           ,PixelMap &map_out
+                           ,PixelMap &error_map
+                           ,bool psf
+                           ,bool noise
+                           ,Utilities::RandomNumbers_NR &ran,bool cosmics) = 0;
+  
+  virtual float getBackgroundNoise() const = 0;
+
+  /// convert using stan
+  virtual double mag_to_flux(double m) const = 0;
+  virtual double flux_to_mag(double flux) const = 0;
+  
+protected:
+
+  double pix_size; // pixel size (in rad)
+  void CorrelateNoise(PixelMap &pmap);
+  float seeing;  // full-width at half maximum of the gaussian smoothing
+  
+  // the number of pixels in the real image
+  size_t Npix_x_output,Npix_y_output;
+  // the number of pixels in the oversamples image
+  size_t Npix_x_input,Npix_y_input;
+ 
+  float oversample; // psf oversampling factor
+  void downsample(PixelMap &map_in,PixelMap &map_out) const;  // downsize from Npix_input to Npix_output
+  
+  PixelMap map_scratch;
+ 
+private:
+  double input_psf_pixel_size;
   size_t side_ncorr; // pixels on a side of input noise correlation function
 
-	//float diameter;  // diameter of telescope (in cm)
-	//float transmission;  // total transmission of the instrument
-	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
-	float exp_time;  // total exposure time (in sec)
-	int exp_num;  // number of exposures
-	float back_mag;  // sky (or background) magnitude in mag/arcsec^2
-	float ron;  // read-out noise in electrons/pixel
-	float seeing;  // full-width at half maximum of the gaussian smoothing
-	std::valarray<double> map_psf;  // array of the point spread function
-	float oversample; // psf oversampling factor
-	double pix_size; // pixel size (in rad)
-	bool telescope; // was the observation created from a default telescope?
-  float e_per_s_to_ergs_s_cm2;  // e- / s   for zero magnitudes
-  float background_flux;  // e- / s / arcsec
-
-  void set_up();
-  
-  PixelMap AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran);//,long *seed);
-  
-  void ToCounts(PixelMap &pmap);
-  void ToSurfaceBrightness(PixelMap &pmap);
-	void ApplyPSF(PixelMap &pmap);
   void fftpsf();  // FFT the psf for later use
+  std::valarray<double> map_psf;  // array of the point spread function
+  
   std::vector<std::complex<double> > fft_psf;
   std::vector<std::complex<double> > fft_padded;
   std::vector<double> image_padded;
-  
+  std::vector<double> sqrt_noise_power;  // stores sqrt root of power noise spectrum
+
   // size of borders for psf convolution
   size_t nborder_x = 0;
   size_t nborder_y = 0;
@@ -575,14 +577,166 @@ private:
   fftw_plan image_to_fft;
   fftw_plan fft_to_image;
 
-  void CorrelateNoise(PixelMap &pmap);
-
   //PixelMap noise_correlation;
   std::vector<std::complex<double> > noise_fft_image;
   std::vector<double> noise_in_zeropad;
   fftw_plan p_noise_r2c;
   std::vector<double> noise_image_out;
   fftw_plan p_noise_c2r;
+};
+
+/**
+ * \brief It creates a realistic image from the output of a ray-tracing simulation.
+ *
+ * It translates pixel values in observed units (counts/sec), applies PSF and noise.
+ * Input must be in ergs/(s*cm^2*Hz).
+ *
+ *  see https://www.ucolick.org/~bolte/AY257/s_n.pdf
+ */
+class ObsVIS : public Obs{
+private:
+  
+  // standard erg s−1 cm−2 Hz−1
+  double mag_zeropoint = -24.4;
+  double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
+  
+  double gain = 11160; // e-/ADU (Analog Digital Units)
+  //double exp_num = 4;
+  //double exp_time = 2260.;  // seconds
+  double l = 7103.43;
+  double dl = 3318.28;
+  //double seeing = 0.18;
+  
+  // derived parameters;
+  double sigma_background;  // background var in ergs / cm^2 / s / Hz
+  double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
+
+  // adds random cosmic rays to the noise map
+  void cosmics(PixelMap &error_map
+                ,double inv_sigma2 // for one dither
+                ,int nc // number of cosmics to be added
+                ,Utilities::RandomNumbers_NR &ran) const ;
+  
+public:
+  
+  ObsVIS(size_t Npix_x,size_t Npix_y
+         ,int oversample
+         //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
+  );
+  
+  ~ObsVIS(){};
+  
+  
+  /// Applies  noise (read-out + Poisson) on an image, returns noise map
+  void AddNoise(PixelMap &pmap
+                 ,PixelMap &error_map
+                 ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+
+  void Convert(PixelMap &map_in
+               ,PixelMap &map_out
+               ,PixelMap &error_map  // this is 1/sigma^2
+               ,bool psf
+               ,bool noise
+               ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+  
+ 
+  double mag_to_flux(double m) const{
+    if(m == 100) return 0;
+    return pow(10,-0.4*(m - mag_zeropoint));
+  }
+  double flux_to_mag(double flux) const{
+    if(flux <=0) return 100;
+    return -2.5 * log10(flux) + mag_zeropoint;
+  }
+ 
+  double flux_to_counts(double flux) const{
+    if(flux <=0) return 100;
+    return -2.5 * log10(flux) + mag_zeropoint;
+  }
+ 
+  // returns std of pixels in surface brightness
+  float getBackgroundNoise() const {return sigma_background;}
+};
+
+
+/** 
+ * \brief It creates a realistic image from the output of a ray-tracing simulation.
+ *
+ * It translates pixel values in observed units (counts/sec), applies PSF and noise.
+ * Input must be in ergs/(s*cm^2*Hz).
+ *
+ *  see https://www.ucolick.org/~bolte/AY257/s_n.pdf
+ */
+class Observation : public Obs
+{
+public:
+	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise
+              ,size_t Npix_x,size_t Npix_y,double pix_size,float seeing = 0.);
+	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise ,std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample = 1.);
+  
+  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise, size_t Npix_x,size_t Npix_y,double pix_size,float seeing=0);
+  Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise ,std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample = 1.);
+  
+  ~Observation(){};
+  
+  float getExpTime() const {return exp_time;}
+	int getExpNum() const {return exp_num;}
+	float getBackMag() const {return back_mag;}
+   /// read-out noise in electrons/pixel
+	float getRon() const {return read_out_noise;}
+  /// seeing in arcsecs
+	float getSeeing() const {return seeing;}
+	float getZeropoint() const {return mag_zeropoint;}
+    /// pixel size in radians
+  float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec) const;
+  float getBackgroundNoise() const {return 0;};
+
+  void AddNoise(PixelMap &pmap,PixelMap &error_map,Utilities::RandomNumbers_NR &ran,bool dummy);
+
+  void Convert(PixelMap &map_in
+               ,PixelMap &map_out
+               ,PixelMap &error_map
+               ,bool psf
+               ,bool noise
+               ,Utilities::RandomNumbers_NR &ran);
+ 
+  /// returns factor by which code image units need to be multiplied by to get flux units
+  //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
+
+  void setExpTime(float time){exp_time = time;}
+  void setPixelSize(float pixel_size){pix_size=pixel_size;}
+ 
+  double mag_to_flux(double m) const {
+    if(m == 100) return 0;
+    return pow(10,-0.4*(m - mag_zeropoint));
+  }
+  double flux_to_mag(double flux) const{
+    if(flux <=0) return 100;
+    return -2.5 * log10(flux) + mag_zeropoint;
+  }
+
+private:
+  
+	//float diameter;  // diameter of telescope (in cm)
+	//float transmission;  // total transmission of the instrument
+	float mag_zeropoint;  // magnitude of a source that produces one count/sec in the image
+	float exp_time;  // total exposure time (in sec)
+	int exp_num;  // number of exposures
+	float back_mag;  // sky (or background) magnitude in mag/arcsec^2
+	float read_out_noise;  // read-out noise in electrons/pixel
+  float gain;
+  
+	bool telescope; // was the observation created from a default telescope?
+  float e_per_s_to_ergs_s_cm2;  // e- / s   for zero magnitudes
+  float background_flux;  // e- / s / arcsec
+
+  void set_up();
+    
+  void ToCounts(PixelMap &pmap);
+  void ToSurfaceBrightness(PixelMap &pmap);
+  void ToADU(PixelMap &pmap);
+  
 };
 
 void pixelize(double *map,long Npixels,double range,double *center

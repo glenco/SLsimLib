@@ -30,10 +30,12 @@ struct GridMap{
   
 	GridMap(LensHndl lens,unsigned long N1d,const double center[2],double range);
   GridMap(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
+  /// this makes a dumy GridMap that has no lensing
+  GridMap(unsigned long N1d,const double center[2],double range);
 	~GridMap();
   
     /// reshoot the rays for example when the source plane has been changed
-  void ReInitializeGrid(LensHndl lens);
+  GridMap ReInitialize(LensHndl lens);
   /**
    * \brief Recalculate surface brightness at every point without changing the positions of the gridmap or any lens properties.
    *
@@ -50,6 +52,7 @@ struct GridMap{
    May be slow.
    */
   double AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source);
+  
  /**
    * \brief Recalculate surface brightness just like GridMap::RefreshSurfaceBrightness but
    * the new source is added to any sources that were already there.
@@ -58,7 +61,13 @@ struct GridMap{
    */
   double AddSurfaceBrightnesses(SourceHndl source);
 
+  /// get the image point for a index number
+  Point_2d image_point(size_t index){return i_points[index];}
+  /// get the image point for a index number
+  Point_2d source_point(size_t index){return s_points[index];}
+ 
   void ClearSurfaceBrightnesses();
+  void assertNAN(); // check for nan in surface prightness
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
 	/// return initial number of grid points in each direction
@@ -124,11 +133,422 @@ struct GridMap{
     grid.s_points = nullptr;
     
     center = grid.center;
+    
+    point_factory = std::move(grid.point_factory);
 
     return *this;
   }
 
+  struct Triangle{
+    Triangle(size_t i,size_t j,size_t k){
+      index[0] = i;
+      index[1] = j;
+      index[2] = k;
+    }
+    size_t index[3];
+    size_t & operator[](int i){return index[i];}
+  };
+  /** find all images by triangle method
+   */
+  void find_images(Point_2d y
+                   ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
+                   ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+                   ) const {
+    
+    image_points.clear();
+    triangles.clear();
+    
+    size_t k;
+    size_t k1;
+    size_t k2;
+    size_t k3;
+    
+    int sig1,sig2,sig3,sig_sum;
+
+    for(size_t i=0 ; i< Ngrid_init-1 ; i++){
+      for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
+        k = i + j*Ngrid_init;
+        k1 = k + Ngrid_init + 1;
+        
+        k2 = k + 1;
+        k3 = k + Ngrid_init;
+
+        sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+        sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
+        sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
+        
+        sig_sum = sig1 + sig2 + sig3;
+        if(abs(sig_sum) == 3){ // inside
+          image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
+          triangles.push_back(Triangle(k,k1,k2));
+        }else if(abs(sig_sum) == 2){ // on edge
+          if(sig_sum > 0){
+            if(sig1 == 0){
+              image_points.push_back( ( i_points[k] + i_points[k1])/2  );
+              triangles.push_back(Triangle(k,k1,k2));
+            }else if(sig2 == 0){
+              image_points.push_back( ( i_points[k1] + i_points[k2])/2  );
+              triangles.push_back(Triangle(k,k1,k2));
+            }else{
+              image_points.push_back( ( i_points[k2] + i_points[k])/2  );
+              triangles.push_back(Triangle(k,k1,k2));
+            }
+          }
+        }else if (sig1 == 0 && sig3 == 0){ // a vertex
+          image_points.push_back( i_points[k] );
+        }
+       
+        sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+        sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
+        sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
+        
+        sig_sum = sig1 + sig2 + sig3;
+        if(abs(sig_sum) == 3){ // inside
+          image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k3] )/3  );
+          triangles.push_back(Triangle(k,k1,k3));
+        }else if(abs(sig_sum) == 2){ // on edge
+          if(sig_sum > 0){
+            if(sig1 == 0){
+              image_points.push_back( ( i_points[k] + i_points[k1] )/2  );
+              triangles.push_back(Triangle(k,k1,k3));
+            }else if(sig2 == 0){
+              image_points.push_back( ( i_points[k1] + i_points[k3] )/2  );
+              triangles.push_back(Triangle(k,k1,k3));
+            }else{
+              image_points.push_back( ( i_points[k3] + i_points[k] )/2  );
+              triangles.push_back(Triangle(k,k1,k3));
+            }
+          }
+        }
+      }
+    }
+    
+    return;
+  }
+  
+  /** \brief add flux to the rays that are nearest to the source on the source plane for each image
+  *
+   * This uses GridMap::find_images to find the images.  It then finds the point that is closest to the source position.
+   *  The flux is added to one point per image.  The total flux added is returned.  No further refinement of the grid is done
+   *  so it is limited by the resolution of the GridMap.  Some spurious low magnification images can be found.
+   */
+  double AddPointSource(const Point_2d &y,double flux){
+    std::vector<Point_2d> images;
+    std::vector<Triangle> tri;
+
+    find_images(y,images,tri);
+    
+    int n = images.size();
+    
+    double total_flux = 0;
+    for(int i = 0 ; i<n ; ++i){
+      
+      int closest = 0;
+      double d = (s_points[ tri[i][0] ] - y).length_sqr();
+      double tmp = (s_points[ tri[i][1] ] - y).length_sqr();
+      if(tmp < d){ d=tmp; closest = 1;}
+      tmp = (s_points[ tri[i][2] ] - y).length_sqr();
+      if(tmp < d){ d=tmp; closest = 2;}
+ 
+      size_t ii = tri[i][closest];
+      total_flux += flux / fabs(i_points[ii].invmag());
+      d = flux / fabs(i_points[ii].invmag()) / getResolution() / getResolution() ;
+      i_points[ii].surface_brightness += d;
+      s_points[ii].surface_brightness += d;
+    }
+    
+    return total_flux;
+  }
+  
+  void find_crit(std::vector<std::vector<Point_2d> > &points
+                 ,std::vector<bool> &hits_boundary
+                 ,std::vector<CritType> &crit_type
+                 ){
+    
+    points.resize(0);
+    
+    size_t N = Ngrid_init * Ngrid_init2;
+    std::vector<bool> bitmap(N);
+    size_t count = 0;
+    double eigenv[2];
+ 
+    // find tangential critical curves
+    for(size_t k = 0 ; k < N ; ++k){
+      i_points[k].A.eigenv(eigenv);
+      if(eigenv[1] < 0){
+        bitmap[k] = true;
+        ++count;
+      } else {
+        bitmap[k] = false;
+      }
+    }
+    if(count>0) find_boundaries(bitmap,points,hits_boundary);
+    crit_type.resize(points.size());
+    for(CritType &b : crit_type) b = CritType::tangential;
+
+    // find radial critical curves
+    count=0;
+    for(size_t k = 0 ; k < N ; ++k){
+      i_points[k].A.eigenv(eigenv);
+      if(eigenv[0] < 0 && eigenv[1] < 0){
+        bitmap[k] = true;
+        ++count;
+      }else{
+        bitmap[k] = false;
+      }
+    }
+    if(count>0) find_boundaries(bitmap,points,hits_boundary,true);
+    
+    int k = crit_type.size();
+    crit_type.resize(points.size());
+    for(int i=k ; i<crit_type.size() ; ++i) crit_type[i] = CritType::radial;
+  }
+  
+  /** finds ordered boundaries to regions where bitmap == true
+
+   This can be used to find critical curves or contours.
+   `bitmap` should be the same size as the `Gridmap`
+   If the boundary curve  touches the edge of the `GridMap` it will be indicated in `hits_boundary` as
+   `true`.
+   
+   Boundaries will never cross or lead off the grid.  On the edges they will leave the edge pixels out even if they should be in.  This is a technical comprimise.
+  */
+  void find_boundaries(std::vector<bool> &bitmap  // = true inside
+                       ,std::vector<std::vector<Point_2d> > &points
+                       ,std::vector<bool> &hits_edge
+                       //,std::vector<CritType> &crit_type
+                       ,bool add_to_vector=false
+                       ){
+    
+    size_t nx = Ngrid_init;
+    size_t ny = Ngrid_init2;
+    size_t n = nx*ny;
+    size_t ncells = nx*ny;
+    
+    std::vector<bool> not_used(bitmap.size(),true);
+    
+    assert(bitmap.size()==ncells);
+    
+    // pad edge of field with bitmap=false
+    for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
+    size_t j = nx*(ny-1);
+    for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
+    for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
+    j = nx-1;
+    for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
+
+    std::list<std::list<Point_2d>> contours;
+    if(!add_to_vector){
+      hits_edge.resize(0);
+      //crit_type.resize(0);
+    }
+    
+    bool done = false;
+    size_t kfirst_in_bound = 0;
+    while(!done){
+      // find first cell in edge
+      size_t k=0;
+      int count;
+      for( k = kfirst_in_bound + 1; k < n - nx ; ++k){
+        if(k % nx != nx-1){ // one less cells than points
+          count = 0;
+          if(bitmap[k]) ++count;
+          if(bitmap[k+1]) ++count;;
+          if(bitmap[k + Ngrid_init]) ++count;;
+          if(bitmap[k + Ngrid_init + 1]) ++count;
+          if(count > 0
+             && count < 4
+             && not_used[k]
+             ) break;
+        }
+      }
+      
+      kfirst_in_bound = k;
+      
+      if(k == n-nx){
+        done=true;
+      }else{ // found an edge
+        
+        contours.resize(contours.size() + 1);
+        std::list<Point_2d> &contour = contours.back();
+        hits_edge.push_back(false);
+        
+        /* find type of critical curve
+        if(i_points[k].inverted()
+           || i_points[k+1].inverted()
+           || i_points[k+nx].inverted()
+           || i_points[k+nx+1].inverted()
+           ){
+          crit_type.push_back(CritType::radial);
+        }else{
+          crit_type.push_back(CritType::tangential);
+        }
+        */
+        
+        int face_in=0;
+        int type;
+        size_t n_edge = 0;
+        // follow edge until we return to the first point
+        while(k != kfirst_in_bound || n_edge==0){
+          
+          if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
+          if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
+          
+          not_used[k] = false;
+          
+          ++n_edge;
+          type = 0;
+          // find type of cell
+          if(bitmap[k]) type +=1;
+          if(bitmap[k+1]) type += 10;
+          if(bitmap[k + Ngrid_init]) type += 100;
+          if(bitmap[k + Ngrid_init + 1]) type += 1000;
+          
+          if(type == 0 || type == 1111){  // all in or all out
+            throw std::runtime_error("off edge!!");
+          }else if(type == 1 || type == 1110){ // lower left only
+            
+            if(face_in==0){
+              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+              face_in=1;
+              k -= nx;
+            }else{
+              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+              face_in=2;
+              k -= 1;
+            }
+            
+          }else if(type == 10 || type == 1101){ // lower right only
+            
+            if(face_in==2){
+              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+              face_in=1;
+              k -= nx;
+            }else{
+              contour.push_back( (i_points[k+nx] + i_points[k+1]) / 2 );
+              face_in=0;
+              k += 1;
+            }
+            
+          }else if(type == 100 || type == 1011){ // upper left only
+            
+            if(face_in==0){
+              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+              face_in=3;
+              k += nx;
+            }else{
+              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+              face_in=2;
+              k -= 1;
+            }
+            
+          }else if(type == 1000 || type == 111){ // upper right only
+            
+            if(face_in==1){
+              contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
+              face_in=0;
+              k += 1;
+            }else{
+              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+              face_in=3;
+              k += nx;
+            }
+            
+          }else if(type == 11 || type == 1100){ // lower two
+            
+            if(face_in==0){
+              contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
+              k += 1;
+            }else{
+              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+              k -= 1;
+            }
+            
+          }else if(type == 1010 || type == 101){ // right two
+            
+            if(face_in==1){
+              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+              k -= nx;
+            }else{
+              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+              k += nx;
+            }
+            
+          }else if(type == 1001){ // lower left upper right
+            
+            if(face_in==0){
+              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+              face_in=3;
+              k += nx;
+            }else if(face_in==1){
+              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+              face_in=2;
+              k -= 1;
+            }else if(face_in==2){
+              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+              face_in=1;
+              k -= nx;
+            }else{
+              contour.push_back( (i_points[k+nx] + i_points[k+1]) / 2 );
+              face_in=0;
+              k += 1;
+            }
+            
+          }else if(type == 110){ // upper left lower right
+            
+            if(face_in==0){
+              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+              face_in=1;
+              k -= nx;
+            }else if(face_in==1){
+              contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
+              face_in=0;
+              k += 1;
+            }else if(face_in==2){
+              contour.push_back( (i_points[k + nx] + i_points[k+nx+1]) / 2 );
+              face_in=3;
+              k += nx;
+            }else{
+              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+              face_in=2;
+              k -= 1;
+            }
+          }
+        }
+      }
+    }
+    
+    int offset = 0;
+    if(!add_to_vector){
+      points.resize(contours.size());
+    }else{
+      offset = points.size();
+      points.resize(points.size() + contours.size());
+    }
+    
+    // copy lists of points into vectors
+    int i=0;
+    for(auto &c: contours){
+      points[offset+i].resize(c.size());
+      size_t j=0;
+      for(auto &p: c){
+        points[offset+i][j] = p;
+        ++j;
+      }
+      ++i;
+    }
+  }
+  
 private:
+  
+  // cluge to make compatible with old method of producing points
+  Point * NewPointArray(size_t N){
+    Point * p = point_factory(N);
+    p[0].head = N;
+    for(size_t i=1; i < N ; ++i) p[i].head = 0;
+    return p;
+  }
+  
   void xygridpoints(Point *points,double range,const double *center,long Ngrid
                     ,short remove_center);
   
@@ -147,6 +567,8 @@ private:
   
   bool to_refine(long i,long j,double total,double f) const ;
   static std::mutex grid_mutex;
+  
+  MemmoryBank<Point> point_factory;
 };
 
 #endif // defined(__GLAMER__gridmap__)

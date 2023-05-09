@@ -79,7 +79,7 @@ public:
     
     BranchV *leaf;
     
-    bool leaf_found = false;
+    //bool leaf_found = false;
     moveTop();
     do{
       long p = current->branch_index - index.data();

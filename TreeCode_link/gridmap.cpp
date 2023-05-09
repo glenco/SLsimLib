@@ -51,7 +51,8 @@ GridMap::GridMap(
   //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init2);
-  
+  //i_points = point_factory(Ngrid_init*Ngrid_init2);
+ 
   int i;
   // set grid of positions
   for(int ii=0;ii<Ngrid_init;++ii){
@@ -70,7 +71,9 @@ GridMap::GridMap(
   
   assert(i == Ngrid_init*Ngrid_init2-1);
   
-  s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init2);
+  s_points = NewPointArray(Ngrid_init*Ngrid_init2);
+  //s_points = point_factory(Ngrid_init*Ngrid_init2);
+  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init2);
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points);
@@ -91,8 +94,8 @@ GridMap::GridMap(
   
   pointID = 0;
   
-  assert(N1d > 0);
-  assert(range > 0);
+  if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
+  if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
   
   center = my_center;
   
@@ -101,27 +104,52 @@ GridMap::GridMap(
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init);
   xygridpoints(i_points,range,center.x,Ngrid_init,0);
-  s_points=LinkToSourcePoints(i_points,Ngrid_init*Ngrid_init);
+  s_points = NewPointArray(Ngrid_init*Ngrid_init);
+  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
     
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
   }
-  
 }
 
-GridMap::~GridMap(){
-  FreePointArray(i_points);
-  FreePointArray(s_points);
+GridMap::GridMap(
+                 unsigned long N1d          /// Initial number of grid points in each dimension.
+                 ,const PosType my_center[2]    /// Center of grid.
+                 ,PosType range              /// Full width of grid in whatever units will be used.
+): Ngrid_init(N1d),Ngrid_init2(N1d),axisratio(1.0),x_range(range){
+  
+  pointID = 0;
+  
+  if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
+  if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
+  
+  center = my_center;
+  
+  if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
+  if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
+  
+  i_points = NewPointArray(Ngrid_init*Ngrid_init);
+  xygridpoints(i_points,range,center.x,Ngrid_init,0);
+  s_points = NewPointArray(Ngrid_init*Ngrid_init);
+  xygridpoints(s_points,range,center.x,Ngrid_init,0);
+  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
 }
 
-void GridMap::ReInitializeGrid(LensHndl lens){
+GridMap::~GridMap(){}
+
+GridMap GridMap::ReInitialize(LensHndl lens){
   
+  GridMap newgrid(lens,Ngrid_init,center.x,x_range,getYRange());
+  
+  return newgrid;
+  /*
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
     lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
   }
   ClearSurfaceBrightnesses();
+   */
 }
 
 /// Output a PixelMap of the surface brightness with same res as the GridMap
@@ -214,7 +242,6 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
   PosType f=1.0e-4;
   
   double resolution = getResolution();
-  double res2 = resolution*resolution;
   LinkedPoint point;
 
   double total_flux = RefreshSurfaceBrightnesses(&source)/resolution/resolution;
@@ -234,7 +261,6 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
         double new_flux = i_points[k].surface_brightness;
         double old_flux=0;
         int n = 1;
-        double original = new_flux;  // ????
 
         total_flux -= new_flux;
         while ( fabs(old_flux-new_flux) > 1.0e-3*new_flux ){
@@ -265,7 +291,7 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
     }
   }
   
-  std::cout << " change in total flux = " << (total_flux-original_total_flux) / original_total_flux << std::endl;
+  //std::cout << " change in total flux = " << (total_flux-original_total_flux) / original_total_flux << std::endl;
 
   assert( (total_flux-original_total_flux) <  0.1*original_total_flux);
   return total_flux * resolution * resolution;
@@ -306,7 +332,15 @@ void GridMap::ClearSurfaceBrightnesses(){
     = 0.0;
     s_points[i].in_image = s_points[i].image->in_image = NO;
   }
-  
+}
+
+void GridMap::assertNAN(){
+  for(size_t i=0;i <s_points[0].head;++i){
+    assert(!isnan(s_points[i].surface_brightness));
+  }
+  for(size_t i=0;i <i_points[0].head;++i){
+     assert(!isnan(i_points[i].surface_brightness));
+   }
 }
 
 /** \brief Make a Pixel map of the without distribution the pixels.
@@ -559,7 +593,6 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
   long i,j;
   
   if(remove_center && (Ngrid_1d%2 == 1)){
-    /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d-1);*/
     for(i=0,j=0;i<Ngrid_1d*Ngrid_1d;++i){
       
       if( (2*(i/Ngrid_1d)/(Ngrid_1d-1) == 1) && (i%Ngrid_1d == Ngrid_1d/2+1) ) j=1;
@@ -570,7 +603,6 @@ void GridMap::xygridpoints(Point *i_points,PosType range,const PosType *center,l
     }
     
   }else{
-    /*i_points=NewPointArray(Ngrid_1d*Ngrid_1d);*/
     for(i=0;i<Ngrid_1d*Ngrid_1d;++i){
       i_points[i].id=pointID;
       ++pointID;
@@ -625,4 +657,5 @@ Point_2d GridMap::centroid() const{
   }
   return centroid/flux;
 }
+
 

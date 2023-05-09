@@ -11,14 +11,24 @@
 
 using namespace std;
 
-double flux_to_mag(double flux){
+double flux_to_mag_AB(double flux){
   if(flux <=0) return 100;
-  return -2.5 * log10(flux*hplanck) - 48.6;
+  return -2.5 * log10(flux) - 48.6;
 }
 
-double mag_to_flux(double m){
+double mag_to_flux_AB(double m){
   if(m == 100) return 0;
-  return pow(10,-0.4*(m+48.6))/hplanck;
+  return pow(10,-0.4*(m+48.6));
+}
+
+double flux_to_mag(double flux,double zeropoint){
+  if(flux <=0) return 100;
+  return -2.5 * log10(flux) + zeropoint;
+}
+
+double mag_to_flux(double m,double zeropoint){
+  if(m == 100) return 0;
+  return pow(10,-0.4*(m - zeropoint));
 }
 
 //SourceUniform::SourceUniform(InputParams& params) : Source(){
@@ -26,7 +36,7 @@ double mag_to_flux(double m){
 //}
 
 SourceUniform::SourceUniform(Point_2d position,PosType z,PosType radius_in_radians):
-Source(radius_in_radians,position,z)
+Source(radius_in_radians,position,z,-1,-48.6)
 {
 }
 
@@ -221,8 +231,9 @@ SourcePixelled::SourcePixelled(
                                , int my_Npixels           /// number of pixels per side
                                , PosType my_resolution  /// resolution (in rad)
                                , PosType* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
+                               , PosType zero_point        /// magnitude zero point
 )
-:Source(0,my_center,my_z), resolution(my_resolution), Npixels (my_Npixels){
+:Source(0,my_center,my_z,-1,zero_point), resolution(my_resolution), Npixels (my_Npixels){
   zsource = my_z;
   
   range = resolution*(Npixels-1);
@@ -246,8 +257,9 @@ SourcePixelled::SourcePixelled(
                                const PixelMap& gal_map  /// Input image and information
                                , PosType my_z                 /// redshift of the source
                                , PosType factor                /// optional rescaling factor for the flux
+                               , PosType zero_point
 )
-:Source(0,Point_2d(0,0),0){
+:Source(0,Point_2d(0,0),0,-1,zero_point){
   if(gal_map.getNx() != gal_map.getNy()){
     std::cout << "SourcePixelled::SourcePixelled() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
@@ -518,15 +530,12 @@ SourceShapelets::SourceShapelets(
                                  , std::valarray<PosType> my_coeff  	/// coefficients of the shapelets decomposition
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang					/// rotation angle (in rad)
+                                 , PosType zeropoint       /// magnitude zero point
 )
-:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource)
+:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource,-1,zeropoint)
 {
 
   assert(my_center != NULL);
-//  if(my_center != NULL)
-//    setTheta(my_center[0], my_center[1]);
-//  else
-//    setTheta(0, 0);
 
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
@@ -540,7 +549,6 @@ SourceShapelets::SourceShapelets(
   NormalizeFlux();
   
   ++count;
-  id = 0;
 }
 
 SourceShapelets::SourceShapelets(
@@ -549,8 +557,9 @@ SourceShapelets::SourceShapelets(
                                  , std::string shap_file				/// fits file with coefficients in a square array
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang			/// rotation angle (in rad)
+                                 , PosType zeropoint       /// magnitude zero point
 )
-:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z)
+:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z,-1,zeropoint)
 {
   
   assert(my_center != NULL);
@@ -581,22 +590,16 @@ SourceShapelets::SourceShapelets(
   
   current_band = Band::NoBand;
   ++count;
-  id = 0;
 }
 
 SourceShapelets::SourceShapelets(
                                  std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
                                  , PosType my_ang         /// rotation angle (in rad)
-                                //, PosType* my_center  					/// center (in rad)
+                                 , PosType zeropoint       /// magnitude zero point
  )
-:SourceColored(0,0,Point_2d(0,0),0)
+:SourceColored(0,0,Point_2d(0,0),0,-1,zeropoint)
 {
-//  assert(my_center != NULL);
-//  if(my_center != NULL)
-//    setTheta(my_center[0], my_center[1]);
-//  else
-//    setTheta(0, 0);
-//
+  
   cos_sin[0] = cos(my_ang);
   cos_sin[1] = sin(my_ang);
 
@@ -628,7 +631,6 @@ SourceShapelets::SourceShapelets(
   
   cpfits.readKey("REDSHIFT", zsource);
   //cpfits.readKey("ID", id); // I'm not sure what this is.
-  id = -1;
   cpfits.readKey("DIM", n1);
   
   n2 = n1;
@@ -644,7 +646,6 @@ SourceShapelets::SourceShapelets(
   
   NormalizeFlux();
   ++count;
-  id = 0;
 }
 
 /// Returns surface brightness in erg/cm2/sec/Hz, normalized by hplanck.
@@ -737,24 +738,31 @@ void SourceShapelets::NormalizeFlux()
 //  readCatalog();
 //}
 
-SourceMultiShapelets::SourceMultiShapelets(const std::string &my_shapelets_folder,Band my_band
-                                           ,double my_max_mag_limit,double my_min_mag_limit
-                                           ,double my_sb_limit,double maximum_radius)
-: Source(0,Point_2d(0,0),0),index(0),max_mag_limit(my_max_mag_limit),min_mag_limit(my_min_mag_limit)
-,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
+SourceMultiShapelets::SourceMultiShapelets(
+                                           const std::string &my_shapelets_folder,Band my_band
+                                           ,double my_max_mag_limit
+                                           ,double my_min_mag_limit
+                                           ,double my_z_max
+                                           ,double my_sb_limit
+                                           ,double maximum_radius
+                                           ,double zeropoint
+                                           )
+: Source(0,Point_2d(0,0),0,my_sb_limit,zeropoint),index(0),max_mag_limit(my_max_mag_limit),min_mag_limit(my_min_mag_limit)
+,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder),z_max(my_z_max)
 {
   
-  if(sb_limit == -1)
-    setSBlimit_magarcsec(30.);
-  else
-    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
+//  if(sb_limit == -1)
+//    setSBlimit_magarcsec(30.);
+//  else
+//    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
   
   readCatalog();
 }
 
 void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_band
-                                 ,double my_max_mag_limit,double my_min_mag_limit
-                                 ,double my_sb_limit,double maximum_radius)
+                                 ,double my_max_mag_limit,double my_min_mag_limit,double my_z_max
+                                 ,double my_sb_limit,double maximum_radius,double zero_point
+)
 {
   
   index=0;
@@ -763,11 +771,14 @@ void SourceMultiShapelets::input(const std::string &my_shapelets_folder,Band my_
   band = my_band;
   radius_max = maximum_radius;
   shapelets_folder = my_shapelets_folder;
+  setMagZeroPoint(zero_point);
+  z_max = my_z_max;          /// maximum redshift
+
   
-  if(sb_limit == -1)
-    setSBlimit_magarcsec(30.);
-  else
-    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
+ // if(sb_limit == -1)
+ //   setSBlimit_magarcsec(30.);
+ // else
+ //   sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
   
   readCatalog();
 }
@@ -850,9 +861,9 @@ void SourceMultiShapelets::readCatalog()
     std::ifstream shap_input(shap_file.c_str());
     if (shap_input)
     {
-      SourceShapelets s(shap_file.c_str());
+      SourceShapelets s(shap_file.c_str(),0,getMagZeroPoint());
       
-      s.id = i;
+      s.setID(i);
 
       s.sed_type = viz_cat[j][4];
       
@@ -866,9 +877,13 @@ void SourceMultiShapelets::readCatalog()
       s.setBand(Band::EUC_H,h_cat[j++][2]);
       
       //s.setActiveBand(band);
-      if (s.getMag() > 0. && s.getMag(Band::EUC_VIS) < max_mag_limit && s.getMag(Band::EUC_VIS) > min_mag_limit
-          && s.getMag(Band::EUC_J) > 0 && s.getMag(Band::EUC_H) > 0
-          && s.getRadius() < radius_max){
+      if (s.getMag() > 0.
+          && s.getMag(Band::EUC_VIS) < max_mag_limit
+          && s.getMag(Band::EUC_VIS) > min_mag_limit
+          && s.getMag(Band::EUC_J) > 0
+          && s.getMag(Band::EUC_H) > 0
+          && s.getRadius() < radius_max
+          && s.getZ() < z_max){
         galaxies.push_back(s);
         shap_input.close();
       }
@@ -898,10 +913,9 @@ void SourceMultiShapelets::assignParams(InputParams& params){
 
   
   if(!params.get("source_sb_limit",sb_limit))
-    setSBlimit_magarcsec(30.);
+    sb_limit = -1;
   else
-    sb_limit = flux_to_mag(sb_limit)*pow(180*60*60/PI,2);
-  
+    sb_limit = SBlimit_magarcsec(sb_limit);
   if(!params.get("shapelets_folder",shapelets_folder)){
     std::cerr << "ERROR: shapelets_folder not found in parameter file " << params.filename() << std::endl;
     exit(1);

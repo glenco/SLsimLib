@@ -79,7 +79,7 @@ public:
   void InverseOrthographicProjection(const SphericalPoint &central,T const x[]);
   void InverseOrthographicProjection(const SphericalPoint &central,const Point_2d &x);
   SphericalPoint<T> InverseOrthographicProjection(const Point_2d &x);
-
+  
   
   /// angle between points.  This uses the haversine formula that is more stable for small angles than the more commin formula
   T angular_separation(SphericalPoint &p){
@@ -93,11 +93,11 @@ public:
   Point_3d<T> unitPhi();
   /// unit vector in theta direction
   Point_3d<T> unitTheta();
-
+  
   /// the angle between the orthographic x-axis  and the constant theta curve
-   T OrthographicAngleTheta(const SphericalPoint &central);
+  T OrthographicAngleTheta(const SphericalPoint &central);
   /// the angle between the orthographic x-axis  and the constant Phi curve
-   T OrthographicAnglePhi(const SphericalPoint &central);
+  T OrthographicAnglePhi(const SphericalPoint &central);
   
   // returns the unit theta vector
   Point_3d<T> theta_hat() const{
@@ -108,19 +108,19 @@ public:
     
     return p;
   }
-
+  
   // returns the unit phi vector
   Point_3d<T> phi_hat() const{
-     Point_3d<T> p;
-     p[0] = -sin(phi);
-     p[1] =  cos(phi);
-     p[2] = 0;
-     
-     return p;
-   }
-
+    Point_3d<T> p;
+    p[0] = -sin(phi);
+    p[1] =  cos(phi);
+    p[2] = 0;
+    
+    return p;
+  }
+  
 };
- 
+
 
 /** \brief Quaternion class that is especially useful for rotations.
  
@@ -353,6 +353,7 @@ bool intersect(const PosType a1[],const PosType a2[]
                ,const PosType b1[],const PosType b2[]);
 /// returns the number of times a closed curve intersects itself
 int intersect(const std::vector<Point_2d> &curve);
+int intersections(const std::vector<Point_2d> &curve,std::vector<Point_2d> &intersections,std::vector<std::pair<int,int> > &segments);
 
 /** \brief To find orientation of the triangle formed by the ordered triplet (p, q, r).
  
@@ -426,7 +427,7 @@ void SphericalPoint<T>::StereographicProjection(
   double cosphi = cos(phi - central.phi);
   double so = sin(central.theta);
   double co = cos(central.theta);
-
+  
   PosType k = 2/( 1 + so*st + co*ct*cosphi );
   
   x[0] = k*(ct*sin(phi - central.phi));
@@ -441,7 +442,7 @@ void SphericalPoint<T>::StereographicProjection(
   double cosphi = cos(phi - central.phi);
   double so = sin(central.theta);
   double co = cos(central.theta);
-
+  
   PosType k = 2/( 1 + so*st + co*ct*cosphi );
   
   x[0] = k*(ct*sin(phi - central.phi));
@@ -456,7 +457,7 @@ Point_2d SphericalPoint<T>::StereographicProjection(
   double cosphi = cos(phi - central.phi);
   double so = sin(central.theta);
   double co = cos(central.theta);
-
+  
   PosType k = 2/( 1 + so*st + co*ct*cosphi );
   
   return Point_2d(k*(ct*sin(phi - central.phi)),k*(co*st - so*ct*cosphi));
@@ -526,25 +527,25 @@ void SphericalPoint<T>::InverseOrthographicProjection(
   at = (at < -1) ? -1 : at;
   theta = asin( at );
   phi = central.phi + atan2(x[0] , cos(central.theta)*cos(c)
-                             - x[1]*sin(central.theta) );
+                            - x[1]*sin(central.theta) );
 }
 
 template <typename T>
 T SphericalPoint<T>::OrthographicAngleTheta(
-          const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
-  ){
-    return atan2( sin(central.theta) * sin(phi - central.phi)
-                 , cos(phi - central.phi) );
-  }
+                                            const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+){
+  return atan2( sin(central.theta) * sin(phi - central.phi)
+               , cos(phi - central.phi) );
+}
 
-  template <typename T>
-  T SphericalPoint<T>::OrthographicAnglePhi(
-            const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
-    ){
-      return atan2( cos(central.theta) * cos(theta) + sin(central.theta) * sin(central.theta)
-                   *cos(phi - central.phi)
-          , -sin(phi - central.phi) * sin(phi - central.phi) );
-    }
+template <typename T>
+T SphericalPoint<T>::OrthographicAnglePhi(
+                                          const SphericalPoint<T> &central   /// point on the sphere where the tangent plane touches
+){
+  return atan2( cos(central.theta) * cos(theta) + sin(central.theta) * sin(central.theta)
+               *cos(phi - central.phi)
+               , -sin(phi - central.phi) * sin(phi - central.phi) );
+}
 
 //// deprojection where this is the center of the projection
 
@@ -595,6 +596,26 @@ T AngleSeporation(const SphericalPoint<T> &p1
   return acos(sin(p1.theta)*sin(p2.theta) + cos(p1.theta)*cos(p2.theta)*cos(p1.phi-p2.phi));
 }
 
+
+/// used so that an index will not go out of bounds,  ie. CYCLIC[0]=0,  CYCLIC[n]=0,  CYCLIC[-1]=n-1, etc.
+struct CYCLIC{
+  CYCLIC(long n):n(n){}
+  
+  // returns the integer in bounds
+  long operator[](long i){
+    while(i<0) i+=n;
+    return i%n;
+  }
+  
+  long n;
+};
+
+/*** \brief finds the edge-wise concave hull of a complex curve
+ 
+ The returned curve will consist of segments of the edges of the original curve that form a closed
+ curve that does not cross itself and will enclose all the verticies.
+ */
+std::vector<Point_2d> MagicHull(const std::vector<Point_2d> &points);
 }
 }
 

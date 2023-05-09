@@ -1247,6 +1247,7 @@ void LensHaloTEPL::deflection(std::complex<double> &z
   }
 }
 
+// for calculating exterior solution
 std::complex<double> LensHaloTEPL::F(double r_e,double t,std::complex<double> z) const{
 
   std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
@@ -1334,13 +1335,14 @@ void LensHaloTEBPL::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,
 
 #ifdef ENABLE_CERF
 
-LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
-              ,PosType my_zlens /// redshift
-              ,PosType r_scale  /// scale hight along the largest dimension
-              ,float my_fratio /// axis ratio
-              ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
-              ,const COSMOLOGY &cosmo  /// cosmology
-              ,float f /// cuttoff radius in units of truncation radius
+LensHaloGaussian::LensHaloGaussian(
+              float my_mass
+              ,PosType my_zlens
+              ,PosType r_scale
+              ,float my_fratio
+              ,float my_pa
+              ,const COSMOLOGY &cosmo
+              ,float f
 ):LensHalo(),q(my_fratio),pa(my_pa),I(0,1)
 {
 
@@ -1353,7 +1355,7 @@ LensHaloGaussian::LensHaloGaussian(float my_mass  /// total mass in Msun
   if(q > 1){
     q = 1/q;
   }
-  Rhight = r_scale*q;
+  Rhight = r_scale*sqrt(q);
   q_prime = (1-q*q)/q/q;
   
   R = std::complex<double>(cos(pa),sin(pa));
@@ -2465,16 +2467,17 @@ double LensHalo::test_average_kappa(PosType R){
 
 /// Three tests: 1st - Mass via 1D integration vs mass via 2D integration. 2nd: gamma_t=alpha/r - kappa(R) which can be used for spherical distributions. Deviations are expected for axis ratios <1. For the latter case we use the next test. 3rd: The average along a circular aperture of gamma_t should be equal to <kappa(<R)> minus the average along a circular aperture over kappa. Note that also  alpha/r - kappa is checked for consistency with kappa(<R)-<kappa(R)>. For axis ratios < 1 the factor between the two is expected to be of order O(10%).
 bool LensHalo::test(){
+  std::cout << " LensHalo test :" << std::endl;
   std::cout << "test alpha's consistance with kappa by comparing mass interior to a radius by 1D integration and Gauss' law and by 2D integration" << std::endl << "  The total internal mass is " << mass << std::endl;
   
-  std::cout << "R/Rmax     R/Rsize     Mass 1 D (from alpha)     Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
+  std::cout << "R            R/Rmax     R/Rsize     Mass 1 D (from alpha)     Mass 2 D         (m1 - m2)/m1       m2/m1" << std::endl;
   
-  int N=25;
+  int N=100;
   PosType m1,m2;
   for(int i=1;i<N;++i){
     m1 = MassBy1DIntegation(LensHalo::getRsize()*i/(N-4));
     m2 = MassBy2DIntegation(LensHalo::getRsize()*i/(N-4));
-    std::cout <<  i*1./(N-4) << "      " << i/(N-4) << "      " << m1 << "       "
+    std::cout << LensHalo::getRsize()*i*1./(N-4) << "      " <<  i*1./(N-4) << "      " << i*1./(N-4) << "      " << m1 << "       "
     << m2 << "        "<< (m1-m2)/m1 << "         " << m2/m1  << std::endl;
     
   }
@@ -2585,6 +2588,259 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
   assert(kappa >= 0.0);
   return m*kappa/(ap*bp*bp*bp*p2); // integrand of equation (29) in Schramm 1990
 }
+
+//int LensHaloMultiGauss::count = 0;
+
+LensHaloMultiGauss::LensHaloMultiGauss(
+                   double mass_norm
+                   ,double Rnorm
+                   ,MultiGauss::PROFILE &profile
+                   ,int Ngaussians
+                   ,int Nradii
+                   ,PosType r_min
+                   ,PosType r_max
+                   ,PosType my_zlens
+                   ,float my_fratio
+                   ,float my_pa
+                   ,const COSMOLOGY &cosmo
+                   ,float f
+                   ,bool verbose
+):LensHalo(my_zlens,cosmo),nn(Ngaussians),mm(Nradii),q(my_fratio),pa(my_pa)
+,mass_norm(mass_norm),r_norm(Rnorm)
+{
+ //++LensHaloMultiGauss::count;
+ if(q <= 0){throw std::runtime_error("bad axis ratio"); }
+ if(nn > mm){
+    std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
+    throw std::runtime_error("");
+  }
+  
+  if(q > 1){
+    q = 1/q;
+  }
+  
+  double totalmass=0;
+  calc_masses_scales(profile,nn,mm,r_min,r_max,mass_norm,r_norm
+                     ,totalmass,sigmas,A,rms_error,verbose);
+
+  // construct Gaussian components
+  for(int i=0 ; i<nn ; ++i){
+    gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
+  }
+  Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+  Rmax = Rsize = f*r_max;
+  
+  totalmass = 0;
+  for(int n=0 ; n<nn ; ++n){
+    totalmass += A[n] * ( 1 - exp(-Rmax*Rmax / 2 / (sigmas[n]*sigmas[n]) ) );
+  }
+  LensHalo::setMass(totalmass);
+}
+
+LensHaloMultiGauss::LensHaloMultiGauss(
+                   double my_mass_norm
+                   ,double Rnorm
+                   ,double my_scale   // radial scale in units of the scale that was used to produce relative_scales
+                   ,const std::vector<double> &relative_scales
+                   ,const std::vector<double> &relative_masses
+                   ,PosType my_zlens /// redshift
+                   ,float my_fratio /// axis ratio
+                   ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
+                   ,const COSMOLOGY &cosmo  /// cosmology
+                   ,float f        /// cuttoff radius in units of the larges scale
+                   ,bool verbose
+):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(my_mass_norm),r_norm(Rnorm)
+
+{
+  //++LensHaloMultiGauss::count;
+  
+  if(q <= 0){throw std::runtime_error("bad axis ratio"); }
+  if(relative_scales.size() != relative_masses.size()){
+    throw std::runtime_error("arrays are wrong size.");
+  }
+  nn = relative_scales.size();
+  q = abs(q);
+  if(q > 1){
+    q = 1/q;
+  }
+  mm=0;
+  
+  sigmas = relative_scales;
+  for(double &s : sigmas) s *= my_scale;
+
+  
+  A = relative_masses;
+  double tmp_mass = 0;
+  
+  for(int n=0 ; n<nn ; ++n){
+    tmp_mass += relative_masses[n] * ( 1 - exp(-r_norm*r_norm / 2 / (sigmas[n]*sigmas[n]) ) );
+  }
+  for(auto &a : A) a *= my_mass_norm/tmp_mass;
+
+  Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+  Rmax = Rsize = f*sigmas.back();
+
+  double totalmass = 0;
+  for(int n=0 ; n<nn ; ++n){
+    totalmass += A[n] * ( 1 - exp(-Rmax*Rmax / 2 / (sigmas[n]*sigmas[n]) ) );
+  }
+  LensHalo::setMass(totalmass);
+  
+  // construct Gaussian components
+  for(int i=0 ; i<nn ; ++i){
+    gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo
+                           ,Rmax/sigmas[i]);
+  }
+
+  if(verbose){
+    double mass=0;
+    for(int n=0 ; n<nn ; ++n){
+      mass += A[n] * ( 1 - exp(-r_norm*r_norm / 2 / (sigmas[n]*sigmas[n]) ) );
+    }
+    std::cout << " total mass at r_norm : " << mass << " mass / mass_in = " << mass/my_mass_norm << std::endl;
+    
+    mass=0;
+    for(int n=0 ; n<nn ; ++n){
+      mass += A[n] * ( 1 - exp(-Rmax*Rmax / 2 / (sigmas[n]*sigmas[n]) ) );
+    }
+    std::cout << " total mass at Rmax : " << mass << " mass / mass_in = " << mass/my_mass_norm << std::endl;
+
+  }
+
+}
+
+LensHaloMultiGauss::LensHaloMultiGauss(LensHaloMultiGauss &&halo):
+LensHalo(std::move(halo))
+{
+  //++LensHaloMultiGauss::count;
+  nn=halo.nn; // number of gaussians
+  mm=halo.mm; // number of fit radii
+  q=halo.q; // axis ratio
+  pa=halo.pa; // position angle
+  mass_norm=halo.mass_norm;
+  r_norm=halo.r_norm;
+  sigmas=std::move(halo.sigmas);
+  radii=std::move(halo.radii);
+  Rotation=std::move(halo.Rotation);
+  gaussians=std::move(halo.gaussians);
+  A=std::move(halo.A);
+  rms_error=halo.rms_error;
+}
+LensHaloMultiGauss::LensHaloMultiGauss(const LensHaloMultiGauss &halo):
+LensHalo(halo)
+{
+  //++LensHaloMultiGauss::count;
+  nn=halo.nn; // number of gaussians
+  mm=halo.mm; // number of fit radii
+  q=halo.q; // axis ratio
+  pa=halo.pa; // position angle
+  mass_norm=halo.mass_norm;
+  r_norm=halo.r_norm;
+  sigmas=halo.sigmas;
+  radii=halo.radii;
+  Rotation=halo.Rotation;
+  gaussians=halo.gaussians;
+  A=halo.A;
+  rms_error=halo.rms_error;
+}
+
+LensHaloMultiGauss& LensHaloMultiGauss::operator=(const LensHaloMultiGauss &&halo){
+ 
+  LensHalo::operator= (std::move(halo));
+  nn=halo.nn; // number of gaussians
+  mm=halo.mm; // number of fit radii
+  q=halo.q; // axis ratio
+  pa=halo.pa; // position angle
+  mass_norm=halo.mass_norm;
+  r_norm=halo.r_norm;
+  sigmas=std::move(halo.sigmas);
+  radii=std::move(halo.radii);
+  Rotation=std::move(halo.Rotation);
+  gaussians=std::move(halo.gaussians);
+  A=std::move(halo.A);
+  rms_error=halo.rms_error;
+  
+  return *this;
+}
+LensHaloMultiGauss& LensHaloMultiGauss::operator=(const LensHaloMultiGauss &halo){
+  if(this==&halo) return *this;
+  
+  LensHalo::operator= (halo);
+  nn=halo.nn; // number of gaussians
+  mm=halo.mm; // number of fit radii
+  q=halo.q; // axis ratio
+  pa=halo.pa; // position angle
+  mass_norm=halo.mass_norm;
+  r_norm=halo.r_norm;
+  sigmas=halo.sigmas;
+  radii=halo.radii;
+  Rotation=halo.Rotation;
+  gaussians=halo.gaussians;
+  A=halo.A;
+  rms_error=halo.rms_error;
+  
+  return *this;
+}
+
+void LensHaloMultiGauss::set_pa(double my_pa){
+  pa = my_pa;
+  Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
+}
+
+double LensHaloMultiGauss::profile(double r){
+  double sigma=0;
+  for(int n=0 ; n < nn ; ++n){
+    sigma += A[n] * exp(-r*r / 2 / sigmas[n] /sigmas[n]) /2/PI/sigmas[n] /sigmas[n];
+  }
+  
+  return sigma;
+}
+
+/// mass within elliptical radius
+double LensHaloMultiGauss::mass_cum(double r){
+  double mass_tmp=0;
+  for(int n=0 ; n<nn ; ++n) mass_tmp += A[n]*( 1 - exp(-r*r / 2 / sigmas[n] /sigmas[n]) );
+  
+  return mass_tmp;
+}
+
+/// returns the RMS relative error for the fit points in the profile
+float LensHaloMultiGauss::error(){
+  return rms_error;
+}
+
+void LensHaloMultiGauss::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening){
+  
+  std::complex<PosType> z(xcm[0],xcm[1]);
+  
+  if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
+                 ,subtract_point,screening)) return;
+  
+  z = z * std::conj(Rotation);
+  
+  std::complex<PosType> a=0,g=0;
+  std::complex<PosType> at,gt;
+  double kappat;
+  
+  for(auto &h : gaussians){
+    h.deflection(z,at,gt,kappat);
+    a += at;
+    g += gt;
+    *kappa += kappat;
+  }
+  
+  a = std::conj(a) * Rotation;
+  g = std::conj(g) * Rotation * Rotation;
+  
+  alpha[0] += a.real();
+  alpha[1] += a.imag();
+  gamma[0] += g.real();
+  gamma[1] += g.imag();
+  
+  assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
+  assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
+}
+
 
 //bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}
 //bool compare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}

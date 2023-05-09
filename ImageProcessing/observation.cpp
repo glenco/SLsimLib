@@ -1,12 +1,11 @@
 /*
  * observation.cpp
  *
- *  Created on: Apr 29, 2013
- *      Author: F. Bellagamba
  */
 
 #include <complex>
 #include "slsimlib.h"
+#include "image_processing.h"
 
 #include "cpfits.h"
 
@@ -18,337 +17,211 @@
 #include <limits>
 
 
-/** * \brief Creates an observation setup that mimics a known instrument
- *
- */
-Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
-Npix_x(Npix_x),Npix_y(Npix_y)
+ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
+:Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1)
 {
- 
-  float diameter,transmission;
-  switch (tel_name) {
-    case Telescope::Euclid_VIS:
-      // from Eric
-      // Equivalent gain is 11160 e-/ADU (Analog Digital Units)
-      // Saturation is 71 ADU
-      // Equivalent exposure time with 4 frames is 2260s
-      // Magnitude Zeropoint is 23.9
-     
-      //exp_time = 1800.;
-      exp_time = 2260.;
-      exp_num = 4;
-      mag_zeropoint = 23.9;
-      
-      back_mag = 22.8;  //back_mag = 25.0; // ?????
-      ron = 5.; //ron = 1.0; //ron = 0.01; // ?????
-      seeing = 0.18;
-      pix_size = .1*arcsecTOradians;
-      break;
-    case Telescope::Euclid_Y:
-      diameter = 119.;
-      transmission = 0.0961;
-      
-      
-      exp_time = 264.;
-      exp_num = 3;
-      back_mag = 22.57;
-      ron = 5.;
-      seeing = 0.3;
-      pix_size = .3*arcsecTOradians;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-  break;
-    case Telescope::Euclid_J:
-      diameter = 119.;
-      transmission = 0.0814;
-      
-      exp_time = 270.;
-      exp_num = 3;
-      back_mag = 22.53;
-      ron = 5.;
-      seeing = 0.3;
-      pix_size = .3*arcsecTOradians;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::Euclid_H:
-      diameter = 119.;
-      transmission = 0.1692;
-      exp_time = 162.;
-      exp_num = 3;
-      back_mag = 22.59;
-      ron = 5.;
-      seeing = 0.3;
-      pix_size = .3/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
- 
-      break;
-    case Telescope::KiDS_u:
-      diameter = 265.;
-      transmission = 0.032;
-      exp_time = 1000.;
-      exp_num = 5;
-      back_mag = 22.93;
-      ron = 5.;
-      seeing = 1.0;
-      pix_size = .2/60./60./180.*PI;
-            
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
- 
-      break;
-    case Telescope::KiDS_g:
-      diameter = 265.;
-      transmission = 0.1220;
-      exp_time = 900.;
-      exp_num = 5;
-      back_mag = 22.29;
-      ron = 5.;
-      seeing = 0.8;
-      pix_size = .2/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::KiDS_r:
-      diameter = 265.;
-      transmission = 0.089;
-      exp_time = 1800.;
-      exp_num = 5;
-      back_mag = 21.40;
-      ron = 5.;
-      seeing = 0.7;
-      pix_size = .2/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::KiDS_i:
-      diameter = 265.;
-      transmission = 0.062;
-      exp_time = 1200.;
-      exp_num = 5;
-      back_mag = 20.64;
-      ron = 5.;
-      seeing = 1.1;
-      pix_size = .2/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::HST_ACS_I:
-      diameter = 250.;
-      transmission = 0.095;
-      exp_time = 420.;
-      exp_num = 1;
-      back_mag = 22.8;
-      ron = 3.;
-      seeing = 0.1;
-      pix_size = .05/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::CFHT_u:
-      diameter = 358.;
-      transmission = 0.0644;
-      exp_time = 3000.;
-      exp_num = 5;
-      back_mag = 22.7;
-      ron = 5.;
-      seeing = 0.85;
-      pix_size = .187/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::CFHT_g:
-      diameter = 358.;
-      transmission = 0.1736;
-      exp_time = 2500.;
-      exp_num = 5;
-      back_mag = 22.0;
-      ron = 5.;
-      seeing = 0.78;
-      pix_size = .187/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::CFHT_r:
-      diameter = 358.;
-      transmission = 0.0971;
-      exp_time = 2000.;
-      exp_num = 4;
-      back_mag = 21.3;
-      ron = 5.;
-      seeing = 0.71;
-      pix_size = .187/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::CFHT_i:
-      diameter = 358.;
-      transmission = 0.0861;
-      exp_time = 4300.;
-      exp_num = 5;
-      back_mag = 20.3;
-      ron = 5.;
-      seeing = 0.64;
-      pix_size = .187/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    case Telescope::CFHT_z:
-      diameter = 358.;
-      transmission = 0.0312;
-      exp_time = 3600.;
-      exp_num = 6;
-      back_mag = 19.4;
-      ron = 5.;
-      seeing = 0.68;
-      pix_size = .187/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-      break;
-    default:
-      throw std::runtime_error("The Telescope selected is not available.");
-      break;
-	}
-
- 	telescope = true;
-  set_up();
+  sigma_background = 0.00365150 * sqrt(2366.) ;
+  //sb_to_e = (119.*119.*PI/4.) * t * dl / l / hplanck;
 }
 
-/** *  Creates a custom observation setup with parameters decided by the user.
- *
- * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
- * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
- * \param exp_time Total exposure time
- * \param exp_num Number of exposures
- * \param back_mag Flux due to background and/or sky in mag/arcsec^2
- * \param ron Read-out noise in electrons/pixel
- * \param seeing FWHM in arcsecs of the image
- */
-Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
-Npix_x(Npix_x),Npix_y(Npix_y),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),ron(ron),seeing(seeing)
-{
-  //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-  mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-  telescope = false;
- 
-  set_up();
+void ObsVIS::AddNoise(PixelMap &pmap
+                      ,PixelMap &error_map
+                      ,Utilities::RandomNumbers_NR &ran,bool cosmic
+                      ){
+  if(pmap.getNx() != pmap.getNy()){
+    std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+  
+  double t1 = 565;
+  double t2 = 106;
+  
+  double sigma2 = sigma_background*sigma_background;
+  //  + pmap[i] / sb_to_e );
+  
+  int exposures = 4;
+  if(ran() < 0.5){
+    exposures = 3;
+  }
+  
+  double dt = exposures * t1 + t2;
+  
+  double inv_sigma2 = (dt)/sigma2;
+  size_t N = pmap.size();
+  for (unsigned long i = 0; i < N ; i++){
+    error_map[i] = inv_sigma2;
+  }
+  
+  double p = exposures*t1/dt;
+  if(cosmic){
+    if(ran() < p ){
+      cosmics(error_map,t1/sigma2,ran.poisson(100),ran);
+    }else{
+      cosmics(error_map,t2/sigma2,ran.poisson(100*(dt-t1)/dt),ran);
+    }
+  }
+  for (unsigned long i = 0; i < N ; i++){
+    error_map[i] = sqrt( 1.0 / error_map[i] + pmap[i] / dt ) ;
+    pmap[i] += ran.gauss() * error_map[i];
+  }
+
+  return;
 }
 
-/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
- *
- * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
- * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
- * \param exp_time Total exposure time
- * \param exp_num Number of exposures
- * \param back_mag Flux due to background and/or sky in mag/arcsec^2
- * \param ron Read-out noise in electrons/pixel
- * \param psf_file Input PSF image
- * \param oversample Oversampling rate of the PSF image
- */
-Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
-Npix_x(Npix_x),Npix_y(Npix_y), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , ron(ron), oversample(oversample)
-		{
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+void  ObsVIS::cosmics(
+                      PixelMap &error_map  // inverse error
+                      ,double inv_sigma2 // for one dither
+                      ,int nc // number of cosmics to be added
+                      ,Utilities::RandomNumbers_NR &ran
+                      ) const {
+  size_t N = error_map.size();
+  size_t Nx = error_map.getNx();
+  size_t Ny = error_map.getNy();
+  
+  int length = 2;
+  size_t ic=0;
+  
+  while (ic < nc) {
+  
+    size_t no = (size_t)(N*ran());
+    double theta = 2*PI*ran();
+    double c=cos(theta),s=sin(theta);
+  
+    size_t io = no % Nx;
+    size_t jo = no / Nx;
  
+    double L = MAX(length/tan(PI*ran()/2),1);
+    //error_map.DrawLine(io, io + L * c, jo, jo + L * s, -inv_sigma2, true); // ???
+    //error_map.DrawLine(io + 0.5*s, io + L * c + 0.5*s, jo - 0.5*c, jo + L * s - 0.5*c, -inv_sigma2, true);
 
-      CPFITS_READ cpfits(psf_file);
-
-      std::vector<long> sizes;
-      cpfits.read(map_psf,sizes);
-      //int side_psf = h0->axis(0);
-      //int side_psf = sizes[0];
-      //int N_psf = side_psf*side_psf;
-      //map_psf.resize(N_psf);
-      //h0->read(map_psf);
-      telescope = false;
-      
-      set_up();
+    double t = tan(theta),x,y;
+    if(abs(t) < 1){
+      long x1 = (long)(io + L * c );
+      int sgn = sign(c);
+      x1 = MAX(0,x1);
+      x1 = MIN(Nx-1,x1);
+      for(x = io ; x !=  x1 ; x = x + sgn){
+        y = MAX((long)(t*(x-io) + jo),0);
+        y= MIN(y,Ny-2);
+        error_map(x,y) += -inv_sigma2;
+        error_map(x,y+1) += -inv_sigma2;
+      }
+    }else{
+      long y1 = (long)(jo + L * s );
+      int sgn = sign(s);
+      y1 = MAX(0,y1);
+      y1 = MIN(Ny-1,y1);
+      for(y = jo ; y !=  y1 ; y = y + sgn){
+        x = MAX((long)((y-jo)/t + io),0);
+        x = MIN(x,Nx-2);
+        error_map(x,y) += -inv_sigma2;
+        error_map(x+1,y) += -inv_sigma2;
+      }
+    }
+    ++ic;
+  }
 }
 
-/**  Creates a custom observation setup with parameters decided by the user.
- *
- * \param zeropoint_mag Magnitude that produces one count per second on the detector
- * \param exp_time Total exposure time
- * \param exp_num Number of exposures
- * \param back_mag Flux due to background and/or sky in mag/arcsec^2
- * \param ron Read-out noise in electrons/pixel
- * \param seeing FWHM in arcsecs of the image
- */
-Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, size_t Npix_x,size_t Npix_y,float seeing):
-Npix_x(Npix_x),Npix_y(Npix_y),mag_zeropoint(zeropoint_mag),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
-,ron(ron),seeing(seeing)
-{
-  telescope = false;
+void ObsVIS::Convert(
+              PixelMap &map_in
+             ,PixelMap &map_out
+             ,PixelMap &error_map
+             ,bool psf
+             ,bool noise
+             ,Utilities::RandomNumbers_NR &ran
+             ,bool cosmic
+                     ){
+  assert(map_in.getNx() == Npix_x_input);
+  assert(map_in.getNy() == Npix_y_input);
+  
+  if (fabs(map_in.getResolution()*oversample - pix_size) > pix_size*1.0e-5)
+  {
+    std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
+    throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
+  }
+
+  map_out.Clean();
+  if (psf == true){
+    ApplyPSF(map_in,map_scratch);
+    downsample(map_scratch,map_out);
+  }else{
+    downsample(map_in,map_out);
+  }
  
-  set_up();
+  if (noise == true) AddNoise(map_out,error_map,ran,cosmic);
+  
+  return;
 }
 
-/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
- *
- * \param zeropoint_mag Magnitude that produces one count per second on the detector
- * \param exp_time Total exposure time
- * \param exp_num Number of exposures
- * \param back_mag Flux due to background and/or sky in mag/arcsec^2
- * \param ron Read-out noise in electrons/pixel
- * \param psf_file Input PSF image
- * \param oversample Oversampling rate of the PSF image
- */
-Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y, float oversample):
-Npix_x(Npix_x),Npix_y(Npix_y), mag_zeropoint(zeropoint_mag), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
-, ron(ron), oversample(oversample)
-    {
-      CPFITS_READ cpfits(psf_file);
-
-      std::vector<long> sizes;
-      cpfits.read(map_psf,sizes);
-      //int side_psf = h0->axis(0);
-      //int side_psf = sizes[0];
-      //int N_psf = side_psf*side_psf;
-      //map_psf.resize(N_psf);
-      //h0->read(map_psf);
-      telescope = false;
-      
-      set_up();
+Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
+    ,double pix_size               /// pixel size (in rad)
+    ,int oversample          /// oversampling for input image
+    ,float seeing // seeing in arcsec
+    ):
+  pix_size(pix_size)
+,seeing(seeing)
+,Npix_x_output(Npix_xx)
+,Npix_y_output(Npix_yy)
+,oversample(oversample)
+,map_scratch(Point_2d(0,0).x, oversample * Npix_xx,  oversample * Npix_yy, pix_size){
+  Npix_x_input = oversample * Npix_x_output;
+  Npix_y_input = oversample * Npix_y_output;
 }
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
-void Observation::setPSF(std::string psf_file  /// name of fits file with psf
-                         , float os  /// over sampling factor
+void Obs::setPSF(std::string psf_file  /// name of fits file with psf
                          )
 {
  
   CPFITS_READ cpfits(psf_file);
 
+  cpfits.readKey("CD1_1",input_psf_pixel_size);  // this is in degrees
+  input_psf_pixel_size *= degreesTOradians;
+  
+  if( (input_psf_pixel_size - pix_size/oversample)/input_psf_pixel_size > 1.0e-3){
+    std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
+    throw std::runtime_error("");
+  }
+                           
   std::vector<long> size;
   cpfits.read(map_psf, size);
+  
+  long max_x,max_y;
+  
+  {
+    long i=0,imax=0;
+    double amax = map_psf[0];
+    for(auto &a : map_psf){
+      if(a > amax){imax=i;amax=a;}
+      ++i;
+    }
+    max_y = imax % size[0];
+    max_x = imax / size[0];
+  }
 
-  //int side_psf = h0->axis(0);
-  //int side_psf = size[0];
-	//int N_psf = side_psf*side_psf;
-	//map_psf.resize(N_psf);
-	//h0->read(map_psf);
-
-  oversample = os;
+  long Lx;
+  long Ly = Lx = 2*MIN( MIN(max_y,size[1]-max_y),MIN(max_x,size[0]-max_x));
+  
+  std::valarray<double> tmp(Lx*Ly);
+  long ii=0;
+  for(long i=max_x - Lx/2 ; i<max_x + Lx/2 ;++i){
+    assert(i<size[0]);
+    long jj=0;
+    for(long j=max_y - Ly/2 ; j<max_y + Ly/2 ;++j){
+      assert(j<size[1]);
+      tmp[ii + Lx*jj] = map_psf[j + size[1] * i];
+      ++jj;
+    }
+    ++ii;
+  }
+  
+  std::swap(tmp,map_psf);
   
   fftpsf();
 }
 
 /// Read in and set the noise correlation function.
-void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file with noise correlation function in pixel units
+void Obs::setNoiseCorrelation(std::string nc_file  /// name of fits file with noise correlation function in pixel units
 )
 {
   std::cout << nc_file << std::endl;
@@ -383,8 +256,8 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
   // arrange ncorr data for fft, creates plane, then performs fft
   // ncorr data are moved into the four corners of ncorr_big_zeropad
   
-  assert(Npix_x == Npix_y);
-  size_t Npix = Npix_x;
+  assert(Npix_x_output == Npix_y_output);
+  size_t Npix = Npix_x_output;
   size_t ncorr_big_zeropad_Npixels = Npix + side_ncorr;
   size_t ncorr_big_zeropad_Npixels2 = ncorr_big_zeropad_Npixels*ncorr_big_zeropad_Npixels;
   
@@ -438,68 +311,95 @@ void Observation::setNoiseCorrelation(std::string nc_file  /// name of fits file
                                      , FFTW_ESTIMATE);
 }
 
-/**  \brief Converts the input map to a realistic image
- *
- * \param map Input map in photons/(cm^2*Hz)
- * \param psf Decides if the psf smoothing is applied
- * \param noise Decides if noise is added
- * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
- */
-PixelMap Observation::Convert(PixelMap &map, bool psf, bool noise,Utilities::RandomNumbers_NR &ran)//long *seed)
-{
+void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
   
-  if (telescope == true && fabs(map.getResolution()-pix_size) > pix_size*1.0e-5)
-  {
-    std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
-    throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
+  assert(map_in.getNx() == Npix_x_input);
+  assert(map_in.getNy() == Npix_y_input);
+  assert(map_out.getNx() == Npix_x_output);
+  assert(map_out.getNy() == Npix_y_output);
+  
+  if(oversample == 1){
+    map_out = map_in;
+    return;
   }
-  
-  PixelMap error_map;
-  
-  ToCounts(map);
-  if (psf == true)  ApplyPSF(map);
-  if (noise == true) error_map = AddNoise(map,ran);
-  ToSurfaceBrightness(map);
-  
-  //if (unit == flux && map.getUnits() != photon_flux )
-  //{
-    //double counts_to_flux = pow(10,-0.4*mag_zeropoint);
-    //map.Renormalize(zero_point_flux);
-    //map.ChangeUnits(photon_flux);
-  //}
-  return error_map;
+ 
+  map_out.Clean();
+  for(size_t i=0 ; i<Npix_x_input ; ++i){
+    size_t ii = MIN(i / oversample + 0.5, Npix_x_output - 1 ) ;
+    for(size_t j=0 ; j<Npix_y_input ; ++j){
+      size_t jj = MIN(j / oversample + 0.5, Npix_y_output - 1 ) ;
+      
+      map_out(ii,jj) += map_in(i,j);
+    }
+  }
+
+  return;
 }
 
-void Observation::fftpsf(){
+
+void Obs::fftpsf(){
   
   // calculates normalisation of psf
   int N_psf = map_psf.size();
   int n_side_psf = sqrt(N_psf);
-  double map_norm = 0.;
-  for (int i = 0; i < N_psf; i++)
-  {
-    map_norm += map_psf[i];
-  }
 
-  nborder_x = Npix_x/2;
-  nborder_y = Npix_y/2;
+  nborder_x = Npix_x_input/2;
+  nborder_y = Npix_y_input/2;
 
-  n_x = Npix_x + 2*nborder_x;
-  n_y = Npix_y + 2*nborder_y;
+  n_x = Npix_x_input + 2*nborder_x;
+  n_y = Npix_y_input + 2*nborder_y;
+  
+  double oversample_factor = pix_size / input_psf_pixel_size / oversample;
   
   // make extended map of psf
-  std::vector<double> psf_padded(n_x * n_y);
-  for(double &a : psf_padded) a=0;
+  std::vector<double> psf_padded(n_x * n_y,0);
+  std::vector<int> psf_count(n_x * n_y,0);
+
+  // find maximum of psf
+  long half_psf_x,half_psf_y;
+  {
+    long i=0,imax=0;
+    double amax =map_psf[0];
+    for(auto &a : map_psf){
+      if(a > amax){imax=i;amax=a;}
+      ++i;
+    }
+    half_psf_x = imax % n_side_psf;
+    half_psf_y = imax / n_side_psf;
+  }
   
-  // shift center of psf to bottom left whish a rap
-  long half_psf = n_side_psf/2;
-  for(long i=0 ; i< n_side_psf ; ++i){
-    size_t ii = (i >= half_psf) ? (i - half_psf)/oversample : n_x + (i - half_psf)/oversample;
-    for(long j=0 ; j< n_side_psf ; ++j){
-      size_t jj = (j >= half_psf) ? (j - half_psf)/oversample : n_y + (j - half_psf)/oversample;
-      psf_padded[ii*n_x + jj] += map_psf[i*n_side_psf + j]/map_norm;
+  
+  
+  long n_side_psf_x = MIN(2*half_psf_x , n_side_psf);
+  long n_side_psf_y = MIN(2*half_psf_y , n_side_psf);
+ 
+  // shift center of psf to bottom left with a rap and down sample
+  //long half_psf = n_side_psf/2;
+  for(long i=0 ; i< n_side_psf_x ; ++i){
+    size_t ii = (i >= half_psf_x) ? (i - half_psf_x)/oversample_factor + 0.5 :
+                                   n_x + (i - half_psf_x)/oversample_factor + 0.5;
+    if(ii >=n_x) ii=n_x-1;
+    for(long j=0 ; j< n_side_psf_y ; ++j){
+      size_t jj = (j >= half_psf_y) ? (j - half_psf_y)/oversample_factor + 0.5 :
+                                   n_y + (j - half_psf_y)/oversample_factor + 0.5;
+      
+      if(jj >= n_y) jj=n_y-1;
+      psf_padded[ii*n_x + jj] += map_psf[i*n_side_psf + j];
+      psf_count[ii*n_x + jj] += 1;
     }
   }
+  
+  double psf_norm = 0.;
+  for(long i=0;i<psf_count.size();++i){
+    if(psf_count[i] >0){
+      psf_padded[i] /= psf_count[i];
+      psf_norm += psf_padded[i];
+    }else{
+      psf_padded[i] = 0;
+    }
+  }
+  
+  for(double &p : psf_padded) p /= psf_norm;
   
   fft_psf.resize(n_x*(n_y/2+1));
   fft_padded.resize(n_x*(n_y/2+1));
@@ -509,6 +409,8 @@ void Observation::fftpsf(){
   fftw_plan p_psf = fftw_plan_dft_r2c_2d(n_x ,n_y ,psf_padded.data()
                                ,reinterpret_cast<fftw_complex*>(fft_psf.data()), FFTW_ESTIMATE);
   fftw_execute(p_psf);
+  
+  //std::complex<double> phase = std::polar(1, i*half_psf_x / n_x + j*half_psf_y / n_y ); *****
   
   image_to_fft = fftw_plan_dft_r2c_2d(n_x,n_y ,image_padded.data()
                                       ,reinterpret_cast<fftw_complex*>(fft_padded.data()), FFTW_ESTIMATE);
@@ -520,87 +422,95 @@ void Observation::fftpsf(){
 /** * \brief Smooths the image with a PSF map.
 *
 */
-void Observation::ApplyPSF(PixelMap &pmap)
+void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
 {
-  if(pmap.getNx() != pmap.getNy()){
-    std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+  if(map_in.getNx() != map_in.getNy()){
+    std::cout << "Obs::ApplyPSF() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
   }
+  if(map_in.getNx() != Npix_y_input){
+    std::cout << "Obs::ApplyPSF() Input map it the wrong size." << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+  if(map_in.getNx() != map_out.getNx()){
+    std::cout << "Obs::ApplyPSF() Input map output are not the same size." << std::endl;
+    throw std::runtime_error("nonsquare");
+  }
+
   
-	if (map_psf.size() == 0)
-	{
-		if (seeing > 0.)
-		{
-			//PixelMap outmap(pmap);
-			pmap.smooth(seeing/2.355);
-			return;
-		}
-		else
-		{
-			return;
-		}
-	}
-	else
-	{
+  if (map_psf.size() == 0){
+    
+    map_out = map_in;
+    
+    if (seeing > 0.){
+      //PixelMap outmap(pmap);
+      map_out.smooth(seeing/2.355);
+      return;
+    }else{
+      return;
+    }
+    
+  }else{
 
 #ifdef ENABLE_FFTW
     
-    
     // paste image into image with padding
     for(double &a :image_padded) a=0;
-    for(int i=0 ; i<Npix_x ; ++i){
-      for(int j=0 ; j<Npix_y ; ++j){
-        image_padded[(i+nborder_x)*n_x + j+nborder_y] = pmap(i,j);
+    for(int i=0 ; i<Npix_x_input ; ++i){
+      for(int j=0 ; j<Npix_y_input ; ++j){
+        image_padded[ (i+nborder_x)*n_x + j + nborder_y] = map_in(i,j);
       }
     }
  
     fftw_execute(image_to_fft);
     
+    // multiply by DFT of PSF
     assert(fft_psf.size() == fft_padded.size());
     size_t i=0;
     for(std::complex<double> &a : fft_padded) a *= fft_psf[i++];
     
+    // inverse DFT
     fftw_execute(fft_to_image);
     
+    // copy region within padding
     size_t N = n_x*n_y;
-    for(int i=0 ; i<Npix_x ; ++i){
-      for(int j=0 ; j<Npix_y ; ++j){
-        pmap(i,j) = image_padded[ (i+nborder_x)*n_x + j+nborder_y ]/N;
+    for(int i=0 ; i< Npix_x_input ; ++i){
+      for(int j=0 ; j< Npix_y_input ; ++j){
+        map_out(i,j) = image_padded[ (i+nborder_x)*n_x + j + nborder_y]/N;
       }
     }
 
     return;
 #else
-		std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
-		exit(1);
+    std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
+    exit(1);
 #endif
 
-	}
+  }
 }
 
-/** * \brief Smooths the image with a PSF map.
+/** * \brief Correlate a noise map
  *
  */
-void Observation::CorrelateNoise(PixelMap &pmap)
+void Obs::CorrelateNoise(PixelMap &pmap)
 {
   
-  if(sqrt_noise_power.size()==0)return;
+  if(sqrt_noise_power.size()==0) return;
   
   if(pmap.getNx() != pmap.getNy()){
-    std::cout << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+    std::cout << "Observation::CorrelateNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
   }
-  if(pmap.getNx() != Npix_x){
-    std::cout << "Observation::AddNoise() Map must have the same dimensions as Observation was constructed with." << std::endl;
+  if(pmap.getNx() != Npix_x_output){
+    std::cout << "Observation::CorrelateNoise() Map must have the same dimensions as the observation." << std::endl;
     throw std::runtime_error("nonsquare");
   }
 
 #ifdef ENABLE_FFTW
   
-  
     // creates plane for fft of map, sets properly input and output data, then performs fft
-    assert(Npix_x == Npix_y);
-    size_t Npix = Npix_x;
+    assert(Npix_x_output == Npix_y_output);
+    size_t Npix = Npix_x_output;
     size_t ncorr_big_zeropad_Npixels = Npix + side_ncorr;
     long Npix_zeropad = Npix + side_ncorr;
   
@@ -656,10 +566,344 @@ void Observation::CorrelateNoise(PixelMap &pmap)
     exit(1);
 #endif
 }
+
+/** * \brief Creates an observation setup that mimics a known instrument
+ *
+ */
+Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
+  Obs(Npix_x,Npix_y,0,1)
+{
+ 
+  
+  float diameter,transmission;
+  switch (tel_name) {
+    case Telescope::Euclid_VIS:
+      // from Eric
+      // Equivalent gain is 11160 e-/ADU (Analog Digital Units)
+      // Saturation is 71 ADU
+      // Equivalent exposure time with 4 frames is 2260s
+      // Magnitude Zeropoint is 23.9
+      
+      gain = 11160;
+      //exp_time = 1800.;
+      exp_time = 2260.;
+      exp_num = 4;
+      mag_zeropoint = 23.9;
+      
+      back_mag = 22.8;  //back_mag = 25.0; // ?????
+      read_out_noise = 5.; //read_out_noise = 1.0; //read_out_noise = 0.01; // ?????
+      seeing = 0.18;
+      pix_size = 0.1*arcsecTOradians;
+      
+      break;
+    case Telescope::Euclid_Y:
+      diameter = 119.;
+      transmission = 0.0961;
+      
+      gain = 0;
+      exp_time = 264.;
+      exp_num = 3;
+      back_mag = 22.57;
+      read_out_noise = 5.;
+      seeing = 0.3;
+      pix_size = .3*arcsecTOradians;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+  break;
+    case Telescope::Euclid_J:
+      diameter = 119.;
+      transmission = 0.0814;
+      
+      gain = 0;
+      exp_time = 270.;
+      exp_num = 3;
+      back_mag = 22.53;
+      read_out_noise = 5.;
+      seeing = 0.3;
+      pix_size = .3*arcsecTOradians;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::Euclid_H:
+      diameter = 119.;
+      transmission = 0.1692;
+      gain = 0;
+      exp_time = 162.;
+      exp_num = 3;
+      back_mag = 22.59;
+      read_out_noise = 5.;
+      seeing = 0.3;
+      pix_size = .3/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+ 
+      break;
+    case Telescope::KiDS_u:
+      diameter = 265.;
+      transmission = 0.032;
+      gain = 0;
+      exp_time = 1000.;
+      exp_num = 5;
+      back_mag = 22.93;
+      read_out_noise = 5.;
+      seeing = 1.0;
+      pix_size = .2/60./60./180.*PI;
+            
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+ 
+      break;
+    case Telescope::KiDS_g:
+      diameter = 265.;
+      transmission = 0.1220;
+      gain = 0;
+      exp_time = 900.;
+      exp_num = 5;
+      back_mag = 22.29;
+      read_out_noise = 5.;
+      seeing = 0.8;
+      pix_size = .2/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::KiDS_r:
+      diameter = 265.;
+      transmission = 0.089;
+      gain = 0;
+      exp_time = 1800.;
+      exp_num = 5;
+      back_mag = 21.40;
+      read_out_noise = 5.;
+      seeing = 0.7;
+      pix_size = .2/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::KiDS_i:
+      diameter = 265.;
+      transmission = 0.062;
+      gain = 0;
+      exp_time = 1200.;
+      exp_num = 5;
+      back_mag = 20.64;
+      read_out_noise = 5.;
+      seeing = 1.1;
+      pix_size = .2/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::HST_ACS_I:
+      diameter = 250.;
+      transmission = 0.095;
+      exp_time = 420.;
+      exp_num = 1;
+      back_mag = 22.8;
+      read_out_noise = 3.;
+      seeing = 0.1;
+      pix_size = .05/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::CFHT_u:
+      diameter = 358.;
+      transmission = 0.0644;
+      exp_time = 3000.;
+      exp_num = 5;
+      back_mag = 22.7;
+      read_out_noise = 5.;
+      seeing = 0.85;
+      pix_size = .187/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::CFHT_g:
+      diameter = 358.;
+      transmission = 0.1736;
+      exp_time = 2500.;
+      exp_num = 5;
+      back_mag = 22.0;
+      read_out_noise = 5.;
+      seeing = 0.78;
+      pix_size = .187/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::CFHT_r:
+      diameter = 358.;
+      transmission = 0.0971;
+      exp_time = 2000.;
+      exp_num = 4;
+      back_mag = 21.3;
+      read_out_noise = 5.;
+      seeing = 0.71;
+      pix_size = .187/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::CFHT_i:
+      diameter = 358.;
+      transmission = 0.0861;
+      exp_time = 4300.;
+      exp_num = 5;
+      back_mag = 20.3;
+      read_out_noise = 5.;
+      seeing = 0.64;
+      pix_size = .187/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    case Telescope::CFHT_z:
+      diameter = 358.;
+      transmission = 0.0312;
+      exp_time = 3600.;
+      exp_num = 6;
+      back_mag = 19.4;
+      read_out_noise = 5.;
+      seeing = 0.68;
+      pix_size = .187/60./60./180.*PI;
+      
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      break;
+    default:
+      throw std::runtime_error("The Telescope selected is not available.");
+      break;
+	}
+
+ 	telescope = true;
+  set_up();
+}
+
+/** *  Creates a custom observation setup with parameters decided by the user.
+ *
+ * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
+ * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
+ * \param exp_time Total exposure time
+ * \param exp_num Number of exposures
+ * \param back_mag Flux due to background and/or sky in mag/arcsec^2
+ * \param read_out_noise Read-out noise in electrons/pixel
+ * \param seeing FWHM in arcsecs of the image
+ */
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise, size_t Npix_x,size_t Npix_y,double pix_size,float seeing):
+    Obs(Npix_x,Npix_y,pix_size,1,seeing),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),read_out_noise(read_out_noise)
+{
+  mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+  telescope = false;
+ 
+  set_up();
+}
+
+/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
+ *
+ * \param diameter Diameter of telescope (in cm) (Collecting area is pi/4.*diameter^2)
+ * \param transmission Total transmission of the telescope (/int T(\lambda)/\lambda d\lambda)
+ * \param exp_time Total exposure time
+ * \param exp_num Number of exposures
+ * \param back_mag Flux due to background and/or sky in mag/arcsec^2
+ * \param read_out_noise Read-out noise in electrons/pixel
+ * \param psf_file Input PSF image
+ * \param oversample Oversampling rate of the PSF image
+ */
+Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample):
+    Obs(Npix_x,Npix_y,pix_size,oversample), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , read_out_noise(read_out_noise)
+		{
+      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+ 
+      setPSF(psf_file);
+
+      telescope = false;
+      
+      set_up();
+}
+
+/**  Creates a custom observation setup with parameters decided by the user.
+ *
+ * \param zeropoint_mag Magnitude that produces one count per second on the detector
+ * \param exp_time Total exposure time
+ * \param exp_num Number of exposures
+ * \param back_mag Flux due to background and/or sky in mag/arcsec^2
+ * \param read_out_noise Read-out noise in electrons/pixel
+ * \param seeing FWHM in arcsecs of the image
+ */
+Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise, size_t Npix_x,size_t Npix_y,double pix_size,float seeing):Obs(Npix_x,Npix_y,pix_size,1,seeing)
+    ,mag_zeropoint(zeropoint_mag),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag)
+    ,read_out_noise(read_out_noise)
+{
+  telescope = false;
+ 
+  set_up();
+}
+
+/**  Creates a custom observation setup with parameters decided by the user. Allows for the use of a psf fits image.
+ *
+ * \param zeropoint_mag Magnitude that produces one count per second on the detector
+ * \param exp_time Total exposure time
+ * \param exp_num Number of exposures
+ * \param back_mag Flux due to background and/or sky in mag/arcsec^2
+ * \param read_out_noise Read-out noise in electrons/pixel
+ * \param psf_file Input PSF image
+ * \param oversample Oversampling rate of the PSF image
+ */
+Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise, std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample):Obs(Npix_x,Npix_y,pix_size,oversample), mag_zeropoint(zeropoint_mag), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), read_out_noise(read_out_noise)
+    {
+      setPSF(psf_file);
+      telescope = false;
+      
+      set_up();
+}
+
+
+/**  \brief Converts the input map to a realistic image
+ *
+ * \param map Input map in photons/(cm^2*Hz)
+ * \param psf Decides if the psf smoothing is applied
+ * \param noise Decides if noise is added
+ * \param unit Decides units of output (if flux, output is in 10**(-0.4*mag)) 
+ */
+void Observation::Convert(PixelMap &map_in
+                          ,PixelMap &map_out
+                          ,PixelMap &error_map
+                          ,bool psf
+                          ,bool noise,Utilities::RandomNumbers_NR &ran)
+{
+  
+  assert(map_in.getNx() == Npix_x_input);
+  assert(map_in.getNy() == Npix_y_input);
+
+  if (fabs(map_in.getResolution()*oversample - pix_size) > pix_size*1.0e-5)
+  {
+    std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
+    throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
+  }
+  
+  if (psf == true) ApplyPSF(map_in,map_scratch);
+ 
+  map_out.Clean();
+  downsample(map_scratch,map_out);
+  ToCounts(map_out);
+  if (noise == true) AddNoise(map_out,error_map,ran,true);
+  ToSurfaceBrightness(map_out);
+  
+  return;
+}
+
+
 /// Outputs rms of noise counts due to background and instrument
 /// in the unit decided by the user
 float Observation::getBackgroundNoise(float resolution, UnitType unit)
-{
+const {
     if (telescope==true && fabs(resolution-pix_size) > pix_size*1.0e-5)
     {
         std::cout << "The resolution is different from the one of the simulated instrument in Observation::getBackgroundNoise!" << std::endl;
@@ -669,8 +913,9 @@ float Observation::getBackgroundNoise(float resolution, UnitType unit)
     double res_in_arcsec = resolution / arcsecTOradians ;
     double back_mean = background_flux * res_in_arcsec*res_in_arcsec * exp_time ;
 
-    double rms = sqrt(exp_num*ron*ron + back_mean) / exp_time;
-    if (unit==UnitType::flux) rms /= e_per_s_to_ergs_s_cm2 * hplanck;
+    // in e-
+    double rms = sqrt(exp_num*read_out_noise*read_out_noise + back_mean) / exp_time;
+    if (unit==UnitType::flux) rms /= e_per_s_to_ergs_s_cm2;
   
     return rms;
 }
@@ -678,30 +923,30 @@ float Observation::getBackgroundNoise(float resolution, UnitType unit)
 void Observation::set_up(){
   //zero_point_flux = pow(10,-0.4*mag_zeropoint);  // erg/s/Hz/cm**2
   //e_per_s_to_ergs_s_cm2 = pow(10,0.4*(mag_zeropoint-AB_zeropoint));
-  e_per_s_to_ergs_s_cm2 = 1.0/(mag_to_flux(mag_zeropoint)*hplanck);
   
+  e_per_s_to_ergs_s_cm2 = 1.0/(mag_to_flux(mag_zeropoint));
   background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
  }
 
 /// Applies realistic noise (read-out + Poisson) on an image, returns noise map
-PixelMap Observation::AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran)//,long *seed)
+void Observation::AddNoise(
+                           PixelMap &pmap
+                           ,PixelMap &error_map
+                           ,Utilities::RandomNumbers_NR &ran,bool dummy)
 {
   if(pmap.getNx() != pmap.getNy()){
     std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
   }
-  if(pmap.getUnits() != count_per_sec){
+  if(pmap.getUnits() != PixelMapUnits::count_per_sec){
     std::cerr << "Units need to be in counts per second in Observation::AddNoise." << std::endl;
     throw std::runtime_error("wrong units.");
   }
   
-  
-  PixelMap error_map(pmap);
-  
   double res_in_arcsec = pmap.getResolution() / arcsecTOradians;
   double back_mean = background_flux * res_in_arcsec*res_in_arcsec * exp_time ;
 
-  double var_readout = exp_num*ron*ron;
+  double var_readout = exp_num*read_out_noise*read_out_noise;
   double norm_map;
   
   PixelMap noise_map(pmap);
@@ -718,14 +963,6 @@ PixelMap Observation::AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran)/
     }
     else
     {
-//      int k = 0;
-//      double p = 1.;
-//      double L = exp(-(norm_map + back_mean));
-//      do{
-//        k++;
-//        p *= ran();
-//      } while (p > L);
-//
       // photons from mean
       int k = ran.poisson(norm_map + back_mean);
       double noise = ran.gauss()*sqrt(var_readout);
@@ -738,7 +975,7 @@ PixelMap Observation::AddNoise(PixelMap &pmap,Utilities::RandomNumbers_NR &ran)/
   CorrelateNoise(noise_map);
   pmap += noise_map;
   
-  return error_map;
+  return;
 }
 
 /// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second
@@ -750,23 +987,19 @@ void Observation::ToCounts(PixelMap &pmap)
 
   double Q;
   PixelMapUnits units = pmap.getUnits();
-  if(units == count_per_sec) return;
+  if(units == PixelMapUnits::count_per_sec) return;
 
-  if(units == surfb){
-    Q = e_per_s_to_ergs_s_cm2 * hplanck;
-    //Q = hplanck/zero_point_flux;
-    //Q = pow(10,0.4*(mag_zeropoint - AB_zeropoint))*hplanck;
-    //  }else if(pmap.getUnits() == photon_flux ){
-    //    Q = hplanck/;
-  //}else if(units==photon_flux){
-  //  Q = 1/zero_point_flux;
+  if(units == PixelMapUnits::surfb){
+    Q = e_per_s_to_ergs_s_cm2;
+  }else if(pmap.getUnits() == PixelMapUnits::ADU){
+    Q = 1.0/gain;
   }else{
     std::cerr << "Map needs to be in photon flux units." << std::endl;
     throw std::runtime_error("wrong units");
   }
   
 	pmap.Renormalize(Q);
-  pmap.ChangeUnits(count_per_sec);
+  pmap.ChangeUnits(PixelMapUnits::count_per_sec);
 	return;
 }
 
@@ -775,14 +1008,27 @@ void Observation::ToSurfaceBrightness(PixelMap &pmap)
 {
 
   double Q;
-  if(pmap.getUnits() == count_per_sec){
-    Q = 1.0/e_per_s_to_ergs_s_cm2 / hplanck;
+  if(pmap.getUnits() == PixelMapUnits::count_per_sec){
+    Q = 1.0/e_per_s_to_ergs_s_cm2 ;
+  }else if(pmap.getUnits() == PixelMapUnits::ADU){
+    Q = 1.0/gain/e_per_s_to_ergs_s_cm2;
   }else{
     std::cerr << "Map needs to be in photon flux units." << std::endl;
     throw std::runtime_error("wrong units");
   }
   
   pmap.Renormalize(Q);
-  pmap.ChangeUnits(surfb);
+  pmap.ChangeUnits(PixelMapUnits::surfb);
+  return;
+}
+
+/// Translates photon flux (in 1/(s*cm^2*Hz*hplanck)) into telescope counts per second
+void Observation::ToADU(PixelMap &pmap)
+{
+  
+  ToCounts(pmap);
+  pmap *= gain;
+  pmap.ChangeUnits(PixelMapUnits::ADU);
+  
   return;
 }

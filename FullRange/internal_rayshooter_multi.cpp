@@ -662,6 +662,7 @@ RAY Lens::find_image(
   double invmago = p.invmag();
   
   Point_2d dy = *(p.image) - yo,dy_tmp;
+  if(dy.length_sqr() == 0) return p;
 
   if(!use_image_guess){
     // in this case the input image position is not used

@@ -27,7 +27,7 @@ double SunInfo::AbsMag(Band band){
   
   auto it = std::lower_bound(wavelengths.begin(),wavelengths.end(),wavelength);
   
-  return flux_to_mag(sed[it - wavelengths.begin()]);
+  return flux_to_mag_AB(sed[it - wavelengths.begin()]);
 }
 
 /// k-corrected apparent magnitude, very crudely done without integration of spectrum
@@ -39,7 +39,7 @@ double SunInfo::mag(Band band,double z,const COSMOLOGY &cosmo){
   auto it = std::lower_bound(wavelengths.begin(),wavelengths.end(),lambda);
   
   // remember that cosmo.lumDist(z) is the bolometric distance
-  return flux_to_mag(sed[it - wavelengths.begin()]*(1+z)) + 5 * (std::log10(cosmo.lumDist(z)*1.0e6) - 1);
+  return flux_to_mag_AB(sed[it - wavelengths.begin()]*(1+z)) + 5 * (std::log10(cosmo.lumDist(z)*1.0e6) - 1);
 }
 
 /// k-corrected flux in ergs/s/cm^2/Hz

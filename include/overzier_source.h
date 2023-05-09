@@ -23,20 +23,17 @@ class SourceOverzier : public Source
 {
 public:
 	//SourceOverzier();
-	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *theta=0);
+	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,double zero_point);
   
   SourceOverzier(const SourceOverzier &s);
   SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
-	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z=0,const PosType *my_theta=0);
+	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *my_theta);
   virtual PosType SurfaceBrightness(PosType *x);
 	PosType getTotalFlux() const;
 	void printSource();
-	
-	/// Halo ID.
-	unsigned long getID() { return haloID; }
-	
+  
 	/// get magnitude of whole galaxy.  Which band this is in depends on which was passed in the constructor
   PosType getMag() const { return current.mag; }
   PosType getMag(Band band) const ;
@@ -104,9 +101,6 @@ protected:
   // renormalize the disk and bulge to agree with current mag and mag_bulge
   void renormalize_current();
 	void assignParams(InputParams& params);
-	
-	/// haloID
-	unsigned long haloID;
 
   struct Params{
 
@@ -159,16 +153,17 @@ class SourceOverzierPlus : public SourceOverzier
 public:
   //SourceOverzierPlus();
   SourceOverzierPlus(
-                                         PosType my_mag         /// total magnitude
-                                         ,PosType my_mag_bulge  /// magnitude of bulge
-                                         ,PosType my_Reff       /// effective radius of bulge
-                                         ,PosType my_Rdisk      /// scale hight of disk
-                                         ,PosType my_PA         /// position angle
-                                         ,PosType inclination   /// inclination in radians
-                                         ,unsigned long my_id
-                                         ,PosType my_z
-                                         ,const PosType *theta
-                                         ,Utilities::RandomNumbers_NR &ran
+                     PosType my_mag         /// total magnitude
+                     ,PosType my_mag_bulge  /// magnitude of bulge
+                     ,PosType my_Reff       /// effective radius of bulge
+                     ,PosType my_Rdisk      /// scale hight of disk
+                     ,PosType my_PA         /// position angle
+                     ,PosType inclination   /// inclination in radians
+                     ,unsigned long my_id
+                     ,PosType my_z
+                     ,const PosType *theta
+                     ,PosType mag_zero      /// magnitude zero point
+                     ,Utilities::RandomNumbers_NR &ran
                                          );
 
   ~SourceOverzierPlus();
@@ -195,7 +190,8 @@ public:
   
   /// position angle in radians
   PosType getPA() const { return PA; }
-  
+  void setPA(double pa); // in radians
+
   int getNarms() const {return Narms;}
   PosType getArmAmplitude() const {return Ad;}
   PosType getArmAlpha() const {return arm_alpha;}

@@ -48,7 +48,7 @@ public:
     
   public:
     /// Sets the top or root to the top of "tree".
-    iterator(TreeStruct * tree){current = top = tree->top;}
+    iterator(TreeStruct * tree){current = top = tree->top_ptr.get();}
     /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
     iterator(Branch *branch){current = top = branch;}
     iterator(iterator &p){
@@ -105,20 +105,21 @@ public:
   };
   
   TreeStruct::iterator begin() const{
-    iterator it(top);
+    iterator it(top_ptr.get());
     return it;
   };
   
   TreeStruct::iterator end() const{
-    iterator it(top->brother);
+    iterator it(top_ptr->brother);
     return it;
   };
   
   /// root branch
-  Branch * getTop(){return top;}
+  Branch * getTop(){return top_ptr.get();}
   
   /// list of points
-  PointList *pointlist;
+  PointList pointlist;
+  //std::list<Point> pointlist;
   
   
   //void FindAllBoxNeighbors(Point *point,ListHndl neighbors);
@@ -142,7 +143,7 @@ public:
   int AddPointsToTree(Point *xpoint,unsigned long Nadd);
   
   short emptyTree();
-  void RebuildTreeFromList();
+  //void RebuildTreeFromList();
   
   /***** State of tree functions *****/
   bool isEmpty();
@@ -154,23 +155,26 @@ public:
   
   Point * FindBoxPoint(const PosType* ray) const;
   
-  TreeStruct * spawn(TreeStruct::iterator &current);
+  //TreeStruct * spawn(TreeStruct::iterator &current);
   
   void _FindLeaf(TreeStruct::iterator &current,const PosType* ray,unsigned long Nadd = 0) const;
   
   static std::mutex mutex;
 private:
+
+  TreeStruct(){};
+  TreeStruct(TreeStruct&);
+  TreeStruct& operator=(const TreeStruct&);
+
+  // source of all Points
+  MemmoryBank<Point> point_memmory_bank;
   
   // Adding and removing to branches of tree
   void insertChildToCurrent(Branch *current,Branch *branch,int child);
   void attachChildrenToCurrent(Branch *current,Branch *child1,Branch *child2);
   
   /// root branch
-  Branch *top;
-  
-  TreeStruct(){};
-  
-  Point **temp_points;
+  std::unique_ptr<Branch> top_ptr;
   
   /// number of barnches in tree */
   unsigned long Nbranches;
@@ -182,12 +186,12 @@ private:
                       ,PosType boundary_p1[2],PosType boundary_p2[2]
                       ,PosType center[2],int Nbucket);
   
-  void _freeBranches(TreeStruct::iterator &current, short child);
+  //void _freeBranches(TreeStruct::iterator &current, short child);
   void _AddPoint(TreeStruct::iterator &current);
   void _BuildTree(TreeStruct::iterator &current);
   
   void _checkTree(TreeStruct::iterator &current, unsigned long *count);
-  void _freeBranches_iter();
+  //void _freeBranches_iter();
   
   // const functions
   void _FindAllBoxNeighborsKist(Branch *leaf,TreeStruct::iterator &treeit,Kist<Point> * neighbors) const;
@@ -258,9 +262,9 @@ bool BoxIntersectCircle(const PosType* center,PosType radius,PosType *p1,PosType
 // Point arrays
 
 void PrintPoint(Point *point);
-Point *NewPointArray(unsigned long N);
-Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold);
-void FreePointArray(Point *array,bool NewXs = true);
+//Point *NewPointArray(unsigned long N);
+//Point *AddPointToArray(Point *points,unsigned long N,unsigned long Nold);
+//void FreePointArray(Point *array,bool NewXs = true);
 void SwapPointsInArray(Point *p1,Point *p2);
 void SwapPointsInArrayData(Point *p1,Point *p2);
 void PointCopy(Point *pcopy,Point *pins);
@@ -271,7 +275,8 @@ void PointCopyAll(Point *pcopy,Point *pins);
 
 //ImageInfo *NewImageInfo(int Nimages);
 //void freeImageInfo(ImageInfo *imageinfo,int Nimages);
-void combineCloseImages(PosType linkinglength,ImageInfo *imageinfo,int *Nimages
+void combineCloseImages(PosType linkinglength,ImageInfo *imageinfo
+                        ,int *Nimages
                         ,int *NewNimages,int NimageMax);
 void SwapImages(ImageInfo *image1,ImageInfo *image2);
 void SwapImages(OldImageInfo *image1,OldImageInfo *image2);
@@ -292,15 +297,19 @@ void findborders4(TreeHndl i_tree,ImageInfo *imageinfo,bool &touches_boundary);
 // in find_crit.c
 void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 
-Point *LinkToSourcePoints(Point *i_points,unsigned long Npoints);
+void LinkToSourcePoints(Point *i_points,Point *s_points,unsigned long Npoints);
 
 /// structure to construct, hold and destruct image and source points
 struct PointPack{
   /// for points without preset positions
   PointPack(size_t N):n(N){
-    i_points=NewPointArray(N);
-    s_points=LinkToSourcePoints(i_points,N);
+    //i_points=NewPointArray(N);
+    //s_points=NewPointArray(N);
+    i_points=factory(N);
+    s_points=factory(N);
+    LinkToSourcePoints(i_points,s_points,N);
   }
+ 
  
   ~PointPack(){
     delete [] i_points;
@@ -309,6 +318,9 @@ struct PointPack{
   size_t n;
   Point *i_points;
   Point *s_points;
+  
+private:
+  MemmoryBank<Point> factory;
 };
 
 ///

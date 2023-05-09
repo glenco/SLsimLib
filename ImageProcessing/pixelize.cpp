@@ -63,19 +63,19 @@ void swap(PixelMap& x, PixelMap& y)
 
 std::string to_string(PixelMapUnits unit){
   switch (unit) {
-    case ndef:
+    case PixelMapUnits::ndef:
       return "not defined";
       break;
-    case surfb:
+    case PixelMapUnits::surfb:
       return "surface brightness (ergs / s / cm**2) ";
       break;
-    case count_per_sec:
+    case PixelMapUnits::count_per_sec:
       return "counts per sec";
       break;
-    case mass:
+    case PixelMapUnits::mass:
       return "mass";
       break;
-    case mass_density:
+    case PixelMapUnits::mass_density:
       return "mass density";
       break;
 
@@ -85,7 +85,7 @@ std::string to_string(PixelMapUnits unit){
 };
 
 PixelMap::PixelMap()
-: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(ndef)
+: map(), Nx(0), Ny(0), resolution(0), rangeX(0), rangeY(0),units(PixelMapUnits::ndef)
 {
   center[0] = 0;
   center[1] = 0;
@@ -156,12 +156,13 @@ PixelMap::PixelMap(
                    const PosType* center,  /// The location of the center of the map
                    std::size_t Nx,  /// Number of pixels in x dimension of map.
                    std::size_t Ny,  /// Number of pixels in y dimension of map.
-                   PosType resolution        /// One dimensional range of map in whatever units the point positions are in
+                   PosType resolution  /// One dimensional range of map in whatever units the point positions are in
                    ,PixelMapUnits u
 )
 : map(0.0, Nx*Ny),
 Nx(Nx), Ny(Ny), resolution(resolution),units(u)
 {
+  
   std::copy(center, center + 2, this->center);
   rangeX = resolution*Nx;
   rangeY = resolution*Ny;
@@ -526,6 +527,14 @@ PixelMap PixelMap::operator*(const PixelMap& a) const
   return diff;
 }
 
+/// Multiply two PixelMaps.
+PixelMap PixelMap::operator/(const PixelMap& a) const
+{
+  PixelMap diff(a);
+  for(size_t i=0;i<map.size();++i) diff[i] = map[i]/a.map[i];
+  return diff;
+}
+
 PosType PixelMap::ave() const{
   return sum()/map.size();
 }
@@ -552,7 +561,7 @@ void PixelMap::AddImages(
 
 ){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -590,7 +599,7 @@ void PixelMap::AddImages(
 void PixelMap::AddGridBrightness(Grid &grid){
   
   //if(units != photon_flux) throw std::invalid_argument("wrong units");
-  PointList *plist = grid.i_tree->pointlist;
+  PointList *plist = &(grid.i_tree->pointlist);
   
   if(plist->size() == 0) return;
   
@@ -602,7 +611,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
   std::list <unsigned long> neighborlist;
   std::list<unsigned long>::iterator it;
   //for(long ii=0;ii<Nimages;++ii){
-  
+
   do{
     //for(listit = plist->begin() ; listit != plist->end() ; ++listit ){
     sb = (*listit)->surface_brightness;
@@ -622,7 +631,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
 
 void PixelMap::AddGridMapBrightness(const GridMap &grid){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
     grid.getPixelMapFlux(*this);
@@ -667,7 +676,7 @@ void PixelMap::AddUniformImages(
                       ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
                       ,int Nimages,double value){
   
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -1104,40 +1113,120 @@ void PixelMap::drawline(
                         PosType x1[]     /// one end point of line
                         ,PosType x2[]    /// other end point of line
                         ,PosType value   /// value that it is set to on the map
+                        ,bool add        /// true : add value, false replace with value
 ){
   
   PosType x[2],s1,s2,r;
   long index;
   PosType d = 0;
   
-  r = sqrt( (x2[0] - x1[0])*(x2[0] - x1[0]) + (x2[1] - x1[1])*(x2[1] - x1[1]) );
+  long index0 = find_index(x1);
+  long index1 = find_index(x2);
   
-  if(r==0.0){
-    if(inMapBox(x1)){
-      //index = Utilities::IndexFromPosition(x1,Nx,range,center);
-      index = find_index(x1);
-      map[index] = value;
-    }
-    return;
-  }
+  DrawLineGS(index0 % Nx,index1 % Nx,index0 / Nx,index1 / Nx,value,add);
   
-  s1 = (x2[0] - x1[0])/r;
-  s2 = (x2[1] - x1[1])/r;
-  
-  x[0] = x1[0];
-  x[1] = x1[1];
-  while(d <= r){
-    if(inMapBox(x)){
-      //index = Utilities::IndexFromPosition(x,Nx,range,center);
-      index = find_index(x);
-      if(index != -1) map[index] = value;
-    }
-    x[0] += s1*resolution;
-    x[1] += s2*resolution;
-    d += resolution;
-  }
-  
+//  r = sqrt( (x2[0] - x1[0])*(x2[0] - x1[0]) + (x2[1] - x1[1])*(x2[1] - x1[1]) );
+//
+//  if(r==0.0){
+//    if(inMapBox(x1)){
+//      //index = Utilities::IndexFromPosition(x1,Nx,range,center);
+//      index = find_index(x1);
+//      map[index] = value;
+//    }
+//    return;
+//  }
+//
+//  s1 = (x2[0] - x1[0])/r;
+//  s2 = (x2[1] - x1[1])/r;
+//
+//  x[0] = x1[0];
+//  x[1] = x1[1];
+//  while(d <= r){
+//    if(inMapBox(x)){
+//      //index = Utilities::IndexFromPosition(x,Nx,range,center);
+//      index = find_index(x);
+//      if(index != -1) map[index] = value;
+//    }
+//    x[0] += s1*resolution;
+//    x[1] += s2*resolution;
+//    d += resolution;
+//  }
+//
   return;
+}
+
+void PixelMap::DrawLine(long x0,long x1,long y0,long y1,double value,bool add) {
+  
+  x0 = MAX(x0,0);
+  x0 = MIN(x0,Nx-1);
+  x1 = MAX(x1,0);
+  x1 = MIN(x1,Nx-1);
+  
+  y0 = MAX(y0,0);
+  y0 = MIN(y0,Ny-1);
+  y1 = MAX(y1,0);
+  y1 = MIN(y1,Ny-1);
+
+  long dx = abs(x1 - x0);
+  int sx = x0 < x1 ? 1 : -1;
+  long dy = -abs(y1 - y0);
+  int sy = y0 < y1 ? 1 : -1;
+  long error = dx + dy;
+   
+  while(true){
+    if(add){
+      (*this)(x0,y0) += value;
+    }else{
+      (*this)(x0,y0) = value;
+    }
+    if(x0 == x1 && y0 == y1) break;
+    long e2 = 2 * error;
+    if(e2 >= dy){
+      if(x0 == x1) break;
+      error = error + dy;
+      x0 = x0 + sx;
+    }
+    if(e2 <= dx){
+      if(y0 == y1) break;
+      error = error + dx;
+      y0 = y0 + sy;
+    }
+  }
+}
+
+
+void PixelMap::DrawLineGS(long x0,long x1,long y0,long y1,double value,bool add) {
+
+    long x = x0;
+    long y = y0;
+    long dx = x1-x0;
+    long dy = y1-y0;
+    long d = 2 * dy-dx; // discriminator
+    
+    // Euclidean distance of point (x,y) from line (signed)
+    double D = 0;
+    
+    // Euclidean distance between points (x1, y1) and (x2, y2)
+    double length = sqrt(dx * dx + dy * dy);
+    
+    double s = dx / length;
+    double c = dy / length;
+    while (x <= x1) {
+      (*this)(x,MAX(y-1,0)) = value ;//* ( abs(D + c) < 1);
+      (*this)(x,y) = value * (D < 1);
+      (*this)(x,MIN(y+1,Ny-1)) = value ;//* ( abs(D - c) < 1);
+      
+      x = x + 1;
+      if (d <= 0) {
+        D = D + s;
+        d = d + 2 * dy;
+      } else {
+        D = D + s-c;
+        d = d + 2 * (dy-dx);
+        y = y + 1;
+        
+      }
+    }
 }
 
 /**
@@ -1157,7 +1246,7 @@ void PixelMap::drawcircle(
     x1[1] = r_center[1] + radius*sin(theta);
     x2[0] = r_center[0] + radius*cos(theta+dtheta);
     x2[1] = r_center[1] + radius*sin(theta+dtheta);
-    drawline(x1,x2,value);
+    drawline(x1,x2,value,false);
   }
   
   return;
@@ -1193,7 +1282,7 @@ void PixelMap::drawdisk(
     x1[0] = sqrt(radius*radius - y*y) + r_center[0];
     x2[0] = -sqrt(radius*radius - y*y) + r_center[0];
     x1[1] = x2[1] = r_center[1] + y;
-    drawline(x1,x2,value);
+    drawline(x1,x2,value,false);
   }
   return;
 }
@@ -1209,14 +1298,14 @@ void PixelMap::drawgrid(int N,PosType value){
   x2[1] = map_boundary_p2[1];
   for(int i=1;i<N;++i){
     x1[0] = x2[0] = map_boundary_p1[0] + i*rangeX/N;
-    drawline(x1,x2,value);
+    drawline(x1,x2,value,false);
   }
   
   x1[0] = map_boundary_p1[0];
   x2[0] = map_boundary_p2[0];
   for(int i=1;i<N;++i){
     x1[1] = x2[1] = map_boundary_p1[1] + i*rangeY/N;
-    drawline(x1,x2,value);
+    drawline(x1,x2,value,false);
   }
 }
 void PixelMap::drawPoints(std::vector<Point *> points,PosType size,PosType value){
@@ -1271,25 +1360,25 @@ void PixelMap::drawSquare(PosType p1[],PosType p2[],PosType value){
   x1[1] = p1[1];
   x2[0] = p2[0];
   x2[1] = p1[1];
-  drawline(x1,x2,value);
+  drawline(x1,x2,value,false);
   
   x1[0] = p2[0];
   x1[1] = p1[1];
   x2[0] = p2[0];
   x2[1] = p2[1];
-  drawline(x1,x2,value);
+  drawline(x1,x2,value,false);
   
   x1[0] = p2[0];
   x1[1] = p2[1];
   x2[0] = p1[0];
   x2[1] = p2[1];
-  drawline(x1,x2,value);
+  drawline(x1,x2,value,false);
   
   x1[0] = p1[0];
   x1[1] = p2[1];
   x2[0] = p1[0];
   x2[1] = p1[1];
-  drawline(x1,x2,value);
+  drawline(x1,x2,value,false);
 }
 
 /**
@@ -1334,7 +1423,7 @@ void PixelMap::drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip)
   {
     x1[1] = x1ini[1]-i*(p2[1]-p1[1])/N;
     x2[1] = x2ini[1]-i*(p2[1]-p1[1])/N;
-    drawline(x1,x2,value);
+    drawline(x1,x2,value,false);
   }
 
   return ;
@@ -1363,12 +1452,12 @@ void PixelMap::AddCurve(Kist<Point> *imagekist,PosType value){
   x[1] = imagekist->getCurrent()->x[1];
   imagekist->Down();
   for(;!(imagekist->OffBottom());imagekist->Down()){
-    drawline(x,imagekist->getCurrent()->x,value);
+    drawline(x,imagekist->getCurrent()->x,value,false);
     x[0] = imagekist->getCurrent()->x[0];
     x[1] = imagekist->getCurrent()->x[1];
   }
   imagekist->MoveToTop();
-  drawline(x,imagekist->getCurrent()->x,value);
+  drawline(x,imagekist->getCurrent()->x,value,false);
   
   return;
 }
@@ -1381,11 +1470,11 @@ void PixelMap::AddCurve(std::vector<Point_2d> &curve,double value){
   x[0] = curve[0][0];
   x[1] = curve[0][1];
   for(size_t ii=1;ii<curve.size();++ii){
-    drawline(x,curve[ii].x,value);
+    drawline(x,curve[ii].x,value,false);
     x[0] = curve[ii][0];
     x[1] = curve[ii][1];
   }
-  drawline(x,curve[0].x,value);
+  drawline(x,curve[0].x,value,false);
   
   return;
   
@@ -1399,11 +1488,11 @@ void PixelMap::AddCurve(std::vector<RAY> &curve,double value){
   x[0] = curve[0].x[0];
   x[1] = curve[0].x[1];
   for(size_t ii=1;ii<curve.size();++ii){
-    drawline(x,curve[ii].x.x,value);
+    drawline(x,curve[ii].x.x,value,false);
     x[0] = curve[ii].x[0];
     x[1] = curve[ii].x[1];
   }
-  drawline(x,curve[0].x.x,value);
+  drawline(x,curve[0].x.x,value,false);
   
   return;
   
@@ -1417,7 +1506,7 @@ void PixelMap::AddCurve(std::vector<RAY> &curve,double value){
 void PixelMap::AddGrid(const Grid &grid,PosType value){
   if(grid.getNumberOfPoints() == 0) return;
 
-  PointList* list = grid.i_tree->pointlist;
+  PointList* list = &(grid.i_tree->pointlist);
   size_t index;
   
   PointList::iterator list_current = list->Top();
@@ -1444,7 +1533,7 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
   
   if(grid.getNumberOfPoints() == 0 ) return;
   
-  AddGrid_(*(grid.i_tree->pointlist),val);
+  AddGrid_(grid.i_tree->pointlist,val);
   
   return;
   //***********************************************************************
@@ -2152,7 +2241,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 PosType PixelMap::AddSource(Source &source){
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   Point_2d s_center;
   source.getTheta(s_center);
   
@@ -2177,7 +2266,7 @@ PosType PixelMap::AddSource(Source &source){
 }
 
 PosType PixelMap::AddSource(Source &source,int oversample){
-  if(units != surfb) throw std::invalid_argument("wrong units");
+  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
 
   Point_2d s_center;
   source.getTheta(s_center);

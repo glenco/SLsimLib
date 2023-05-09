@@ -12,7 +12,7 @@
 
 #ifndef pointtypes_declare
 #define pointtypes_declare
-
+#include <complex>
 #include <standard.h>
 #include "Kist.h"
 
@@ -29,6 +29,14 @@
 #define boo_declare
 typedef enum {NO, YES, MAYBE} Boo;
 #endif
+
+/// enumerates the types of critical curves. ND is "not defined".
+enum class CritType {ND,radial,tangential,pseudo};
+
+
+/// returns sign of a number
+template <typename T>
+int sign(T val){return (T(0) < val) - (val < T(0));}
 
 /**  \brief Class for representing points or vectors in 2 dimensions.  Not that the dereferencing operator is overridden.
  
@@ -381,6 +389,15 @@ struct Matrix2x2{
     std::cout << a[0] << "  " << a[1] << std::endl;
     std::cout << a[2] << "  " << a[3] << std::endl;
   }
+  
+  // this assumes that the eigenvalues are real
+  void eigenv(T lambda[]){
+    T m = (a[0] + a[3])/2;
+    T determinent = det();
+    
+    lambda[0] = m + sqrt( abs(m*m - determinent));
+    lambda[1] = m - sqrt( abs(m*m - determinent));
+  }
 };
 
 
@@ -455,8 +472,13 @@ struct Point: public Point_2d{
     return (p1->x[1] > p2->x[1]);
   }
 
-  /// returns true if the image is double inverted,  At very low magnification this can fail.
-  bool inverted(){ return 0 > (A.a[0] + sqrt( fabs(A.a[0]*A.a[0] - invmag()) ) ); }
+  /// returns true if the image is double inverted,  At very low magnification or when there is a rotation this can fail.
+  bool inverted(){
+    KappaType eigens[2];
+    A.eigenv(eigens);
+    
+    return (eigens[0] < 0)*(eigens[1] < 0);
+  }
 };
 
 std::ostream &operator<<(std::ostream &os, Point const &p);
@@ -584,10 +606,15 @@ struct RAY{
   /// inverse of the magnification
   KappaType invmag(){return A.det();}
   
-  /// deflection angle
+  /// deflection angle, x-y
   Point_2d alpha(){return x - y;}
 };
 
+//inline std::string to_string(RAY &r) {
+//  std::string s = "[" + std::to_string(r.x[0]) + "," + r.x[1] + ",[" + r.y[0] + "," + r.y[1]
+//  + "]," + r.z + "," + r.kappa() + ",[" + r.gamma1() + "," + r.gamma2() + "," + r.gamma3() + "]," << r.dt;
+//  return s;
+//}
 std::ostream &operator<<(std::ostream &os, RAY const &r);
 
 /// The box representing a branch of a binary tree structure.  Used specifically in TreeStruct for organizing points in the grid.
@@ -595,7 +622,7 @@ struct Branch{
 	Branch(Point *my_points,unsigned long my_npoints
 			  ,double my_boundary_p1[2],double my_boundary_p2[2]
 			  ,double my_center[2],int my_level);
-	~Branch();
+  ~Branch();
 
   struct Point *points;        /// pointer to first points in Branch
   
@@ -629,14 +656,102 @@ private:
 
 //typedef struct branchstruct Branch;
 
-/** \brief link list for points, uses the linking pointers within the Point type unlike  Kist */
+/**
+ This is for memory management.  It will create pointers to allicated arrays of Ts that will be deleted when the MemmorytBank goes out of scope.
+ */
+template<typename T>
+struct MemmoryBank{
+  
+  MemmoryBank():count(0){};
+  MemmoryBank(MemmoryBank &&membank){
+    *this = std::move(membank);
+  }
+  void operator=(MemmoryBank &&membank){
+    bank = std::move(membank.bank);
+  }
+
+  
+  T * operator()(size_t N){
+    if(N <= 0) return nullptr;
+    
+    bank.emplace_back(new T[N]);
+    count += N;
+    return bank.back().get();
+  }
+  
+  // clear all data
+  void clear(){
+    bank.clear();
+    count = 0;
+  }
+  
+  // clear specific array, does not decrement count
+  bool clear(T *ptr){
+    for(auto &p : bank){
+      if(p.get() == ptr){
+        p.swap(bank.back());
+        bank.pop_back();
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  size_t number_of_blocks(){return bank.size();}
+  
+private:
+
+  MemmoryBank(const MemmoryBank<T> &b);
+  MemmoryBank<T> & operator=(const MemmoryBank<T> &b);
+  
+  size_t count;
+  std::vector<std::unique_ptr<T[]>> bank;
+};
+
+// A class that onlt counts iteslf for testing
+//struct DummyClass{
+//  DummyClass(){
+//    N = count;
+//    ++count;
+//  };
+//  ~DummyClass(){
+//    std::cout << "delete " << N << std::endl;
+//  }
+//  int N;
+//  static int count;
+//};
+
+//int DummyClass::count = 0;
+//{  test lines for MemmoryBank
+//  MemmoryBank<DummyClass> pointbang;
+//
+//  DummyClass *p = pointbang(10);
+//  p[7].N = 2;
+//  for(int i=0 ; i<10 ; ++i){
+//    cout << p[i].N << endl;
+//  }
+//
+//  DummyClass *p2 = pointbang(5);
+//  for(int i=0 ; i<5 ; ++i){
+//    cout << p2[i].N << endl;
+//  }
+//
+//  pointbang.clear(p2);
+//
+//  DummyClass *p3 = pointbang(10);
+//}
+
+/** \brief link list for points, uses the linking pointers within the Point type unlike  Kist
+ 
+ Does not own the Points within it and will not delete them when distroyed
+ */
 struct PointList{
   PointList(){
     top=NULL;
     Npoints=0;
     bottom = top;
   }
-  ~PointList(){EmptyList();}
+  ~PointList(){}
   
   struct iterator{
 
@@ -644,31 +759,12 @@ struct PointList{
     
     iterator():current(NULL){ }
     
-/*    iterator(PointList &list){
-      current = list.top;
-    }
-    iterator(iterator &it){
-      current = *it;
-    }
- */
     iterator(Point *p){
       current = p;
     }
     
- /*
-    PointList::iterator &operator=(Point *point){
-      current = point;
-      return *this;
-    }
-*/
     Point *operator*(){return current;}
     
-    /*iterator &operator=(iterator &p){
-      if(&p == this) return *this;
-      current = p.current;
-      return *this;
-    }*/
-
     bool operator++(){
       assert(current);
       if(current->prev == NULL) return false;
@@ -727,27 +823,12 @@ struct PointList{
     return *it == bottom;
   };
   
-  /* Many changes need to be made to implement this correctly
-  PointList::iterator begin() const{
-    PointList::iterator it;
-    it.current = bottom;
-    return it;
-  }
-
-  PointList::iterator end() const{
-    PointList::iterator it;
-    it.current = top->prev;
-    return it;
-  }
-  */
-  
-  
   Point *Top() const {return top;}
   Point *Bottom() const {return bottom;}
   
   void EmptyList();
-  void InsertAfterCurrent(iterator &current,double *x,unsigned long id,Point *image);
-  void InsertBeforeCurrent(iterator &current,double *x,unsigned long id,Point *image);
+  //void InsertAfterCurrent(iterator &current,double *x,unsigned long id,Point *image);
+  //void InsertBeforeCurrent(iterator &current,double *x,unsigned long id,Point *image);
   void InsertPointAfterCurrent(iterator &current,Point *);
   void InsertPointBeforeCurrent(iterator &current,Point *);
   
@@ -759,32 +840,32 @@ struct PointList{
   void MergeLists(PointList* list2);
   void ShiftList(iterator &current);
 
-  void FillList(double **x,unsigned long N
-                ,unsigned long idmin);
+  //void FillList(double **x,unsigned long N
+  //              ,unsigned long idmin);
   void PrintList();
 
   void setN(unsigned long N){Npoints = N;}
   void setTop(Point *p){top = p;}
   void setBottom(Point *p){bottom = p;}
-
+  
 private:
   Point *top;
   Point *bottom;
   unsigned long Npoints;
   
   // make a point uncopyable
-  //PointList(const PointList &p);
   PointList &operator=(const PointList &p);
-
 };
 
 typedef struct PointList *ListHndl;
+
 
 // ***********************************************************
 //   routines for linked list of points
 // ************************************************************
 
-Point *NewPoint(double *x,unsigned long id);
+//Point *NewPoint(double *x,unsigned long id);
+
 void SwapPointsInList(ListHndl list,Point *p1,Point *p2);
 Point *sortList(long n, double arr[],ListHndl list,Point *firstpoint);
 
@@ -943,5 +1024,131 @@ std::ostream &operator<<(std::ostream &os, Point_3d<T> const &p) {
 inline double pointx(Point &p){return p.x[0];}
 inline double pointy(Point &p){return p.x[1];}
 
+/*
+template <typename T>
+struct LISTiterator{
 
+  std::list<T>::iterator current_it;
+  
+  LISTiterator(){ }
+
+  T& operator*(){return *current_it;}
+
+  bool operator++(){
+    if(current_it == )
+    --current_it;
+    
+    assert(current);
+    if(current->prev == NULL) return false;
+    current=current->prev;
+    return true;
+  }
+
+  /// Same as Up()
+  bool operator++(int){
+    assert(current);
+    if(current->prev == NULL) return false;
+    current=current->prev;
+    return true;
+  }
+
+  /// Same as Down()
+  bool operator--(){
+    assert(current);
+    if(current->next == NULL) return false;
+    current=current->next;
+    return true;
+   }
+
+  /// Same as Down()
+  bool operator--(int){
+    assert(current);
+    if(current->next == NULL) return false;
+    current=current->next;
+    return true;
+  }
+
+  void JumpDownList(int jump){
+    int i;
+
+    if(jump > 0) for(i=0;i<jump;++i) --(*this);
+    if(jump < 0) for(i=0;i<abs(jump);++i) ++(*this);
+  }
+
+
+  bool operator==(const iterator my_it){
+    return (current == my_it.current);
+  }
+
+  bool operator!=(const iterator my_it){
+    return (current != my_it.current);
+  }
+};
+
+
+template <typename T>
+struct LIST
+{
+  LIST(){
+  }
+  ~LIST(){EmptyList();}
+  
+  std::list<T> list;
+  
+  LISTiterator<T> top(){
+    iterator it;
+    it.current_it = list.begin();
+    return it;
+  }
+ 
+  LISTiterator<T> bottom(){
+    iterator it;
+    it.current_it = list.end();
+    return it;
+  }
+ 
+  unsigned long size() const {return list.size();}
+
+  inline bool IsTop(LISTiterator<T> &it) const{
+    return it.current_it == list.begin();
+  };
+  inline bool IsBottom(LIST::iterator &it) const{
+    return it.current_it == list.end();
+  };
+  
+  T *Top() const {return list.front();}
+  T *Bottom() const {return list.back();}
+  
+  void EmptyList(){list.clear();}
+  
+  void InsertAfterCurrent(LISTiterator<T> &it,T &d){
+    list.insert(it.current_it+1,d);
+  }
+  void InsertBeforeCurrent(LISTiterator<T> &it,T &d){
+    list.insert(it.current_it,d);
+  }
+  
+  void MoveCurrentToBottom(iterator &current);
+  Point *TakeOutCurrent(iterator &current);
+
+  void InsertListAfterCurrent(iterator &current,PointList *list2);
+  void InsertListBeforeCurrent(iterator &current,PointList *list2);
+  void MergeLists(PointList* list2);
+  void ShiftList(iterator &current);
+  
+  void PrintList();
+
+  //void setN(unsigned long N){Npoints = N;}
+  //void setTop(Point *p){top = p;}
+  //void setBottom(Point *p){bottom = p;}
+
+private:
+  //Point *top;
+  //Point *bottom;
+  //unsigned long Npoints;
+  
+  // make a point uncopyable
+  LIST &operator=(const LIST &p);
+}
+ */
 #endif

@@ -1077,6 +1077,17 @@ public:
       }
     }
     
+    /// add a new column of zeros
+    void addColumn(std::string name){
+      int nc =  number_of_columns();
+      long nr = number_of_rows();
+      data.emplace_back(nr);
+      all_column_names.push_back(name);
+      used_column_names.push_back(name);
+      datamap[name] = nc;
+      //column_index.push_back(nc);
+    }
+    
     size_t number_of_rows(){return data[0].size();}
     size_t number_of_columns(){return data.size();}
 

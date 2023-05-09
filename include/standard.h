@@ -15,7 +15,7 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include <pthread.h>
+//#include <pthread.h>
 
 #include <list>
 #include <math.h>

@@ -31,9 +31,9 @@ bool tree_count_test(TreeHndl tree){
 	 */
 
 /*	do{
-		tree->pointlist->current = tree->current->points;
+		tree->pointlist.current = tree->current->points;
 		for(i=0;i<tree->current->npoints;++i,MoveDownList(tree->pointlist))
-			assert(inbox(tree->pointlist->current->x,tree->current->boundary_p1,tree->current->boundary_p2));
+			assert(inbox(tree->pointlist.current->x,tree->current->boundary_p1,tree->current->boundary_p2));
 
 		++nbranches;
 		assert(nbranches <= tree->Nbranches);
@@ -48,8 +48,8 @@ bool tree_count_test(TreeHndl tree){
 bool testLeafs(TreeHndl tree){
 	Branch *leaf;
 	
-  PointList::iterator pointlist_current(tree->pointlist->Top());
-	for(unsigned long i=0;i<tree->pointlist->size();--pointlist_current,++i){
+  PointList::iterator pointlist_current(tree->pointlist.Top());
+	for(unsigned long i=0;i<tree->pointlist.size();--pointlist_current,++i){
 		leaf = (*pointlist_current)->leaf;
 		if(leaf->child1 != NULL || leaf->child2 != NULL){
 			std::cout << "a point " << (*pointlist_current)->id << "'s leaf is not a leaf!"
@@ -93,18 +93,12 @@ bool testLeafs(TreeHndl tree){
  
  */
 //TreeHndl BuildTree(Point *xp,unsigned long Npoints,short my_median_cut){
-TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,PosType buffer){
-  //TreeHndl tree;
+TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,PosType buffer):top_ptr(nullptr)
+{
   unsigned long i;
   PosType p1[2],p2[2],center[2];
   const int my_Nbucket = 1;   // must be =1 if each leaf is to coincide with each cell
-/*
-  if( (Npoints & (Npoints-1)) != 0){
-	  ERROR_MESSAGE();
-	  std::printf("ERROR: BuildTree, Npoints is not a power of 2\n");
-	  exit(1);
-  }
-*/
+
   p1[0]=xp[0].x[0]; p1[1]=xp[0].x[1];
   p2[0]=xp[0].x[0]; p2[1]=xp[0].x[1];
 
@@ -127,13 +121,12 @@ TreeStruct::TreeStruct(Point *xp,unsigned long Npoints,short my_median_cut,PosTy
   p2[0] += buffer;
   p2[1] += buffer;
 
-  /* Initialize tree root */
-  //tree=NewTree(xp,Npoints,p1,p2,center,Nbucket);
+  // Initialize tree root
   construct_root(xp,Npoints,p1,p2,center,my_Nbucket);
 
   median_cut = my_median_cut;
- /* build the tree */
-  TreeStruct::iterator current(top);
+ // build the tree 
+  TreeStruct::iterator current(top_ptr.get());
   _BuildTree(current);
 
   /************************** test routine *****************************/
@@ -150,75 +143,80 @@ void TreeStruct::FillTree(Point *xp,unsigned long Npoints){
 
   unsigned long i;
 
-  top->points=xp;
-  top->npoints=Npoints;
+  top_ptr->points=xp;
+  top_ptr->npoints=Npoints;
   // link point array into point list
-  pointlist->EmptyList();
+  pointlist.EmptyList();
   PointList::iterator list_current;
   for(i=0;i<Npoints;++i){
-    pointlist->InsertPointAfterCurrent(list_current,&xp[i]);
-    list_current = pointlist->Bottom();
+    pointlist.InsertPointAfterCurrent(list_current,&xp[i]);
+    list_current = pointlist.Bottom();
   }
 
-  list_current = pointlist->Top();
+  list_current = pointlist.Top();
  /* build the tree */
   // make sure there are no branches in the tree
-  _freeBranches_iter();
+  //_freeBranches_iter();
+  
+  delete top_ptr->child1;
+  top_ptr->child1 = NULL;
+  delete top_ptr->child2;
+  top_ptr->child2 = NULL;
 
-  TreeStruct::iterator current(top);
+  TreeStruct::iterator current(top_ptr.get());
   _BuildTree(current);
 
   return ;
 }
 
-/**
+/*
  * \brief Rebuilds the tree from the points that are already in the tree->pointlist
  *
  * This is not the best function because it copies all the points
  */
-void TreeStruct::RebuildTreeFromList(){
-  std::lock_guard<std::mutex> hold(TreeStruct::mutex);
-
- /* Builds or rebuilds a tree that already has a tree->pointlist.
-  */
-
-	if(pointlist->size() < 1) return;
-
-	unsigned long Npoints = pointlist->size(),i;
-
-	// Make new array of points
-	Point *points = NewPointArray(Npoints);
-
-  PointList::iterator pointlist_current(pointlist->Top());
-	for(i=0;i<Npoints;++i,--pointlist_current){
-		//tmp = points[i].x;
-		// PointCopy() copies the x pointer which is later freed in
-		// emptyTree() so the information needs to be copied
-
-		PointCopy(&(points[i]),*pointlist_current);
-		//points[i].x = tmp;
-		//points[i].x[0] = pointlist->current->x[0];
-		//points[i].x[1] = pointlist->current->x[1];
-
-		/* Below is for trash collection in PruneTree().
-		 * When PruneTree has been used not all of the
-		 * heads in the point arrays are guaranteed to be
-		 * in the pointlist.
-		 */
-		(*pointlist_current)->leaf = NULL;
-	}
-	//std::printf(" %e %e\n",points[0].x[0],points[0].x[1]);
-	// emptry the tree and free all former points
-	emptyTree();
-
-	assert(Nbranches == 1);
-	assert(top->npoints == 0);
-	assert(pointlist->size() == 0);
-
-	FillTree(points,Npoints);
-
-	return;
-}
+//void TreeStruct::RebuildTreeFromList(){
+//  std::lock_guard<std::mutex> hold(TreeStruct::mutex);
+//
+// /* Builds or rebuilds a tree that already has a tree->pointlist.
+//  */
+//
+//	if(pointlist.size() < 1) return;
+//
+//	unsigned long Npoints = pointlist.size(),i;
+//
+//	// Make new array of points
+//	Point *points = NewPointArray(Npoints);
+//
+//  PointList::iterator pointlist_current(pointlist.Top());
+//	for(i=0;i<Npoints;++i,--pointlist_current){
+//		//tmp = points[i].x;
+//		// PointCopy() copies the x pointer which is later freed in
+//		// emptyTree() so the information needs to be copied
+//
+//		PointCopy(&(points[i]),*pointlist_current);
+//		//points[i].x = tmp;
+//		//points[i].x[0] = pointlist.current->x[0];
+//		//points[i].x[1] = pointlist.current->x[1];
+//
+//		/* Below is for trash collection in PruneTree().
+//		 * When PruneTree has been used not all of the
+//		 * heads in the point arrays are guaranteed to be
+//		 * in the pointlist.
+//		 */
+//		(*pointlist_current)->leaf = NULL;
+//	}
+//	//std::printf(" %e %e\n",points[0].x[0],points[0].x[1]);
+//	// emptry the tree and free all former points
+//	emptyTree();
+//
+//	assert(Nbranches == 1);
+//	assert(top.get()->npoints == 0);
+//	assert(pointlist.size() == 0);
+//
+//	FillTree(points,Npoints);
+//
+//	return;
+//}
 
 /** \brief Spawn a subtree with current as its top
  *
@@ -226,34 +224,34 @@ void TreeStruct::RebuildTreeFromList(){
  *  Warning:: Adding points to the new tree will not update the 
  *  parent tree so it can become dangerously out of sync.
  */
-TreeStruct * TreeStruct::spawn(TreeStruct::iterator &current){
-  std::lock_guard<std::mutex> hold(TreeStruct::mutex);
-
-  throw std::runtime_error("This is untested and could cause significant problems");
-  
-  TreeStruct *newTree = new TreeStruct;
-
-  newTree->Nbucket = Nbucket;
-  newTree->top = *current;
-  newTree->pointlist->setTop( (*current)->points );
-  newTree->pointlist->setN( (*current)->npoints );
-  PointList::iterator pointlist_current( (*current)->points );
-  for(size_t i=0 ; i < (*current)->npoints-1 ; ++i) --pointlist_current;
-  newTree->pointlist->setBottom(*pointlist_current);
-  
-  // count the number of branches below
-  do{
-    newTree->Nbranches++;
-  }while(current.TreeWalkStep(true) && (*current) != newTree->top->brother);
-  current = newTree->top;
-  
-  return newTree;
-}
+//TreeStruct * TreeStruct::spawn(TreeStruct::iterator &current){
+//  std::lock_guard<std::mutex> hold(TreeStruct::mutex);
+//
+//  throw std::runtime_error("This is untested and could cause significant problems");
+//
+//  TreeStruct *newTree = new TreeStruct;
+//
+//  newTree->Nbucket = Nbucket;
+//  newTree->top_ptr.get() = *current;
+//  newTree->pointlist.setTop( (*current)->points );
+//  newTree->pointlist.setN( (*current)->npoints );
+//  PointList::iterator pointlist_current( (*current)->points );
+//  for(size_t i=0 ; i < (*current)->npoints-1 ; ++i) --pointlist_current;
+//  newTree->pointlist.setBottom(*pointlist_current);
+//
+//  // count the number of branches below
+//  do{
+//    newTree->Nbranches++;
+//  }while(current.TreeWalkStep(true) && (*current) != newTree->top->brother);
+//  current = newTree->top.get();
+//
+//  return newTree;
+//}
 
 /**
 * \brief Empty tree of all point leaving a tree with an empty root.
 *
-* The points are freed, but the list structure is not destroyed.
+* The points are not freed, and the list structure is not destroyed.
 *
 *  FillTree can then be used to regenerate tree.
 */
@@ -263,14 +261,19 @@ short TreeStruct::emptyTree(){
   Point **heads;
   unsigned long i,j,count;
 
-  heads = (Point **) malloc(pointlist->size()*sizeof(Point*));  // maximum number of pointers that could be needed
+  heads = (Point **) malloc(pointlist.size()*sizeof(Point*));  // maximum number of pointers that could be needed
 
-  _freeBranches_iter();
+  //_freeBranches_iter();
+  
+  delete top_ptr->child1;
+  top_ptr->child1 = NULL;
+  delete top_ptr->child2;
+  top_ptr->child2 = NULL;
 
   assert(Nbranches == 1);
 
-  PointList::iterator pointlist_current(pointlist->Top());
-  for(i=0,j=0,count=0;i<pointlist->size();++i){
+  PointList::iterator pointlist_current(pointlist.Top());
+  for(i=0,j=0,count=0;i<pointlist.size();++i){
 	  if((*pointlist_current)->head){
 		  heads[j] = *pointlist_current;
 		  ++j;
@@ -281,15 +284,15 @@ short TreeStruct::emptyTree(){
   }
 
   //std::printf("freed %i arrays out of %i points in array, %i freed\n",j,i,count);
-  for(i=0;i<j;++i) FreePointArray(heads[i]);
-  top->npoints = 0;
+  //for(i=0;i<j;++i) FreePointArray(heads[i]);
+  top_ptr->npoints = 0;
 
   //printTree;
 
-  pointlist->setN(0);
-  pointlist->setTop(NULL);
-  pointlist->setBottom(NULL);
-
+  pointlist.setN(0);
+  pointlist.setTop(NULL);
+  pointlist.setBottom(NULL);
+  
   free(heads);
   return 1;
 }
@@ -297,79 +300,79 @@ short TreeStruct::emptyTree(){
 /** 
 * \brief Recursively free branches
 */
-void TreeStruct::_freeBranches(TreeStruct::iterator &current,short child){
-	Branch *branch;
-
-	/*printBranch(current);*/
-
-	if((*current)->child1 != NULL){
-    current.down(1);
-		_freeBranches(current,1);
-	}
-
-    if((*current)->child2 != NULL){
-      current.down(2);
-      _freeBranches(current,2);
-    }
-
-    if( ((*current)->child1 == NULL)*((*current)->child2 == NULL) ){
-
-    	if(current.atTop()){
-        return;
-    	}
-
-    	branch = *current;
-      current.up();
-      delete branch;
-
-      if(child==1) (*current)->child1=NULL;
-    	if(child==2) (*current)->child2=NULL;
-    	--Nbranches;
-
-    	return;
-    }
-
-    return;
-}
+//void TreeStruct::_freeBranches(TreeStruct::iterator &current,short child){
+//	Branch *branch;
+//
+//	/*printBranch(current);*/
+//
+//	if((*current)->child1 != NULL){
+//    current.down(1);
+//		_freeBranches(current,1);
+//	}
+//
+//    if((*current)->child2 != NULL){
+//      current.down(2);
+//      _freeBranches(current,2);
+//    }
+//
+//    if( ((*current)->child1 == NULL)*((*current)->child2 == NULL) ){
+//
+//    	if(current.atTop()){
+//        return;
+//    	}
+//
+//    	branch = *current;
+//      current.up();
+//      delete branch;
+//
+//      if(child==1) (*current)->child1=NULL;
+//    	if(child==2) (*current)->child2=NULL;
+//    	--Nbranches;
+//
+//    	return;
+//    }
+//
+//    return;
+//}
 /** 
 * \brief Iteratively free branches
 *
 * Frees all the branches of the tree so there is only the stump.
  */
-void TreeStruct::_freeBranches_iter(){
-	Branch *branch;
-
-	//moveTop();
-	/*printBranch(current);*/
-
-  TreeStruct::iterator current(top);
-  
-	while(Nbranches > 1){
-		if((*current)->child1 != NULL){
-			current.down(1);
-		}else if((*current)->child2 != NULL){
-			current.down(2);
-		}else{
-			branch = *current;
-			if((*current)->brother == (*current)->prev->brother){
-        current.up();
-				assert((*current)->child1 == NULL);
-				(*current)->child2 = NULL;
-			}else{
-				current = (*current)->brother;
-				(*current)->prev->child1 = NULL;
-			}
-			delete branch;
-			--Nbranches;
-		}
-	}
-
-	// re-assign the leaf pointers in the particles to the root
-  PointList::iterator pointlist_current(pointlist->Top());
-	 do{ (*pointlist_current)->leaf = top; }while(--pointlist_current);
-
-    return;
-}
+//void TreeStruct::_freeBranches_iter(){
+//	Branch *branch;
+//
+//	//moveTop();
+//	/*printBranch(current);*/
+//
+//  TreeStruct::iterator current(top.get());
+//
+//	while(Nbranches > 1){
+//		if((*current)->child1 != NULL){
+//			current.down(1);
+//		}else if((*current)->child2 != NULL){
+//			current.down(2);
+//		}else{
+//			branch = *current;
+//			if((*current)->brother == (*current)->prev->brother){
+//        current.up();
+//				assert((*current)->child1 == NULL);
+//				(*current)->child2 = NULL;
+//			}else{
+//				current = (*current)->brother;
+//				(*current)->prev->child1 = NULL;
+//			}
+//			delete branch;
+//			--Nbranches;
+//		}
+//	}
+//
+//	// re-assign the leaf pointers in the particles to the root
+//  PointList::iterator pointlist_current(pointlist.Top());
+//  do{ (*pointlist_current)->leaf = top; }while(--pointlist_current);
+//
+//  return;
+//}
 
 
 /** 
@@ -458,10 +461,10 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   }
 
   /*/ Test lines /////////////////////////////////////////////////
-  pointlist->current = current->points;
+  pointlist.current = current->points;
   for(int k = 0; k< current->npoints-1 ; ++k,MoveDownList(pointlist)){
-    assert(pointlist->current->x[dimension] <= pointlist->current->next->x[dimension]);
-    assert(inbox(pointlist->current->x,current->boundary_p1,current->boundary_p2));
+    assert(pointlist.current->x[dimension] <= pointlist.current->next->x[dimension]);
+    assert(inbox(pointlist.current->x,current->boundary_p1,current->boundary_p2));
   }
   //////////////////////////////////////////////////////////////*/
 
@@ -471,9 +474,9 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   branch1->points = points;
 
   /*/ Test lines /////////////////////////////////////////////////
-  pointlist->current = branch1->points;
+  pointlist.current = branch1->points;
   for(int k = 0; k< branch1->npoints ; ++k,MoveDownList(pointlist)){
-    assert(inbox(pointlist->current->x,branch1->boundary_p1,branch1->boundary_p2));
+    assert(inbox(pointlist.current->x,branch1->boundary_p1,branch1->boundary_p2));
   }
    //////////////////////////////////////////////////////////////*/
 
@@ -484,9 +487,9 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   branch2->points = *pointlist_current;
 
   /*/ Test lines /////////////////////////////////////////////////
-  pointlist->current = branch2->points;
+  pointlist.current = branch2->points;
   for(int k = 0; k< branch2->npoints ; ++k,MoveDownList(pointlist)){
-    assert(inbox(pointlist->current->x,branch2->boundary_p1,branch2->boundary_p2));
+    assert(inbox(pointlist.current->x,branch2->boundary_p1,branch2->boundary_p2));
   }
   //////////////////////////////////////////////////////////////*/
   
@@ -503,18 +506,18 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
   /* centers of mass *
 
   for(i=0;i<2;++i) branch1->center[i]=0;
-  pointlist->current=branch1->points;
+  pointlist.current=branch1->points;
   for(i=0;i<cut; ++i){
-	  branch1->center[0]+=pointlist->current->x[0]/branch1->npoints;
-	  branch1->center[1]+=pointlist->current->x[1]/branch1->npoints;
+	  branch1->center[0]+=pointlist.current->x[0]/branch1->npoints;
+	  branch1->center[1]+=pointlist.current->x[1]/branch1->npoints;
 	  MoveDownList(pointlist);
   }
 
   for(i=0;i<2;++i) branch2->center[i]=0;
-  pointlist->current=branch2->points;
+  pointlist.current=branch2->points;
   for(i=cut;i<cbranch->npoints; ++i){
-	  branch2->center[0]+=pointlist->current->x[0]/branch2->npoints;
-	  branch2->center[1]+=pointlist->current->x[1]/branch2->npoints;
+	  branch2->center[0]+=pointlist.current->x[0]/branch2->npoints;
+	  branch2->center[1]+=pointlist.current->x[1]/branch2->npoints;
 	  MoveDownList(pointlist);
   }*/
 
@@ -548,15 +551,15 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
   
   if(Nadd==0) return 1;
 
-  Ntest = pointlist->size();
+  Ntest = pointlist.size();
   
-  TreeStruct::iterator current(top);
+  TreeStruct::iterator current(top_ptr.get());
   PointList::iterator pointlist_current;
   
   for(j=0;j<Nadd;++j){
 
 	   // add only that are inside original grid
-    	if( !inbox(xpoint[j].x,top->boundary_p1,top->boundary_p2) ){
+    	if( !inbox(xpoint[j].x,top_ptr->boundary_p1,top_ptr->boundary_p2) ){
     		ERROR_MESSAGE();
     		std::printf("ERROR: in AddPointToTree, ray is not inside the simulation box x = %e %e Nadd=%li\n  not adding it to tree\n",
     				   xpoint[j].x[0],xpoint[j].x[1],Nadd);
@@ -574,11 +577,11 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
     		assert(inbox(xpoint[j].x,(*current)->prev->boundary_p1,(*current)->prev->boundary_p2));
         
         /*/ Test lines /////////////////////////////////////////////////////////
-        pointlist->current = current->points;
+        pointlist.current = current->points;
         for(int k = 0; k < current->npoints - 1 ; ++k,MoveDownList(pointlist)){
-          assert( inbox(pointlist->current->x,current->boundary_p1,current->boundary_p2) );
+          assert( inbox(pointlist.current->x,current->boundary_p1,current->boundary_p2) );
         }
-        pointlist->current = current->points;
+        pointlist.current = current->points;
         /////////////////////////////////////////////////////////////////////*/
 
     		// insert point into point list
@@ -596,9 +599,9 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
 
        				// insert the point
        				if(++pointlist_current){
-       					pointlist->InsertPointAfterCurrent(pointlist_current,(*current)->points);
+       					pointlist.InsertPointAfterCurrent(pointlist_current,(*current)->points);
        				}else{
-       					pointlist->InsertPointBeforeCurrent(pointlist_current,(*current)->points);
+       					pointlist.InsertPointBeforeCurrent(pointlist_current,(*current)->points);
        				}
   					  // InsertPointBeforeCurrent(pointlist,(*current)->points);
          			// re-assign parent first points
@@ -611,33 +614,33 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
 
     			}else{
               pointlist_current.JumpDownList((*current)->prev->npoints-2);  // adds point to end of parent branches list
-        			pointlist->InsertPointAfterCurrent(pointlist_current,(*current)->points);
+        			pointlist.InsertPointAfterCurrent(pointlist_current,(*current)->points);
     			}
 
-    			//pointlist->current = (*current)->points;
+    			//pointlist.current = (*current)->points;
           //(*current)->points->leaf = current;
 
           assert((*current)->points->next || (*current)->points->prev);
           
           /*/ Test lines //////////////////////////////////////////////////////
-    			pointlist->current = (*current)->points;
+    			pointlist.current = (*current)->points;
     			for(int k = 0; k< (*current)->npoints ; ++k,MoveDownList(pointlist)){
-    				assert(inbox(pointlist->(*current)->x
+    				assert(inbox(pointlist.(*current)->x
                          ,(*current)->boundary_p1,(*current)->boundary_p2));
     			}
-          pointlist->current = (*current)->points;
+          pointlist.current = (*current)->points;
     			/////////////////////////////////////////////////////////////////////*/
 
     		}else{ // case where the leaf needs to be divided
     			assert((*current)->npoints > 1);
 
     			/*/ Test lines /////////////////////////////////////////////////////////
-    			pointlist->current = (*current)->points;
+    			pointlist.current = (*current)->points;
     			for(int k = 0; k< (*current)->npoints - 1 ; ++k,MoveDownList(pointlist)){
-    				assert(inbox(pointlist->current->x
+    				assert(inbox(pointlist.current->x
                          ,(*current)->boundary_p1,(*current)->boundary_p2));
     			}
-          pointlist->current = (*current)->points;
+          pointlist.current = (*current)->points;
     			/////////////////////////////////////////////////////////////////////*/
 
     			// case of points already in leaf
@@ -648,7 +651,7 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
           // adds point to end of branches list, note that (*current)->npoints has already been increased
     			pointlist_current = (*current)->points;
     			pointlist_current.JumpDownList((*current)->npoints-2);
-    			pointlist->InsertPointAfterCurrent(pointlist_current,&xpoint[j]);
+    			pointlist.InsertPointAfterCurrent(pointlist_current,&xpoint[j]);
           
           assert(inbox(xpoint[j].x,(*current)->boundary_p1,(*current)->boundary_p2));
 
@@ -656,9 +659,9 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
     			xpoint[j].leaf = *current;
 
           Branch *parent_branch = *current;
-          //unsigned long n=pointlist->Npoints;
+          //unsigned long n=pointlist.Npoints;
           _AddPoint(current);
-          //assert(n==pointlist->Npoints);
+          //assert(n==pointlist.Npoints);
 
           assert(parent_branch->child1->points->leaf == parent_branch->child1);
           assert(parent_branch->child2->points->leaf == parent_branch->child2);
@@ -667,9 +670,9 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
       	    	/*/  Test lines
       	    	if(!testLeafs()){
       	    		ERROR_MESSAGE();
-      	    		pointlist->current = parent_branch->points;
+      	    		pointlist.current = parent_branch->points;
       	    		for(int i=0;i<parent_branch->npoints;++i,MoveDownList(pointlist)){
-      	    			std::cout << "points in split branch " << pointlist->current->id << std::endl;
+      	    			std::cout << "points in split branch " << pointlist.current->id << std::endl;
       	    		}
       	    		std::cout << "Adding point " << xpoint[j].id << " branch " << parent_branch << std::endl;
       	    		std::cout << "End of AddPointsToTree "<< std::endl; exit(1);
@@ -681,12 +684,12 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
     	}
 
     /*/ Test lines /////////////////////////////////////////////////////////
-    pointlist->current = (*current)->points;
+    pointlist.current = (*current)->points;
     for(int k = 0; k < (*current)->npoints ; ++k,MoveDownList(pointlist)){
-      assert(inbox(pointlist->current->x
+      assert(inbox(pointlist.current->x
                    ,(*current)->boundary_p1,(*current)->boundary_p2));
     }
-    pointlist->current = (*current)->points;
+    pointlist.current = (*current)->points;
     /////////////////////////////////////////////////////////////////////*/
 
     while( !inbox(xpoint[j].x,(*current)->boundary_p1,(*current)->boundary_p2) ) current.up();
@@ -696,16 +699,16 @@ int TreeStruct::AddPointsToTree(Point *xpoint,unsigned long Nadd){
     assert(inbox(xpoint[j].x,xpoint[j].leaf->boundary_p1,xpoint[j].leaf->boundary_p2));
   }
 
-  assert(pointlist->size() == Ntest + Nadd);
+  assert(pointlist.size() == Ntest + Nadd);
   return 1;
 }
 
 void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 
 		/*/ Test lines /////////////////////////////////////////////////
-		pointlist->current = current->points;
+		pointlist.current = current->points;
 		for(int k = 0; k< current->npoints ; ++k,MoveDownList(pointlist)){
-			assert(inbox(pointlist->current->x
+			assert(inbox(pointlist.current->x
 				,current->boundary_p1,current->boundary_p2));
 		}
 		//////////////////////////////////////////////////////////////*/
@@ -715,12 +718,12 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 		return;
 	}else if((*current)->npoints <= Nbucket){
 		/**** test lines *******************
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(i=0;i<(*current)->npoints;i++){
-			pointlist->current->leaf = current;
-			assert(inbox(pointlist->current->x
-					,pointlist->current->leaf->boundary_p1
-					,pointlist->current->leaf->boundary_p2));
+			pointlist.current->leaf = current;
+			assert(inbox(pointlist.current->x
+					,pointlist.current->leaf->boundary_p1
+					,pointlist.current->leaf->boundary_p2));
 			MoveDownList(pointlist);
 		}
 		/ ****************************************/
@@ -737,14 +740,14 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
     PointList::iterator pointlist_current;
 
 		/*// Test lines
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(int k = 0; k< (*current)->npoints ; ++k,MoveDownList(pointlist)){
-			assert(inbox(pointlist->current->x
+			assert(inbox(pointlist.current->x
                    ,top->boundary_p1,top->boundary_p2));
-			assert(inbox(pointlist->current->x
+			assert(inbox(pointlist.current->x
                    ,(*current)->boundary_p1,(*current)->boundary_p2));
 		}
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		///////////////////////////////////*/
   
     Branch* branch1 = new Branch(NULL,0,(*current)->boundary_p1,(*current)->boundary_p2
@@ -763,12 +766,12 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 		}*/
 
 		/*/ Test lines
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(int k = 0; k< (*current)->npoints ; ++k,MoveDownList(pointlist)){
-			assert(inbox(pointlist->current->x
+			assert(inbox(pointlist.current->x
 				,(*current)->boundary_p1,(*current)->boundary_p2));
 		}
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		///////////////////////////////////*/
 
 		// set dimension to cut box
@@ -782,21 +785,21 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 		}
 		/*if(x[0] == x[1]){
 			dimension = !dimension;
-			pointlist->current = (*current)->points;
+			pointlist.current = (*current)->points;
 			for(i=0;i<(*current)->npoints;++i){
-				x[i] = pointlist->current->x[dimension];
+				x[i] = pointlist.current->x[dimension];
 				MoveDownList(pointlist);
 			}
 			assert((*current)->npoints == 2);
 		}*/
 
 		/*/ Test lines
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(int k = 0; k< (*current)->npoints ; ++k,MoveDownList(pointlist)){
-			assert(inbox(pointlist->current->x
+			assert(inbox(pointlist.current->x
 				,(*current)->boundary_p1,(*current)->boundary_p2));
 		}
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		///////////////////////////////////*/
 
 		oldfirstpoint = (*current)->points;
@@ -804,10 +807,10 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 			pointlist_current = (*current)->points;
 			if((*pointlist_current)->x[dimension] > (*pointlist_current)->next->x[dimension]){
 				pointlist_current = (*current)->points;
-        bool attop = (*pointlist_current == pointlist->Top());
-				Point *point = pointlist->TakeOutCurrent(pointlist_current);
+        bool attop = (*pointlist_current == pointlist.Top());
+				Point *point = pointlist.TakeOutCurrent(pointlist_current);
 				if(!attop) --pointlist_current;
-				pointlist->InsertPointAfterCurrent(pointlist_current,point);
+				pointlist.InsertPointAfterCurrent(pointlist_current,point);
 				(*current)->points = point->prev;
 				PosType tmp = x[1];
 				x[1] = x[0];
@@ -817,7 +820,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 			ERROR_MESSAGE();
 			std::cout << "This is prone to errors and should never happen! npoints in this branch = " << (*current)->npoints << std::endl;
 			throw std::runtime_error("Not the right number of points in a leaf");
-			(*current)->points = sortList((*current)->npoints,x,pointlist,(*current)->points);
+			(*current)->points = sortList((*current)->npoints,x,&pointlist,(*current)->points);
 		}
 		newfirstpoint = (*current)->points;
   
@@ -839,10 +842,10 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 				pointlist_current = (*current)->points;
 				if((*pointlist_current)->x[dimension] > (*pointlist_current)->next->x[dimension]){
 					pointlist_current = (*current)->points;
-					bool attop = (*pointlist_current == pointlist->Top());
-					Point *point = pointlist->TakeOutCurrent(pointlist_current);
+					bool attop = (*pointlist_current == pointlist.Top());
+					Point *point = pointlist.TakeOutCurrent(pointlist_current);
           if(!attop) --pointlist_current;
-					pointlist->InsertPointAfterCurrent(pointlist_current,point);
+					pointlist.InsertPointAfterCurrent(pointlist_current,point);
 					(*current)->points = point->prev;
 					PosType tmp = x[1];
 					x[1] = x[0];
@@ -857,14 +860,14 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
             
             --pointlist_current;
           }
-          std::cout << std::setprecision(15) << "top bounderies  " << top->boundary_p1[0] << " " << top->boundary_p1[1] << "      " << top->boundary_p2[0] << " " << top->boundary_p2[1] << std::endl;
+          std::cout << std::setprecision(15) << "top bounderies  " << top_ptr->boundary_p1[0] << " " << top_ptr->boundary_p1[1] << "      " << top_ptr->boundary_p2[0] << " " << top_ptr->boundary_p2[1] << std::endl;
           throw std::runtime_error("Points in grid are the same");
         }
 			}else{
 				ERROR_MESSAGE();
 				std::cout << "This is prone to errors and this should never happen!" << std::endl;
 				exit(1);
-				(*current)->points = sortList((*current)->npoints,x,pointlist,(*current)->points);
+				(*current)->points = sortList((*current)->npoints,x,&pointlist,(*current)->points);
 			}
 			newfirstpoint=(*current)->points;
 		}
@@ -891,12 +894,12 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
     assert((*current)->boundary_p1[1] < (*current)->boundary_p2[1]);
 		delete[] x;
 		/*/  Test lines
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(int k = 0; k< (*current)->npoints ; ++k,MoveDownList(pointlist)){
 			assert(inbox((*pointlist_current)->x
 				,(*current)->boundary_p1,(*current)->boundary_p2));
 		}
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		///////////////////////////////////*/
 
 		assert(cut <= (*current)->npoints);
@@ -916,12 +919,12 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 			branch2->points = NULL;
 		}
 		/*/ Test lines
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(int k = 0; k< (*current)->npoints ; ++k,MoveDownList(pointlist)){
 			assert(inbox((*pointlist_current)->x
 				,(*current)->boundary_p1,(*current)->boundary_p2));
 		}
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		///////////////////////////////////*/
 
 		// use geometric center
@@ -936,7 +939,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 			printBranch(current);
 			printBranch(&branch1);
 			printBranch(&branch2);
-			pointlist->current = (*current)->points;
+			pointlist.current = (*current)->points;
 			for(i=0;i<(*current)->npoints;i++){
 				std::cout << (*pointlist_current)->x[0] << "  " << (*pointlist_current)->x[1] << std::endl;
 				MoveDownList(pointlist);
@@ -948,7 +951,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 			printBranch(current);
 			printBranch(&branch1);
 			printBranch(&branch2);
-			pointlist->current = (*current)->points;
+			pointlist.current = (*current)->points;
 			for(i=0;i<(*current)->npoints;i++){
 				std::cout << (*pointlist_current)->x[0] << "  " << (*pointlist_current)->x[1] << std::endl;
 				MoveDownList(pointlist);
@@ -960,7 +963,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 		/* centers of mass *
 
 	for(i=0;i<2;++i) branch1->center[i]=0;
-	pointlist->current=branch1->points;
+	pointlist.current=branch1->points;
 	for(i=0;i<cut; ++i){
 		branch1->center[0]+=(*pointlist_current)->x[0]/branch1->npoints;
 		branch1->center[1]+=(*pointlist_current)->x[1]/branch1->npoints;
@@ -968,7 +971,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 	}
 
 	for(i=0;i<2;++i) branch2->center[i]=0;
-	pointlist->current=branch2->points;
+	pointlist.current=branch2->points;
 	for(i=cut;i<(*current)->npoints; ++i){
 		branch2->center[0]+=(*pointlist_current)->x[0]/branch2->npoints;
 		branch2->center[1]+=(*pointlist_current)->x[1]/branch2->npoints;
@@ -986,17 +989,17 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 		assert((*current)->child2->child2 == NULL);
     
     /*/ Test lines /////////////////////////////////////////////////////////
-    pointlist->current = (*current)->child1->points;
+    pointlist.current = (*current)->child1->points;
     for(int k = 0; k< (*current)->child1->npoints - 1 ; ++k,MoveDownList(pointlist)){
       assert(inbox((*pointlist_current)->x
                    ,(*current)->child1->boundary_p1,(*current)->child1->boundary_p2));
     }
-    pointlist->current = (*current)->child2->points;
+    pointlist.current = (*current)->child2->points;
     for(int k = 0; k< (*current)->child2->npoints - 1 ; ++k,MoveDownList(pointlist)){
       assert(inbox((*pointlist_current)->x
                    ,(*current)->child2->boundary_p1,(*current)->child2->boundary_p2));
     }
-    pointlist->current = (*current)->points;
+    pointlist.current = (*current)->points;
     /////////////////////////////////////////////////////////////////////*/
 
 		assert( ((*current)->child1->npoints + (*current)->child2->npoints)
@@ -1004,10 +1007,10 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
 		assert((*current)->child1->npoints == 1 && (*current)->child2->npoints == 1);
 
 		/******* test lines ***********
-		pointlist->current = (*current)->points;
+		pointlist.current = (*current)->points;
 		for(int n=0;n<(*current)->npoints;++n){
 			assert((*pointlist_current)->leaf != current);
-			assert((*pointlist_current)->leaf == (*current)->child1 || pointlist->(*current)->leaf == (*current)->child2);
+			assert((*pointlist_current)->leaf == (*current)->child1 || pointlist.(*current)->leaf == (*current)->child2);
 			MoveDownList(pointlist);
 		}
 		/ *******************************************/
@@ -1043,7 +1046,7 @@ void TreeStruct::_AddPoint(TreeStruct::iterator &current){
  *  Reduces the size of the tree by removing points and branches that are no longer needed.
  *
  *
-*/
+*
 unsigned long Grid::PruneTrees(
 		PosType resolution  /// Maximum size of a cell to be removed.
 		,bool useSB   /// If true it will not remove any point that has a flux above fluxlimit.
@@ -1059,7 +1062,7 @@ unsigned long Grid::PruneTrees(
 	if(i_tree == NULL) return 0;
 	if(s_tree == NULL) return 0;
 
-	Ntmp = i_tree->pointlist->size();
+	Ntmp = i_tree->pointlist.size();
 
 	//i_tree->moveTop();
       
@@ -1092,37 +1095,21 @@ unsigned long Grid::PruneTrees(
 			}
 
 			 // remove all lower branches and make current a leaf
-			if(go && (*i_tree_current)->npoints > 1) count += FreeBranchesBelow(i_tree_current,i_tree,s_tree,trashkist);
-
+      if(go && (*i_tree_current)->npoints > 1){
+        
+        count += FreeBranchesBelow(i_tree_current,i_tree,s_tree,trashkist);
+      }
 		 }
 	 }while(i_tree_current.TreeWalkStep(true));
 
 	 // rebuild source tree from list.
 	 //if(count > 0) RebuildTreeFromList(s_tree);
 
-	 assert(count == (Ntmp - i_tree->pointlist->size()) );
-
-	 // Trash collection
-	 //CollectTrash(trashkist,true);
-
-/*	 if(count > 10 && trashlist->Npoints > 10){
-		 MoveToTopList(trashlist);
-		 do{
-			 // check to see if all points in the block have been removed from the trees
-			 for(i=0;i<trashlist->current->head;++i) if(trashlist->current[i].leaf != NULL) break;
-			 if(i == trashlist->current->head){
-				 if(AtTopList(trashlist)) go = false; else go = true;
-				 points = TakeOutCurrent(trashlist);
-				 //std::printf("freeing memory!\n");
-				 FreePointArray(points);
-			 }
-		 }while(MoveDownList(trashlist) && go);
-	 }
-*/
+	 assert(count == (Ntmp - i_tree->pointlist.size()) );
 
 	 return count;
 }
-
+*/
 
 
 /** 
@@ -1136,7 +1123,7 @@ unsigned long Grid::PruneTrees(
  *  that are within the outer circle.  Thus some points will be outside of the inner circle
  *  and some cells that are not removed may intersect with the outer circle.
  *
-*/
+*
 
 unsigned long Grid::PrunePointsOutside(
 		PosType resolution  /// Maximum size of a cell to be removed.
@@ -1167,27 +1154,6 @@ unsigned long Grid::PrunePointsOutside(
 	s_tree->PointsWithinKist_iter(y,r_in,r_out+resolution,subkist);
 
 	std::printf("number of points after PointsWithin %li\n",subkist->Nunits());
-	/*/*** test lines *******
-	if(subkist->Nunits() > 0){
-	MoveToTopKist(subkist);
-	i=0;
-	do{
-
-		point = getCurrentKist(subkist);
-		unit = subkist->current;
-
-		assert(pow(r_out+resolution,2) >= pow(point->x[0] - y[0],2) + pow(point->x[1] - y[1],2)
-				&& r_in*r_in <= pow(point->x[0] - y[0],2) + pow(point->x[1] - y[1],2));
-		j=i;
-		while(MoveDownKist(subkist)){
-			++j;
-			assert( getCurrentKist(subkist) != point );
-		}
-		subkist->current=unit;
-		++i;
-	}while(MoveDownKist(subkist));
-	}
-	/ *****************************************/
 
 	if(r_in > 0){
 		// take out points that are within inner circle
@@ -1216,20 +1182,6 @@ unsigned long Grid::PrunePointsOutside(
 
 	// move from source plane to image plane
 	subkist->TranformPlanes();
-
-	/*/*** test lines *******
-	MoveToTopKist(subkist);
-	do{
-		point = getCurrentKist(subkist);
-		unit = subkist->current;
-
-		while(MoveDownKist(subkist)){
-			assert( getCurrentKist(subkist) != point );
-		}
-		subkist->current=unit;
-
-	}while(MoveDownKist(subkist));
-	/ *****************************************/
 
       TreeStruct::iterator i_tree_current(i_tree);
       
@@ -1268,54 +1220,7 @@ unsigned long Grid::PrunePointsOutside(
 		if(go) subkist->Down();
 	}
 
-	/*/ ******** Test *************
-	MoveToTopKist(subkist);
-	do{
-		point = getCurrentKist(subkist);
-		unit = subkist->current;
 
-		while(MoveDownKist(subkist)){
-			assert( getCurrentKist(subkist) != point );
-		}
-		subkist->current=unit;
-
-	}while(MoveDownKist(subkist));
-
-	MoveToTopKist(subkist);
-	do{
-		i_tree->current = getCurrentKist(subkist)->leaf;
-		// Move up to nearest ancestor that was refined.
-		while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-		assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-	    unit = subkist->current;
-	    branch = i_tree->current;
-		while(MoveDownKist(subkist)){
-			assert(unit->data != getCurrentKist(subkist));
-			assert( !inbox(getCurrentKist(subkist)->x,(*i_tree_current)->boundary_p1,(*i_tree_current)->boundary_p2) );
-			assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-		}
-		subkist->current = unit;
-
-		branch = i_tree->current;
-		point = getCurrentKist(subkist);
-		unit = subkist->current;
-		while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-		assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-		branch2 = i_tree->current;
-		while(MoveDownKist(subkist)){
-			i_tree->current = getCurrentKist(subkist)->leaf;
-			while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-
-			assert(branch2 != i_tree->current);
-			assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-		}
-		subkist->current = unit;
-		i_tree->current = branch;
-
-
-	}while(MoveDownKist(subkist));
-
-	/ ******************************/
 
 	assert(subkist->AtBottom());
 
@@ -1328,16 +1233,6 @@ unsigned long Grid::PrunePointsOutside(
 
 		//assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
 
-		/*/************* Test lines ******************
-		point = getCurrentKist(subkist);
-	    unit = subkist->current;
-		MoveDownKist(subkist);
-		while(MoveDownKist(subkist)){
-			assert( !inbox(getCurrentKist(subkist)->x,(*i_tree_current)->boundary_p1,(*i_tree_current)->boundary_p2) );
-		}
-		subkist->current = unit;
-		/ *******************************************/
-
 		// make sure that none of the child points are outside the annulus
 		i_tree_pointlist_current = (*i_tree_current)->points;
 		for(i=0;i < Ngrid_block*Ngrid_block ; ++i,--i_tree_pointlist_current){
@@ -1349,66 +1244,7 @@ unsigned long Grid::PrunePointsOutside(
 		if(i == Ngrid_block*Ngrid_block){
 			branch = *i_tree_current;
 
-			/*/************* Test lines ******************
-			assert(branch == i_tree->current);
-
-			if(subkist->Nunits() > 1){
-				branch = i_tree->current;
-				point = getCurrentKist(subkist);
-				unit = subkist->current;
-				while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-				assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-				branch2 = i_tree->current;
-				while(MoveDownKist(subkist)){
-					i_tree->current = getCurrentKist(subkist)->leaf;
-					while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-
-					assert(branch2 != i_tree->current);
-					assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-				}
-				subkist->current = unit;
-				i_tree->current = branch;
-
-				point = getCurrentKist(subkist);
-				unit = subkist->current;
-				while(MoveDownKist(subkist)){
-					assert( !inbox(getCurrentKist(subkist)->x,(*i_tree_current)->boundary_p1,(*i_tree_current)->boundary_p2) );
-				}
-				subkist->current = unit;
-
-			}
-			/ *******************************************/
-
 			count += FreeBranchesBelow(i_tree_current,i_tree,s_tree,trashkist);
-
-			/*/************* Test lines ******************
-			assert(branch == i_tree->current);
-
-			if(subkist->Nunits() > 1){
-				branch = i_tree->current;
-				point = getCurrentKist(subkist);
-				unit = subkist->current;
-				while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-				branch2 = i_tree->current;
-				while(MoveDownKist(subkist)){
-					i_tree->current = getCurrentKist(subkist)->leaf;
-					while(!((*i_tree_current)->refined) && moveUp(i_tree) );
-
-					assert(branch2 != i_tree->current);
-					assert((*i_tree_current)->npoints == Ngrid_block*Ngrid_block);
-				}
-				subkist->current = unit;
-				i_tree->current = branch;
-
-				point = getCurrentKist(subkist);
-				unit = subkist->current;
-				while(MoveDownKist(subkist)){
-					assert( !inbox(getCurrentKist(subkist)->x,(*i_tree_current)->boundary_p1,(*i_tree_current)->boundary_p2) );
-				}
-				subkist->current = unit;
-
-			}
-			/ *******************************************/
 
 			assert((*i_tree_current)->npoints == 1);
 			assert( fabs( 1 - ((*i_tree_current)->boundary_p2[0] - (*i_tree_current)->boundary_p1[0])/(*i_tree_current)->points->gridsize) < 1.0e-4 );
@@ -1424,6 +1260,7 @@ unsigned long Grid::PrunePointsOutside(
 
 	return count;
 }
+*/
 
 /** 
  *  \brief Empty trash points.
@@ -1432,7 +1269,7 @@ unsigned long Grid::PrunePointsOutside(
  *  If check=true it will only free arrays where all the points have NULL leafs.
  *     check=false all the point arrays are freed..
  *
- */
+ *
 void CollectTrash(Kist<Point> * trashkist,bool check){
 	bool go;
 	unsigned long i,j,Ntmp;
@@ -1469,6 +1306,7 @@ void CollectTrash(Kist<Point> * trashkist,bool check){
 
 	 return;
 }
+*/
 
 /** 
  *
@@ -1479,7 +1317,7 @@ void CollectTrash(Kist<Point> * trashkist,bool check){
  * On exit: The i_tree->current is back to the original current.  If it is
  *          square it will have no children and contain one point.  The source
  *          points and branches are also removed.
- */
+ *
 
 unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_tree,TreeHndl s_tree,Kist<Point> * trashkist){
 
@@ -1514,17 +1352,17 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 
 			if((*i_tree_current) != headbranch) i_tree->RemoveLeafFromTree(i_tree_current,&Ntmp);
 
-			/***************** test line  **************************/
+			//***************** test line  **************************
 			assert(*i_tree_current == branch);
 			assert(i == (*i_tree_current)->npoints);
 
-			/***************** test line  **************************/
+			//***************** test line  **************************
 			assert((*i_tree_current)->points->next || (*i_tree_current)->points->prev);
 
 			// in a square leaf cell take out extra points that have come up from below
 
 			if(i_tree_current.atLeaf() && (*i_tree_current)->refined){
-					/***************** test line  **************************/
+					//***************** test line  **************************
 				assert((*i_tree_current)->points->next || (*i_tree_current)->points->prev);
 
 				//std::printf("  collecting points from removed leaves\n");
@@ -1548,7 +1386,7 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 						(*i_tree_pointlist_current)->image->gridsize = (*i_tree_pointlist_current)->gridsize;
 						(*i_tree_current)->points = (*i_tree_pointlist_current);
 
-						/***************** test line  **************************/
+						//***************** test line  **************************
 						assert((*i_tree_current)->points->next || (*i_tree_current)->points->prev);
 						assert((*i_tree_pointlist_current)->leaf == *i_tree_current);
 					}else{
@@ -1558,10 +1396,9 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 
 						// reduce the number of particles in all parent cells
 
-						/* First take points out of source plane
-						 *   This is tricky because they are not ordered into
-						 *   square blocks with 9 points in each.
-						 */
+						// First take points out of source plane
+						// *   This is tricky because they are not ordered into
+						// *   square blocks with 9 points in each.
 
 						// Take point out of the source plane
 
@@ -1594,7 +1431,7 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 						if(s_tree->getTop()->npoints > 0 && s_tree->getTop()->points == point) s_tree->getTop()->points = point->next;
 
 						s_tree_pointlist_current = point;
-						s_tree->pointlist->TakeOutCurrent(s_tree_pointlist_current);
+						s_tree->pointlist.TakeOutCurrent(s_tree_pointlist_current);
 						point->leaf = NULL;  // set leaf to NULL to indicate that point is no longer in tree
 						if(point->head) trashkist->InsertAfterCurrent(point);  // collect heads for later trash collection
 
@@ -1612,7 +1449,7 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 						assert(boxinbox(*i_tree_current,headbranch));
 
 						if((*i_tree_pointlist_current) == (*i_tree_current)->points) (*i_tree_current)->points = (*i_tree_pointlist_current)->next;
-						point = i_tree->pointlist->TakeOutCurrent(i_tree_pointlist_current);
+						point = i_tree->pointlist.TakeOutCurrent(i_tree_pointlist_current);
 						point->leaf = NULL;
 						// If point is a head of a memory block add it to trashlist for eventual trash collection
 						if(point->head){
@@ -1660,7 +1497,7 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 	//if(count) std::printf("FreeBranchesBelow() freed %li points and moved up %li points\n",count,count2);
     return count;
 }
-
+*/
 /** 
  * Removes current from a tree if it is a leaf.
  *   Will not remove root of tree.

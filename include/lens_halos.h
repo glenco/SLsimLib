@@ -946,10 +946,8 @@ private:
 /** \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated power-law mass profiles.
  *
- *The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
+ * The truncation is in 2d not 3d. \f$ \Sigma \propto r^{-\beta} \f$ so beta would usually be positive.
  *
- * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
- * The shear and kappa is always more accurate than the deflection.
  */
 class LensHaloPowerLaw: public LensHalo{
 public:
@@ -1303,6 +1301,9 @@ protected:
   std::complex<double> F(double r_e,double t,std::complex<double> z) const;
 };
 
+/*** \brief Truncated eliptical double power-law
+ 
+ */
 class LensHaloTEBPL : public LensHalo{
 public:
   
@@ -1401,9 +1402,9 @@ private:
 class LensHaloGaussian : public LensHalo{
 public:
 
-  LensHaloGaussian(float my_mass  /// total mass in Msun
+  LensHaloGaussian(float my_mass  /// total mass in Msun without cutoff
                 ,PosType my_zlens /// redshift
-                ,PosType r_scale  /// scale hight along the largest dimension
+                ,PosType r_scale  /// scale high so major axis of a kappa contour is rscale / sqrt(q) and minor axis is rscale sqrt(q)
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the horizontal axis and goes counter clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
@@ -1572,6 +1573,89 @@ protected:
 
 #ifdef ENABLE_EIGEN
 
+/// profiles that can be used in LensHaloMultiGauss
+namespace MultiGauss{
+
+struct PROFILE{
+  virtual double operator()(double r) = 0;
+  virtual double cum(double r) = 0;
+};
+
+struct POWERLAW : public PROFILE
+{
+  POWERLAW(
+           float g  // power-law index of surfcae density
+  ){
+    if(g <= -2){
+      std::cerr << "power-law index <= 2 give unbounded mass!" << std::endl;
+      throw std::runtime_error("bad mass");
+    }
+    gamma = g;
+  }
+  double operator()(double r){return pow(r,gamma);}
+  double cum(double r){return 2*PI*pow(r,gamma + 2)/(gamma+2);}
+  
+  void reset(float g){gamma = g;}
+  float gamma;
+};
+
+struct SERSIC : public PROFILE
+{
+  SERSIC(){reset(0,0);}
+  SERSIC(float nn,float Re){
+    reset(nn,Re);
+  }
+  double cum(double r){
+    return cum_norm * boost::math::tgamma_lower(2*n, bn*pow(r/re,t) );
+  }
+  double operator()(double r){ //check that these are consistant
+    return exp(-bn*pow(r/re,t) );
+  }
+  
+  void reset(float nn,float Re){
+    re = Re;
+    n = nn;
+    bn = 1.9992*n - 0.3271;  // approximation valid for 0.5 < n < 8
+    t = 1.0/n;
+    cum_norm = 2*PI*n/pow(bn,2*n)*re*re;
+  }
+  
+private:
+  float t;
+  float re;
+  float n;
+  float bn;
+  float cum_norm;
+};
+
+struct NFW: public PROFILE
+{
+  NFW(float rs):rs(rs){
+  }
+  double cum(double r){
+    double x =r/rs;
+    
+    double ans=log(x/2);
+    if(x==1.0) ans += 1.0;
+    if(x>1.0) ans += 2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);
+    if(x<1.0) ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);
+    
+    return 2*PI*rs*rs*ans;
+  }
+  double operator()(double r){ //check that these are consistant
+    double x =r/rs;
+    
+    if(x==1.0){return 1.0/3.0;}
+    if(x>1.0) return (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1);
+    return (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1);
+  }
+  
+  void reset(double Rs){rs = Rs;}
+  
+  float rs;
+};
+}
+
 /***
 \brief  A class for constructing and approximation to any elliptical profile out of a series of elliptical gaussians.
  
@@ -1586,15 +1670,14 @@ protected:
  and the eigen library.  They must be installed and linked using the cmake variable ENABLE_CERF = ON and ENABLE_EIGEN=ON
  */
 
-template <typename P>
 class LensHaloMultiGauss: public LensHalo{
   
 private:
   
   int nn; // number of gaussians
   int mm; // number of fit radii
-  double q;
-  double pa;
+  double q; // axis ratio
+  double pa; // position angle
   double mass_norm;
   double r_norm;
   std::vector<double> sigmas;
@@ -1603,13 +1686,15 @@ private:
   std::vector<LensHaloGaussian> gaussians;
   std::vector<double> A;
   float rms_error;
-  
+  //static int count;
+
 public:
   
+  /// This constructor calculates the Gaussian sizes and magnitudes appropriate for the input profile.  To avoid this use the other constructor.
   LensHaloMultiGauss(
                      double mass_norm  /// mass in Msun at radius Rnorm
                      ,double Rnorm       /// elliptical radius for normalization of mass
-                     ,P &profile  /// cumulative profile
+                     ,MultiGauss::PROFILE &profile  /// one of several profiles
                      ,int Ngaussians    /// number of gausians
                      ,int Nradii    /// number of radii they are fit to
                      ,PosType r_min
@@ -1620,91 +1705,36 @@ public:
                      ,const COSMOLOGY &cosmo  /// cosmology
                      ,float f=10 /// cuttoff radius in units of truncation radius
                      ,bool verbose = false
-  ):LensHalo(my_zlens,cosmo),nn(Ngaussians),mm(Nradii),q(my_fratio),pa(my_pa)
-  ,mass_norm(mass_norm),r_norm(Rnorm)
-  {
-
-   if(q <= 0){throw std::runtime_error("bad axis ratio"); }
-   if(nn > mm){
-      std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
-      throw std::runtime_error("");
-    }
-    
-    if(q > 1){
-      q = 1/q;
-    }
-    
-    double totalmass=0;
-    calc_masses_scales(profile,nn,mm,r_min,r_max,mass_norm,r_norm
-                       ,totalmass,sigmas,A,rms_error,verbose);
-    
-    LensHalo::setMass(totalmass);
+                     );
   
-    // construct Gaussian components
-    for(int i=0 ; i<nn ; ++i){
-      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
-    }
-    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
-    Rmax = Rsize = f*r_max;
-  }
-  
+  /// This constructor can be used when the scales and masses of the component Gaussians have already been calculated.
   LensHaloMultiGauss(
                      double my_mass_norm
                      ,double Rnorm
-                     ,double my_scale           // radial scale in units of the scale that was used to produce relative_scales
+                     ,double my_scale   // radial scale in units of the scale that was used to produce relative_scales
                      ,const std::vector<double> &relative_scales
                      ,const std::vector<double> &relative_masses
                      ,PosType my_zlens /// redshift
                      ,float my_fratio /// axis ratio
                      ,float my_pa     /// position angle, 0 has long axis along the veritical axis and goes clockwise
                      ,const COSMOLOGY &cosmo  /// cosmology
-                     ,float f=100 /// cuttoff radius in units of truncation radius
+                     ,float f=100 /// cuttoff radius in units of the larges scale
                      ,bool verbose = false
-  ):LensHalo(my_zlens,cosmo),q(my_fratio),pa(my_pa),mass_norm(my_mass_norm),r_norm(Rnorm)
+                     );
   
-  {
-
-    if(q <= 0){throw std::runtime_error("bad axis ratio"); }
-    if(relative_scales.size() != relative_masses.size()){
-      throw std::runtime_error("arrays are wrong size.");
-    }
-    nn = relative_scales.size();
-    q = abs(q);
-    if(q > 1){
-      q = 1/q;
-    }
-    mm=0;
-    
-    sigmas = relative_scales;
-    for(double &s : sigmas) s *= my_scale;
-
-    
-    A = relative_masses;
-    double tmp_mass = 0;
-    
-    for(int n=0 ; n<nn ; ++n){
-      tmp_mass += relative_masses[n] * ( 1 - exp(-r_norm*r_norm / 2 / (sigmas[n]*sigmas[n]) ) );
-    }
-    for(auto &a : A) a *= my_mass_norm/tmp_mass;
-
- 
-    double totalmass = 0;
-    for(auto a : A) totalmass += a;
-    LensHalo::setMass(totalmass);
   
-    // construct Gaussian components
-    for(int i=0 ; i<nn ; ++i){
-      gaussians.emplace_back(A[i],my_zlens,sigmas[i],q,0,cosmo,f);
-    }
-    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
-    Rmax = Rsize = f*sigmas.back();
-  }
 
+  LensHaloMultiGauss(LensHaloMultiGauss &&halo);
+  LensHaloMultiGauss(const LensHaloMultiGauss &halo);
+
+  LensHaloMultiGauss & operator=(const LensHaloMultiGauss &&halo);
+  LensHaloMultiGauss & operator=(const LensHaloMultiGauss &halo);
+  
+  ~LensHaloMultiGauss(){};//--LensHaloMultiGauss::count;}
+  
   /// reset the position angle
-  void set_pa(double my_pa){
-    pa = my_pa;
-    Rotation = std::complex<double>(cos(my_pa),sin(my_pa));
-  }
+  void set_pa(double my_pa);
+  
   /***
     This is a static function that can be used to find the masses and scales for the gaussians which can
    then be fed into the scond constructor with a rescaling.  This avoids having to recalculate them when the same profile is used multiple times.
@@ -1716,12 +1746,13 @@ public:
    double mass_out;
    float rms_error;
    std::vector<double> scales,masses;
-   LensHaloMultiGauss<MultiGauss::sersic>::calc_masses_scales(profile, 13, 25, 0.01,3,0.5,1,mass_out,scales,masses,rms_error);
-   LensHaloMultiGauss<MultiGauss::sersic> halo1(mass,rscale,scales,masses,zl,q,-pa,cosmo);
-   LensHaloMultiGauss<MultiGauss::sersic> halo2(mass/2,0.1*rscale,scales,masses,zl2,q2,-pa2,cosmo);
+   LensHaloMultiGauss::calc_masses_scales(profile, 13, 25, 0.01,3,0.5,1,mass_out,scales,masses,rms_error);
+   LensHaloMultiGauss halo1(mass,rscale,scales,masses,zl,q,-pa,cosmo);
+   LensHaloMultiGauss halo2(mass/2,0.1*rscale,scales,masses,zl2,q2,-pa2,cosmo);
    <\p>
    */
-  static void calc_masses_scales(P &profile  /// cumulative profile
+  
+  static void calc_masses_scales(MultiGauss::PROFILE &profile  /// cumulative profile
                                  ,int Ngaussians    /// number of gausians
                                  ,int Nradii    /// number of radii they are fit to
                                  ,PosType r_min
@@ -1786,7 +1817,7 @@ public:
       //M = M.inverse();
       a = M.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(v);
       
-      if(verbose) std::cout << "test " << std::endl << M*a << std::endl;
+      if(verbose) std::cout << "test in LensHaloMultiGauss::calc_masses_scales()" << std::endl << M*a << std::endl;
     }
     
     // tests
@@ -1838,143 +1869,26 @@ public:
     for(int n=0 ; n<Ngaussians ; ++n) totalmass_out += masses[n];
   }
   
-  double profile(double r){
-    double sigma=0;
-    for(int n=0 ; n < nn ; ++n){
-      sigma += A[n] * exp(-r*r / 2 / sigmas[n] /sigmas[n]) /2/PI/sigmas[n] /sigmas[n];
-    }
-    
-    return sigma;
-  }
+  double profile(double r);
   
   /// mass within elliptical radius
-  double mass_cum(double r){
-    double mass_tmp=0;
-    for(int n=0 ; n<nn ; ++n) mass_tmp += A[n]*( 1 - exp(-r*r / 2 / sigmas[n] /sigmas[n]) );
-    
-    return mass_tmp;
-  }
+  double mass_cum(double r);
   
   /// returns the RMS relative error for the fit points in the profile
-  float error(){
-    return rms_error;
-  }
+  float error();
   
-  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1){
-    
-    std::complex<PosType> z(xcm[0],xcm[1]);
-    
-    if(force_point(alpha,kappa,gamma,phi,xcm,std::norm(z)
-                   ,subtract_point,screening)) return;
-    
-    z = z * std::conj(Rotation);
-    
-    std::complex<PosType> a=0,g=0;
-    std::complex<PosType> at,gt;
-    double kappat;
-    
-    for(auto &h : gaussians){
-      h.deflection(z,at,gt,kappat);
-      a += at;
-      g += gt;
-      *kappa += kappat;
-    }
-    
-    a = std::conj(a) * Rotation;
-    g = std::conj(g) * Rotation * Rotation;
-    
-    alpha[0] += a.real();
-    alpha[1] += a.imag();
-    gamma[0] += g.real();
-    gamma[1] += g.imag();
-    
-    assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
-    assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
-  }
+  void force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point=false,PosType screening = 1);
   
 
 };
 
-/// profiles that can be used in LensHeloMultiGauss
-namespace MultiGauss{
-struct POWERLAW{
 
-  POWERLAW(
-           float g  // power-law index of surfcae density
-  ){
-    if(g <= -2){
-      std::cerr << "power-law index <= 2 give unbounded mass!" << std::endl;
-      throw std::runtime_error("bad mass");
-    }
-    gamma = g;
-  }
-  double operator()(double r){return pow(r,gamma);}
-  double cum(double r){return 2*PI*pow(r,gamma + 2)/(gamma+2);}
-  
-  void reset(float g){gamma = g;}
-  float gamma;
-};
-
-struct SERSIC{
-  SERSIC(){reset(0,0);}
-  SERSIC(float nn,float Re){
-     reset(nn,Re);
-   }
-  double cum(double r){
-    return cum_norm * boost::math::tgamma_lower(2*n, bn*pow(r/re,t) );
-  }
-  double operator()(double r){ //check that these are consistant
-    return exp(-bn*pow(r/re,t) );
-  }
-  
-  void reset(float nn,float Re){
-    re = Re;
-    n = nn;
-    bn = 1.9992*n - 0.3271;  // approximation valid for 0.5 < n < 8
-    t = 1.0/n;
-    cum_norm = 2*PI*n/pow(bn,2*n)*re*re;
-  }
-  
-private:
-  float t;
-  float re;
-  float n;
-  float bn;
-  float cum_norm;
-};
-
-struct NFW{
-  NFW(float rs):rs(rs){
-  }
-  double cum(double r){
-    double x =r/rs;
-    
-    double ans=log(x/2);
-    if(x==1.0) ans += 1.0;
-    if(x>1.0) ans += 2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1);
-    if(x<1.0) ans += 2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x);
-    
-    return 2*PI*rs*rs*ans;
-  }
-  double operator()(double r){ //check that these are consistant
-    double x =r/rs;
-    
-    if(x==1.0){return 1.0/3.0;}
-    if(x>1.0) return (1-2*atan(sqrt((x-1)/(x+1)))/sqrt(x*x-1))/(x*x-1);
-    return (1-2*atanh(sqrt((1-x)/(x+1)))/sqrt(1-x*x))/(x*x-1);
-  }
-  
-  void reset(double Rs){rs = Rs;}
-  
-  float rs;
-};
-}
 #endif // eigen
 
 #endif // libcerf
 
 
-/**
+/*
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a halos
  * with truncated Hernquist mass profiles.
@@ -2052,7 +1966,7 @@ private:
   PosType gmax;
 };
 
-/** 
+/*
  *
  * \brief A class for calculating the deflection, kappa and gamma caused by a collection of halos
  * with truncated Jaffe mass profiles.
@@ -2166,6 +2080,5 @@ typedef LensHalo* LensHaloHndl;
 
 //bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2);//{return (lh1->getZlens() < lh2->getZlens());}
 //bool LensHaloZcompare(LensHalo lh1,LensHalo lh2){return (lh1.getZlens() < lh2.getZlens());}
-
 
 #endif /* LENS_HALOS_H_ */

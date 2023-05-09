@@ -28,12 +28,12 @@ struct Grid{
   Grid(LensHndl lens ,unsigned long Nx ,const PosType center[2] ,PosType rangeX ,PosType rangeY);
   ~Grid();
   
-  void ReInitializeGrid(LensHndl lens);
-  void ReShoot(LensHndl lens);
+  Grid ReInitialize(LensHndl lens);
+  //void ReShoot(LensHndl lens);
   void zoom(LensHndl lens,double *center,double scale,Branch *top = NULL);
   
-  unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
-  unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
+  //unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
+  //unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
   
   double RefreshSurfaceBrightnesses(SourceHndl source);
   
@@ -125,10 +125,25 @@ struct Grid{
                    ,unsigned long &Nimagepoints
                    );
  
+  void map_images(
+                        Lens* lens
+                        ,Source *source
+                        ,int *Nimages
+                        ,std::vector<ImageInfo> &imageinfo
+                        ,PosType xmax
+                        ,PosType xmin
+                        ,PosType initial_size
+                        ,ExitCriterion criterion
+                        ,bool FindCenter
+                        ,bool divide_images
+                        );
  
   Grid(Grid &&grid){
     *this = std::move(grid);
   }
+  
+  Grid operator=(Grid &grid) = delete;
+  Grid(Grid &grid) =  delete;
   
   Grid & operator=(Grid &&grid){
     assert(&grid != this);
@@ -139,8 +154,8 @@ struct Grid{
     grid.s_tree = nullptr;
     neighbors = grid.neighbors;
     grid.neighbors = nullptr;
-    trashkist = grid.trashkist;
-    grid.trashkist = nullptr;
+    //trashkist = grid.trashkist;
+    //grid.trashkist = nullptr;
 
     Ngrid_init = grid.Ngrid_init;
     Ngrid_init2 = grid.Ngrid_init2;
@@ -149,6 +164,9 @@ struct Grid{
     maglimit = grid.maglimit;
     pointID = grid.pointID;
     axisratio = grid.axisratio;
+    
+    point_factory.clear();
+    point_factory=std::move(grid.point_factory);
     
     return *this;
   }
@@ -174,7 +192,7 @@ struct Grid{
   /// one dimensional number of cells a cell will be divided into on each refinement step
   int Ngrid_block;
   bool initialized;
-  Kist<Point> * trashkist;
+  //Kist<Point> * trashkist;
   
   double maglimit;
   Kist<Point> * neighbors;
@@ -187,16 +205,21 @@ struct Grid{
   
   unsigned long pointID;
   PosType axisratio;
-  //void writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val);
+
   void writePixelMapUniform_(Point *head,size_t N,PixelMap *map,LensingVariable val);
 
+  // cluge to make compatible with old method of producing points
+  Point * NewPointArray(size_t N){
+    Point * p = point_factory(N);
+    p[0].head = N;
+    for(size_t i=1; i < N ; ++i) p[i].head = 0;
+    return p;
+  }
+  MemmoryBank<Point> point_factory;
   static std::mutex grid_mutex;
 };
 
 typedef struct Grid* GridHndl;
-
-/// enumerates the types of critical curves. ND is "not defined".
-enum class CritType {ND,radial,tangential,pseudo};
 
 /// converts CritType into descriptive string
 std::string to_string(CritType crit);
@@ -218,6 +241,7 @@ namespace ImageFinding{
       z_source = 0.0;
       type = CritType::ND;
       caustic_intersections = -1;
+      touches_edge = false;
     };
     
     CriticalCurve(const CriticalCurve &p){
@@ -235,6 +259,7 @@ namespace ImageFinding{
       z_source = p.z_source;
       type = p.type;
       caustic_intersections = p.caustic_intersections;
+      touches_edge = p.touches_edge;
    }
 
     CriticalCurve & operator=(const CriticalCurve &p){
@@ -254,11 +279,11 @@ namespace ImageFinding{
       z_source = p.z_source;
       type = p.type;
       caustic_intersections = p.caustic_intersections;
+      touches_edge = p.touches_edge;
       return *this;
     }
     
     std::vector<RAY> critcurve;
-    //std::vector<Point_2d> critical_curve;
     std::vector<Point_2d> caustic_curve_outline;
     std::vector<Point_2d> caustic_curve_intersecting;
     std::vector<Point_2d> ellipse_curve;
@@ -317,7 +342,7 @@ namespace ImageFinding{
     
     /// return true if x is inside or on the border of the critical curve
     bool inCriticalCurve(Point_2d &x){
-      return Utilities::inhull(x.x,critcurve);
+      return Utilities::inhull<RAY>(x.x,critcurve);
     }
 
     /// return true if x is strictly inside (entirely) the caustic curve
@@ -458,6 +483,7 @@ namespace ImageFinding{
   
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
                  ,double resolution,double invmag_min = 0.0,bool verbose = false,bool test=false);
+  void find_crit(Lens &lens,GridMap &gridmap,std::vector<CriticalCurve> &crtcurves,bool verbose = false);
  
   //void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
   //                ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);

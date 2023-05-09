@@ -9,11 +9,6 @@
  */
 #include "slsimlib.h"
 
-/// sets everything to zero
-//SourceOverzier::SourceOverzier()
-//: haloID(0)
-//{
-//}
 
 SourceOverzier::SourceOverzier(
 		PosType my_mag          /// Total magnitude
@@ -25,8 +20,10 @@ SourceOverzier::SourceOverzier(
 		,unsigned long my_id          ///          id number
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
-		):Source(0,Point_2d(0,0),my_z),
- spheroid(my_mag_bulge,my_Reff,0,4,(1-0.5*sin(my_inclination)),my_z)
+    ,double zeropoint       /// magnitude zero point
+
+		):Source(0,Point_2d(0,0),my_z,-1,zeropoint),
+ spheroid(my_mag_bulge,my_Reff,0,4,(1-0.5*sin(my_inclination)),my_z,zeropoint)
 {
 
       //std::cout << "SourceOverzier constructor" << std::endl;
@@ -49,9 +46,8 @@ SourceOverzier::~SourceOverzier()
 }
 
 SourceOverzier::SourceOverzier(const SourceOverzier &s)
-:Source(s){
-  
-  spheroid = s.spheroid;
+:Source(s),spheroid(s.spheroid){
+  //spheroid = s.spheroid;
   current = s.current;
   sedtype = s.sedtype;
 }
@@ -63,13 +59,14 @@ SourceOverzier& SourceOverzier::operator=(const SourceOverzier &s){
   spheroid = s.spheroid;
   current = s.current;
   sedtype = s.sedtype;
+
   return *this;
 }
 
 /// Sets internal variables.  If default constructor is used this must be called before the surface brightness function.
 void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Reff,double my_Rdisk,double my_PA,double incl,unsigned long my_id,double my_z,const double *my_theta){
 
-	haloID = my_id;
+  setID(my_id);
 
   current.cosPA = cos(my_PA);
   current.sinPA = sin(my_PA);
@@ -176,8 +173,20 @@ void SourceOverzier::renormalize_current(){
 }
 
 
-SourceOverzierPlus::SourceOverzierPlus(PosType my_mag,PosType my_mag_bulge,PosType my_Reff,PosType my_Rdisk,PosType my_PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,Utilities::RandomNumbers_NR &ran):
-SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
+SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
+                                       ,PosType my_mag_bulge
+                                       ,PosType my_Reff
+                                       ,PosType my_Rdisk
+                                       ,PosType my_PA
+                                       ,PosType inclination
+                                       ,unsigned long my_id
+                                       ,PosType my_z
+                                       ,const PosType *theta
+                                       ,PosType zeropoint
+                                       ,Utilities::RandomNumbers_NR &ran
+                                       ):
+SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0,zeropoint)
+,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -190,12 +199,13 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
   disk_phase = PI*ran(); // add phase of arms
   Ad = minA + (maxA-minA)*ran();
   
-  // extra cersic component
+  // extra sersic component
   //double index = 4 + 3*(ran()-0.5)*2;
   
   //double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
   //double index = ran() + 3.5 ;
   double index = 3.5 + 0.5*ran();  // ????
+  //double index = 4;  // ????
 
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
@@ -226,7 +236,7 @@ SourceOverzierPlus::~SourceOverzierPlus(){
 SourceOverzierPlus::SourceOverzierPlus(const SourceOverzierPlus &p):
 SourceOverzier(p),
 Narms(p.Narms),Ad(p.Ad),mctalpha(p.mctalpha),arm_alpha(p.arm_alpha)
-,disk_phase(p.disk_phase),PA(p.PA),cosPA(p.cosPA),sinPA(p.sinPA),cosi(p.cosi)
+,disk_phase(p.disk_phase),PA(p.PA),cosPA(p.cosPA),sinPA(p.sinPA),cosi(p.cosi),spheroid(p.spheroid)
 {
   //delete spheroid;
   /*spheroid = new SourceSersic(p.spheroid->getMag(),p.getReff()
@@ -441,4 +451,11 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   //SourceOverzier::printSource();
 }
 
+void SourceOverzierPlus::setPA(double pa){
+  
+  PA = pa;
+  cosPA = cos(PA);
+  sinPA = sin(-PA);
 
+  spheroid.setPA(pa);
+}
