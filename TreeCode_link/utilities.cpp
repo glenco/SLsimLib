@@ -15,7 +15,7 @@ void LinkToSourcePoints(Point *i_points,Point *s_points,unsigned long Npoints){
   //Point *s_points;
   long i;
 
-  if(Npoints < 1) return NULL;
+  if(Npoints < 1) return;
 
   //s_points = NewPointArray(Npoints);
 
