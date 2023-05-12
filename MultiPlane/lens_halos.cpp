@@ -2589,6 +2589,9 @@ PosType LensHalo::DALPHAYDM::operator()(PosType m){
   return m*kappa/(ap*bp*bp*bp*p2); // integrand of equation (29) in Schramm 1990
 }
 
+#ifdef ENABLE_EIGEN
+#ifdef ENABLE_CERF
+
 //int LensHaloMultiGauss::count = 0;
 
 LensHaloMultiGauss::LensHaloMultiGauss(
@@ -2841,6 +2844,8 @@ void LensHaloMultiGauss::force_halo(PosType *alpha,KappaType *kappa,KappaType *g
   assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
 }
 
+#endif // eigen
+#endif // libcerf
 
 //bool LensHaloZcompare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}
 //bool compare(LensHalo *lh1,LensHalo *lh2){return (lh1->getZlens() < lh2->getZlens());}
