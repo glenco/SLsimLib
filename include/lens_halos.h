@@ -1882,11 +1882,8 @@ public:
 
 };
 
-
 #endif // eigen
-
 #endif // libcerf
-
 
 /*
  *
