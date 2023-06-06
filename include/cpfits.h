@@ -190,7 +190,38 @@ public:
     return fits_read_key(fptr,TLONG,keyname.c_str(),
                          &value,NULL,&status);
   }
+  int readHeader(std::vector<std::string> &headercards,bool verbose=false){
+    std::lock_guard<std::mutex> hold(mutex_lock);
+    int nkeys,status=0,hdupos;
+    char card[FLEN_CARD];
+    
+    headercards.clear();
+    fits_get_hdu_num(fptr, &hdupos);  /* Get the current HDU position */
+    fits_get_hdrspace(fptr, &nkeys, NULL, &status); // get # of keywords
+    
+    if(verbose) printf("Header listing for HDU #%d:\n", hdupos);
 
+    for (int ii = 1; ii <= nkeys; ii++) { // Read and print each keywords
+      if (fits_read_record(fptr, ii, card, &status))break;
+      if(verbose) printf("%s\n", card);
+      headercards.push_back(card);
+    }
+    if(verbose) printf("END\n\n");  // terminate listing with END
+
+      //fits_movrel_hdu(fptr, 1, NULL, &status);  /* try to move to next HDU */
+    return status;
+  }
+
+  /// print all header information
+  int printHeader(){
+    std::vector<std::string> cards;
+    return readHeader(cards,true);
+  }
+  
+   
+  //int fits_parse_value(char *card, char *value, char *comment, int *status)
+  //int fits_get_keytype(char *value, char *dtype, int *status)
+  
 protected:
   int Ndims;
   std::vector<long> sizes;
@@ -571,6 +602,22 @@ public:
                            &value,comment.c_str(),&status);
   }
 
+  /// write many header cards at once
+  int writeHeader(std::vector<std::string> &cards){
+    int status = 0;
+    for(auto &str : cards){
+      fits_write_record(fptr, str.c_str(), &status);
+    }
+    return status;
+  }
+  
+  /// copy all the header information from the input file to the output file
+  void copyHeader(CPFITS_BASE &input){
+    std::vector<std::string> cards;
+    input.readHeader(cards);
+    writeHeader(cards);
+  }
+
 };
 
 /// read only fits file interface
@@ -593,14 +640,18 @@ private:
   int get_colnames(std::vector<std::string> &names){
     
     int status=0;
-    char colname[20];
+    char colname[100];
     std::string c = "*";
     names.resize(Ncol);
     int colnum;
     
-    for(int i=0;i<Ncol;++i){
+    //for(int i=0;i<Ncol;++i){
+    //for(int i=0;i<10;++i){
+    for(auto &name : names){
       fits_get_colname(fptr,CASESEN,(char*)(c.c_str()),colname, &colnum, &status);
-      names[i] = colname;
+      //names[i] = colname;
+      name = colname;
+      //std::cout << i << " " << names[i] << "  " << status << std::endl;
     }
     
     return status;

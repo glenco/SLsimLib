@@ -1038,6 +1038,22 @@ void PixelMap::printFITS(std::string filename
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }
 }
+void PixelMap::printFITS(std::string filename
+                         ,std::vector<std::string> &headercards)
+{
+
+  if(filename.empty())
+    throw std::invalid_argument("Please enter a valid filename for the FITS file output");
+  
+  CPFITS_WRITE cpfits(filename,false);
+  
+  std::vector<long> naxex(2);
+  naxex[0] = Nx;
+  naxex[1] = Ny;
+
+  cpfits.write_image(map,naxex);
+  cpfits.writeHeader(headercards);
+}
 
 /** 
  *

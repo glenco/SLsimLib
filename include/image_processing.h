@@ -183,6 +183,10 @@ public:
 	void printASCIItoFile(std::string filename) const;
 	void printFITS(std::string filename,bool Xflip = false, bool verbose = false);
   void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
+  /// This overides all header information and relaces it with the inputs. Meant for making a modified copy
+  void printFITS(std::string filename  /// file to create
+                ,std::vector<std::string> &headercards // header information in cfitsio "card" format
+                 );
 
 	void smooth(double sigma);
 
