@@ -79,7 +79,8 @@ struct TreeNBStruct{
  * Most of the code in TreeNB.c and TreeDriverNB.c is duplicated here as private
  * methods and a few public ones.
  *
- * PType must have a dereferencing operator [] that gives the value to be sorterd
+ * PType must have a dereferencing operator [] that gives the value to be sorterd.
+ *  THIS CAN ONLY BE IN 2 OR 3 DIMENSIONS.
  */
 template<typename PType>
 class TreeSimple {

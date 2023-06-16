@@ -34,7 +34,7 @@ public:
                   ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
                 ,D *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
-  ):Nbranches(0)
+  ):Nbranches(0),realray(dimensions)
   {
     index.resize(Npoints);
     for(IndexType ii=0;ii<Npoints;++ii) index[ii] = ii;
@@ -209,7 +209,7 @@ protected:
 	IndexType Nparticles;
 	bool median_cut;
 	int Nbucket;
-	D realray[2];
+	Point_nd<D> realray;
 	T *points;
   D *(*position)(T&);
   
@@ -252,10 +252,15 @@ protected:
 		return (current->child1 == NULL)*(current->child2 == NULL);
 	}
 	inline bool inbox(const D* center,D *p1,D *p2){
-        return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
+    int tt=1;
+    for(int i=0;i<Ndimensions;++i) tt *= (center[i]>=p1[i]);
+    
+    return tt;
+//        return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
 	}
 
 
+  int cutbox(const D *center,D *p1,D *p2,float rmax);
 };
 /*
 template <class T>
@@ -322,18 +327,18 @@ void TreeSimpleVec<T,D>::PointsWithinCircle(
     
     neighborlist.clear();
     
-    realray[0]=ray[0];
-    realray[1]=ray[1];
+    //realray[0]=ray[0];
+    //realray[1]=ray[1];
+    for(int j=0 ; j<Ndimensions ; ++j) realray[j]=ray[j];
     
     //cout << "ray = " << ray[0] << " " << ray[1] << " rmax = " << rmax << endl;
     moveTop();
     if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
         
-        ray[0] = (ray[0] > current->boundary_p1[0]) ? ray[0] : current->boundary_p1[0];
-        ray[0] = (ray[0] < current->boundary_p2[0]) ? ray[0] : current->boundary_p2[0];
-        
-        ray[1] = (ray[1] > current->boundary_p1[1]) ? ray[1] : current->boundary_p1[1];
-        ray[1] = (ray[1] < current->boundary_p2[1]) ? ray[1] : current->boundary_p2[1];
+      for(int i=0 ; i<Ndimensions ; ++i){
+        ray[i] = (ray[i] > current->boundary_p1[i]) ? ray[i] : current->boundary_p1[i];
+        ray[i] = (ray[i] < current->boundary_p2[i]) ? ray[i] : current->boundary_p2[i];
+      }
       
     }
     incell=1;
@@ -361,17 +366,18 @@ void TreeSimpleVec<T,D>::_PointsWithin(D *ray,float *rmax,std::list <unsigned lo
             //cout << "   In box" << endl;
             
             // found the box small enough
-            if( Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax)==1
-               || atLeaf() ){
-                //cout << "   Found cell" << endl;
+            //if( cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax)==1
+            //   || atLeaf() ){
+            if( atLeaf() ){
+               //cout << "   Found cell" << endl;
                 
                 // whole box in circle or a leaf with ray in it
                 
                 incell=0;
                 
-                ray[0]=realray[0];
-                ray[1]=realray[1];
-                
+                //ray[0]=realray[0];
+                //ray[1]=realray[1];
+                for(int j=0;j<Ndimensions;++j) ray[j]=realray[j];
                 if( atLeaf() ){
                     // if leaf calculate the distance to all the points in cell
                     for(i=0;i<current->nparticles;++i){
@@ -420,7 +426,7 @@ void TreeSimpleVec<T,D>::_PointsWithin(D *ray,float *rmax,std::list <unsigned lo
         
     }else{    // found cell
         
-        pass=Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax);
+        pass = cutbox(ray,current->boundary_p1,current->boundary_p2,*rmax);
         // does radius cut into the box
         if( pass ){
             //cout << "   Cell found searching other cells" << endl;
@@ -432,11 +438,11 @@ void TreeSimpleVec<T,D>::_PointsWithin(D *ray,float *rmax,std::list <unsigned lo
                         neighborlist.push_back(current->branch_index[i]);
                     }
                 }
-            }else if(pass==1){ // whole box is inside radius
+            //}else if(pass==1){ // whole box is inside radius
                 
-                for(i=0;i<current->nparticles;++i){
-                    neighborlist.push_back(current->branch_index[i]);
-                }
+            //    for(i=0;i<current->nparticles;++i){
+            //        neighborlist.push_back(current->branch_index[i]); ?????
+            //    }
             }else{
                 if(current->child1 !=NULL){
                     moveToChild(1);
@@ -503,7 +509,7 @@ void TreeSimpleVec<T,D>::NearestNeighbors(
         neighbors[i] = 0;
     }
     
-    for(j=0;j<Ndimensions;++j) realray[j]=ray[j];
+    for(int j=0;j<Ndimensions;++j) realray[j]=ray[j];
     
     moveTop();
     if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
@@ -535,7 +541,7 @@ void TreeSimpleVec<T,D>::NearestNeighbor(
                                      ){
     IndexType i;
     //static int count=0,oldNneighbors=-1;
-    short j;
+    //short j;
     
     D rneighbors[1+Nbucket];
     IndexType neighbors[1+Nbucket];
@@ -552,13 +558,13 @@ void TreeSimpleVec<T,D>::NearestNeighbor(
         neighbors[i] = 0;
     }
     
-    for(j=0;j<Ndimensions;++j) realray[j]=ray[j];
+    for(int j=0;j<Ndimensions;++j) realray.x[j]=ray[j];
     
     moveTop();
     if( inbox(ray,current->boundary_p1,current->boundary_p2) == 0 ){
         //ERROR_MESSAGE();
         
-        for(j=0;j<Ndimensions;++j){
+        for(int j=0;j<Ndimensions;++j){
           ray[j] = (ray[j] > current->boundary_p1[j]) ? ray[j] : current->boundary_p1[j];
           ray[j] = (ray[j] < current->boundary_p2[j]) ? ray[j] : current->boundary_p2[j];
         }
@@ -631,8 +637,8 @@ void TreeSimpleVec<T,D>::_NearestNeighbors(D *ray,int Nneighbors,unsigned long *
             }
         }
     }else{ // found cell
-		/* does radius cut into the box */
-        if( Utilities::cutbox(ray,current->boundary_p1,current->boundary_p2,rneighbors[Nneighbors-1]) ){
+		// does radius cut into the box
+        if( cutbox(ray,current->boundary_p1,current->boundary_p2,rneighbors[Nneighbors-1]) ){
             
             if( (current->child1 == NULL)*(current->child2 == NULL)){  /* leaf case */
                 
@@ -1089,5 +1095,18 @@ bool TreeSimpleVec<T,D>::TreeWalkStep(bool allowDescent){
 	}
 	return false;
 }
-    
+
+// = 0 if not possibly intersection
+// > 0 sphere might intersect box
+// = 2 sphere completely inside box
+template <typename T,typename D>
+int TreeSimpleVec<T,D>::cutbox(const D *center,D *p1,D *p2,float rmax){
+  int intersection = 1,inside=1;
+  for(int i=0 ; i<Ndimensions ; ++i){
+    intersection *= ( (center[i] + rmax) > p1[i] )*( (center[i] - rmax) < p2[i] );
+    inside *= ( (center[i] - rmax) > p1[i] )*( (center[i] + rmax) < p2[i] );
+  }
+  
+  return intersection + inside;
+}
 #endif /* SIMP_TREE_V_ */

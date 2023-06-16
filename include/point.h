@@ -1151,4 +1151,94 @@ private:
   LIST &operator=(const LIST &p);
 }
  */
+
+/** /brief N-dimensional point
+ 
+ This is a rapper for a n-dimenstional vector that adds arithmetic methods
+ */
+template <typename T = PosType>
+struct Point_nd{
+  Point_nd():dim(0){ }
+  Point_nd(int d):x(d,0),dim(d){ }
+  
+  void setD(int d){
+    dim=d;
+    x.resize(dim);
+  }
+  
+  ~Point_nd(){};
+  
+  Point_nd(const Point_nd &p){
+    for(int i=0 ; i<dim ; ++i ) x[i] = p.x[i];
+  }
+  
+  Point_nd<T> & operator=(const Point_nd<T> &p){
+    if(this == &p) return *this;
+    for(int i=0 ; i<dim ; ++i ) x[i] = p.x[i];
+    return *this;
+  }
+  Point_nd<T>  operator+(const Point_nd<T> &p) const{
+    Point_nd<T> tmp(dim);
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i] + p.x[i];
+    return tmp;
+  }
+  Point_nd<T>  operator-(const Point_nd<T> &p) const{
+    Point_nd<T> tmp(dim);
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i] - p.x[i];
+    return tmp;
+  }
+  Point_nd<T> & operator+=(const Point_nd<T> &p){
+    for(int i=0 ; i<dim ; ++i ) x[i] += p.x[i];
+    return *this;
+  }
+  Point_nd<T> & operator-=(const Point_nd<T> &p){
+    for(int i=0 ; i<dim ; ++i ) x[i] -= p.x[i];
+    return *this;
+  }
+  Point_nd<T> & operator/=(T value){
+    for(int i=0 ; i<dim ; ++i ) x[i]/=value;
+    return *this;
+  }
+  Point_nd<T> operator/(T value) const{
+    Point_nd<T> tmp;
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i]/value;
+    return tmp;
+  }
+  Point_nd<T> & operator*=(T value){
+    for(int i=0 ; i<dim ; ++i ) x[i] *=value;
+    return *this;
+  }
+  Point_nd operator*(PosType value) const{
+    Point_nd<T> tmp;
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i]*value;
+    return tmp;
+  }
+  
+  /// scalar product
+  T operator*(const Point_nd<T> &p) const {
+    T ans = 0;
+    for(int i=0 ; i<dim ; ++i ) ans += x[i]*p.x[i];
+    return ans;
+  }
+
+  /// length
+  T length_sqr() const{
+    T ans = 0;
+    for(int i=0 ; i<dim ; ++i ) ans += x[i]*x[i];
+    return ans;
+  }
+
+  T length() const{
+    return sqrt(length_sqr());
+  }
+  
+  T* data(){return x.data();}
+  
+  std::vector<T> x;
+  T & operator[](size_t i){return x[i];}
+  const T &  operator[](size_t i) const {return x[i];}
+private:
+  int dim;
+};
+
 #endif

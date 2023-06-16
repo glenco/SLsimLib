@@ -2337,6 +2337,7 @@ void PixelMap::copy_in(
     return;
   }
   double res_ratio = resolution / pmap.resolution;
+  if(abs(res_ratio -1) < 1.0e-4) res_ratio = 1.0;
   double res_ratio2 = res_ratio*res_ratio;
   
   // check is maps overlap

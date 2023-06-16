@@ -1033,6 +1033,8 @@ class RandomNumbers_NR{
 public:
   
   RandomNumbers_NR(long seed);
+  // sets seed from clock
+  RandomNumbers_NR();
   
   PosType operator()(void);
   /// generates a Gaussian distributed number with unit variance by polar Box-Muller transform

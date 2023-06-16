@@ -392,6 +392,37 @@ unsigned long prevpower(unsigned long k){
     iy=iv[0];
   }
   
+RandomNumbers_NR::RandomNumbers_NR():
+calls(0),IM1(2147483399),IM2(2147483399),IA1(40014),IA2(40692),IQ1(53668),
+IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
+  count(true)
+{
+  
+  AM = (1.0/IM1);
+  //IMM1 = (IM1-1);
+  NDIV = (1+(IM1-1)/32);
+  RNMX = (1.0-EPS);
+  
+  long seed = time(nullptr);
+  firstseed = seed;
+  if(seed > 0) seed *= -1;
+  idum = seed;
+  
+  long k,j;
+  
+  if (-(idum) < 1) idum=1;
+  else idum = -(idum);
+  idum2 = idum;
+  for (j=32+7;j>=0;j--) {
+    k = idum/IQ1;
+    idum=IA1*(idum-k*IQ1)-k*IR1;
+    if (idum < 0) idum += IM1;
+    if (j < 32) iv[j] = idum;
+  }
+  iy=iv[0];
+}
+
+
   /// return a uniform random number between 0 and 1
   PosType RandomNumbers_NR::operator()(void){
     ++calls;
