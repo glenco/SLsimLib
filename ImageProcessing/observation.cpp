@@ -24,6 +24,24 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
   //sb_to_e = (119.*119.*PI/4.) * t * dl / l / hplanck;
 }
 
+void ObsVIS::AddPoisson(PixelMap &pmap
+                        ,Utilities::RandomNumbers_NR &ran
+                        ){
+  double t1 = 565;
+  double t2 = 106;
+  
+  int exposures = 4;
+  if(ran() < 0.5){
+    exposures = 3;
+  }
+  
+  double dt = exposures * t1 + t2;
+  
+  for(auto &p : pmap.data() ){
+    if(p>0) p = ran.poisson(p*dt)/dt;
+  }
+}
+
 void ObsVIS::AddNoise(PixelMap &pmap
                       ,PixelMap &error_map
                       ,Utilities::RandomNumbers_NR &ran,bool cosmic

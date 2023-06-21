@@ -630,6 +630,10 @@ public:
   
   ~ObsVIS(){};
   
+  /// add poisson noise to an image that is in units of electrons
+  void AddPoisson(PixelMap &pmap
+                         ,Utilities::RandomNumbers_NR &ran
+                     );
   
   /// Applies  noise (read-out + Poisson) on an image, returns noise map
   void AddNoise(PixelMap &pmap
