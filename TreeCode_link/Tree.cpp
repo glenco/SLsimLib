@@ -948,18 +948,18 @@ void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
   }
 }
 void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
-  if(caustic_curve_outline.size() == 0){
+  if(caustic_curve_intersecting.size() == 0){
     my_p1 *= 0;
     my_p2 *= 0;
     return;
   }
-  my_p1 = my_p2 = caustic_curve_outline[0];
+  my_p1 = my_p2 = caustic_curve_intersecting[0];
   
-  for(size_t ii=1;ii < caustic_curve_outline.size();++ii){
-    if(caustic_curve_outline[ii][0] < my_p1[0] ) my_p1[0] = caustic_curve_outline[ii][0];
-    if(caustic_curve_outline[ii][0] > my_p2[0] ) my_p2[0] = caustic_curve_outline[ii][0];
-    if(caustic_curve_outline[ii][1] < my_p1[1] ) my_p1[1] = caustic_curve_outline[ii][1];
-    if(caustic_curve_outline[ii][1] > my_p2[1] ) my_p2[1] = caustic_curve_outline[ii][1];
+  for(size_t ii=1;ii < caustic_curve_intersecting.size();++ii){
+    if(caustic_curve_intersecting[ii][0] < my_p1[0] ) my_p1[0] = caustic_curve_intersecting[ii][0];
+    if(caustic_curve_intersecting[ii][0] > my_p2[0] ) my_p2[0] = caustic_curve_intersecting[ii][0];
+    if(caustic_curve_intersecting[ii][1] < my_p1[1] ) my_p1[1] = caustic_curve_intersecting[ii][1];
+    if(caustic_curve_intersecting[ii][1] > my_p2[1] ) my_p2[1] = caustic_curve_intersecting[ii][1];
   }
 }
 
