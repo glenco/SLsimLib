@@ -664,7 +664,10 @@ void ImageFinding::find_crit(
       
       //***************** move to source plane ************/
       
-      crtcurve[ii].caustic_curve_outline = Utilities::Geometry::MagicHull(crtcurve[ii].caustic_curve_intersecting);
+      //crtcurve[ii].caustic_curve_outline = Utilities::Geometry::MagicHull(crtcurve[ii].caustic_curve_intersecting);
+      crtcurve[ii].caustic_curve_outline = crtcurve[ii].caustic_curve_intersecting;
+      
+      int intersections =  Utilities::RemoveIntersections(crtcurve[ii].caustic_curve_outline);
       
       std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
       /*
@@ -1069,7 +1072,10 @@ void ImageFinding::find_crit(
     }
     critcurves[i].caustic_center /= Npoints;
     
-    critcurves[i].caustic_curve_outline = Utilities::Geometry::MagicHull(critcurves[i].caustic_curve_intersecting);
+    //critcurves[i].caustic_curve_outline = Utilities::Geometry::MagicHull(critcurves[i].caustic_curve_intersecting);
+    critcurves[i].caustic_curve_outline = critcurves[i].caustic_curve_intersecting;
+    int intersections =  Utilities::RemoveIntersections(critcurves[i].caustic_curve_outline);
+  
     Utilities::windings(critcurves[i].caustic_center,critcurves[i].caustic_curve_outline,&(critcurves[i].caustic_area));
     critcurves[i].caustic_intersections = -1;
     
