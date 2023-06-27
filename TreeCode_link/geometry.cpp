@@ -183,96 +183,96 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
 //  }
 //  
 //}
-std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d> &points){
- 
-  std::vector<Point_2d> hull;
-  if(points.size() == 0) return hull;
-  
-  // find left most point
-  long init = 0,Npoints=points.size();
-  double pmin = points[0][0];
-  for(int i=1 ; i<Npoints ; ++i){
-    if(points[i][0] < pmin){
-      init = i;
-      pmin = points[i][0];
-    }
-  }
-  
-  CYCLIC cyc(Npoints);
-  int orientation = sign( (points[cyc[init-1]] - points[init])^(points[cyc[init+1]] - points[init])  );
-  
-  hull.reserve(3*Npoints);
-  
-  long k=init,count=0;
-  int direction = 1;
-  Point_2d intersection_point;
-  long next_segment;
-  Point_2d current_point = points[init];
-  hull.push_back(points[init]);
-  
-  k = cyc[init + 1];
-  long current_segment = init;
-  while(count < 3*Npoints ) {
-    
-    int Nintersect = 0;
-    
-    {
-      long j=0,jp;
-      double minimum=HUGE_VALF;
-      // find closest itersection if any
-      while(j<Npoints){
-        jp = cyc[j+1];
-
-        if(Utilities::Geometry::intersect(current_point.x,points[k].x,points[j].x,points[jp].x) ){
-          
-          Point_2d dp = points[k] - current_point;
-          Point_2d dq = points[jp] - points[j];
-          //double v = ( (points[k]^current_point) - (dp^points[j]) ) / (dp^dq) ;
-          double u = ( dq^(points[j]-current_point) ) / (dq^dp) ;
-          
-          Point_2d p = dp*u + current_point;
-          
-          if (abs(u) > 1.0e-10){ // requires the current_point not be on the next edge
-            if ( u < minimum ){
-              intersection_point = p;
-              minimum = u;
-              next_segment = j;
-            }
-            ++Nintersect;
-          }
-          //else{
-          //  std::cout << u/dp.length() << "," << k <<","<< j << "," << jp << "," << current_segment << std::endl;
-          //}
-        }
-        ++j;
-      }
-    }
-    
-    if(Nintersect==0){      // no intersection
-      if(k==init) break;
-              
-      hull.push_back(points[k]);
-      current_segment = k;
-      k = cyc[k + direction];
-    }else{
-      
-      hull.push_back(intersection_point);
-      if(orientation == sign( (points[next_segment] - intersection_point)^(points[ k ] - intersection_point) ) ){
-        k = cyc[next_segment + 1];
-        direction = 1;
-      }else{
-        k = next_segment;
-        direction = -1;
-      }
-    }
-    current_point = hull.back();
-    ++count;
-  }
-  
-  hull.shrink_to_fit();
-  
-  return hull;
-}
+//std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d> &points){
+//
+//  std::vector<Point_2d> hull;
+//  if(points.size() == 0) return hull;
+//
+//  // find left most point
+//  long init = 0,Npoints=points.size();
+//  double pmin = points[0][0];
+//  for(int i=1 ; i<Npoints ; ++i){
+//    if(points[i][0] < pmin){
+//      init = i;
+//      pmin = points[i][0];
+//    }
+//  }
+//
+//  CYCLIC cyc(Npoints);
+//  int orientation = sign( (points[cyc[init-1]] - points[init])^(points[cyc[init+1]] - points[init])  );
+//
+//  hull.reserve(3*Npoints);
+//
+//  long k=init,count=0;
+//  int direction = 1;
+//  Point_2d intersection_point;
+//  long next_segment;
+//  Point_2d current_point = points[init];
+//  hull.push_back(points[init]);
+//
+//  k = cyc[init + 1];
+//  long current_segment = init;
+//  while(count < 3*Npoints ) {
+//
+//    int Nintersect = 0;
+//
+//    {
+//      long j=0,jp;
+//      double minimum=HUGE_VALF;
+//      // find closest itersection if any
+//      while(j<Npoints){
+//        jp = cyc[j+1];
+//
+//        if(Utilities::Geometry::intersect(current_point.x,points[k].x,points[j].x,points[jp].x) ){
+//
+//          Point_2d dp = points[k] - current_point;
+//          Point_2d dq = points[jp] - points[j];
+//          //double v = ( (points[k]^current_point) - (dp^points[j]) ) / (dp^dq) ;
+//          double u = ( dq^(points[j]-current_point) ) / (dq^dp) ;
+//
+//          Point_2d p = dp*u + current_point;
+//
+//          if (abs(u) > 1.0e-10){ // requires the current_point not be on the next edge
+//            if ( u < minimum ){
+//              intersection_point = p;
+//              minimum = u;
+//              next_segment = j;
+//            }
+//            ++Nintersect;
+//          }
+//          //else{
+//          //  std::cout << u/dp.length() << "," << k <<","<< j << "," << jp << "," << current_segment << std::endl;
+//          //}
+//        }
+//        ++j;
+//      }
+//    }
+//
+//    if(Nintersect==0){      // no intersection
+//      if(k==init) break;
+//
+//      hull.push_back(points[k]);
+//      current_segment = k;
+//      k = cyc[k + direction];
+//    }else{
+//
+//      hull.push_back(intersection_point);
+//      if(orientation == sign( (points[next_segment] - intersection_point)^(points[ k ] - intersection_point) ) ){
+//        k = cyc[next_segment + 1];
+//        direction = 1;
+//      }else{
+//        k = next_segment;
+//        direction = -1;
+//      }
+//    }
+//    current_point = hull.back();
+//    ++count;
+//  }
+//
+//  hull.shrink_to_fit();
+//
+//  return hull;
+//}
 
 /** test code for MagicHull
  
