@@ -1122,6 +1122,7 @@ void Grid::find_point_source_images(
   return;
 };
 
+/// find rays using telescoping triangle method
 std::vector<RAY> Lens::find_images(
                                         Point_2d y_source
                                         ,double z_source
@@ -1143,6 +1144,7 @@ std::vector<RAY> Lens::find_images(
   return images;
 }
 
+/// find rays using telescoping triangle method starting with a GridMap init_grid
 std::vector<RAY> Lens::find_images(
                                         GridMap &init_grid
                                         ,Point_2d y_source
@@ -1209,6 +1211,7 @@ std::vector<RAY> Lens::find_images(
 //                  );
 //  }
 //}
+
 
 void Lens::_find_images_(
                         std::vector<RAY> &images

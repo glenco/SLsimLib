@@ -413,15 +413,15 @@ public:
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
 
+  /// finds images by telescoping triangle method
   std::vector<RAY> find_images(Point_2d y_source
                                     ,double z_source
                                     ,Point_2d &center
                                     ,double range
                                     ,double stop_res
                                     );
-  
-  std::vector<RAY> find_images(
-                                    GridMap &init_grid
+  /// finds images by telescoping triangle method
+  std::vector<RAY> find_images(GridMap &init_grid
                                     ,Point_2d y_source
                                     ,double z_source
                                     ,Point_2d &center
@@ -607,6 +607,7 @@ protected:
 private:
 	GLAMER_TEST_FRIEND(LensTest)
   
+  /// iterative image finding using telescoping triangel method with telescoping GridMap s
   void _find_images_(std::vector<RAY> &images
                      ,RAY &center
                      ,double range
