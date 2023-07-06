@@ -343,7 +343,13 @@ std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == CritType::ND) return os << "not determined";
   if(p == CritType::pseudo) return os << "Pseudo";
   if(p == CritType::tangential) return os << "Tangential";
-  return os << "Radial";
+  if(p == CritType::radial) return os << "Radial";
+  return os << "not determined";
 }
 
-
+//std::string to_string(const CritType &p){
+//  if(p == CritType::ND) return "not determined";
+//  if(p == CritType::pseudo) return "Pseudo";
+//  if(p == CritType::tangential) return "Tangential";
+//  return "Radial";
+//}

@@ -33,6 +33,8 @@ typedef enum {NO, YES, MAYBE} Boo;
 /// enumerates the types of critical curves. ND is "not defined".
 enum class CritType {ND,radial,tangential,pseudo};
 
+//std::string to_string(const CritType &p);
+std::ostream &operator<<(std::ostream &os, CritType const &p);
 
 /// returns sign of a number
 template <typename T>
@@ -586,7 +588,8 @@ struct RAY{
   /// time-delay
   KappaType dt;
   KappaType z;
-  
+
+  /// inverse of the magnification
   KappaType invmag() const{
     return A.det();
   }
@@ -602,12 +605,9 @@ struct RAY{
   KappaType kappa() const{
     return A.kappa();
   }
-    
-  /// inverse of the magnification
-  KappaType invmag(){return A.det();}
   
   /// deflection angle, x-y
-  Point_2d alpha(){return x - y;}
+  Point_2d alpha() const {return x - y;}
 };
 
 //inline std::string to_string(RAY &r) {
