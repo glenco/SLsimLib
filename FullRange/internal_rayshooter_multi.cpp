@@ -443,6 +443,84 @@ void Lens::info_rayshooter(
   return;
 }
 
+void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs to be set, all other quantities will be replaced
+                          ,std::vector<double> &masses     /// mass within curve on each lens plane
+                          ,bool verbose
+                          ){
+  int Nrays = rays.size();
+  
+  double source_z;
+  source_z = plane_redshifts.back();
+
+  long jmax = lensing_planes.size();
+  masses.resize(jmax);
+  
+  double Dls_Ds; // this is the ratio between of the distance between the last lens plane and the source to the distance to the source
+  double D_Ds; // this is the ratio between of the distance to the last lens plane and the source to the distance to the source
+
+  Dls_Ds = dDl.back() / Dl.back();
+  D_Ds = Dl[Dl.size() - 2] / Dl.back();
+  
+  PosType aa,bb;
+  KappaType kappa,gamma[3];
+  KappaType phi;
+  Matrix2x2<PosType> G;
+
+  std::vector<Point_2d> theta(Nrays);
+  std::vector<Point_2d> SumPrevAlphas(Nrays);
+  std::vector<Matrix2x2<PosType> > SumPrevAG(Nrays);
+  for(auto m : SumPrevAG) m.setToI();
+  
+  // find angular position on first lens plane
+  for(int i=0 ; i<Nrays ; ++i){
+    theta[i] = rays[i].x;
+    SumPrevAlphas[i] = rays[i].x;
+  }
+ 
+  // Begining of the loop through the planes :
+  std::vector<Point_2d> alphas(Nrays);
+  std::vector<Point_2d> xx(Nrays);
+  for(int j = 0; j < jmax ; ++j){
+    
+    // convert to physical coordinates on the plane j
+    double Dphysical = Dl[j]/(1 + plane_redshifts[j]);
+
+    for(int i=0 ; i<Nrays ; ++i){
+      
+      // convert to physical coordinates on the plane j, just for force calculation
+      xx[i] = theta[i] *  Dphysical;
+      
+      lensing_planes[j]->force(alphas[i].data(),&kappa,gamma,&phi,xx[i].data()); // Computed in physical coordinates.
+      
+      G[0] = kappa + gamma[0];    G[1] = gamma[1];
+      G[2] = gamma[1]; G[3] = kappa - gamma[0];
+      
+      G *= charge * Dl[j] / (1 + plane_redshifts[j]);
+      
+      PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j]
+                                          ,source_z);
+      
+      // kappa *= charge / SigmaCrit;
+      //alphas[i] *= charge;
+      SumPrevAlphas[i] -= alphas[i] * charge;
+      
+      if(j < jmax-1 ){
+        aa = dDl[j+1] / Dl[j+1];
+        bb = Dl[j] / Dl[j+1];
+      }else{
+        aa = Dls_Ds;
+        bb = D_Ds;
+      }
+      
+      theta[i] = theta[i] * bb + SumPrevAlphas[i] * aa;
+  
+    }
+  
+    masses[j] = Utilities::interior_mass(alphas,xx); 
+  } // End of the loop going through the planes
+
+  return;
+}
 
 void Lens::compute_rays_parallel(int start
                                  ,int chunk_size

@@ -2160,7 +2160,31 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   return H;
 }
 
+double Utilities::interior_mass(const std::vector<Point_2d> &alpha
+                     ,const std::vector<Point_2d> &x){
   
+  long n=x.size();
+  double ans = 0;
+  for(int i=0 ; i<n-1 ; ++i){
+    ans += (alpha[i+1]+alpha[i])^(x[i+1]-x[i]);
+  }
+  ans += (alpha[0]+alpha[n-1])^(x[0]-x[n-1]);
+
+  return ans / 4;
+}
+
+/// this returns area within the curve x average kappa iwithin the curve
+double Utilities::interior_mass(const std::vector<RAY> &rays){
+  
+  long n=rays.size();
+  double ans = 0;
+  for(int i=0 ; i<n-1 ; ++i){
+    ans += ( rays[i+1].alpha()+rays[i].alpha() )^( rays[i+1].x-rays[i].x );
+  }
+  ans += ( rays[0].alpha()+rays[n-1].alpha() )^( rays[0].x-rays[n-1].x );
+
+  return ans / 4;
+}
 
 /*
  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
