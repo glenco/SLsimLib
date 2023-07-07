@@ -262,7 +262,7 @@ void Lens::info_rayshooter(
                            ,LensHalo &halo_max                /// halo with the larges kappa
                            ,KappaType &kappa_max              /// the kappa from that halo
                            ,KappaType gamma_max[]             /// shear from that halo
-                           ,PosType rmax
+                           ,PosType rmax                      /// distance for neighbors
                            ,int tag
                            ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
                            ,bool verbose
