@@ -360,6 +360,13 @@ public:
                       ,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
                       ,bool verbose = false
                                        );
+  
+  /// finds the mass within a cuve of rays one every lens plane im Msun
+  void mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs to be set
+                    ,std::vector<double> &masses     /// mass within curve on each lens plane
+                    ,bool verbose = false
+                    );
+  
   /** \brief  Find the image position of a source without grid refinement.
   
   This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
@@ -413,15 +420,15 @@ public:
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
 
+  /// finds images by telescoping triangle method
   std::vector<RAY> find_images(Point_2d y_source
                                     ,double z_source
                                     ,Point_2d &center
                                     ,double range
                                     ,double stop_res
                                     );
-  
-  std::vector<RAY> find_images(
-                                    GridMap &init_grid
+  /// finds images by telescoping triangle method
+  std::vector<RAY> find_images(GridMap &init_grid
                                     ,Point_2d y_source
                                     ,double z_source
                                     ,Point_2d &center
@@ -596,6 +603,9 @@ public:
     *this = std::move(lens);
   }
   
+  // get the adress of field_plane_redshifts
+  std::vector<PosType>  get_plane_redshifts () { return plane_redshifts; }
+ 
 private:
   Lens & operator=(const Lens &lens);   // block copy
   Lens(const Lens &lens);
@@ -607,6 +617,7 @@ protected:
 private:
 	GLAMER_TEST_FRIEND(LensTest)
   
+  /// iterative image finding using telescoping triangel method with telescoping GridMap s
   void _find_images_(std::vector<RAY> &images
                      ,RAY &center
                      ,double range
@@ -723,9 +734,6 @@ private:
   std::vector<PosType> sigma_back_Tab;
   
   /* ----- */
-  
-  // get the adress of field_plane_redshifts
-  std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
   
   /// Number of Field Halos
   size_t getNFieldHalos() const {return field_halos.size();}

@@ -134,7 +134,13 @@ std::vector<T> TightHull(const std::vector<T> &curve){
   return hull;
 }
 
-  
+/// this returns area within the curve x average kappa iwithin the curve
+double interior_mass(const std::vector<Point_2d> &alpha
+                     ,const std::vector<Point_2d> &x);
+
+/// this returns area within the curve x average kappa iwithin the curve
+double interior_mass(const std::vector<RAY> &rays);
+
   /// Returns a vector of points on the convex hull in counter-clockwise order.
   template<typename T>
   void convex_hull(std::vector<T> &P,std::vector<T> &hull_out)
