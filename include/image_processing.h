@@ -539,9 +539,10 @@ public:
   virtual float getBackgroundNoise() const = 0;
 
   /// convert using stan
-  virtual double mag_to_flux(double m) const = 0;
-  virtual double flux_to_mag(double flux) const = 0;
-  
+  virtual double mag_to_counts(double m) const = 0;
+  virtual double counts_to_mag(double flux) const = 0;
+  virtual double zeropoint() const = 0;
+
 protected:
 
   double pix_size; // pixel size (in rad)
@@ -600,20 +601,20 @@ private:
 class ObsVIS : public Obs{
 private:
   
-  // standard erg s−1 cm−2 Hz−1
-  double mag_zeropoint = -24.4;
-  double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
+  // standard from magnitude to e- per sec
+  double zero_point = 24.4;
+  //double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
   
-  double gain = 11160; // e-/ADU (Analog Digital Units)
+  //double gain = 11160; // e-/ADU (Analog Digital Units)
   //double exp_num = 4;
   //double exp_time = 2260.;  // seconds
-  double l = 7103.43;
-  double dl = 3318.28;
+  //double l = 7103.43;
+  //double dl = 3318.28;
   //double seeing = 0.18;
   
   // derived parameters;
   double sigma_background;  // background var in ergs / cm^2 / s / Hz
-  double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
+  //double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
 
   // adds random cosmic rays to the noise map
   void cosmics(PixelMap &error_map
@@ -638,34 +639,32 @@ public:
   /// Applies  noise (read-out + Poisson) on an image, returns noise map
   void AddNoise(PixelMap &pmap
                  ,PixelMap &error_map
-                 ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+                 ,Utilities::RandomNumbers_NR &ran
+                ,bool cosmic=true);
 
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
                ,PixelMap &error_map  // this is 1/sigma^2
                ,bool psf
                ,bool noise
-               ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+               ,Utilities::RandomNumbers_NR &ran
+               ,bool cosmic=true);
   
  
-  double mag_to_flux(double m) const{
+  double mag_to_counts(double m) const{
     if(m == 100) return 0;
-    return pow(10,-0.4*(m - mag_zeropoint));
+    return pow(10,-0.4*(m + zero_point));
   }
-  double flux_to_mag(double flux) const{
+  double counts_to_mag(double flux) const{
     if(flux <=0) return 100;
-    return -2.5 * log10(flux) + mag_zeropoint;
+    return -2.5 * log10(flux) - zero_point;
   }
- 
-  double flux_to_counts(double flux) const{
-    if(flux <=0) return 100;
-    return -2.5 * log10(flux) + mag_zeropoint;
-  }
+
+  double zeropoint() const {return zero_point;}
  
   // returns std of pixels in surface brightness
   float getBackgroundNoise() const {return sigma_background;}
 };
-
 
 /** 
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -678,7 +677,7 @@ public:
 class Observation : public Obs
 {
 public:
-	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y);
+	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float oversample);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise
               ,size_t Npix_x,size_t Npix_y,double pix_size,float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise ,std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample = 1.);
@@ -707,7 +706,9 @@ public:
                ,PixelMap &error_map
                ,bool psf
                ,bool noise
-               ,Utilities::RandomNumbers_NR &ran);
+               ,Utilities::RandomNumbers_NR &ran
+               ,bool cosmic=false
+               );
  
   /// returns factor by which code image units need to be multiplied by to get flux units
   //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
@@ -715,15 +716,17 @@ public:
   void setExpTime(float time){exp_time = time;}
   void setPixelSize(float pixel_size){pix_size=pixel_size;}
  
-  double mag_to_flux(double m) const {
+  double mag_to_counts(double m) const {
     if(m == 100) return 0;
     return pow(10,-0.4*(m - mag_zeropoint));
   }
-  double flux_to_mag(double flux) const{
+  double counts_to_mag(double flux) const{
     if(flux <=0) return 100;
     return -2.5 * log10(flux) + mag_zeropoint;
   }
-
+  double zeropoint() const{
+     return mag_zeropoint;
+   }
 private:
   
 	//float diameter;  // diameter of telescope (in cm)
