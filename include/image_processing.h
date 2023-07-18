@@ -121,7 +121,7 @@ public:
    **/
   void paste(const PixelMap& pmap);
 
-  /// paste a PixelMap on with the lower left pixel match to [nx,ny]
+  /// paste a PixelMap on with the lower left pixel match to [nx,ny] of this
   void paste(const PixelMap& pmap,long nx,long ny);
 
   /** \brief copy a PixelMap that must be the same without creating a new one..
@@ -441,8 +441,8 @@ private:
   std::vector<std::tuple<std::string,std::string,std::string> > headers_string;
 
   std::valarray<double> map;
-	std::size_t Nx;
-	std::size_t Ny;
+	long Nx;
+	long Ny;
   double resolution,rangeX,rangeY,center[2];
   double RA=0,DEC=0; // optional coordinates of center
 	double map_boundary_p1[2],map_boundary_p2[2];
