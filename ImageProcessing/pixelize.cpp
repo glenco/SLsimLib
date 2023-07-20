@@ -78,8 +78,11 @@ std::string to_string(PixelMapUnits unit){
     case PixelMapUnits::mass_density:
       return "mass density";
       break;
-
+    case PixelMapUnits::ADU:
+      return "ADU";
+      break;
     default:
+      throw std::invalid_argument("No such unit");
       break;
   }
 };
@@ -631,7 +634,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
 
 void PixelMap::AddGridMapBrightness(const GridMap &grid){
   
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
     grid.getPixelMapFlux(*this);
@@ -2257,7 +2260,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 PosType PixelMap::AddSource(Source &source){
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   Point_2d s_center;
   source.getTheta(s_center);
   

@@ -518,7 +518,8 @@ public:
   size_t getNyOutput() const { return Npix_y_output;}
 
   std::valarray<double> getPSF(){return map_psf;}
-  void setPSF(std::string psf_file);
+  //void setPSF(std::string psf_file);
+  void setPSF(std::string psf_file,double resolution=0);
   void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
   void setNoiseCorrelation(std::string nc_file);

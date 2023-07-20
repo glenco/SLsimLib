@@ -188,7 +188,8 @@ Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Obs::setPSF(std::string psf_file  /// name of fits file with psf
-                         )
+                  ,double resolution  /// resolution in degrees if it isn't in fits header
+                 )
 {
  
   CPFITS_READ cpfits(psf_file);
@@ -196,8 +197,13 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
   int exits = cpfits.readKey("CD1_1",input_psf_pixel_size);  // this is in degrees
   
   if(exits != 0){
+    if(resolution > 0){
+      std::cout << "No resolution found in PSF.  Using input resolution" << std::endl;
+      input_psf_pixel_size = resolution;
+    }else{
     std::cerr << " PSF " << psf_file << " does not have key word CD1_1" << std::endl;
     throw std::runtime_error("bad file");
+    }
   }
   std::cout << "Obs::setPSF() - intrinsic psf resolution : " <<
   input_psf_pixel_size*60*60 << " arcsec" << std::endl;
@@ -476,7 +482,7 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
     }
     
   }else{
-
+    map_out.ChangeUnits(map_in.getUnits());
 #ifdef ENABLE_FFTW
     
     // paste image into image with padding
@@ -921,13 +927,17 @@ void Observation::Convert(PixelMap &map_in
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
   }
   
-  if (psf == true) ApplyPSF(map_in,map_scratch);
- 
   map_out.Clean();
-  downsample(map_scratch,map_out);
+  if (psf == true){
+    ApplyPSF(map_in,map_scratch);
+    downsample(map_scratch,map_out);
+  }else{
+    downsample(map_in,map_out);
+  }
   ToCounts(map_out);
+ 
   if (noise == true) AddNoise(map_out,error_map,ran,true);
-  ToSurfaceBrightness(map_out);
+  //ToSurfaceBrightness(map_out);
   
   return;
 }
