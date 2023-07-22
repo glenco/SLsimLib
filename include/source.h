@@ -587,12 +587,12 @@ class QuasarLF{
 
 	private:
     PosType kcorr;
-    PosType red;
-    PosType mag_limit;
-    PosType mstar;
+    //PosType red;
+    //PosType mag_limit;
+    //PosType mstar;
     PosType log_phi;
-    PosType alpha;
-    PosType beta;
+    //PosType alpha;
+    //PosType beta;
     PosType norm;
     int arr_nbin;
     PosType* mag_arr;

@@ -188,12 +188,25 @@ Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Obs::setPSF(std::string psf_file  /// name of fits file with psf
-                         )
+                  ,double resolution  /// resolution in degrees if it isn't in fits header
+                 )
 {
  
   CPFITS_READ cpfits(psf_file);
 
-  cpfits.readKey("CD1_1",input_psf_pixel_size);  // this is in degrees
+  int exits = cpfits.readKey("CD1_1",input_psf_pixel_size);  // this is in degrees
+  
+  if(exits != 0){
+    if(resolution > 0){
+      std::cout << "No resolution found in PSF.  Using input resolution" << std::endl;
+      input_psf_pixel_size = resolution;
+    }else{
+    std::cerr << " PSF " << psf_file << " does not have key word CD1_1" << std::endl;
+    throw std::runtime_error("bad file");
+    }
+  }
+  std::cout << "Obs::setPSF() - intrinsic psf resolution : " <<
+  input_psf_pixel_size*60*60 << " arcsec" << std::endl;
   input_psf_pixel_size *= degreesTOradians;
   
   if( (input_psf_pixel_size - pix_size/oversample)/input_psf_pixel_size > 1.0e-3){
@@ -469,7 +482,7 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
     }
     
   }else{
-
+    map_out.ChangeUnits(map_in.getUnits());
 #ifdef ENABLE_FFTW
     
     // paste image into image with padding
@@ -588,11 +601,10 @@ void Obs::CorrelateNoise(PixelMap &pmap)
 /** * \brief Creates an observation setup that mimics a known instrument
  *
  */
-Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
-  Obs(Npix_x,Npix_y,0,1)
+Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float oversample):
+  Obs(Npix_x,Npix_y,0,oversample)
 {
  
-  
   float diameter,transmission;
   switch (tel_name) {
     case Telescope::Euclid_VIS:
@@ -627,8 +639,11 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .3*arcsecTOradians;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
-  break;
+      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
+      
+      mag_zeropoint = 25.04;
+      
+      break;
     case Telescope::Euclid_J:
       diameter = 119.;
       transmission = 0.0814;
@@ -642,7 +657,9 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .3*arcsecTOradians;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
+      
+      mag_zeropoint = 25.26;
       break;
     case Telescope::Euclid_H:
       diameter = 119.;
@@ -656,8 +673,9 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .3/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
- 
+      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
+       
+      mag_zeropoint = 25.21;
       break;
     case Telescope::KiDS_u:
       diameter = 265.;
@@ -671,7 +689,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .2/60./60./180.*PI;
             
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
  
       break;
     case Telescope::KiDS_g:
@@ -686,7 +704,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .2/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::KiDS_r:
       diameter = 265.;
@@ -700,7 +718,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .2/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::KiDS_i:
       diameter = 265.;
@@ -714,7 +732,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .2/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::HST_ACS_I:
       diameter = 250.;
@@ -727,7 +745,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .05/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_u:
       diameter = 358.;
@@ -740,7 +758,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .187/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_g:
       diameter = 358.;
@@ -753,7 +771,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .187/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_r:
       diameter = 358.;
@@ -766,7 +784,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .187/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_i:
       diameter = 358.;
@@ -779,7 +797,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .187/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     case Telescope::CFHT_z:
       diameter = 358.;
@@ -792,7 +810,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
       pix_size = .187/60./60./180.*PI;
       
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
       break;
     default:
       throw std::runtime_error("The Telescope selected is not available.");
@@ -816,7 +834,7 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y):
 Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise, size_t Npix_x,size_t Npix_y,double pix_size,float seeing):
     Obs(Npix_x,Npix_y,pix_size,1,seeing),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),read_out_noise(read_out_noise)
 {
-  mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+  mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
   telescope = false;
  
   set_up();
@@ -837,7 +855,7 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
     Obs(Npix_x,Npix_y,pix_size,oversample), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , read_out_noise(read_out_noise)
 		{
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      mag_zeropoint = flux_to_mag(1.0/(diameter*diameter*transmission*PI/4.));
+      mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
  
       setPSF(psf_file);
 
@@ -894,25 +912,32 @@ void Observation::Convert(PixelMap &map_in
                           ,PixelMap &map_out
                           ,PixelMap &error_map
                           ,bool psf
-                          ,bool noise,Utilities::RandomNumbers_NR &ran)
+                          ,bool noise
+                          ,Utilities::RandomNumbers_NR &ran
+,bool cosmic)
 {
   
   assert(map_in.getNx() == Npix_x_input);
   assert(map_in.getNy() == Npix_y_input);
 
+  if(cosmic) throw std::runtime_error("cosmics not implemented");
   if (fabs(map_in.getResolution()*oversample - pix_size) > pix_size*1.0e-5)
   {
     std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
   }
   
-  if (psf == true) ApplyPSF(map_in,map_scratch);
- 
   map_out.Clean();
-  downsample(map_scratch,map_out);
+  if (psf == true){
+    ApplyPSF(map_in,map_scratch);
+    downsample(map_scratch,map_out);
+  }else{
+    downsample(map_in,map_out);
+  }
   ToCounts(map_out);
+ 
   if (noise == true) AddNoise(map_out,error_map,ran,true);
-  ToSurfaceBrightness(map_out);
+  //ToSurfaceBrightness(map_out);
   
   return;
 }
@@ -942,7 +967,7 @@ void Observation::set_up(){
   //zero_point_flux = pow(10,-0.4*mag_zeropoint);  // erg/s/Hz/cm**2
   //e_per_s_to_ergs_s_cm2 = pow(10,0.4*(mag_zeropoint-AB_zeropoint));
   
-  e_per_s_to_ergs_s_cm2 = 1.0/(mag_to_flux(mag_zeropoint));
+  e_per_s_to_ergs_s_cm2 = 1.0/(mag_to_counts(mag_zeropoint));
   background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
  }
 
