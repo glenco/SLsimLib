@@ -295,8 +295,10 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
 		map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
 		map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
 		map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
-  
-		int edge[2];
+    
+    units = pmap.getUnits();
+		
+    int edge[2];
 		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Nx/2;
 		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Ny/2;
 		if (edge[0] > int(pmap.Nx) || edge[1] > int(pmap.Ny) || edge[0]+int(Nx) < 0 || edge[1]+int(Ny) < 0)

@@ -12,7 +12,12 @@
 #include "utilities_slsim.h"
 
 class PixelMap;
+double mag_to_jansky_AB(double);
+double jansky_to_mag_AB(double flux);
+
+/// ergs / s /cm^2 / Hz
 double mag_to_flux_AB(double);
+/// ergs / s /cm^2 / Hz
 double flux_to_mag_AB(double flux);
 double mag_to_flux(double m,double zeropoint);
 double flux_to_mag(double flux,double zeropoint);

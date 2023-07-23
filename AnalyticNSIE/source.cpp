@@ -21,6 +21,16 @@ double mag_to_flux_AB(double m){
   return pow(10,-0.4*(m+48.6));
 }
 
+double jansky_to_mag_AB(double flux){
+  if(flux <=0) return 100;
+  return -2.5 * log10(flux) + 8.9;
+}
+
+double mag_to_jansky_AB(double m){
+  if(m == 100) return 0;
+  return pow(10,-0.4*(m - 8.9));
+}
+
 double flux_to_mag(double flux,double zeropoint){
   if(flux <=0) return 100;
   return -2.5 * log10(flux) + zeropoint;
