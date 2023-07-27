@@ -895,8 +895,8 @@ void SourceMultiShapelets::readCatalog()
           && s.getRadius() < radius_max
           && s.getZ() < z_max){
         galaxies.push_back(s);
-        shap_input.close();
       }
+      shap_input.close();
       /*else if (i == 1)
       {
         std::cout << "Can't open file " << shap_file << std::endl;

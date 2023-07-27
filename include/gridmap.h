@@ -378,16 +378,15 @@ struct GridMap{
     std::list<std::list<Point_2d>> contours;
     if(!add_to_vector){
       hits_edge.resize(0);
-      //crit_type.resize(0);
     }
     
     bool done = false;
-    size_t kfirst_in_bound = 0;
+    long kfirst_in_bound = -1;
     while(!done){
       // find first cell in edge
       size_t k=0;
       int count;
-      for( k = kfirst_in_bound + 1; k < n - nx ; ++k){
+      for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
         if(k % nx != nx-1){ // one less cells than points
           count = 0;
           if(bitmap[k]) ++count;
@@ -410,18 +409,6 @@ struct GridMap{
         contours.resize(contours.size() + 1);
         std::list<Point_2d> &contour = contours.back();
         hits_edge.push_back(false);
-        
-        /* find type of critical curve
-        if(i_points[k].inverted()
-           || i_points[k+1].inverted()
-           || i_points[k+nx].inverted()
-           || i_points[k+nx+1].inverted()
-           ){
-          crit_type.push_back(CritType::radial);
-        }else{
-          crit_type.push_back(CritType::tangential);
-        }
-        */
         
         int face_in=0;
         int type;
@@ -463,7 +450,7 @@ struct GridMap{
               face_in=1;
               k -= nx;
             }else{
-              contour.push_back( (i_points[k+nx] + i_points[k+1]) / 2 );
+              contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
               face_in=0;
               k += 1;
             }
@@ -527,7 +514,7 @@ struct GridMap{
               face_in=1;
               k -= nx;
             }else{
-              contour.push_back( (i_points[k+nx] + i_points[k+1]) / 2 );
+              contour.push_back( (i_points[k+nx + 1] + i_points[k+1]) / 2 );
               face_in=0;
               k += 1;
             }
