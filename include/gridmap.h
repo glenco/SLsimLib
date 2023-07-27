@@ -382,7 +382,7 @@ struct GridMap{
     }
     
     bool done = false;
-    size_t kfirst_in_bound = 0;
+    size_t kfirst_in_bound = -1;
     while(!done){
       // find first cell in edge
       size_t k=0;
@@ -392,8 +392,8 @@ struct GridMap{
           count = 0;
           if(bitmap[k]) ++count;
           if(bitmap[k+1]) ++count;;
-          if(bitmap[k + Ngrid_init]) ++count;;
-          if(bitmap[k + Ngrid_init + 1]) ++count;
+          if(bitmap[k + nx]) ++count;;
+          if(bitmap[k + nx + 1]) ++count;
           if(count > 0
              && count < 4
              && not_used[k]
@@ -411,23 +411,27 @@ struct GridMap{
         std::list<Point_2d> &contour = contours.back();
         hits_edge.push_back(false);
         
-        /* find type of critical curve
-        if(i_points[k].inverted()
-           || i_points[k+1].inverted()
-           || i_points[k+nx].inverted()
-           || i_points[k+nx+1].inverted()
-           ){
-          crit_type.push_back(CritType::radial);
-        }else{
-          crit_type.push_back(CritType::tangential);
-        }
-        */
-        
         int face_in=0;
         int type;
         size_t n_edge = 0;
         // follow edge until we return to the first point
         while(k != kfirst_in_bound || n_edge==0){
+          if(n_edge >= ncells){
+            std::cerr << "Too many points in GridMap::find_boundaries()." << std::endl;
+            std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
+            std::cerr << "  countour is output to boundary_error_file.csv" << std::endl;
+            std::ofstream file("boundary_error_file.csv");
+            file << "contour,x,y" << std::endl;
+            int i = 0;
+            for(auto &v : contours){
+              for(Point_2d &p : v){
+                file << i << "," << p[0] << "," << p[1] << std::endl;
+              }
+              ++i;
+            }
+            throw std::runtime_error("caught in loop.");
+          }
+          assert(n_edge < ncells);
           
           if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
           if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
@@ -437,7 +441,7 @@ struct GridMap{
           ++n_edge;
           type = 0;
           // find type of cell
-          if(bitmap[k]) type +=1;
+          if(bitmap[k] ) type +=1;
           if(bitmap[k+1]) type += 10;
           if(bitmap[k + Ngrid_init]) type += 100;
           if(bitmap[k + Ngrid_init + 1]) type += 1000;
@@ -463,7 +467,7 @@ struct GridMap{
               face_in=1;
               k -= nx;
             }else{
-              contour.push_back( (i_points[k+nx] + i_points[k+1]) / 2 );
+              contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
               face_in=0;
               k += 1;
             }
@@ -527,7 +531,7 @@ struct GridMap{
               face_in=1;
               k -= nx;
             }else{
-              contour.push_back( (i_points[k+nx] + i_points[k+1]) / 2 );
+              contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
               face_in=0;
               k += 1;
             }
