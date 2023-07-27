@@ -378,16 +378,15 @@ struct GridMap{
     std::list<std::list<Point_2d>> contours;
     if(!add_to_vector){
       hits_edge.resize(0);
-      //crit_type.resize(0);
     }
     
     bool done = false;
-    size_t kfirst_in_bound = -1;
+    long kfirst_in_bound = -1;
     while(!done){
       // find first cell in edge
       size_t k=0;
       int count;
-      for( k = kfirst_in_bound + 1; k < n - nx ; ++k){
+      for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
         if(k % nx != nx-1){ // one less cells than points
           count = 0;
           if(bitmap[k]) ++count;

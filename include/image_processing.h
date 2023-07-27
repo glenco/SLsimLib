@@ -136,10 +136,10 @@ public:
     Point_2d s_center;
     source.getTheta(s_center);
     
-    if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
-    if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
-    if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
-    if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+    if( (s_center[0] + source.getRadius() ) < map_boundary_p1[0] ) return 0.0;
+    if( (s_center[0] - source.getRadius() ) > map_boundary_p2[0] ) return 0.0;
+    if( (s_center[1] + source.getRadius() ) < map_boundary_p1[1] ) return 0.0;
+    if( (s_center[1] - source.getRadius() ) > map_boundary_p2[1] ) return 0.0;
     
     int nthreads = Utilities::GetNThreads();
     PosType totals[nthreads];
