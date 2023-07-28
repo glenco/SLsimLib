@@ -236,11 +236,17 @@ private:
   //CPFITS_READ operator=(CPFITS_READ );
   
 public:
-  CPFITS_READ(std::string filename,bool verbose = false) {
+  CPFITS_READ(std::string filename,std::string extension=""
+              ,bool verbose = false) {
 
     int status = 0;
     //fits_open_file(&fptr,filename.c_str(), READONLY, &status);
-    fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+    if(extension==""){
+      fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+    }else{
+      filename = filename + extension;
+      fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+    }
        //    print any error messages
     check_status(status,"Problem with input fits file.");
     reset_imageInfo();
@@ -264,12 +270,18 @@ public:
   }
   
   /// close old and reopen a new file
-  void reset(std::string filename){
+  void reset(std::string filename,std::string extension=""){
     std::lock_guard<std::mutex> hold(mutex_lock);
     int status = 0;
     fits_close_file(fptr, &status);
     check_status(status);
-    fits_open_file(&fptr,filename.c_str(), READONLY, &status);
+    //fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+    if(extension==""){
+      fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+    }else{
+      filename = filename + extension;
+      fits_open_image(&fptr,filename.c_str(), READONLY, &status);
+    }
     check_status(status);
     reset_imageInfo();
   }
@@ -410,7 +422,7 @@ public:
       check_status(status);
     }else{
       int status = 0;
-      fits_open_file(&fptr,filename.c_str(),READWRITE,&status);
+      fits_open_image(&fptr,filename.c_str(),READWRITE,&status);
       reset_imageInfo();
 
       if(status==104){  // create file if it does not exist
