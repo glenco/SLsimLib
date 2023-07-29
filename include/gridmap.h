@@ -361,11 +361,10 @@ struct GridMap{
     size_t nx = Ngrid_init;
     size_t ny = Ngrid_init2;
     size_t n = nx*ny;
-    size_t ncells = nx*ny;
     
     std::vector<bool> not_used(bitmap.size(),true);
     
-    assert(bitmap.size()==ncells);
+    assert(bitmap.size()==n);
     
     // pad edge of field with bitmap=false
     for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
@@ -385,23 +384,24 @@ struct GridMap{
     while(!done){
       // find first cell in edge
       size_t k=0;
-      int count;
+      int type;
       for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
         if(k % nx != nx-1){ // one less cells than points
-          count = 0;
-          if(bitmap[k]) ++count;
-          if(bitmap[k+1]) ++count;;
-          if(bitmap[k + nx]) ++count;;
-          if(bitmap[k + nx + 1]) ++count;
-          if(count > 0
-             && count < 4
+          type = 0;
+          if(bitmap[k] ) type +=1;
+          if(bitmap[k+1]) type += 10;
+          if(bitmap[k + nx]) type += 100;
+          if(bitmap[k + nx + 1]) type += 1000;
+
+          if(type > 0
+             && type != 1111
              && not_used[k]
              ) break;
         }
       }
       
       kfirst_in_bound = k;
-      
+       
       if(k == n-nx){
         done=true;
       }else{ // found an edge
@@ -410,27 +410,38 @@ struct GridMap{
         std::list<Point_2d> &contour = contours.back();
         hits_edge.push_back(false);
         
-        int face_in=0;
         int type;
+        int face_in=0;
         size_t n_edge = 0;
+
         // follow edge until we return to the first point
         while(k != kfirst_in_bound || n_edge==0){
-          if(n_edge >= ncells){
+          
+          if(n_edge >= n){  // infinite loop, output debugging data
             std::cerr << "Too many points in GridMap::find_boundaries()." << std::endl;
             std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
-            std::cerr << "  countour is output to boundary_error_file.csv" << std::endl;
-            std::ofstream file("boundary_error_file.csv");
-            file << "contour,x,y" << std::endl;
-            int i = 0;
-            for(auto &v : contours){
-              for(Point_2d &p : v){
-                file << i << "," << p[0] << "," << p[1] << std::endl;
+            std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
+            {
+              std::ofstream file("bitmap_error_file.csv");
+              file << "in,x,y" << std::endl;
+              for(size_t i=0 ; i<n ; ++i){
+                file << bitmap[i] << "," << i_points[i][0] << "," << i_points[i][1] << std::endl;
               }
-              ++i;
+            }
+            
+            {
+              std::ofstream file("boundary_error_file.csv");
+              file << "contour,x,y" << std::endl;
+              int i = 0;
+              for(auto &v : contours){
+                for(Point_2d &p : v){
+                  file << i << "," << p[0] << "," << p[1] << std::endl;
+                }
+                ++i;
+              }
             }
             throw std::runtime_error("caught in loop.");
           }
-          assert(n_edge < ncells);
           
           if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
           if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
@@ -442,8 +453,8 @@ struct GridMap{
           // find type of cell
           if(bitmap[k] ) type +=1;
           if(bitmap[k+1]) type += 10;
-          if(bitmap[k + Ngrid_init]) type += 100;
-          if(bitmap[k + Ngrid_init + 1]) type += 1000;
+          if(bitmap[k + nx]) type += 100;
+          if(bitmap[k + nx + 1]) type += 1000;
           
           if(type == 0 || type == 1111){  // all in or all out
             throw std::runtime_error("off edge!!");
@@ -502,6 +513,7 @@ struct GridMap{
               k += 1;
             }else{
               contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+              face_in = 2;
               k -= 1;
             }
             
@@ -512,6 +524,7 @@ struct GridMap{
               k -= nx;
             }else{
               contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+              face_in = 3;
               k += nx;
             }
             
@@ -556,6 +569,13 @@ struct GridMap{
             }
           }
         }
+        
+        // the diamand with a hole
+        //if(n_edge == 12 && bitmap[k + nx + 1] ){
+        //  n_edge=0;
+        //  face_in = 2;
+        //}
+        
       }
     }
     
