@@ -48,6 +48,7 @@ public:
   PixelMap(const PixelMap& other);
   PixelMap(PixelMap&& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
+  PixelMap(const PixelMap& pmap,long nx,long ny, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
 	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
 	PixelMap(std::string fitsfilename
@@ -520,6 +521,8 @@ public:
   std::valarray<double> getPSF(){return map_psf;}
   //void setPSF(std::string psf_file);
   void setPSF(std::string psf_file,double resolution=0);
+  void setPSF(PixelMap &psf_map);
+ 
   void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
   void setNoiseCorrelation(std::string nc_file);

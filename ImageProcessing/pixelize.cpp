@@ -280,27 +280,27 @@ PixelMap::PixelMap(
  * If the region exceeds the boundaries of the original map, the new map is completed with zeros.
  */
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
-                   const PosType* center, /// center of the region to be duplicated (in rads)
+                   const PosType* my_center, /// center of the region to be duplicated (in rads)
                    std::size_t my_Npixels /// size of the region to be duplicated (in pixels)
 )
 : map(0.0, my_Npixels*my_Npixels),
 Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
 ,units(pmap.units)
 {
-		std::copy(center, center + 2, this->center);
+		std::copy(my_center, my_center + 2, this->center);
 		rangeX = resolution*Nx;
 		rangeY = resolution*Ny;
   
-		map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
-		map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
-		map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
-		map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
+		map_boundary_p1[0] = my_center[0]-(Nx*resolution)/2.;
+		map_boundary_p1[1] = my_center[1]-(Ny*resolution)/2.;
+		map_boundary_p2[0] = my_center[0]+(Nx*resolution)/2.;
+		map_boundary_p2[1] = my_center[1]+(Ny*resolution)/2.;
     
     units = pmap.getUnits();
 		
     int edge[2];
-		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Nx/2;
-		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Ny/2;
+		edge[0] = (my_center[0]-pmap.map_boundary_p1[0])/resolution - Nx/2;
+		edge[1] = (my_center[1]-pmap.map_boundary_p1[1])/resolution - Ny/2;
 		if (edge[0] > int(pmap.Nx) || edge[1] > int(pmap.Ny) || edge[0]+int(Nx) < 0 || edge[1]+int(Ny) < 0)
     {
       std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
@@ -314,6 +314,44 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
       if (ix+edge[0] > 0 && ix+edge[0] < pmap.Nx && iy+edge[1] > 0 && iy+edge[1] < pmap.Ny)
         map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Nx];
     }
+}
+
+/// Produces a square cut-out of the input PixelMap
+PixelMap::PixelMap(const PixelMap& in_map,  /// Input PixelMap (from which the stamp is taken)
+                   long nx, /// lower left  pixels of in pmap
+                   long ny, /// lower left  pixels of in  pmap
+                   std::size_t my_Npixels /// size of the region to be duplicated (in pixels)
+)
+: map(0.0, my_Npixels*my_Npixels),
+Nx(my_Npixels), Ny(my_Npixels), resolution(in_map.resolution)
+,units(in_map.units)
+{
+
+  long iimin =  MAX(0,nx);
+  long iimax =  MIN(iimin+Nx,in_map.Nx);
+  long jjmin =  MAX(0,ny);
+  long jjmax =  MIN(jjmin+Nx,in_map.Ny);
+
+  for(long ii=iimin ; ii < iimax ; ++ii){
+    long i = ii - nx;
+    for(long jj=jjmin; jj < jjmax ; ++jj){
+      long j = jj - ny;
+        
+      map[i + Nx*j] = in_map(ii,jj);
+    }
+  }
+  
+  rangeX = resolution*Nx;
+  rangeY = resolution*Ny;
+  
+  map_boundary_p1[0] = in_map.map_boundary_p1[0] + resolution*nx;
+  map_boundary_p1[1] = in_map.map_boundary_p1[1] + resolution*ny;
+  
+  map_boundary_p2[0] = map_boundary_p1[0] + resolution * Nx;
+  map_boundary_p2[1] = map_boundary_p1[1] + resolution * Ny;
+  
+  center[0] = (map_boundary_p2[0] + map_boundary_p1[0])/2;
+  center[1] = (map_boundary_p2[1] + map_boundary_p1[1])/2;
 }
 
 /** \brief Creates a PixelMap at a different resolution.

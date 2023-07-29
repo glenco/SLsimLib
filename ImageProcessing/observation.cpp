@@ -159,6 +159,7 @@ void ObsVIS::Convert(
   }
 
   map_out.Clean();
+  
   if (psf == true){
     ApplyPSF(map_in,map_scratch);
     downsample(map_scratch,map_out);
@@ -230,6 +231,56 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
     max_x = imax / size[0];
   }
 
+  long Lx;
+  long Ly = Lx = 2*MIN( MIN(max_y,size[1]-max_y),MIN(max_x,size[0]-max_x));
+  
+  std::valarray<double> tmp(Lx*Ly);
+  long ii=0;
+  for(long i=max_x - Lx/2 ; i<max_x + Lx/2 ;++i){
+    assert(i<size[0]);
+    long jj=0;
+    for(long j=max_y - Ly/2 ; j<max_y + Ly/2 ;++j){
+      assert(j<size[1]);
+      tmp[ii + Lx*jj] = map_psf[j + size[1] * i];
+      ++jj;
+    }
+    ++ii;
+  }
+  
+  std::swap(tmp,map_psf);
+  
+  fftpsf();
+}
+
+/// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
+void Obs::setPSF(PixelMap &psf_map/// name of fits file with psf
+                 ){
+ 
+  input_psf_pixel_size = psf_map.getResolution();
+  
+  if( (input_psf_pixel_size - pix_size/oversample)/input_psf_pixel_size > 1.0e-3){
+    std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
+    throw std::runtime_error("");
+  }
+  
+  map_psf.resize(psf_map.size());
+  for(size_t i=0 ; i<psf_map.size() ; ++i){
+    map_psf[i] = psf_map[i];
+  }
+  
+  std::vector<size_t> size = {psf_map.getNx(),psf_map.getNy()};
+  
+  long max_x,max_y;
+  {
+    long i=0,imax=0;
+    double amax = map_psf[0];
+    for(auto &a : map_psf){
+      if(a > amax){imax=i;amax=a;}
+      ++i;
+    }
+    max_y = imax % size[0];
+    max_x = imax / size[0];
+  }
   long Lx;
   long Ly = Lx = 2*MIN( MIN(max_y,size[1]-max_y),MIN(max_x,size[0]-max_x));
   
@@ -348,9 +399,10 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
   assert(map_in.getNy() == Npix_y_input);
   assert(map_out.getNx() == Npix_x_output);
   assert(map_out.getNy() == Npix_y_output);
-  
+ 
   if(oversample == 1){
-    map_out = map_in;
+    size_t n=map_in.size();
+    for(size_t i=0; i<n ; ++i ) map_out[i] = map_in[i]; // keep bounding box information
     return;
   }
  
