@@ -314,6 +314,11 @@ public:
     map = tmp;
   }
 #endif
+  
+  void find_contour(double level
+                    ,std::vector<std::vector<Point_2d> > &points
+                    ,std::vector<bool> &hits_edge
+                    ) const;
 
   /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
    

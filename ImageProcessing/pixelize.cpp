@@ -799,6 +799,24 @@ bool PixelMap::pixels_are_neighbors(size_t i,size_t j) const{
   return true;
 }
 
+void PixelMap::find_contour(double level
+                            ,std::vector<std::vector<Point_2d> > &points
+                            ,std::vector<bool> &hits_edge
+                            ) const {
+  
+  std::vector<bool> bitmap( map.size() );
+  
+  for(size_t i = 0 ; i<map.size() ; ++i) bitmap[i] = (map[i] > level);
+  
+  Utilities::find_boundaries<Point_2d>(bitmap,Nx,points,hits_edge,false);
+  
+  // rescale the points to PixelMap coordinates
+  Point_2d xo(map_boundary_p1[0] + resolution*0.5
+             ,map_boundary_p1[1] + resolution*0.5);
+  for(std::vector<Point_2d> &v : points){
+    for(Point_2d &p : v) p = p * resolution + xo;
+  }
+}
 int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
   
   if(pixel_index.size() == 0) return 0;
