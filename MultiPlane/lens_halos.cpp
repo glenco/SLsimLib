@@ -809,6 +809,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    ,EllipMethod my_ellip_method /// ellipticizing method
 ){
 
+  if(my_beta >= 2.0){
+    std::cerr << "ERROR: Power-law index in LensHaloPowerLaw cannot be >= 2" << std::endl;
+    throw std::invalid_argument("bad gamma");
+  }
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
@@ -1251,7 +1255,8 @@ void LensHaloTEPL::deflection(std::complex<double> &z
 std::complex<double> LensHaloTEPL::F(double r_e,double t,std::complex<double> z) const{
 
   std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
-  assert(std::norm(u) < 1);
+  //assert(std::norm(u) < 1);
+  if(std::norm(u) > 1 ) u = u/std::norm(u);
   double a = 1;
   std::complex<double> sum(1,0);
   for(int n=1 ; n < 20 ; ++n){

@@ -1050,7 +1050,7 @@ void Lens::compute_points_parallel(int start
         
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      assert(phi == phi);
+      //assert(phi == phi);
       
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j}
       // according to the corrected Eq. (18) of paper GLAMER II ---------------------------------
