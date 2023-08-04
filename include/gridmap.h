@@ -12,6 +12,7 @@
 #include <iostream>
 #include "lens.h"
 #include "point.h"
+#include "concave_hull.h"
 #include "Tree.h"
 #include "source.h"
 #include <mutex>
@@ -73,12 +74,12 @@ struct GridMap{
 	size_t getNumberOfPoints() const {return Ngrid_init*Ngrid_init2;}
   
 	/// return initial number of grid points in each direction
-	int getInitNgrid(){return Ngrid_init;}
+	int getInitNgrid() const {return Ngrid_init;}
 	/// return initial range of gridded region.  This is the distance from the first ray in a row to the last (unlike PixelMap)
-	double getXRange(){return x_range;}
-	double getYRange(){return x_range*axisratio;}
+	double getXRange() const {return x_range;}
+	double getYRange() const {return x_range*axisratio;}
   /// resolution in radians, this is range / (N-1)
-  double getResolution(){return x_range/(Ngrid_init-1);}
+  double getResolution() const {return x_range/(Ngrid_init-1);}
   
    /// make pixel map of lensing quantities at the resolution of the GridMap
   PixelMap writePixelMap(LensingVariable lensvar);
@@ -109,8 +110,9 @@ struct GridMap{
   PosType EinsteinArea() const;
 
   /// flux weighted magnification with current surface brightness averaged on the image plane
-  PosType magnification() const;
-  PosType magnification2() const;
+  //PosType magnification() const;
+  //PosType magnification2() const;
+  
   /// returns centroid of flux on the grid
   Point_2d centroid() const;
   
@@ -265,6 +267,44 @@ struct GridMap{
     return;
   }
   
+  /**calculate the magnification by triangel method
+   */
+  double magnificationTr() const {
+    
+    size_t k;
+    size_t k1;
+    size_t k2;
+    size_t k3;
+
+    double flux_source=0.0,flux_image=0.0;
+    for(size_t i=0 ; i< Ngrid_init-1 ; i++){
+      for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
+        
+        k = i + j*Ngrid_init;
+        k1 = k + Ngrid_init + 1;
+        
+        k2 = k + 1;
+        k3 = k + Ngrid_init;
+
+        double sb = (i_points[k].surface_brightness
+        + i_points[k1].surface_brightness + i_points[k2].surface_brightness)/3;
+        
+        flux_source += sb * abs( (s_points[k1] - s_points[k])^(s_points[k2] - s_points[k]) )/2;
+       
+        flux_image += sb;
+        
+        sb = (i_points[k].surface_brightness
+        + i_points[k1].surface_brightness + i_points[k3].surface_brightness)/3;
+        
+        flux_source += sb * abs( (s_points[k1] - s_points[k])^(s_points[k3] - s_points[k]) )/2;
+  
+        flux_image += sb;
+      }
+    }
+    
+    return flux_image * getResolution() * getResolution() * 0.5 / flux_source;
+  }
+
   /** \brief add flux to the rays that are nearest to the source on the source plane for each image
   *
    * This uses GridMap::find_images to find the images.  It then finds the point that is closest to the source position.
@@ -321,7 +361,16 @@ struct GridMap{
         bitmap[k] = false;
       }
     }
-    if(count>0) find_boundaries(bitmap,points,hits_boundary);
+    //if(count>0) find_boundaries(bitmap,points,hits_boundary);
+    if(count>0){
+
+      Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,points,hits_boundary,false);
+      double resolution = getResolution();
+      for(std::vector<Point_2d> &v : points){
+        for(Point_2d &p : v) p = p * resolution + i_points[0];
+      }
+      
+    }
     crit_type.resize(points.size());
     for(CritType &b : crit_type) b = CritType::tangential;
 
@@ -336,8 +385,18 @@ struct GridMap{
         bitmap[k] = false;
       }
     }
-    if(count>0) find_boundaries(bitmap,points,hits_boundary,true);
-    
+    //if(count>0) find_boundaries(bitmap,points,hits_boundary,true);
+    if(count>0){
+
+      int n = points.size();
+      Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,points,hits_boundary,true);
+      double resolution = getResolution();
+      //for(std::vector<Point_2d> &v : points){
+      for(int i=n ; i<points.size() ; ++i){
+        for(Point_2d &p : points[i]) p = p * resolution + i_points[0];
+      }
+      
+    }
     int k = crit_type.size();
     crit_type.resize(points.size());
     for(int i=k ; i<crit_type.size() ; ++i) crit_type[i] = CritType::radial;
