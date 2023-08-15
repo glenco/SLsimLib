@@ -289,14 +289,14 @@ struct GridMap{
         double sb = (i_points[k].surface_brightness
         + i_points[k1].surface_brightness + i_points[k2].surface_brightness)/3;
         
-        flux_source += sb * abs( (s_points[k1] - s_points[k])^(s_points[k2] - s_points[k]) )/2;
+        flux_source += sb * fabs( (s_points[k1] - s_points[k])^(s_points[k2] - s_points[k]) )/2;
        
         flux_image += sb;
         
         sb = (i_points[k].surface_brightness
         + i_points[k1].surface_brightness + i_points[k3].surface_brightness)/3;
         
-        flux_source += sb * abs( (s_points[k1] - s_points[k])^(s_points[k3] - s_points[k]) )/2;
+        flux_source += sb * fabs( (s_points[k1] - s_points[k])^(s_points[k3] - s_points[k]) )/2;
   
         flux_image += sb;
       }
