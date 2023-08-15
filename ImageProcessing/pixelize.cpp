@@ -817,6 +817,7 @@ void PixelMap::find_contour(double level
     for(Point_2d &p : v) p = p * resolution + xo;
   }
 }
+
 int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
   
   if(pixel_index.size() == 0) return 0;
