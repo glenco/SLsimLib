@@ -39,6 +39,9 @@ struct GridMap{
   
     /// reshoot the rays for example when the source plane has been changed
   GridMap ReInitialize(LensHndl lens);
+  
+  /// resets to state without lensing
+  void deLens();
   /**
    * \brief Recalculate surface brightness at every point without changing the positions of the gridmap or any lens properties.
    *
@@ -109,8 +112,9 @@ struct GridMap{
   /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
   PosType EinsteinArea() const;
 
-  /// flux weighted magnification with current surface brightness averaged on the image plane
-  //PosType magnification() const;
+  /** flux weighted local magnification with current surface brightness averaged on the image plane,
+   */
+  //PosType magnification_invmag() const;
   //PosType magnification2() const;
   
   /// returns centroid of flux on the grid
@@ -267,43 +271,56 @@ struct GridMap{
     return;
   }
   
-  /**calculate the magnification by triangel method
+  /**
+   Calculate the magnification of one source by adding up its flux for the lensed image and an image made on an unlensed regulare grid
    */
-  double magnificationTr() const {
-    
-    size_t k;
-    size_t k1;
-    size_t k2;
-    size_t k3;
-
-    double flux_source=0.0,flux_image=0.0;
-    for(size_t i=0 ; i< Ngrid_init-1 ; i++){
-      for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
-        
-        k = i + j*Ngrid_init;
-        k1 = k + Ngrid_init + 1;
-        
-        k2 = k + 1;
-        k3 = k + Ngrid_init;
-
-        double sb = (i_points[k].surface_brightness
-        + i_points[k1].surface_brightness + i_points[k2].surface_brightness)/3;
-        
-        flux_source += sb * abs( (s_points[k1] - s_points[k])^(s_points[k2] - s_points[k]) )/2;
-       
-        flux_image += sb;
-        
-        sb = (i_points[k].surface_brightness
-        + i_points[k1].surface_brightness + i_points[k3].surface_brightness)/3;
-        
-        flux_source += sb * abs( (s_points[k1] - s_points[k])^(s_points[k3] - s_points[k]) )/2;
+  PosType magnificationFlux(Source &source) const ;
   
-        flux_image += sb;
-      }
-    }
-    
-    return flux_image * getResolution() * getResolution() * 0.5 / flux_source;
-  }
+  /**\brief calculate the LOCAL magnification by triangel method weighted by interpolated surface brightness
+   
+   This is done by finding the area of every half cell triangle on the source plane and multiplying by the surface bightness interpolated to the
+   center of the triangle on the image plane.  This does not use the point-wise magnification calculated by the rayshooter beacuse this can be highly unstable.
+   
+   NOTE: This will not equal the ratio of the lensed flux to the unlensed flux except in the case of one image (assuming the source is well resolved).
+   */
+  double magnificationTr() const ;
+
+  /** \brief Same as `magnificationTr()`  but for a limited number of cells.  Problematic when cell is intersected by critical curve.
+   */
+  double magnificationTr(std::vector<size_t> &pixels) const ;
+
+  /// area of a cell  (pixel size region with its lower left at point k) on source plane - calculated by triangal method
+  double AreaCellOnSourcePlane(size_t k) const;
+  
+// depricated version of PixalMap::magnificationTr()
+//  double magnificationTr2() const {
+//
+//    size_t k;
+//    size_t k1;
+//    size_t k2;
+//
+//    double flux_source=0.0,flux_image=0.0;
+//    for(size_t i=1 ; i< Ngrid_init-1 ; i++){
+//      for(size_t j=1 ; j< Ngrid_init2-1 ; j++){
+//
+//        k = i + j*Ngrid_init;
+//
+//        assert( s_points[k].surface_brightness == i_points[k].surface_brightness);
+//        double sb = s_points[k].surface_brightness;
+//
+//        if(sb !=0.0){
+//          flux_source += AreaCellOnSourcePlane(k) *sb;
+//          flux_source += AreaCellOnSourcePlane(k-1) *sb;
+//          flux_source += AreaCellOnSourcePlane(k-1-Ngrid_init) *sb;
+//          flux_source += AreaCellOnSourcePlane(k-Ngrid_init) *sb;
+//        }
+//
+//        flux_image += sb;
+//      }
+//    }
+//
+//    return flux_image * getResolution() * getResolution() * 4 / flux_source;
+//  }
 
   /** \brief add flux to the rays that are nearest to the source on the source plane for each image
   *
@@ -311,96 +328,12 @@ struct GridMap{
    *  The flux is added to one point per image.  The total flux added is returned.  No further refinement of the grid is done
    *  so it is limited by the resolution of the GridMap.  Some spurious low magnification images can be found.
    */
-  double AddPointSource(const Point_2d &y,double flux){
-    std::vector<Point_2d> images;
-    std::vector<Triangle> tri;
-
-    find_images(y,images,tri);
-    
-    int n = images.size();
-    
-    double total_flux = 0;
-    for(int i = 0 ; i<n ; ++i){
-      
-      int closest = 0;
-      double d = (s_points[ tri[i][0] ] - y).length_sqr();
-      double tmp = (s_points[ tri[i][1] ] - y).length_sqr();
-      if(tmp < d){ d=tmp; closest = 1;}
-      tmp = (s_points[ tri[i][2] ] - y).length_sqr();
-      if(tmp < d){ d=tmp; closest = 2;}
- 
-      size_t ii = tri[i][closest];
-      total_flux += flux / fabs(i_points[ii].invmag());
-      d = flux / fabs(i_points[ii].invmag()) / getResolution() / getResolution() ;
-      i_points[ii].surface_brightness += d;
-      s_points[ii].surface_brightness += d;
-    }
-    
-    return total_flux;
-  }
+  double AddPointSource(const Point_2d &y,double flux);
   
   void find_crit(std::vector<std::vector<Point_2d> > &points
                  ,std::vector<bool> &hits_boundary
                  ,std::vector<CritType> &crit_type
-                 ){
-    
-    points.resize(0);
-    
-    size_t N = Ngrid_init * Ngrid_init2;
-    std::vector<bool> bitmap(N);
-    size_t count = 0;
-    double eigenv[2];
- 
-    // find tangential critical curves
-    for(size_t k = 0 ; k < N ; ++k){
-      i_points[k].A.eigenv(eigenv);
-      if(eigenv[1] < 0){
-        bitmap[k] = true;
-        ++count;
-      } else {
-        bitmap[k] = false;
-      }
-    }
-    //if(count>0) find_boundaries(bitmap,points,hits_boundary);
-    if(count>0){
-
-      Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,points,hits_boundary,false);
-      double resolution = getResolution();
-      for(std::vector<Point_2d> &v : points){
-        for(Point_2d &p : v) p = p * resolution + i_points[0];
-      }
-      
-    }
-    crit_type.resize(points.size());
-    for(CritType &b : crit_type) b = CritType::tangential;
-
-    // find radial critical curves
-    count=0;
-    for(size_t k = 0 ; k < N ; ++k){
-      i_points[k].A.eigenv(eigenv);
-      if(eigenv[0] < 0 && eigenv[1] < 0){
-        bitmap[k] = true;
-        ++count;
-      }else{
-        bitmap[k] = false;
-      }
-    }
-    //if(count>0) find_boundaries(bitmap,points,hits_boundary,true);
-    if(count>0){
-
-      int n = points.size();
-      Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,points,hits_boundary,true);
-      double resolution = getResolution();
-      //for(std::vector<Point_2d> &v : points){
-      for(int i=n ; i<points.size() ; ++i){
-        for(Point_2d &p : points[i]) p = p * resolution + i_points[0];
-      }
-      
-    }
-    int k = crit_type.size();
-    crit_type.resize(points.size());
-    for(int i=k ; i<crit_type.size() ; ++i) crit_type[i] = CritType::radial;
-  }
+                 );
   
   /** finds ordered boundaries to regions where bitmap == true
 
@@ -415,249 +348,7 @@ struct GridMap{
                        ,std::vector<std::vector<Point_2d> > &points
                        ,std::vector<bool> &hits_edge
                        ,bool add_to_vector=false
-                       ){
-    
-    size_t nx = Ngrid_init;
-    size_t ny = Ngrid_init2;
-    size_t n = nx*ny;
-    
-    std::vector<bool> not_used(bitmap.size(),true);
-    
-    assert(bitmap.size()==n);
-    
-    // pad edge of field with bitmap=false
-    for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
-    size_t j = nx*(ny-1);
-    for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
-    for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
-    j = nx-1;
-    for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
-
-    std::list<std::list<Point_2d>> contours;
-    if(!add_to_vector){
-      hits_edge.resize(0);
-    }
-    
-    bool done = false;
-    long kfirst_in_bound = -1;
-    while(!done){
-      // find first cell in edge
-      size_t k=0;
-      int type;
-      for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
-        if(k % nx != nx-1){ // one less cells than points
-          type = 0;
-          if(bitmap[k] ) type +=1;
-          if(bitmap[k+1]) type += 10;
-          if(bitmap[k + nx]) type += 100;
-          if(bitmap[k + nx + 1]) type += 1000;
-
-          if(type > 0
-             && type != 1111
-             && not_used[k]
-             ) break;
-        }
-      }
-      
-      kfirst_in_bound = k;
-       
-      if(k == n-nx){
-        done=true;
-      }else{ // found an edge
-        
-        contours.resize(contours.size() + 1);
-        std::list<Point_2d> &contour = contours.back();
-        hits_edge.push_back(false);
-        
-        int type;
-        int face_in=0;
-        size_t n_edge = 0;
-
-        // follow edge until we return to the first point
-        while(k != kfirst_in_bound || n_edge==0){
-          
-          if(n_edge >= n){  // infinite loop, output debugging data
-            std::cerr << "Too many points in GridMap::find_boundaries()." << std::endl;
-            std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
-            std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
-            {
-              std::ofstream file("bitmap_error_file.csv");
-              file << "in,x,y" << std::endl;
-              for(size_t i=0 ; i<n ; ++i){
-                file << bitmap[i] << "," << i_points[i][0] << "," << i_points[i][1] << std::endl;
-              }
-            }
-            
-            {
-              std::ofstream file("boundary_error_file.csv");
-              file << "contour,x,y" << std::endl;
-              int i = 0;
-              for(auto &v : contours){
-                for(Point_2d &p : v){
-                  file << i << "," << p[0] << "," << p[1] << std::endl;
-                }
-                ++i;
-              }
-            }
-            throw std::runtime_error("caught in loop.");
-          }
-          
-          if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
-          if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
-          
-          not_used[k] = false;
-          
-          ++n_edge;
-          type = 0;
-          // find type of cell
-          if(bitmap[k] ) type +=1;
-          if(bitmap[k+1]) type += 10;
-          if(bitmap[k + nx]) type += 100;
-          if(bitmap[k + nx + 1]) type += 1000;
-          
-          if(type == 0 || type == 1111){  // all in or all out
-            throw std::runtime_error("off edge!!");
-          }else if(type == 1 || type == 1110){ // lower left only
-            
-            if(face_in==0){
-              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-              face_in=1;
-              k -= nx;
-            }else{
-              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-              face_in=2;
-              k -= 1;
-            }
-            
-          }else if(type == 10 || type == 1101){ // lower right only
-            
-            if(face_in==2){
-              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-              face_in=1;
-              k -= nx;
-            }else{
-              contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
-              face_in=0;
-              k += 1;
-            }
-            
-          }else if(type == 100 || type == 1011){ // upper left only
-            
-            if(face_in==0){
-              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-              face_in=3;
-              k += nx;
-            }else{
-              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-              face_in=2;
-              k -= 1;
-            }
-            
-          }else if(type == 1000 || type == 111){ // upper right only
-            
-            if(face_in==1){
-              contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
-              face_in=0;
-              k += 1;
-            }else{
-              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-              face_in=3;
-              k += nx;
-            }
-            
-          }else if(type == 11 || type == 1100){ // lower two
-            
-            if(face_in==0){
-              contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
-              k += 1;
-            }else{
-              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-              face_in = 2;
-              k -= 1;
-            }
-            
-          }else if(type == 1010 || type == 101){ // right two
-            
-            if(face_in==1){
-              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-              k -= nx;
-            }else{
-              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-              face_in = 3;
-              k += nx;
-            }
-            
-          }else if(type == 1001){ // lower left upper right
-            
-            if(face_in==0){
-              contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-              face_in=3;
-              k += nx;
-            }else if(face_in==1){
-              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-              face_in=2;
-              k -= 1;
-            }else if(face_in==2){
-              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-              face_in=1;
-              k -= nx;
-            }else{
-              contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
-              face_in=0;
-              k += 1;
-            }
-            
-          }else if(type == 110){ // upper left lower right
-            
-            if(face_in==0){
-              contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-              face_in=1;
-              k -= nx;
-            }else if(face_in==1){
-              contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
-              face_in=0;
-              k += 1;
-            }else if(face_in==2){
-              contour.push_back( (i_points[k + nx] + i_points[k+nx+1]) / 2 );
-              face_in=3;
-              k += nx;
-            }else{
-              contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-              face_in=2;
-              k -= 1;
-            }
-          }
-        }
-        
-        // the diamand with a hole
-        //if(n_edge == 12 && bitmap[k + nx + 1] ){
-        //  n_edge=0;
-        //  face_in = 2;
-        //}
-        
-      }
-    }
-    
-    int offset = 0;
-    if(!add_to_vector){
-      points.resize(contours.size());
-    }else{
-      offset = points.size();
-      points.resize(points.size() + contours.size());
-    }
-    
-    // copy lists of points into vectors
-    int i=0;
-    for(auto &c: contours){
-      points[offset+i].resize(c.size());
-      size_t j=0;
-      for(auto &p: c){
-        points[offset+i][j] = p;
-        ++j;
-      }
-      ++i;
-    }
-  }
+                       );
   
 private:
   
