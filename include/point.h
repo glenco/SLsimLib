@@ -423,6 +423,7 @@ struct Point: public Point_2d{
 
   PosType *ptr_y(){return image->x;}
   
+  /// Only copies position!!
   Point operator=(const Point_2d &p){
     Point_2d::operator=(p);
     
