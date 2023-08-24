@@ -153,7 +153,7 @@ void ObsVIS::Convert(
   assert(map_in.getNx() == Npix_x_input);
   assert(map_in.getNy() == Npix_y_input);
   
-  if (fabs(map_in.getResolution()*oversample - pix_size) > pix_size*1.0e-5)
+  if (fabs(map_in.getResolution()*psf_oversample - pix_size) > pix_size*1.0e-5)
   {
     std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");
@@ -182,7 +182,7 @@ Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
 ,seeing(seeing)
 ,Npix_x_output(Npix_xx)
 ,Npix_y_output(Npix_yy)
-,oversample(oversample)
+,psf_oversample(oversample)
 ,map_scratch(Point_2d(0,0).x, oversample * Npix_xx,  oversample * Npix_yy, pix_size){
   Npix_x_input = oversample * Npix_x_output;
   Npix_y_input = oversample * Npix_y_output;
@@ -211,7 +211,7 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
   input_psf_pixel_size*60*60 << " arcsec" << std::endl;
   input_psf_pixel_size *= degreesTOradians;
   
-  if( (input_psf_pixel_size - pix_size/oversample)/input_psf_pixel_size > 1.0e-3){
+  if( (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size > 1.0e-3){
     std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
     throw std::runtime_error("");
   }
@@ -259,7 +259,7 @@ void Obs::setPSF(PixelMap &psf_map/// name of fits file with psf
  
   input_psf_pixel_size = psf_map.getResolution();
   
-  if( (input_psf_pixel_size - pix_size/oversample)/input_psf_pixel_size > 1.0e-3){
+  if( (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size > 1.0e-3){
     std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
     throw std::runtime_error("");
   }
@@ -401,7 +401,7 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
   assert(map_out.getNx() == Npix_x_output);
   assert(map_out.getNy() == Npix_y_output);
  
-  if(oversample == 1){
+  if(psf_oversample == 1){
     size_t n=map_in.size();
     for(size_t i=0; i<n ; ++i ) map_out[i] = map_in[i]; // keep bounding box information
     return;
@@ -409,9 +409,9 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
  
   map_out.Clean();
   for(size_t i=0 ; i<Npix_x_input ; ++i){
-    size_t ii = MIN(i / oversample + 0.5, Npix_x_output - 1 ) ;
+    size_t ii = MIN(i / psf_oversample + 0.5, Npix_x_output - 1 ) ;
     for(size_t j=0 ; j<Npix_y_input ; ++j){
-      size_t jj = MIN(j / oversample + 0.5, Npix_y_output - 1 ) ;
+      size_t jj = MIN(j / psf_oversample + 0.5, Npix_y_output - 1 ) ;
       
       map_out(ii,jj) += map_in(i,j);
     }
@@ -433,7 +433,7 @@ void Obs::fftpsf(){
   n_x = Npix_x_input + 2*nborder_x;
   n_y = Npix_y_input + 2*nborder_y;
   
-  double oversample_factor = pix_size / input_psf_pixel_size / oversample;
+  double oversample_factor = pix_size / input_psf_pixel_size / psf_oversample;
   
   // make extended map of psf
   std::vector<double> psf_padded(n_x * n_y,0);
@@ -974,7 +974,7 @@ void Observation::Convert(PixelMap &map_in
   assert(map_in.getNy() == Npix_y_input);
 
   if(cosmic) throw std::runtime_error("cosmics not implemented");
-  if (fabs(map_in.getResolution()*oversample - pix_size) > pix_size*1.0e-5)
+  if (fabs(map_in.getResolution()*psf_oversample - pix_size) > pix_size*1.0e-5)
   {
     std::cout << "The resolution of the input map is different from the one of the simulated instrument in Observation::Convert!" << std::endl;
     throw std::runtime_error("The resolution of the input map is different from the one of the simulated instrument!");

@@ -573,22 +573,10 @@ PixelMap PixelMap::operator*(const PixelMap& a) const
 /// Multiply two PixelMaps.
 PixelMap PixelMap::operator/(const PixelMap& a) const
 {
-  PixelMap diff(a);
-  for(size_t i=0;i<map.size();++i) diff[i] = map[i]/a.map[i];
+  PixelMap diff(*this);
+  for(size_t i=0;i<map.size();++i) diff[i] /= a.map[i];
   return diff;
 }
-
-PosType PixelMap::ave() const{
-  return sum()/map.size();
-}
-PosType PixelMap::sum() const{
-  PosType tmp=0;
-  for(size_t i=0;i<map.size();++i){
-    tmp += map[i];
-  }
-  return tmp;
-}
-
 
 /** \brief Add an image to the map
  *
@@ -817,6 +805,229 @@ void PixelMap::find_contour(double level
     for(Point_2d &p : v) p = p * resolution + xo;
   }
 }
+
+void PixelMap::find_islands_holes(double level,
+                            std::vector<std::vector<size_t> > &points
+                            ) const {
+  
+  std::vector<bool> bitmap( map.size() );
+  std::vector<size_t> points_in;
+  
+  for(size_t i = 0 ; i<map.size() ; ++i){
+    if (map[i] > level){
+      bitmap[i] = true;
+      points_in.push_back(i);
+    }else{
+      bitmap[i] = false;
+    }
+  }
+  
+  std::vector<bool> hits_edge;
+  std::vector<std::vector<Point_2d> > boundaries;
+  Utilities::find_boundaries<Point_2d>(bitmap,Nx,boundaries,hits_edge,false);
+  points.resize(boundaries.size());
+  
+  if(boundaries.size() == 1){
+    std::swap(points[0],points_in);
+    return;
+  }
+  
+  for(auto &v : points) v.clear();
+  
+  size_t n=points_in.size();
+  size_t m=0;
+  for(size_t k=0 ; k<n ; ++k){
+    for(int i=0 ; i<boundaries.size() ; ++i){
+      if( incurve(points_in[k],boundaries[i]) ){
+        points[i].push_back(points_in[k]);
+        ++m;
+        break;
+      }
+    }
+  }
+  
+
+  
+  // remove holes
+//  int i=0,k=points.size();
+//  while( i < k){
+//    m += points[i].size();
+//    if(points[i].size() == 0){
+//      std::swap(points[i],points[k-1]);
+//      --k;
+//    }else{
+//      ++i;
+//    }
+//  }
+//
+//  points.resize(k);
+  
+  assert(m == n && "In PixelMap::find_islands_holes");
+}
+std::vector<size_t> PixelMap::maxima(double minlevel
+                            ) const {
+  std::vector<size_t> indexes;
+  if(map.max() < minlevel) return indexes;
+  
+  for(size_t j=1 ; j < Ny-1 ; ++j){
+    size_t k = Nx*j+1;
+    for(size_t i=1 ; i < Nx-1 ; ++i,++k){
+      if(map[k] > minlevel){
+        double val = map[k];
+        if(
+           val > map[k-1] &&
+           val > map[k+1] &&
+           val > map[k+Nx] &&
+           val > map[k+Nx-1] &&
+           val > map[k+Nx+1] &&
+           val > map[k-Nx] &&
+           val > map[k-Nx-1] &&
+           val > map[k-Nx+1]
+           ){
+             indexes.push_back(k);
+           }
+      }
+    }
+  }
+  return indexes;
+}
+
+bool  PixelMap::incurve(long k,std::vector<Point_2d> &curve) const{
+  int n=0;
+  long i = k % Nx , j = k / Nx;
+  for(Point_2d &p : curve){
+    if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
+  }
+  
+  return n%2 == 1;
+}
+
+
+bool PixelMap::lens_definition(
+                            double min_sn_per_image
+                            ,double pixel_threshold
+                            ,double &total_sig_noise_source
+                            ,std::vector<size_t> &maxima_indexes
+                            ,std::vector<std::vector<size_t> > &image_points
+                            ,bool &lens_TF
+                            ,double &level
+                            ,size_t &n_pix_in_source
+                            ,bool verbose
+                            ){
+    
+  image_points.clear();
+  find_islands_holes(pixel_threshold,image_points);
+  double sn_max = map.max();
+  
+  total_sig_noise_source = 0;
+  if(verbose) std::cout << "Number of islands : " << image_points.size() << std::endl;
+  std::vector<double> sig_noise(image_points.size(),0);
+  for(size_t i=0 ; i<image_points.size() ; ++i ){
+    for(size_t k : image_points[i] ){
+      sig_noise[i] += map[k];
+    }
+    if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
+    total_sig_noise_source += sig_noise[i];
+  }
+  n_pix_in_source = 0;
+  for(auto &v : image_points) n_pix_in_source += v.size();
+  if(verbose) std::cout << "              total : " << total_sig_noise_source << "  " << n_pix_in_source << std::endl;
+  
+  maxima_indexes = maxima( pixel_threshold );
+  if(verbose) std::cout << "Number of maxima : " << maxima_indexes.size() << std::endl;
+  
+  // remove holes
+
+  bool ring = false;
+  { // remove holes
+    int i=0,k=image_points.size();
+    while( i < k){
+      if(image_points[i].size() == 0){
+        std::swap(image_points[i],image_points[k-1]);
+        --k;
+        ring = true;
+        if(verbose) std::cout << "There is a hole ! " << std::endl;
+      }else{
+        ++i;
+      }
+    }
+    image_points.resize(k);
+  }
+  
+  {
+    // remove low s/n peaks
+    int i=0,k=sig_noise.size();
+    while( i < k){
+      if(sig_noise[i] < min_sn_per_image){
+        std::swap(sig_noise[i],sig_noise[k-1]);
+        std::swap(image_points[i],image_points[k-1]);
+        --k;
+      }
+      ++i;
+    }
+  }
+  level = pixel_threshold;
+  
+  if( image_points.size() == 1 && !ring){
+    
+    while( image_points.size() == 1
+          && image_points[0].size() > 1
+          && !ring
+          && level < sn_max
+          ){
+      
+      std::sort(image_points[0].begin(),image_points[0].end()
+                ,[this](size_t i,size_t j){return map[i] < map[j];});
+      level = map[ image_points[0][1] ];
+      
+      find_islands_holes(level,image_points);
+      if(verbose) std::cout << "    Number of islands : " << image_points.size() << "   level " << level << std::endl;
+      
+      sig_noise.resize(image_points.size());
+      for(size_t i=0 ; i<image_points.size() ; ++i ){
+        sig_noise[i] = 0;
+        for(size_t k : image_points[i] ){
+          sig_noise[i] += map[k];
+        }
+        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
+      }
+      
+      {  // remove/check holes
+        int i=0,k=image_points.size();
+        while( i < k){
+          if(image_points[i].size() == 0){
+            std::swap(image_points[i],image_points[k-1]);
+            --k;
+            ring = true;
+            if(verbose) std::cout << "There is a hole ! " << std::endl;
+          }else{
+            ++i;
+          }
+        }
+        image_points.resize(k);
+      }
+      
+      // remove low s/n images
+      int i=0,k=sig_noise.size();
+      while( i < k){
+        if(sig_noise[i] < min_sn_per_image){
+          std::swap(sig_noise[i],sig_noise[k-1]);
+          std::swap(image_points[i],image_points[k-1]);
+          --k;
+        }else{
+          ++i;
+        }
+      }
+      
+      sig_noise.resize(k);
+      image_points.resize(k);
+    }
+  }
+  
+  lens_TF = image_points.size() > 1 || ring;
+  if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
+}
+
 
 int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
   

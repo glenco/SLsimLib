@@ -193,7 +193,7 @@ public:
 
 	inline double getValue(std::size_t i) const { return map[i]; }
   inline double & operator[](std::size_t i) { return map[i]; };
-  const double & operator[](std::size_t i) const { return map[i]; };
+  double operator[](std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
   inline double & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
@@ -213,10 +213,6 @@ public:
 
 	PixelMap& operator*=(PosType b);
 
- 	//friend PixelMap operator*(const PixelMap&, PosType b);
-  /// element wise multiplictioan
-  PixelMap operator*=(const PixelMap &m) const;
-
 	std::valarray<double>& data() { return map; }
 	
   /// Check whether two PixelMaps agree in their physical dimensions.
@@ -226,12 +222,14 @@ public:
   static void swap(PixelMap&, PixelMap&);
   
   /// return average pixel value
-  PosType ave() const;
+  PosType ave() const {return map.sum()/map.size();}
   /// return sum of all pixel values
-  PosType sum() const;
+  PosType sum() const {return map.sum();};
   /// Total number of pixels
   size_t size(){return map.size();}
-	
+  double max() const{ return map.max(); }
+  double min() const{ return map.min(); }
+
   void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
   
@@ -315,11 +313,48 @@ public:
   }
 #endif
   
+  /// returns a vector of  contour curves
   void find_contour(double level
                     ,std::vector<std::vector<Point_2d> > &points
                     ,std::vector<bool> &hits_edge
                     ) const;
-
+  /** find all the points above level divided into seprated groups
+   
+   Groups with points are connected regions above level.
+   Groups without points are regions surounded by regions above level
+   */
+  
+  void find_islands_holes(double level,
+                    std::vector<std::vector<size_t> > &points
+                    ) const;
+  
+  /** This applies a definition of lesning for a resolved source based on that of Sonnenfeld et al. 2023
+   
+   This is meant to be used on a signal-to-noise map of the lensed source only.
+   
+   The definition does the following tests:
+   1) define a footprint at surface brightness level `pixel_threshold`
+   2) romove disconected region that have signal-to-noise below `min_sn_per_image `
+   3) if there are multiple images or a hole in the image `lens_TF =true`
+   4) if there is one image with no hole increase the threshold and apply 3) until the it is classified as a
+          lens or it reaches the maximum surface brightness level
+   
+   */
+  bool lens_definition(double min_sn_per_image                 /// signal-to-noise required for a seporate image (ex 10)
+                       ,double pixel_threshold                 /// signal-to-noise threshold that defines the footprint (ex. 2)
+                       ,double &total_sig_noise_source         /// gives the total signal-to-noise of all images
+                       ,std::vector<size_t> &maxima_indexes    /// index of maxima
+                       ,std::vector<std::vector<size_t> > &image_points
+                       ,bool &lens_TF                          /// whether it passes lens diffintion
+                       ,double &level                          /// levels on which the multiple images are defined
+                       ,size_t &n_pix_in_source                 /// number of pixels in footprint
+                       ,bool verbose = false
+                       );
+  
+  
+  /// find maxima that are above minlevel
+  std::vector<size_t> maxima(double minlevel) const;
+  
   /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
    
    On return, 'pixel_index' is ordered into groups and the 'heads' list points to the first elemant 
@@ -499,6 +534,8 @@ private:
     }
   }
   
+  // find if pixel k is in the curve which must be in pixel units, meant to be used in conjunction with Utilities::find_boundaries<>
+  bool incurve(long k,std::vector<Point_2d> &curve) const;
 };
 
 enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z};
@@ -563,7 +600,7 @@ protected:
   // the number of pixels in the oversamples image
   size_t Npix_x_input,Npix_y_input;
  
-  float oversample; // psf oversampling factor
+  float psf_oversample; // psf oversampling factor
   void downsample(PixelMap &map_in,PixelMap &map_out) const;  // downsize from Npix_input to Npix_output
   
   PixelMap map_scratch;
