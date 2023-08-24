@@ -671,8 +671,16 @@ public:
 
   double zeropoint() const {return zero_point;}
  
-  // returns std of pixels in surface brightness
-  float getBackgroundNoise() const {return sigma_background;}
+  /// returns std of pixels in e-
+  float getBackgroundNoise() const {
+    double dt = 3 * t1 + t2;
+    
+    return sigma_background / sqrt(dt);
+  }
+private:
+  double t1;
+  double t2;
+
 };
 
 /** 
