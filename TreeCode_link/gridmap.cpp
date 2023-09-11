@@ -1241,6 +1241,57 @@ void GridMap::find_images(Point_2d y
   return;
 }
 
+void GridMap::limited_image_search(Point_2d &y
+                 ,std::vector<size_t> &cell_numbers  /// positions of the images limited by resolution of the gridmap
+                 ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+) const {
+  
+  triangles.clear();
+  
+  size_t k1;
+  size_t k2;
+  size_t k3;
+  
+  int sig1,sig2,sig3,sig_sum;
+  
+  for(size_t k : cell_numbers){
+    k1 = k + Ngrid_init + 1;
+    
+    k2 = k + 1;
+    k3 = k + Ngrid_init;
+    
+    sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+    sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
+    sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
+    
+    sig_sum = sig1 + sig2 + sig3;
+    if(abs(sig_sum) == 3){ // inside
+      triangles.push_back(Triangle(k,k1,k2));
+    }else if(abs(sig_sum) == 2){ // on edge
+      if(sig_sum > 0){
+        triangles.push_back(Triangle(k,k1,k2));
+      }
+    }else if (sig1 == 0 && sig3 == 0){ // a vertex
+      triangles.push_back(Triangle(k,k1,k2));
+    }
+    
+    //sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+    sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
+    sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
+    
+    sig_sum = sig1 + sig2 + sig3;
+    if(abs(sig_sum) == 3){ // inside
+      triangles.push_back(Triangle(k,k1,k3));
+    }else if(abs(sig_sum) == 2){ // on edge
+      if(sig_sum > 0){
+        triangles.push_back(Triangle(k,k1,k3));
+      }
+    }
+  }
+  
+  return;
+}
+
 void GridMap::_find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RAY> &rays) const{
   
   std::vector<Point_2d> x;

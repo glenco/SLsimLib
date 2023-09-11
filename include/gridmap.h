@@ -313,6 +313,11 @@ private:
   
   void _find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RAY> &rays) const;
 
+  // find if there are images of y in specific cells
+  void limited_image_search(Point_2d &y
+                   ,std::vector<size_t> &cell_numbers  /// positions of the images limited by resolution of the gridmap
+                   ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+  ) const;
 };
 
 #endif // defined(__GLAMER__gridmap__)
