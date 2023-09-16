@@ -1316,3 +1316,14 @@ void GridMap::_find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RA
   
   return;
 }
+
+bool  GridMap::incurve(long k,std::vector<Point_2d> &curve) const{
+  int n=0;
+  long i = k % Ngrid_init , j = k / Ngrid_init;
+  for(Point_2d &p : curve){
+    if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
+  }
+  
+  return n%2 == 1;
+}
+

@@ -282,6 +282,9 @@ struct GridMap{
   
 private:
   
+  // curve must be in pixel units
+  bool  incurve(long k,std::vector<Point_2d> &curve) const;
+  
   // cluge to make compatible with old method of producing points
   Point * NewPointArray(size_t N){
     Point * p = point_factory(N);

@@ -102,8 +102,13 @@ std::vector<T> TightHull(const std::vector<T> &curve){
         
         Point_2d x =  hull[ii] - hull[i];
         x.unitize();
-        if( ( x^(hull[ (j+1) % N ] - hull[i]) ) / (hull[ (j+1) % N ] - hull[i]).length()
-           > ( x^(hull[j] - hull[i]) ) / (hull[j] - hull[i]).length()
+    
+        if(
+           ( x^(hull[ (j+1) % N ] - hull[i]) ) / (hull[ (j+1) % N ] - hull[i]).length()
+           //atan2( x^(hull[ (j+1) % N ] - hull[i]) , x*(hull[ (j+1) % N ] - hull[i]) )
+           >
+           //atan2( x^(hull[j] - hull[i]) , x*(hull[j] - hull[i]) )
+           ( x^(hull[j] - hull[i]) ) / (hull[j] - hull[i]).length()
            ){
           
           // inner loop - remove all points between i and j+1
@@ -506,55 +511,53 @@ void convex_hull(std::vector<T> &P,std::vector<T> &hull_out)
 }
 
 /// Returns a vector of points on the convex hull in counter-clockwise order.
-    Carefull, P is reordered.
 ///
 template<typename T>
-void convex_hull(std::vector<T> &P,std::vector<size_t> &hull_index)
+void convex_hull(const std::vector<T> &P,std::vector<size_t> &hull)
 {
   
   size_t n = P.size();
   
   if(n <= 3){
-    hull_index.resize(n);
+    hull.resize(n);
     size_t i = 0;
-    for(size_t &d : hull_index) d = i++;
+    for(size_t &d : hull) d = i++;
     return;
   }
   
-  std::vector<T> hull(n + 1);
-  hull_index.resize(n + 1);
-  
+  //std::vector<T> hull(n + 1);
+  hull.resize(n + 1);
   size_t k = 0;
   
   // Sort points lexicographically
-  std::sort(P.begin(), P.end(),
-            [](T p1,T p2){
-    if(p1[0]==p2[0]) return p1[1] < p2[1];
-    return p1[0] < p2[0];});
+  std::vector<size_t> sort_index(P.size());
+  {
+    int i=0;
+    for(size_t &a :  sort_index) a = i++;
+  }
+  std::sort(sort_index.begin(), sort_index.end(),
+            [&P](size_t i1,size_t i2){
+    if(P[i1][0]==P[i2][0]) return P[i1][1] < P[i2][1];
+    return P[i1][0] < P[i2][0];});
   
   
   // Build lower hull
   for (size_t i = 0; i < n; i++) {
-    while (k >= 2 && crossD(hull[k-2], hull[k-1], P[i]) <= 0){
+    while (k >= 2 && crossD(P[hull[k-2]], P[hull[k-1]], P[sort_index[i]]) <= 0){
       k--;
     }
-    hull_index[k] = i;
-    hull[k++] = P[i];
+    hull[k++] = sort_index[i];
   }
   
   // Build upper hull
   for (long i = n-2, t = k+1; i >= 0; i--) {
-    while (k >= t && crossD(hull[k-2], hull[k-1], P[i]) <= 0){
+    while (k >= t && crossD(P[hull[k-2]], P[hull[k-1]],P[sort_index[i]]) <= 0){
       k--;
       assert(k > 1);
     }
-    hull_index[k] = i;
-    hull[k++] = P[i];
+    hull[k++] = sort_index[i];
   }
-  
-  hull_index.resize(k);
-  hull_index.pop_back();
-  
+    
   hull.resize(k);
   hull.pop_back();
   
