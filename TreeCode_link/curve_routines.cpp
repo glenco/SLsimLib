@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include "concave_hull.h"
 
 /**  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
@@ -2750,4 +2751,257 @@ Point_2d Utilities::contour_center(std::vector<RAY> &P, unsigned long Npoints){
   center.x[0]=0.5*(ix[0]+jx[0]);
   center.x[1]=0.5*(ix[1]+jx[1]);
   return center;
+}
+
+void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
+                  ,long nx  // number of pixels in x direction
+                  ,std::vector<std::vector<long> > &indexes
+                  ,std::vector<bool> &hits_edge
+                  ,bool add_to_vector
+                  ){
+  
+  size_t n = bitmap.size();
+  long ny = n/nx;
+  
+  if(n != nx*ny){
+    std::cerr << "Wrong sizes in Utilities::find_boundaries." << std::endl;
+    throw std::invalid_argument("invalid size");
+  }
+  
+  std::vector<bool> not_used(n,true);
+  
+  // pad edge of field with bitmap=false
+  for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
+  size_t j = nx*(ny-1);
+  for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
+  for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
+  j = nx-1;
+  for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
+  
+  std::list< std::set<long> > contours;
+  
+  if(!add_to_vector){
+    hits_edge.resize(0);
+  }
+  
+  bool done = false;
+  long kfirst_in_bound = -1;
+  while(!done){
+    // find first cell in edge
+    size_t k=0,k1,k2,k3;
+    int type;
+    for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
+      if(k % nx != nx-1){ // one less cells than points
+        type = 0;
+        if(bitmap[k] ) type +=1;
+        if(bitmap[k+1]) type += 10;
+        if(bitmap[k + nx]) type += 100;
+        if(bitmap[k + nx + 1]) type += 1000;
+        
+        if(type > 0
+           && type != 1111
+           && not_used[k]
+           ) break;
+      }
+    }
+    
+    kfirst_in_bound = k;
+    
+    if(k == n-nx){
+      done=true;
+    }else{ // found an edge
+      
+      contours.resize(contours.size() + 1);
+      std::set<long> &contour = contours.back();
+      hits_edge.push_back(false);
+      
+      
+      int type;
+      int face_in=0;
+      size_t n_edge = 0;
+      
+      // follow edge until we return to the first point
+      while(k != kfirst_in_bound || n_edge==0){
+        
+        if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
+        if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
+        
+        not_used[k] = false;
+        
+        ++n_edge;
+        type = 0;
+        
+        k1 = k+1;
+        k2 = k+nx;
+        k3 = k+nx+1;
+        
+        // find type of cell
+        if(bitmap[k]) type +=1;
+        if(bitmap[k1]) type += 10;
+        if(bitmap[k2]) type += 100;
+        if(bitmap[k3]) type += 1000;
+        
+        if(type == 0 || type == 1111){  // all in or all out
+          throw std::runtime_error("off edge!!");
+        }else if(type == 1 || type == 1110){ // lower left only
+          
+          if(type == 1) contour.insert(k);
+          if(type == 1110){
+            contour.insert(k1);
+            contour.insert(k2);
+            contour.insert(k3);
+          }
+          
+          if(face_in==0){
+            face_in=1;
+            k -= nx;
+          }else{
+            face_in=2;
+            k -= 1;
+          }
+          
+        }else if(type == 10 || type == 1101){ // lower right only
+          
+          if(type == 10) contour.insert(k1);
+          if(type == 1101){
+            contour.insert(k);
+            contour.insert(k2);
+            contour.insert(k3);
+          }
+          
+          if(face_in==2){
+            face_in=1;
+            k -= nx;
+          }else{
+            face_in=0;
+            k += 1;
+          }
+          
+        }else if(type == 100 || type == 1011){ // upper left only
+          
+          if(type == 100) contour.insert(k2);
+          if(type == 1011){
+            contour.insert(k);
+            contour.insert(k1);
+            contour.insert(k3);
+          }
+          
+          if(face_in==0){
+            face_in=3;
+            k += nx;
+          }else{
+            face_in=2;
+            k -= 1;
+          }
+          
+        }else if(type == 1000 || type == 111){ // upper right only
+          
+          if(type == 1000) contour.insert(k3);
+          if(type == 1011){
+            contour.insert(k);
+            contour.insert(k1);
+            contour.insert(k2);
+          }
+          
+          if(face_in==1){
+            face_in=0;
+            k += 1;
+          }else{
+            face_in=3;
+            k += nx;
+          }
+          
+        }else if(type == 11 || type == 1100){ // lower two
+          
+          if(type == 11){
+            contour.insert(k);
+            contour.insert(k1);
+          }
+          if(type == 1100){
+            contour.insert(k2);
+            contour.insert(k3);
+          }
+          
+          if(face_in==0){
+            k += 1;
+          }else{
+            face_in = 2;
+            k -= 1;
+          }
+          
+        }else if(type == 1010 || type == 101){ // right two
+          
+          if(type == 1010){
+            contour.insert(k1);
+            contour.insert(k3);
+          }
+          if(type == 101){
+            contour.insert(k);
+            contour.insert(k2);
+          }
+          
+          if(face_in==1){
+            k -= nx;
+          }else{
+            face_in = 3;
+            k += nx;
+          }
+          
+        }else if(type == 1001){ // lower left upper right
+          
+          contour.insert(k);
+          contour.insert(k3);
+          
+          if(face_in==0){
+            face_in=3;
+            k += nx;
+          }else if(face_in==1){
+            face_in=2;
+            k -= 1;
+          }else if(face_in==2){
+            face_in=1;
+            k -= nx;
+          }else{
+            face_in=0;
+            k += 1;
+          }
+          
+        }else if(type == 110){ // upper left lower right
+          
+          contour.insert(k1);
+          contour.insert(k2);
+          
+          if(face_in==0){
+            face_in=1;
+            k -= nx;
+          }else if(face_in==1){
+            face_in=0;
+            k += 1;
+          }else if(face_in==2){
+            face_in=3;
+            k += nx;
+          }else{
+            face_in=2;
+            k -= 1;
+          }
+        }
+      }
+      
+      indexes.emplace_back();
+      std::vector<long> &index = indexes.back();
+      auto it = contour.begin();
+      while(it != contour.end() ){
+        long k = *it;
+        index.push_back(k);
+        ++it;
+        ++k;
+        if(bitmap[k]){
+          for( ; k < *it ; ++k){
+            if(bitmap[k]) index.push_back(k);
+          }
+        }
+      }
+      
+    }
+  }
 }
