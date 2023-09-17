@@ -31,7 +31,7 @@ typedef enum {NO, YES, MAYBE} Boo;
 #endif
 
 /// enumerates the types of critical curves. ND is "not defined".
-enum class CritType {ND,radial,tangential,pseudo};
+enum class CritType {ND=0,radial=2,tangential=1,pseudo=3,};
 
 //std::string to_string(const CritType &p);
 std::ostream &operator<<(std::ostream &os, CritType const &p);

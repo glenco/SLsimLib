@@ -224,7 +224,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
       while(k != kfirst_in_bound || n_edge==0){
         
         if(n_edge >= n){  // infinite loop, output debugging data
-          std::cerr << "Too many points in GridMap::find_boundaries()." << std::endl;
+          std::cerr << "Too many points in Utilities::find_boundaries()." << std::endl;
           std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
           std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
           {

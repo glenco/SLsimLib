@@ -175,11 +175,12 @@ struct GridMap{
   ) const ;
   
   /** \brief finds the boundary of the region on the source plane where there are more than one image
+
+   Warning : slow but perhaps reliable than find_caustics() when no radial caustic is found.
    
    This uses the triangle method to determin which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
 
    This should not be as susceptible to missing the radial caustic because of resolution in the image plane.
-   The resolution of the curve might not be so good.
    */
   void find_boundaries_of_caustics(std::vector<std::vector<Point_2d> > &boundaries
                            ,std::vector<bool> &hits_edge
@@ -197,7 +198,7 @@ struct GridMap{
       if(multiplicities[i] > 1) bitmap[i] = true;
     }
     
-    find_boundaries(bitmap,boundaries,hits_edge);
+    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,boundaries,hits_edge);
   }
   
   /**
@@ -260,12 +261,18 @@ struct GridMap{
    */
   double AddPointSource(const Point_2d &y,double flux);
   
+  /** \brief Find critical curves.  This is usually not used outside of ImageFinding::find_crit()
+   
+   This will find all the resolved tangential and radial critical curves.  If a radial critical curve is not found
+   within a tangential one, curves arounf the maxima are used to estimate a radial or pseudo caustic.  These are labeled CritType::pseudo.  The out put is ordered so that the radia/pseudo curves within a tangent curve imediately follow it.
+   */
   void find_crit(std::vector<std::vector<Point_2d> > &points
                  ,std::vector<bool> &hits_boundary
                  ,std::vector<CritType> &crit_type
                  );
   
-  /** finds ordered boundaries to regions where bitmap == true
+  
+  /** \brief finds ordered boundaries to regions where bitmap == true
 
    This can be used to find critical curves or contours.
    `bitmap` should be the same size as the `Gridmap`
