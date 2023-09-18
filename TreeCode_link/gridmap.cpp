@@ -964,8 +964,6 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
   }
 }
 
-
-
 //PosType GridMap::magnification2() const{
 //  double mag = 0,flux = 0;
 //  size_t N = Ngrid_init*Ngrid_init2;
@@ -976,253 +974,261 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
 //  return flux/mag;
 //}
 
-void GridMap::find_boundaries(std::vector<bool> &bitmap  // = true inside
-                     ,std::vector<std::vector<Point_2d> > &points
-                     ,std::vector<bool> &hits_edge
-                     ,bool add_to_vector
-                     ){
-  
-  size_t nx = Ngrid_init;
-  size_t ny = Ngrid_init2;
-  size_t n = nx*ny;
-  
-  std::vector<bool> not_used(bitmap.size(),true);
-  
-  assert(bitmap.size()==n);
-  
-  // pad edge of field with bitmap=false
-  for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
-  size_t j = nx*(ny-1);
-  for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
-  for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
-  j = nx-1;
-  for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
+//void GridMap::find_boundaries(std::vector<bool> &bitmap  // = true inside
+//                     ,std::vector<std::vector<Point_2d> > &points
+//                     ,std::vector<bool> &hits_edge
+//                     ,bool add_to_vector
+//                     ){
+//
+//  size_t nx = Ngrid_init;
+//  size_t ny = Ngrid_init2;
+//  size_t n = nx*ny;
+//
+//  std::vector<bool> not_used(bitmap.size(),true);
+//
+//  assert(bitmap.size()==n);
+//
+//  // pad edge of field with bitmap=false
+//  for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
+//  size_t j = nx*(ny-1);
+//  for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
+//  for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
+//  j = nx-1;
+//  for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
+//
+//  std::list<std::list<Point_2d>> contours;
+//  if(!add_to_vector){
+//    hits_edge.resize(0);
+//  }
+//
+//  bool done = false;
+//  long kfirst_in_bound = -1;
+//  while(!done){
+//    // find first cell in edge
+//    size_t k=0;
+//    int type;
+//    for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
+//      if(k % nx != nx-1){ // one less cells than points
+//        type = 0;
+//        if(bitmap[k] ) type +=1;
+//        if(bitmap[k+1]) type += 10;
+//        if(bitmap[k + nx]) type += 100;
+//        if(bitmap[k + nx + 1]) type += 1000;
+//
+//        if(type > 0
+//           && type != 1111
+//           && not_used[k]
+//           ) break;
+//      }
+//    }
+//
+//    kfirst_in_bound = k;
+//
+//    if(k == n-nx){
+//      done=true;
+//    }else{ // found an edge
+//
+//      contours.resize(contours.size() + 1);
+//      std::list<Point_2d> &contour = contours.back();
+//      hits_edge.push_back(false);
+//
+//      int type;
+//      int face_in=0;
+//      size_t n_edge = 0;
+//
+//      // follow edge until we return to the first point
+//      while(k != kfirst_in_bound || n_edge==0){
+//
+//        if(n_edge >= n){  // infinite loop, output debugging data
+//          std::cerr << "Too many points in GridMap::find_boundaries()." << std::endl;
+//          std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
+//          std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
+//          {
+//            std::ofstream file("bitmap_error_file.csv");
+//            file << "in,x,y" << std::endl;
+//            for(size_t i=0 ; i<n ; ++i){
+//              file << bitmap[i] << "," << i_points[i][0] << "," << i_points[i][1] << std::endl;
+//            }
+//          }
+//
+//          {
+//            std::ofstream file("boundary_error_file.csv");
+//            file << "contour,x,y" << std::endl;
+//            int i = 0;
+//            for(auto &v : contours){
+//              for(Point_2d &p : v){
+//                file << i << "," << p[0] << "," << p[1] << std::endl;
+//              }
+//              ++i;
+//            }
+//          }
+//          throw std::runtime_error("caught in loop.");
+//        }
+//
+//        if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
+//        if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
+//
+//        not_used[k] = false;
+//
+//        ++n_edge;
+//        type = 0;
+//        // find type of cell
+//        if(bitmap[k] ) type +=1;
+//        if(bitmap[k+1]) type += 10;
+//        if(bitmap[k + nx]) type += 100;
+//        if(bitmap[k + nx + 1]) type += 1000;
+//
+//        if(type == 0 || type == 1111){  // all in or all out
+//          throw std::runtime_error("off edge!!");
+//        }else if(type == 1 || type == 1110){ // lower left only
+//
+//          if(face_in==0){
+//            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+//            face_in=1;
+//            k -= nx;
+//          }else{
+//            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+//            face_in=2;
+//            k -= 1;
+//          }
+//
+//        }else if(type == 10 || type == 1101){ // lower right only
+//
+//          if(face_in==2){
+//            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+//            face_in=1;
+//            k -= nx;
+//          }else{
+//            contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
+//            face_in=0;
+//            k += 1;
+//          }
+//
+//        }else if(type == 100 || type == 1011){ // upper left only
+//
+//          if(face_in==0){
+//            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+//            face_in=3;
+//            k += nx;
+//          }else{
+//            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+//            face_in=2;
+//            k -= 1;
+//          }
+//
+//        }else if(type == 1000 || type == 111){ // upper right only
+//
+//          if(face_in==1){
+//            contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
+//            face_in=0;
+//            k += 1;
+//          }else{
+//            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+//            face_in=3;
+//            k += nx;
+//          }
+//
+//        }else if(type == 11 || type == 1100){ // lower two
+//
+//          if(face_in==0){
+//            contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
+//            k += 1;
+//          }else{
+//            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+//            face_in = 2;
+//            k -= 1;
+//          }
+//
+//        }else if(type == 1010 || type == 101){ // right two
+//
+//          if(face_in==1){
+//            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+//            k -= nx;
+//          }else{
+//            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+//            face_in = 3;
+//            k += nx;
+//          }
+//
+//        }else if(type == 1001){ // lower left upper right
+//
+//          if(face_in==0){
+//            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
+//            face_in=3;
+//            k += nx;
+//          }else if(face_in==1){
+//            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+//            face_in=2;
+//            k -= 1;
+//          }else if(face_in==2){
+//            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+//            face_in=1;
+//            k -= nx;
+//          }else{
+//            contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
+//            face_in=0;
+//            k += 1;
+//          }
+//
+//        }else if(type == 110){ // upper left lower right
+//
+//          if(face_in==0){
+//            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
+//            face_in=1;
+//            k -= nx;
+//          }else if(face_in==1){
+//            contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
+//            face_in=0;
+//            k += 1;
+//          }else if(face_in==2){
+//            contour.push_back( (i_points[k + nx] + i_points[k+nx+1]) / 2 );
+//            face_in=3;
+//            k += nx;
+//          }else{
+//            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
+//            face_in=2;
+//            k -= 1;
+//          }
+//        }
+//      }
+//
+//      // the diamand with a hole
+//      //if(n_edge == 12 && bitmap[k + nx + 1] ){
+//      //  n_edge=0;
+//      //  face_in = 2;
+//      //}
+//
+//    }
+//  }
+//
+//  int offset = 0;
+//  if(!add_to_vector){
+//    points.resize(contours.size());
+//  }else{
+//    offset = points.size();
+//    points.resize(points.size() + contours.size());
+//  }
+//
+//  // copy lists of points into vectors
+//  int i=0;
+//  for(auto &c: contours){
+//    points[offset+i].resize(c.size());
+//    size_t j=0;
+//    for(auto &p: c){
+//      points[offset+i][j] = p;
+//      ++j;
+//    }
+//    ++i;
+//  }
+//}
 
-  std::list<std::list<Point_2d>> contours;
-  if(!add_to_vector){
-    hits_edge.resize(0);
-  }
-  
-  bool done = false;
-  long kfirst_in_bound = -1;
-  while(!done){
-    // find first cell in edge
-    size_t k=0;
-    int type;
-    for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
-      if(k % nx != nx-1){ // one less cells than points
-        type = 0;
-        if(bitmap[k] ) type +=1;
-        if(bitmap[k+1]) type += 10;
-        if(bitmap[k + nx]) type += 100;
-        if(bitmap[k + nx + 1]) type += 1000;
 
-        if(type > 0
-           && type != 1111
-           && not_used[k]
-           ) break;
-      }
-    }
-    
-    kfirst_in_bound = k;
-     
-    if(k == n-nx){
-      done=true;
-    }else{ // found an edge
-      
-      contours.resize(contours.size() + 1);
-      std::list<Point_2d> &contour = contours.back();
-      hits_edge.push_back(false);
-      
-      int type;
-      int face_in=0;
-      size_t n_edge = 0;
+//void GridMap::find_crit_boundary(std::vector<std::vector<Point_2d> > &points
+//               ,std::vector<bool> &hits_boundary
+//               ) const{
+//  
+//}
 
-      // follow edge until we return to the first point
-      while(k != kfirst_in_bound || n_edge==0){
-        
-        if(n_edge >= n){  // infinite loop, output debugging data
-          std::cerr << "Too many points in GridMap::find_boundaries()." << std::endl;
-          std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
-          std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
-          {
-            std::ofstream file("bitmap_error_file.csv");
-            file << "in,x,y" << std::endl;
-            for(size_t i=0 ; i<n ; ++i){
-              file << bitmap[i] << "," << i_points[i][0] << "," << i_points[i][1] << std::endl;
-            }
-          }
-          
-          {
-            std::ofstream file("boundary_error_file.csv");
-            file << "contour,x,y" << std::endl;
-            int i = 0;
-            for(auto &v : contours){
-              for(Point_2d &p : v){
-                file << i << "," << p[0] << "," << p[1] << std::endl;
-              }
-              ++i;
-            }
-          }
-          throw std::runtime_error("caught in loop.");
-        }
-        
-        if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
-        if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
-        
-        not_used[k] = false;
-        
-        ++n_edge;
-        type = 0;
-        // find type of cell
-        if(bitmap[k] ) type +=1;
-        if(bitmap[k+1]) type += 10;
-        if(bitmap[k + nx]) type += 100;
-        if(bitmap[k + nx + 1]) type += 1000;
-        
-        if(type == 0 || type == 1111){  // all in or all out
-          throw std::runtime_error("off edge!!");
-        }else if(type == 1 || type == 1110){ // lower left only
-          
-          if(face_in==0){
-            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-            face_in=1;
-            k -= nx;
-          }else{
-            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-            face_in=2;
-            k -= 1;
-          }
-          
-        }else if(type == 10 || type == 1101){ // lower right only
-          
-          if(face_in==2){
-            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-            face_in=1;
-            k -= nx;
-          }else{
-            contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
-            face_in=0;
-            k += 1;
-          }
-          
-        }else if(type == 100 || type == 1011){ // upper left only
-          
-          if(face_in==0){
-            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-            face_in=3;
-            k += nx;
-          }else{
-            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-            face_in=2;
-            k -= 1;
-          }
-          
-        }else if(type == 1000 || type == 111){ // upper right only
-          
-          if(face_in==1){
-            contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
-            face_in=0;
-            k += 1;
-          }else{
-            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-            face_in=3;
-            k += nx;
-          }
-          
-        }else if(type == 11 || type == 1100){ // lower two
-          
-          if(face_in==0){
-            contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
-            k += 1;
-          }else{
-            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-            face_in = 2;
-            k -= 1;
-          }
-          
-        }else if(type == 1010 || type == 101){ // right two
-          
-          if(face_in==1){
-            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-            k -= nx;
-          }else{
-            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-            face_in = 3;
-            k += nx;
-          }
-          
-        }else if(type == 1001){ // lower left upper right
-          
-          if(face_in==0){
-            contour.push_back( (i_points[k+nx] + i_points[k+nx+1]) / 2 );
-            face_in=3;
-            k += nx;
-          }else if(face_in==1){
-            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-            face_in=2;
-            k -= 1;
-          }else if(face_in==2){
-            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-            face_in=1;
-            k -= nx;
-          }else{
-            contour.push_back( (i_points[k+nx+1] + i_points[k+1]) / 2 );
-            face_in=0;
-            k += 1;
-          }
-          
-        }else if(type == 110){ // upper left lower right
-          
-          if(face_in==0){
-            contour.push_back( (i_points[k] + i_points[k+1]) / 2 );
-            face_in=1;
-            k -= nx;
-          }else if(face_in==1){
-            contour.push_back( (i_points[k+1] + i_points[k+nx+1]) / 2 );
-            face_in=0;
-            k += 1;
-          }else if(face_in==2){
-            contour.push_back( (i_points[k + nx] + i_points[k+nx+1]) / 2 );
-            face_in=3;
-            k += nx;
-          }else{
-            contour.push_back( (i_points[k] + i_points[k+nx]) / 2 );
-            face_in=2;
-            k -= 1;
-          }
-        }
-      }
-      
-      // the diamand with a hole
-      //if(n_edge == 12 && bitmap[k + nx + 1] ){
-      //  n_edge=0;
-      //  face_in = 2;
-      //}
-      
-    }
-  }
-  
-  int offset = 0;
-  if(!add_to_vector){
-    points.resize(contours.size());
-  }else{
-    offset = points.size();
-    points.resize(points.size() + contours.size());
-  }
-  
-  // copy lists of points into vectors
-  int i=0;
-  for(auto &c: contours){
-    points[offset+i].resize(c.size());
-    size_t j=0;
-    for(auto &p: c){
-      points[offset+i][j] = p;
-      ++j;
-    }
-    ++i;
-  }
-}
 
 Point_2d GridMap::centroid() const{
   double flux = 0;

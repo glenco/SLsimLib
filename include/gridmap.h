@@ -272,7 +272,16 @@ struct GridMap{
                  );
   
   
-  /** \brief finds ordered boundaries to regions where bitmap == true
+ 
+  
+//  void find_crit_boundary(std::vector<std::vector<Point_2d> > &points
+//                          ,std::vector<bool> &hits_boundary
+//                          ) const;
+  
+private:
+  /* Depricated to Utilities::find_boundaries<>()
+   
+   finds ordered boundaries to regions where bitmap == true
 
    This can be used to find critical curves or contours.
    `bitmap` should be the same size as the `Gridmap`
@@ -281,14 +290,12 @@ struct GridMap{
    
    Boundaries will never cross or lead off the grid.  On the edges they will leave the edge pixels out even if they should be in.  This is a technical comprimise.
   */
-  void find_boundaries(std::vector<bool> &bitmap  // = true inside
-                       ,std::vector<std::vector<Point_2d> > &points
-                       ,std::vector<bool> &hits_edge
-                       ,bool add_to_vector=false
-                       );
-  
-private:
-  
+//  void find_boundaries(std::vector<bool> &bitmap  // = true inside
+//                       ,std::vector<std::vector<Point_2d> > &points
+//                       ,std::vector<bool> &hits_edge
+//                       ,bool add_to_vector=false
+//                       );
+//
   // curve must be in pixel units
   bool  incurve(long k,std::vector<Point_2d> &curve) const;
   

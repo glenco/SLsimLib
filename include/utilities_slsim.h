@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <boost/variant.hpp>
 
 #endif
 
@@ -2367,6 +2368,113 @@ double hypergeometric( T a, T b, T c, T x )
 
    return value;
 }
+
+class LOGDATA{
+
+public:
+  typedef boost::variant<int,long,size_t,float,double,std::string,bool> MULTITYPE;
+  typedef std::map<std::string,MULTITYPE> LINE;
+
+private:
+  std::vector<LINE> lines;
+  std::string filename;
+  size_t col;
+  std::string blanck_val;
+  std::vector<std::string> header;
+  long nbatch;
+  long precision;
+public:
+
+  LOGDATA(std::string file,std::string blanck_value = "0",long Nbatch=10000):filename(file),col(0),blanck_val(blanck_value)
+  ,nbatch(Nbatch),precision(std::cout.precision()){};
+  
+  ~LOGDATA(){print_to_file();}
+  
+  std::string output_file(){return filename;}
+  
+  void set_precision(long p){
+    precision = p;
+  }
+  
+  void print_to_file(){
+    
+    const auto default_precision {std::cout.precision()};
+    //std::cout << std::setprecision(12);
+    
+    if(lines.size() == 0 ) return;
+    // find the labels
+    std::vector<std::string> labels;
+    labels.reserve( lines.size() * lines[0].size() );
+    
+    for(LINE &line : lines){
+      for (auto itr = line.begin(); itr != line.end(); ++itr) labels.push_back(itr->first);
+    }
+    // use only unique labels
+    std::sort(labels.begin(),labels.end());
+    auto itr =std::unique(labels.begin(),labels.end());
+    labels.erase(itr,labels.end());
+    
+    std::ofstream logfile(filename);
+    
+    time_t now = time(0);
+    struct tm date = *localtime(&now);
+    logfile << "# " << date.tm_hour << ":" << date.tm_min << "   " << date.tm_mday << "/" << date.tm_mon << "/" << date.tm_year + 1900 << std::endl;
+    for(std::string &s : header){
+      logfile << "# " << s << std::endl;
+    }
+
+    size_t i=0,n=labels.size();
+    for(auto &label : labels){
+      logfile << label;
+      if(i<n-1) logfile << ",";
+      ++i;
+    }
+    logfile << std::endl;
+
+    std::cout << std::setprecision(precision);
+    for(LINE &line : lines){
+      i=0;
+      for(auto &label : labels){
+        try{
+          if(label == "galaxy_halo_id"){
+            logfile << line.at(label) << std::setprecision(12) ;
+            std::cout << std::setprecision(precision);
+          }else{
+            logfile << line.at(label) << std::setprecision(precision);
+          }
+          if(i<n-1) logfile << ",";
+        }catch(std::exception& e){
+          logfile << blanck_val << std::setprecision(precision);
+          if(i<n-1) logfile << ",";
+        }
+        ++i;
+      }
+      logfile << std::endl;
+    }
+    std::cout << std::setprecision(default_precision);
+  }
+  
+  /// add row
+  void add(const LINE &line){
+    if(col==0){col = line.size();}
+    lines.push_back(line);
+    if(lines.size() % nbatch == 0) print_to_file();
+  }
+  
+  /// replace last line
+  void replace(const LINE &line){
+    if(col==0){col = line.size();}
+    if(line.size() != col){
+      std::cerr << "Adding wrong sized line to LOGDATA object." << std::endl;
+      throw std::invalid_argument("bad line.");
+    }
+    lines.back() = line;
+  }
+
+  void headercomment(const std::string &s){
+    header.push_back(s);
+  }
+};
 
 }  // Utilities
 
