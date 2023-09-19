@@ -903,7 +903,7 @@ bool  PixelMap::incurve(long k,std::vector<Point_2d> &curve) const{
 }
 
 
-bool PixelMap::lens_definition(
+void PixelMap::lens_definition(
                             double min_sn_per_image
                             ,double pixel_threshold
                             ,double &total_sig_noise_source

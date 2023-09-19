@@ -387,7 +387,7 @@ private:
     std::vector<Point_2d> x;
     std::vector<Triangle> triangles;
     rays.resize(0);
-    auto itr = rays.begin();
+    
     for(long k=0 ; k<Nys ; ++k){
       find_images(ys[k],x,triangles);
       rays.emplace_back();

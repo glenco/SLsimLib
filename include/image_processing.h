@@ -340,7 +340,7 @@ public:
           lens or it reaches the maximum surface brightness level
    
    */
-  bool lens_definition(double min_sn_per_image                 /// signal-to-noise required for a seporate image (ex 10)
+  void lens_definition(double min_sn_per_image                 /// signal-to-noise required for a seporate image (ex 10)
                        ,double pixel_threshold                 /// signal-to-noise threshold that defines the footprint (ex. 2)
                        ,double &total_sig_noise_source         /// gives the total signal-to-noise of all images
                        ,std::vector<size_t> &maxima_indexes    /// index of maxima
