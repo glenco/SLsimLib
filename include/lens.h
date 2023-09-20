@@ -361,7 +361,7 @@ public:
                       ,bool verbose = false
                                        );
   
-  /// finds the mass within a cuve of rays one every lens plane im Msun
+  /// finds the mass within a curve of rays one every lens plane im Msun
   void mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs to be set
                     ,std::vector<double> &masses     /// mass within curve on each lens plane
                     ,bool verbose = false

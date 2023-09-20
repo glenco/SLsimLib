@@ -34,7 +34,7 @@ public:
                   ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
                 ,D *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
-  ):Nbranches(0),realray(dimensions)
+  ):realray(dimensions),Nbranches(0)
   {
     index.resize(Npoints);
     for(IndexType ii=0;ii<Npoints;++ii) index[ii] = ii;
