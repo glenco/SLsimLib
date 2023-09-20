@@ -1706,8 +1706,8 @@ namespace Utilities{
     return wn;
   }
   int windings(
-               Point_2d &x              /// Point for which the winding number is calculated
-               ,std::vector<Point_2d> &point         /// The points on the border.  These must be ordered.
+               const Point_2d &x              /// Point for which the winding number is calculated
+               ,const std::vector<Point_2d> &point         /// The points on the border.  These must be ordered.
                ,PosType *area          /// returns absolute the area within the curve with oriented border
   ){
     int wn=0;
@@ -3004,4 +3004,140 @@ void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
       
     }
   }
+}
+
+Point_2d Utilities::line_intersection(const Point_2d &v1,const Point_2d &v2,
+                            const Point_2d &w1,const Point_2d &w2){
+  Point_2d dv = v2-v1;
+  Point_2d dw = w2-w1;
+  double s = ( dw^(w1-v1) ) / (dw^dv);
+  return v1 + dv*s;
+}
+
+
+std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w){
+  
+  if(v.size() == 0 ) return w;
+  if(w.size() == 0 ) return v;
+  
+  // find most left
+  double tmp = v[0][0];
+  size_t imax = 0;
+  for(int i=1 ; i<v.size() ; ++i){
+    if(tmp > v[i][0]){
+      tmp=v[i][0];
+      imax = i;
+    }
+  }
+  tmp = w[0][0];
+  size_t jmax = 0;
+  for(int i=1 ; i<w.size() ; ++i){
+    if(tmp > w[i][0]){
+      tmp=w[i][0];
+      jmax = i;
+    }
+  }
+  
+  size_t n_tot =  v.size() + w.size();
+  size_t i = imax,j=jmax;
+  
+  bool on_v = ( v[imax][0] < w[jmax][0] );
+  std::vector<Point_2d> env;
+  int o = 1;
+  
+  if(on_v){
+    env.push_back(v[i]);
+  }else{
+    env.push_back(w[j]);
+  }
+  
+  size_t nv = v.size();
+  size_t nw = w.size();
+  Utilities::Geometry::CYCLIC cycv(nv);
+  Utilities::Geometry::CYCLIC cycw(nw);
+  
+  // orientation
+  if(on_v){
+    o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
+  }else{
+    o = sign( (w[cycv[jmax-1]]-w[jmax])^(w[cycv[jmax+1]]-w[jmax])  );
+  }
+  
+  bool init_on_v = on_v;
+  int n_intersect=0,step=0;
+  
+  while( (i != imax)*init_on_v + (j != jmax)*(init_on_v-1) || step == 0){  // this assumes w is left most  ???
+    ++step;
+    if(on_v){
+      
+      for(j=0; j<nw ; ++j){
+        if( Utilities::Geometry::intersect(v[i].x,v[ cycv[i+o] ].x
+                                           ,w[j].x,w[ cycw[j+1] ].x) ){
+          ++n_intersect;
+          break;
+        }
+      }
+      
+      if(j==nw){
+        i = cycv[i+o];
+        env.push_back(v[i]);
+      }else{
+        Point_2d  v1 = v[ cycv[i+o] ] - v[i];
+        Point_2d  w1 = w[ cycw[j+1] ] - w[j];
+        env.push_back(line_intersection(v[ cycv[i+o] ],v[i],w[ cycw[j+1] ],w[j]));
+        if( (w1^v1) > 0){
+          o=-1;
+        }else{
+          j = cycw[j+1];
+          o=1;
+        }
+        env.push_back(w[j]);
+        on_v = false;
+      }
+      
+    }else{
+      
+      for(i=0; i<nv ; ++i){
+        if( Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
+                                           ,w[j].x,w[ cycw[j+o] ].x) ){
+          ++n_intersect;
+          break;
+        }
+      }
+      
+      if(i==nv){
+        j = cycw[j+o];
+        env.push_back(w[j]);
+      }else{
+        Point_2d  v1 = v[ cycv[i+1] ] - v[i];
+        Point_2d  w1 = w[ cycw[j+o] ] - w[j];
+        env.push_back(line_intersection(v[ cycv[i+1] ],v[i],w[ cycw[j+o] ],w[j]));
+        if( (v1^w1) > 0){
+          o=-1;
+        }else{
+          i = cycv[i+1];
+          o=1;
+        }
+        env.push_back(v[i]);
+        on_v = true;
+      }
+      
+      
+    }
+    
+    assert(env.size() <= n_tot);
+  }
+  
+  if(n_intersect == 0){
+    double area;
+    
+    if(on_v){
+      if( Utilities::windings(w[0], v, &area) == 0 ) env.clear();
+    }else{
+      if( Utilities::windings(v[0], w, &area) == 0 ) env.clear();
+    }
+  }
+  
+  return env;
 }

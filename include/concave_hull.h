@@ -1378,5 +1378,17 @@ void testconcaveK(){
   std::cout << "Test plot : concavek_test.fits" << std::endl;
 }
 
+/// return the interesetion point  of line defined by v1,v2 and w1,w2
+Point_2d line_intersection(const Point_2d &v1,const Point_2d &v2,
+                           const Point_2d &w1,const Point_2d &w2);
+
+/** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
+ 
+ v and w must be non-self intersecting
+ If they do not intersect and one is not inside the other an empty vector is output.
+ */
+std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w);
+
 }
 #endif /* concave_hull_h */

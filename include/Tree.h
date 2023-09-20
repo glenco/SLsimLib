@@ -858,14 +858,14 @@ inline float isLeft( Point *p0, Point *p1, PosType *x ){
   return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
   - (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
 };
-inline float isLeft(Point_2d &p0,Point_2d &p1,Point_2d &x ){
+inline float isLeft(const Point_2d &p0,const Point_2d &p1,const Point_2d &x ){
   return (p1[0] - p0[0])*(x[1] - p0[1]) - (x[0] - p0[0])*(p1[1] - p0[1]);
 };
 unsigned long prevpower(unsigned long k);
 
 int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
 int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
-int windings(Point_2d &x,std::vector<Point_2d> &point,PosType *area);
+int windings(const Point_2d &x,const std::vector<Point_2d> &point,PosType *area);
 // this is for the image postions
 int windings(Point_2d &x,std::vector<RAY> &point,PosType *area);
 int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
@@ -885,6 +885,8 @@ void ordered_convexhull(Kist<Point> * curve);
 void ordered_shrink_wrap(Kist<Point> * curve);
 void ordered_concavehull(Kist<Point> * curve);
 PosType ConvexHullArea(Kist<Point> * curve);
+
+
 }
 // in curve_routines.c
 void nesting_curve(OldImageInfo *curves,int Ncurves);
