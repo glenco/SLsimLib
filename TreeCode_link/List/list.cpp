@@ -338,6 +338,11 @@ std::ostream &operator<<(std::ostream &os, Point_2d const &p) {
   return os << p.x[0] << " " << p.x[1];
 }
 
+void write_csv(std::string filename,const std::vector<Point_2d> &v){
+  std::ofstream file(filename);
+  file << "x,y" << std::endl;
+  for(const Point_2d &p : v) file << p[0] << "," << p[1] << std::endl;
+}
 
 std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == CritType::ND) return os << "not determined";

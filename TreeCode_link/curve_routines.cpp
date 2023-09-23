@@ -3014,6 +3014,35 @@ Point_2d Utilities::line_intersection(const Point_2d &v1,const Point_2d &v2,
   return v1 + dv*s;
 }
 
+bool Utilities::circleIntersetsCurve(const Point_2d &x,double r,const std::vector<Point_2d> &v){
+  
+  int n=v.size();
+  double rr,B;
+  Point_2d dx,dl;
+  for(int i=0 ; i<n ; ++i){
+    dl = v[i]-x;
+    rr = dl.length();
+    if(rr <= r) return true;
+    dx = v[(i+1)%n]-v[i];
+    B = -(dx*dl)/dx.length_sqr();
+    if(B>0 && B<1){
+      if( dx*dx*B*B + dx*dl*2*B + rr*rr <= r*r) return true;
+    }
+  }
+  
+  return false;
+}
+
+bool Utilities::circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> &v){
+
+  double area;
+  // is center of circle inside curve
+  if(Utilities::windings(x,v,&area)) return true;
+  // if curve entirely within circle this will be true
+  if( (x-v[0]).length() < r) return true;
+  
+  return Utilities::circleIntersetsCurve(x,r,v);
+}
 
 std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
@@ -3032,10 +3061,10 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   }
   tmp = w[0][0];
   size_t jmax = 0;
-  for(int i=1 ; i<w.size() ; ++i){
-    if(tmp > w[i][0]){
-      tmp=w[i][0];
-      jmax = i;
+  for(int j=1 ; j<w.size() ; ++j){
+    if(tmp > w[j][0]){
+      tmp=w[j][0];
+      jmax = j;
     }
   }
   
@@ -3043,6 +3072,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   size_t i = imax,j=jmax;
   
   bool on_v = ( v[imax][0] < w[jmax][0] );
+  
   std::vector<Point_2d> env;
   int o = 1;
   
@@ -3061,27 +3091,69 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   if(on_v){
     o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
   }else{
-    o = sign( (w[cycv[jmax-1]]-w[jmax])^(w[cycv[jmax+1]]-w[jmax])  );
+    o = sign( (w[cycw[jmax-1]]-w[jmax])^(w[cycw[jmax+1]]-w[jmax])  );
   }
   
   bool init_on_v = on_v;
   int n_intersect=0,step=0;
   
-  while( (i != imax)*init_on_v + (j != jmax)*(init_on_v-1) || step == 0){  // this assumes w is left most  ???
+  while( (i != imax)*init_on_v + (j != jmax)*(1-init_on_v) || step == 0){
     ++step;
+    
     if(on_v){
       
-      for(j=0; j<nw ; ++j){
+      j=-1;
+      for(int jj=0; jj<nw ; ++jj){
         if( Utilities::Geometry::intersect(v[i].x,v[ cycv[i+o] ].x
-                                           ,w[j].x,w[ cycw[j+1] ].x) ){
+                                           ,w[jj].x,w[ cycw[jj+1] ].x)
+           && v[i] != w[jj]
+           && v[i] != w[cycw[jj+1]]
+           && v[ cycv[i+o] ] != w[jj]
+           ){
           ++n_intersect;
-          break;
+          if(j==-1){
+            j=jj;
+          }else{ // case of two intersections
+            Point_2d dv = v[ cycv[i+o] ] - v[i];
+            double s = ( dv^(v[i]-w[jj]) ) /( dv^(w[ cycw[jj+1] ] - w[jj] ) );
+            double s2 = ( dv^(v[i]-w[j]) ) /( dv^(w[ cycw[j+1] ] - w[j] ) );
+            if(s < s2) j=jj;
+          }
         }
       }
       
-      if(j==nw){
+      if(j==-1){  // no intersection
         i = cycv[i+o];
         env.push_back(v[i]);
+      }else if( v[ cycv[i+o] ] == w[ cycw[j+1] ] ){  // end points are the same
+   
+        Point_2d  vo = v[ cycv[i+o] ] - v[i];
+        
+        i = cycv[i+o];
+        env.push_back( v[i] );
+  
+ 
+        Point_2d  v1 = v[ cycv[i+o] ] - v[i];
+        Point_2d  w1 = w[ cycw[j+2] ] - v[i];
+        Point_2d  w2 = w[j] - v[i];
+ 
+        double a1 = atan2(v1^vo,v1*vo);
+        double a2 = atan2(w1^vo,w1*vo);
+        double a3 = atan2(w2^vo,w2*vo);
+  
+        if( a2 < a1 && a2 < a3){
+          j=cycw[j+1];
+          o=1;
+          on_v = false;
+          i=-1;
+        }else if( a3 < a1 && a3 < a2){
+          j=cycw[j+1];
+          o=-1;
+          on_v = false;
+          i=-1;
+        }
+ 
+        
       }else{
         Point_2d  v1 = v[ cycv[i+o] ] - v[i];
         Point_2d  w1 = w[ cycw[j+1] ] - w[j];
@@ -3094,21 +3166,63 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
         }
         env.push_back(w[j]);
         on_v = false;
+        i=-1;
       }
       
     }else{
       
-      for(i=0; i<nv ; ++i){
-        if( Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
-                                           ,w[j].x,w[ cycw[j+o] ].x) ){
+      i=-1;
+      for(int ii=0; ii<nv ; ++ii){
+        if( Utilities::Geometry::intersect(v[ii].x,v[ cycv[ii+1] ].x
+                                           ,w[j].x,w[ cycw[j+o] ].x)
+           && v[ii] != w[j]
+           && v[ cycv[ii+1] ] != w[j]
+           && v[ii] != w[cycw[j+o]]
+            ){
           ++n_intersect;
-          break;
+          if(i==-1){
+            i=ii;
+          }else{ // case of two intersections
+            Point_2d dw = w[ cycw[j+o] ] - w[j];
+            double s = ( dw^(w[j]-v[ii]) ) /( dw^(v[ cycv[ii+1] ] - v[ii] ) );
+            double s2 = ( dw^(w[j]-v[i]) ) /( dw^(v[ cycv[i+1] ] - v[i] ) );
+            if(s < s2) i=ii;
+          }
+          
         }
       }
       
-      if(i==nv){
+      if(i==-1){
         j = cycw[j+o];
         env.push_back(w[j]);
+        
+      }else if( v[ cycv[i+1] ] == w[ cycw[j+o] ] ){
+        
+        Point_2d  wo = w[ cycw[j+o] ] - w[j];
+        
+        j = cycw[j+o];
+        env.push_back( w[j] );
+  
+        Point_2d  w1 = w[ cycw[j+o] ] - w[j];
+        Point_2d  v1 = v[ cycv[i+2] ] - w[j];
+        Point_2d  v2 = v[i] - w[j];
+ 
+        double a1 = atan2(w1^wo,w1*wo);
+        double a2 = atan2(v1^wo,v1*wo);
+        double a3 = atan2(v2^wo,v2*wo);
+  
+        if( a2 < a1 && a2 < a3){
+          i=cycv[i+1];
+          o=1;
+          on_v = true;
+          j=-1;
+        }else if( a3 < a1 && a3 < a2){
+          i=cycv[i+1];
+          o=-1;
+          on_v = true;
+          j=-1;
+        }
+        
       }else{
         Point_2d  v1 = v[ cycv[i+1] ] - v[i];
         Point_2d  w1 = w[ cycw[j+o] ] - w[j];
@@ -3121,13 +3235,18 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
         }
         env.push_back(v[i]);
         on_v = true;
+        j=-1;
       }
       
-      
     }
-    
-    assert(env.size() <= n_tot);
+
+    assert(env.size() <= 2*n_tot);
   }
+  
+  env.pop_back();  // last point is repeated
+  
+  //write_csv("test_hull.csv",env);
+  assert(env.size() > 2);
   
   if(n_intersect == 0){
     double area;

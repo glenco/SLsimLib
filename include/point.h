@@ -30,6 +30,7 @@
 typedef enum {NO, YES, MAYBE} Boo;
 #endif
 
+
 /// enumerates the types of critical curves. ND is "not defined".
 enum class CritType {ND=0,radial=2,tangential=1,pseudo=3,};
 
@@ -173,6 +174,7 @@ struct Point_2d{
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+void write_csv(std::string filename,const std::vector<Point_2d> &v);
 
 template <typename T>
 struct Matrix2x2{
