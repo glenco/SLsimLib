@@ -93,22 +93,24 @@ std::vector<T> TightHull(const std::vector<T> &curve){
   }
   
   for(size_t i=0;i<N-2;++i){
+
     for(size_t j=i+2;j<N;++j){
       if(Utilities::Geometry::intersect(hull[i].x,hull[ (i+1) % N ].x,hull[j].x,hull[ (j+1) % N ].x)){
         
-        long ii;
-        if(i==0) ii = N-1;
-        else ii = i-1;
         
-        Point_2d x =  hull[ii] - hull[i];
+        long ii = cyc[i-1];
+        //if(i==0) ii = N-1;
+        //else ii = i-1;
+        
+        Point_2d x =  hull[i] - hull[ii];
         x.unitize();
     
         if(
-           ( x^(hull[ (j+1) % N ] - hull[i]) ) / (hull[ (j+1) % N ] - hull[i]).length()
-           //atan2( x^(hull[ (j+1) % N ] - hull[i]) , x*(hull[ (j+1) % N ] - hull[i]) )
-           >
-           //atan2( x^(hull[j] - hull[i]) , x*(hull[j] - hull[i]) )
-           ( x^(hull[j] - hull[i]) ) / (hull[j] - hull[i]).length()
+           //( x^(hull[ (j+1) % N ] - hull[i]) ) / (hull[ (j+1) % N ] - hull[i]).length()
+           atan2( x^(hull[ (j+1) % N ] - hull[i]) , x*(hull[ (j+1) % N ] - hull[i]) )
+           <
+           atan2( x^(hull[j] - hull[i]) , x*(hull[j] - hull[i]) )
+           //( x^(hull[j] - hull[i]) ) / (hull[j] - hull[i]).length()
            ){
           
           // inner loop - remove all points between i and j+1
@@ -116,12 +118,14 @@ std::vector<T> TightHull(const std::vector<T> &curve){
           int n = j - i;
           int k = j+1;
           while(k < N){
-            std::swap(hull[k],hull[k-n]);
+            //std::swap(hull[k],hull[k-n]);
+            hull[k-n] = hull[k];
             ++k;
           }
           N -= n;
         }else{
           
+          // outer loop - put them in reverse order
           size_t k=i+1,l=j;
           while(k < l){
             std::swap(hull[k] , hull[l]);
@@ -136,7 +140,8 @@ std::vector<T> TightHull(const std::vector<T> &curve){
   
   //assert(hull[0]==hull.back());
   hull.resize(N);
-  
+   
+  assert(N>2);
   return hull;
 }
 
@@ -1382,6 +1387,14 @@ void testconcaveK(){
 Point_2d line_intersection(const Point_2d &v1,const Point_2d &v2,
                            const Point_2d &w1,const Point_2d &w2);
 
+
+/// returns true if a circle of radius r around the point x intersects with the curve v.  Does not include case where one compleatly encloses the other.
+bool circleIntersetsCurve(const Point_2d &x,double r,const std::vector<Point_2d> &v);
+
+/** \brief Returns true if there is any overlap between a curve and a circle.  This includea cases where one compleatly encloses the other.
+ */
+bool circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> &v);
+
 /** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
  
  v and w must be non-self intersecting
@@ -1389,6 +1402,79 @@ Point_2d line_intersection(const Point_2d &v1,const Point_2d &v2,
  */
 std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w);
+
+
+template <typename R>
+Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
+  
+  if(curve.size()==0) throw std::runtime_error("bad curve");
+    
+  Point_2d p1,p2,center;
+  p1=p2=curve[0];
+  for(const Point_2d &p : curve){
+    if(p[0] < p1[0]){
+      p1[0]=p[0];
+    }else if(p[0] > p2[0]){
+      p2[0]=p[0];
+    }
+    if(p[1] < p1[1]){
+      p1[1]=p[1];
+    }else if(p[1] > p2[1]){
+      p2[1]=p[1];
+    }
+  }
+  
+  if( p1==p2) return p1;
+  Point_2d p;
+  double area;
+  do{
+    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
+    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
+
+  }while( Utilities::windings(p,curve,&area) == 0 );
+  
+  return p;
+}
+/** \brief Return a point that is either within the curve or within a distance r of the curve
+ */
+template <typename R>
+Point_2d RandomPointTouchingCurve(const std::vector<Point_2d> &curve
+                                  ,double r
+                                  ,R &ran){
+  
+  if(curve.size()==0) throw std::runtime_error("bad curve");
+    
+  Point_2d p1,p2,center;
+  p1=p2=curve[0];
+  for(const Point_2d &p : curve){
+    if(p[0] < p1[0]){
+      p1[0]=p[0];
+    }else if(p[0] > p2[0]){
+      p2[0]=p[0];
+    }
+    if(p[1] < p1[1]){
+      p1[1]=p[1];
+    }else if(p[1] > p2[1]){
+      p2[1]=p[1];
+    }
+  }
+
+  p1[0] -= r;
+  p1[1] -= r;
+  p2[0] += r;
+  p2[1] += r;
+
+  Point_2d p;
+  double area;
+  do{
+    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
+    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
+  }while( Utilities::windings(p.x,curve,&area) == 0
+         && Utilities::circleOverlapsCurve(p,r,curve) == false
+         );
+  
+  return p;
+}
 
 }
 #endif /* concave_hull_h */
