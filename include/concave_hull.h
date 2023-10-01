@@ -56,6 +56,7 @@ size_t RemoveIntersections(std::vector<T> &curve){
   return count;
 }
 
+
 /// removes the intersections while removing interior loops
 ///  The input curve needs to be ordered already.  Not points in the
 ///  input curve will be outside the output hull.

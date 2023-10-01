@@ -2383,10 +2383,12 @@ private:
   std::vector<std::string> header;
   long nbatch;
   long precision;
+  
+  long nprints;
 public:
 
   LOGDATA(std::string file,std::string blanck_value = "0",long Nbatch=10000):filename(file),col(0),blanck_val(blanck_value)
-  ,nbatch(Nbatch),precision(std::cout.precision()){};
+  ,nbatch(Nbatch),precision(std::cout.precision()),nprints(0){};
   
   ~LOGDATA(){print_to_file();}
   
@@ -2452,6 +2454,8 @@ public:
       logfile << std::endl;
     }
     std::cout << std::setprecision(default_precision);
+    
+    ++nprints;
   }
   
   /// add row
