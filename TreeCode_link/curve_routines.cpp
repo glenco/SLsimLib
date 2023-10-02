@@ -3114,9 +3114,13 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
           if(j==-1){
             j=jj;
           }else{ // case of two intersections
-            Point_2d dv = v[ cycv[i+o] ] - v[i];
-            double s = ( dv^(v[i]-w[jj]) ) /( dv^(w[ cycw[jj+1] ] - w[jj] ) );
-            double s2 = ( dv^(v[i]-w[j]) ) /( dv^(w[ cycw[j+1] ] - w[j] ) );
+            Point_2d dv = v[ cycv[i+o] ] - v[i] ;
+            Point_2d dw = w[ cycw[jj+1] ] - w[jj];
+            double s = ( dw^(w[jj]-v[i]) )/( dw^dv );
+            //assert(s>0);
+            dw = w[ cycw[j+1] ] - w[j];
+            double s2 = ( dw^(w[j]-v[i]) ) /( dw^dv );
+            //assert(s2>0);
             if(s < s2) j=jj;
           }
         }
@@ -3169,7 +3173,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
         i=-1;
       }
       
-    }else{
+    }else{  // on w
       
       i=-1;
       for(int ii=0; ii<nv ; ++ii){
@@ -3183,9 +3187,13 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
           if(i==-1){
             i=ii;
           }else{ // case of two intersections
-            Point_2d dw = w[ cycw[j+o] ] - w[j];
-            double s = ( dw^(w[j]-v[ii]) ) /( dw^(v[ cycv[ii+1] ] - v[ii] ) );
-            double s2 = ( dw^(w[j]-v[i]) ) /( dw^(v[ cycv[i+1] ] - v[i] ) );
+            Point_2d dw = w[ cycw[j+o] ] - w[j] ;
+            Point_2d dv = v[ cycv[ii+1] ] - v[ii];
+            double s = ( dv^(v[ii]-w[j]) ) /( dv^dw );
+            //assert(s>0);
+            dv = v[ cycv[i+1] ] - v[i];
+            double s2 = ( dv^(v[i]-w[j]) ) /( dv^dw );
+            //assert(s2>0);
             if(s < s2) i=ii;
           }
           
@@ -3239,7 +3247,8 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
       }
       
     }
-
+    
+    //write_csv("test_hull.csv",env);
     assert(env.size() <= 2*n_tot);
   }
   
