@@ -2987,20 +2987,25 @@ void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
         }
       }
       
+   
+      // fill in island
       indexes.emplace_back();
       std::vector<long> &index = indexes.back();
-      auto it = contour.begin();
-      while(it != contour.end() ){
-        long k = *it;
-        index.push_back(k);
-        ++it;
-        ++k;
-        if(bitmap[k]){
-          for( ; k < *it ; ++k){
-            if(bitmap[k]) index.push_back(k);
+      
+      long k=0;
+      for(auto it = contour.begin()
+            ; it != contour.end()
+            ; ++it
+            ){
+        if(k<*it){
+          k=*it;
+          while(bitmap[k]){
+            index.push_back(k);
+            ++k;
           }
         }
       }
+      
       
     }
   }
