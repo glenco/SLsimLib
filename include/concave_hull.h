@@ -56,95 +56,99 @@ size_t RemoveIntersections(std::vector<T> &curve){
   return count;
 }
 
+// fails when some segments are very close to the same.  Use TighterHull.
 
 /// removes the intersections while removing interior loops
-///  The input curve needs to be ordered already.  Not points in the
+///  The input curve needs to be ordered already.  No points in the
 ///  input curve will be outside the output hull.
-template <typename T>
-std::vector<T> TightHull(const std::vector<T> &curve){
-  
-  if(curve.size() <=3) return curve;
-  
-  size_t N = curve.size(),count = 0;
-  T tmp;
-  
-  // find left most point
-  long init = 0;
-  double pmin = curve[0][0];
-  for(int i=1 ; i<N ; ++i){
-    if(curve[i][0] < pmin){
-      init = i;
-      pmin = curve[i][0];
-    }
-  }
-  
-  // orientation == 1 clockwise
-  Geometry::CYCLIC cyc(N);
-  int orientation = sign( (curve[cyc[init-1]] - curve[init])^(curve[cyc[init+1]] - curve[init])  );
-  if(orientation == 0){
-    orientation = sign( curve[cyc[init+1]][1] - curve[init][1]);
-  }
-  
-  orientation *= -1; // orientation == 1 is counter clockwise
-  
-  // make a copy where first one is the leftmost
-  std::vector<T> hull(N);
-  for(size_t i=0;i<N;++i){
-    hull[i] = curve[ cyc[ orientation * i + init] ];
-  }
-  
-  for(size_t i=0;i<N-2;++i){
+std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 
-    for(size_t j=i+2;j<N;++j){
-      if(Utilities::Geometry::intersect(hull[i].x,hull[ (i+1) % N ].x,hull[j].x,hull[ (j+1) % N ].x)){
-        
-        
-        long ii = cyc[i-1];
-        //if(i==0) ii = N-1;
-        //else ii = i-1;
-        
-        Point_2d x =  hull[i] - hull[ii];
-        x.unitize();
-    
-        if(
-           //( x^(hull[ (j+1) % N ] - hull[i]) ) / (hull[ (j+1) % N ] - hull[i]).length()
-           atan2( x^(hull[ (j+1) % N ] - hull[i]) , x*(hull[ (j+1) % N ] - hull[i]) )
-           <
-           atan2( x^(hull[j] - hull[i]) , x*(hull[j] - hull[i]) )
-           //( x^(hull[j] - hull[i]) ) / (hull[j] - hull[i]).length()
-           ){
-          
-          // inner loop - remove all points between i and j+1
-          
-          int n = j - i;
-          int k = j+1;
-          while(k < N){
-            //std::swap(hull[k],hull[k-n]);
-            hull[k-n] = hull[k];
-            ++k;
-          }
-          N -= n;
-        }else{
-          
-          // outer loop - put them in reverse order
-          size_t k=i+1,l=j;
-          while(k < l){
-            std::swap(hull[k] , hull[l]);
-            ++k;
-            --l;
-          }
-        }
-        ++count;
-      }
-    }
-  }
-  
-  //assert(hull[0]==hull.back());
-  hull.resize(N);
-   
-  assert(N>2);
-  return hull;
-}
+
+//template <typename T>
+//std::vector<T> TightHull(const std::vector<T> &curve){
+//
+//  if(curve.size() <=3) return curve;
+//
+//  size_t N = curve.size(),count = 0;
+//  T tmp;
+//
+//  // find left most point
+//  long init = 0;
+//  double pmin = curve[0][0];
+//  for(int i=1 ; i<N ; ++i){
+//    if(curve[i][0] < pmin){
+//      init = i;
+//      pmin = curve[i][0];
+//    }
+//  }
+//
+//  // orientation == 1 clockwise
+//  Geometry::CYCLIC cyc(N);
+//  int orientation = sign( (curve[cyc[init-1]] - curve[init])^(curve[cyc[init+1]] - curve[init])  );
+//  if(orientation == 0){
+//    orientation = sign( curve[cyc[init+1]][1] - curve[init][1]);
+//  }
+//
+//  orientation *= -1; // orientation == 1 is counter clockwise
+//
+//  // make a copy where first one is the leftmost
+//  std::vector<T> hull(N);
+//  for(size_t i=0;i<N;++i){
+//    hull[i] = curve[ cyc[ orientation * i + init] ];
+//  }
+//
+//  for(size_t i=0;i<N-2;++i){
+//
+//    for(size_t j=i+2;j<N;++j){
+//      if(Utilities::Geometry::intersect(hull[i].x,hull[ (i+1) % N ].x,hull[j].x,hull[ (j+1) % N ].x)){
+//
+//
+//        long ii = cyc[i-1];
+//        //if(i==0) ii = N-1;
+//        //else ii = i-1;
+//
+//        Point_2d x =  hull[i] - hull[ii];
+//        x.unitize();
+//
+//        if(
+//           //( x^(hull[ (j+1) % N ] - hull[i]) ) / (hull[ (j+1) % N ] - hull[i]).length()
+//           atan2( x^(hull[ (j+1) % N ] - hull[i]) , x*(hull[ (j+1) % N ] - hull[i]) )
+//           <
+//           atan2( x^(hull[j] - hull[i]) , x*(hull[j] - hull[i]) )
+//           //( x^(hull[j] - hull[i]) ) / (hull[j] - hull[i]).length()
+//           ){
+//
+//          // inner loop - remove all points between i and j+1
+//
+//          int n = j - i;
+//          int k = j+1;
+//          while(k < N){
+//            //std::swap(hull[k],hull[k-n]);
+//            hull[k-n] = hull[k];
+//            ++k;
+//          }
+//          N -= n;
+//        }else{
+//
+//          // outer loop - put them in reverse order
+//          size_t k=i+1,l=j;
+//          while(k < l){
+//            std::swap(hull[k] , hull[l]);
+//            ++k;
+//            --l;
+//          }
+//        }
+//        ++count;
+//      }
+//    }
+//  }
+//
+//  //assert(hull[0]==hull.back());
+//  hull.resize(N);
+//
+//  assert(N>2);
+//  return hull;
+//}
 
 
 /** finds ordered boundaries to regions where bitmap == true

@@ -3276,115 +3276,115 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
 }
 
 // fails when some segments are very close to the same.  Use TighterHull.
-//std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
-//
-//  if(v.size() < 4 ) return v;
-//
-//  // find most left
-//  double tmp = v[0][0];
-//  size_t imax = 0;
-//  for(int i=1 ; i<v.size() ; ++i){
-//    if(tmp > v[i][0]){
-//      tmp=v[i][0];
-//      imax = i;
-//    }
-//  }
-//
-//  size_t n_tot =  v.size();
-//  size_t i = imax;
-//
-//  std::vector<Point_2d> env;
-//
-//  //env.push_back(v[i]);
-//
-//  size_t nv = v.size();
-//  Utilities::Geometry::CYCLIC cycv(nv);
-//
-//  // orientation
-//  int o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
-//
-//  int n_intersect=0,step=0;
-//
-//  while( i != imax || step == 0){
-//    ++step;
-//
-//    long j_int=-1;
-//    for(int jj=0; jj<nv ; ++jj){
-//      if(
-//         jj != i
-//         && jj != cycv[i+o]
-//         && Utilities::Geometry::intersect(v[i].x,v[ cycv[i+o] ].x
-//                                         ,v[jj].x,v[ cycv[jj+1] ].x)
-//         && v[i] != v[jj]
-//         && v[i] != v[cycv[jj+1]]
-//         && v[ cycv[i+o] ] != v[jj]
-//         ){
-//        ++n_intersect;
-//        if(j_int==-1){
-//          j_int=jj;
-//        }else{ // case of two intersections
-//          Point_2d dv = v[ cycv[i+o] ] - v[i];
-//          double s = ( dv^(v[i]-v[jj]) ) /( dv^(v[ cycv[jj+1] ] - v[jj] ) );
-//          double s2 = ( dv^(v[i]-v[j_int]) ) /( dv^(v[ cycv[j_int+1] ] - v[j_int] ) );
-//          if(s < s2) j_int=jj;
-//        }
-//      }
-//    }
-//
-//    //problem when curve returns to very nearly the same point
-//    if(j_int==-1){  // no intersection
-//      i = cycv[i+o];
-//      env.push_back(v[i]);
-//    }else if( v[ cycv[i+o] ] == v[ cycv[j_int+1] ] ){  // end points are the same
-//
-//      Point_2d  vo = v[ cycv[i+o] ] - v[i];
-//
-//      i = cycv[i+o];
-//      env.push_back( v[i] );
-//
-//
-//      Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-//      Point_2d  w1 = v[ cycv[j_int+2] ] - v[i];
-//      Point_2d  w2 = v[j_int] - v[i];
-//
-//      double a1 = atan2(v1^vo,v1*vo);
-//      double a2 = atan2(w1^vo,w1*vo);
-//      double a3 = atan2(w2^vo,w2*vo);
-//
-//      if( a2 < a1 && a2 < a3){
-//        i=cycv[j_int+1];
-//        o=1;
-//      }else if( a3 < a1 && a3 < a2){
-//        i=cycv[j_int+1];
-//        o=-1;
-//      }
-//
-//    }else{
-//      Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-//      Point_2d  w1 = v[ cycv[j_int] ] - v[i];
-//      env.push_back(line_intersection(v[ cycv[i+o] ],v[i]
-//                                      ,v[ cycv[j_int+1] ],v[j_int]));
-//
-//      Point_2d p = v[i];
-//      if( (w1^v1) < 0){
-//        i = cycv[j_int];
-//        o = -1;
-//      }else{
-//        i = cycv[j_int+1];
-//        o = 1;
-//      }
-//      env.push_back(v[i]);
-//
-//    }
-//
-//    write_csv("hull.csv",env);
-//    assert(env.size() <= 2*n_tot);
-//  }
-//
-//  //env.pop_back();  // last point is repeated
-//
-//  //write_csv("test_hull.csv",env);
-//  assert(env.size() > 2);
-//
-//  return env;
-//}
+std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
+
+  if(v.size() < 4 ) return v;
+
+  // find most left
+  double tmp = v[0][0];
+  size_t imax = 0;
+  for(int i=1 ; i<v.size() ; ++i){
+    if(tmp > v[i][0]){
+      tmp=v[i][0];
+      imax = i;
+    }
+  }
+
+  size_t n_tot =  v.size();
+  size_t i = imax;
+
+  std::vector<Point_2d> env;
+
+  size_t nv = v.size();
+  Utilities::Geometry::CYCLIC cycv(nv);
+
+  // orientation
+  int o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
+
+  int n_intersect=0,step=0;
+
+  while( i != imax || step == 0){
+    ++step;
+
+    long j_int=-1;
+    for(int jj=0; jj<nv ; ++jj){
+      if(
+         jj != i
+         && jj != cycv[i+o]
+         && Utilities::Geometry::intersect(v[i].x,v[ cycv[i+o] ].x
+                                         ,v[jj].x,v[ cycv[jj+1] ].x)
+         && v[i] != v[jj]
+         && v[i] != v[cycv[jj+1]]
+         && v[ cycv[i+o] ] != v[jj]
+         ){
+        ++n_intersect;
+        if(j_int==-1){
+          j_int=jj;
+        }else{ // case of two intersections
+          Point_2d dv = v[ cycv[i+o] ] - v[i] ;
+          Point_2d dw = v[ cycv[jj+1] ] - v[jj];
+          double s = ( dw^(v[jj]-v[i]) )/( dw^dv );
+          //assert(s>0);
+          dw = v[ cycv[j_int+1] ] - v[j_int];
+          double s2 = ( dw^(v[j_int]-v[i]) ) /( dw^dv );
+          //assert(s2>0);
+          if(s < s2) j_int=jj;
+        }
+      }
+    }
+
+    //problem when curve returns to very nearly the same point
+    if(j_int==-1){  // no intersection
+      i = cycv[i+o];
+      env.push_back(v[i]);
+    }else if( v[ cycv[i+o] ] == v[ cycv[j_int+1] ] ){  // end points are the same
+
+      Point_2d  vo = v[ cycv[i+o] ] - v[i];
+
+      i = cycv[i+o];
+      env.push_back( v[i] );
+
+
+      Point_2d  v1 = v[ cycv[i+o] ] - v[i];
+      Point_2d  w1 = v[ cycv[j_int+2] ] - v[i];
+      Point_2d  w2 = v[j_int] - v[i];
+
+      double a1 = atan2(v1^vo,v1*vo);
+      double a2 = atan2(w1^vo,w1*vo);
+      double a3 = atan2(w2^vo,w2*vo);
+
+      if( a2 < a1 && a2 < a3){
+        i=cycv[j_int+1];
+        o=1;
+      }else if( a3 < a1 && a3 < a2){
+        i=cycv[j_int+1];
+        o=-1;
+      }
+
+    }else{
+      Point_2d  v1 = v[ cycv[i+o] ] - v[i];
+      Point_2d  w1 = v[ cycv[j_int] ] - v[i];
+      env.push_back(line_intersection(v[ cycv[i+o] ],v[i]
+                                      ,v[ cycv[j_int+1] ],v[j_int]));
+
+      Point_2d p = v[i];
+      if( (w1^v1) < 0){
+        i = cycv[j_int];
+        o = -1;
+      }else{
+        i = cycv[j_int+1];
+        o = 1;
+      }
+      env.push_back(v[i]);
+
+    }
+
+    write_csv("hull.csv",env);
+    assert(env.size() <= 2*n_tot);
+  }
+
+  //write_csv("test_hull.csv",env);
+  assert(env.size() > 2);
+
+  return env;
+}
