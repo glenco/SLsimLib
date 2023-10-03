@@ -264,15 +264,12 @@ struct GridMap{
   /** \brief Find critical curves.  This is usually not used outside of ImageFinding::find_crit()
    
    This will find all the resolved tangential and radial critical curves.  If a radial critical curve is not found
-   within a tangential one, curves arounf the maxima are used to estimate a radial or pseudo caustic.  These are labeled CritType::pseudo.  The out put is ordered so that the radia/pseudo curves within a tangent curve imediately follow it.
+   within a tangential one, curves around the maxima are used to estimate a radial or pseudo caustic.  These are labeled CritType::pseudo.  The out put is ordered so that the radia/pseudo curves within a tangent curve imediately follow it.
    */
   void find_crit(std::vector<std::vector<Point_2d> > &points
                  ,std::vector<bool> &hits_boundary
                  ,std::vector<CritType> &crit_type
                  );
-  
-  
- 
   
 //  void find_crit_boundary(std::vector<std::vector<Point_2d> > &points
 //                          ,std::vector<bool> &hits_boundary

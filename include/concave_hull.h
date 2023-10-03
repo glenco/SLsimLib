@@ -452,7 +452,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
   }
 }
 
-/// find the indexes of areas with bitmap[]=true broken up into diconected islands
+/// find the indexes of areas with bitmap[]=true broken up into diconnected islands
 void find_islands(std::vector<bool> &bitmap  // = true inside
                   ,long nx  // number of pixels in x direction
                   ,std::vector<std::vector<long> > &indexes
