@@ -849,28 +849,14 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
   crit_type.resize(m);
   for(int i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
   
-  std::vector<bool> has_radial(ntange,false);
-  
-  int l=0;
   // reorder them so that radial curves follow the tangential curves they are within
   for(int j=ntange ; j<m ; ++j){
     // pixel in radial critical curve
     long q = long(points[j][0][0]) + Ngrid_init*long(points[j][0][1]);
-    if(bitmap[q]==false){
-      ++q;
-      if(bitmap[q]==false){
-        q += Ngrid_init-1;
-        if(bitmap[q]==false){
-          ++q;
-        }
-      }
-    }
-    
-    assert(bitmap[q]);
+
     for(int i=0 ; i<j ;++i){
       if(crit_type[i] == CritType::tangential && incurve(q,points[i])
          ){
-        has_radial[l++]=true;
         for(int k=j ; k>i+1 ; --k){
           std::swap(points[k],points[k-1]);
           std::swap(crit_type[k],crit_type[k-1]);
@@ -882,21 +868,17 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
     }
   }
   
-  int n_has_radial=0;
-  for(int p : has_radial) n_has_radial += p;
-  
-  // rescale from pixel units to
+  // rescale from pixel units to those of grid
   double resolution = getResolution();
   for(int i=0; i<points.size() ; ++i){
     for(Point_2d &p : points[i]) p = p * resolution + i_points[0];
   }
   
-  if(n_has_radial < ntange){
-    // if radial caustic has not been found, estimate a pseudo caustic
-    int ii=0;
-    for(int j=0 ; j<points.size() ; ++j){
-      if(crit_type[j] == CritType::tangential){
-        if(!has_radial[ii]){
+  // if radial caustic has not been found, estimate a pseudo caustic
+  int ii=0;
+  for(int j=0 ; j<points.size() ; ++j){
+    if(crit_type[j] == CritType::tangential){
+        if(j==points.size() || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
           
           // find maximum kappa in negative mag region
           std::vector<size_t> maxima;
@@ -961,7 +943,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
         ++ii;
       }
     }
-  }
+  
 }
 
 //PosType GridMap::magnification2() const{

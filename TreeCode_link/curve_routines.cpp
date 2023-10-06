@@ -2778,7 +2778,7 @@ void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
   j = nx-1;
   for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
   
-  std::list< std::set<long> > contours;
+  std::list< std::set<long> > contours;  // a set ensures that it is in assending order and no element is repeated
   
   if(!add_to_vector){
     hits_edge.resize(0);
