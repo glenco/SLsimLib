@@ -796,12 +796,12 @@ double GridMap::AddPointSource(const Point_2d &y,double flux){
   return total_flux;
 }
 
-void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
+void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
                ,std::vector<bool> &hits_boundary
                ,std::vector<CritType> &crit_type
                         ){
   
-  points.resize(0);
+  curves.resize(0);
   
   size_t N = Ngrid_init * Ngrid_init2;
   std::vector<bool> bitmap(N);
@@ -821,11 +821,11 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
   //if(count>0) find_boundaries(bitmap,points,hits_boundary);
   std::vector<std::vector<long> > indexes;
   if(count>0){
-    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,points,hits_boundary,false);
+    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,false);
     
     Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
   }
-  crit_type.resize(points.size());
+  crit_type.resize(curves.size());
   for(CritType &b : crit_type) b = CritType::tangential;
   
   // find radial critical curves
@@ -840,25 +840,25 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
     }
   }
   
-  int ntange = points.size();  // number of tangential curves
+  int ntange = curves.size();  // number of tangential curves
   if(count>0){
-    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,points,hits_boundary,true);
+    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,true);
   }
   
-  int m=points.size();
+  int m=curves.size();
   crit_type.resize(m);
   for(int i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
   
   // reorder them so that radial curves follow the tangential curves they are within
   for(int j=ntange ; j<m ; ++j){
     // pixel in radial critical curve
-    long q = long(points[j][0][0]) + Ngrid_init*long(points[j][0][1]);
+    long q = long(curves[j][0][0]) + Ngrid_init*long(curves[j][0][1]);
 
     for(int i=0 ; i<j ;++i){
-      if(crit_type[i] == CritType::tangential && incurve(q,points[i])
+      if(crit_type[i] == CritType::tangential && incurve(q,curves[i])
          ){
         for(int k=j ; k>i+1 ; --k){
-          std::swap(points[k],points[k-1]);
+          std::swap(curves[k],curves[k-1]);
           std::swap(crit_type[k],crit_type[k-1]);
           std::swap(hits_boundary[k],hits_boundary[k-1]);
         }
@@ -870,15 +870,16 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
   
   // rescale from pixel units to those of grid
   double resolution = getResolution();
-  for(int i=0; i<points.size() ; ++i){
-    for(Point_2d &p : points[i]) p = p * resolution + i_points[0];
+  for(int i=0; i<curves.size() ; ++i){
+    for(Point_2d &p : curves[i]) p = p * resolution + i_points[0];
   }
   
+  //for(int i=0; i<curves.size() ; ++i) write_csv("test_crits" + std::to_string(i) + ".csv",curves[i]);
   // if radial caustic has not been found, estimate a pseudo caustic
   int ii=0;
-  for(int j=0 ; j<points.size() ; ++j){
+  for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
-        if(j==points.size() || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
+        if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
           
           // find maximum kappa in negative mag region
           std::vector<size_t> maxima;
@@ -886,10 +887,15 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
             
             double tmp =  i_points[i].kappa();
             
-            if(tmp > s_points[i-1].kappa() &&
-               tmp > s_points[i+1].kappa() &&
-               tmp > s_points[i+Ngrid_init].kappa() &&
-               tmp > s_points[i-Ngrid_init].kappa() ){
+            if(tmp > i_points[i-1].kappa() &&
+               tmp > i_points[i+1].kappa() &&
+               tmp > i_points[i+Ngrid_init].kappa() &&
+               tmp > i_points[i-Ngrid_init].kappa() &&
+               tmp > i_points[i-1-Ngrid_init].kappa() &&
+               tmp > i_points[i-1+Ngrid_init].kappa() &&
+               tmp > i_points[i+1-Ngrid_init].kappa() &&
+               tmp > i_points[i+1+Ngrid_init].kappa()
+               ){
               
               maxima.push_back(i);
             }
@@ -898,42 +904,47 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &points
           std::vector<size_t> hull_index;
           if(maxima.size() > 0){  // avoids point masses in uniform background
             
-            std::vector<Point_2d> psudo;
-            psudo.reserve(9*maxima.size());
+            std::vector<long> tmp_index;
+            tmp_index.reserve(9*maxima.size());
             for(size_t kmax : maxima){
               // include all 8 neighbors i
-              psudo.push_back(s_points[kmax-1-Ngrid_init]);
-              psudo.push_back(s_points[kmax-Ngrid_init]);
-              psudo.push_back(s_points[kmax+1-Ngrid_init]);
-              psudo.push_back(s_points[kmax-1]);
-              psudo.push_back(s_points[kmax]);
-              psudo.push_back(s_points[kmax+1]);
-              psudo.push_back(s_points[kmax-1+Ngrid_init]);
-              psudo.push_back(s_points[kmax+Ngrid_init]);
-              psudo.push_back(s_points[kmax+1+Ngrid_init]);
+              long k=kmax-1-Ngrid_init;
+              tmp_index.push_back(k);
+              ++k;
+              tmp_index.push_back(k);
+              ++k;
+              tmp_index.push_back(k);
+              k+=Ngrid_init;
+              tmp_index.push_back(k);
+              --k;
+              tmp_index.push_back(k);
+              --k;
+              tmp_index.push_back(k);
+              k+=Ngrid_init;
+              tmp_index.push_back(k);
+              ++k;
+              tmp_index.push_back(k);
+              ++k;
+              tmp_index.push_back(k);
             }
+ 
+            std::vector<Point_2d> psudo;
+            psudo.reserve(9*maxima.size());
+            for(size_t k : tmp_index) psudo.push_back(s_points[k]);
             
             Utilities::convex_hull(psudo,hull_index);
             
-            // convert to full
-            for(size_t &k : hull_index){
-              size_t t = k/9 , p = k%9;
-              
-              size_t ill=maxima[t]%Ngrid_init-1, jll=maxima[t]/Ngrid_init-1;
-              
-              k = (p%3) + ill + Ngrid_init * ( p/3 + jll);
-            }
-            
-            
             std::vector<Point_2d> v;
-            points.push_back(v);
-            for(size_t k : hull_index) points.back().push_back(i_points[k]);
+            curves.push_back(v);
+            for(size_t k : hull_index) curves.back().push_back(i_points[ tmp_index[k]  ]);
+            
+            //write_csv("test_pseud.csv", curves.back());
             
             crit_type.push_back(CritType::pseudo);
             hits_boundary.push_back(false);
             
-            for(int k=points.size()-1 ; k>j+1 ; --k){
-              std::swap(points[k],points[k-1]);
+            for(int k=curves.size()-1 ; k>j+1 ; --k){
+              std::swap(curves[k],curves[k-1]);
               std::swap(crit_type[k],crit_type[k-1]);
               std::swap(hits_boundary[k],hits_boundary[k-1]);
             }

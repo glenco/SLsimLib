@@ -3379,7 +3379,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
 
     }
 
-    write_csv("hull.csv",env);
+    //write_csv("hull.csv",env);
     assert(env.size() <= 2*n_tot);
   }
 
