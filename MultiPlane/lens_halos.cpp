@@ -2617,7 +2617,11 @@ LensHaloMultiGauss::LensHaloMultiGauss(
     std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
     throw std::runtime_error("");
   }
-  
+  if( mass_norm <= 0){
+     std::cerr << "LensHaloMultiGauss : mass_norm <= 0." << std::endl;
+     throw std::runtime_error("");
+   }
+
   if(q > 1){
     q = 1/q;
   }
@@ -2661,6 +2665,11 @@ LensHaloMultiGauss::LensHaloMultiGauss(
   if(relative_scales.size() != relative_masses.size()){
     throw std::runtime_error("arrays are wrong size.");
   }
+  if( mass_norm <= 0){
+     std::cerr << "LensHaloMultiGauss : mass_norm <= 0." << std::endl;
+     throw std::runtime_error("");
+   }
+
   nn = relative_scales.size();
   q = abs(q);
   if(q > 1){
