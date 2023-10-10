@@ -3292,7 +3292,6 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
 
   size_t n_tot =  v.size();
   size_t i = imax;
-  long last_i = imax;
 
   std::vector<Point_2d> env;
 
@@ -3304,6 +3303,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
   int o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
 
   int n_intersect=0,step=0;
+  long last_i = cycv[imax-o];
 
   while( env.size() <= 2*n_tot ){
     ++step;
@@ -3315,7 +3315,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
     for(int jj=0; jj<nv ; ++jj){
       if(
          jj != i
-         && jj != cycv[i-o]
+         //&& jj != cycv[i-o]
          && jj != last_i
          && Utilities::Geometry::intersect(env.back().x,v[ cycv[i+o] ].x
                                            ,v[jj].x,v[ cycv[jj+1] ].x)
@@ -3411,6 +3411,8 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
       //env.push_back(line_intersection(v[ cycv[i+o] ],env.back()
       //                                ,v[ cycv[j_int+1] ],v[j_int]));
       env.push_back(env.back() + (v[ cycv[i+o] ] - env.back())*s );
+      assert(s >= 0);
+      assert(s <= 1);
                     
       //Point_2d p = v[i];
       if( (w1^v1) < 0){
@@ -3426,13 +3428,14 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
   }
 
   if(env.size() > 2*n_tot){
-    //write_csv("test_curve.csv",v);
-    //write_csv("test_hull.csv",env);
+    write_csv("test_curve.csv",v);
+    write_csv("test_hull.csv",env);
     std::cerr << "Failer of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
     throw std::runtime_error("TighterHull");
   }
  
   assert(env.size() > 2);
 
+  env.pop_back();
   return env;
 }
