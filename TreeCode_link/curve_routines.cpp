@@ -3292,9 +3292,11 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
 
   size_t n_tot =  v.size();
   size_t i = imax;
+  long last_i = imax;
 
   std::vector<Point_2d> env;
 
+  env.push_back(v[i]);
   size_t nv = v.size();
   Utilities::Geometry::CYCLIC cycv(nv);
 
@@ -3303,87 +3305,133 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
 
   int n_intersect=0,step=0;
 
-  while( i != imax || step == 0){
+  while( env.size() <= 2*n_tot ){
     ++step;
 
     long j_int=-1;
+    double s=-1,p;
+    Point_2d dv = v[ cycv[i+o] ] - env.back();
+    n_intersect=0;
     for(int jj=0; jj<nv ; ++jj){
       if(
          jj != i
-         && jj != cycv[i+o]
-         && Utilities::Geometry::intersect(v[i].x,v[ cycv[i+o] ].x
-                                         ,v[jj].x,v[ cycv[jj+1] ].x)
-         && v[i] != v[jj]
-         && v[i] != v[cycv[jj+1]]
-         && v[ cycv[i+o] ] != v[jj]
+         && jj != cycv[i-o]
+         && jj != last_i
+         && Utilities::Geometry::intersect(env.back().x,v[ cycv[i+o] ].x
+                                           ,v[jj].x,v[ cycv[jj+1] ].x)
+         //&& v[i] != v[jj]
+         //&& v[i] != v[cycv[jj+1]]
+         //&& v[ cycv[i+o] ] != v[jj]
          ){
-        ++n_intersect;
-        if(j_int==-1){
-          j_int=jj;
-        }else{ // case of two intersections
-          Point_2d dv = v[ cycv[i+o] ] - v[i] ;
-          Point_2d dw = v[ cycv[jj+1] ] - v[jj];
-          double s = ( dw^(v[jj]-v[i]) )/( dw^dv );
-          //assert(s>0);
-          dw = v[ cycv[j_int+1] ] - v[j_int];
-          double s2 = ( dw^(v[j_int]-v[i]) ) /( dw^dv );
-          //assert(s2>0);
-          if(s < s2) j_int=jj;
-        }
-      }
+           ++n_intersect;
+           Point_2d dw = v[ cycv[jj+1] ] - v[jj];
+           if(j_int==-1){
+             j_int=jj;
+             
+             p = dw^dv;
+             s = ( dw^(v[jj]-env.back()) ) /p;
+             if( p == 0){ // colinear case
+               double s2 = (v[jj]-env.back())*dv/dv.length();
+               double s3 = (v[cycv[jj+1]]-env.back())*dv/dv.length();
+               if(s2/s3 <0 ) s=MAX(s2,s3);
+               else s=MIN(s2,s3);
+             }
+           }else{ // case of two intersections
+   
+             double p2 = dw^dv;
+             double s2 = ( dw^(v[jj]-env.back()) )/p2;
+             if( p2 == 0){ // colinear case
+               double s3 = (v[jj]-env.back())*dv/dv.length();
+               double s4 = (v[cycv[jj+1]]-env.back())*dv/dv.length();
+               if(s3/s4 <0 ) s2=MAX(s3,s4);
+               else s2=MIN(s4,s3);
+             }
+
+             if(s > s2){
+               j_int=jj;
+               s=s2;
+               p=p2;
+             }
+           }
+         }
     }
 
+    if(o==1) last_i = i;
+    else last_i = cycv[i-1];
+
     //problem when curve returns to very nearly the same point
-    if(j_int==-1){  // no intersection
+    if(j_int==-1  || s>=1){  // no intersection
+  
       i = cycv[i+o];
       env.push_back(v[i]);
-    }else if( v[ cycv[i+o] ] == v[ cycv[j_int+1] ] ){  // end points are the same
+      if(i==imax) break;
+    }else if( env.back() == v[ cycv[j_int] ]
+             && v[ cycv[i+o] ] == v[ cycv[j_int+1] ]
+             ){  // end points are the same
+        i = cycv[i+o];
+        env.push_back(v[i]);
+        if(i==imax) break;
+    }else if( env.back() == v[ cycv[j_int+1] ]
+             && v[ cycv[i+o] ] == v[ cycv[j_int] ]
+             ){  // end points are the same
+        i = cycv[i+o];
+        env.push_back(v[i]);
+        if(i==imax) break;
 
-      Point_2d  vo = v[ cycv[i+o] ] - v[i];
-
-      i = cycv[i+o];
-      env.push_back( v[i] );
-
-
-      Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-      Point_2d  w1 = v[ cycv[j_int+2] ] - v[i];
-      Point_2d  w2 = v[j_int] - v[i];
-
-      double a1 = atan2(v1^vo,v1*vo);
-      double a2 = atan2(w1^vo,w1*vo);
-      double a3 = atan2(w2^vo,w2*vo);
-
-      if( a2 < a1 && a2 < a3){
-        i=cycv[j_int+1];
-        o=1;
-      }else if( a3 < a1 && a3 < a2){
-        i=cycv[j_int+1];
-        o=-1;
-      }
-
+//      }else{
+//        Point_2d  vo = v[i+o] - env.back(); // not correct
+//
+//        //i = cycv[i+o];
+//        //env.push_back( v[i] );
+//
+//        Point_2d  v1 = v[ cycv[i+o] ] - v[i];
+//        Point_2d  w1 = v[ cycv[j_int+1] ] - v[i];
+//        Point_2d  w2 = v[ cycv[j_int-1] ] - v[i];
+//
+//        double a1 = atan2(v1^vo,v1*vo);
+//        double a2 = atan2(w1^vo,w1*vo);
+//        double a3 = atan2(w2^vo,w2*vo);
+//
+//        if( a2 < a1 && a2 < a3){
+//          i=cycv[j_int+1];
+//          o=1;
+//        }else if( a3 < a1 && a3 < a2){
+//          i=cycv[j_int-1];
+//          o=-1;
+//        }else{
+//          i = i+o;
+//        }
+//
+//        env.push_back( v[i] );
+//        if(i==imax) break;
+//      }
     }else{
-      Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-      Point_2d  w1 = v[ cycv[j_int] ] - v[i];
-      env.push_back(line_intersection(v[ cycv[i+o] ],v[i]
-                                      ,v[ cycv[j_int+1] ],v[j_int]));
-
-      Point_2d p = v[i];
+      Point_2d  v1 = v[ cycv[i+o] ] - env.back();
+      Point_2d  w1 = v[ cycv[j_int] ] - env.back();
+      //env.push_back(line_intersection(v[ cycv[i+o] ],env.back()
+      //                                ,v[ cycv[j_int+1] ],v[j_int]));
+      env.push_back(env.back() + (v[ cycv[i+o] ] - env.back())*s );
+                    
+      //Point_2d p = v[i];
       if( (w1^v1) < 0){
-        i = cycv[j_int];
+        i = cycv[j_int+1];
         o = -1;
       }else{
-        i = cycv[j_int+1];
+        i = j_int;
         o = 1;
       }
-      env.push_back(v[i]);
-
     }
 
     //write_csv("hull.csv",env);
-    assert(env.size() <= 2*n_tot);
   }
 
-  //write_csv("test_hull.csv",env);
+  if(env.size() > 2*n_tot){
+    //write_csv("test_curve.csv",v);
+    //write_csv("test_hull.csv",env);
+    std::cerr << "Failer of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
+    throw std::runtime_error("TighterHull");
+  }
+ 
   assert(env.size() > 2);
 
   return env;

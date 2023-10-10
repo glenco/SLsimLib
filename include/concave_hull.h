@@ -61,6 +61,7 @@ size_t RemoveIntersections(std::vector<T> &curve){
 /// removes the intersections while removing interior loops
 ///  The input curve needs to be ordered already.  No points in the
 ///  input curve will be outside the output hull.
+///  Will fail if there are overlapping segments on the hull.
 std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 
 
