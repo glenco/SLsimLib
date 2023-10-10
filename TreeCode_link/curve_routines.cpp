@@ -3305,7 +3305,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
   int n_intersect=0,step=0;
   long last_i = cycv[imax-o];
 
-  while( env.size() <= 2*n_tot ){
+  while( env.size() <= 20*n_tot ){
     ++step;
 
     long j_int=-1;
@@ -3427,11 +3427,11 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
     //write_csv("hull.csv",env);
   }
 
-  if(env.size() > 2*n_tot){
+  if(env.size() > 10*n_tot){
     write_csv("test_curve.csv",v);
     write_csv("test_hull.csv",env);
-    std::cerr << "Failer of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
-    throw std::runtime_error("TighterHull");
+    std::cerr << "Failure of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
+    throw "Failure in TighterHull";
   }
  
   assert(env.size() > 2);
