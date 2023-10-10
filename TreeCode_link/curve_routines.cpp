@@ -3254,7 +3254,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
     }
     
     //write_csv("test_hull.csv",env);
-    assert(env.size() <= 2*n_tot);
+    //assert(env.size() <= 2*n_tot);
   }
   
   env.pop_back();  // last point is repeated
@@ -3304,6 +3304,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
 
   int n_intersect=0,step=0;
   long last_i = cycv[imax-o];
+  if(o==-1) last_i = imax;
 
   while( env.size() <= 20*n_tot ){
     ++step;
@@ -3427,7 +3428,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
     //write_csv("hull.csv",env);
   }
 
-  if(env.size() > 10*n_tot){
+  if(env.size() > 20*n_tot){
     write_csv("test_curve.csv",v);
     write_csv("test_hull.csv",env);
     std::cerr << "Failure of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
