@@ -1097,8 +1097,10 @@ public:
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,float inv_area
+                    ,float my_theta_force=0.1
+                    ,bool mu_periodic_buffer = false
                     ,bool verbose=false
-  ):LensHalo(redshift,cosmo),inv_area(inv_area)
+  ):LensHalo(redshift,cosmo),inv_area(inv_area),theta_force(my_theta_force),periodic_buffer(mu_periodic_buffer)
   {
     std::swap(pvector,trash_collector);
     Nhalos = trash_collector.size();
@@ -1144,10 +1146,12 @@ protected:
   Utilities::Geometry::SphericalPoint<> center;
   
   size_t Nhalos;
-  
+ 
+  float theta_force;
+  bool periodic_buffer;
+
   TreeQuadHalos<HType> * qtree;
   
-  //TreeQuadParticles<HType> * qtree;
   void set_up(float redshift,const COSMOLOGY& cosmo,bool verbose);
 };
 
@@ -1160,7 +1164,7 @@ void LensHaloHalos<HType>::set_up(
 
   LensHalo::set_flag_elliptical(false);
   
-  Rmax = 1.0e3;  // ????
+  Rmax = 1.0e100;  // ????
   LensHalo::setRsize(Rmax);
 
   // convert from comoving to physical coordinates
@@ -1184,8 +1188,7 @@ void LensHaloHalos<HType>::set_up(
   
   if(verbose) std::cout << "   Particle mass range : " << min_mass << " to " << max_mass << "  ratio of : " << max_mass/min_mass << std::endl;
   
-  qtree = new TreeQuadHalos<HType>(vpp.data(),Nhalos,inv_area);
-  //qtree = new TreeQuadParticles<HType>(pp.data(),Nhalos,-1,-1,0,20);
+  qtree = new TreeQuadHalos<HType>(vpp.data(),Nhalos,inv_area,5,theta_force,periodic_buffer);
 }
 
 template<typename HType>
@@ -1198,11 +1201,11 @@ void LensHaloHalos<HType>::force_halo(double *alpha,KappaType *kappa
                                ,KappaType *gamma,KappaType *phi
                                           ,double const *xcm
                                           ,bool subtract_point,PosType screening){
-  qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
+  qtree->force2D(xcm,alpha,kappa,gamma,phi);
 
-//   ?????
-//  alpha[0] *= -1;
-//  alpha[1] *= -1;
+  //   ?????
+  alpha[0] *= -1;
+  alpha[1] *= -1;
 }
 
 template<typename HType>

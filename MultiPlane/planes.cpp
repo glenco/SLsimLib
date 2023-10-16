@@ -64,7 +64,7 @@ LensPlaneTree & LensPlaneTree::operator=(LensPlaneTree &&p){
 
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma
                           ,KappaType *phi,PosType *xx){
-	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi);
+	halo_tree->force2D(xx,alpha,kappa,gamma,phi);
 }
 
 
