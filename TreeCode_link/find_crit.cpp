@@ -1065,7 +1065,7 @@ void ImageFinding::find_crit(
  
     Utilities::windings(critcurves[i].critical_center,critcurves[i].critcurve,&(critcurves[i].critical_area));
    
-    
+    if(verbose) std::cout << "critical area = " << critcurves[i].critical_area/arcsecTOradians/arcsecTOradians << " arcsec^2" << std::endl;
     lens.rayshooterInternal(Npoints,critcurves[i].critcurve.data());
     
     critcurves[i].caustic_center *= 0;

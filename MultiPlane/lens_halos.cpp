@@ -383,6 +383,7 @@ LensHaloNFW::LensHaloNFW()
   make_tables();
   gmax = InterpolateFromTable(gtable, xmax);
   set_flag_elliptical(false);
+  ++count;
 }
 
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration
@@ -426,6 +427,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
     Rmax = LensHalo::getRsize();
   }
   
+  ++count;
 }
 
 /* LensHalo::LensHalo(mass,Rsize,zlens, // base
@@ -533,7 +535,6 @@ void LensHaloNFW::make_tables(){
      */
     
   }
-  count++;
 }
 
 // InterpolateModes was used for Ansatz IV and is an efficient way to calculate the Fourier modes used for elliptisizing the isotropic profiles before the program starts
@@ -592,8 +593,8 @@ void LensHaloNFW::assignParams(InputParams& params){
 }
 
 LensHaloNFW::~LensHaloNFW(){
-  --count;
-  if(count == 0){
+  --LensHaloNFW::count;
+  if(LensHaloNFW::count == 0){
     delete[] xtable;
     delete[] gtable;
     delete[] ftable;
@@ -645,6 +646,8 @@ PosType* LensHaloPseudoNFW::mhattable = NULL;
 LensHaloPseudoNFW::LensHaloPseudoNFW()
 : LensHalo()
 {
+  make_tables();
+  ++count;
 }
 /// constructor
 LensHaloPseudoNFW::LensHaloPseudoNFW(
@@ -688,6 +691,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
     set_flag_elliptical(false);
     Rmax = LensHalo::getRsize();
   }
+  ++count;
 }
 
 // The Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. e.g. 1.5 for main_slope = 1. Note that set_slope is overridden for PseudoNFW to recalculate tables for different beta. But only fixed values of beta, i.e. 1,2 and >=3 are allowed!
@@ -743,7 +747,6 @@ void LensHaloPseudoNFW::make_tables(){
       xtable[i] = x;
       mhattable[i] = mhat(x,beta);
     }
-    count++;
   }
 }
 
@@ -769,6 +772,7 @@ void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rsize, float my
   beta = my_slope;
   xmax = my_Rsize/my_rscale;
   make_tables();
+  ++count;
 }
 
 void LensHaloPseudoNFW::assignParams(InputParams& params){

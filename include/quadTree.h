@@ -617,8 +617,10 @@ void TreeQuadParticles<PType>::CalcMoments(){
     
     rcom=sqrt(rcom);
     
-    if(force_theta > 0.0) cbranch->rcrit_angle = 1.15470*rcom/(force_theta);
-    else  cbranch->rcrit_angle=1.0e100;
+    if(force_theta > 0.0){
+      cbranch->r2crit_angle = 1.15470*rcom/(force_theta);
+      cbranch->r2crit_angle *= cbranch->r2crit_angle;
+    }else  cbranch->r2crit_angle=1.0e100;
     
   }while(tree->WalkStep(true));
   
@@ -1005,7 +1007,7 @@ void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *r
     
     boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
     
-    if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+    if( rcm2cell < branch->r2crit_angle || rcm2cell < 5.83*boxsize2)
     {
       
       // Treat all particles in a leaf as a point particle

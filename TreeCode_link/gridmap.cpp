@@ -825,6 +825,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     
     Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
   }
+
   crit_type.resize(curves.size());
   for(CritType &b : crit_type) b = CritType::tangential;
   

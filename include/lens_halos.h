@@ -755,13 +755,13 @@ public:
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=EllipMethod::Pseudo
               );
-	//LensHaloNFW(InputParams& params);
+	
   LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
-    ++count;
+    ++LensHaloNFW::count;
     gmax = h.gmax;
   }
   LensHaloNFW(const LensHaloNFW &&h):LensHalo(std::move(h)){
-    ++count;
+    ++LensHaloNFW::count;
     gmax = h.gmax;
   }
 
