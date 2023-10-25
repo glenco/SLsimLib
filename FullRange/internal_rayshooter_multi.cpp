@@ -516,7 +516,7 @@ void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs 
   
     }
   
-    masses[j] = Utilities::interior_mass(alphas,xx); 
+    masses[j] = abs(Utilities::interior_mass(alphas,xx)); 
   } // End of the loop going through the planes
 
   return;
