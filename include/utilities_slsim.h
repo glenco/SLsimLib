@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <boost/variant.hpp>
+#include <set>
 
 #endif
 
@@ -2378,17 +2379,65 @@ public:
 private:
   std::vector<LINE> lines;
   std::string filename;
-  size_t col;
-  std::string blanck_val;
+  std::string blank_val;
   std::vector<std::string> header;
   long nbatch;
   long precision;
+  long last_line_printed;
+  int nlabels;
+  std::set<std::string> labels;
+  
+  std::map<std::string,std::string> label_comments;
   
   long nprints;
+  
+  void append_file(){
+    
+    const auto default_precision {std::cout.precision()};
+    std::ofstream logfile;
+    logfile.open(filename,std::ios_base::app);
+   
+    int n=labels.size();
+    if(n == nlabels && last_line_printed > 0){
+      std::cout << std::setprecision(precision);
+      for(size_t j=last_line_printed ; j<lines.size() ; ++j ){
+        int i=0;
+        for(auto &label : labels){
+          try{
+            if(label == "galaxy_halo_id"){
+              logfile << lines[j].at(label) << std::setprecision(12) ;
+              std::cout << std::setprecision(precision);
+            }else{
+              logfile << lines[j].at(label) << std::setprecision(precision);
+            }
+            if(i<n-1) logfile << ",";
+          }catch(std::exception& e){
+            logfile << blank_val << std::setprecision(precision);
+            if(i<n-1) logfile << ",";
+          }
+          ++i;
+        }
+        logfile << std::endl;
+      }
+      std::cout << std::setprecision(default_precision);
+      
+      last_line_printed = lines.size();
+    }else{
+      // number of labels has changed print from the beginning
+      print_to_file();
+    }
+  }
+  
 public:
 
-  LOGDATA(std::string file,std::string blanck_value = "0",long Nbatch=10000):filename(file),col(0),blanck_val(blanck_value)
-  ,nbatch(Nbatch),precision(std::cout.precision()),nprints(0){};
+  LOGDATA(std::string file
+          ,std::string blanck_value = "0"
+          ,long Nbatch=1000
+          ):filename(file),blank_val(blanck_value)
+  ,nbatch(Nbatch),precision(std::cout.precision()),nprints(0)
+  ,last_line_printed(0),nlabels(0){
+    print_to_file();
+  };
   
   ~LOGDATA(){print_to_file();}
   
@@ -2398,23 +2447,17 @@ public:
     precision = p;
   }
   
+  // current number of columns
+  int ncol(){return labels.size();}
+  // names of columns
+  std::set<std::string> names(){return labels;}
+  
   void print_to_file(){
     
     const auto default_precision {std::cout.precision()};
     //std::cout << std::setprecision(12);
     
     if(lines.size() == 0 ) return;
-    // find the labels
-    std::vector<std::string> labels;
-    labels.reserve( lines.size() * lines[0].size() );
-    
-    for(LINE &line : lines){
-      for (auto itr = line.begin(); itr != line.end(); ++itr) labels.push_back(itr->first);
-    }
-    // use only unique labels
-    std::sort(labels.begin(),labels.end());
-    auto itr =std::unique(labels.begin(),labels.end());
-    labels.erase(itr,labels.end());
     
     std::ofstream logfile(filename);
     
@@ -2425,10 +2468,21 @@ public:
       logfile << "# " << s << std::endl;
     }
 
-    size_t i=0,n=labels.size();
+    // print comments on labels
+    for(auto &label : labels){
+      auto it = label_comments.find(label);
+      if(it == label_comments.end() ){
+        logfile << "# " << label << " : no comment" << std::endl;
+      }else{
+        logfile << "# " << it->first << " : " << it->second << std::endl;
+      }
+    }
+    
+    size_t i=0;
+    nlabels = labels.size();
     for(auto &label : labels){
       logfile << label;
-      if(i<n-1) logfile << ",";
+      if(i<nlabels-1) logfile << ",";
       ++i;
     }
     logfile << std::endl;
@@ -2444,10 +2498,10 @@ public:
           }else{
             logfile << line.at(label) << std::setprecision(precision);
           }
-          if(i<n-1) logfile << ",";
+          if(i<nlabels-1) logfile << ",";
         }catch(std::exception& e){
-          logfile << blanck_val << std::setprecision(precision);
-          if(i<n-1) logfile << ",";
+          logfile << blank_val << std::setprecision(precision);
+          if(i<nlabels-1) logfile << ",";
         }
         ++i;
       }
@@ -2455,28 +2509,33 @@ public:
     }
     std::cout << std::setprecision(default_precision);
     
+    last_line_printed = lines.size();
     ++nprints;
   }
   
   /// add row
   void add(const LINE &line){
-    if(col==0){col = line.size();}
+    for (auto itr = line.begin(); itr != line.end(); ++itr) labels.insert(itr->first);
     lines.push_back(line);
-    if(lines.size() % nbatch == 0) print_to_file();
+    if(lines.size() % nbatch == 0) append_file();
   }
   
   /// replace last line
   void replace(const LINE &line){
-    if(col==0){col = line.size();}
-    if(line.size() != col){
-      std::cerr << "Adding wrong sized line to LOGDATA object." << std::endl;
-      throw std::invalid_argument("bad line.");
-    }
+    for (auto itr = line.begin(); itr != line.end(); ++itr) labels.insert(itr->first);
     lines.back() = line;
   }
 
-  void headercomment(const std::string &s){
+  /// add a general message at the head of the file
+  void header_comment(const std::string &s){
     header.push_back(s);
+  }
+  
+  /// add description for a label.  They will appear at the head of the file in the same order as columns
+  void label_description(const std::string &name
+                     ,const std::string &description
+                     ){
+    label_comments[name] = description;
   }
 };
 

@@ -321,7 +321,7 @@ public:
   /** find all the points above level divided into seprated groups
    
    Groups with points are connected regions above level.
-   Groups without points are regions surounded by regions above level
+   Groups without points are regions surrounded by regions above level, i.e. holes.
    */
   
   void find_islands_holes(double level,
@@ -690,7 +690,7 @@ public:
 
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
-               ,PixelMap &error_map  // this is 1/sigma^2
+               ,PixelMap &error_map  // this is sigma
                ,bool psf
                ,bool noise
                ,Utilities::RandomNumbers_NR &ran
