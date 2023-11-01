@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <boost/variant.hpp>
+#include <set>
 
 #endif
 
