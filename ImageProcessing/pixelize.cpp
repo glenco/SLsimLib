@@ -846,8 +846,6 @@ void PixelMap::find_islands_holes(double level,
     }
   }
   
-
-  
   // remove holes
 //  int i=0,k=points.size();
 //  while( i < k){
@@ -864,6 +862,8 @@ void PixelMap::find_islands_holes(double level,
   
   assert(m == n && "In PixelMap::find_islands_holes");
 }
+
+/// find the index of the pixels that are larger than all its neighbors
 std::vector<size_t> PixelMap::maxima(double minlevel
                             ) const {
   std::vector<size_t> indexes;
@@ -915,10 +915,20 @@ void PixelMap::lens_definition(
                             ,bool verbose
                             ){
     
-  image_points.clear();
-  find_islands_holes(pixel_threshold,image_points);
-  double sn_max = map.max();
   
+  // default
+  total_sig_noise_source = 0;
+  maxima_indexes.clear();
+  image_points.clear();
+  lens_TF = false;
+  level = 0;
+  n_pix_in_source = 0;
+  
+  double sn_max = map.max();
+  if(sn_max < pixel_threshold) return;
+  
+  find_islands_holes(pixel_threshold,image_points);
+ 
   total_sig_noise_source = 0;
   if(verbose) std::cout << "Number of islands : " << image_points.size() << std::endl;
   std::vector<double> sig_noise(image_points.size(),0);
