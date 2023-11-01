@@ -828,6 +828,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
 
   crit_type.resize(curves.size());
   for(CritType &b : crit_type) b = CritType::tangential;
+  int ntange = curves.size();  // number of tangential curves
   
   // find radial critical curves
   count=0;
@@ -841,7 +842,6 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     }
   }
   
-  int ntange = curves.size();  // number of tangential curves
   if(count>0){
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,true);
   }
@@ -850,7 +850,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   crit_type.resize(m);
   for(int i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
   
-  // reorder them so that radial curves follow the tangential curves they are within
+  // reorder them so that radial curves follow the tangential curves they are within them
   for(int j=ntange ; j<m ; ++j){
     // pixel in radial critical curve
     long q = long(curves[j][0][0]) + Ngrid_init*long(curves[j][0][1]);
@@ -884,60 +884,70 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
           
           // find maximum kappa in negative mag region
           std::vector<size_t> maxima;
+          double max=0;
           for(size_t i : indexes[ii]){
             
-            double tmp =  i_points[i].kappa();
+//            double tmp =  i_points[i].kappa();
+//            max=MAX(tmp,max);
+//            if(tmp > i_points[i-1].kappa() &&
+//               tmp > i_points[i+1].kappa() &&
+//               tmp > i_points[i+Ngrid_init].kappa() &&
+//               tmp > i_points[i-Ngrid_init].kappa() &&
+//               tmp > i_points[i-1-Ngrid_init].kappa() &&
+//               tmp > i_points[i-1+Ngrid_init].kappa() &&
+//               tmp > i_points[i+1-Ngrid_init].kappa() &&
+//               tmp > i_points[i+1+Ngrid_init].kappa()
+//               ){
+//
+//              maxima.push_back(i);
+//            }
+//          }
+//          if(maxima.size()==0) maxima.push_back(max);
+//
+//          assert(maxima.size() > 0);
+//          std::vector<size_t> hull_index;
+//          if(maxima.size() > 0){  // avoids point masses in uniform background
+//
+//            std::vector<long> tmp_index;
+//            tmp_index.reserve(9*maxima.size());
+//            for(size_t kmax : maxima){
+//              // include all 8 neighbors i
+//              long k=kmax-1-Ngrid_init;
+//              tmp_index.push_back(k);
+//              ++k;
+//              tmp_index.push_back(k);
+//              ++k;
+//              tmp_index.push_back(k);
+//              k+=Ngrid_init;
+//              tmp_index.push_back(k);
+//              --k;
+//              tmp_index.push_back(k);
+//              --k;
+//              tmp_index.push_back(k);
+//              k+=Ngrid_init;
+//              tmp_index.push_back(k);
+//              ++k;
+//              tmp_index.push_back(k);
+//              ++k;
+//              tmp_index.push_back(k);
+//            }
+//
+            std::vector<Point_2d> psudo(indexes[ii].size());
+            //psudo.reserve(9*maxima.size());
+            //for(size_t k : tmp_index) psudo.push_back(s_points[k]);
+            //for(size_t k : indexes[ii]) psudo.push_back(s_points[k]);
             
-            if(tmp > i_points[i-1].kappa() &&
-               tmp > i_points[i+1].kappa() &&
-               tmp > i_points[i+Ngrid_init].kappa() &&
-               tmp > i_points[i-Ngrid_init].kappa() &&
-               tmp > i_points[i-1-Ngrid_init].kappa() &&
-               tmp > i_points[i-1+Ngrid_init].kappa() &&
-               tmp > i_points[i+1-Ngrid_init].kappa() &&
-               tmp > i_points[i+1+Ngrid_init].kappa()
-               ){
-              
-              maxima.push_back(i);
-            }
-          }
-          
-          std::vector<size_t> hull_index;
-          if(maxima.size() > 0){  // avoids point masses in uniform background
-            
-            std::vector<long> tmp_index;
-            tmp_index.reserve(9*maxima.size());
-            for(size_t kmax : maxima){
-              // include all 8 neighbors i
-              long k=kmax-1-Ngrid_init;
-              tmp_index.push_back(k);
-              ++k;
-              tmp_index.push_back(k);
-              ++k;
-              tmp_index.push_back(k);
-              k+=Ngrid_init;
-              tmp_index.push_back(k);
-              --k;
-              tmp_index.push_back(k);
-              --k;
-              tmp_index.push_back(k);
-              k+=Ngrid_init;
-              tmp_index.push_back(k);
-              ++k;
-              tmp_index.push_back(k);
-              ++k;
-              tmp_index.push_back(k);
-            }
- 
-            std::vector<Point_2d> psudo;
-            psudo.reserve(9*maxima.size());
-            for(size_t k : tmp_index) psudo.push_back(s_points[k]);
-            
+            for(size_t i=0 ; i<indexes[ii].size() ; ++i) psudo[i] = s_points[ indexes[ii][i] ];
+           
+            std::vector<size_t> hull_index;
             Utilities::convex_hull(psudo,hull_index);
             
-            std::vector<Point_2d> v;
+            std::vector<Point_2d> v(hull_index.size());
             curves.push_back(v);
-            for(size_t k : hull_index) curves.back().push_back(i_points[ tmp_index[k]  ]);
+            {
+              int j=0;
+              for(size_t k : hull_index) curves.back()[j++] = i_points[ indexes[ii][k]  ];
+            }
             
             //write_csv("test_pseud.csv", curves.back());
             
@@ -949,13 +959,12 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
               std::swap(crit_type[k],crit_type[k-1]);
               std::swap(hits_boundary[k],hits_boundary[k-1]);
             }
-            ++j;
-          }
-        }
+          }  // more than one maximum
+        } // radial missing
         ++ii;
-      }
-    }
-  
+      } // is a tangent
+    } // loop through all
+  assert(2*ntange <= curves.size());
 }
 
 //PosType GridMap::magnification2() const{
