@@ -906,6 +906,7 @@ bool  PixelMap::incurve(long k,std::vector<Point_2d> &curve) const{
 void PixelMap::lens_definition(
                             double min_sn_per_image
                             ,double pixel_threshold
+                            ,int &Nimages
                             ,double &total_sig_noise_source
                             ,std::vector<size_t> &maxima_indexes
                             ,std::vector<std::vector<size_t> > &image_points
@@ -923,6 +924,7 @@ void PixelMap::lens_definition(
   lens_TF = false;
   level = 0;
   n_pix_in_source = 0;
+  Nimages = 0;
   
   double sn_max = map.max();
   if(sn_max < pixel_threshold) return;
@@ -937,14 +939,9 @@ void PixelMap::lens_definition(
       sig_noise[i] += map[k];
     }
     if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
-    total_sig_noise_source += sig_noise[i];
+    if(sig_noise[i] >= min_sn_per_image) total_sig_noise_source += sig_noise[i];
   }
-  n_pix_in_source = 0;
-  for(auto &v : image_points) n_pix_in_source += v.size();
-  if(verbose) std::cout << "              total : " << total_sig_noise_source << "  " << n_pix_in_source << std::endl;
   
-  maxima_indexes = maxima( pixel_threshold );
-  if(verbose) std::cout << "Number of maxima : " << maxima_indexes.size() << std::endl;
   
   // remove holes
 
@@ -953,6 +950,7 @@ void PixelMap::lens_definition(
     int i=0,k=image_points.size();
     while( i < k){
       if(image_points[i].size() == 0){
+        std::swap(sig_noise[i],sig_noise[k-1]);
         std::swap(image_points[i],image_points[k-1]);
         --k;
         ring = true;
@@ -962,79 +960,104 @@ void PixelMap::lens_definition(
       }
     }
     image_points.resize(k);
+    sig_noise.resize(k);
   }
   
   {
-    // remove low s/n peaks
+    // remove low s/n images
     int i=0,k=sig_noise.size();
     while( i < k){
       if(sig_noise[i] < min_sn_per_image){
         std::swap(sig_noise[i],sig_noise[k-1]);
         std::swap(image_points[i],image_points[k-1]);
         --k;
+      }else{
+        ++i;
       }
-      ++i;
+    }
+    image_points.resize(k);
+    sig_noise.resize(k);
+  }
+  
+  for(auto &v : image_points){
+    for(size_t k : v){
+      double val = map[k];
+       if(
+          val > map[k-1] &&
+          val > map[k+1] &&
+          val > map[k+Nx] &&
+          val > map[k+Nx-1] &&
+          val > map[k+Nx+1] &&
+          val > map[k-Nx] &&
+          val > map[k-Nx-1] &&
+          val > map[k-Nx+1]
+          ){
+            maxima_indexes.push_back(k);
+          }
     }
   }
+  if(verbose) std::cout << "Number of maxima : " << maxima_indexes.size() << std::endl;
+  
+  
+  n_pix_in_source = 0;
+  for(auto &v : image_points) n_pix_in_source += v.size();
+  if(verbose) std::cout << "              total : " << total_sig_noise_source << "  " << n_pix_in_source << std::endl;
+
   level = pixel_threshold;
+  Nimages = image_points.size();
   
   if( image_points.size() == 1 && !ring){
+    std::vector<std::vector<size_t> > new_image_points=image_points;
     
-    while( image_points.size() == 1
-          && image_points[0].size() > 1
+    while( new_image_points.size() == 1
+          && new_image_points[0].size() > 1
           && !ring
           && level < sn_max
           ){
       
-      std::sort(image_points[0].begin(),image_points[0].end()
+      std::sort(new_image_points[0].begin(),new_image_points[0].end()
                 ,[this](size_t i,size_t j){return map[i] < map[j];});
-      level = map[ image_points[0][1] ];
+      level = map[ new_image_points[0][1] ];
       
-      find_islands_holes(level,image_points);
-      if(verbose) std::cout << "    Number of islands : " << image_points.size() << "   level " << level << std::endl;
+      find_islands_holes(level,new_image_points);
+      if(verbose) std::cout << "    Number of islands : " << new_image_points.size() << "   level " << level << std::endl;
       
-      sig_noise.resize(image_points.size());
-      for(size_t i=0 ; i<image_points.size() ; ++i ){
-        sig_noise[i] = 0;
-        for(size_t k : image_points[i] ){
-          sig_noise[i] += map[k];
-        }
-        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
+      // detect holes
+      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+        if(new_image_points[i].size() == 0) ring = true;
       }
       
-      {  // remove/check holes
-        int i=0,k=image_points.size();
-        while( i < k){
-          if(image_points[i].size() == 0){
-            std::swap(image_points[i],image_points[k-1]);
-            --k;
-            ring = true;
-            if(verbose) std::cout << "There is a hole ! " << std::endl;
-          }else{
-            ++i;
-          }
-        }
-        image_points.resize(k);
-      }
+//      sig_noise.resize(new_image_points.size());
+//      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+//        sig_noise[i] = 0;
+//        for(size_t k : new_image_points[i] ){
+//          sig_noise[i] += map[k];
+//        }
+//        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
+//      }
+//
+//      {
+//        // remove low s/n images
+//        int i=0,k=sig_noise.size();
+//        while( i < k){
+//          if(sig_noise[i] < min_sn_per_image){
+//            std::swap(sig_noise[i],sig_noise[k-1]);
+//            std::swap(new_image_points[i],new_image_points[k-1]);
+//            --k;
+//          }else{
+//            ++i;
+//          }
+//        }
+//
+//        sig_noise.resize(k);
+//        new_image_points.resize(k);
+//      }
       
-      // remove low s/n images
-      int i=0,k=sig_noise.size();
-      while( i < k){
-        if(sig_noise[i] < min_sn_per_image){
-          std::swap(sig_noise[i],sig_noise[k-1]);
-          std::swap(image_points[i],image_points[k-1]);
-          --k;
-        }else{
-          ++i;
-        }
-      }
-      
-      sig_noise.resize(k);
-      image_points.resize(k);
     }
+    Nimages = new_image_points.size();
   }
   
-  lens_TF = image_points.size() > 1 || ring;
+  lens_TF = Nimages > 1 || ring;
   if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
 }
 

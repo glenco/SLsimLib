@@ -342,6 +342,7 @@ public:
    */
   void lens_definition(double min_sn_per_image                 /// signal-to-noise required for a seporate image (ex 10)
                        ,double pixel_threshold                 /// signal-to-noise threshold that defines the footprint (ex. 2)
+                       ,int &Nimages                           /// the number of images
                        ,double &total_sig_noise_source         /// gives the total signal-to-noise of all images
                        ,std::vector<size_t> &maxima_indexes    /// index of maxima
                        ,std::vector<std::vector<size_t> > &image_points
@@ -350,7 +351,7 @@ public:
                        ,size_t &n_pix_in_source                 /// number of pixels in footprint
                        ,bool verbose = false
                        );
-  
+ 
   
   /// find maxima that are above minlevel
   std::vector<size_t> maxima(double minlevel) const;

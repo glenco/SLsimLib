@@ -650,7 +650,6 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
                                                 ) const
 {
   
-  IndexType i;
   bool allowDescent;
   unsigned long count=0;//,tmp_index;
   
