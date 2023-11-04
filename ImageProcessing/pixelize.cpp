@@ -540,8 +540,8 @@ PixelMap PixelMap::operator-(const PixelMap& a) const
 {
   if(units != a.units)
     throw std::runtime_error("Units of maps are not compatible");
-  PixelMap diff(a);
-  diff -= *this;
+  PixelMap diff(*this);
+  diff -= a;
   return diff;
 }
 
@@ -813,12 +813,16 @@ void PixelMap::find_islands_holes(double level,
   std::vector<bool> bitmap( map.size() );
   std::vector<size_t> points_in;
   
-  for(size_t i = 0 ; i<map.size() ; ++i){
-    if (map[i] > level){
-      bitmap[i] = true;
-      points_in.push_back(i);
-    }else{
-      bitmap[i] = false;
+  // excludes boundaries that will be set to false in Utilities::find_boundaries
+  for(size_t i = 1 ; i<Nx-1 ; ++i){
+    for(size_t j = 1 ; j<Ny-1 ; ++j){
+      size_t k = i + Nx*j;
+      if (map[k] > level){
+        bitmap[k] = true;
+        points_in.push_back(k);
+      }else{
+        bitmap[k] = false;
+      }
     }
   }
   
@@ -932,7 +936,7 @@ void PixelMap::lens_definition(
   find_islands_holes(pixel_threshold,image_points);
  
   total_sig_noise_source = 0;
-  if(verbose) std::cout << "Number of islands : " << image_points.size() << std::endl;
+  if(verbose) std::cout << "Initial Number of islands : " << image_points.size() << std::endl;
   std::vector<double> sig_noise(image_points.size(),0);
   for(size_t i=0 ; i<image_points.size() ; ++i ){
     for(size_t k : image_points[i] ){
@@ -1027,31 +1031,31 @@ void PixelMap::lens_definition(
         if(new_image_points[i].size() == 0) ring = true;
       }
       
-//      sig_noise.resize(new_image_points.size());
-//      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
-//        sig_noise[i] = 0;
-//        for(size_t k : new_image_points[i] ){
-//          sig_noise[i] += map[k];
-//        }
-//        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
-//      }
-//
-//      {
-//        // remove low s/n images
-//        int i=0,k=sig_noise.size();
-//        while( i < k){
-//          if(sig_noise[i] < min_sn_per_image){
-//            std::swap(sig_noise[i],sig_noise[k-1]);
-//            std::swap(new_image_points[i],new_image_points[k-1]);
-//            --k;
-//          }else{
-//            ++i;
-//          }
-//        }
-//
-//        sig_noise.resize(k);
-//        new_image_points.resize(k);
-//      }
+      sig_noise.resize(new_image_points.size());
+      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+        sig_noise[i] = 0;
+        for(size_t k : new_image_points[i] ){
+          sig_noise[i] += map[k];
+        }
+        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
+      }
+
+      {
+        // remove low s/n images
+        int i=0,k=sig_noise.size();
+        while( i < k){
+          if(sig_noise[i] < min_sn_per_image){
+            std::swap(sig_noise[i],sig_noise[k-1]);
+            std::swap(new_image_points[i],new_image_points[k-1]);
+            --k;
+          }else{
+            ++i;
+          }
+        }
+
+        sig_noise.resize(k);
+        new_image_points.resize(k);
+      }
       
     }
     Nimages = new_image_points.size();
