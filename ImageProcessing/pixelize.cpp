@@ -497,8 +497,8 @@ PixelMap PixelMap::operator-(const PixelMap& a) const
 {
   if(units != a.units)
     throw std::runtime_error("Units of maps are not compatible");
-  PixelMap diff(a);
-  diff -= *this;
+  PixelMap diff(*this);
+  diff -= a;
   return diff;
 }
 
