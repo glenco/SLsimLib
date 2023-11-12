@@ -1021,41 +1021,48 @@ void PixelMap::lens_definition(
       
       std::sort(new_image_points[0].begin(),new_image_points[0].end()
                 ,[this](size_t i,size_t j){return map[i] < map[j];});
-      level = map[ new_image_points[0][1] ];
+      level = (map[ new_image_points[0][1] ] +  map[ new_image_points[0][0] ])/2;
       
       find_islands_holes(level,new_image_points);
       if(verbose) std::cout << "    Number of islands : " << new_image_points.size() << "   level " << level << std::endl;
       
-      // detect holes
+      // detect holes and delete holes
       for(size_t i=0 ; i<new_image_points.size() ; ++i ){
-        if(new_image_points[i].size() == 0) ring = true;
+        if(new_image_points[i].size() == 0){
+          ring = true;
+          for(int k = i ; k<new_image_points.size()-1 ; ++k){
+            std::swap(sig_noise[k],sig_noise[k+1]);
+            std::swap(new_image_points[k],new_image_points[k+1]);
+          }
+          new_image_points.pop_back();
+        }
       }
       
-      sig_noise.resize(new_image_points.size());
-      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
-        sig_noise[i] = 0;
-        for(size_t k : new_image_points[i] ){
-          sig_noise[i] += map[k];
-        }
-        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
-      }
+//      sig_noise.resize(new_image_points.size());
+//      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+//        sig_noise[i] = 0;
+//        for(size_t k : new_image_points[i] ){
+//          sig_noise[i] += map[k];
+//        }
+//        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
+//      }
+//
+//      {
+//        // remove low s/n images
+//        int i=0,k=sig_noise.size();
+//        while( i < k){
+//          if(sig_noise[i] < min_sn_per_image){
+//            std::swap(sig_noise[i],sig_noise[k-1]);
+//            std::swap(new_image_points[i],new_image_points[k-1]);
+//            --k;
+//          }else{
+//            ++i;
+//          }
+//        }
 
-      {
-        // remove low s/n images
-        int i=0,k=sig_noise.size();
-        while( i < k){
-          if(sig_noise[i] < min_sn_per_image){
-            std::swap(sig_noise[i],sig_noise[k-1]);
-            std::swap(new_image_points[i],new_image_points[k-1]);
-            --k;
-          }else{
-            ++i;
-          }
-        }
-
-        sig_noise.resize(k);
-        new_image_points.resize(k);
-      }
+//        sig_noise.resize(k);
+//        new_image_points.resize(k);
+//      }
       
     }
     Nimages = new_image_points.size();
