@@ -555,11 +555,20 @@ PixelMap& PixelMap::operator*=(const PixelMap& rhs)
   return *this;
 }
 
+// multiply each pixel by a constant
 PixelMap& PixelMap::operator*=(PosType b)
 {
   for(size_t i=0;i<map.size();++i) map[i] *= b;
   //map *= rhs.map;
   return *this;
+}
+
+// multiply each pixel by a constant
+PixelMap PixelMap::operator*(PosType b) const
+{
+  PixelMap map(*this);
+  map *= b;
+  return map;
 }
 
 /// Multiply two PixelMaps.

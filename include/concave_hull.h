@@ -56,14 +56,11 @@ size_t RemoveIntersections(std::vector<T> &curve){
   return count;
 }
 
-// fails when some segments are very close to the same.  Use TighterHull.
-
 /// removes the intersections while removing interior loops
 ///  The input curve needs to be ordered already.  No points in the
 ///  input curve will be outside the output hull.
 ///  Will fail if there are overlapping segments on the hull.
 std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
-
 
 //template <typename T>
 //std::vector<T> TightHull(const std::vector<T> &curve){

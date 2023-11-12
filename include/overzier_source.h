@@ -217,6 +217,9 @@ public:
   void setBulgeAxisRatio(PosType q){
     spheroid.setAxesRatio(q);
   }
+  void setBulgeSersicIndex(double index){
+    spheroid.setSersicIndex(index);
+  }
   /// Randomly change some of the internal paramters and angles of the source
   void randomize(Utilities::RandomNumbers_NR &ran);
 private:

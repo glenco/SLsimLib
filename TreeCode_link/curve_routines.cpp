@@ -3275,7 +3275,6 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   return env;
 }
 
-// fails when some segments are very close to the same.  Use TighterHull.
 std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
 
   if(v.size() < 4 ) return v;
