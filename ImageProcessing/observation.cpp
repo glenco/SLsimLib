@@ -250,8 +250,52 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
   
   std::swap(tmp,map_psf);
   
+  map_psfo = map_psf;
+  
   fftpsf();
 }
+
+void Obs::rotatePSF(double theta,double scale_x,double scale_y){
+  
+  double s=-sin(theta);
+  double c=cos(theta);
+  
+  int N_psf = map_psf.size();
+  int n_side_psf = sqrt(N_psf);
+
+  long center[2] = {n_side_psf/2,n_side_psf/2};
+  double f[2];
+  
+  std::valarray<double> map_psf(N_psf);
+  
+  for(long k=0 ; k<N_psf ; ++k){
+    long i = k%n_side_psf-center[0];
+    long j = k/n_side_psf-center[1];
+    
+    double x = (i*c - j*s)/scale_x + center[0];
+    if(x>=0 && x < n_side_psf-1){
+      double y = (i*s + j*c)/scale_y + center[1];
+      if(y>=0 && y < n_side_psf-1){
+        
+        long kk = (long)(x) + (long)(y)*n_side_psf; // lower left
+        
+        f[0]= x - (long)(x);
+        f[1]= y - (long)(y);
+        
+        map_psf[k] = (1-f[0])*(1-f[1])*map_psfo[kk] + f[0]*(1-f[1])*map_psfo[kk+1]
+        + f[0]*f[1]*map_psfo[kk+1+n_side_psf]
+        + (1-f[0])*f[1]*map_psfo[kk+n_side_psf];
+      }else{
+        map_psf[k] = 0;
+      }
+    }else{
+      map_psf[k] = 0;
+    }
+  }
+  
+  fftpsf();
+}
+
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Obs::setPSF(PixelMap &psf_map/// name of fits file with psf
@@ -299,6 +343,7 @@ void Obs::setPSF(PixelMap &psf_map/// name of fits file with psf
   }
   
   std::swap(tmp,map_psf);
+  map_psfo=map_psf;
   
   fftpsf();
 }

@@ -248,6 +248,12 @@ public:
   /// get the index for a position, returns -1 if out of map
   void find_position(PosType x[],std::size_t const ix,std::size_t const iy) const;
   
+  /// rotate and scale the image while keeping pixels, resoluiton
+  PixelMap rotate(
+                  PosType theta  /// counter-clockwise rotation (radians)
+                  ,PosType scale=1  /// scale <1 shrinks it
+                  );
+  
   /// interpolate to point x[]
   PosType linear_interpolate(PosType x[]);
   
@@ -565,6 +571,11 @@ public:
   //void setPSF(std::string psf_file);
   void setPSF(std::string psf_file,double resolution=0);
   void setPSF(PixelMap &psf_map);
+  /// rotate and scale the psf from the original
+  void rotatePSF(double theta   /// counter-clockwise rotation (radians)
+                 ,double scale_x=1  /// scale <1 shrinks it
+                 ,double scale_y=1  /// scale <1 shrinks it
+ );
  
   void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
@@ -612,6 +623,7 @@ private:
 
   void fftpsf();  // FFT the psf for later use
   std::valarray<double> map_psf;  // array of the point spread function
+  std::valarray<double> map_psfo;  // initial array of the point spread function
   
   std::vector<std::complex<double> > fft_psf;
   std::vector<std::complex<double> > fft_padded;

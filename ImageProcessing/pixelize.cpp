@@ -2374,6 +2374,41 @@ void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const 
   return;
 }
 
+PixelMap PixelMap::rotate(PosType theta,double scale){
+
+  double s=-sin(theta);
+  double c=cos(theta);
+  
+  long center[2] = {Nx/2,Ny/2};
+  Point_2d map_center = getCenter();
+  double f[2];
+  
+  PixelMap rot_map(map_center.data(),Nx,Ny,resolution,units);
+  
+  size_t N = Nx*Ny;
+  for(long k=0 ; k<N ; ++k){
+    long i = k%Nx-center[0];
+    long j = k/Nx-center[1];
+    
+    double x = (i*c - j*s)/scale + center[0];
+    if(x>=0 && x < Nx-1){
+      double y = (i*s + j*c)/scale + center[1];
+      if(y>=0 && y < Ny-1){
+        
+        long kk = (long)(x) + (long)(y)*Nx; // lower left
+        
+        f[0]= x - (long)(x);
+        f[1]= y - (long)(y);
+        
+        rot_map[k] = (1-f[0])*(1-f[1])*map[kk] + f[0]*(1-f[1])*map[kk+1] + f[0]*f[1]*map[kk+1+Nx]
+        + (1-f[0])*f[1]*map[kk+Nx];
+      }
+    }
+  }
+  
+  return rot_map;
+}
+
 PosType PixelMap::linear_interpolate(PosType x[]){
   long ix,iy;
   PosType f[2];
