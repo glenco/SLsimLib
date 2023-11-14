@@ -36,8 +36,7 @@ enum class PixelMapUnits {
 std::string to_string(PixelMapUnits unit);
 
 /**
- * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
- * can be exported as a fits file, smoothed, etc. like an image.
+ * \brief Image structure that can be manipulated and exported to/from fits files.
  *
  */
 class PixelMap
@@ -212,6 +211,7 @@ public:
   PixelMap operator/(const PixelMap& a) const;
 
 	PixelMap& operator*=(PosType b);
+  PixelMap operator*(PosType b) const;
 
 	std::valarray<double>& data() { return map; }
 	

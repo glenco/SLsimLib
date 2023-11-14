@@ -2469,15 +2469,18 @@ public:
     }
 
     // print comments on labels
-    for(auto &label : labels){
-      auto it = label_comments.find(label);
-      if(it == label_comments.end() ){
-        logfile << "# " << label << " : no comment" << std::endl;
-      }else{
-        logfile << "# " << it->first << " : " << it->second << std::endl;
+    {
+      int i=1;
+      for(auto &label : labels){
+        auto it = label_comments.find(label);
+        if(it == label_comments.end() ){
+          logfile << "# " << i << " " << label << " : no comment" << std::endl;
+        }else{
+          logfile << "# " << i << " " << it->first << " : " << it->second << std::endl;
+        }
+        ++i;
       }
     }
-    
     size_t i=0;
     nlabels = labels.size();
     for(auto &label : labels){
