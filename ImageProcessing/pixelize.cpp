@@ -1047,34 +1047,35 @@ void PixelMap::lens_definition(
         }
       }
       
-//      sig_noise.resize(new_image_points.size());
-//      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
-//        sig_noise[i] = 0;
-//        for(size_t k : new_image_points[i] ){
-//          sig_noise[i] += map[k];
-//        }
-//        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
-//      }
-//
-//      {
-//        // remove low s/n images
-//        int i=0,k=sig_noise.size();
-//        while( i < k){
-//          if(sig_noise[i] < min_sn_per_image){
-//            std::swap(sig_noise[i],sig_noise[k-1]);
-//            std::swap(new_image_points[i],new_image_points[k-1]);
-//            --k;
-//          }else{
-//            ++i;
-//          }
-//        }
+      sig_noise.resize(new_image_points.size());
+      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+        sig_noise[i] = 0;
+        for(size_t k : new_image_points[i] ){
+          sig_noise[i] += map[k];
+        }
+        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
+      }
 
-//        sig_noise.resize(k);
-//        new_image_points.resize(k);
-//      }
+      {
+        // remove low s/n images
+        int i=0,k=sig_noise.size();
+        while( i < k){
+          if(sig_noise[i] < 2 * pixel_threshold ){
+            std::swap(sig_noise[i],sig_noise[k-1]);
+            std::swap(new_image_points[i],new_image_points[k-1]);
+            --k;
+          }else{
+            ++i;
+          }
+        }
+
+        sig_noise.resize(k);
+        new_image_points.resize(k);
+      }
       
     }
-    Nimages = new_image_points.size();
+    // returns to one image in cases where peaks do not have enough S/N
+    Nimages = MAX(new_image_points.size(),image_points.size());
   }
   
   lens_TF = Nimages > 1 || ring;
