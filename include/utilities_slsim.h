@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <boost/variant.hpp>
 #include <set>
+#include <iomanip>
 
 #endif
 
