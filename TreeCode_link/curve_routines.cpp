@@ -3052,227 +3052,56 @@ bool Utilities::circleOverlapsCurve(const Point_2d &x,double r,const std::vector
 std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
   
-  if(v.size() == 0 ) return w;
-  if(w.size() == 0 ) return v;
-  
-  // find most left
-  double tmp = v[0][0];
-  size_t imax = 0;
-  for(int i=1 ; i<v.size() ; ++i){
-    if(tmp > v[i][0]){
-      tmp=v[i][0];
-      imax = i;
-    }
-  }
-  tmp = w[0][0];
-  size_t jmax = 0;
-  for(int j=1 ; j<w.size() ; ++j){
-    if(tmp > w[j][0]){
-      tmp=w[j][0];
-      jmax = j;
-    }
-  }
-  
-  size_t n_tot =  v.size() + w.size();
-  size_t i = imax,j=jmax;
-  
-  bool on_v = ( v[imax][0] < w[jmax][0] );
-  
-  std::vector<Point_2d> env;
-  int o = 1;
-  
-  if(on_v){
-    env.push_back(v[i]);
-  }else{
-    env.push_back(w[j]);
-  }
-  
   size_t nv = v.size();
   size_t nw = w.size();
+  std::cout << nv << " " << nw << std::endl;
+  if(nv<3) return w;
+  if(nw<3) return v;
+  
   Utilities::Geometry::CYCLIC cycv(nv);
   Utilities::Geometry::CYCLIC cycw(nw);
+  Point_2d inter_p;
   
-  // orientation
-  if(on_v){
-    o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
-  }else{
-    o = sign( (w[cycw[jmax-1]]-w[jmax])^(w[cycw[jmax+1]]-w[jmax])  );
-  }
-  
-  bool init_on_v = on_v;
-  int n_intersect=0,step=0;
-  
-  while( (i != imax)*init_on_v + (j != jmax)*(1-init_on_v) || step == 0){
-    ++step;
-    
-    if(on_v){
-      
-      j=-1;
-      for(int jj=0; jj<nw ; ++jj){
-        if( Utilities::Geometry::intersect(v[i].x,v[ cycv[i+o] ].x
-                                           ,w[jj].x,w[ cycw[jj+1] ].x)
-           && v[i] != w[jj]
-           && v[i] != w[cycw[jj+1]]
-           && v[ cycv[i+o] ] != w[jj]
-           ){
-          ++n_intersect;
-          if(j==-1){
-            j=jj;
-          }else{ // case of two intersections
-            Point_2d dv = v[ cycv[i+o] ] - v[i] ;
-            Point_2d dw = w[ cycw[jj+1] ] - w[jj];
-            double s = ( dw^(w[jj]-v[i]) )/( dw^dv );
-            //assert(s>0);
-            dw = w[ cycw[j+1] ] - w[j];
-            double s2 = ( dw^(w[j]-v[i]) ) /( dw^dv );
-            //assert(s2>0);
-            if(s < s2) j=jj;
-          }
-        }
-      }
-      
-      if(j==-1){  // no intersection
-        i = cycv[i+o];
-        env.push_back(v[i]);
-      }else if( v[ cycv[i+o] ] == w[ cycw[j+1] ] ){  // end points are the same
-   
-        Point_2d  vo = v[ cycv[i+o] ] - v[i];
-        
-        i = cycv[i+o];
-        env.push_back( v[i] );
-  
- 
-        Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-        Point_2d  w1 = w[ cycw[j+2] ] - v[i];
-        Point_2d  w2 = w[j] - v[i];
- 
-        double a1 = atan2(v1^vo,v1*vo);
-        double a2 = atan2(w1^vo,w1*vo);
-        double a3 = atan2(w2^vo,w2*vo);
-  
-        if( a2 < a1 && a2 < a3){
-          j=cycw[j+1];
-          o=1;
-          on_v = false;
-          i=-1;
-        }else if( a3 < a1 && a3 < a2){
-          j=cycw[j+1];
-          o=-1;
-          on_v = false;
-          i=-1;
-        }
- 
-        
-      }else{
-        Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-        Point_2d  w1 = w[ cycw[j+1] ] - w[j];
-        env.push_back(line_intersection(v[ cycv[i+o] ],v[i],w[ cycw[j+1] ],w[j]));
-        if( (w1^v1) > 0){
-          o=-1;
-        }else{
-          j = cycw[j+1];
-          o=1;
-        }
-        env.push_back(w[j]);
-        on_v = false;
-        i=-1;
-      }
-      
-    }else{  // on w
-      
-      i=-1;
-      for(int ii=0; ii<nv ; ++ii){
-        if( Utilities::Geometry::intersect(v[ii].x,v[ cycv[ii+1] ].x
-                                           ,w[j].x,w[ cycw[j+o] ].x)
-           && v[ii] != w[j]
-           && v[ cycv[ii+1] ] != w[j]
-           && v[ii] != w[cycw[j+o]]
-            ){
-          ++n_intersect;
-          if(i==-1){
-            i=ii;
-          }else{ // case of two intersections
-            Point_2d dw = w[ cycw[j+o] ] - w[j] ;
-            Point_2d dv = v[ cycv[ii+1] ] - v[ii];
-            double s = ( dv^(v[ii]-w[j]) ) /( dv^dw );
-            //assert(s>0);
-            dv = v[ cycv[i+1] ] - v[i];
-            double s2 = ( dv^(v[i]-w[j]) ) /( dv^dw );
-            //assert(s2>0);
-            if(s < s2) i=ii;
-          }
-          
-        }
-      }
-      
-      if(i==-1){
-        j = cycw[j+o];
-        env.push_back(w[j]);
-        
-      }else if( v[ cycv[i+1] ] == w[ cycw[j+o] ] ){
-        
-        Point_2d  wo = w[ cycw[j+o] ] - w[j];
-        
-        j = cycw[j+o];
-        env.push_back( w[j] );
-  
-        Point_2d  w1 = w[ cycw[j+o] ] - w[j];
-        Point_2d  v1 = v[ cycv[i+2] ] - w[j];
-        Point_2d  v2 = v[i] - w[j];
- 
-        double a1 = atan2(w1^wo,w1*wo);
-        double a2 = atan2(v1^wo,v1*wo);
-        double a3 = atan2(v2^wo,v2*wo);
-  
-        if( a2 < a1 && a2 < a3){
-          i=cycv[i+1];
-          o=1;
-          on_v = true;
-          j=-1;
-        }else if( a3 < a1 && a3 < a2){
-          i=cycv[i+1];
-          o=-1;
-          on_v = true;
-          j=-1;
-        }
-        
-      }else{
-        Point_2d  v1 = v[ cycv[i+1] ] - v[i];
-        Point_2d  w1 = w[ cycw[j+o] ] - w[j];
-        env.push_back(line_intersection(v[ cycv[i+1] ],v[i],w[ cycw[j+o] ],w[j]));
-        if( (v1^w1) > 0){
-          o=-1;
-        }else{
-          i = cycv[i+1];
-          o=1;
-        }
-        env.push_back(v[i]);
-        on_v = true;
-        j=-1;
-      }
-      
-    }
-    
-    //write_csv("test_hull.csv",env);
-    //assert(env.size() <= 2*n_tot);
-  }
-  
-  env.pop_back();  // last point is repeated
-  
-  //write_csv("test_hull.csv",env);
-  assert(env.size() > 2);
-  
-  if(n_intersect == 0){
-    double area;
-    
-    if(on_v){
-      if( Utilities::windings(w[0], v, &area) == 0 ) env.clear();
-    }else{
-      if( Utilities::windings(v[0], w, &area) == 0 ) env.clear();
+  bool intersecting = false;
+  // check if they intersect
+  long i,j;
+  for(i=0; i<nv && !intersecting ; ++i){
+    for(j=0; j<nw && !intersecting ; ++j){
+      if(Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
+                                        ,w[j].x,w[ cycw[j+1] ].x))
+        intersecting = true;
+        inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
+                        ,w[j].x,w[ cycw[j+1] ].x);
     }
   }
   
-  return env;
+  if(intersecting == false){
+    if( Utilities::inCurve<Point_2d>(w[0],v)){
+      return v;
+    }
+    
+    if( Utilities::inCurve<Point_2d>(v[0],w)){
+      return w;
+    }
+
+    // case where they do not overlap
+    return std::vector<Point_2d>(0);
+  }
+  
+  // concatenate curves
+  std::vector<Point_2d> curve(w.size() + v.size() + 2);
+  long ii=0;
+  while(ii < nw ){
+    curve[ii++] = w[ cycw[j++] ];
+  }
+  curve[ii++] = inter_p;  // insert extra point where curves intersect
+  while(ii < curve.size() - 1 ){
+    curve[ii++] = v[ cycv[i++] ];
+  }
+  
+  curve[ii] = inter_p + ( curve[ii-1] - inter_p) * 0.01;  // insert extra point close to where curves intersect
+
+  return Utilities::TighterHull(curve);
 }
 
 std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){

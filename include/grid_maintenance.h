@@ -333,7 +333,7 @@ namespace ImageFinding{
     bool EntirelyinCausticCurve(Point_2d &x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the caustic :
-      bool IsInCurve = Utilities::inhull2(x,caustic_curve_outline);
+      bool IsInCurve = Utilities::inCurve(x,caustic_curve_outline);
       
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the caustic curve
@@ -356,7 +356,7 @@ namespace ImageFinding{
     bool EntirelyinCriticalCurve(Point_2d x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the critical curve :
-      bool IsInCurve = Utilities::inhull2(x,caustic_curve_outline);
+      bool IsInCurve = Utilities::inCurve(x,caustic_curve_outline);
       
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the critical curve

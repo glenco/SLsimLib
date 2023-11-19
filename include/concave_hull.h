@@ -949,7 +949,7 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
 }
 
 template <typename Ptype>
-bool inhull2(Ptype &x,const std::vector<Ptype> &H){
+bool inCurve(const Ptype &x,const std::vector<Ptype> &H){
   
   size_t n = H.size();
   if(n <=2) return false;
@@ -1239,7 +1239,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
             // this is to prevent pre-mature closing of the loop
             hull.push_back(new_point);
             for(size_t i : neighbors){
-              if(i != new_index && !inhull2(points[i],hull)){
+              if(i != new_index && !inCurve(points[i],hull)){
                 intersect = true;
                 break;
               }
@@ -1296,7 +1296,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
     segmented = false;
     if(check){
       for(auto i : remaining_index){
-        if(!inhull2(points[i],hull)){
+        if(!inCurve(points[i],hull)){
           segmented = true;
           k *= 2;
           //          std::cout << "point outside ... ";
@@ -1401,7 +1401,7 @@ bool circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> 
 /** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
  
  v and w must be non-self intersecting
- If they do not intersect and one is not inside the other an empty vector is output.
+ If they do not intersect and one is not inside the other an empty vector is returned
  */
 std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w);
