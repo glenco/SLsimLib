@@ -575,7 +575,15 @@ public:
   void rotatePSF(double theta   /// counter-clockwise rotation (radians)
                  ,double scale_x=1  /// scale <1 shrinks it
                  ,double scale_y=1  /// scale <1 shrinks it
- );
+  );
+  
+  /// add two PSFs to simulate stacking
+  void coaddPSF(double f         /// relative weight of the PSFs, 1 being equal weight
+                ,double theta1   /// ratation of first PSF
+                ,double theta2   /// rotation of second PSF
+                ,double scale_x  /// scale <1 shrinks it
+                ,double scale_y  /// scale <1 shrinks it
+                );
  
   void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
