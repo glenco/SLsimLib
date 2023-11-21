@@ -296,6 +296,67 @@ void Obs::rotatePSF(double theta,double scale_x,double scale_y){
   fftpsf();
 }
 
+void Obs::coaddPSF(double f,double theta1,double theta2,double scale_x,double scale_y){
+  
+  double a = f/(1+f);
+  double b = 1/(1+f);
+  double s1=-sin(theta1);
+  double c1=cos(theta1);
+  
+  double s2=-sin(theta2);
+  double c2=cos(theta2);
+
+  int N_psf = map_psf.size();
+  int n_side_psf = sqrt(N_psf);
+
+  long center[2] = {n_side_psf/2,n_side_psf/2};
+  double ff[2];
+  
+  std::valarray<double> map_psf(N_psf);
+  
+  for(long k=0 ; k<N_psf ; ++k){
+    long i = k%n_side_psf-center[0];
+    long j = k/n_side_psf-center[1];
+    
+    double x = (i*c1 - j*s1)/scale_x + center[0];
+    if(x>=0 && x < n_side_psf-1){
+      double y = (i*s1 + j*c1)/scale_y + center[1];
+      if(y>=0 && y < n_side_psf-1){
+        
+        long kk = (long)(x) + (long)(y)*n_side_psf; // lower left
+        
+        ff[0]= x - (long)(x);
+        ff[1]= y - (long)(y);
+        
+        map_psf[k] = a*( (1-ff[0])*(1-ff[1])*map_psfo[kk] + ff[0]*(1-ff[1])*map_psfo[kk+1]
+        + ff[0]*ff[1]*map_psfo[kk+1+n_side_psf]
+        + (1-ff[0])*ff[1]*map_psfo[kk+n_side_psf] );
+      }else{
+        map_psf[k] = 0;
+      }
+    }else{
+      map_psf[k] = 0;
+    }
+    
+    x = (i*c2 - j*s2)/scale_x + center[0];
+    if(x>=0 && x < n_side_psf-1){
+      double y = (i*s2 + j*c2)/scale_y + center[1];
+      if(y>=0 && y < n_side_psf-1){
+        
+        long kk = (long)(x) + (long)(y)*n_side_psf; // lower left
+        
+        ff[0]= x - (long)(x);
+        ff[1]= y - (long)(y);
+        
+        map_psf[k] += b*( (1-ff[0])*(1-ff[1])*map_psfo[kk] + ff[0]*(1-ff[1])*map_psfo[kk+1]
+        + ff[0]*ff[1]*map_psfo[kk+1+n_side_psf]
+        + (1-ff[0])*ff[1]*map_psfo[kk+n_side_psf] );
+      }
+    }
+  }
+  fftpsf();
+}
+
 
 /// Reads in and sets the PSF from a fits file. If the pixel size of the fits is different (smaller) than the one of the telescope, it must be specified.
 void Obs::setPSF(PixelMap &psf_map/// name of fits file with psf
