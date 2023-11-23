@@ -3104,9 +3104,40 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   return Utilities::TighterHull(curve);
 }
 
-std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
+std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
 
-  if(v.size() < 4 ) return v;
+  if(vv.size() < 4 ) return vv;
+ 
+  std::vector<Point_2d> v = vv;
+  size_t nv = v.size();
+  Utilities::Geometry::CYCLIC cycv(nv);
+  
+  // check for colinear segments
+  for(long i=0 ; i<nv-1 ; ++i){
+    Point_2d dv = v[i+1]-v[i];
+    for(long j=i+1 ; j<nv ; ++j){
+
+      long jp = cycv[j+1];
+      if( ( dv^( v[j]-v[i]) ) == 0 && ( dv^( v[jp]-v[i]) ) == 0 ){  // colinear
+        Point_2d dw = v[jp]-v[j];
+        
+        double s =( dv*(v[j]-v[i]) )/dv.length_sqr();
+        double s2 =( dv*(v[jp]-v[i]) )/dv.length_sqr();
+        double s3 =( dw*(v[i]-v[j]) )/dw.length_sqr();
+ 
+        if(  (s >= 0 && s <= 1)
+           || (s2 >= 0 && s2 <= 1)
+           || (s3 >= 0 && s3 <= 1)
+           ){  // overlapping
+            // add small perturbation perpendiculare to segmant
+            std::swap(dw[0],dw[1]);
+            dw[0] *= -1;
+            v[i] += dw*0.001;
+            v[i+1] -= dw*0.001;
+        }
+      }
+    }
+  }
 
   // find most left
   double tmp = v[0][0];
@@ -3118,14 +3149,12 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
     }
   }
 
-  size_t n_tot =  v.size();
   size_t i = imax;
-
+ 
+  
   std::vector<Point_2d> env;
 
   env.push_back(v[i]);
-  size_t nv = v.size();
-  Utilities::Geometry::CYCLIC cycv(nv);
 
   // orientation
   int o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
@@ -3134,7 +3163,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
   long last_i = cycv[imax-o];
   if(o==-1) last_i = imax;
 
-  while( env.size() <= 20*n_tot ){
+  while( env.size() <= 20*nv ){
     ++step;
 
     long j_int=-1;
@@ -3206,34 +3235,6 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
         i = cycv[i+o];
         env.push_back(v[i]);
         if(i==imax) break;
-
-//      }else{
-//        Point_2d  vo = v[i+o] - env.back(); // not correct
-//
-//        //i = cycv[i+o];
-//        //env.push_back( v[i] );
-//
-//        Point_2d  v1 = v[ cycv[i+o] ] - v[i];
-//        Point_2d  w1 = v[ cycv[j_int+1] ] - v[i];
-//        Point_2d  w2 = v[ cycv[j_int-1] ] - v[i];
-//
-//        double a1 = atan2(v1^vo,v1*vo);
-//        double a2 = atan2(w1^vo,w1*vo);
-//        double a3 = atan2(w2^vo,w2*vo);
-//
-//        if( a2 < a1 && a2 < a3){
-//          i=cycv[j_int+1];
-//          o=1;
-//        }else if( a3 < a1 && a3 < a2){
-//          i=cycv[j_int-1];
-//          o=-1;
-//        }else{
-//          i = i+o;
-//        }
-//
-//        env.push_back( v[i] );
-//        if(i==imax) break;
-//      }
     }else{
       Point_2d  v1 = v[ cycv[i+o] ] - env.back();
       Point_2d  w1 = v[ cycv[j_int] ] - env.back();
@@ -3256,7 +3257,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
     //write_csv("hull.csv",env);
   }
 
-  if(env.size() > 20*n_tot){
+  if(env.size() > 20*nv){
     write_csv("test_curve.csv",v);
     write_csv("test_hull.csv",env);
     std::cerr << "Failure of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
