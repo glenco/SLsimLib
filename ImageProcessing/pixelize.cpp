@@ -2782,7 +2782,10 @@ void PixelMap::paste(const PixelMap& pmap){
   }
 }
 
-void PixelMap::paste(const PixelMap& pmap,long nx_ll,long ny_ll){
+void PixelMap::paste(const PixelMap& pmap
+                     ,long nx_ll    // lower left pixel of this
+                     ,long ny_ll
+                     ){
   
   if(resolution != pmap.resolution){
     std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;

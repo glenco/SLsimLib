@@ -3260,7 +3260,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &v){
     write_csv("test_curve.csv",v);
     write_csv("test_hull.csv",env);
     std::cerr << "Failure of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
-    throw "Failure in TighterHull";
+    throw std::runtime_error("Failure in TighterHull");
   }
  
   assert(env.size() > 2);
