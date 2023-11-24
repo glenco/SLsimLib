@@ -3112,32 +3112,41 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   size_t nv = v.size();
   Utilities::Geometry::CYCLIC cycv(nv);
   
-  // check for colinear segments
   for(long i=0 ; i<nv-1 ; ++i){
-    Point_2d dv = v[i+1]-v[i];
-    for(long j=i+1 ; j<nv ; ++j){
-
-      long jp = cycv[j+1];
-      if( ( dv^( v[j]-v[i]) ) == 0 && ( dv^( v[jp]-v[i]) ) == 0 ){  // colinear
-        Point_2d dw = v[jp]-v[j];
-        
-        double s =( dv*(v[j]-v[i]) )/dv.length_sqr();
-        double s2 =( dv*(v[jp]-v[i]) )/dv.length_sqr();
-        double s3 =( dw*(v[i]-v[j]) )/dw.length_sqr();
- 
-        if(  (s >= 0 && s <= 1)
-           || (s2 >= 0 && s2 <= 1)
-           || (s3 >= 0 && s3 <= 1)
-           ){  // overlapping
-            // add small perturbation perpendiculare to segmant
-            std::swap(dw[0],dw[1]);
-            dw[0] *= -1;
-            v[i] += dw*0.001;
-            v[i+1] -= dw*0.001;
-        }
-      }
-    }
+   for(long j=i+1 ; j<nv ; ++j){
+     if( v[i] == v[j]){
+       Point_2d dw = v[cycv[j+1]]-v[j];
+       v[j] += dw*0.001;
+     }
+   }
   }
+  
+//  // check for colinear segments
+//  for(long i=0 ; i<nv-1 ; ++i){
+//    Point_2d dv = v[i+1]-v[i];
+//    for(long j=i+1 ; j<nv ; ++j){
+//
+//      long jp = cycv[j+1];
+//      if( ( dv^( v[j]-v[i]) ) == 0 && ( dv^( v[jp]-v[i]) ) == 0 ){  // colinear
+//        Point_2d dw = v[jp]-v[j];
+//
+//        double s =( dv*(v[j]-v[i]) )/dv.length_sqr();
+//        double s2 =( dv*(v[jp]-v[i]) )/dv.length_sqr();
+//        double s3 =( dw*(v[i]-v[j]) )/dw.length_sqr();
+//
+//        if(  (s >= 0 && s <= 1)
+//           || (s2 >= 0 && s2 <= 1)
+//           || (s3 >= 0 && s3 <= 1)
+//           ){  // overlapping
+//          // add small perturbation perpendiculare to segmant
+//          std::swap(dw[0],dw[1]);
+//          dw[0] *= -1;
+//          v[i] += dw*0.001;
+//          v[i+1] -= dw*0.001;
+//        }
+//      }
+//    }
+//  }
 
   // find most left
   double tmp = v[0][0];
@@ -3167,79 +3176,93 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
     ++step;
 
     long j_int=-1;
-    double s=-1,p;
-    Point_2d dv = v[ cycv[i+o] ] - env.back();
+    double s=-1;//,p;
+    Point_2d di = v[ cycv[i+o] ] - env.back();
     n_intersect=0;
+    
+    double s_max = 1;
+    int jj_parallel = -1;
+    int o_par =0;
+    
     for(int jj=0; jj<nv ; ++jj){
-      if(
-         jj != i
-         //&& jj != cycv[i-o]
-         && jj != last_i
-         && Utilities::Geometry::intersect(env.back().x,v[ cycv[i+o] ].x
-                                           ,v[jj].x,v[ cycv[jj+1] ].x)
-         //&& v[i] != v[jj]
-         //&& v[i] != v[cycv[jj+1]]
-         //&& v[ cycv[i+o] ] != v[jj]
+      if(  jj != i && jj != last_i && jj != cycv[i+o]
          ){
+        
+        long jp = cycv[jj+1];
+        if(
+            Utilities::Geometry::intersect(env.back().x,v[ cycv[i+o] ].x
+                                           ,v[jj].x,v[ jp ].x)  // does not include sheared endpoints
+          ){
            ++n_intersect;
-           Point_2d dw = v[ cycv[jj+1] ] - v[jj];
-           if(j_int==-1){
-             j_int=jj;
+           Point_2d dj = v[ jp ] - v[jj];
+ 
+           double pji = dj^di;
+           
+           if(pji == 0 ){ // overlapping
              
-             p = dw^dv;
-             s = ( dw^(v[jj]-env.back()) ) /p;
-             if( p == 0){ // colinear case
-               double s2 = (v[jj]-env.back())*dv/dv.length();
-               double s3 = (v[cycv[jj+1]]-env.back())*dv/dv.length();
-               if(s2/s3 <0 ) s=MAX(s2,s3);
-               else s=MIN(s2,s3);
+             double sj = (v[jj]-env.back())*di /di.length_sqr();
+             double sjp = (v[jp]-env.back())*di /di.length_sqr();
+             
+             if(MAX(sj,sjp) > s_max ){  // new edge extends beyond current edge
+               if(sjp > sj){
+                 jj_parallel = jj;
+                 o_par = 1;
+                 s_max = sjp;
+               }else{
+                 jj_parallel = jp;
+                 o_par = -1;
+                 s_max = sj;
+               }
              }
-           }else{ // case of two intersections
-   
-             double p2 = dw^dv;
-             double s2 = ( dw^(v[jj]-env.back()) )/p2;
-             if( p2 == 0){ // colinear case
-               double s3 = (v[jj]-env.back())*dv/dv.length();
-               double s4 = (v[cycv[jj+1]]-env.back())*dv/dv.length();
-               if(s3/s4 <0 ) s2=MAX(s3,s4);
-               else s2=MIN(s4,s3);
-             }
-
-             if(s > s2){
-               j_int=jj;
-               s=s2;
-               p=p2;
+             
+           }else{
+             
+             Point_2d inter_p = line_intersection(env.back().x,v[ cycv[i+o] ].x
+                                ,v[jj].x,v[ jp ].x);
+             
+             double s2 = ( (inter_p-env.back())*di )/di.length_sqr();
+             
+             if( s2 > 0){
+               if(j_int==-1 ){
+                 j_int=jj;
+                 
+                 //p = pji;
+                 if( v[ cycv[i+o] ] == v[jj]){
+                   s=1;  // avoid numerical error
+                 }else{
+                   s = s2;
+                 }
+               }else{ // case of two crossings
+                 
+                 //double p2 = pji;
+                 //if( v[ cycv[i+o] ] == v[jj]){
+                 //  s2=1;  // avoid numerical error
+                 //}else{
+                 //  s2 = ( (inter_p-env.back())*di )/di.length_sqr();
+                 // }
+                 
+                 assert(s <= 1);
+                 if(s > s2){
+                   j_int=jj;
+                   s=s2;
+                   //p=p2;
+                 }
+               }
+               assert(s>0);
              }
            }
          }
+      }
     }
 
     if(o==1) last_i = i;
     else last_i = cycv[i-1];
 
-    //problem when curve returns to very nearly the same point
-    if(j_int==-1  || s>=1){  // no intersection
-  
-      i = cycv[i+o];
-      env.push_back(v[i]);
-      if(i==imax) break;
-    }else if( env.back() == v[ cycv[j_int] ]
-             && v[ cycv[i+o] ] == v[ cycv[j_int+1] ]
-             ){  // end points are the same
-        i = cycv[i+o];
-        env.push_back(v[i]);
-        if(i==imax) break;
-    }else if( env.back() == v[ cycv[j_int+1] ]
-             && v[ cycv[i+o] ] == v[ cycv[j_int] ]
-             ){  // end points are the same
-        i = cycv[i+o];
-        env.push_back(v[i]);
-        if(i==imax) break;
-    }else{
+    if(j_int != -1){
+      
       Point_2d  v1 = v[ cycv[i+o] ] - env.back();
       Point_2d  w1 = v[ cycv[j_int] ] - env.back();
-      //env.push_back(line_intersection(v[ cycv[i+o] ],env.back()
-      //                                ,v[ cycv[j_int+1] ],v[j_int]));
+  
       env.push_back(env.back() + (v[ cycv[i+o] ] - env.back())*s );
       assert(s >= 0);
       assert(s <= 1);
@@ -3252,6 +3275,15 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
         i = j_int;
         o = 1;
       }
+      
+    }else if(jj_parallel != -1){
+      i=jj_parallel;
+      o = o_par;
+    }else{
+      // case of moving along in same direction
+      i = cycv[i+o];
+      env.push_back(v[i]);
+      if(i==imax) break;
     }
 
     //write_csv("hull.csv",env);
