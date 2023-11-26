@@ -3222,12 +3222,6 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
         Point_2d dj = v[ jp ] - v[jj];
         double pji = dj^dio;
         
-        double theta = atan2( dj^dio,dj*dio)*180/PI;
-        double theta2 = atan2( ( v[jj]-env.back() )^dio,( v[jj]-env.back() )*dio)*180/PI;
-        if(theta==0 && theta2 == 0){
-          std::cout << "this should go" << std::endl;
-        }
-        
         if(pji == 0  // parallel
            && ( ( v[jj]-env.back() )^dio ) == 0   // colinear
            ){ // colinear
