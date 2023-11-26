@@ -3110,17 +3110,44 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
  
   std::vector<Point_2d> v = vv;
   size_t nv = v.size();
-  Utilities::Geometry::CYCLIC cycv(nv);
   
-  for(long i=0 ; i<nv-1 ; ++i){
-   for(long j=i+1 ; j<nv ; ++j){
-     if( v[i] == v[j]){
-       Point_2d dw = v[cycv[j+1]]-v[j];
-       v[j] += dw*0.001;
-     }
-   }
+  double length_scale=0;
+  for(long i=0 ; i<nv ; ++i){
+    double tmp = (v[i] - v[(i+1)%nv]).length();
+    if(tmp > length_scale) length_scale = tmp;
   }
   
+  length_scale *= 0.01;
+  
+  // remove repeated consecutive points
+  for(long i=0 ; i<nv-1 ; ++i){
+    if( (v[i] - v[i+1]).length() < length_scale ){
+      for(long k=i+1 ; k<nv-1 ; ++k){
+        std::swap(v[k],v[k+1]);
+      }
+      --nv;
+    }
+  }
+  while( (v[nv-1] - v[0]).length() < length_scale ) --nv;
+  v.resize(nv);
+  
+  Utilities::Geometry::CYCLIC cycv(nv);
+  
+  // displace points that are the same
+  {
+    Utilities::RandomNumbers_NR ran;
+  
+    for(long i=0 ; i<nv-1 ; ++i){
+      for(long j=i+1 ; j<nv ; ++j){
+        if( (v[i] - v[j]).length() < length_scale ){
+          Point_2d dw = v[cycv[j+1]]-v[j];
+          //Point_2d dv = v[cycv[i+1]]-v[i];
+          v[j] += dw * length_scale *(2*ran()-1)/dw.length();
+        }
+      }
+    }
+  }
+ 
 //  // check for colinear segments
 //  for(long i=0 ; i<nv-1 ; ++i){
 //    Point_2d dv = v[i+1]-v[i];
@@ -3149,17 +3176,19 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
 //  }
 
   // find most left
-  double tmp = v[0][0];
   size_t imax = 0;
-  for(int i=1 ; i<v.size() ; ++i){
-    if(tmp > v[i][0]){
-      tmp=v[i][0];
-      imax = i;
+  {
+    double tmp = v[0][0];
+    for(int ii=1 ; ii<v.size() ; ++ii){
+      if(tmp > v[ii][0]){
+        tmp=v[ii][0];
+        imax = ii;
+      }
     }
   }
-
   size_t i = imax;
  
+  //write_csv("v_pruned.csv",v);
   
   std::vector<Point_2d> env;
 
@@ -3252,7 +3281,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
                  //  s2 = ( (inter_p-env.back())*di )/di.length_sqr();
                  // }
                  
-                 assert(s <= 1);
+                 //assert(s <= 1);
                  if(s > s2){
                    j_int=jj;
                    s=s2;
