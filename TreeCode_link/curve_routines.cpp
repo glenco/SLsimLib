@@ -3177,7 +3177,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
 
     long j_int=-1;
     double s=-1;//,p;
-    Point_2d di = v[ cycv[i+o] ] - env.back();
+    Point_2d dio = v[ cycv[i+o] ] - env.back();
     n_intersect=0;
     
     double s_max = 1;
@@ -3185,42 +3185,53 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
     int o_par =0;
     
     for(int jj=0; jj<nv ; ++jj){
-      if(  jj != i && jj != last_i && jj != cycv[i+o]
+      if(  jj != i && jj != last_i
+         && jj != cycv[i+o]
          ){
         
         long jp = cycv[jj+1];
-        if(
+        Point_2d dj = v[ jp ] - v[jj];
+        double pji = dj^dio;
+        
+        double theta = atan2( dj^dio,dj*dio)*180/PI;
+        double theta2 = atan2( ( v[jj]-env.back() )^dio,( v[jj]-env.back() )*dio)*180/PI;
+        if(theta==0 && theta2 == 0){
+          std::cout << "this should go" << std::endl;
+        }
+        
+        if(pji == 0  // parallel
+           && ( ( v[jj]-env.back() )^dio ) == 0   // colinear
+           ){ // colinear
+          
+          double sj = (v[jj]-env.back())*dio /dio.length_sqr();
+          double sjp = (v[jp]-env.back())*dio /dio.length_sqr();
+          
+          if(MAX(sj,sjp) > s_max  // new edge extends beyond current edge
+          && MIN(sj,sjp) < 1      // overlaps with current edge
+             ){
+            
+            if(sjp > sj){
+              jj_parallel = jj;
+              o_par = 1;
+              s_max = sjp;
+            }else{
+              jj_parallel = jp;
+              o_par = -1;
+              s_max = sj;
+            }
+          }
+          
+        }else if(
             Utilities::Geometry::intersect(env.back().x,v[ cycv[i+o] ].x
                                            ,v[jj].x,v[ jp ].x)  // does not include sheared endpoints
+           
           ){
            ++n_intersect;
-           Point_2d dj = v[ jp ] - v[jj];
- 
-           double pji = dj^di;
-           
-           if(pji == 0 ){ // overlapping
-             
-             double sj = (v[jj]-env.back())*di /di.length_sqr();
-             double sjp = (v[jp]-env.back())*di /di.length_sqr();
-             
-             if(MAX(sj,sjp) > s_max ){  // new edge extends beyond current edge
-               if(sjp > sj){
-                 jj_parallel = jj;
-                 o_par = 1;
-                 s_max = sjp;
-               }else{
-                 jj_parallel = jp;
-                 o_par = -1;
-                 s_max = sj;
-               }
-             }
-             
-           }else{
              
              Point_2d inter_p = line_intersection(env.back().x,v[ cycv[i+o] ].x
                                 ,v[jj].x,v[ jp ].x);
              
-             double s2 = ( (inter_p-env.back())*di )/di.length_sqr();
+             double s2 = ( (inter_p-env.back())*dio )/dio.length_sqr();
              
              if( s2 > 0){
                if(j_int==-1 ){
@@ -3250,7 +3261,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
                }
                assert(s>0);
              }
-           }
+           
          }
       }
     }
@@ -3260,20 +3271,27 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
 
     if(j_int != -1){
       
-      Point_2d  v1 = v[ cycv[i+o] ] - env.back();
+      //Point_2d  v1 = v[ cycv[i+o] ] - env.back();
       Point_2d  w1 = v[ cycv[j_int] ] - env.back();
-  
-      env.push_back(env.back() + (v[ cycv[i+o] ] - env.back())*s );
+      Point_2d  w2 = v[ cycv[j_int+1] ] - env.back();
+ 
+      env.push_back(env.back() + dio*s );
       assert(s >= 0);
       assert(s <= 1);
-                    
+
+      //double tmp = w1^dio;
       //Point_2d p = v[i];
-      if( (w1^v1) < 0){
+      
+      if( (w1^dio) < 0){
         i = cycv[j_int+1];
         o = -1;
-      }else{
+      }else if( (w2^dio) < 0){
         i = j_int;
         o = 1;
+      }else{ // case where neither point is above the line
+        i = cycv[i+o];
+        env.push_back(v[i]);
+        if(i==imax) break;
       }
       
     }else if(jj_parallel != -1){
@@ -3301,3 +3319,4 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   env.pop_back();
   return env;
 }
+
