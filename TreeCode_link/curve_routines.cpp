@@ -3101,7 +3101,13 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   
   curve[ii] = inter_p + ( curve[ii-1] - inter_p) * 0.01;  // insert extra point close to where curves intersect
 
-  return Utilities::TighterHull(curve);
+  try{
+    return Utilities::TighterHull(curve);
+  }catch(...){
+    std::vector<Point_2d> v_out;
+    Utilities::convex_hull(curve,v_out);
+    return v_out;
+  }
 }
 
 std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
