@@ -877,15 +877,15 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   
   //for(int i=0; i<curves.size() ; ++i) write_csv("test_crits" + std::to_string(i) + ".csv",curves[i]);
   // if radial caustic has not been found, estimate a pseudo caustic
-  int ii=0;
+  int ii_tan=0;
   for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
         if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
           
           // find maximum kappa in negative mag region
-          std::vector<size_t> maxima;
-          double max=0;
-          for(size_t i : indexes[ii]){
+          //std::vector<size_t> maxima;
+          //double max=0;
+//          for(size_t i : indexes[ii]){
             
 //            double tmp =  i_points[i].kappa();
 //            max=MAX(tmp,max);
@@ -932,22 +932,20 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
 //              tmp_index.push_back(k);
 //            }
 //
-            std::vector<Point_2d> psudo(indexes[ii].size());
+            std::vector<Point_2d> psudo(indexes[ii_tan].size());
             //psudo.reserve(9*maxima.size());
             //for(size_t k : tmp_index) psudo.push_back(s_points[k]);
             //for(size_t k : indexes[ii]) psudo.push_back(s_points[k]);
             
-            for(size_t i=0 ; i<indexes[ii].size() ; ++i) psudo[i] = s_points[ indexes[ii][i] ];
+            for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
            
             std::vector<size_t> hull_index;
             Utilities::convex_hull(psudo,hull_index);
             
             std::vector<Point_2d> v(hull_index.size());
             curves.push_back(v);
-            {
-              int j=0;
-              for(size_t k : hull_index) curves.back()[j++] = i_points[ indexes[ii][k]  ];
-            }
+            
+            for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
             
             //write_csv("test_pseud.csv", curves.back());
             
@@ -959,9 +957,9 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
               std::swap(crit_type[k],crit_type[k-1]);
               std::swap(hits_boundary[k],hits_boundary[k-1]);
             }
-          }  // more than one maximum
+          //}  // more than one maximum
         } // radial missing
-        ++ii;
+        ++ii_tan;
       } // is a tangent
     } // loop through all
   assert(2*ntange <= curves.size());
