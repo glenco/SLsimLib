@@ -1039,7 +1039,7 @@ bool ImageFinding::IF_routines::RefinePoint2(Point *point,TreeHndl i_tree,PosTyp
 	nearest->MoveToTop();
 	do{
 		borderSB += nearest->getCurrent()->surface_brightness;
-		maxdiff_sb = MAX(fabs(nearest->getCurrent()->surface_brightness - point->surface_brightness),maxdiff_sb);
+		maxdiff_sb = MAX<double>(fabs(nearest->getCurrent()->surface_brightness - point->surface_brightness),maxdiff_sb);
 	}while(nearest->Down());
 	borderSB /= nearest->Nunits();
 

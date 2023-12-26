@@ -365,7 +365,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   float BtoT;
   { // SourceOverzier variables
     
-    float minsize = 0.01*arcsecTOradians;
+    double minsize = 0.01*arcsecTOradians;
     current.Reff *= MAX( (1 + 0.2*(2*ran()-1.))
                         , minsize );
     current.Rdisk *= MAX( (1 + 0.2*(2*ran()-1.))

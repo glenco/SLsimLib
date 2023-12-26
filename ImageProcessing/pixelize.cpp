@@ -5,25 +5,23 @@
  *      Author: R.B. Metcalf
  */
 
-#include "slsimlib.h"
-
-#include "cpfits.h"
-
+//#include "slsimlib.h"
 #include <fstream>
 #include <algorithm>
 #include <utility>
 #include <stdexcept>
 #include <thread>
-#include "image_processing.h"
-#include "point.h"
-#include "source.h"
-#include "gridmap.h"
-
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "cpfits.h"
+#include "image_processing.h"
+#include "point.h"
+#include "source.h"
+#include "gridmap.h"
+#include "grid_maintenance.h"
 
 /*#if __cplusplus < 201103L
 template<typename T>
@@ -327,9 +325,9 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(in_map.resolution)
 ,units(in_map.units)
 {
 
-  long iimin =  MAX(0,nx);
-  long iimax =  MIN(iimin+Nx,in_map.Nx);
-  long jjmin =  MAX(0,ny);
+  long iimin =  MAX<long>(0,nx);
+  long iimax =  MIN<long>(iimin+Nx,in_map.Nx);
+  long jjmin =  MAX<long>(0,ny);
   long jjmax =  MIN(jjmin+Nx,in_map.Ny);
 
   for(long ii=iimin ; ii < iimax ; ++ii){
@@ -393,8 +391,8 @@ PixelMap::PixelMap(
     old_p1[0] = std::max(0,int(ix*res_ratio));
     old_p1[1] = std::max(0,int(iy*res_ratio));
     
-    old_p2[0] = MIN(old_Nx-1,int((ix+1.)*res_ratio));
-    old_p2[1] = MIN(old_Ny-1,int((iy+1.)*res_ratio));
+    old_p2[0] = MIN(old_Nx-1,long((ix+1.)*res_ratio));
+    old_p2[1] = MIN(old_Ny-1,long((iy+1.)*res_ratio));
     
     for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
     {
@@ -1314,7 +1312,7 @@ void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
 }
 
 void PixelMap::printFITS(std::string filename
-                         ,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose)
+                         ,std::vector<std::tuple<std::string,double,std::string> > &extra_header_info, bool verbose)
 {
 
   if(filename.empty())
@@ -1500,15 +1498,15 @@ void PixelMap::drawline(
 
 void PixelMap::DrawLine(long x0,long x1,long y0,long y1,double value,bool add) {
   
-  x0 = MAX(x0,0);
-  x0 = MIN(x0,Nx-1);
-  x1 = MAX(x1,0);
-  x1 = MIN(x1,Nx-1);
+  x0 = MAX<long>(x0,0);
+  x0 = MIN<long>(x0,Nx-1);
+  x1 = MAX<long>(x1,0);
+  x1 = MIN<long>(x1,Nx-1);
   
-  y0 = MAX(y0,0);
+  y0 = MAX<long>(y0,0);
   y0 = MIN(y0,Ny-1);
-  y1 = MAX(y1,0);
-  y1 = MIN(y1,Ny-1);
+  y1 = MAX<long>(y1,0);
+  y1 = MIN<long>(y1,Ny-1);
 
   long dx = abs(x1 - x0);
   int sx = x0 < x1 ? 1 : -1;
@@ -1555,7 +1553,7 @@ void PixelMap::DrawLineGS(long x0,long x1,long y0,long y1,double value,bool add)
     double s = dx / length;
     double c = dy / length;
     while (x <= x1) {
-      (*this)(x,MAX(y-1,0)) = value ;//* ( abs(D + c) < 1);
+      (*this)(x,MAX<long>(y-1,0)) = value ;//* ( abs(D + c) < 1);
       (*this)(x,y) = value * (D < 1);
       (*this)(x,MIN(y+1,Ny-1)) = value ;//* ( abs(D - c) < 1);
       
@@ -1909,14 +1907,11 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
     //  }while(grid.i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
   }while(treeit.TreeWalkStep(allowDecent) && i < Nblocks);
   
-  std::thread thr[16];
-  
+   std::vector<std::thread> thr;
   for(int i = 0; i< Nblocks ;++i){
-    thr[i] = std::thread(&PixelMap::AddGrid_,this,lists[i],val);
-    //thr[i] = std::async(&PixelMap::AddGrid_,this,lists[i],val);
+    thr.push_back(std::thread(&PixelMap::AddGrid_,this,lists[i],val));
   }
-  for(int ii=0;ii<Nblocks;++ii) thr[ii].join();
-
+  for(auto &t : thr) t.join();
 }
 
 void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
@@ -2721,26 +2716,26 @@ void PixelMap::copy_in(
     double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
     double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
     
-    double xmin = MAX(0,ix - halfpixel);
-    double xmax = MIN(NNx,ix + halfpixel);
+    double xmin = MAX(0.0,ix - halfpixel);
+    double xmax = MIN<double>(NNx,ix + halfpixel);
     if(xmin >= xmax) continue;
 
-    double ymin = MAX(0,iy - halfpixel);
-    double ymax = MIN(NNy,iy + halfpixel);
+    double ymin = MAX(0.0,iy - halfpixel);
+    double ymax = MIN<double>(NNy,iy + halfpixel);
     if(ymin >= ymax) continue;
     
-    long imin = MIN((long)(xmin),NNx-1);
-    long imax = MIN((long)(xmax),NNx-1);
-    long jmin = MIN((long)(ymin),NNy-1);
-    long jmax = MIN((long)(ymax),NNy-1);
+    long imin = MIN<long>((long)(xmin),NNx-1);
+    long imax = MIN<long>((long)(xmax),NNx-1);
+    long jmin = MIN<long>((long)(ymin),NNy-1);
+    long jmax = MIN<long>((long)(ymax),NNy-1);
     long jj;
     
-    for(size_t j = jmin ; j <= jmax ; ++j ){
-      double area1 = MIN(ymax,j+1) -  MAX(ymin,j);
+    for(long j = jmin ; j <= jmax ; ++j ){
+      double area1 = MIN<double>(ymax,j+1) -  MAX<double>(ymin,j);
       if(area1 <= 0.0) continue;
       jj = NNx*j;
-      for(size_t i = imin ; i <= imax ; ++i ){
-        double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
+      for(long i = imin ; i <= imax ; ++i ){
+        double area = (MIN<double>(xmax,i+1) -  MAX<double>(xmin,i)) * area1 ;
         map[ii] += pmap.map[i + jj]*area/res_ratio2;
       }
     }
@@ -2803,8 +2798,8 @@ void PixelMap::paste(const PixelMap& pmap
   if(nx_ur > Nx) nx_ur = Nx;
   if(ny_ur > Ny) ny_ur = Ny;
  
-  for(long j = MAX(ny_ll,0) ; j<ny_ur ; ++j ){
-    for(long i= MAX(nx_ll,0) ; i<nx_ur ; ++i ){
+  for(long j = MAX<long>(ny_ll,0) ; j<ny_ur ; ++j ){
+    for(long i= MAX<long>(nx_ll,0) ; i<nx_ur ; ++i ){
       map[i+j*Nx] += pmap(i-nx_ll,j-ny_ll);
     }
   }

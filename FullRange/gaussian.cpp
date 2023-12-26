@@ -6,12 +6,10 @@
 //
 
 #include "gaussian.h"
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include <complex>
 #include <fstream>
 #include <functional>
-
-
 
 #ifdef ENABLE_FFTW
 #include "fftw3.h"

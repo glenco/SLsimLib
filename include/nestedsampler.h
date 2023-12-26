@@ -1,9 +1,12 @@
+
 /*
  * nestedsampler.h
  *
  *  Created on: Mar 7, 2012
  *      Author: bmetcalf
  */
+#ifndef NSEMAPLER_
+#define NSEMAPLER_
 
 class Sample{
 	double *params;
@@ -36,3 +39,5 @@ private:
 	void (*stepper)(double *params);
 
 };
+
+#endif

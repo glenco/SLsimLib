@@ -4,7 +4,7 @@
  */
 
 #include <complex>
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include "image_processing.h"
 
 #include "cpfits.h"
@@ -109,30 +109,31 @@ void  ObsVIS::cosmics(
     size_t io = no % Nx;
     size_t jo = no / Nx;
  
-    double L = MAX(length/tan(PI*ran()/2),1);
+    double L = MAX<double>(length/tan(PI*ran()/2),1);
     //error_map.DrawLine(io, io + L * c, jo, jo + L * s, -inv_sigma2, true); // ???
     //error_map.DrawLine(io + 0.5*s, io + L * c + 0.5*s, jo - 0.5*c, jo + L * s - 0.5*c, -inv_sigma2, true);
 
-    double t = tan(theta),x,y;
+    double t = tan(theta);
+    long x,y;
     if(abs(t) < 1){
       long x1 = (long)(io + L * c );
       int sgn = sign(c);
-      x1 = MAX(0,x1);
-      x1 = MIN(Nx-1,x1);
+      x1 = MAX<long>(0,x1);
+      x1 = MIN<long>(Nx-1,x1);
       for(x = io ; x !=  x1 ; x = x + sgn){
-        y = MAX((long)(t*(x-io) + jo),0);
-        y= MIN(y,Ny-2);
+        y = MAX<long>((long)(t*(x-io) + jo),0);
+        y= MIN<long>(y,Ny-2);
         error_map(x,y) += -inv_sigma2;
         error_map(x,y+1) += -inv_sigma2;
       }
     }else{
       long y1 = (long)(jo + L * s );
       int sgn = sign(s);
-      y1 = MAX(0,y1);
-      y1 = MIN(Ny-1,y1);
+      y1 = MAX<long>(0,y1);
+      y1 = MIN<long>(Ny-1,y1);
       for(y = jo ; y !=  y1 ; y = y + sgn){
-        x = MAX((long)((y-jo)/t + io),0);
-        x = MIN(x,Nx-2);
+        x = MAX<long>((long)((y-jo)/t + io),0);
+        x = MIN<long>(x,Nx-2);
         error_map(x,y) += -inv_sigma2;
         error_map(x+1,y) += -inv_sigma2;
       }
@@ -388,7 +389,8 @@ void Obs::setPSF(PixelMap &psf_map/// name of fits file with psf
     max_x = imax / size[0];
   }
   long Lx;
-  long Ly = Lx = 2*MIN( MIN(max_y,size[1]-max_y),MIN(max_x,size[0]-max_x));
+  long Ly = Lx = 2*MIN<double>( MIN<double>(max_y,size[1]-max_y)
+                               ,MIN<double>(max_x,size[0]-max_x));
   
   std::valarray<double> tmp(Lx*Ly);
   long ii=0;
@@ -515,9 +517,9 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
  
   map_out.Clean();
   for(size_t i=0 ; i<Npix_x_input ; ++i){
-    size_t ii = MIN(i / psf_oversample + 0.5, Npix_x_output - 1 ) ;
+    size_t ii = MIN<long>(i / psf_oversample + 0.5, Npix_x_output - 1 ) ;
     for(size_t j=0 ; j<Npix_y_input ; ++j){
-      size_t jj = MIN(j / psf_oversample + 0.5, Npix_y_output - 1 ) ;
+      size_t jj = MIN<long>(j / psf_oversample + 0.5, Npix_y_output - 1 ) ;
       
       map_out(ii,jj) += map_in(i,j);
     }
@@ -560,8 +562,8 @@ void Obs::fftpsf(){
   
   
   
-  long n_side_psf_x = MIN(2*half_psf_x , n_side_psf);
-  long n_side_psf_y = MIN(2*half_psf_y , n_side_psf);
+  long n_side_psf_x = MIN<long>(2*half_psf_x , n_side_psf);
+  long n_side_psf_y = MIN<long>(2*half_psf_y , n_side_psf);
  
   // shift center of psf to bottom left with a rap and down sample
   //long half_psf = n_side_psf/2;
@@ -1051,7 +1053,7 @@ Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float
  * \param psf_file Input PSF image
  * \param oversample Oversampling rate of the PSF image
  */
-Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float read_out_noise, std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample):Obs(Npix_x,Npix_y,pix_size,oversample), mag_zeropoint(zeropoint_mag), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), read_out_noise(read_out_noise)
+Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float back_mag, float myread_out_noise, std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample):Obs(Npix_x,Npix_y,pix_size,oversample), mag_zeropoint(zeropoint_mag), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag), read_out_noise(myread_out_noise)
     {
       setPSF(psf_file);
       telescope = false;

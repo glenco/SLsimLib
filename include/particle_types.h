@@ -10,6 +10,8 @@
 #ifndef particle_types_h
 #define particle_types_h
 
+#include "point.h"
+
 /** Formats for particle data files
 
  For csv3,csv4,csv5,csv6 - CSV ascii format without header.  The first three columns

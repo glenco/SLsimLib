@@ -5,8 +5,10 @@
  *      Author: mpetkova, bmetcalf
  */
 
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include <powell.h>
+#include "lens.h"
+#include "concave_hull.h"
 
 /** 
  *

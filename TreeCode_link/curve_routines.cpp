@@ -3054,7 +3054,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   
   size_t nv = v.size();
   size_t nw = w.size();
-  std::cout << nv << " " << nw << std::endl;
+  //std::cout << nv << " " << nw << std::endl;
   if(nv<3) return w;
   if(nw<3) return v;
   
@@ -3263,10 +3263,11 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
           ){
            ++n_intersect;
              
-             Point_2d inter_p = line_intersection(env.back().x,v[ cycv[i+o] ].x
+            Point_2d inter_p = line_intersection(env.back().x,v[ cycv[i+o] ].x
                                 ,v[jj].x,v[ jp ].x);
              
-             double s2 = ( (inter_p-env.back())*dio )/dio.length_sqr();
+            double s2 = ( (inter_p-env.back())*dio )/dio.length_sqr();
+            if(s2>1.0) s2=1.0; // roundoff error occurs sometimes.
              
              if( s2 > 0){
                if(j_int==-1 ){
@@ -3349,7 +3350,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
     throw std::runtime_error("Failure in TighterHull");
   }
  
-  assert(env.size() > 2);
+  //assert(env.size() > 2);
 
   env.pop_back();
   return env;

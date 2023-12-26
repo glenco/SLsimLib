@@ -1128,8 +1128,7 @@ void sort_indexes(const std::vector<T> &v     /// the original data that is not 
   for (size_t i = 0; i != index.size(); ++i) index[i] = i;
   
   // sort indexes based on comparing values in v
-  std::sort(index.begin(), index.end(),
-            [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  std::sort(index.begin(), index.end(),[&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
 }
 
 template <typename T>
@@ -1988,7 +1987,7 @@ void writeCSV(const std::string filename              /// output file path/name
   
   std::ofstream s(filename + ".csv");
   
-  int ncol = header.size();
+  long ncol = header.size();
   assert(ncol == data.size() );
   for(int i = 0 ; i < header.size()-1 ; ++i){
     s << header[i] << ",";
@@ -2383,7 +2382,7 @@ private:
   std::string blank_val;
   std::vector<std::string> header;
   long nbatch;
-  long precision;
+  int precision;
   long last_line_printed;
   int nlabels;
   std::set<std::string> labels;
@@ -2394,11 +2393,11 @@ private:
   
   void append_file(){
     
-    const auto default_precision {std::cout.precision()};
+    const long default_precision = std::cout.precision();
     std::ofstream logfile;
     logfile.open(filename,std::ios_base::app);
    
-    int n=labels.size();
+    size_t n=labels.size();
     if(n == nlabels && last_line_printed > 0){
       std::cout << std::setprecision(precision);
       for(size_t j=last_line_printed ; j<lines.size() ; ++j ){
@@ -2444,18 +2443,18 @@ public:
   
   std::string output_file(){return filename;}
   
-  void set_precision(long p){
+  void set_precision(int p){
     precision = p;
   }
   
   // current number of columns
   int ncol(){return labels.size();}
   // names of columns
-  std::set<std::string> names(){return labels;}
+  std::set<std::string> names = labels;
   
   void print_to_file(){
     
-    const auto default_precision {std::cout.precision()};
+    const int default_precision = std::cout.precision();
     //std::cout << std::setprecision(12);
     
     if(lines.size() == 0 ) return;

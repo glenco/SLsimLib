@@ -7,6 +7,8 @@
 
 #ifndef slicer_h
 #define slicer_h
+
+#include <cmath>
 /**
  This is a slice sampler that can be used to do a markov chain without repeated entries in the chain.
  
@@ -67,7 +69,7 @@ private:
     //double y = prob(x) * ran();
     double y = lnprob(x) + log(ran()); ++n_evals;
   
-    assert(!isnan(y));
+    assert(!std::isnan(y));
     // find range
     int k = Kmax;
     

@@ -5,9 +5,12 @@
  *      Author: mpetkova
  */
 
-#include "slsimlib.h"
 #include <typeinfo>
 #include "cpfits.h"
+#include "source.h"
+#include "source_models.h"
+#include "sourceAnaGalaxy.h"
+#include "image_processing.h"
 
 using namespace std;
 
@@ -482,11 +485,11 @@ PosType Source::integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<P
   PosType integr = 0.;
   for (int i = 0; i < wavel_new_size; i++)
   {
-    wavel_new[i] = max(wavel_fil[0],wavel_sed[0]) + PosType(i)/PosType(wavel_new_size-1)*(min(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-max(wavel_fil[0],wavel_sed[0]) );
+    wavel_new[i] = MAX<PosType>(wavel_fil[0],wavel_sed[0]) + PosType(i)/PosType(wavel_new_size-1)*(MIN<PosType>(wavel_fil[wavel_fil.size()-1],wavel_sed[wavel_sed.size()-1])-MAX<PosType>(wavel_fil[0],wavel_sed[0]) );
     vector<PosType>::iterator it_f = lower_bound(wavel_fil.begin(), wavel_fil.end(), wavel_new[i]);
-    int p = it_f-wavel_fil.begin()-1;
+    long p = it_f-wavel_fil.begin()-1;
     vector<PosType>::iterator it_s = lower_bound(wavel_sed.begin(), wavel_sed.end(), wavel_new[i]);
-    int q = it_s-wavel_sed.begin()-1;
+    long q = it_s-wavel_sed.begin()-1;
     if (p >= 0&& p < wavel_fil.size()-1 && q >= 0 && q < wavel_sed.size())
     {
       fil_val[i] = fil[p] + (fil[p+1]-fil[p])*(wavel_new[i]-wavel_fil[p])/(wavel_fil[p+1]-wavel_fil[p]);
@@ -696,7 +699,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
   assert(flux_total > 0);
   
   
-  return MAX(sb,0);
+  return MAX<double>(sb,0);
   //return max(sb,std::numeric_limits<PosType>::epsilon());
 }
 

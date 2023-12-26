@@ -6,7 +6,8 @@
  *      revised by S. Sim Sep 1, 2011
  */
 
-#include "slsimlib.h"
+//#include "slsimlib.h"
+#include "source.h"
 
 // computes the surface brightness associated with our simplest model
 // for the BLR. x is the projected "distance from center" coordinate

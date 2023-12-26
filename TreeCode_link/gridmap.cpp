@@ -7,6 +7,7 @@
 //
 
 #include "gridmap.h"
+#include "Tree.h"
 #include <mutex>
 #include <thread>
 
@@ -313,8 +314,8 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
 bool GridMap::to_refine(long i,long j,double total,double f) const {
   double flux = i_points[i + j*Ngrid_init].surface_brightness;
   
-  for(size_t ii=MAX(i-1,0) ; ii < MIN(i+2,Ngrid_init) ;++ii){
-    for(size_t jj=MAX(j-1,0) ; jj < MIN(j+2,Ngrid_init2) ;++jj){
+  for(size_t ii=MAX<size_t>(i-1,0) ; ii < MIN<size_t>(i+2,Ngrid_init) ;++ii){
+    for(size_t jj=MAX<size_t>(j-1,0) ; jj < MIN<size_t>(j+2,Ngrid_init2) ;++jj){
       size_t kk = ii + jj*Ngrid_init;
       if( fabs(flux - i_points[kk].surface_brightness ) / total > f ) return true;
     }
@@ -469,7 +470,7 @@ void GridMap::writePixelMapUniform(
   //writePixelMapUniform_(i_points,getNumberOfPoints(),&map,lensvar);
   //return;
   
-  std::thread thr[20];
+  std::vector<std::thread> thr;
   int nthreads = Utilities::GetNThreads();
   
   int chunk_size;
@@ -482,10 +483,9 @@ void GridMap::writePixelMapUniform(
   for(int ii = 0; ii < nthreads ;++ii){
     if(ii == nthreads-1)
     size = getNumberOfPoints() - (nthreads-1)*chunk_size;
-    thr[ii] = std::thread(&GridMap::writePixelMapUniform_,this,&(i_points[ii*chunk_size]),size,&map,lensvar);
+    thr.push_back(std::thread(&GridMap::writePixelMapUniform_,this,&(i_points[ii*chunk_size]),size,&map,lensvar));
   }
-  for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
-  
+  for(auto &t : thr) t.join();
 }
 
 void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,LensingVariable val){

@@ -708,7 +708,7 @@ private:
   MemmoryBank<T> & operator=(const MemmoryBank<T> &b);
   
   size_t count;
-  std::vector<std::unique_ptr<T[]>> bank;
+  std::vector<std::unique_ptr<T[]> > bank;
 };
 
 // A class that onlt counts iteslf for testing

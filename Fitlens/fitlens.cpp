@@ -1,6 +1,8 @@
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include <nrutil.h>
 #include <iomanip>      // std::setprecision
+#include "analytic_lens.h"
+#include "fitlens.h"
 
 using namespace std;
 

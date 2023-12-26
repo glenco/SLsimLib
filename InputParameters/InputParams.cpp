@@ -4,10 +4,11 @@
  *  Created on: Oct 17, 2012
  *      Author: bmetcalf
  */
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include <iomanip>
 
 #include "cpfits.h"
+#include "InputParams.h"
 
 namespace
 {

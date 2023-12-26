@@ -30,7 +30,7 @@
 
 #include <nr.h>
 #include <nrD.h>
-#include <utilities.h>
+//#include <utilities.h>
 
 #include <cosmo.h>
 #include <halo.h>
@@ -134,9 +134,6 @@ typedef double KappaType;
 #define GLAMER_TEST_FRIEND(t)
 #endif
 
-#endif
-
-
 #ifndef MpcToSeconds
 #define MpcToSeconds (3.085677e22 / 2.99792458e8)
 // Computed as MpcToMeter(m) / SpeedOfLight(m.s^{-1})
@@ -151,7 +148,7 @@ typedef double KappaType;
 // Taking 365.25 days per year.
 #endif
 
-
+#endif
 
 
 

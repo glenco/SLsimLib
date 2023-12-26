@@ -422,6 +422,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
     Utilities::quicksortPoints_multithread<4>(points,func,cbranch->npoints);
     //Utilities::quicksortPoints(points,func,cbranch->npoints);
     //Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
+    //std::sort(points,points+cbranch->npoints,func); ??? not sure if func goes the right way
 
     if(func(points[0]) == func(points[cbranch->npoints-1])){
       dimension = !dimension;

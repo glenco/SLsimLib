@@ -6,10 +6,12 @@
 #ifndef SOURCE_H_
 #define SOURCE_H_
 
-#include "standard.h"
-#include "InputParams.h"
-#include "image_processing.h"
+#include <vector>
+//#include "standard.h"
 #include "utilities_slsim.h"
+#include "InputParams.h"
+//#include "image_processing.h"
+#include "point.h"
 
 class PixelMap;
 double mag_to_jansky_AB(double);
@@ -364,7 +366,7 @@ public:
 	inline PosType getRadius() const {return source_r*10.;}
   
   void pepper(int n,double s,Utilities::RandomNumbers_NR &ran){
-  
+    
     double f = SurfaceBrightness(source_x.x);
     
     double t=0.9,t2=0.3;
@@ -375,7 +377,7 @@ public:
       double ff = f*( t - t2 * ran() );
       
       Point_2d x( r*cos(theta) , r*sin(theta) );
-    
+  
       grains.emplace_back(ff,s,x);
     }
   }
@@ -419,7 +421,7 @@ private:
   PosType cos_sin[2];  // [0] is cos(ang), [1] is sin(ang)
   PosType coeff_flux;
   
-  std::vector<PepperCorn> grains;
+  std::vector<SourceShapelets::PepperCorn> grains;
   
   static size_t count;
 };

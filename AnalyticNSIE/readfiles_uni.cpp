@@ -5,10 +5,9 @@
  *      Author: Leier
  */
 
-
-#include "slsimlib.h"
-
-using namespace std;
+#include "cosmo.h"
+#include "lens_halos.h"
+#include "uniform_lens.h"
 
 /*
  * \brief Reads in a parameter file and sets up an uniform lens.

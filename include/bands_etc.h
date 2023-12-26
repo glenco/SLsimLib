@@ -5,10 +5,13 @@
 //  Created by bmetcalf on 13/04/16.
 //
 //
-#include <assert.h>
 
 #ifndef bands_etc_h
 #define bands_etc_h
+
+#include <assert.h>
+#include "InputParams.h"
+
 
 /** \brief Class that contains information about bands.
  *

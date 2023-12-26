@@ -1851,9 +1851,8 @@ public:
     
     // find masses of Gaussian components
    {
-      double total = 0,mass_tmp = 0;
+      double mass_tmp = 0;
       for(int n=0 ; n<Ngaussians ; ++n){
-        total += scales[n]*scales[n]*masses[n];
         mass_tmp += scales[n]*scales[n]*masses[n]
         *( 1 - exp(-r_norm*r_norm / 2 / scales[n] /scales[n]) );
       }

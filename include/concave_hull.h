@@ -10,6 +10,9 @@
 #define concave_hull_h
 
 #include <set>
+#include "point.h"
+#include "geometry.h"
+#include "image_processing.h"
 #include "simpleTreeVec.h"
 
 namespace Utilities{
@@ -433,7 +436,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
     }
   }
   
-  int offset = 0;
+  long offset = 0;
   if(!add_to_vector){
     points.resize(contours.size());
   }else{
@@ -1198,7 +1201,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
         
         tree.NearestNeighbors(hull_end.x,k,radii,neighbors);
         
-        int Nneighbors = neighbors.size(); // incase there are not k left
+        long Nneighbors = neighbors.size(); // incase there are not k left
         thetas.resize(Nneighbors);
         sorted_index.resize(Nneighbors);
         
