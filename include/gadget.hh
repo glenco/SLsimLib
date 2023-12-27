@@ -13,6 +13,7 @@
 #include <math.h>
 #include <vector>
 
+#include "point.h"
 #include "particle_types.h"
 
 #define int4bytes int

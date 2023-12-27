@@ -1551,13 +1551,11 @@ void Grid::writePixelMapUniform(
     }
   }while(i_tree_it.TreeWalkStep(allowDecent) && i < Nblocks);
   
-  std::thread thr[16];
+  std::vector<std::thread> thr;
   for(int ii = 0; ii < i ;++ii){
-    //thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,lists[ii],&map,lensvar);
-    thr[ii] = std::thread(&Grid::writePixelMapUniform_,this,heads[ii],sizes[ii],&map,lensvar);
+    thr.push_back(std::thread(&Grid::writePixelMapUniform_,this,heads[ii],sizes[ii],&map,lensvar));
   }
-  for(int ii = 0; ii < i ;++ii) thr[ii].join();
-
+  for(auto &t : thr) t.join();
 }
 
 //void Grid::writePixelMapUniform_(const PointList &list,PixelMap *map,LensingVariable val){

@@ -5,10 +5,10 @@
  *      Author: bmetcalf
  */
 
-#ifndef source_declare
-#define source_declare
+#ifndef source_model_declare
+#define source_model_declare
 
-#include <source.h>
+#include "source.h"
 
 // Separate files
 double blr_surface_brightness_spherical(double x,SourceBLR *source);

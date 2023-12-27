@@ -5,11 +5,11 @@
  *      Author: R.B. Metcalf
  */
 
-#include "slsimlib.h"
+#include <fstream>
+#include "analytic_lens.h"
 
 //const float sheartol = 1.0e-3;
 
-using namespace std;
 
 /*
  * Einstein_routines for making random, close to elliptical
@@ -20,7 +20,7 @@ using namespace std;
 void LensHaloAnaNSIE::RandomizeSigma(long *seed,bool tables){
 	PosType *sigmaTable;
 	int n,NsigmaTable;
-	ifstream file;
+	std::ifstream file;
 	
 	const char* filename = "GalaxyData/slacs_sigma.dat";
 	file.open(filename);
@@ -48,8 +48,8 @@ void LensHaloAnaNSIE::RandomizeHost(long *seed,bool tables){
 	PosType fo,*axisTable;
 	int n;
 	int NaxisTable;
-	ifstream file;
-	string filename;
+	std::ifstream file;
+	std::string filename;
 
 	filename = "GalaxyData/slacs_f.dat";
 	file.open(filename.c_str());

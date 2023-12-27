@@ -10,14 +10,18 @@
 #define treetypes_declare
 
 #include <mutex>
+#include <future>
+
 //#include "pointlist.h"
 #include "point.h"
 #include "Kist.h"
 #include "image_info.h"
 #include "utilities_slsim.h"
-#include <future>
 #include "geometry.h"
 
+// forward declaration
+struct ImageInfo;
+struct OldImageInfo;
 
 /***** Exported Types *****/
 
@@ -211,12 +215,12 @@ typedef int TreeElement;
 bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
 PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);
 
-inline PosType MIN(PosType x,PosType y){
-  return (x < y) ? x : y;
-};
-inline PosType MAX(PosType x,PosType y){
-  return (x > y) ? x : y;
-};
+//inline PosType MIN(PosType x,PosType y){
+//  return (x < y) ? x : y;
+//};
+//inline PosType MAX(PosType x,PosType y){
+//  return (x > y) ? x : y;
+//};
 template <class T>
 inline T MIN(T x,T y){
   return (x < y) ? x : y;

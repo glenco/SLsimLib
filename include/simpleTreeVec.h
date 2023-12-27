@@ -9,12 +9,7 @@
 #define SIMP_TREE_V_
 
 #include "standard.h"
-//#include "Tree.h"
-//#include "lens_halos.h"
-
-// used for default position of object
-//template<class T>
-//D  *defaultposition(T &in){return in.x;}
+#include "Tree.h"
 
     /** \brief
      * A tree for doing quick searches in multidimensional space.  A pointer to an array of

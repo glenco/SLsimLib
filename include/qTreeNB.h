@@ -8,6 +8,9 @@
 #ifndef qTreeNB_h
 #define qTreeNB_h
 
+#include "utilities.h"
+#include "cosmo.h"
+
 #ifndef PI
 #define PI  3.141593
 #endif

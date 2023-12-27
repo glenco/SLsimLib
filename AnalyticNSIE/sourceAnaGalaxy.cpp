@@ -4,8 +4,10 @@
  *  Created on: Aug 13, 2012
  *      Author: bmetcalf
  */
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include "simpleTreeVec.h"
+#include "source.h"
+#include "sourceAnaGalaxy.h"
 
 // TODO: set `mag_limit` and `band` to default values in all constructors
 

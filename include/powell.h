@@ -1,5 +1,7 @@
 #include <math.h>
 #include <nrutil.h>
+#include <vector>
+
 #define TINY 1.0e-25
 #define ITMAX 5000
 #define ITMAX1 500

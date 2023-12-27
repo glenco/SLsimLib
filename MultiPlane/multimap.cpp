@@ -198,7 +198,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     long_range_map.surface_density.resize(N,0);
   
     long chunk = MIN(N/Noriginal[0],Noriginal[1]);  // same size as long range grid
-    if( chunk == 0) chunk = MIN(100*desample,Noriginal[1]);
+    if( chunk == 0) chunk = MIN<long>(100*desample,Noriginal[1]);
   
     std::vector<long> first(2);
     std::vector<long> last(2);
@@ -267,7 +267,7 @@ LensHalo(redshift,c),write_shorts(write_subfields)
     }
     
     padd_lr = 1 + 2 * border_width_pix * resolution_mpc / long_range_map.x_range();
-    padd_lr = MAX(padd_lr,2);
+    padd_lr = MAX<double>(padd_lr,2);
   }  // long rang map deosn't exist
 
   /// set prefix to subfield maps
@@ -491,10 +491,10 @@ void LensHaloMultiMap::setsubmap(LensMap &short_range_map
       map.surface_density.resize(nx_big * ny_big,0);
     
       std::valarray<float> v;
-      first_sub[0] = MAX(first[0],1);
-      first_sub[1] = MAX(first[1],1);
-      last_sub[0] = MIN(last[0],Noriginal[0]);
-      last_sub[1] = MIN(last[1],Noriginal[1]);
+      first_sub[0] = MAX<long>(first[0],1);
+      first_sub[1] = MAX<long>(first[1],1);
+      last_sub[0] = MIN<long>(last[0],Noriginal[0]);
+      last_sub[1] = MIN<long>(last[1],Noriginal[1]);
       
       Point_2d offset(first_sub[0] - first[0] , first_sub[1] - first[1] );
  

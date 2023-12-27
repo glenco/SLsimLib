@@ -4,7 +4,8 @@
  *  Created on: Sep 20, 2010
  *      Author: bmetcalf
  */
-#include "slsimlib.h"
+#include "source.h"
+#include "Tree.h"
 
 // computes the surface brightness associated with our simplest model
 // for the BLR. x is the projected "distance from center" coordinate
@@ -124,7 +125,7 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 		v_shift_z = v_shift_yprime * sin(source->source_inclination);
 
 		//sig_nu = sigma_0 * source->source_nuo;
-		sig_nu = MAX(sigma_0, 0.01 * vr) * source->source_nuo;
+		sig_nu = MAX<double>(sigma_0, 0.01 * vr) * source->source_nuo;
 		//sig_nu = 0.05 * vr * source->source_nuo;
 
 		nu_shift = v_shift_z * source->source_nuo;

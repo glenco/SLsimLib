@@ -11,8 +11,8 @@
 
 #include <iostream>
 #include "standard.h"
-#include "slsimlib.h"
-//#include "lens.h"
+//#include "slsimlib.h"
+#include "lens.h"
 
 /** \brief Class to convert isotropic LensHalos into elliptical halos.
  *

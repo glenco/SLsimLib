@@ -7,21 +7,26 @@
 
 #ifndef IMAGE_PROCESSING_H_
 #define IMAGE_PROCESSING_H_
- 
-#include "Tree.h"
+
+#include <complex>
+#include <vector>
+#include <tuple>
+
+#include "point.h"
+#include "image_info.h"
+//#include "Tree.h"
+//#include "utilities_slsim.h"
+//#include "image_processing.h"
+#include "source.h"
+
 #ifdef ENABLE_FFTW
 #include "fftw3.h"
 #endif
 
-#include "utilities_slsim.h"
-#include "image_processing.h"
-#include "source.h"
-#include <complex>
-
 // forward declaration
 struct Grid;
 struct GridMap;
-class Source;
+//class Source;
 
 /// These are partial units for the pixel map that can be used to ensure consistency.  For example, maps with different units cannot be added together.  default: ndef
 enum class PixelMapUnits {
@@ -175,17 +180,18 @@ public:
   void drawdisk(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
   void AddGrid(const Grid &grid,LensingVariable val);
-
+  
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
 	void printFITS(std::string filename,bool Xflip = false, bool verbose = false);
-  void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
+  void printFITS(std::string filename,std::vector< std::tuple<std::string,double,std::string> > &extra_header_info, bool verbose);
+  
   /// This overides all header information and relaces it with the inputs. Meant for making a modified copy
   void printFITS(std::string filename  /// file to create
-                ,std::vector<std::string> &headercards // header information in cfitsio "card" format
+                ,std::vector<std::string> &headercards /// header information in cfitsio "card" format
                  );
 
 	void smooth(double sigma);
@@ -277,7 +283,7 @@ public:
   void drawSquare(PosType p1[],PosType p2[],PosType value);
   void drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip);
   
-#ifdef ENABLE_FFTW
+//#ifdef ENABLE_FFTW
 
   /// Find the power spectrum of the map
   void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
@@ -317,7 +323,7 @@ public:
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
     map = tmp;
   }
-#endif
+//#endif
   
   /// returns a vector of  contour curves
   void find_contour(double level

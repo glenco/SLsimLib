@@ -7,6 +7,12 @@
 
 #ifndef quadTreeHalos_h
 #define quadTreeHalos_h
+
+#include "standard.h"
+#include "utilities_slsim.h"
+#include "Tree.h"
+#include "qTreeNB.h"
+
 /**
  * \brief TreeQuadHalo is a class for calculating the deflection, kappa and gamma by tree method.
  *<pre>
@@ -229,7 +235,7 @@ template <typename LensHaloType>
 void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   
   QBranchNB *cbranch = tree->current; /* pointer to current branch */
-  IndexType i,j,cut,cut2,jt;
+  IndexType i,j,cut,cut2;
   
   cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
   cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;

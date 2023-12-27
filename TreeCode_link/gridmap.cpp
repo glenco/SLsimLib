@@ -7,6 +7,7 @@
 //
 
 #include "gridmap.h"
+#include "Tree.h"
 #include <mutex>
 #include <thread>
 
@@ -313,8 +314,8 @@ double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
 bool GridMap::to_refine(long i,long j,double total,double f) const {
   double flux = i_points[i + j*Ngrid_init].surface_brightness;
   
-  for(size_t ii=MAX(i-1,0) ; ii < MIN(i+2,Ngrid_init) ;++ii){
-    for(size_t jj=MAX(j-1,0) ; jj < MIN(j+2,Ngrid_init2) ;++jj){
+  for(size_t ii=MAX<size_t>(i-1,0) ; ii < MIN<size_t>(i+2,Ngrid_init) ;++ii){
+    for(size_t jj=MAX<size_t>(j-1,0) ; jj < MIN<size_t>(j+2,Ngrid_init2) ;++jj){
       size_t kk = ii + jj*Ngrid_init;
       if( fabs(flux - i_points[kk].surface_brightness ) / total > f ) return true;
     }
@@ -469,7 +470,7 @@ void GridMap::writePixelMapUniform(
   //writePixelMapUniform_(i_points,getNumberOfPoints(),&map,lensvar);
   //return;
   
-  std::thread thr[20];
+  std::vector<std::thread> thr;
   int nthreads = Utilities::GetNThreads();
   
   int chunk_size;
@@ -482,10 +483,9 @@ void GridMap::writePixelMapUniform(
   for(int ii = 0; ii < nthreads ;++ii){
     if(ii == nthreads-1)
     size = getNumberOfPoints() - (nthreads-1)*chunk_size;
-    thr[ii] = std::thread(&GridMap::writePixelMapUniform_,this,&(i_points[ii*chunk_size]),size,&map,lensvar);
+    thr.push_back(std::thread(&GridMap::writePixelMapUniform_,this,&(i_points[ii*chunk_size]),size,&map,lensvar));
   }
-  for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
-  
+  for(auto &t : thr) t.join();
 }
 
 void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap *map,LensingVariable val){
@@ -877,15 +877,15 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   
   //for(int i=0; i<curves.size() ; ++i) write_csv("test_crits" + std::to_string(i) + ".csv",curves[i]);
   // if radial caustic has not been found, estimate a pseudo caustic
-  int ii=0;
+  int ii_tan=0;
   for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
         if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
           
           // find maximum kappa in negative mag region
-          std::vector<size_t> maxima;
-          double max=0;
-          for(size_t i : indexes[ii]){
+          //std::vector<size_t> maxima;
+          //double max=0;
+//          for(size_t i : indexes[ii]){
             
 //            double tmp =  i_points[i].kappa();
 //            max=MAX(tmp,max);
@@ -932,22 +932,20 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
 //              tmp_index.push_back(k);
 //            }
 //
-            std::vector<Point_2d> psudo(indexes[ii].size());
+            std::vector<Point_2d> psudo(indexes[ii_tan].size());
             //psudo.reserve(9*maxima.size());
             //for(size_t k : tmp_index) psudo.push_back(s_points[k]);
             //for(size_t k : indexes[ii]) psudo.push_back(s_points[k]);
             
-            for(size_t i=0 ; i<indexes[ii].size() ; ++i) psudo[i] = s_points[ indexes[ii][i] ];
+            for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
            
             std::vector<size_t> hull_index;
             Utilities::convex_hull(psudo,hull_index);
             
             std::vector<Point_2d> v(hull_index.size());
             curves.push_back(v);
-            {
-              int j=0;
-              for(size_t k : hull_index) curves.back()[j++] = i_points[ indexes[ii][k]  ];
-            }
+            
+            for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
             
             //write_csv("test_pseud.csv", curves.back());
             
@@ -959,9 +957,9 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
               std::swap(crit_type[k],crit_type[k-1]);
               std::swap(hits_boundary[k],hits_boundary[k-1]);
             }
-          }  // more than one maximum
+          //}  // more than one maximum
         } // radial missing
-        ++ii;
+        ++ii_tan;
       } // is a tangent
     } // loop through all
   assert(2*ntange <= curves.size());
