@@ -12,7 +12,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <random>
-#if __cplusplus >= 201103L
+//#if __cplusplus >= 201103L
 #include <typeindex>
 #include <dirent.h>
 #include <unistd.h>
@@ -21,8 +21,7 @@
 #include <boost/variant.hpp>
 #include <set>
 #include <iomanip>
-
-#endif
+#include <thread>
 
 namespace Utilities
 {
@@ -58,19 +57,19 @@ bool AlwaysFalse(T t){return false;}
 // this is not for the user
 namespace detail
 {
-#if __cplusplus < 201103L
-class type_index
-{
-public:
-  type_index(const std::type_info& type) : t(type) {}
-  inline bool operator<(const type_index& rhs) const { return t.before(rhs.t); }
-  
-private:
-  const std::type_info& t;
-};
-#else
+//#if __cplusplus < 201103L
+//class type_index
+//{
+//public:
+//  type_index(const std::type_info& type) : t(type) {}
+//  inline bool operator<(const type_index& rhs) const { return t.before(rhs.t); }
+//
+//private:
+//  const std::type_info& t;
+//};
+//#else
 using std::type_index;
-#endif
+//#endif
 }
 
 template <class T>
@@ -1299,7 +1298,7 @@ inline bool file_exists (const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
 }
-
+  
   template <class T>
   void read1columnfile(
                        std::string filename    /// input file name
@@ -2542,6 +2541,37 @@ public:
   }
 };
 
+//  /// alternative to std::thread that counts threads
+//  template<class Function, class ... Args >
+//  class MyThread
+//  {
+//  private:
+//    std::thread thread_;
+//    
+//    static long count;
+//    static long unjoined;
+//  
+//  public:
+//    MyThread(Function&& f,Args&&... args)
+//    {
+//      if(count > 20) throw std::runtime_error("too many threads");
+//      thread_ = std::thread(std::forward<Function>(f),std::forward<Args>(args)...);
+//      ++count;
+//      ++unjoined;
+//    }
+//    
+//    ~MyThread(){
+//      --count;
+//    }
+//    
+//    void join(){
+//      thread_.join();
+//      --unjoined;
+//    }
+//    
+// 
+//  };
 }  // Utilities
 
+//#endif
 #endif
