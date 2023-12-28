@@ -14,8 +14,6 @@ add_sources(
 	KistDriver.h
 	lens.h
 	lens_halos.h
-	List1.h
-	List_old.h
 	map_images.h
 	MOKAlens.h
 	nestedsampler.h

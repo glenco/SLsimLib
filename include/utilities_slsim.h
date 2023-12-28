@@ -1059,6 +1059,9 @@ public:
   };
   
   int poisson(double lam){
+    if(lam > 200){
+      return std::max<long>(std::lround( gauss()*sqrt(lam) + lam ),0);
+    }
     double L = exp(-lam),p=1;
     int k = 0;
     do{
@@ -1068,6 +1071,28 @@ public:
     
     return k-1;
   }
+  
+//  int poisson(double lam){
+//
+//    int step = 500;
+//    double Lam = lam,p=1;
+//    int k = 0;
+//    do{
+//      ++k;
+//      p *= operator()();
+//      while(p<1 && Lam>0){
+//        if(Lam > step){
+//          p *= exp(step);
+//          Lam -= step;
+//        }else{
+//          p *= exp(Lam);
+//          Lam=0;
+//        }
+//      }
+//    }while(p>1);
+//
+//    return k-1;
+//  }
   
   size_t calls = 0;  /// total number of calls
   
