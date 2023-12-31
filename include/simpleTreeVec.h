@@ -20,46 +20,39 @@
 template <typename T,typename D = PosType>
 class TreeSimpleVec {
 public:
-    
-	TreeSimpleVec(
-                  T *xpt                 /// array of object, xpt[i].x[0...dimensions-1] must exist or Mypos must be specified
-                  ,IndexType Npoints      /// number of object in array
-                  ,int bucket = 5         /// number of points in leaves of tree
-                  ,int dimensions = 2     /// dimension of space
-                  ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
+  
+  TreeSimpleVec(
+                T *xpt                 /// array of object, xpt[i].x[0...dimensions-1] must exist or Mypos must be specified
+                ,IndexType Npoints      /// number of object in array
+                ,int bucket = 5         /// number of points in leaves of tree
+                ,int dimensions = 2     /// dimension of space
+                ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
                 ,D *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
-  ):realray(dimensions),Nbranches(0)
+  ):realray(dimensions),Nbranches(0),position(Mypos),Nbucket(bucket),Ndimensions(dimensions),
+  median_cut(median),Nparticles(Npoints),points(xpt)
   {
     index.resize(Npoints);
     for(IndexType ii=0;ii<Npoints;++ii) index[ii] = ii;
     
-    position = Mypos;
-    
-    Nbucket = bucket;
-    Ndimensions = dimensions;
-    median_cut = median;
-    Nparticles = Npoints;
-        
-    points = xpt;
-
     BuildTree();
   }
-
-  virtual ~TreeSimpleVec()
-    {
-      freeTree();
-      //delete[] index;
-      assert(Nbranches == 0);
-      return;
-    };
   
-	/// \brief Finds the points within a circle around center and puts their index numbers in a list
-	void PointsWithinCircle(D center[2],float radius,std::list<unsigned long> &neighborkist);
-	/// \brief Finds the points within an ellipse around center and puts their index numbers in a list
-	void PointsWithinEllipse(D center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
-	/// \brief Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
-	void NearestNeighbors(D *ray,int Nneighbors,std::vector<D> &radii
+  virtual ~TreeSimpleVec()
+  {
+    delete top;
+    //freeTree();
+    //delete[] index;
+    //assert(Nbranches == 0);
+    return;
+  };
+  
+  /// \brief Finds the points within a circle around center and puts their index numbers in a list
+  void PointsWithinCircle(D center[2],float radius,std::list<unsigned long> &neighborkist);
+  /// \brief Finds the points within an ellipse around center and puts their index numbers in a list
+  void PointsWithinEllipse(D center[2],float a_max,float a_min,float posangle,std::list<unsigned long> &neighborkist);
+  /// \brief Finds the nearest N neighbors and puts their index numbers in an array, also returns the distance to the Nth neighbor for calculating smoothing
+  void NearestNeighbors(D *ray,int Nneighbors,std::vector<D> &radii
                         ,std::vector<IndexType> &neighbors);
   void NearestNeighbor(D *ray,D &radius,IndexType &neighbor);
   
@@ -79,7 +72,7 @@ public:
     do{
       long p = current->branch_index - index.data();
       if(atLeaf() && n >= p && n < p + current->nparticles ){
-         leaf=current;
+        leaf=current;
       }
       if(p > n){
         current->branch_index -= 1;
@@ -88,14 +81,14 @@ public:
     
     assert(leaf->child1==NULL);
     assert(leaf->child2==NULL);
-
-    BranchV *tmp = leaf;
+    
+    //BranchV *tmp = leaf;
     while(leaf != top){
       if(leaf->nparticles > 0) leaf->nparticles -= 1;
       leaf = leaf->prev;
     }
     leaf->nparticles -= 1;
-     
+    
     // remove from index
     for(size_t i = n ; i < Nparticles - 1 ; ++i){
       index[i] = index[i+1];
@@ -104,7 +97,7 @@ public:
     index.pop_back();
     
     //print();
-
+    
   }
   
   /// returns the index numbers of the remaining points which are less than the original if pop() was used.
@@ -125,136 +118,141 @@ public:
     std::cout << std::endl;
   }
   
-    /** \brief Box representing a branch in a tree.  It has four children.  Used in TreeNBStruct which is used in TreeForce.
-     */
-
-    struct BranchV{
+  /** \brief Box representing a branch in a tree.  It has four children.  Used in TreeNBStruct which is used in TreeForce.
+   */
+  
+  struct BranchV{
+    
+    int Ndim;
+    /// array of branch_index in BranchV
+    IndexType *branch_index;
+    IndexType nparticles;
+    /// level in tree
+    int level;
+    unsigned long number;
+    /// bottom, left, back corner of box
+    D *boundary_p1 = nullptr;
+    /// top, right, front corner of box
+    D *boundary_p2 = nullptr;
+    std::vector<D> bank;
+    
+    BranchV *child1;
+    BranchV *child2;
+    /// father of branch
+    BranchV *prev;
+    /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
+    /// Used for iterative tree walk.
+    BranchV *brother;
+    
+    
+    BranchV(int my_Ndim,IndexType *my_branch_index,IndexType my_nparticles
+            ,D my_boundary_p1[],D my_boundary_p2[]
+            ,int my_level,unsigned long my_BranchVnumber)
+    :Ndim(my_Ndim),branch_index(my_branch_index),nparticles(my_nparticles)
+    ,level(my_level),number(my_BranchVnumber)
+    {
       
-      int Ndim;
-        /// array of branch_index in BranchV
-      IndexType *branch_index;
-      IndexType nparticles;
-        /// level in tree
-      int level;
-      unsigned long number;
-        /// bottom, left, back corner of box
-      D *boundary_p1 = nullptr;
-        /// top, right, front corner of box
-      D *boundary_p2 = nullptr;
-      BranchV *child1;
-      BranchV *child2;
-        /// father of branch
-      BranchV *prev;
-        /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
-        /// Used for iterative tree walk.
-      BranchV *brother;
-        
-        
-      BranchV(int my_Ndim,IndexType *my_branch_index,IndexType my_nparticles
-                ,D my_boundary_p1[],D my_boundary_p2[]
-                ,int my_level,unsigned long my_BranchVnumber)
-        :Ndim(my_Ndim),branch_index(my_branch_index),nparticles(my_nparticles)
-         ,level(my_level),number(my_BranchVnumber)
-        {
-            
-          boundary_p1 = new D[Ndim*2];
-          boundary_p2 = &boundary_p1[Ndim];
-
-            for(size_t i=0;i<Ndim;++i){
-                boundary_p1[i]= my_boundary_p1[i];
-                boundary_p2[i]= my_boundary_p2[i];
-            }
-            
-            child1 = NULL;
-            child2 = NULL;
-            prev = NULL;
-            brother = NULL;
-        };
-        BranchV(BranchV &branch){
-                
-                Ndim = branch.Ndim;
-                branch_index = branch.branch_index;
-                nparticles = branch.nparticles;
-                level = branch.level;
-                number = branch.number;
-
-                boundary_p1 = new D[Ndim*2];
-                boundary_p2 = &boundary_p1[Ndim];
-                
-                for(size_t i=0;i<Ndim;++i){
-                    boundary_p1[i]= branch.boundary_p1[i];
-                    boundary_p2[i]= branch.boundary_p2[i];
-                }
-                
-                child1 = NULL;
-                child2 = NULL;
-                prev = NULL;
-                brother = NULL;
-            };
-        
-        ~BranchV(){
-          delete [] boundary_p1;
-        };
+      bank.resize(Ndim*2);
+      boundary_p1 = bank.data();
+      boundary_p2 = bank.data() + Ndim;
+      
+      for(size_t i=0;i<Ndim;++i){
+        boundary_p1[i]= my_boundary_p1[i];
+        boundary_p2[i]= my_boundary_p2[i];
+      }
+      
+      child1 = nullptr;
+      child2 = nullptr;
+      prev = nullptr;
+      brother = nullptr;
+    };
+    BranchV(BranchV &branch){
+      
+      Ndim = branch.Ndim;
+      branch_index = branch.branch_index;
+      nparticles = branch.nparticles;
+      level = branch.level;
+      number = branch.number;
+      
+      bank.resize(Ndim*2);
+      boundary_p1 = bank.data();
+      boundary_p2 = bank.data() + Ndim;
+      
+      for(size_t i=0;i<Ndim;++i){
+        boundary_p1[i]= branch.boundary_p1[i];
+        boundary_p2[i]= branch.boundary_p2[i];
+      }
+      
+      child1 = nullptr;
+      child2 = nullptr;
+      prev = nullptr;
+      brother = nullptr;
     };
     
+    ~BranchV(){
+      delete child1;
+      delete child2;
+    };
+  };
+  
 protected:
-    
-	int incell,incell2;
+  
+  int incell,incell2;
   std::vector<IndexType> index;
-	IndexType Nparticles;
-	bool median_cut;
-	int Nbucket;
-	Point_nd<D> realray;
-	T *points;
+  IndexType Nparticles;
+  bool median_cut;
+  int Nbucket;
+  Point_nd<D> realray;
+  T *points;
   D *(*position)(T&);
   
   std::vector<D> workspace;
-    
+  
   BranchV *top;
   BranchV *current;
-    /// number of branches in tree
+  /// number of branches in tree
   unsigned long Nbranches;
-    /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
+  /// Dimension of tree, 2 or 3.  This will dictate how the force is calculated.
   short Ndimensions;
-    
-	void BuildTree();
-    
-	void _BuildTree(IndexType nparticles,IndexType *tmp_index);
-    
-	void _PointsWithin(D *ray,float *rmax,std::list<unsigned long> &neighborkist);
-	void _NearestNeighbors(D *ray,int Nneighbors,unsigned long *neighbors,D *rneighbors);
-    
-	void freeTree();
-    
-	short clearTree();
-	void _freeTree(short child);
-	bool isEmpty();
-	bool atTop();
-	bool noChild();
-	bool offEnd();
-	void getCurrent(IndexType *branch_index,IndexType *nparticles);
-	unsigned long getNbranches();
-	void moveTop();
-	void moveUp();
-	void moveToChild(int child);
-	void attachChildToCurrent(IndexType *branch_index,IndexType nparticles
-                              ,D boundary_p1[],D boundary_p2[]
-                              ,int child);
-	void attachChildToCurrent(BranchV &data,int child);
-	bool TreeWalkStep(bool allowDescent);
-    
-	inline bool atLeaf(){
-		return (current->child1 == NULL)*(current->child2 == NULL);
-	}
-	inline bool inbox(const D* center,D *p1,D *p2){
+  
+  void BuildTree();
+  
+  void _BuildTree(IndexType nparticles,IndexType *tmp_index);
+  
+  void _PointsWithin(D *ray,float *rmax,std::list<unsigned long> &neighborkist);
+  void _NearestNeighbors(D *ray,int Nneighbors,unsigned long *neighbors,D *rneighbors);
+  
+  void freeTree();
+  
+  //short clearTree();
+  //void _freeTree(short child);
+  bool isEmpty();
+  bool atTop();
+  bool noChild();
+  bool offEnd();
+  void getCurrent(IndexType *branch_index,IndexType *nparticles);
+  unsigned long getNbranches();
+  void moveTop();
+  void moveUp();
+  void moveToChild(int child);
+  void attachChildToCurrent(IndexType *branch_index,IndexType nparticles
+                            ,D boundary_p1[],D boundary_p2[]
+                            ,int child);
+  void attachChildToCurrent(BranchV &data,int child);
+  bool TreeWalkStep(bool allowDescent);
+  
+  inline bool atLeaf(){
+    return (current->child1 == NULL)*(current->child2 == NULL);
+  }
+  inline bool inbox(const D* center,D *p1,D *p2){
     int tt=1;
     for(int i=0;i<Ndimensions;++i) tt *= (center[i]>=p1[i]);
     
     return tt;
-//        return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
-	}
-
-
+    //        return (center[0]>=p1[0])*(center[0]<=p2[0])*(center[1]>=p1[1])*(center[1]<=p2[1]);
+  }
+  
+  
   int cutbox(const D *center,D *p1,D *p2,float rmax);
 };
 /*
@@ -768,19 +766,19 @@ void TreeSimpleVec<T,D>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
     branch2.nparticles=cbranch->nparticles - cut;
     if(cut < (cbranch->nparticles) )
         branch2.branch_index = &tmp_index[cut];
-    else branch2.branch_index=NULL;
+    else branch2.branch_index=nullptr;
   
     if(branch1.nparticles > 0) attachChildToCurrent(branch1,1);
     if(branch2.nparticles > 0) attachChildToCurrent(branch2,2);
     
     // work out brothers for children
-    if( (cbranch->child1 != NULL) && (cbranch->child2 != NULL) ){
+    if( (cbranch->child1 != nullptr) && (cbranch->child2 != nullptr) ){
         cbranch->child1->brother = cbranch->child2;
         cbranch->child2->brother = cbranch->brother;
     }
-    if( (cbranch->child1 == NULL) && (cbranch->child2 != NULL) )
+    if( (cbranch->child1 == nullptr) && (cbranch->child2 != nullptr) )
         cbranch->child2->brother = cbranch->brother;
-    if( (cbranch->child1 != NULL) && (cbranch->child2 == NULL) )
+    if( (cbranch->child1 != nullptr) && (cbranch->child2 == nullptr) )
         cbranch->child1->brother = cbranch->brother;
     
     
@@ -803,60 +801,60 @@ void TreeSimpleVec<T,D>::_BuildTree(IndexType nparticles,IndexType *tmp_index){
 template <typename T,typename D>
 void TreeSimpleVec<T,D>::freeTree(){
     
-	clearTree();
+	//clearTree();
   delete top;
-  --Nbranches;
+  Nbranches=0;
 
 	return;
 }
 
-template <typename T,typename D>
-short TreeSimpleVec<T,D>::clearTree(){
-    
-	moveTop();
-	_freeTree(0);
-    
-	assert(Nbranches == 1);
-    
-	return 1;
-}
+//template <typename T,typename D>
+//short TreeSimpleVec<T,D>::clearTree(){
+//
+//	moveTop();
+//	_freeTree(0);
+//
+//	assert(Nbranches == 1);
+//
+//	return 1;
+//}
 
-template <typename T,typename D>
-void TreeSimpleVec<T,D>::_freeTree(short child){
-	BranchV *branch;
-    
-	assert( current);
-    
-	if(current->child1 != NULL){
-		moveToChild(1);
-		_freeTree(1);
-	}
-    
-    if(current->child2 != NULL){
-        moveToChild(2);
-        _freeTree(2);
-    }
-    
-    if( (current->child1 == NULL)*(current->child2 == NULL) ){
-        
-    	if(atTop()) return;
-        
-    	branch = current;
-    	moveUp();
-      delete branch;
-      --Nbranches;
-      
-    	/*printf("*** removing branch %i number of branches %i\n",branch->number
-         ,Nbranches-1);*/
-        
-      if(child==1) current->child1 = NULL;
-    	if(child==2) current->child2 = NULL;
-      
-    	return;
-    }
-    
-    return;
-}
+//template <typename T,typename D>
+//void TreeSimpleVec<T,D>::_freeTree(short child){
+//	BranchV *branch;
+//
+//	assert( current);
+//
+//	if(current->child1 != NULL){
+//		moveToChild(1);
+//		_freeTree(1);
+//	}
+//
+//    if(current->child2 != NULL){
+//        moveToChild(2);
+//        _freeTree(2);
+//    }
+//
+//    if( (current->child1 == NULL)*(current->child2 == NULL) ){
+//
+//    	if(atTop()) return;
+//
+//    	branch = current;
+//    	moveUp();
+//      delete branch;
+//      --Nbranches;
+//
+//    	/*printf("*** removing branch %i number of branches %i\n",branch->number
+//         ,Nbranches-1);*/
+//
+//      if(child==1) current->child1 = NULL;
+//    	if(child==2) current->child2 = NULL;
+//
+//    	return;
+//    }
+//    
+//    return;
+//}
 
 /************************************************************************
  * isEmpty

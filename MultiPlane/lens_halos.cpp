@@ -817,6 +817,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     std::cerr << "ERROR: Power-law index in LensHaloPowerLaw cannot be >= 2" << std::endl;
     throw std::invalid_argument("bad gamma");
   }
+  
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
@@ -827,6 +828,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   xmax = LensHalo::getRsize()/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
   //mnorm = renormalization(get_Rmax());
   //std::cout << "PA in PowerLawConstructor: " << pa << std::endl;
+  
+  
   
   
   if(fratio!=1){
@@ -847,6 +850,14 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   }else{
     set_flag_elliptical(false);
     Rmax = LensHalo::getRsize();
+  }
+  
+  if(xmax <= 0.0 || std::isnan(xmax)){
+    std::cerr << "ERROR : xmax = " << xmax << std::endl;
+    std::cerr << "        rscale = " << rscale << std::endl;
+    std::cerr << "        Rmax = " << Rmax << std::endl;
+    
+    throw std::runtime_error("Bad halo");
   }
 }
 
