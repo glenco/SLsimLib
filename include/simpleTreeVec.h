@@ -30,10 +30,10 @@ public:
                 ,bool median = true     /// whether to use a median cut or a space cut in splitting branches
                 //  ,PosType *(*Mypos)(T&) = defaultposition  /// function that takes
                 ,D *(*Mypos)(T&) = [](T& in){return in.x;}  /// function that takes the object T and returns a pointer to its position, default is t.x[]
-  ):realray(dimensions),Nbranches(0),position(Mypos),Nbucket(bucket),Ndimensions(dimensions),
-  median_cut(median),Nparticles(Npoints),points(xpt)
+  ):Nparticles(Npoints),median_cut(median),Nbucket(bucket),realray(dimensions),
+  points(xpt),position(Mypos),Nbranches(0),Ndimensions(dimensions)
   {
-    index.resize(Npoints);
+    index.resize(Nparticles);
     for(IndexType ii=0;ii<Npoints;++ii) index[ii] = ii;
     
     BuildTree();
@@ -45,7 +45,7 @@ public:
     //freeTree();
     //delete[] index;
     //assert(Nbranches == 0);
-    return;
+    //return;
   };
   
   /// \brief Finds the points within a circle around center and puts their index numbers in a list
@@ -80,8 +80,8 @@ public:
       }
     }while(TreeWalkStep(true));
     
-    assert(leaf->child1==nullptr);
-    assert(leaf->child2==nullptr);
+    assert(leaf->child1_ptr==nullptr);
+    assert(leaf->child2_ptr==nullptr);
     
     //BranchV *tmp = leaf;
     while(leaf != top_ptr){

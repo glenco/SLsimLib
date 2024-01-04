@@ -32,7 +32,8 @@ GridMap::GridMap(
   
   pointID = 0;
   
-  center = my_center;
+  center[0] = my_center[0];
+  center[1] = my_center[1];
 
   assert(Nx > 0);
   assert(rangeX > 0 && rangeY >0);
@@ -52,7 +53,6 @@ GridMap::GridMap(
   //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init2);
-  //i_points = point_factory(Ngrid_init*Ngrid_init2);
  
   int i;
   // set grid of positions
@@ -73,11 +73,10 @@ GridMap::GridMap(
   assert(i == Ngrid_init*Ngrid_init2-1);
   
   s_points = NewPointArray(Ngrid_init*Ngrid_init2);
-  //s_points = point_factory(Ngrid_init*Ngrid_init2);
-  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init2);
+  LinkToSourcePoints(i_points.data(),s_points.data(),Ngrid_init*Ngrid_init2);
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-    lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points);
+    lens->rayshooterInternal(Ngrid_init*Ngrid_init2,i_points.data());
   }
 }
 
@@ -98,19 +97,20 @@ GridMap::GridMap(
   if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
   if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
   
-  center = my_center;
+  center[0] = my_center[0];
+  center[1] = my_center[1];
   
   if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
   if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init);
-  xygridpoints(i_points,range,center.x,Ngrid_init,0);
+  xygridpoints(i_points.data(),range,center.x,Ngrid_init,0);
   s_points = NewPointArray(Ngrid_init*Ngrid_init);
-  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
+  LinkToSourcePoints(i_points.data(),s_points.data(),Ngrid_init*Ngrid_init);
     
   {
     std::lock_guard<std::mutex> hold(grid_mutex);
-    lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points);
+    lens->rayshooterInternal(Ngrid_init*Ngrid_init,i_points.data());
   }
 }
 
@@ -125,16 +125,17 @@ GridMap::GridMap(
   if(N1d < 1) throw std::runtime_error("GridMap size is < 1!");
   if(range <= 0) throw std::runtime_error("GridMap range is <= 0!");
   
-  center = my_center;
+  center[0] = my_center[0];
+  center[1] = my_center[1];
   
   if(N1d <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no points" << std::endl; exit(1);}
   if(range <= 0){ERROR_MESSAGE(); std::cout << "cannot make GridMap with no range" << std::endl; exit(1);}
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init);
-  xygridpoints(i_points,range,center.x,Ngrid_init,0);
+  xygridpoints(i_points.data(),range,center.x,Ngrid_init,0);
   s_points = NewPointArray(Ngrid_init*Ngrid_init);
-  xygridpoints(s_points,range,center.x,Ngrid_init,0);
-  LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init);
+  xygridpoints(s_points.data(),range,center.x,Ngrid_init,0);
+  LinkToSourcePoints(i_points.data(),s_points.data(),Ngrid_init*Ngrid_init);
 }
 
 GridMap::~GridMap(){}

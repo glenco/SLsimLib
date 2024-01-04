@@ -416,11 +416,11 @@ struct Point: public Point_2d{
   Point();
   Point(const Point_2d &p);
   Point(PosType x,PosType y);
-  Point *next;    // pointer to next point in linked list
-  Point *prev;
-  Point *image;  // pointer to point on image or source plane
-  unsigned long id;
-  unsigned long head;         // marks beginning of allocated array of points for easy deallocation
+  Point *next=nullptr;    // pointer to next point in linked list
+  Point *prev=nullptr;
+  Point *image=nullptr;  // pointer to point on image or source plane
+  unsigned long id=0;
+  unsigned long head=0;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
   PosType *ptr_y(){return image->x;}

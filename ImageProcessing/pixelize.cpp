@@ -976,7 +976,7 @@ void PixelMap::lens_definition(
   
   {
     // remove low s/n images
-    int i=0,k=sig_noise.size();
+    long i=0,k=sig_noise.size();
     while( i < k){
       if(sig_noise[i] < min_sn_per_image){
         std::swap(sig_noise[i],sig_noise[k-1]);
@@ -1037,8 +1037,7 @@ void PixelMap::lens_definition(
       for(size_t i=0 ; i<new_image_points.size() ; ++i ){
         if(new_image_points[i].size() == 0){
           ring = true;
-          for(int k = i ; k<new_image_points.size()-1 ; ++k){
-            std::swap(sig_noise[k],sig_noise[k+1]);
+          for(long k = i ; k<new_image_points.size()-1 ; ++k){
             std::swap(new_image_points[k],new_image_points[k+1]);
           }
           new_image_points.pop_back();
