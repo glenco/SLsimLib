@@ -17,127 +17,127 @@
  *  can break down for crescent curves
  */
 
-void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
-  
-  //OldImageInfo* curves = new OldImageInfo(curves_in);
-  
-  long i,m,j,end;
-  //short spur,closed,attach;
-  unsigned long NpointsTotal;
-  PosType center[2],*theta;
-  //bool delta,tmp,step;
-  //ListHndl reservoir,orderedlist;
-  //Point *newpointarray;
-  
-  //std::printf("entering split_order_curve\n");
-  if(curves[0].Npoints==0){
-    *Ncurves=0;
-    return;
-  }
-  
-  NpointsTotal=curves[0].Npoints;
-  
-  splitter(curves,Maxcurves,Ncurves);
-  
-  /*
-   reservoir=NewList();
-   orderedlist=NewList();
-   
-   // copy points into a list
-   for(i=0;i<NpointsTotal;++i) InsertPointAfterCurrent(reservoir,&(curves[0].points[i]));
-   m=0;
-   i=0;
-   
-   // divide points into disconnected curves using neighbors-of-neighbors
-   while(reservoir->Npoints > 0 && i < Maxcurves){
-   curves[i].points=TakeOutCurrent(reservoir);
-   MoveToBottomList(orderedlist);
-   InsertPointAfterCurrent(orderedlist,curves[i].points);
-   MoveDownList(orderedlist);
-   NeighborsOfNeighbors(orderedlist,reservoir);
-   curves[i].Npoints=orderedlist->Npoints - m;
-   //std::printf("curves[%i].Npoints=%i %i %i\n",i,curves[i].Npoints,orderedlist->Npoints
-   //		,reservoir->Npoints);
-   m+=curves[i].Npoints;
-   ++i;
-   }
-   *Ncurves=i;
-   
-   // copy list back into array
-   point=curves[0].points;
-   newpointarray=NewPointArray(NpointsTotal);
-   MoveToTopList(orderedlist);
-   m=0;
-   i=0;
-   do{
-   if(i < *Ncurves && curves[i].points==orderedlist->current){
-			curves[i].points=&(newpointarray[m]);
-			++i;
-   }
-   PointCopyData(&(newpointarray[m]),orderedlist->current);
-   ++m;
-   }while(MoveDownList(orderedlist));
-   
-   assert(m == NpointsTotal);
-   */
-  // order curve points
-  theta=(PosType *)malloc(NpointsTotal*sizeof(PosType));
-  assert(theta);
-  for(i=0;i<*Ncurves;++i){
-    
-    if(curves[i].Npoints > 3){
-      // sort points by angle around center point
-      center[0]=center[1]=0;
-      for(m=0;m<curves[i].Npoints;++m){
-        center[0]+=curves[i].points[m].x[0];
-        center[1]+=curves[i].points[m].x[1];
-      }
-      center[0]/=curves[i].Npoints;
-      center[1]/=curves[i].Npoints;
-      
-      for(m=0;m<curves[i].Npoints;++m){
-        theta[m]=atan2(curves[i].points[m].x[1]-center[1]
-                       ,curves[i].points[m].x[0]-center[0]);
-      }
-      Utilities::quicksortPoints_multithread<4>(curves[i].points,theta,curves[i].Npoints);
-      
-      // check to make sure the center is inside the curves
-      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
-      
-      //std::printf("N=%i\n",curves[i].Npoints);
-      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)) > 0 );
-      
-      // find the last point that is a neighbor of the first point
-      m=curves[i].Npoints-1;
-      while(!AreBoxNeighbors(&(curves[i].points[0]),&(curves[i].points[m]))) --m;
-      end=m;
-      //assert(m > 0);
-      
-      //std::printf("windings = %i\n",windings(center,curves[i].points,curves[i].Npoints,&tmp1,0));
-      // walk curve to remove shadowing effect
-      j=0;
-      //end=0;
-      m=0;
-      while(j < curves[i].Npoints-1){
-        walkcurve(curves[i].points,curves[i].Npoints,&j,&end);
-        //std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,curves[i].Npoints,end+1,j);
-        if(j < curves[i].Npoints-1)
-          backtrack(curves[i].points,curves[i].Npoints,&j,-1,&end);
-        ++m;
-        assert(m < curves[i].Npoints);
-      }
-      //std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,curves[i].Npoints,end+1,j);
-      curves[i].Npoints=end+1;
-    }
-  }
-  
-  free(theta);
-  //free(reservoir);
-  //free(orderedlist);
-  //free(point);
-  
-  return ;
-}
+//void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
+//
+//  //OldImageInfo* curves = new OldImageInfo(curves_in);
+//
+//  long i,m,j,end;
+//  //short spur,closed,attach;
+//  unsigned long NpointsTotal;
+//  PosType center[2],*theta;
+//  //bool delta,tmp,step;
+//  //ListHndl reservoir,orderedlist;
+//  //Point *newpointarray;
+//
+//  //std::printf("entering split_order_curve\n");
+//  if(curves[0].Npoints==0){
+//    *Ncurves=0;
+//    return;
+//  }
+//
+//  NpointsTotal=curves[0].Npoints;
+//
+//  splitter(curves,Maxcurves,Ncurves);
+//
+//  /*
+//   reservoir=NewList();
+//   orderedlist=NewList();
+//
+//   // copy points into a list
+//   for(i=0;i<NpointsTotal;++i) InsertPointAfterCurrent(reservoir,&(curves[0].points[i]));
+//   m=0;
+//   i=0;
+//
+//   // divide points into disconnected curves using neighbors-of-neighbors
+//   while(reservoir->Npoints > 0 && i < Maxcurves){
+//   curves[i].points=TakeOutCurrent(reservoir);
+//   MoveToBottomList(orderedlist);
+//   InsertPointAfterCurrent(orderedlist,curves[i].points);
+//   MoveDownList(orderedlist);
+//   NeighborsOfNeighbors(orderedlist,reservoir);
+//   curves[i].Npoints=orderedlist->Npoints - m;
+//   //std::printf("curves[%i].Npoints=%i %i %i\n",i,curves[i].Npoints,orderedlist->Npoints
+//   //		,reservoir->Npoints);
+//   m+=curves[i].Npoints;
+//   ++i;
+//   }
+//   *Ncurves=i;
+//
+//   // copy list back into array
+//   point=curves[0].points;
+//   newpointarray=NewPointArray(NpointsTotal);
+//   MoveToTopList(orderedlist);
+//   m=0;
+//   i=0;
+//   do{
+//   if(i < *Ncurves && curves[i].points==orderedlist->current){
+//			curves[i].points=&(newpointarray[m]);
+//			++i;
+//   }
+//   PointCopyData(&(newpointarray[m]),orderedlist->current);
+//   ++m;
+//   }while(MoveDownList(orderedlist));
+//
+//   assert(m == NpointsTotal);
+//   */
+//  // order curve points
+//  theta=(PosType *)malloc(NpointsTotal*sizeof(PosType));
+//  assert(theta);
+//  for(i=0;i<*Ncurves;++i){
+//
+//    if(curves[i].Npoints > 3){
+//      // sort points by angle around center point
+//      center[0]=center[1]=0;
+//      for(m=0;m<curves[i].Npoints;++m){
+//        center[0]+=curves[i].points[m].x[0];
+//        center[1]+=curves[i].points[m].x[1];
+//      }
+//      center[0]/=curves[i].Npoints;
+//      center[1]/=curves[i].Npoints;
+//
+//      for(m=0;m<curves[i].Npoints;++m){
+//        theta[m]=atan2(curves[i].points[m].x[1]-center[1]
+//                       ,curves[i].points[m].x[0]-center[0]);
+//      }
+//      Utilities::quicksortPoints_multithread<4>(curves[i].points,theta,curves[i].Npoints);
+//
+//      // check to make sure the center is inside the curves
+//      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
+//
+//      //std::printf("N=%i\n",curves[i].Npoints);
+//      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)) > 0 );
+//
+//      // find the last point that is a neighbor of the first point
+//      m=curves[i].Npoints-1;
+//      while(!AreBoxNeighbors(&(curves[i].points[0]),&(curves[i].points[m]))) --m;
+//      end=m;
+//      //assert(m > 0);
+//
+//      //std::printf("windings = %i\n",windings(center,curves[i].points,curves[i].Npoints,&tmp1,0));
+//      // walk curve to remove shadowing effect
+//      j=0;
+//      //end=0;
+//      m=0;
+//      while(j < curves[i].Npoints-1){
+//        walkcurve(curves[i].points,curves[i].Npoints,&j,&end);
+//        //std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,curves[i].Npoints,end+1,j);
+//        if(j < curves[i].Npoints-1)
+//          backtrack(curves[i].points,curves[i].Npoints,&j,-1,&end);
+//        ++m;
+//        assert(m < curves[i].Npoints);
+//      }
+//      //std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,curves[i].Npoints,end+1,j);
+//      curves[i].Npoints=end+1;
+//    }
+//  }
+//
+//  free(theta);
+//  //free(reservoir);
+//  //free(orderedlist);
+//  //free(point);
+//
+//  return ;
+//}
 namespace Utilities{
 
   /** 
@@ -233,7 +233,7 @@ namespace Utilities{
     newnumber = order_curve4(tmpcurve,curve->Nunits());
     
     // resort points in imagekist to match tmpcurve
-    for(i=0;i<Npoints;++i){
+    for(int i=0;i<Npoints;++i){
       curve->JumpDown(i);
       do{
         if(tmpcurve[Npoints-1-i].id == curve->getCurrent()->id){
@@ -1465,70 +1465,71 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 /** meant to be a sure fire way to split all points into separate images or
  *   curves into separate curves
  */
-void splitter(OldImageInfo *images,int Maximages,int *Nimages){
-  long i,m,j;
-  PointList imagelist;
-  unsigned long NpointsTotal=0;
-  Point *newpointarray;
-  
-  //assert(images[0].Npoints);
-  
-  if(images[0].Npoints==0){
-    *Nimages=0;
-    return;
-  }
-  
-  NpointsTotal = images[0].Npoints;
-  
-  PointList::iterator imagelist_it;
-  imagelist_it.current = imagelist.Bottom();
-  // copy image points into a list
-  for(i=0;i<images[0].Npoints;++i) imagelist.InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
-  
-  assert(imagelist.size() == images[0].Npoints);
-  //std::printf("imagelist = %il\n",imagelist->Npoints);
-  
-  splitlist(&imagelist,images,Nimages,Maximages);
-  //std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
-  assert(imagelist.size() == NpointsTotal);
-  
-  // copy list back into array
-  MemmoryBank<Point> factory;
-  //newpointarray = NewPointArray(NpointsTotal);
-  newpointarray = factory(NpointsTotal);
-
-  imagelist_it.current = imagelist.Top();
-  m=0;
-  i=0;
-  do{
-    if(i < *Nimages && images[i].points == *imagelist_it){
-      images[i].points=&(newpointarray[m]);
-      ++i;
-    }
-    PointCopyData(&(newpointarray[m]),*imagelist_it);
-    ++m;
-  }while(--imagelist_it);
-  
-  assert(m == NpointsTotal);
-  
-  // take out images that have no points in them
-  for(i=0;i<*Nimages;++i){
-    if(images[i].Npoints==0){
-      for(j=i;j<*Nimages-1;++j){
-        images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
-        images[j].Npoints=images[j+1].Npoints;
-        images[j].points=images[j+1].points;
-        images[j].area=images[j+1].area;
-        images[j].area_error=images[j+1].area_error;
-        for(m=0;m<3;++m) images[j].gridrange[m]=images[j+1].gridrange[m];
-      }
-      --(*Nimages);
-      --i;
-    }
-  }
-  
-  return ;
-}
+//void splitter(OldImageInfo *images,int Maximages,int *Nimages){
+//
+//  PointList imagelist;
+//  unsigned long NpointsTotal=0;
+//  //Point *newpointarray;
+//
+//  //assert(images[0].Npoints);
+//
+//  if(images[0].Npoints==0){
+//    *Nimages=0;
+//    return;
+//  }
+//
+//  NpointsTotal = images[0].Npoints;
+//
+//  PointList::iterator imagelist_it;
+//  imagelist_it.current = imagelist.Bottom();
+//  // copy image points into a list
+//  for(long i=0;i<images[0].Npoints;++i) imagelist.InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
+//
+//  assert(imagelist.size() == images[0].Npoints);
+//  //std::printf("imagelist = %il\n",imagelist->Npoints);
+//
+//  splitlist(&imagelist,images,Nimages,Maximages);
+//  //std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
+//  assert(imagelist.size() == NpointsTotal);
+//
+//  // copy list back into array
+//  //MemmoryBank<Point> factory;
+//  //newpointarray = NewPointArray(NpointsTotal);
+//  //newpointarray = factory(NpointsTotal);
+//  std::vector<Point> newpointarray(NpointsTotal);
+//
+//  imagelist_it.current = imagelist.Top();
+//  {
+//    long i=0,m=0;
+//    do{
+//      if(i < *Nimages && images[i].points == *imagelist_it){
+//        images[i].points=&(newpointarray[m]);
+//        ++i;
+//      }
+//      PointCopyData(&(newpointarray[m]),*imagelist_it);
+//      ++m;
+//    }while(--imagelist_it);
+//
+//    assert(m == NpointsTotal);
+//  }
+//  // take out images that have no points in them
+//  for(long i=0;i<*Nimages;++i){
+//    if(images[i].Npoints==0){
+//      for(long j=i;j<*Nimages-1;++j){
+//        images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
+//        images[j].Npoints=images[j+1].Npoints;
+//        images[j].points=images[j+1].points;
+//        images[j].area=images[j+1].area;
+//        images[j].area_error=images[j+1].area_error;
+//        for(int m=0;m<3;++m) images[j].gridrange[m]=images[j+1].gridrange[m];
+//      }
+//      --(*Nimages);
+//      --i;
+//    }
+//  }
+//
+//  return ;
+//}
 
 /** reorders imagelist into separate images using reliable
  *      neighbor-of-neighbor method

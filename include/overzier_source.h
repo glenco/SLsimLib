@@ -30,7 +30,7 @@ public:
 	virtual ~SourceOverzier();
 	
 	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *my_theta);
-  virtual PosType SurfaceBrightness(PosType *x);
+  virtual PosType SurfaceBrightness(const PosType *x) const;
 	PosType getTotalFlux() const;
 	void printSource();
   
@@ -175,7 +175,7 @@ public:
   //*** put modes and phases into surface brightness
   //*** possible put gaussian texture on disk
 
-  PosType SurfaceBrightness(PosType *y);
+  PosType SurfaceBrightness(const PosType *y) const;
 
   /// magnitude in specific band
   void setMag(Band band,PosType my_mag){

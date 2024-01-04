@@ -71,7 +71,7 @@ public:
    
    * The units shuld be ergs / s / Hz / cm^2 
    */
-  virtual PosType SurfaceBrightness(PosType *y) = 0;
+  virtual PosType SurfaceBrightness(const PosType *y) const = 0;
   virtual PosType getTotalFlux() const = 0;
   virtual void printSource() = 0;
 
@@ -92,7 +92,7 @@ public:
   /// Reset the radius of the source in radians
 	void setRadius(PosType my_radius){source_r = my_radius;}
   /// position of source in radians
-  inline Point_2d getTheta(){return source_x;}
+  inline Point_2d getTheta() const {return source_x;}
   /// position of source in radians
   inline void getTheta(PosType *x) const {x[0] = source_x.x[0]; x[1] = source_x.x[0];}
   /// position of source in radians
@@ -281,7 +281,7 @@ public:
 	//SourcePixelled(InputParams& params);
   
 	~SourcePixelled();
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	void printSource();
 	inline PosType getTotalFlux() const {return flux;}
 	inline PosType getRadius() const {return source_r;}
@@ -360,7 +360,7 @@ public:
     cos_sin[1] = sin(ang);
   }
 
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	void printSource();
   /// maximum size
 	inline PosType getRadius() const {return source_r*10.;}
@@ -411,7 +411,7 @@ private:
   
  
 	void assignParams(InputParams& params);
-  void Hermite(std::vector<PosType> &hg,int N, PosType x);
+  void Hermite(std::vector<PosType> &hg,int N, PosType x) const;
 
 	void NormalizeFlux();
 	std::valarray<PosType> coeff;
@@ -436,7 +436,7 @@ public:
                 );
 	~SourceUniform();
 
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	void assignParams(InputParams& params);
 	void printSource();
 	PosType getTotalFlux() const {return PI*source_r*source_r;}
@@ -465,7 +465,7 @@ public:
 
   ~SourcePoint(){};
   
-  PosType SurfaceBrightness(PosType *y){return 0.0;};
+  virtual PosType SurfaceBrightness(const PosType *y)const {return 0.0;};
   void printSource(){};
   void assignParams(InputParams& params){}; // do nothing
   void rotate(PosType t){};                 // do nothing
@@ -497,7 +497,7 @@ public:
 	/// internal scale parameter
 	PosType source_gauss_r2;
 	
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	void assignParams(InputParams& params);
 	void printSource();
 	PosType getTotalFlux() const {return 2*PI*source_gauss_r2;/*std::cout << "No total flux in SourceGaussian yet" << std::endl; exit(1);*/}
@@ -533,7 +533,7 @@ public:
 	/// set to true to integrate over frequency
 	bool source_monocrome;
   
-  inline PosType getDlDs(){return DlDs;}
+  inline PosType getDlDs() const{return DlDs;}
 
 private:
   PosType DlDs;
@@ -544,7 +544,7 @@ private:
 /// A source representing a BLR with a Keplarian disk
 class SourceBLRDisk : public SourceBLR{
 public:
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRDisk yet" << std::endl; exit(1);}
 	
 	//SourceBLRDisk(InputParams&);
@@ -554,7 +554,7 @@ public:
 /// A source representing a BLR with a spherical symmetry and circular orbits
 class SourceBLRSph1 : public SourceBLR{
 public:
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRSph1 yet" << std::endl; exit(1);}
 	
 	//SourceBLRSph1(InputParams&);
@@ -564,7 +564,7 @@ public:
 /// A source representing a BLR with a spherical symmetry and random velocity dispersion
 class SourceBLRSph2 : public SourceBLR{
 public:
-	PosType SurfaceBrightness(PosType *y);
+	PosType SurfaceBrightness(const PosType *y) const;
 	PosType getTotalFlux() const {std::cout << "No total flux in SourceBLRSph2 yet" << std::endl; exit(1);}
 
 	//SourceBLRSph2(InputParams&);

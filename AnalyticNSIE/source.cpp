@@ -212,23 +212,23 @@ void SourceBLR::printSource(){
   cout << "source_fK " << source_fK << endl << endl;
 }
 
-PosType SourceUniform::SurfaceBrightness(PosType *y){
+PosType SourceUniform::SurfaceBrightness(const PosType *y) const{
   return (PosType)( (pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2)) < source_r*source_r );
 }
 
-PosType SourceGaussian::SurfaceBrightness(PosType *y){
+PosType SourceGaussian::SurfaceBrightness(const PosType *y) const{
   return exp( -(pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))/source_gauss_r2 );
 }
 // surface brightness for models of the Broad Line Region
-PosType SourceBLRDisk::SurfaceBrightness(PosType *y){
+PosType SourceBLRDisk::SurfaceBrightness(const PosType *y) const{
   PosType x[2] = {y[0]-getTheta()[0],y[1]-getTheta()[1]};
   return blr_surface_brightness_disk(x,this);
 }
 
-PosType SourceBLRSph1::SurfaceBrightness(PosType *y){
+PosType SourceBLRSph1::SurfaceBrightness(const PosType *y) const{
   return blr_surface_brightness_spherical_circular_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
-PosType SourceBLRSph2::SurfaceBrightness(PosType *y){
+PosType SourceBLRSph2::SurfaceBrightness(const PosType *y) const{
   return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
 
@@ -358,7 +358,7 @@ void SourcePixelled::calcSize(){
   size = r_sum/sum;
 }
 
-PosType SourcePixelled::SurfaceBrightness(PosType *y){
+PosType SourcePixelled::SurfaceBrightness(const PosType *y) const{
   long ix = Utilities::IndexFromPosition(y[0],Npixels,range,source_x[0]);
   long iy = Utilities::IndexFromPosition(y[1],Npixels,range,source_x[1]);
   if (ix>-1 && iy>-1)
@@ -663,8 +663,8 @@ SourceShapelets::SourceShapelets(
 
 /// Returns surface brightness in erg/cm2/sec/Hz, normalized by hplanck.
 /// Given the units of hplanck, the final units are 1/sec/cm2.
-PosType SourceShapelets::SurfaceBrightness(PosType *y)
-{
+PosType SourceShapelets::SurfaceBrightness(const PosType *y)
+const{
   PosType sb = 0.;
   PosType y_norm[2],tmp;
   y_norm[0] = ((y[0]-source_x[0])*cos_sin[0]-(y[1]-source_x[1])*cos_sin[1])/source_r;
@@ -704,7 +704,7 @@ PosType SourceShapelets::SurfaceBrightness(PosType *y)
 }
 
 /// Returns the value of the Hermite polynomials from degree 0 to n at position x
-void SourceShapelets::Hermite(std::vector<PosType> &hg,int N, PosType x)
+void SourceShapelets::Hermite(std::vector<PosType> &hg,int N, PosType x) const
 {
   hg.resize(N);
   hg[0] = 1.;

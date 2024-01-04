@@ -98,8 +98,8 @@ SourceSersic::~SourceSersic()
 }
 
 PosType SourceSersic::SurfaceBrightness(
-	PosType *x  /// position in radians relative to center of source
-)
+	const PosType *x  /// position in radians relative to center of source
+) const
 {
 
   if(Reff <= 0.0) return 0.0;
