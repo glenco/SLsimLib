@@ -101,9 +101,12 @@ PixelMap::PixelMap(const PixelMap& other)
 : map(other.map),
 Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY),units(other.units)
 {
-  std::copy(other.center, other.center + 2, center);
-  std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
-  std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+  center[0] = other.center[0];
+  center[1] = other.center[1];
+  map_boundary_p1[0] = other.map_boundary_p1[0];
+  map_boundary_p1[1] = other.map_boundary_p1[1];
+  map_boundary_p2[0] = other.map_boundary_p2[0];
+  map_boundary_p2[1] = other.map_boundary_p2[1];
 }
 
 // move constructor

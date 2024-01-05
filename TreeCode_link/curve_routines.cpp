@@ -3115,7 +3115,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   if(vv.size() < 4 ) return vv;
  
   std::vector<Point_2d> v = vv;
-  size_t nv = v.size();
+  long nv = v.size();
   
   double length_scale=0;
   for(long i=0 ; i<nv ; ++i){
@@ -3123,7 +3123,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
     if(tmp > length_scale) length_scale = tmp;
   }
   
-  length_scale *= 0.01;
+  length_scale *= 0.001;
   
   // remove repeated consecutive points
   for(long i=0 ; i<nv-1 ; ++i){
@@ -3134,7 +3134,9 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
       --nv;
     }
   }
-  while( (v[nv-1] - v[0]).length() < length_scale ) --nv;
+  while( ( (v[nv-1] - v[0]).length() < length_scale ) && nv>1) --nv;
+  assert(nv>1);
+  
   v.resize(nv);
   
   Utilities::Geometry::CYCLIC cycv(nv);
