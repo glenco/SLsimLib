@@ -10,6 +10,7 @@
 #define __GLAMER__gridmap__
 
 #include <iostream>
+#include <memory>
 #include "lens.h"
 #include "point.h"
 #include "concave_hull.h"
@@ -122,10 +123,34 @@ struct GridMap{
   
   Point_2d getCenter(){return center;}
   
-  Point * operator[](size_t i){return i_points + i;};
+  Point * operator[](size_t i){return i_points.data() + i;};
   
   GridMap(GridMap &&grid){
-    *this = std::move(grid);
+    
+    Ngrid_init = grid.Ngrid_init;
+    Ngrid_init2 = grid.Ngrid_init2;
+    pointID = grid.pointID;
+    axisratio = grid.axisratio;
+    x_range = grid.x_range;
+    
+    std::swap(i_points,grid.i_points);
+    std::swap(s_points,grid.s_points);
+    
+    center = grid.center;
+  }
+  
+  GridMap(GridMap &grid){
+    
+    Ngrid_init = grid.Ngrid_init;
+    Ngrid_init2 = grid.Ngrid_init2;
+    pointID = grid.pointID;
+    axisratio = grid.axisratio;
+    x_range = grid.x_range;
+    
+    i_points = grid.i_points;
+    s_points = grid.s_points;
+    
+    center = grid.center;
   }
   
   GridMap & operator=(GridMap &&grid){
@@ -135,14 +160,10 @@ struct GridMap{
     axisratio = grid.axisratio;
     x_range = grid.x_range;
     
-    i_points = grid.i_points;
-    grid.i_points = nullptr;
-    s_points = grid.s_points;
-    grid.s_points = nullptr;
+    std::swap(i_points,grid.i_points);
+    std::swap(s_points,grid.s_points);
     
     center = grid.center;
-    
-    point_factory = std::move(grid.point_factory);
 
     return *this;
   }
@@ -276,6 +297,8 @@ struct GridMap{
 //                          ) const;
   
 private:
+  GridMap & operator=(GridMap &grid);
+  
   /* Depricated to Utilities::find_boundaries<>()
    
    finds ordered boundaries to regions where bitmap == true
@@ -293,15 +316,14 @@ private:
 //                       ,bool add_to_vector=false
 //                       );
 //
+  
   // curve must be in pixel units
   bool  incurve(long k,std::vector<Point_2d> &curve) const;
-  
     
   // cluge to make compatible with old method of producing points
-  Point * NewPointArray(size_t N){
-    Point * p = point_factory(N);
+  std::vector<Point> NewPointArray(size_t N){
+    std::vector<Point> p(N);
     p[0].head = N;
-    for(size_t i=1; i < N ; ++i) p[i].head = 0;
     return p;
   }
   
@@ -317,14 +339,12 @@ private:
   PosType x_range;
   void writePixelMapUniform_(Point* points,size_t size,PixelMap *map,LensingVariable val);
   
-  Point *i_points;
-  Point *s_points;
+  std::vector<Point> i_points;
+  std::vector<Point> s_points;
   Point_2d center;
   
   bool to_refine(long i,long j,double total,double f) const ;
   static std::mutex grid_mutex;
-  
-  MemmoryBank<Point> point_factory;
   
   void _find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RAY> &rays) const;
 

@@ -93,7 +93,6 @@ Grid::Grid(
     //if(Ngrid_init2 % 2 == 1) ++Ngrid_init2;
     
     i_points = NewPointArray(Ngrid_init*Ngrid_init2);
-    //i_points = point_factory(Ngrid_init*Ngrid_init2);
 
     int i;
     // set grid of positions
@@ -114,7 +113,6 @@ Grid::Grid(
     assert(i == Ngrid_init*Ngrid_init2-1);
  
     s_points = NewPointArray(Ngrid_init*Ngrid_init2);
-    //s_points = point_factory(Ngrid_init*Ngrid_init2);
     LinkToSourcePoints(i_points,s_points,Ngrid_init*Ngrid_init2);
     
     {
@@ -545,7 +543,6 @@ unsigned long Grid::getNumberOfPoints() const{
 Point * Grid::RefineLeaf(LensHndl lens,Point *point){
 
 	Point *i_points = NewPointArray(Ngrid_block*Ngrid_block-1);
-  //Point *i_points = point_factory(Ngrid_block*Ngrid_block-1);
 
 	int Nout,kk;
 
@@ -585,7 +582,6 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point){
 	int  Ntemp = Ngrid_block*Ngrid_block-1-Nout;
 
   Point *s_points= NewPointArray(Ntemp);
-  //Point *s_points= point_factory(Ntemp);
   LinkToSourcePoints(i_points,s_points,Ntemp);
  
   {
@@ -630,7 +626,6 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point){
     int N = Ngrid_block*Ngrid_block-1;
 
     Point *ptr = NewPointArray(N);
-    //Point *ptr = point_factory(N);
     for(size_t i=0 ; i< N ; ++i){
       PointCopy(&ptr[i],&i_points[i]);
     }
@@ -638,7 +633,6 @@ Point * Grid::RefineLeaf(LensHndl lens,Point *point){
     i_points = ptr;
     
     ptr = NewPointArray(N);
-    //ptr = point_factory(N);
     for(size_t i=0 ; i< N ; ++i){
       PointCopy(&ptr[i],&s_points[i]);
     }
@@ -690,7 +684,6 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 
 	size_t Nleaves = points.size();
 	Point *i_points = NewPointArray((Ngrid_block*Ngrid_block-1)*Nleaves);
-  //Point *i_points = point_factory((Ngrid_block*Ngrid_block-1)*Nleaves);
 	size_t Nout,kk,ii;
 	size_t Nadded,Nout_tot;
   std::vector<size_t> addedtocell(points.size());
@@ -760,7 +753,6 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 	}
 
   Point *s_points = NewPointArray(Nadded);
-  //Point *s_points = point_factory(Nadded);
 	LinkToSourcePoints(i_points,s_points,Nadded);
 
   // This interpolation does not work for some reason and needs to be fixed some time.
@@ -891,7 +883,6 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
 	if(Nadded < (Ngrid_block*Ngrid_block-1)*Nleaves){
     // resize to save memmory
     Point *ptr = NewPointArray(Nadded);
-    //Point *ptr = point_factory(Nadded);
     for(size_t i=0 ; i< Nadded ; ++i){
       PointCopy(&ptr[i],&i_points[i]);
     }
@@ -899,7 +890,6 @@ Point * Grid::RefineLeaves(LensHndl lens,std::vector<Point *>& points){
     i_points = ptr;
     
     ptr = NewPointArray(Nadded);
-    //ptr = point_factory(Nadded);
     for(size_t i=0 ; i< Nadded ; ++i){
       PointCopy(&ptr[i],&s_points[i]);
     }

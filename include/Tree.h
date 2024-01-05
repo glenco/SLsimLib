@@ -304,28 +304,28 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 void LinkToSourcePoints(Point *i_points,Point *s_points,unsigned long Npoints);
 
 /// structure to construct, hold and destruct image and source points
-struct PointPack{
-  /// for points without preset positions
-  PointPack(size_t N):n(N){
-    //i_points=NewPointArray(N);
-    //s_points=NewPointArray(N);
-    i_points=factory(N);
-    s_points=factory(N);
-    LinkToSourcePoints(i_points,s_points,N);
-  }
- 
- 
-  ~PointPack(){
-    delete [] i_points;
-    delete [] s_points;
-  }
-  size_t n;
-  Point *i_points;
-  Point *s_points;
-  
-private:
-  MemmoryBank<Point> factory;
-};
+//struct PointPack{
+//  /// for points without preset positions
+//  PointPack(size_t N):n(N){
+//    //i_points=NewPointArray(N);
+//    //s_points=NewPointArray(N);
+//    i_points=factory(N);
+//    s_points=factory(N);
+//    LinkToSourcePoints(i_points,s_points,N);
+//  }
+//
+//
+//  ~PointPack(){
+//    delete [] i_points;
+//    delete [] s_points;
+//  }
+//  size_t n;
+//  Point *i_points;
+//  Point *s_points;
+//
+//private:
+//  MemmoryBank<Point> factory;
+//};
 
 ///
 namespace Utilities{
@@ -893,11 +893,11 @@ PosType ConvexHullArea(Kist<Point> * curve);
 
 }
 // in curve_routines.c
-void nesting_curve(OldImageInfo *curves,int Ncurves);
-void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void nesting_curve(OldImageInfo *curves,int Ncurves);
+//void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
 PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
@@ -907,7 +907,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages);
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
-void splitter(OldImageInfo *images,int Maximages,int *Nimages);
+//void splitter(OldImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
 
 

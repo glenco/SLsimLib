@@ -37,7 +37,7 @@ public:
 	~SourceMultiAnaGalaxy();
 	
 	/// Surface brightness of current galaxy.
-	PosType SurfaceBrightness(PosType* x) {
+	PosType SurfaceBrightness(const PosType* x) const {
 		PosType sb = galaxies[index].SurfaceBrightness(x);
 		if (sb < sb_limit) return 0.;
 		return sb;
@@ -93,7 +93,7 @@ public:
 
 
 	/// Return angular position of current source.
-	Point_2d getTheta(){return galaxies[index].getTheta();}
+	Point_2d getTheta() const{return galaxies[index].getTheta();}
 	/// Set angular position of current source.
 	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
   void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}
@@ -212,7 +212,7 @@ public:
   void sortInRedshift();
   void sortInMag();
   /// Surface brightness of current galaxy.
-  PosType SurfaceBrightness(PosType* x) {
+  PosType SurfaceBrightness(const PosType* x)const {
 		PosType sb = galaxies[index].SurfaceBrightness(x);
 		if (sb < sb_limit) return 0.;
 		return sb;
@@ -227,7 +227,7 @@ public:
 	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag());}
 
     /// Return angular position of current source.
-	Point_2d getTheta(){return galaxies[index].getTheta();}
+	Point_2d getTheta() const {return galaxies[index].getTheta();}
 	/// Set angular position of current source.
 	void setTheta(PosType my_theta[2]){galaxies[index].setTheta(my_theta);}
 	void setTheta(PosType my_x,PosType my_y){galaxies[index].setTheta(my_x, my_y);}

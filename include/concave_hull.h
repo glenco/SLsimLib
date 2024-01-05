@@ -1192,7 +1192,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
       Ptype v2;
       
       size_t new_index;
-      double theta_max;
+      double theta_max=0;
       Ptype new_point;
       std::vector<double> thetas;
       std::vector<int> sorted_index(k);

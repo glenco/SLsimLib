@@ -15,7 +15,7 @@
 // normalization is arbitrary for now.
 
 // inputs are in Mpc,days,Hz,Hz
-double blr_surface_brightness_spherical(double x,SourceBLR *source){
+double blr_surface_brightness_spherical(double x,const SourceBLR *source){
 
 	// some constants which need to be set in the real version but will be
 	// plucked from the air here
@@ -39,7 +39,7 @@ double blr_surface_brightness_spherical(double x,SourceBLR *source){
 	return  x/pow(x*x + tau*tau,1.5) * pow(r/source->source_r_in,source->source_gamma-0.5);
 }
 
-double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
+double blr_surface_brightness_disk_old(double x[],const SourceBLR *source){
 
 	/* computes the surface brightness associated with our simplest model
 	// for the BLR. x is the projected "distance from center" coordinate
@@ -70,7 +70,7 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 	double zz_prime,xx_prime,yy_prime;
 	double sig_nu;
 
-	float DlDs = source->getDlDs();
+	double DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 

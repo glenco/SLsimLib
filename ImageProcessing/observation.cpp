@@ -520,7 +520,8 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
   long n = map_in.size();
   for(long i=0 ; i<n ; ++i){
     map_in.find_position(x.x, i);
-    map_out[map_out.find_index(x.x)] += map_in[i];
+    long k = map_out.find_index(x.x);
+    if(k > -1) map_out[k] += map_in[i];
   }
   
 //  for(size_t i=0 ; i<Npix_x_input ; ++i){

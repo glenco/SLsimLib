@@ -201,17 +201,17 @@ Point *NewPointArray(
 /** 
  *
  */
-void FreePointArray(Point *array,bool NewXs){
-  /* Note: this deallocates positions!! */
-
-  if(array[0].head){
-	  delete[] array;
-  }else{
-	  ERROR_MESSAGE();
-	  std::cout << "ERROR: FreePointArray, miss aligned attempt to free point array" << std::endl;
-	  exit(1);
-  }
-}
+//void FreePointArray(Point *array,bool NewXs){
+//  /* Note: this deallocates positions!! */
+//
+//  if(array[0].head){
+//	  delete[] array;
+//  }else{
+//	  ERROR_MESSAGE();
+//	  std::cout << "ERROR: FreePointArray, miss aligned attempt to free point array" << std::endl;
+//	  exit(1);
+//  }
+//}
 
 std::mutex TreeStruct::mutex;
 /**

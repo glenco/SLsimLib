@@ -18,14 +18,14 @@
 
 // inputs are in Mpc,days,Hz,Hz
 
-double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *source){
+double blr_surface_brightness_spherical_random_motions(double x,const SourceBLR *source){
 
 	// some constants which need to be set in the real version but will be
 	// plucked from the air here
 
 	float r,tau, sigma2, eta;
 	
-	float DlDs = source->getDlDs();
+	double DlDs = source->getDlDs();
 
 	x /= DlDs;
 
@@ -54,11 +54,11 @@ double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *sourc
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
 }
 
-double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *source){
+double blr_surface_brightness_spherical_circular_motions(double x,const SourceBLR *source){
 
 	float r,tau, eta, sin_theta, nu_m;
 
-	float DlDs = source->getDlDs();
+	double DlDs = source->getDlDs();
 
 	x /= DlDs;
 
@@ -85,7 +85,7 @@ double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *sou
 	return  pow(r/source->source_r_in,source->source_gamma)*eta*r/tau;
 }
 
-double blr_surface_brightness_disk(double x[],SourceBLR *source){
+double blr_surface_brightness_disk(double x[],const SourceBLR *source){
 
 	/* computes the surface brightness associated with our simplest model
 	// for the BLR. x is the projected "distance from center" coordinate
@@ -105,7 +105,7 @@ double blr_surface_brightness_disk(double x[],SourceBLR *source){
 	double zz_prime,xx_prime;//,yy_prime;
 	double sigma2,eta;
 
-	float DlDs = source->getDlDs();
+	double DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 

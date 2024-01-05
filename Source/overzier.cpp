@@ -109,8 +109,8 @@ void SourceOverzier::setInternals(double my_mag,double my_mag_bulge,double my_Re
 
 /// Surface brightness in erg/cm^2/sec/rad^2/Hz
 PosType SourceOverzier::SurfaceBrightness(
-		PosType *y  /// position in radians
-		){
+		const PosType *y  /// position in radians
+		) const{
 	// position relative to center
 	PosType x[2];
 	x[0] = (y[0]-source_x[0])*current.cosPA +
@@ -281,7 +281,7 @@ SourceOverzierPlus & SourceOverzierPlus::operator=(const SourceOverzierPlus &p){
 }
 
 
-PosType SourceOverzierPlus::SurfaceBrightness(PosType *y){
+PosType SourceOverzierPlus::SurfaceBrightness(const PosType *y) const{
   // position relative to center
   Point_2d x;
   x[0] = (y[0]-source_x[0]) * cosPA -

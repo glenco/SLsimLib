@@ -227,8 +227,6 @@ std::string to_string(CritType crit);
 // in image_finder_kist.c
 namespace ImageFinding{
   
-  
-  
   struct CriticalCurve{
     
     CriticalCurve(){

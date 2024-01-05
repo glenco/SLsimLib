@@ -87,7 +87,7 @@ public:
 	
 	//inline PosType getTotalFlux() const { return flux_total; }
 	
-	PosType SurfaceBrightness(PosType *x);
+	PosType SurfaceBrightness(const PosType *x) const;
 	void printSource();
 	
 private:
