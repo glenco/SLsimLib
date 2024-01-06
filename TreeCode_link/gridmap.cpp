@@ -6,10 +6,11 @@
 //
 //
 
-#include "gridmap.h"
-#include "Tree.h"
+#include <utility>
 #include <mutex>
 #include <thread>
+#include "gridmap.h"
+#include "Tree.h"
 
 std::mutex GridMap::grid_mutex;
 
@@ -862,7 +863,12 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
         for(int k=j ; k>i+1 ; --k){
           std::swap(curves[k],curves[k-1]);
           std::swap(crit_type[k],crit_type[k-1]);
-          std::swap(hits_boundary[k],hits_boundary[k-1]);
+	  {
+	    bool tmp = hits_boundary[k];
+	    hits_boundary[k] = hits_boundary[k-1];
+	    hits_boundary[k-1] = tmp;
+	  }
+          //std::swap(hits_boundary[k],hits_boundary[k-1]);
         }
         
         break;
@@ -956,7 +962,12 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
             for(int k=curves.size()-1 ; k>j+1 ; --k){
               std::swap(curves[k],curves[k-1]);
               std::swap(crit_type[k],crit_type[k-1]);
-              std::swap(hits_boundary[k],hits_boundary[k-1]);
+	      {
+		bool tmp = hits_boundary[k];
+		hits_boundary[k] = hits_boundary[k-1];
+		hits_boundary[k-1] = tmp;
+	      }
+              //std::swap(hits_boundary[k],hits_boundary[k-1]);
             }
           //}  // more than one maximum
         } // radial missing
