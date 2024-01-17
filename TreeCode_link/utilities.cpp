@@ -447,11 +447,7 @@ IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
     if ((temp=AM*iy) > RNMX) return RNMX;
     else return temp;
   }
-  
-  
-#ifdef ENABLE_FFTW
-  
-  
+    
   void powerspectrum2d(
                        std::valarray<double> const &aa
                        ,std::valarray<double> const &bb
@@ -762,8 +758,6 @@ void powerspectrum2dprebin(
   }
   delete [] fNa;
 }
-
-#endif
   
 std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
     

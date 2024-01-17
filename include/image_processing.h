@@ -282,8 +282,6 @@ public:
   /// Draw a rectangle
   void drawSquare(PosType p1[],PosType p2[],PosType value);
   void drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip);
-  
-//#ifdef ENABLE_FFTW
 
   /// Find the power spectrum of the map
   void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
@@ -323,7 +321,6 @@ public:
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
     map = tmp;
   }
-//#endif
   
   /// returns a vector of  contour curves
   void find_contour(double level
