@@ -20,23 +20,30 @@
 ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
 :Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1)
 {
-  sigma_background = 0.00365150 * sqrt(2366.) ;
+  //sigma_background = 0.00365150 * sqrt(2366.);
+
   //sb_to_e = (119.*119.*PI/4.) * t * dl / l / hplanck;
   
-  t1 = 565;
-  t2 = 106;
+  //t1 = 565;
+  //t2 = 106;
+
+  // new values 16/1/24
+  t1 = 560;
+  t2 = 89.5;
+
+  sigma_background = 0.002 * sqrt(4*t1 + 2*t2);
 }
 
 void ObsVIS::AddPoisson(PixelMap &pmap
                         ,Utilities::RandomNumbers_NR &ran
                         ){
    
-  int exposures = 4;
-  if(ran() < 0.5){
-    exposures = 3;
+  double dt = 4 * t1 + 2 * t2;
+  if(ran() < 0.2){
+    // select a frame
+    int missing_frame = (int)(ran()*6);
+    dt = (4 - (missing_frame <= 3)) * t1 + (2 - (missing_frame > 3) )*t2;
   }
-  
-  double dt = exposures * t1 + t2;
   
   for(auto &p : pmap.data() ){
     if(p>0) p = ran.poisson(p*dt)/dt;
@@ -52,26 +59,25 @@ void ObsVIS::AddNoise(PixelMap &pmap
     throw std::runtime_error("nonsquare");
   }
   
-  double t1 = 565;
-  double t2 = 106;
-  
   double sigma2 = sigma_background*sigma_background;
   //  + pmap[i] / sb_to_e );
   
-  int exposures = 4;
-  if(ran() < 0.5){
-    exposures = 3;
+  double dt = 4 * t1 + 2 * t2;
+  int drop=0;
+  if(ran() < 0.2){
+    // select a frame
+    int missing_frame = (int)(ran()*6);
+    dt = (4 - (missing_frame <= 3)) * t1 + (2 - (missing_frame > 3) )*t2;
+    drop=1;
   }
-  
-  double dt = exposures * t1 + t2;
-  
+
   double inv_sigma2 = (dt)/sigma2;
   size_t N = pmap.size();
   for (unsigned long i = 0; i < N ; i++){
     error_map[i] = inv_sigma2;
   }
   
-  double p = exposures*t1/dt;
+  double p = (6-drop)*t1/dt;
   if(cosmic){
     if(ran() < p ){
       cosmics(error_map,t1/sigma2,ran.poisson(100),ran);
@@ -652,7 +658,6 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
     
   }else{
     map_out.ChangeUnits(map_in.getUnits());
-#ifdef ENABLE_FFTW
     
     // paste image into image with padding
     for(double &a :image_padded) a=0;
@@ -681,10 +686,6 @@ void Obs::ApplyPSF(PixelMap &map_in,PixelMap &map_out)
     }
 
     return;
-#else
-    std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
-    exit(1);
-#endif
 
   }
 }
