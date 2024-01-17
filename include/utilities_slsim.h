@@ -1060,7 +1060,7 @@ public:
   
   int poisson(double lam){
     if(lam > 200){
-      return std::max<long>(std::lround( gauss()*sqrt(lam) + lam ),0);
+      return std::max<long>(std::lround( gauss()*sqrt(lam) + lam ) ,0);
     }
     double L = exp(-lam),p=1;
     int k = 0;

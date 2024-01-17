@@ -516,22 +516,22 @@ void Obs::downsample(PixelMap &map_in,PixelMap &map_out) const{
   }
  
   map_out.Clean();
-  Point_2d x;
-  long n = map_in.size();
-  for(long i=0 ; i<n ; ++i){
-    map_in.find_position(x.x, i);
-    long k = map_out.find_index(x.x);
-    if(k > -1) map_out[k] += map_in[i];
-  }
-  
-//  for(size_t i=0 ; i<Npix_x_input ; ++i){
-//    size_t ii = MIN<long>(i / psf_oversample + 0.5, Npix_x_output - 1 ) ;
-//    for(size_t j=0 ; j<Npix_y_input ; ++j){
-//      size_t jj = MIN<long>(j / psf_oversample + 0.5, Npix_y_output - 1 ) ;
-//
-//      map_out(ii,jj) += map_in(i,j);
-//    }
+//  Point_2d x;
+//  long n = map_in.size();
+//  for(long i=0 ; i<n ; ++i){
+//    map_in.find_position(x.x, i);
+//    long k = map_out.find_index(x.x);
+//    if(k > -1) map_out[k] += map_in[i];
 //  }
+  
+  for(size_t i=0 ; i<Npix_x_input ; ++i){
+    size_t ii = MIN<long>(i / psf_oversample + 0.5, Npix_x_output - 1 ) ;
+    for(size_t j=0 ; j<Npix_y_input ; ++j){
+      size_t jj = MIN<long>(j / psf_oversample + 0.5, Npix_y_output - 1 ) ;
+
+      map_out(ii,jj) += map_in(i,j);
+    }
+  }
 
   return;
 }
