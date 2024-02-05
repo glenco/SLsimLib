@@ -817,6 +817,10 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     std::cerr << "ERROR: Power-law index in LensHaloPowerLaw cannot be >= 2" << std::endl;
     throw std::invalid_argument("bad gamma");
   }
+  if(my_Rsize <= 0.0 || std::isnan(my_Rsize)){
+    std::cerr << "ERROR : my_Rsize = " << my_Rsize << std::endl;
+    throw std::runtime_error("Bad halo");
+  }
   
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);

@@ -3124,7 +3124,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
     if(tmp > length_scale) length_scale = tmp;
   }
   
-  length_scale *= 0.001;
+  length_scale *= 0.01;
   
   // remove repeated consecutive points
   for(long i=0 ; i<nv-1 ; ++i){
