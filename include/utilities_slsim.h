@@ -53,6 +53,13 @@ bool AlwaysTrue(T t){return true;}
 
 template <typename T>
 bool AlwaysFalse(T t){return false;}
+  
+template <typename T>
+T vec_sum(const std::vector<T> &v){
+  double sum=0.0;
+  for(const T &a : v) sum += a;
+  return sum;
+}
 
 // this is not for the user
 namespace detail

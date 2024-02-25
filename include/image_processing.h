@@ -204,6 +204,7 @@ public:
   inline double & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
   
 	PixelMap& operator+=(const PixelMap& rhs);
+  void operator+=(double f){map +=f;};
   //friend PixelMap operator+(const PixelMap&, const PixelMap&);
   PixelMap operator+(const PixelMap&) const;
 
@@ -694,10 +695,16 @@ private:
   
 public:
   
+  // exposure times are set to wide survey expectations
   ObsVIS(size_t Npix_x,size_t Npix_y
          ,int oversample
          //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
   );
+  
+  ObsVIS(size_t Npix_x
+         ,size_t Npix_y
+         ,const std::vector<double> &exposure_times  // in seconds
+         ,int oversample);
   
   ~ObsVIS(){};
   
@@ -734,13 +741,14 @@ public:
  
   /// returns std of pixels in e-
   float getBackgroundNoise() const {
-    double dt = 3 * t1 + t2;
+    double dt = Utilities::vec_sum(t_exp);// 3 * t1 + t2;
     
     return sigma_background / sqrt(dt);
   }
 private:
-  double t1;
-  double t2;
+  //double t1;
+  //double t2;
+  std::vector<double> t_exp;  // exposure times
 
 };
 
@@ -755,7 +763,8 @@ private:
 class Observation : public Obs
 {
 public:
-	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float oversample);
+	Observation(Telescope tel_name,double exposure_time,int exposure_num
+              ,size_t Npix_x,size_t Npix_y, float oversample);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise
               ,size_t Npix_x,size_t Npix_y,double pix_size,float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise ,std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample = 1.);

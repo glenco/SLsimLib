@@ -28,21 +28,34 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
   //t2 = 106;
 
   // new values 16/1/24
-  t1 = 560;
-  t2 = 89.5;
+  //t1 = 560;
+  //t2 = 89.5;
+  t_exp = {560,560,560,560,89.5,89.5};
+  sigma_background = 0.002 * sqrt( Utilities::vec_sum(t_exp) );
 
-  sigma_background = 0.002 * sqrt(4*t1 + 2*t2);
+  //sigma_background = 0.002 * sqrt(4*t1 + 2*t2);
 }
+
+ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
+               ,const std::vector<double> &exposure_times  // in seconds
+               ,int oversample)
+:Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1),t_exp(exposure_times)
+{
+
+  sigma_background = 0.002 * sqrt( Utilities::vec_sum(t_exp) );
+}
+
 
 void ObsVIS::AddPoisson(PixelMap &pmap
                         ,Utilities::RandomNumbers_NR &ran
                         ){
    
-  double dt = 4 * t1 + 2 * t2;
+  double dt =  Utilities::vec_sum(t_exp);
   if(ran() < 0.2){
     // select a frame
-    int missing_frame = (int)(ran()*6);
-    dt = (4 - (missing_frame <= 3)) * t1 + (2 - (missing_frame > 3) )*t2;
+    int missing_frame = (int)(ran()*t_exp.size());
+    
+    dt -= t_exp[missing_frame];
   }
   
   for(auto &p : pmap.data() ){
@@ -62,13 +75,14 @@ void ObsVIS::AddNoise(PixelMap &pmap
   double sigma2 = sigma_background*sigma_background;
   //  + pmap[i] / sb_to_e );
   
-  double dt = 4 * t1 + 2 * t2;
-  int drop=0;
+  double dt = Utilities::vec_sum(t_exp);
+  int missing_frame = -1;
+  //int drop=0;
   if(ran() < 0.2){
     // select a frame
-    int missing_frame = (int)(ran()*6);
-    dt = (4 - (missing_frame <= 3)) * t1 + (2 - (missing_frame > 3) )*t2;
-    drop=1;
+    missing_frame = (int)(ran()*t_exp.size());
+    dt -= t_exp[missing_frame];
+    //drop=1;
   }
 
   double inv_sigma2 = (dt)/sigma2;
@@ -77,13 +91,27 @@ void ObsVIS::AddNoise(PixelMap &pmap
     error_map[i] = inv_sigma2;
   }
   
-  double p = (6-drop)*t1/dt;
+  //double p = (t_exp.size()-drop)*t1/dt;
   if(cosmic){
-    if(ran() < p ){
-      cosmics(error_map,t1/sigma2,ran.poisson(100),ran);
-    }else{
-      cosmics(error_map,t2/sigma2,ran.poisson(100*(dt-t1)/dt),ran);
+    
+    double t = (int)(ran()*dt);
+    for(int j=0 ; j<100 ; ++j){
+      // chooses an exposure at random weighted by exposure time
+      int i=0;
+      double tt=t_exp[0];
+      while(t>tt){
+        ++i;
+        tt += t_exp[i];
+      }
+    
+      if(i != missing_frame) cosmics(error_map,t_exp[i]/sigma2,1,ran);
     }
+    
+//    if(ran() < p ){
+//      cosmics(error_map,t1/sigma2,ran.poisson(100),ran);
+//    }else{
+//      cosmics(error_map,t2/sigma2,ran.poisson(100*(dt-t1)/dt),ran);
+//    }
   }
   for (unsigned long i = 0; i < N ; i++){
     error_map[i] = sqrt( 1.0 / error_map[i] + pmap[i] / dt ) ;
@@ -771,8 +799,10 @@ void Obs::CorrelateNoise(PixelMap &pmap)
 /** * \brief Creates an observation setup that mimics a known instrument
  *
  */
-Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float oversample):
-  Obs(Npix_x,Npix_y,0,oversample)
+Observation::Observation(Telescope tel_name
+                         ,double exposure_time,int exposure_num
+                         ,size_t Npix_x,size_t Npix_y, float oversample):
+  Obs(Npix_x,Npix_y,0,oversample),exp_time(exposure_time),exp_num(exposure_num)
 {
  
   float diameter,transmission;
@@ -786,8 +816,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       
       gain = 11160;
       //exp_time = 1800.;
-      exp_time = 2260.;
-      exp_num = 4;
+      //exp_time = 2260.;
+      //exp_num = 4;
       mag_zeropoint = 23.9;
       
       back_mag = 22.8;  //back_mag = 25.0; // ?????
@@ -801,8 +831,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       transmission = 0.0961;
       
       gain = 0;
-      exp_time = 264.;
-      exp_num = 3;
+      //exp_time = 264.;
+      //exp_num = 3;
       back_mag = 22.57;
       read_out_noise = 5.;
       seeing = 0.3;
@@ -819,8 +849,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       transmission = 0.0814;
       
       gain = 0;
-      exp_time = 270.;
-      exp_num = 3;
+      //exp_time = 270.;
+      //exp_num = 3;
       back_mag = 22.53;
       read_out_noise = 5.;
       seeing = 0.3;
@@ -835,8 +865,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       diameter = 119.;
       transmission = 0.1692;
       gain = 0;
-      exp_time = 162.;
-      exp_num = 3;
+      //exp_time = 162.;
+      //exp_num = 3;
       back_mag = 22.59;
       read_out_noise = 5.;
       seeing = 0.3;
@@ -851,8 +881,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       diameter = 265.;
       transmission = 0.032;
       gain = 0;
-      exp_time = 1000.;
-      exp_num = 5;
+      //exp_time = 1000.;
+      //exp_num = 5;
       back_mag = 22.93;
       read_out_noise = 5.;
       seeing = 1.0;
@@ -866,8 +896,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       diameter = 265.;
       transmission = 0.1220;
       gain = 0;
-      exp_time = 900.;
-      exp_num = 5;
+      //exp_time = 900.;
+      //exp_num = 5;
       back_mag = 22.29;
       read_out_noise = 5.;
       seeing = 0.8;
@@ -880,8 +910,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       diameter = 265.;
       transmission = 0.089;
       gain = 0;
-      exp_time = 1800.;
-      exp_num = 5;
+      //exp_time = 1800.;
+      //exp_num = 5;
       back_mag = 21.40;
       read_out_noise = 5.;
       seeing = 0.7;
@@ -894,8 +924,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
       diameter = 265.;
       transmission = 0.062;
       gain = 0;
-      exp_time = 1200.;
-      exp_num = 5;
+      //exp_time = 1200.;
+      //exp_num = 5;
       back_mag = 20.64;
       read_out_noise = 5.;
       seeing = 1.1;
@@ -907,8 +937,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
     case Telescope::HST_ACS_I:
       diameter = 250.;
       transmission = 0.095;
-      exp_time = 420.;
-      exp_num = 1;
+      //exp_time = 420.;
+      //exp_num = 1;
       back_mag = 22.8;
       read_out_noise = 3.;
       seeing = 0.1;
@@ -920,8 +950,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
     case Telescope::CFHT_u:
       diameter = 358.;
       transmission = 0.0644;
-      exp_time = 3000.;
-      exp_num = 5;
+      //exp_time = 3000.;
+      //exp_num = 5;
       back_mag = 22.7;
       read_out_noise = 5.;
       seeing = 0.85;
@@ -933,8 +963,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
     case Telescope::CFHT_g:
       diameter = 358.;
       transmission = 0.1736;
-      exp_time = 2500.;
-      exp_num = 5;
+      //exp_time = 2500.;
+      //exp_num = 5;
       back_mag = 22.0;
       read_out_noise = 5.;
       seeing = 0.78;
@@ -946,8 +976,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
     case Telescope::CFHT_r:
       diameter = 358.;
       transmission = 0.0971;
-      exp_time = 2000.;
-      exp_num = 4;
+      //exp_time = 2000.;
+      //exp_num = 4;
       back_mag = 21.3;
       read_out_noise = 5.;
       seeing = 0.71;
@@ -959,8 +989,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
     case Telescope::CFHT_i:
       diameter = 358.;
       transmission = 0.0861;
-      exp_time = 4300.;
-      exp_num = 5;
+      //exp_time = 4300.;
+      //exp_num = 5;
       back_mag = 20.3;
       read_out_noise = 5.;
       seeing = 0.64;
@@ -972,8 +1002,8 @@ Observation::Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y, float o
     case Telescope::CFHT_z:
       diameter = 358.;
       transmission = 0.0312;
-      exp_time = 3600.;
-      exp_num = 6;
+      //exp_time = 3600.;
+      //exp_num = 6;
       back_mag = 19.4;
       read_out_noise = 5.;
       seeing = 0.68;

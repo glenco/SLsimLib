@@ -206,11 +206,59 @@ SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0,z
   //double index = ran() + 3.5 ;
   double index = 3.5 + 0.5*ran();  // ????
   //double index = 4;  // ????
-
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
   spheroid.ReSet(my_mag_bulge,my_Reff,0,index,q,my_z,0);
+  spheroid.setTheta(0, 0);
+  
+  PA = my_PA;
+  cosPA = cos(my_PA );
+  sinPA = sin(-my_PA );
+  cosi  = cos(current.inclination);
+  
+  modes.resize(6);
+  for(PosType &mod : modes){
+    mod = 2.0e-2*ran();
+  }
+
+  setTheta(theta);
+  
+  assert(original.Rdisk != 0 || original.Reff != 0);
+}
+
+SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
+                                       ,PosType my_mag_bulge
+                                       ,PosType my_Reff
+                                       ,PosType my_bulge_q
+                                       ,PosType my_bulge_index
+                                       ,PosType my_Rdisk
+                                       ,PosType my_PA
+                                       ,PosType inclination
+                                       ,unsigned long my_id
+                                       ,PosType my_z
+                                       ,const PosType *theta
+                                       ,PosType zeropoint
+                                       ,Utilities::RandomNumbers_NR &ran
+                                       ):
+SourceOverzier(my_mag,my_mag_bulge,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0,zeropoint)
+,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint)
+{
+  assert(my_mag_bulge >= my_mag);
+  //std::cout << "SourceOverzierPlus constructor" << std::endl;
+  original = current;
+
+  float minA = 0.01,maxA = 0.4; // minimum and maximum amplitude of arms
+  Narms = (ran() > 0.2) ? 2 : 4;  // number of arms
+  arm_alpha = (21 + 10*(ran()-0.5)*2)*degreesTOradians; // arm pitch angle
+  mctalpha = Narms/tan(arm_alpha);
+  disk_phase = PI*ran(); // add phase of arms
+  Ad = minA + (maxA-minA)*ran();
+  
+  // extra sersic component
+  spheroid.setSersicIndex(my_bulge_index);
+  
+  spheroid.ReSet(my_mag_bulge,my_Reff,0,my_bulge_index,my_bulge_q,my_z,0);
   spheroid.setTheta(0, 0);
   
   PA = my_PA;

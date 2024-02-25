@@ -153,6 +153,22 @@ class SourceOverzierPlus : public SourceOverzier
 public:
   //SourceOverzierPlus();
   SourceOverzierPlus(
+                     PosType my_mag          /// total magnitude
+                     ,PosType my_mag_bulge   /// magnitude of bulge
+                     ,PosType my_Reff        /// effective radius of bulge
+                     ,PosType my_bulge_q     /// bulge axis ratio
+                     ,PosType my_bulge_index /// bulge sersic index
+                     ,PosType my_Rdisk       /// scale hight of disk
+                     ,PosType my_PA          /// position angle
+                     ,PosType inclination    /// inclination in radians
+                     ,unsigned long my_id
+                     ,PosType my_z           /// redshift
+                     ,const PosType *theta   /// angular position
+                     ,PosType mag_zero       /// magnitude zero point
+                     ,Utilities::RandomNumbers_NR &ran
+                     );
+  
+  SourceOverzierPlus(
                      PosType my_mag         /// total magnitude
                      ,PosType my_mag_bulge  /// magnitude of bulge
                      ,PosType my_Reff       /// effective radius of bulge
@@ -160,11 +176,12 @@ public:
                      ,PosType my_PA         /// position angle
                      ,PosType inclination   /// inclination in radians
                      ,unsigned long my_id
-                     ,PosType my_z
-                     ,const PosType *theta
-                     ,PosType mag_zero      /// magnitude zero point
+                     ,PosType my_z           /// redshift
+                     ,const PosType *theta   /// angular position
+                     ,PosType mag_zero       /// magnitude zero point
                      ,Utilities::RandomNumbers_NR &ran
-                                         );
+);
+ 
 
   ~SourceOverzierPlus();
   

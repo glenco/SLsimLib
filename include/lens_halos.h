@@ -1661,7 +1661,7 @@ struct NFW: public PROFILE
  
  The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
  
- The profile is fit Nradii proints logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
+ The profile is fit Nradii points logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
  Typically Nradii ~ 2 * Ngaussians.
  
  The mass is normalized so that mass_norm is within the elliptical distance Rnorm.  The total mass with be calculated and can be recovered after construction.
