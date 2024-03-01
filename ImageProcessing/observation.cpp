@@ -17,8 +17,8 @@
 #include <limits>
 
 
-ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
-:Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1)
+ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample,double resolution)
+:Obs(Npix_x,Npix_y,resolution,oversample,1)
 {
   //sigma_background = 0.00365150 * sqrt(2366.);
 
@@ -38,11 +38,21 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample)
 
 ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
                ,const std::vector<double> &exposure_times  // in seconds
-               ,int oversample)
+               ,int oversample
+               )
 :Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1),t_exp(exposure_times)
 {
+  sigma_background = 0.0015 * sqrt( Utilities::vec_sum(t_exp) );
+}
 
-  sigma_background = 0.002 * sqrt( Utilities::vec_sum(t_exp) );
+ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
+               ,const std::vector<double> &exposure_times  // in seconds
+               ,int oversample
+               ,double resolution
+               ,double my_background_sigma)
+:Obs(Npix_x,Npix_y,resolution,oversample,1),t_exp(exposure_times)
+{
+  sigma_background = my_background_sigma * sqrt( Utilities::vec_sum(t_exp) );
 }
 
 
@@ -114,7 +124,7 @@ void ObsVIS::AddNoise(PixelMap &pmap
 //    }
   }
   for (unsigned long i = 0; i < N ; i++){
-    error_map[i] = sqrt( 1.0 / error_map[i] + pmap[i] / dt ) ;
+    error_map[i] = sqrt( 1.0 / error_map[i] + MAX<float>(pmap[i] / dt,0) ) ;
     pmap[i] += ran.gauss() * error_map[i];
   }
 

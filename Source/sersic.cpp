@@ -10,7 +10,8 @@ SourceSersic::SourceSersic()
 : SourceColored(0,0,Point_2d(0,0),0,-1,-48.6)
 {
   /// set to values that hopefully will cause an error if it is used
-  ReSet(1,0,0,-1,-1,0);
+  zeropoints[Band::NoBand] = 0;
+  ReSet(1,Band::NoBand,0,0,0,-1,-1,0);
   sed_type = 1;
 }
 
@@ -28,7 +29,25 @@ SourceSersic::SourceSersic(
   if(my_q > 1) my_q = 1/my_q;
     sed_type = 1;
     assert(my_Reff > 0);
-    ReSet(my_mag,my_Reff,my_PA,my_index,my_q,my_z,0);
+    ReSet(my_mag,Band::NoBand,my_Reff,my_PA,my_index,my_q,my_z,0);
+}
+SourceSersic::SourceSersic(
+              double my_mag            /// Total magnitude
+              ,Band band               ///
+              ,double my_zeropoint     /// zeropoint
+              ,double my_Reff          /// Bulge half light radius (arcs)
+              ,double my_PA            /// Position angle (radians)
+              ,double my_index         /// Sersic index
+              ,double my_q             /// axes ratio
+              ,double my_z             /// redshift
+        )
+: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z, -1,my_zeropoint)
+{
+  setMag(my_mag,band,my_zeropoint);
+  if(my_q > 1) my_q = 1/my_q;
+  sed_type = 1;
+  assert(my_Reff > 0);
+  ReSet(my_mag,band,my_Reff,my_PA,my_index,my_q,my_z,0);
 }
 
 SourceSersic::SourceSersic(const SourceSersic &p):SourceColored(p){
@@ -66,23 +85,25 @@ SourceSersic& SourceSersic::operator=(const SourceSersic &p){
   return *this;
 }
 
-/// Reset all the parameters
+/// Reset  parameters but not the magnitude
 void SourceSersic::ReSet(
-                               double my_mag            /// Total magnitude
-                               ,double my_Reff          /// Bulge half light radius (arcs)
-                               ,double my_PA            /// Position angle (radians)
-                               ,double my_index         /// Sersic index
-                               ,double my_q             /// axes ratio
-                               ,double my_z             /// redshift
-                               ,const double *my_theta  /// optional angular position on the sky
+                         double my_mag            /// Total magnitude
+                         ,Band band
+                         ,double my_Reff          /// Bulge half light radius (arcs)
+                         ,double my_PA            /// Position angle (radians)
+                         ,double my_index         /// Sersic index
+                         ,double my_q             /// axes ratio
+                         ,double my_z             /// redshift
+                         ,const double *my_theta  /// optional angular position on the sky
 ){
-//std::cout << "SourceSersic constructor" << std::endl;
+  //std::cout << "SourceSersic constructor" << std::endl;
   //assert(my_Reff > 0);
   setReff(my_Reff);
-  setMag(my_mag);
+  setMag(my_mag,band,zeropoints.at(band));
   setPA(my_PA);
   setSersicIndex(my_index);
   setAxesRatio(my_q);
+  setActiveBand(band);
 
   setZ(my_z);
 

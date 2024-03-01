@@ -34,15 +34,7 @@ double mag_to_jansky_AB(double m){
   return pow(10,-0.4*(m - 8.9));
 }
 
-double flux_to_mag(double flux,double zeropoint){
-  if(flux <=0) return 100;
-  return -2.5 * log10(flux) + zeropoint;
-}
-
-double mag_to_flux(double m,double zeropoint){
-  if(m == 100) return 0;
-  return pow(10,-0.4*(m - zeropoint));
-}
+std::map<Band,PosType> SourceColored::zeropoints;
 
 //SourceUniform::SourceUniform(InputParams& params) : Source(){
 //  assignParams(params);
@@ -518,18 +510,19 @@ PosType Source::integrateFilterSED(std::vector<PosType> wavel_fil, std::vector<P
  }
  */
 
-size_t SourceShapelets::count = 0;;
+size_t SourceShapelets::count = 0;
 
 void SourceColored::setActiveBand(Band band)
 {
   
   if(mag_map.size() == 0) return;
+  if(current_band == band) return;
   
   mag = mag_map.at(band);
   if (mag < 0.)
       flux_total = std::numeric_limits<PosType>::epsilon();
     else
-      flux_total = mag_to_flux(mag);
+      flux_total = mag_to_flux(mag,zeropoints[band]);
   
   assert(flux_total > 0);
   current_band = band;
@@ -626,16 +619,27 @@ SourceShapelets::SourceShapelets(
 
   cpfits.readKey("SED_TYPE",sed_type);
   
-  cpfits.readKey("MAG_B",mag_map[Band::F435W]); // ACS F435W band magnitude
-  cpfits.readKey("MAG_V",mag_map[Band::F606W]); // ACS F606W band magnitude
-  cpfits.readKey("MAG_I",mag_map[Band::F775W]); // ACS F775W band magnitude
-  cpfits.readKey("MAG_Z",mag_map[Band::F850LP]);// ACS F850LP band magnitude
-  cpfits.readKey("MAG_J",mag_map[Band::F110W]); // NIC3 F110W band magnitude
-  cpfits.readKey("MAG_H",mag_map[Band::F160W]);  // NIC3 F160W band magnitude
-  cpfits.readKey("MAG_u_KIDS",mag_map[Band::KiDS_U]); // u band obtained from SED fitting
-  cpfits.readKey("MAG_g_KIDS",mag_map[Band::KiDS_G]); // g band obtained from SED fitting
-  cpfits.readKey("MAG_r_KIDS",mag_map[Band::KiDS_R]); // r band obtained from SED fitting
-  cpfits.readKey("MAG_i_KIDS",mag_map[Band::KiDS_I]); // i band obtained from SED fitting
+  float tmp;
+  cpfits.readKey("MAG_B",tmp); // ACS F435W band magnitude
+  setMag(tmp,Band::F435W,zeropoint);
+  cpfits.readKey("MAG_V",tmp); // ACS F606W band magnitude
+  setMag(tmp,Band::F606W,zeropoint);
+  cpfits.readKey("MAG_I",tmp); // ACS F775W band magnitude
+  setMag(tmp,Band::F775W,zeropoint);
+  cpfits.readKey("MAG_Z",tmp);// ACS F850LP band magnitude
+  setMag(tmp,Band::F850LP,zeropoint);
+  cpfits.readKey("MAG_J",tmp); // NIC3 F110W band magnitude
+  setMag(tmp,Band::F110W,zeropoint);
+  cpfits.readKey("MAG_H",tmp);  // NIC3 F160W band magnitude
+  setMag(tmp,Band::F160W,zeropoint);
+  cpfits.readKey("MAG_u_KIDS",tmp); // u band obtained from SED fitting
+  setMag(tmp,Band::KiDS_U,zeropoint);
+  cpfits.readKey("MAG_g_KIDS",tmp); // g band obtained from SED fitting
+  setMag(tmp,Band::KiDS_G,zeropoint);
+  cpfits.readKey("MAG_r_KIDS",tmp); // r band obtained from SED fitting
+  setMag(tmp,Band::KiDS_R,zeropoint);
+  cpfits.readKey("MAG_i_KIDS",tmp); // i band obtained from SED fitting
+  setMag(tmp,Band::KiDS_I,zeropoint);
 
   
   // by default, the magnitude is the one in the i band,
@@ -650,12 +654,16 @@ SourceShapelets::SourceShapelets(
   std::vector<long> size;
   cpfits.read(coeff,size);
 
-  
+  setMag(getMag(Band::KiDS_I),Band::EUC_VIS,zeropoints.at(Band::EUC_VIS));
+  setMag(getMag(Band::F110W),Band::EUC_J,zeropoints.at(Band::EUC_J));
+  setMag(getMag(Band::F160W),Band::EUC_H,zeropoints.at(Band::EUC_H));
+
+
   // ??? kluge
-  mag_map[Band::EUC_VIS] = mag_map.at(Band::KiDS_I);
+  //mag_map[Band::EUC_VIS] = mag_map.at(Band::KiDS_I);
   //mag_map[Band::EUC_Y] = mag_map.at(Band::F110W);
-  mag_map[Band::EUC_J] = mag_map.at(Band::F110W);
-  mag_map[Band::EUC_H] = mag_map.at(Band::F160W);
+  //mag_map[Band::EUC_J] = mag_map.at(Band::F110W);
+  //mag_map[Band::EUC_H] = mag_map.at(Band::F160W);
   
   NormalizeFlux();
   ++count;
@@ -761,7 +769,7 @@ SourceMultiShapelets::SourceMultiShapelets(
                                            ,double zeropoint
                                            )
 : Source(0,Point_2d(0,0),0,my_sb_limit,zeropoint),index(0),max_mag_limit(my_max_mag_limit),min_mag_limit(my_min_mag_limit)
-,band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder),z_max(my_z_max)
+,z_max(my_z_max),band(my_band),radius_max(maximum_radius),shapelets_folder(my_shapelets_folder)
 {
   
 //  if(sb_limit == -1)
@@ -874,20 +882,20 @@ void SourceMultiShapelets::readCatalog()
     std::ifstream shap_input(shap_file.c_str());
     if (shap_input)
     {
-      SourceShapelets s(shap_file.c_str(),0,getMagZeroPoint());
+      SourceShapelets s(shap_file.c_str(),0,0);
       
       s.setID(i);
 
       s.sed_type = viz_cat[j][4];
       
       assert(viz_cat.size() > j );
-      s.setBand(Band::EUC_VIS,viz_cat[j][2]);
+      s.setMag(viz_cat[j][2],Band::EUC_VIS,s.getMagZeroPoint(Band::EUC_VIS));
       assert(y_cat.size() > j );
-      s.setBand(Band::EUC_Y,y_cat[j][2]);
+      s.setMag(y_cat[j][2],Band::EUC_Y,s.getMagZeroPoint(Band::EUC_Y));
       assert(j_cat.size() > j );
-      s.setBand(Band::EUC_J,j_cat[j][2]);
+      s.setMag(j_cat[j][2],Band::EUC_J,s.getMagZeroPoint(Band::EUC_J));
       assert(h_cat.size() > j );
-      s.setBand(Band::EUC_H,h_cat[j++][2]);
+      s.setMag(h_cat[j++][2],Band::EUC_H,s.getMagZeroPoint(Band::EUC_H));
       
       //s.setActiveBand(band);
       if (s.getMag() > 0.

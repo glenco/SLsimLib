@@ -23,13 +23,13 @@ class SourceOverzier : public Source
 {
 public:
 	//SourceOverzier();
-	SourceOverzier(PosType mag,PosType mag_bulge,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta,double zero_point);
+	SourceOverzier(PosType mag,PosType mag_bulge,Band band,double zero_point,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *theta);
   
   SourceOverzier(const SourceOverzier &s);
   SourceOverzier& operator=(const SourceOverzier &s);
 	virtual ~SourceOverzier();
 	
-	void setInternals(PosType mag,PosType BtoT,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *my_theta);
+	void setInternals(PosType mag,PosType mag_bulge,Band band,PosType Reff,PosType Rdisk,PosType PA,PosType inclination,unsigned long my_id,PosType my_z,const PosType *my_theta);
   virtual PosType SurfaceBrightness(const PosType *x) const;
 	PosType getTotalFlux() const;
 	void printSource();
@@ -60,12 +60,14 @@ public:
   */
   
   /// magnitude in specific band
-  virtual void setMag(Band band,PosType my_mag){
+  virtual void setMag(PosType my_mag,Band band,PosType zero_point){
     current.mag_map[band] = my_mag;
-  };
+    zeropoints[band] = zero_point;
+  }
   /// magnitude in specific band
-  virtual void setMagBulge(Band band,PosType my_mag){
+  virtual void setMagBulge(PosType my_mag,Band band,PosType zero_point){
     current.bulge_mag_map[band] = my_mag;
+    zeropoints[band] = zero_point;
   }
   
 	/// bulge half light radius in arcseconds
@@ -95,7 +97,7 @@ public:
 protected:
   
   SourceSersic spheroid;
-  
+  static std::map<Band,PosType> zeropoints;
   
   float sedtype = -1;
   // renormalize the disk and bulge to agree with current mag and mag_bulge
@@ -124,6 +126,7 @@ protected:
     // colors
     std::map<Band,double> mag_map;
     std::map<Band,double> bulge_mag_map;
+    Band band;
     
     void print(){
       /// bulge half light radius
@@ -155,6 +158,8 @@ public:
   SourceOverzierPlus(
                      PosType my_mag          /// total magnitude
                      ,PosType my_mag_bulge   /// magnitude of bulge
+                     ,Band band              ///
+                     ,PosType mag_zero_point       /// magnitude zero point
                      ,PosType my_Reff        /// effective radius of bulge
                      ,PosType my_bulge_q     /// bulge axis ratio
                      ,PosType my_bulge_index /// bulge sersic index
@@ -164,13 +169,14 @@ public:
                      ,unsigned long my_id
                      ,PosType my_z           /// redshift
                      ,const PosType *theta   /// angular position
-                     ,PosType mag_zero       /// magnitude zero point
                      ,Utilities::RandomNumbers_NR &ran
                      );
   
   SourceOverzierPlus(
                      PosType my_mag         /// total magnitude
                      ,PosType my_mag_bulge  /// magnitude of bulge
+                     ,Band band              ///
+                     ,PosType mag_zero_point       /// magnitude zero point
                      ,PosType my_Reff       /// effective radius of bulge
                      ,PosType my_Rdisk      /// scale hight of disk
                      ,PosType my_PA         /// position angle
@@ -178,7 +184,6 @@ public:
                      ,unsigned long my_id
                      ,PosType my_z           /// redshift
                      ,const PosType *theta   /// angular position
-                     ,PosType mag_zero       /// magnitude zero point
                      ,Utilities::RandomNumbers_NR &ran
 );
  
@@ -195,14 +200,17 @@ public:
   PosType SurfaceBrightness(const PosType *y) const;
 
   /// magnitude in specific band
-  void setMag(Band band,PosType my_mag){
+  void setMag(PosType my_mag,Band band,double zeropoint){
     current.mag_map[band] = my_mag;
     original.mag_map[band] = my_mag;
+    zeropoints[band] = zeropoint;
   }
   /// magnitude in specific band
-  void setMagBulge(Band band,PosType my_mag){
+  void setMagBulge(PosType my_mag,Band band,double zeropoint){
     current.bulge_mag_map[band] = my_mag;
     original.bulge_mag_map[band] = my_mag;
+    zeropoints[band] = zeropoint;
+    spheroid.setMag(my_mag,band,zeropoint);
   }
   
   /// position angle in radians

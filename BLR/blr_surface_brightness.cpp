@@ -24,7 +24,7 @@ double blr_surface_brightness_spherical(double x,const SourceBLR *source){
 	//static const float r_in = 2.3884456e-9; // Mpc
 	//static const float r_out = 4.2992021e-7; // Mpc
 	//static const float gam = -1.0;
-	float r,y,tau;
+	float r,tau;
 
 	tau = source->source_tau*8.39428142e-10;  // convert days to Mpc
 
@@ -32,7 +32,7 @@ double blr_surface_brightness_spherical(double x,const SourceBLR *source){
 
 	if ( (r < source->source_r_in ) || (r > source->source_r_out) ) return 0.0;
 
-	y = r - tau;
+	//float y = r - tau;
 
 	//if( y < 0.0 ) return 0.0;  // optically thick accretion disk
 

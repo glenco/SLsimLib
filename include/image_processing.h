@@ -612,6 +612,8 @@ public:
   virtual double mag_to_counts(double m) const = 0;
   virtual double counts_to_mag(double flux) const = 0;
   virtual double zeropoint() const = 0;
+  virtual void setZeropoint(double zpoint) = 0;
+
 
 protected:
 
@@ -698,14 +700,23 @@ public:
   // exposure times are set to wide survey expectations
   ObsVIS(size_t Npix_x,size_t Npix_y
          ,int oversample
+         ,double resolution = 0.1*arcsecTOradians
          //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
   );
   
   ObsVIS(size_t Npix_x
          ,size_t Npix_y
          ,const std::vector<double> &exposure_times  // in seconds
-         ,int oversample);
+         ,int oversample
+         );
   
+  ObsVIS(size_t Npix_x
+         ,size_t Npix_y
+         ,const std::vector<double> &exposure_times  // in seconds
+         ,int oversample
+         ,double resolution
+         ,double background_sigma
+         );
   ~ObsVIS(){};
   
   /// add poisson noise to an image that is in units of electrons
@@ -738,6 +749,7 @@ public:
   }
 
   double zeropoint() const {return zero_point;}
+  void setZeropoint(double zpoint){zero_point=zpoint;}
  
   /// returns std of pixels in e-
   float getBackgroundNoise() const {
@@ -782,6 +794,7 @@ public:
   /// seeing in arcsecs
 	float getSeeing() const {return seeing;}
 	float getZeropoint() const {return mag_zeropoint;}
+  void setZeropoint(double zpoint){mag_zeropoint=zpoint;}
     /// pixel size in radians
   float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec) const;
   float getBackgroundNoise() const {return 0;};

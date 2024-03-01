@@ -31,7 +31,8 @@
  */
 class SourceMultiAnaGalaxy: public Source{
 public:
-	SourceMultiAnaGalaxy(PosType mag, PosType mag_bulge, PosType Reff, PosType Rdisk, PosType PA, PosType inclination,PosType my_z,PosType *my_theta,PosType zero_point,Utilities::RandomNumbers_NR &ran);
+	SourceMultiAnaGalaxy(PosType mag,PosType mag_bulge,Band band,PosType zero_point, PosType Reff, PosType Rdisk, PosType PA, PosType inclination,PosType my_z,PosType *my_theta
+                       ,Utilities::RandomNumbers_NR &ran);
 	SourceMultiAnaGalaxy(SourceOverzierPlus *my_galaxy);
 	//SourceMultiAnaGalaxy(InputParams& params,Utilities::RandomNumbers_NR &ran);
 	~SourceMultiAnaGalaxy();
@@ -44,7 +45,7 @@ public:
   }
 	
 	/// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag());}
+	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag(),mag_zero_point);}
 
 	void printSource();
 	// Add a pre-constructed galaxy to the source collection
@@ -164,7 +165,7 @@ private:
   TreeSimpleVec<SourceOverzierPlus> *searchtree;
 	std::string input_gal_file;
 
-	void readDataFileMillenn(Utilities::RandomNumbers_NR &ran);
+	void readDataFileMillenn(std::map<Band,double> zeropoints,Utilities::RandomNumbers_NR &ran);
 	void assignParams(InputParams& params);
 
   PosType rangex[2],rangey[2];
@@ -205,7 +206,7 @@ public:
                        ,double my_z_max          /// maximum redshift
                        ,double my_sb_limit     /// surface brightness limit
                        ,double maximum_radius   /// maximum radius (as defined in shapelet expansion) in radians
-                       ,double zero_point        /// magnitude zreo point
+                       ,double zero_point        /// magnitude zero point
                      );
 
   ~SourceMultiShapelets();
@@ -224,7 +225,7 @@ public:
   std::size_t size() const {return galaxies.size();}
 
     /// Total flux coming from the current galaxy in erg/sec/Hz/cm^2
-	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag());}
+	PosType getTotalFlux() const {return mag_to_flux(galaxies[index].getMag(),mag_zero_point);}
 
     /// Return angular position of current source.
 	Point_2d getTheta() const {return galaxies[index].getTheta();}
@@ -272,7 +273,7 @@ public:
 	}
     
     /// Sets the active band for all the objects
-	SourceShapelets& setBand (Band b){
+	SourceShapelets& setBand (Band b,double zeropoint){
         band = b;
         for (int i = 0; i < galaxies.size(); i++)
             galaxies[i].setActiveBand(band);
