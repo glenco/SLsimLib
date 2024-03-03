@@ -860,7 +860,7 @@ LensHaloPowerLaw::LensHaloPowerLaw(
     std::cerr << "ERROR : xmax = " << xmax << std::endl;
     std::cerr << "        rscale = " << rscale << std::endl;
     std::cerr << "        Rmax = " << Rmax << std::endl;
-    
+
     throw std::runtime_error("Bad halo");
   }
 }

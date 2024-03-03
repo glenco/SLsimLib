@@ -2066,7 +2066,7 @@ int windings(
   {
     return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   }
-  PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B)
+  PosType crossD(const Point_2d &O,const Point_2d &A,const Point_2d &B)
   {
     return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   }
@@ -3105,9 +3105,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   try{
     return Utilities::TighterHull(curve);
   }catch(...){
-    std::vector<Point_2d> v_out;
-    Utilities::convex_hull(curve,v_out);
-    return v_out;
+    return Utilities::convex_hull(curve);
   }
 }
 
@@ -3353,3 +3351,72 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   return env;
 }
 
+Point_2d Utilities::RandomInTriangle(const Point_2d &x1,
+                                     const Point_2d &x2,
+                                     const Point_2d &x3,
+                                     Utilities::RandomNumbers_NR &ran
+                                     ){
+  double u1=ran(),u2=ran();
+  if(u1+u2 > 1){
+    u1=1-u1;
+    u2=1-u2;
+  }
+   
+  return x1*u1 + x2*u2 + x3*(1-u1-u2);
+}
+
+Point_2d Utilities::RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                                     Utilities::RandomNumbers_NR &ran
+               ){
+  assert(pp.size() >0);
+  int n=pp.size();
+  if(n==2){
+    return pp[0] + (pp[1]-pp[0])*ran();
+  }else if(n==3){
+    return RandomInTriangle(pp[0],pp[1],pp[2],ran);
+  }
+  std::vector<double> areas(n-1,0);
+  for(int i=1 ; i<n-1 ; ++i){
+    areas[i] =  areas[i-1] + abs( (pp[i]-pp[0])^(pp[i+1]-pp[0]) );
+  }
+  double tmp = ran()*areas.back();
+  
+  int i=1;
+  while(tmp > areas[i]) ++i;
+  
+  assert(i<n-1);
+  return RandomInTriangle(pp[i],pp[i+1],pp[0],ran);
+}
+
+Point_2d Utilities::RandomInPoly(std::vector<Point_2d> &pp,
+                                Utilities::RandomNumbers_NR &ran
+               ){
+  assert(pp.size() >0);
+  int n=pp.size();
+  if(n==2){
+    return pp[0] + (pp[1]-pp[0])*ran();
+  }else if(n==3){
+    return RandomInTriangle(pp[0],pp[1],pp[2],ran);
+  }
+  
+  std::vector<Point_2d> hull = convex_hull(pp);
+  
+  n=hull.size();
+  std::vector<double> areas(n-1,0);
+  for(int i=1 ; i<n-1 ; ++i){
+    areas[i] =  areas[i-1] + abs( (hull[i]-hull[0])^(hull[i+1]-hull[0]) );
+  }
+  
+  Point_2d p;
+  do{
+    double tmp = ran()*areas.back();
+  
+    int i=1;
+    while(tmp > areas[i]) ++i;
+  
+    assert(i<n-1);
+    p = RandomInTriangle(hull[i],hull[i+1],hull[0],ran);
+  }while( !inCurve(p,pp) );
+         
+  return p;
+}

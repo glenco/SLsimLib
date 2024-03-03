@@ -151,8 +151,21 @@ std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 //  return hull;
 //}
 
+/// returns random point within a trinagle
+Point_2d RandomInTriangle(const Point_2d &x1,
+                          const Point_2d &x2,
+                          const Point_2d &x3,
+                          Utilities::RandomNumbers_NR &ran);
 
-/** finds ordered boundaries to regions where bitmap == true
+/// return a point within a convex polygon
+Point_2d RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                            Utilities::RandomNumbers_NR &ran);
+
+/// return a point within a polygon that doesn't need to be convex
+Point_2d RandomInPoly(std::vector<Point_2d> &pp,
+                      Utilities::RandomNumbers_NR &ran);
+
+/** \brief finds ordered boundaries to regions where bitmap == true
 
  This can be used to find critical curves or contours.
  `bitmap` should be the same size as the `Gridmap`
@@ -474,19 +487,18 @@ double interior_mass(const std::vector<RAY> &rays);
 
 /// Returns a vector of points on the convex hull in counter-clockwise order.
 template<typename T>
-void convex_hull(std::vector<T> &P,std::vector<T> &hull_out)
+std::vector<T> convex_hull(const std::vector<T> &PP)
 {
-  
-  if(P.size() <= 3){
-    hull_out = P;
-    return;
+ 
+  if(PP.size() <= 3){
+    return PP;
   }
-  
-  std::vector<T> hull;
-  
+
+  std::vector<T> P=PP;
+
   size_t n = P.size();
   size_t k = 0;
-  hull.resize(2*n);
+  std::vector<T> hull(2*n);
   
   // Sort points lexicographically
   std::sort(P.begin(), P.end(),
@@ -515,8 +527,6 @@ void convex_hull(std::vector<T> &P,std::vector<T> &hull_out)
   
   hull.resize(k);
   hull.pop_back();
-  
-  std::swap(hull,hull_out);
   
   return;
 }
@@ -605,10 +615,8 @@ void concave(std::vector<T> &init_points
   
   bool TEST = false;
   
-  std::vector<T> hull;
-  
   // find the convex hull
-  convex_hull(init_points,hull);
+  std::vector<T> hull = convex_hull(init_points);
   
   if(init_points.size() == hull.size()) return;
   
@@ -775,10 +783,8 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
   
   bool TEST = false;
   
-  std::vector<T> hull;
-  
   // find the convex hull
-  convex_hull(init_points,hull);
+  std::vector<T> hull = convex_hull(init_points);
   
   if(init_points.size() == hull.size()) return hull;
   
@@ -1176,7 +1182,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
       TreeSimpleVec<Ptype> tree(points.data(),npoints,2);
       
       if(k>=points.size()){
-        convex_hull(points,hull);
+        hull = convex_hull(points);
         return hull;
       }
       
