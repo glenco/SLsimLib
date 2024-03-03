@@ -876,7 +876,9 @@ void Observation::Convert(PixelMap &map_in
                           ,PixelMap &map_out
                           ,PixelMap &error_map
                           ,bool psf
-                          ,bool noise,Utilities::RandomNumbers_NR &ran)
+                          ,bool noise
+                          ,Utilities::RandomNumbers_NR &ran
+                          ,bool cosmics)
 {
   
   assert(map_in.getNx() == Npix_x_input);
@@ -893,7 +895,7 @@ void Observation::Convert(PixelMap &map_in
   map_out.Clean();
   downsample(map_scratch,map_out);
   ToCounts(map_out);
-  if (noise == true) AddNoise(map_out,error_map,ran,true);
+  if (noise == true) AddNoise(map_out,error_map,ran,cosmics);
   ToSurfaceBrightness(map_out);
   
   return;

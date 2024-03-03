@@ -699,7 +699,8 @@ public:
                ,PixelMap &error_map
                ,bool psf
                ,bool noise
-               ,Utilities::RandomNumbers_NR &ran);
+               ,Utilities::RandomNumbers_NR &ran
+               ,bool cosmics=0);
  
   /// returns factor by which code image units need to be multiplied by to get flux units
   //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
