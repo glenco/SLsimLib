@@ -200,6 +200,7 @@ public:
                 ,PosType SBlimit,double zero_point)
   :Source(r,x,z,SBlimit,zero_point)
   {
+    zeropoints[Band::NoBand] = zero_point;
     current_band = Band::NoBand;
     
     mag_map[current_band]=magnitude;

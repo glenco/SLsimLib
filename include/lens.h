@@ -423,18 +423,16 @@ public:
   /// finds images by telescoping triangle method
   std::vector<RAY> find_images(Point_2d y_source
                                     ,double z_source
-                                    ,Point_2d &center
+                                    ,Point_2d center
                                     ,double range
                                     ,double stop_res
                                     );
   /// finds images by telescoping triangle method
   std::vector<RAY> find_images(GridMap &init_grid
-                                    ,Point_2d y_source
-                                    ,double z_source
-                                    ,Point_2d &center
-                                    ,double range
-                                    ,double stop_res
-                                    );
+                              ,Point_2d y_source
+                              ,double z_source
+                              ,double stop_res
+                              );
   
   void find_images_min_parallel(std::vector<RAY> &rays
                                         ,double ytol2

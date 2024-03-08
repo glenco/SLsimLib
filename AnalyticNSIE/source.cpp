@@ -599,9 +599,9 @@ SourceShapelets::SourceShapelets(
 }
 
 SourceShapelets::SourceShapelets(
-                                 std::string shap_file				/// fits file with coefficients in a square array. Mag and redshift are read from the header.
+                                 std::string shap_file		/// fits file with coefficients in a square array. Mag and redshift are read from the header.
                                  , PosType my_ang         /// rotation angle (in rad)
-                                 , PosType zeropoint       /// magnitude zero point
+                                 , PosType zeropoint      /// magnitude zero point
  )
 :SourceColored(0,0,Point_2d(0,0),0,-1,zeropoint)
 {
