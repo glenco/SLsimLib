@@ -716,6 +716,7 @@ public:
          ,int oversample
          ,double resolution
          ,double background_sigma
+         ,double calibration_exposure_time
          );
   ~ObsVIS(){};
   
