@@ -30,9 +30,12 @@
 typedef enum {NO, YES, MAYBE} Boo;
 #endif
 
-/// enumerates the types of critical curves. ND is "not defined".
-enum class CritType {ND,radial,tangential,pseudo};
 
+/// enumerates the types of critical curves. ND is "not defined".
+enum class CritType {ND=0,radial=2,tangential=1,pseudo=3,};
+
+//std::string to_string(const CritType &p);
+std::ostream &operator<<(std::ostream &os, CritType const &p);
 
 /// returns sign of a number
 template <typename T>
@@ -171,6 +174,7 @@ struct Point_2d{
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+void write_csv(std::string filename,const std::vector<Point_2d> &v);
 
 template <typename T>
 struct Matrix2x2{
@@ -412,15 +416,16 @@ struct Point: public Point_2d{
   Point();
   Point(const Point_2d &p);
   Point(PosType x,PosType y);
-  Point *next;    // pointer to next point in linked list
-  Point *prev;
-  Point *image;  // pointer to point on image or source plane
-  unsigned long id;
-  unsigned long head;         // marks beginning of allocated array of points for easy deallocation
+  Point *next=nullptr;    // pointer to next point in linked list
+  Point *prev=nullptr;
+  Point *image=nullptr;  // pointer to point on image or source plane
+  unsigned long id=0;
+  unsigned long head=0;         // marks beginning of allocated array of points for easy deallocation
   Boo in_image; // marks if point is in image
 
   PosType *ptr_y(){return image->x;}
   
+  /// Only copies position!!
   Point operator=(const Point_2d &p){
     Point_2d::operator=(p);
     
@@ -586,7 +591,8 @@ struct RAY{
   /// time-delay
   KappaType dt;
   KappaType z;
-  
+
+  /// inverse of the magnification
   KappaType invmag() const{
     return A.det();
   }
@@ -602,12 +608,9 @@ struct RAY{
   KappaType kappa() const{
     return A.kappa();
   }
-    
-  /// inverse of the magnification
-  KappaType invmag(){return A.det();}
   
   /// deflection angle, x-y
-  Point_2d alpha(){return x - y;}
+  Point_2d alpha() const {return x - y;}
 };
 
 //inline std::string to_string(RAY &r) {
@@ -705,7 +708,7 @@ private:
   MemmoryBank<T> & operator=(const MemmoryBank<T> &b);
   
   size_t count;
-  std::vector<std::unique_ptr<T[]>> bank;
+  std::vector<std::unique_ptr<T[]> > bank;
 };
 
 // A class that onlt counts iteslf for testing
@@ -1151,4 +1154,94 @@ private:
   LIST &operator=(const LIST &p);
 }
  */
+
+/** /brief N-dimensional point
+ 
+ This is a rapper for a n-dimenstional vector that adds arithmetic methods
+ */
+template <typename T = PosType>
+struct Point_nd{
+  Point_nd():dim(0){ }
+  Point_nd(int d):x(d,0),dim(d){ }
+  
+  void setD(int d){
+    dim=d;
+    x.resize(dim);
+  }
+  
+  ~Point_nd(){};
+  
+  Point_nd(const Point_nd &p){
+    for(int i=0 ; i<dim ; ++i ) x[i] = p.x[i];
+  }
+  
+  Point_nd<T> & operator=(const Point_nd<T> &p){
+    if(this == &p) return *this;
+    for(int i=0 ; i<dim ; ++i ) x[i] = p.x[i];
+    return *this;
+  }
+  Point_nd<T>  operator+(const Point_nd<T> &p) const{
+    Point_nd<T> tmp(dim);
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i] + p.x[i];
+    return tmp;
+  }
+  Point_nd<T>  operator-(const Point_nd<T> &p) const{
+    Point_nd<T> tmp(dim);
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i] - p.x[i];
+    return tmp;
+  }
+  Point_nd<T> & operator+=(const Point_nd<T> &p){
+    for(int i=0 ; i<dim ; ++i ) x[i] += p.x[i];
+    return *this;
+  }
+  Point_nd<T> & operator-=(const Point_nd<T> &p){
+    for(int i=0 ; i<dim ; ++i ) x[i] -= p.x[i];
+    return *this;
+  }
+  Point_nd<T> & operator/=(T value){
+    for(int i=0 ; i<dim ; ++i ) x[i]/=value;
+    return *this;
+  }
+  Point_nd<T> operator/(T value) const{
+    Point_nd<T> tmp;
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i]/value;
+    return tmp;
+  }
+  Point_nd<T> & operator*=(T value){
+    for(int i=0 ; i<dim ; ++i ) x[i] *=value;
+    return *this;
+  }
+  Point_nd operator*(PosType value) const{
+    Point_nd<T> tmp;
+    for(int i=0 ; i<dim ; ++i ) tmp.x[i] = x[i]*value;
+    return tmp;
+  }
+  
+  /// scalar product
+  T operator*(const Point_nd<T> &p) const {
+    T ans = 0;
+    for(int i=0 ; i<dim ; ++i ) ans += x[i]*p.x[i];
+    return ans;
+  }
+
+  /// length
+  T length_sqr() const{
+    T ans = 0;
+    for(int i=0 ; i<dim ; ++i ) ans += x[i]*x[i];
+    return ans;
+  }
+
+  T length() const{
+    return sqrt(length_sqr());
+  }
+  
+  T* data(){return x.data();}
+  
+  std::vector<T> x;
+  T & operator[](size_t i){return x[i];}
+  const T &  operator[](size_t i) const {return x[i];}
+private:
+  int dim;
+};
+
 #endif

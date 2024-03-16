@@ -24,8 +24,9 @@ MakeParticleLenses::MakeParticleLenses(
                    ,SimFileFormat format  /// format of data file
                    ,int Nsmooth   /// number of nearest neighbors used for smoothing
                    ,bool recenter /// recenter so that the LensHalos are centered on the center of mass of all the particles
-                  ,bool ignore_type_in_smoothing
-                   ):filename(filename),Nsmooth(Nsmooth)
+                   //,bool compensate  /// if true a negative mass will be included so that  the region wil have zero massl
+                   ,bool ignore_type_in_smoothing
+                   ):filename(filename),Nsmooth(Nsmooth)//,compensate(compensate)
 {
   
   
@@ -107,7 +108,8 @@ MakeParticleLenses::MakeParticleLenses(
 
 MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / name of glmb file
                    ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
-                   ):filename(filename)
+                   //,bool compensate  /// if true a negative mass will be included so that  the region wil have zero massl
+                   ):filename(filename)//,compensate(compensate)
 {
   
   
@@ -148,7 +150,7 @@ void MakeParticleLenses::Recenter(Point_3d<> x){
   Utilities::delete_container(halos);
 }
 
-void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
+void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift,double inv_area){
 
   // put into proper units
   float h = cosmo.gethubble();
@@ -169,6 +171,11 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
     delete halos.back();
     halos.pop_back();
   }
+  
+  double vol = (bbox_ur[0] - bbox_ll[0])*(bbox_ur[1] - bbox_ll[1])*(bbox_ur[2] - bbox_ll[2]);
+ //***
+  /// how do you set up inv_area in general ???
+  //if(!compensate) inv_area = 0;
   
   // create halos
   ParticleType<float> *pp;
@@ -192,7 +199,9 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift){
                                                                   ,cosmo
                                                                   ,theta_rotate
                                                                   ,false
-                                                                  ,0,false)
+                                                                  ,inv_area
+                                                                  ,false
+                                                                  )
                       );
      }
     skip += nparticles[i];

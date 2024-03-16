@@ -7,9 +7,15 @@
 
 #ifndef quadTreeHalos_h
 #define quadTreeHalos_h
+
+#include "standard.h"
+#include "utilities_slsim.h"
+#include "Tree.h"
+#include "qTreeNB.h"
+
 /**
  * \brief TreeQuadHalo is a class for calculating the deflection, kappa and gamma by tree method.
- *
+ *<pre>
  * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
  * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
  * the tree is built in such a way the large particles are stored in branches that are no smaller
@@ -18,7 +24,7 @@
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa is always more accurate than the deflection.
- *
+ *<\pre>
  */
 
 
@@ -31,9 +37,9 @@ public:
   TreeQuadHalos(
            LensHaloType **my_halos
            ,IndexType Npoints
-           ,PosType my_sigma_background = 0
+           ,PosType my_inv_area = 0
            ,int bucket = 5
-           ,PosType theta_force = 0.1
+           ,PosType theta_force = 0.5
            ,bool my_periodic_buffer = false
            ,PosType my_inv_screening_scale = 0
            ,PosType maximum_range  = -1
@@ -44,8 +50,8 @@ public:
   void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
                        ,KappaType *phi) const;
   
-  void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa
-                             ,KappaType *gamma,KappaType *phi);
+  //void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa
+  //                           ,KappaType *gamma,KappaType *phi);
   
   /// find all points within rmax of ray in 2D
   void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const;
@@ -61,11 +67,9 @@ protected:
   PosType **xp;
   bool MultiMass;
   bool MultiRadius;
-  //float *masses;
-  //float *sizes;
   
   IndexType Nparticles;
-  PosType sigma_background;
+  PosType inv_area;
   int Nbucket;
   
   PosType force_theta;
@@ -108,7 +112,7 @@ protected:
   //                           ,bool MultiRadius,bool MultiMass);
   void cuttoffscale(QTreeNB<PosType *> * tree,PosType *theta);
   
-  void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
+  //void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
   void walkTree_iter(QBiterator<PosType *> &treeit, PosType const *ray,PosType *alpha,KappaType *kappa
                      ,KappaType *gamma,KappaType *phi) const;
   
@@ -125,18 +129,18 @@ template <typename LensHaloType>
 TreeQuadHalos<LensHaloType>::TreeQuadHalos(
                    LensHaloType **my_halos     /// list of halos to be put in tree
                    ,IndexType Npoints          /// number of halos
-                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,PosType my_inv_area /// background kappa that is subtracted
                    ,int bucket                  /// maximum number of halos in each leaf of the tree
-                   ,PosType theta_force         /// the openning angle used in the criterion for decending into a subcell
+                   ,PosType my_theta_force         /// the openning angle used in the criterion for decending into a subcell
                    ,bool periodic_buffer        /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadHalos::force2D() for details. See note for TreeQuadHalos::force2D_recur().
                    ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadHalos::force2D_recur().
                    ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
 ):
 MultiMass(true),MultiRadius(true)//,masses(NULL),sizes(NULL)
-,Nparticles(Npoints),sigma_background(my_sigma_background),Nbucket(bucket)
-,force_theta(theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
+,Nparticles(Npoints),inv_area(my_inv_area),Nbucket(bucket)
+,force_theta(my_theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
-,max_range(max_range)
+,max_range(maximum_range)
 {
   index.resize(Npoints);
   IndexType ii;
@@ -231,7 +235,7 @@ template <typename LensHaloType>
 void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   
   QBranchNB *cbranch = tree->current; /* pointer to current branch */
-  IndexType i,j,cut,cut2,jt;
+  IndexType i,j,cut,cut2;
   
   cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
   cbranch->center[1] = (cbranch->boundary_p1[1] + cbranch->boundary_p2[1])/2;
@@ -240,39 +244,44 @@ void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *
   
   double theta_range = 2*force_theta;
   if(max_range > 0){
-      double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
-      theta_range = boxsize / MAX(sqrt(cbranch->center[0]*cbranch->center[0]
-             + cbranch->center[1]*cbranch->center[1] )
-             - max_range, boxsize );  
+    double boxsize = 1.732*(cbranch->boundary_p2[0] - cbranch->boundary_p1[0]);
+    theta_range = boxsize / MAX(sqrt(cbranch->center[0]*cbranch->center[0]
+                                     + cbranch->center[1]*cbranch->center[1] )
+                                - max_range, boxsize );
   }
-
-   // leaf case
-   if(cbranch->nparticles <= Nbucket
-      || force_theta > theta_range
-    ){
-     
-    PosType r;
-    cbranch->Nbig_particles = 0;
-    for(i=0;i<cbranch->nparticles;++i){
-      jt = particles[i]*MultiRadius;
-      r = halos[jt]->get_Rmax();
-      //r = haloON ? halos[particles[i]*MultiRadius].Rmax  : sizes[particles[i]*MultiRadius];
-      if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++cbranch->Nbig_particles;
-    }
-    if(cbranch->Nbig_particles){
-      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
-      cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
-      for(i=0,j=0;i<cbranch->nparticles;++i){
-        jt = particles[i]*MultiRadius;
-        r = halos[jt]->get_Rmax();
-        //r = haloON ? halos[particles[i]*MultiRadius].Rmax  : sizes[particles[i]*MultiRadius];
-        if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
-      }
-    }
-    else{
-      cbranch->big_particles.reset(nullptr);
+  
+  // leaf case
+  if(cbranch->nparticles <= Nbucket
+     || force_theta > theta_range
+     ){
+    
+    cbranch->Nbig_particles = cbranch->nparticles;
+    cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
+    for(i=0,j=0;i<cbranch->nparticles;++i){
+      cbranch->big_particles[i] = particles[i];
     }
     
+//    PosType r;
+//    cbranch->Nbig_particles = 0;
+//    for(i=0;i<cbranch->nparticles;++i){
+//      jt = particles[i]*MultiRadius;
+//      r = halos[jt]->get_Rmax();
+//      //r = haloON ? halos[particles[i]*MultiRadius].Rmax  : sizes[particles[i]*MultiRadius];
+//      if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) ++(cbranch->Nbig_particles);
+//    }
+//    if(cbranch->Nbig_particles){
+//      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
+//      cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
+//      for(i=0,j=0;i<cbranch->nparticles;++i){
+//        jt = particles[i]*MultiRadius;
+//        r = halos[jt]->get_Rmax();
+//        if(r < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])) cbranch->big_particles[j++] = particles[i];
+//      }
+//    }
+//    else{
+//      cbranch->big_particles.reset(nullptr);
+//    }
+//
     return;
   }
   
@@ -287,19 +296,17 @@ void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *
     // store the particles that are too large to be in a child at the end of the list of particles in cbranch
     for(i=0;i<cbranch->nparticles;++i){
       x[i] = halos[particles[i]]->get_Rmax();
-      //x[i] =  haloON ? halos[particles[i]].Rmax : sizes[particles[i]];
     }
-    PosType maxsize = (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2;
+    PosType half_box = (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2;
     
     // sort particles in size
-    //quicksort(particles,x,cbranch->nparticles);
-    Utilities::quickPartition(maxsize,&cut,particles,x,cbranch->nparticles);
+    Utilities::quickPartition(half_box,&cut,particles,x,cbranch->nparticles);
     
     if(cut < cbranch->nparticles){
       if(tree->atTop()){
         cbranch->Nbig_particles = cut2 = cbranch->nparticles-cut;
       }else{
-        Utilities::quickPartition(2*maxsize,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
+        Utilities::quickPartition(2*half_box,&cut2,&particles[cut],&x[cut],cbranch->nparticles-cut);
         cbranch->Nbig_particles = cut2;
       }
       
@@ -310,14 +317,12 @@ void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *
     
   }else{
     x[0] = halos[0]->get_Rmax();
-    //x[0] =  haloON ? halos[0].Rmax : sizes[0];
     if(x[0] > (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])/2
        && x[0] < (cbranch->boundary_p2[0]-cbranch->boundary_p1[0])){
       cbranch->Nbig_particles = cbranch->nparticles;
-      //cbranch->big_particles = cbranch->particles;
       cbranch->big_particles.reset( new IndexType[cbranch->Nbig_particles] );
       for(i=0;i<cbranch->Nbig_particles;++i) cbranch->big_particles[i] = particles[i];
-
+      
     }
   }
   
@@ -346,25 +351,28 @@ void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *
   child0->boundary_p1[1]=cbranch->center[1];
   child0->boundary_p2[0]=cbranch->boundary_p2[0];
   child0->boundary_p2[1]=cbranch->boundary_p2[1];
+  child0->boxsize2 = (child0->boundary_p2[0] - child0->boundary_p1[0])*(child0->boundary_p2[0] - child0->boundary_p1[0]);
   
   child1->boundary_p1[0]=cbranch->boundary_p1[0];
   child1->boundary_p1[1]=cbranch->center[1];
   child1->boundary_p2[0]=cbranch->center[0];
   child1->boundary_p2[1]=cbranch->boundary_p2[1];
+  child1->boxsize2 = (child1->boundary_p2[0] - child1->boundary_p1[0])*(child1->boundary_p2[0] - child1->boundary_p1[0]);
   
   child2->boundary_p1[0]=cbranch->center[0];
   child2->boundary_p1[1]=cbranch->boundary_p1[1];
   child2->boundary_p2[0]=cbranch->boundary_p2[0];
   child2->boundary_p2[1]=cbranch->center[1];
+  child2->boxsize2 = (child2->boundary_p2[0] - child2->boundary_p1[0])*(child2->boundary_p2[0] - child2->boundary_p1[0]);
   
   child3->boundary_p1[0]=cbranch->boundary_p1[0];
   child3->boundary_p1[1]=cbranch->boundary_p1[1];
   child3->boundary_p2[0]=cbranch->center[0];
   child3->boundary_p2[1]=cbranch->center[1];
+  child3->boxsize2 = (child3->boundary_p2[0] - child3->boundary_p1[0])*(child3->boundary_p2[0] - child3->boundary_p1[0]);
   
   
   // **** makes sure force does not require nbucket at leaf
-  
   xcut = cbranch->center[0];
   ycut = cbranch->center[1];
   
@@ -474,7 +482,7 @@ void TreeQuadHalos<LensHaloType>::CalcMoments(){
       cbranch->center[1] += tmp*tree->xxp[cbranch->particles[i]][1]/cbranch->mass;
     }
     //////////////////////////////////////////////
-    // calculate quadropole moment of branch
+    // calculate quadropole moment of branch assuming point masses
     //////////////////////////////////////////////
     cbranch->quad[0]=cbranch->quad[1]=cbranch->quad[2]=0;
     for(i=0;i<cbranch->nparticles;++i){
@@ -495,8 +503,10 @@ void TreeQuadHalos<LensHaloType>::CalcMoments(){
     
     rcom=sqrt(rcom);
     
-    if(force_theta > 0.0) cbranch->rcrit_angle = 1.15470*rcom/(force_theta);
-    else  cbranch->rcrit_angle=1.0e100;
+    if(force_theta > 0.0){
+      cbranch->r2crit_angle = 1.15470*rcom/(force_theta);
+      cbranch->r2crit_angle *= cbranch->r2crit_angle;
+    }else  cbranch->r2crit_angle=1.0e100;
     
   }while(tree->WalkStep(true));
   
@@ -572,10 +582,10 @@ void TreeQuadHalos<LensHaloType>::force2D(const PosType *ray,PosType *alpha,Kapp
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
-  *kappa -= sigma_background;
+  //*kappa -= sigma_background;
   
   return;
 }
@@ -643,150 +653,160 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
                              ,KappaType *kappa
                              ,KappaType *gamma
                              ,KappaType *phi
-                             ) const {
+                                                ) const
+{
   
-  PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
-  IndexType i;
-  bool allowDescent=true;
-  unsigned long count=0,tmp_index;
-  PosType prefac;
-  //bool notscreen = true;
-  
-  assert(tree);
+  bool allowDescent;
+  unsigned long count=0;//,tmp_index;
   
   treeit.movetop();
-  //tree->moveTop();
   do{
     ++count;
-    allowDescent=false;
+    allowDescent=true;
     
-    /*
-     if(inv_screening_scale2 != 0) notscreen = BoxIntersectCircle(ray,3*sqrt(1.0/inv_screening_scale2)
-     ,(*treeit)->boundary_p1
-     ,(*treeit)->boundary_p2);
-     else notscreen = true;
-     */
-    //if(tree->current->nparticles > 0)
-    if((*treeit)->nparticles > 0)
-    {
+    // add big paritcles, these are all the particles in tha case of a leaf
+    
+    for(size_t i = 0 ; i < (*treeit)->Nbig_particles ; ++i){
       
-      xcm[0]=(*treeit)->center[0]-ray[0];
-      xcm[1]=(*treeit)->center[1]-ray[1];
+      size_t tmp_index = (*treeit)->big_particles[i];
       
-      rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+      PosType xcm[2];
+      xcm[0] = tree->xxp[tmp_index][0] - ray[0];
+      xcm[1] = tree->xxp[tmp_index][1] - ray[1];
       
-      boxsize2 = ((*treeit)->boundary_p2[0]-(*treeit)->boundary_p1[0])*((*treeit)->boundary_p2[0]-(*treeit)->boundary_p1[0]);
+      PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
       
-      if( rcm2cell < ((*treeit)->rcrit_angle)*((*treeit)->rcrit_angle) || rcm2cell < 5.83*boxsize2)
-      {
-        
-        // includes rcrit_particle constraint
-        allowDescent=true;
-        
-        
-        // Treat all particles in a leaf as a point particle
-        if(treeit.atLeaf())
-        {
-          
-          for(i = 0 ; i < (*treeit)->nparticles ; ++i)
-          {
-            
-            xcm[0] = tree->xxp[(*treeit)->particles[i]][0] - ray[0];
-            xcm[1] = tree->xxp[(*treeit)->particles[i]][1] - ray[1];
-            
-            
-            rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-            double screening = exp(-rcm2*inv_screening_scale2);
-            if(rcm2 < 1e-20) rcm2 = 1e-20;
-            
-            tmp_index = MultiMass*(*treeit)->particles[i];
-            
-            prefac = halos[tmp_index]->get_mass();
-            prefac /= rcm2*PI/screening;
-            
-            tmp = -1.0*prefac;
-            
-            alpha[0] += tmp*xcm[0];
-            alpha[1] += tmp*xcm[1];
-            
-            
-            tmp = -2.0*prefac/rcm2;
-            
-            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-            gamma[1] += xcm[0]*xcm[1]*tmp;
-            
-            *phi += prefac*rcm2*0.5*log(rcm2);
-            
-          } // end of for
-        } // end of if(tree->atLeaf())
-        
-        
-        // Find the particles that intersect with ray and add them individually.
-        if(rcm2cell < 5.83*boxsize2)
-        {
-          
-          for(i = 0 ; i < (*treeit)->Nbig_particles ; ++i)
-          {
-            
-            tmp_index = (*treeit)->big_particles[i];
-            
-            xcm[0] = tree->xxp[tmp_index][0] - ray[0];
-            xcm[1] = tree->xxp[tmp_index][1] - ray[1];
-            
-            rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-            
-            double screening = exp(-rcm2*inv_screening_scale2);
-            halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true,screening);
-           }
-        }
-        
-      }
-      else
-      { // use whole cell
+      double screening = exp(-rcm2*inv_screening_scale2);
+      halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,false,screening);
+      
+      // background part
+      double mass = halos[tmp_index]->get_mass();
+      double prefac = mass * inv_area ;
+      
+      alpha[0] += prefac*xcm[0];
+      alpha[1] += prefac*xcm[1];
+      
+      *phi += - inv_area*rcm2 * mass*0.5;
+      *kappa -=  mass * inv_area;
+      
+    }
+    
+    if( !(treeit.atLeaf()) ){
+      PosType xcm_cell[2];
+      
+      xcm_cell[0]=(*treeit)->center[0]-ray[0];
+      xcm_cell[1]=(*treeit)->center[1]-ray[1];
+      
+      PosType rcm2cell = xcm_cell[0]*xcm_cell[0] + xcm_cell[1]*xcm_cell[1];
+      
+      if(rcm2cell > (*treeit)->r2crit_angle ){ // use whole cell
         
         allowDescent=false;
         
         double screening = exp(-rcm2cell*inv_screening_scale2);
-        double tmp = -1.0*(*treeit)->mass/rcm2cell/PI*screening;
+        double tmp = (*treeit)->mass*(inv_area - screening/rcm2cell/PI);
         
-        alpha[0] += tmp*xcm[0];
-        alpha[1] += tmp*xcm[1];
+        alpha[0] += tmp*xcm_cell[0];
+        alpha[1] += tmp*xcm_cell[1];
         
         {      //  taken out to speed up
           tmp=-2.0*(*treeit)->mass/PI/rcm2cell/rcm2cell*screening;
-          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-          gamma[1] += xcm[0]*xcm[1]*tmp;
+          gamma[0] += 0.5*(xcm_cell[0]*xcm_cell[0]-xcm_cell[1]*xcm_cell[1])*tmp;
+          gamma[1] += xcm_cell[0]*xcm_cell[1]*tmp;
           
           *phi += 0.5*(*treeit)->mass*log( rcm2cell )/PI*screening;
-          *phi -= 0.5*( (*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1] + 2*(*treeit)->quad[2]*xcm[0]*xcm[1] )/(PI*rcm2cell*rcm2cell)*screening;
+          *phi -= 0.5*( (*treeit)->quad[0]*xcm_cell[0]*xcm_cell[0] + (*treeit)->quad[1]*xcm_cell[1]*xcm_cell[1] + 2*(*treeit)->quad[2]*xcm_cell[0]*xcm_cell[1] )/(PI*rcm2cell*rcm2cell)*screening;
         }
         
         // quadrapole contribution
         //   the kappa and gamma are not calculated to this order
-        alpha[0] -= ((*treeit)->quad[0]*xcm[0] + (*treeit)->quad[2]*xcm[1])
+        alpha[0] -= ((*treeit)->quad[0]*xcm_cell[0] + (*treeit)->quad[2]*xcm_cell[1])
         /(rcm2cell*rcm2cell)/PI*screening;
-        alpha[1] -= ((*treeit)->quad[1]*xcm[1] + (*treeit)->quad[2]*xcm[0])
+        alpha[1] -= ((*treeit)->quad[1]*xcm_cell[1] + (*treeit)->quad[2]*xcm_cell[0])
         /(rcm2cell*rcm2cell)/PI*screening;
         
-        tmp = 4*((*treeit)->quad[0]*xcm[0]*xcm[0] + (*treeit)->quad[1]*xcm[1]*xcm[1]
-                 + 2*(*treeit)->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/PI*screening;
+        tmp = 4*((*treeit)->quad[0]*xcm_cell[0]*xcm_cell[0] + (*treeit)->quad[1]*xcm_cell[1]*xcm_cell[1]
+                 + 2*(*treeit)->quad[2]*xcm_cell[0]*xcm_cell[1])/(rcm2cell*rcm2cell*rcm2cell)/PI*screening;
         
-        alpha[0] += tmp*xcm[0];
-        alpha[1] += tmp*xcm[1];
+        alpha[0] += tmp*xcm_cell[0];
+        alpha[1] += tmp*xcm_cell[1];
+        
+        *kappa -= (*treeit)->mass*inv_area;
+        *phi -= (*treeit)->mass*inv_area*rcm2cell;
         
       }
     }
+    assert(count <= treeit.getNbranches());
   }while(treeit.TreeWalkStep(allowDescent));
   
+  //    if((*treeit)->nparticles > 0)
+  //    {
+  //
+  //
+  //
+  //      // Find the particles that intersect with ray and add them individually.
+  //      //if(rcm2cell < 5.83*((*treeit)->boxsize2))
+  //
+  //      //boxsize2 = ((*treeit)->boundary_p2[0]-(*treeit)->boundary_p1[0])*((*treeit)->boundary_p2[0]-(*treeit)->boundary_p1[0]);
+  //
+  //      if( rcm2cell <  ((*treeit)->rcrit_angle)*((*treeit)->rcrit_angle) )
+  ////         || rcm2cell < 5.83*((*treeit)->boxsize2) )
+  //      {
+  //
+  //        // includes rcrit_particle constraint
+  //        allowDescent=true;
+  //
+  //
+  //        // Treat all particles in a leaf as a point particle
+  //        if(treeit.atLeaf()){
+  //
+  //          for(i = 0 ; i < (*treeit)->nparticles ; ++i)
+  //          {
+  //
+  //            xcm_cell[0] = tree->xxp[(*treeit)->particles[i]][0] - ray[0];
+  //            xcm_cell[1] = tree->xxp[(*treeit)->particles[i]][1] - ray[1];
+  //
+  //
+  //            rcm2 = xcm_cell[0]*xcm_cell[0] + xcm_cell[1]*xcm_cell[1];
+  //            double screening = exp(-rcm2*inv_screening_scale2);
+  //            if(rcm2 < 1e-20) rcm2 = 1e-20;
+  //
+  //            size_t tmp_index = MultiMass*(*treeit)->particles[i];
+  //
+  //            double mass = halos[tmp_index]->get_mass();
+  //            prefac = mass * (inv_area - screening/rcm2/PI) ;
+  //            //prefac /= rcm2*PI/screening;
+  //            //tmp = -1.0*prefac;
+  //
+  //            alpha[0] += prefac*xcm_cell[0];
+  //            alpha[1] += prefac*xcm_cell[1];
+  //
+  //            tmp = -2.0*mass*screening/PI/rcm2/rcm2;
+  //
+  //            gamma[0] += 0.5*(xcm_cell[0]*xcm_cell[0]-xcm_cell[1]*xcm_cell[1])*tmp;
+  //            gamma[1] += xcm_cell[0]*xcm_cell[1]*tmp;
+  //
+  //            *phi += (screening*log(rcm2)/PI - inv_area*rcm2) *mass*0.5;
+  //            *kappa -=  mass * inv_area;
+  //
+  //          } // end of for
+  //        } // end of if(tree->atLeaf())
+  //
+  //
+  //
+  //      }else
+  //    }
+  //  }while(treeit.TreeWalkStep(allowDescent));
+  //
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
-  {      //  taken out to speed up
-    *kappa -= sigma_background;
-    // *phi -= sigma_background * sigma_background ;
-  }
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
+  //{      //  taken out to speed up
+  //  *kappa -= sigma_background;
+  // *phi -= sigma_background * sigma_background ;
+  //}
   
   return;
 }
@@ -815,187 +835,202 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
  *   screens the large scale geometry of the simulation on the sky.  This is useful when the region is rectangular instead of circular.
  * */
 
-template <typename LensHaloType>
-void TreeQuadHalos<LensHaloType>::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
-  
-  
-  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
-  *kappa=*phi=0.0;
-  
-  if(Nparticles == 0) return;
-  assert(tree);
-  
-  //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
-  
-  if(periodic_buffer){
-    PosType tmp_ray[2],tmp_c[2];
-    
-    // for points outside of primary zone shift to primary zone
-    //if(inbox(ray,tree->top->boundary_p1,tree->top->boundary_p2)){
-    tmp_c[0] = ray[0];
-    tmp_c[1] = ray[1];
-    /*}else{
-     int di[2];
-     PosType center[2] = { (tree->top->boundary_p1[0] + tree->top->boundary_p2[0])/2 ,
-     (tree->top->boundary_p1[1] + tree->top->boundary_p2[1])/2 };
-     
-     di[0] = (int)( 2*(ray[0] - center[0])/lx );
-     di[1] = (int)( 2*(ray[1] - center[1])/ly );
-     
-     di[0] = (di[0] > 0) ? (di[0] + 1)/2 : (di[0] - 1)/2;
-     di[1] = (di[1] > 0) ? (di[1] + 1)/2 : (di[1] - 1)/2;
-     
-     tmp_c[0] = ray[0] - lx * di[0];
-     tmp_c[1] = ray[1] - ly * di[1];
-     
-     assert(inbox(tmp_c,tree->top->boundary_p1,tree->top->boundary_p2));
-     }*/
-    
-    for(int i = -1;i<2;++i){
-      for(int j = -1;j<2;++j){
-        tmp_ray[0] = tmp_c[0] + i*original_xl;
-        tmp_ray[1] = tmp_c[1] + j*original_yl;
-        walkTree_recur(tree->top,tmp_ray,alpha,kappa,gamma,phi);
-      }
-    }
-  }else{
-    walkTree_recur(tree->top,ray,alpha,kappa,gamma,phi);
-  }
-  
-  // Subtract off uniform mass sheet to compensate for the extra mass
-  //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
-  
-  *kappa -= sigma_background;
-  
-  return;
-}
+//template <typename LensHaloType>
+//void TreeQuadHalos<LensHaloType>::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
+//
+//
+//  alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+//  *kappa=*phi=0.0;
+//
+//  if(Nparticles == 0) return;
+//  assert(tree);
+//
+//  //walkTree_recur(tree->top,ray,&alpha[0],kappa,&gamma[0],phi);
+//
+//  if(periodic_buffer){
+//    PosType tmp_ray[2],tmp_c[2];
+//
+//    // for points outside of primary zone shift to primary zone
+//    //if(inbox(ray,tree->top->boundary_p1,tree->top->boundary_p2)){
+//    tmp_c[0] = ray[0];
+//    tmp_c[1] = ray[1];
+//    /*}else{
+//     int di[2];
+//     PosType center[2] = { (tree->top->boundary_p1[0] + tree->top->boundary_p2[0])/2 ,
+//     (tree->top->boundary_p1[1] + tree->top->boundary_p2[1])/2 };
+//
+//     di[0] = (int)( 2*(ray[0] - center[0])/lx );
+//     di[1] = (int)( 2*(ray[1] - center[1])/ly );
+//
+//     di[0] = (di[0] > 0) ? (di[0] + 1)/2 : (di[0] - 1)/2;
+//     di[1] = (di[1] > 0) ? (di[1] + 1)/2 : (di[1] - 1)/2;
+//
+//     tmp_c[0] = ray[0] - lx * di[0];
+//     tmp_c[1] = ray[1] - ly * di[1];
+//
+//     assert(inbox(tmp_c,tree->top->boundary_p1,tree->top->boundary_p2));
+//     }*/
+//
+//    for(int i = -1;i<2;++i){
+//      for(int j = -1;j<2;++j){
+//        tmp_ray[0] = tmp_c[0] + i*original_xl;
+//        tmp_ray[1] = tmp_c[1] + j*original_yl;
+//        walkTree_recur(tree->top,tmp_ray,alpha,kappa,gamma,phi);
+//      }
+//    }
+//  }else{
+//    walkTree_recur(tree->top,ray,alpha,kappa,gamma,phi);
+//  }
+//
+//  // Subtract off uniform mass sheet to compensate for the extra mass
+//  //  added to the universe in the halos.
+//  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+//  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+//
+//  //*kappa -= sigma_background;
+//
+//  return;
+//}
 
-template <typename LensHaloType>
-void TreeQuadHalos<LensHaloType>::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
-  
-  PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
-  IndexType i;
-  std::size_t tmp_index;
-  PosType prefac;
-  /*bool notscreen = true;
-   
-   if(inv_screening_scale2 != 0) notscreen = BoxIntersectCircle(ray,3*sqrt(1.0/inv_screening_scale2), branch->boundary_p1, branch->boundary_p2);
-   */
-  if(branch->nparticles > 0)
-  {
-    xcm[0]=branch->center[0]-ray[0];
-    xcm[1]=branch->center[1]-ray[1];
-    
-    rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-    
-    boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
-    
-    if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
-    {
-      
-      // Treat all particles in a leaf as a point particle
-      if(tree->atLeaf(branch))
-      {
-        
-        for(i = 0 ; i < branch->nparticles ; ++i){
-          
-          xcm[0] = tree->xxp[branch->particles[i]][0] - ray[0];
-          xcm[1] = tree->xxp[branch->particles[i]][1] - ray[1];
-          
-          rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-          double screening = exp(-rcm2*inv_screening_scale2);
-          if(rcm2 < 1e-20) rcm2 = 1e-20;
-          
-          tmp_index = MultiMass*branch->particles[i];
-          
-          
-          prefac = halos[tmp_index]->get_mass();
-          prefac /= rcm2*PI/screening;
-          
-          
-          alpha[0] += -1.0*prefac*xcm[0];
-          alpha[1] += -1.0*prefac*xcm[1];
-          
-          {
-            tmp = -2.0*prefac/rcm2;
-            
-            
-            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-            gamma[1] += xcm[0]*xcm[1]*tmp;
-            
-            *phi += prefac*rcm2*0.5*log(rcm2);
-          }
-        }
-      }
-      
-      // Find the particles that intersect with ray and add them individually.
-      if(rcm2cell < 5.83*boxsize2)
-      {
-        
-        for(i = 0 ; i < branch->Nbig_particles ; ++i)
-        {
-          
-          tmp_index = branch->big_particles[i];
-          
-          xcm[0] = tree->xxp[tmp_index][0] - ray[0];
-          xcm[1] = tree->xxp[tmp_index][1] - ray[1];
-          rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-          
-          /////////////////////////////////////////
-          double screening = exp(-rcm2*inv_screening_scale2);
-          halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true,screening);
-        }
-      }
-      
-      if(branch->child0 != NULL)
-        walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
-      if(branch->child1 != NULL)
-        walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
-      if(branch->child2 != NULL)
-        walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
-      if(branch->child3 != NULL)
-        walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
-      
-    }
-    else
-    { // use whole cell
-      
-      double screening = exp(-rcm2cell*inv_screening_scale2);
-      double tmp = -1.0*branch->mass/rcm2cell/PI*screening;
-      
-      alpha[0] += tmp*xcm[0];
-      alpha[1] += tmp*xcm[1];
-      
-      {      //  taken out to speed up
-        tmp=-2.0*branch->mass/PI/rcm2cell/rcm2cell*screening;
-        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-        gamma[1] += xcm[0]*xcm[1]*tmp;
-        
-        *phi += 0.5*tree->current->mass*log( rcm2cell )/PI*screening;
-        *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(PI*rcm2cell*rcm2cell)*screening;
-      }
-      
-      // quadrapole contribution
-      //   the kappa and gamma are not calculated to this order
-      alpha[0] -= (branch->quad[0]*xcm[0] + branch->quad[2]*xcm[1])
-      /(rcm2cell*rcm2cell)/PI*screening;
-      alpha[1] -= (branch->quad[1]*xcm[1] + branch->quad[2]*xcm[0])
-      /(rcm2cell*rcm2cell)/PI*screening;
-      
-      tmp = 4*(branch->quad[0]*xcm[0]*xcm[0] + branch->quad[1]*xcm[1]*xcm[1]
-               + 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/PI*screening;
-      
-      alpha[0] += tmp*xcm[0];
-      alpha[1] += tmp*xcm[1];
-      
-      return;
-    }
-    
-  }
-  return;
-}
+//template <typename LensHaloType>
+//void TreeQuadHalos<LensHaloType>::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
+//
+//  PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
+//  IndexType i;
+//  std::size_t tmp_index;
+//  PosType prefac;
+//  /*bool notscreen = true;
+//
+//   if(inv_screening_scale2 != 0) notscreen = BoxIntersectCircle(ray,3*sqrt(1.0/inv_screening_scale2), branch->boundary_p1, branch->boundary_p2);
+//   */
+//  if(branch->nparticles > 0)
+//  {
+//    xcm[0]=branch->center[0]-ray[0];
+//    xcm[1]=branch->center[1]-ray[1];
+//
+//    rcm2cell = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+//
+//    boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
+//
+//    if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+//    {
+//
+//      // Treat all particles in a leaf as a point particle
+//      if(tree->atLeaf(branch))
+//      {
+//        Point_2d initgamma(gamma[0],gamma[1]);
+//        for(i = 0 ; i < branch->nparticles ; ++i){
+//
+//          xcm[0] = tree->xxp[branch->particles[i]][0] - ray[0];
+//          xcm[1] = tree->xxp[branch->particles[i]][1] - ray[1];
+//
+//          rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+//          double screening = exp(-rcm2*inv_screening_scale2);
+//          if(rcm2 < 1e-20) rcm2 = 1e-20;
+//
+//          tmp_index = MultiMass*branch->particles[i];
+//
+//          double mass = halos[tmp_index]->get_mass();
+//          prefac = mass * (inv_area - screening/rcm2/PI);
+//
+//          alpha[0] += prefac*xcm[0];
+//          alpha[1] += prefac*xcm[1];
+//
+//          //assert(abs(gamma[0]/2.74889e+15) < 10);
+//          //assert(abs(gamma[1]/2.74889e+15) < 10);
+//
+//          tmp = -2.0 * mass * screening/rcm2/rcm2/PI;
+//          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+//          gamma[1] += xcm[0]*xcm[1]*tmp;
+//
+//          //assert(abs(gamma[0]/2.74889e+15) < 10);
+//          //assert(abs(gamma[1]/2.74889e+15) < 10);
+//
+//          *phi += (log(rcm2)/PI - inv_area*rcm2)*0.5*mass;
+//          *kappa -= mass*inv_area;
+//        }
+//      }
+//
+//      // Find the particles that intersect with ray and add them individually.
+//      if(rcm2cell < 5.83*boxsize2)
+//      {
+//
+//        for(i = 0 ; i < branch->Nbig_particles ; ++i)
+//        {
+//
+//          tmp_index = branch->big_particles[i];
+//
+//          xcm[0] = tree->xxp[tmp_index][0] - ray[0];
+//          xcm[1] = tree->xxp[tmp_index][1] - ray[1];
+//          rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+//          //assert(abs(gamma[0]/2.74889e+15) < 10);
+//          //assert(abs(gamma[1]/2.74889e+15) < 10);
+//
+//          /////////////////////////////////////////
+//          double screening = exp(-rcm2*inv_screening_scale2);
+//          halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,true,screening);
+//          //assert(abs(gamma[0]/2.74889e+15) < 10);
+//          //assert(abs(gamma[1]/2.74889e+15) < 10);
+//
+//        }
+//      }
+//
+//      if(branch->child0 != NULL)
+//        walkTree_recur(branch->child0,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
+//      if(branch->child1 != NULL)
+//        walkTree_recur(branch->child1,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
+//      if(branch->child2 != NULL)
+//        walkTree_recur(branch->child2,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
+//      if(branch->child3 != NULL)
+//        walkTree_recur(branch->child3,&ray[0],&alpha[0],kappa,&gamma[0],&phi[0]);
+//
+//    }
+//    else
+//    { // use whole cell
+//
+//      double screening = exp(-rcm2cell*inv_screening_scale2);
+//      //double tmp = -1.0*branch->mass/rcm2cell/PI*screening;
+//      double tmp = branch->mass*(inv_area - screening/rcm2cell/PI);
+//
+//      alpha[0] += tmp*xcm[0];
+//      alpha[1] += tmp*xcm[1];
+//
+//      {      //  taken out to speed up
+//        assert(abs(gamma[0]/2.74889e+15) < 10);
+//        assert(abs(gamma[1]/2.74889e+15) < 10);
+//
+//        tmp=-2.0*branch->mass/PI/rcm2cell/rcm2cell*screening;
+//        gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+//        gamma[1] += xcm[0]*xcm[1]*tmp;
+//
+//        assert(abs(gamma[0]/2.74889e+15) < 10);
+//        assert(abs(gamma[1]/2.74889e+15) < 10);
+//
+//        *phi += 0.5*tree->current->mass*log( rcm2cell )/PI*screening;
+//        *phi -= 0.5*( tree->current->quad[0]*xcm[0]*xcm[0] + tree->current->quad[1]*xcm[1]*xcm[1] + 2*tree->current->quad[2]*xcm[0]*xcm[1] )/(PI*rcm2cell*rcm2cell)*screening;
+//      }
+//
+//      // quadrapole contribution
+//      //   the kappa and gamma are not calculated to this order
+//      alpha[0] -= (branch->quad[0]*xcm[0] + branch->quad[2]*xcm[1])
+//      /(rcm2cell*rcm2cell)/PI*screening;
+//      alpha[1] -= (branch->quad[1]*xcm[1] + branch->quad[2]*xcm[0])
+//      /(rcm2cell*rcm2cell)/PI*screening;
+//
+//      tmp = 4*(branch->quad[0]*xcm[0]*xcm[0] + branch->quad[1]*xcm[1]*xcm[1]
+//               + 2*branch->quad[2]*xcm[0]*xcm[1])/(rcm2cell*rcm2cell*rcm2cell)/PI*screening;
+//
+//      alpha[0] += tmp*xcm[0];
+//      alpha[1] += tmp*xcm[1];
+//
+//      *kappa -= branch->mass * inv_area;
+//      *phi -= 0.5 * rcm2cell * inv_area * branch->mass;
+//      return;
+//    }
+//
+//  }
+//  return;
+//}
 
 /** This is a diagnostic routine that prints the position of every point in a
  * given branch of the tree.

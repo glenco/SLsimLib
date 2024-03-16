@@ -548,7 +548,6 @@ T SphericalPoint<T>::OrthographicAnglePhi(
 }
 
 //// deprojection where this is the center of the projection
-
 template <typename T>
 SphericalPoint<T> SphericalPoint<T>::InverseOrthographicProjection(
                                                                    const Point_2d &x             /// 2D coordinate on projection
@@ -616,7 +615,7 @@ struct CYCLIC{
  curve that does not cross itself and will enclose all the verticies.
  */
 
-//std::vector<Point_2d> MagicHull(const std::vector<Point_2d> &points);
+std::vector<Point_2d> DeInterset(const std::vector<Point_2d> &points);
 }
 }
 

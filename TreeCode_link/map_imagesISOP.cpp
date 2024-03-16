@@ -175,7 +175,8 @@ void ImageFinding::map_imagesISOP(
     // integrate cells in parallel
     if(int_on && imageinfo[i].imagekist->Nunits() > 0){
       int nthreads = N_THREADS < imageinfo[i].imagekist->Nunits() ? N_THREADS : imageinfo[i].imagekist->Nunits();
-      std::thread thread[N_THREADS];
+      
+      std::vector<std::thread> thr;
       Kist<Point>::iterator its[2];
       int block_size = (int)(imageinfo[i].imagekist->Nunits()/nthreads);
       PosType area[N_THREADS];
@@ -189,8 +190,8 @@ void ImageFinding::map_imagesISOP(
       
       nthreads = 0;
       //std::cout << "Start thread " << nthreads << "  = " << jj << "  " << (its[1] == imageinfo[i].imagekist->getTopIt()) << std::endl;
-      thread[nthreads] = std::thread(IF_routines::IntegrateCellsParallel,its[0],its[1],source
-                                     ,&area[nthreads],&counts[nthreads]);
+      thr.push_back(std::thread(IF_routines::IntegrateCellsParallel,its[0],its[1],source
+                                     ,&area[nthreads],&counts[nthreads]));
       ++nthreads;
       while(its[1] != imageinfo[i].imagekist->TopIt()){
         ++its[1];
@@ -200,13 +201,13 @@ void ImageFinding::map_imagesISOP(
             && its[1] !=  imageinfo[i].imagekist->TopIt();++jj) ++its[1];
         //std::cout << "Start thread " << nthreads << " jj = " << jj << "  " << (its[1] == imageinfo[i].imagekist->getTopIt()) << std::endl;
 
-        thread[nthreads] = std::thread(IF_routines::IntegrateCellsParallel,its[0],its[1],source
-                                         ,&area[nthreads],&counts[nthreads]);
+        thr.push_back(std::thread(IF_routines::IntegrateCellsParallel,its[0],its[1],source
+                                         ,&area[nthreads],&counts[nthreads]));
         ++nthreads;
       }
       assert(nthreads <= N_THREADS);
         
-      for(int ii=0;ii<nthreads;++ii) thread[ii].join();
+      for(auto &t : thr) t.join();
       for(int ii=0;ii<nthreads;++ii){ imageinfo[i].area += area[ii]; counti += counts[ii];}
       assert(counti == imageinfo[i].imagekist->Nunits());
       count += counti;

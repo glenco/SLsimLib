@@ -383,6 +383,7 @@ LensHaloNFW::LensHaloNFW()
   make_tables();
   gmax = InterpolateFromTable(gtable, xmax);
   set_flag_elliptical(false);
+  ++count;
 }
 
 LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_concentration
@@ -426,6 +427,7 @@ LensHaloNFW::LensHaloNFW(float my_mass,float my_Rsize,PosType my_zlens,float my_
     Rmax = LensHalo::getRsize();
   }
   
+  ++count;
 }
 
 /* LensHalo::LensHalo(mass,Rsize,zlens, // base
@@ -533,7 +535,6 @@ void LensHaloNFW::make_tables(){
      */
     
   }
-  count++;
 }
 
 // InterpolateModes was used for Ansatz IV and is an efficient way to calculate the Fourier modes used for elliptisizing the isotropic profiles before the program starts
@@ -592,8 +593,8 @@ void LensHaloNFW::assignParams(InputParams& params){
 }
 
 LensHaloNFW::~LensHaloNFW(){
-  --count;
-  if(count == 0){
+  --LensHaloNFW::count;
+  if(LensHaloNFW::count == 0){
     delete[] xtable;
     delete[] gtable;
     delete[] ftable;
@@ -645,6 +646,8 @@ PosType* LensHaloPseudoNFW::mhattable = NULL;
 LensHaloPseudoNFW::LensHaloPseudoNFW()
 : LensHalo()
 {
+  make_tables();
+  ++count;
 }
 /// constructor
 LensHaloPseudoNFW::LensHaloPseudoNFW(
@@ -688,6 +691,7 @@ LensHaloPseudoNFW::LensHaloPseudoNFW(
     set_flag_elliptical(false);
     Rmax = LensHalo::getRsize();
   }
+  ++count;
 }
 
 // The Fourier modes set to ellipticize kappa at slope main_slope+0.5, i.e. e.g. 1.5 for main_slope = 1. Note that set_slope is overridden for PseudoNFW to recalculate tables for different beta. But only fixed values of beta, i.e. 1,2 and >=3 are allowed!
@@ -743,7 +747,6 @@ void LensHaloPseudoNFW::make_tables(){
       xtable[i] = x;
       mhattable[i] = mhat(x,beta);
     }
-    count++;
   }
 }
 
@@ -769,6 +772,7 @@ void LensHaloPseudoNFW::initFromMassFunc(float my_mass, float my_Rsize, float my
   beta = my_slope;
   xmax = my_Rsize/my_rscale;
   make_tables();
+  ++count;
 }
 
 void LensHaloPseudoNFW::assignParams(InputParams& params){
@@ -809,6 +813,15 @@ LensHaloPowerLaw::LensHaloPowerLaw(
                                    ,EllipMethod my_ellip_method /// ellipticizing method
 ){
 
+  if(my_beta >= 2.0){
+    std::cerr << "ERROR: Power-law index in LensHaloPowerLaw cannot be >= 2" << std::endl;
+    throw std::invalid_argument("bad gamma");
+  }
+  if(my_Rsize <= 0.0 || std::isnan(my_Rsize)){
+    std::cerr << "ERROR : my_Rsize = " << my_Rsize << std::endl;
+    throw std::runtime_error("Bad halo");
+  }
+  
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   LensHalo::setRsize(my_Rsize);
@@ -819,6 +832,8 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   xmax = LensHalo::getRsize()/rscale ; /// xmax needs to be in initialized before the mass_norm_factor for Pseudo ellip method is calculated via  set_norm_factor()
   //mnorm = renormalization(get_Rmax());
   //std::cout << "PA in PowerLawConstructor: " << pa << std::endl;
+  
+  
   
   
   if(fratio!=1){
@@ -839,6 +854,14 @@ LensHaloPowerLaw::LensHaloPowerLaw(
   }else{
     set_flag_elliptical(false);
     Rmax = LensHalo::getRsize();
+  }
+  
+  if(xmax <= 0.0 || std::isnan(xmax)){
+    std::cerr << "ERROR : xmax = " << xmax << std::endl;
+    std::cerr << "        rscale = " << rscale << std::endl;
+    std::cerr << "        Rmax = " << Rmax << std::endl;
+    
+    throw std::runtime_error("Bad halo");
   }
 }
 
@@ -1251,7 +1274,8 @@ void LensHaloTEPL::deflection(std::complex<double> &z
 std::complex<double> LensHaloTEPL::F(double r_e,double t,std::complex<double> z) const{
 
   std::complex<double> u = (1. - sqrt(1. - q_prime * r_e * r_e / z / z ) )/2.;
-  assert(std::norm(u) < 1);
+  //assert(std::norm(u) < 1);
+  if(std::norm(u) > 1 ) u = u/std::norm(u);
   double a = 1;
   std::complex<double> sum(1,0);
   for(int n=1 ; n < 20 ; ++n){
@@ -1534,6 +1558,7 @@ bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,Kapp
 {
   
   if(rcm2 < Rmax*Rmax){
+    if(rcm2==0) return false;
     if(subtract_point){
     
       PosType fac = screening*mass/rcm2/PI;
@@ -1548,12 +1573,6 @@ bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,Kapp
       
       *phi += -0.5*mass*log(rcm2) / PI;
     }
-//    else{
-//      alpha[0] = alpha[1] = 0.0;
-//      gamma[0] = gamma[1] = gamma[2] = 0.0;
-//      *kappa = 0.0;
-//      *phi = 0.0 ;
-//    }
     return false;
   }
   if(!subtract_point){
@@ -2617,7 +2636,11 @@ LensHaloMultiGauss::LensHaloMultiGauss(
     std::cerr << "LensHaloMultiGauss : nn must be less than mm." << std::endl;
     throw std::runtime_error("");
   }
-  
+  if( mass_norm <= 0){
+     std::cerr << "LensHaloMultiGauss : mass_norm <= 0." << std::endl;
+     throw std::runtime_error("");
+   }
+
   if(q > 1){
     q = 1/q;
   }
@@ -2661,6 +2684,11 @@ LensHaloMultiGauss::LensHaloMultiGauss(
   if(relative_scales.size() != relative_masses.size()){
     throw std::runtime_error("arrays are wrong size.");
   }
+  if( mass_norm <= 0){
+     std::cerr << "LensHaloMultiGauss : mass_norm <= 0." << std::endl;
+     throw std::runtime_error("");
+   }
+
   nn = relative_scales.size();
   q = abs(q);
   if(q > 1){

@@ -227,8 +227,6 @@ std::string to_string(CritType crit);
 // in image_finder_kist.c
 namespace ImageFinding{
   
-  
-  
   struct CriticalCurve{
     
     CriticalCurve(){
@@ -318,25 +316,9 @@ namespace ImageFinding{
       return Utilities::inhull(x.x,caustic_curve_outline);
     }
     
-    
     /// returns true if a circle of radius r around the point x intersects with the caustic curve
     bool intersectingCausticCurve(Point_2d &x,double r){
-      
-      int n=caustic_curve_outline.size();
-      double rr,B;
-      Point_2d dx,dl;
-      for(int i=0 ; i<n-1 ; ++i){
-        dl = caustic_curve_outline[i]-x;
-        rr = dl.length();
-        if(rr <= r) return true;
-        dx = caustic_curve_outline[i+1]-caustic_curve_outline[i];
-        B = -(dx*dl)/dx.length_sqr();
-        if(B>0 && B<1){
-          if( dx*dx*B*B + dx*dl*2*B + rr*rr <= r*r) return true;
-        }
-      }
-      
-      return false;
+      return Utilities::circleIntersetsCurve(x, r, caustic_curve_outline);
     }
  
     
@@ -349,7 +331,7 @@ namespace ImageFinding{
     bool EntirelyinCausticCurve(Point_2d &x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the caustic :
-      bool IsInCurve = Utilities::inhull2(x,caustic_curve_outline);
+      bool IsInCurve = Utilities::inCurve(x,caustic_curve_outline);
       
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the caustic curve
@@ -372,7 +354,7 @@ namespace ImageFinding{
     bool EntirelyinCriticalCurve(Point_2d x, PosType sourceRadius)
     {
       // Testing if the center of the source is within the critical curve :
-      bool IsInCurve = Utilities::inhull2(x,caustic_curve_outline);
+      bool IsInCurve = Utilities::inCurve(x,caustic_curve_outline);
       
       // Testing now that it is not too close from it (i.e. farther than source radius) :
       int i=0; // index going over the different points of the critical curve

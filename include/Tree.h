@@ -10,14 +10,18 @@
 #define treetypes_declare
 
 #include <mutex>
+#include <future>
+
 //#include "pointlist.h"
 #include "point.h"
 #include "Kist.h"
 #include "image_info.h"
 #include "utilities_slsim.h"
-#include <future>
 #include "geometry.h"
 
+// forward declaration
+struct ImageInfo;
+struct OldImageInfo;
 
 /***** Exported Types *****/
 
@@ -211,12 +215,12 @@ typedef int TreeElement;
 bool BoxInCircle(PosType *ray,PosType radius,PosType *p1,PosType *p2);
 PosType ClosestBorder(PosType *ray,PosType *p1,PosType *p2);
 
-inline PosType MIN(PosType x,PosType y){
-  return (x < y) ? x : y;
-};
-inline PosType MAX(PosType x,PosType y){
-  return (x > y) ? x : y;
-};
+//inline PosType MIN(PosType x,PosType y){
+//  return (x < y) ? x : y;
+//};
+//inline PosType MAX(PosType x,PosType y){
+//  return (x > y) ? x : y;
+//};
 template <class T>
 inline T MIN(T x,T y){
   return (x < y) ? x : y;
@@ -300,28 +304,28 @@ void findborders(TreeHndl i_tree,ImageInfo *imageinfo);
 void LinkToSourcePoints(Point *i_points,Point *s_points,unsigned long Npoints);
 
 /// structure to construct, hold and destruct image and source points
-struct PointPack{
-  /// for points without preset positions
-  PointPack(size_t N):n(N){
-    //i_points=NewPointArray(N);
-    //s_points=NewPointArray(N);
-    i_points=factory(N);
-    s_points=factory(N);
-    LinkToSourcePoints(i_points,s_points,N);
-  }
- 
- 
-  ~PointPack(){
-    delete [] i_points;
-    delete [] s_points;
-  }
-  size_t n;
-  Point *i_points;
-  Point *s_points;
-  
-private:
-  MemmoryBank<Point> factory;
-};
+//struct PointPack{
+//  /// for points without preset positions
+//  PointPack(size_t N):n(N){
+//    //i_points=NewPointArray(N);
+//    //s_points=NewPointArray(N);
+//    i_points=factory(N);
+//    s_points=factory(N);
+//    LinkToSourcePoints(i_points,s_points,N);
+//  }
+//
+//
+//  ~PointPack(){
+//    delete [] i_points;
+//    delete [] s_points;
+//  }
+//  size_t n;
+//  Point *i_points;
+//  Point *s_points;
+//
+//private:
+//  MemmoryBank<Point> factory;
+//};
 
 ///
 namespace Utilities{
@@ -858,14 +862,14 @@ inline float isLeft( Point *p0, Point *p1, PosType *x ){
   return (p1->x[0] - p0->x[0])*(x[1] - p0->x[1])
   - (x[0] - p0->x[0])*(p1->x[1] - p0->x[1]);
 };
-inline float isLeft(Point_2d &p0,Point_2d &p1,Point_2d &x ){
+inline float isLeft(const Point_2d &p0,const Point_2d &p1,const Point_2d &x ){
   return (p1[0] - p0[0])*(x[1] - p0[1]) - (x[0] - p0[0])*(p1[1] - p0[1]);
 };
 unsigned long prevpower(unsigned long k);
 
 int windings(PosType *x,Point *points,unsigned long Npoints,PosType *area,short image = 0 );
 int windings(PosType *x,Point **points,unsigned long Npoints,PosType *area,short image = 0 );
-int windings(Point_2d &x,std::vector<Point_2d> &point,PosType *area);
+int windings(const Point_2d &x,const std::vector<Point_2d> &point,PosType *area);
 // this is for the image postions
 int windings(Point_2d &x,std::vector<RAY> &point,PosType *area);
 int windings(PosType *x,Kist<Point> * kist,PosType *area,short image = 0);
@@ -885,13 +889,15 @@ void ordered_convexhull(Kist<Point> * curve);
 void ordered_shrink_wrap(Kist<Point> * curve);
 void ordered_concavehull(Kist<Point> * curve);
 PosType ConvexHullArea(Kist<Point> * curve);
+
+
 }
 // in curve_routines.c
-void nesting_curve(OldImageInfo *curves,int Ncurves);
-void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
-void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void nesting_curve(OldImageInfo *curves,int Ncurves);
+//void split_order_curve(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void split_order_curve2(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void split_order_curve3(OldImageInfo *curves,int Maxcurves,int *Ncurves);
+//void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves);
 
 bool order_ExteriorBoundary(Point *curve,long Npoints,long *NewNpoints,PosType *area);
 PosType findAreaOfCurve(TreeHndl tree,ImageInfo *curve,int NimageMax);
@@ -901,7 +907,7 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end);
 void split_images(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
 void split_images2(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages);
 void split_images3(TreeHndl i_tree,ImageInfo *images,int Maximages,int *Nimages,bool sortallpoints);
-void splitter(OldImageInfo *images,int Maximages,int *Nimages);
+//void splitter(OldImageInfo *images,int Maximages,int *Nimages);
 void splitlist(ListHndl imagelist,OldImageInfo *images,int *Nimages,int Maximages);
 
 

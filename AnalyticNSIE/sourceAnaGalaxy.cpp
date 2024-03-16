@@ -4,8 +4,10 @@
  *  Created on: Aug 13, 2012
  *      Author: bmetcalf
  */
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include "simpleTreeVec.h"
+#include "source.h"
+#include "sourceAnaGalaxy.h"
 
 // TODO: set `mag_limit` and `band` to default values in all constructors
 
@@ -13,17 +15,18 @@
 SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
 		PosType mag              /// Total magnitude
 		,PosType mag_bulge        /// magnitude of Bulge
-		,PosType Reff            /// Bulge half light radius (arcs)
+    ,Band band                ///
+    ,PosType zero_point          /// magnitude zero point
+    ,PosType Reff            /// Bulge half light radius (arcs)
 		,PosType Rdisk              /// disk scale hight (arcs)
 		,PosType PA              /// Position angle (radians)
 		,PosType inclination     /// inclination of disk (radians)
 		,PosType my_z               /// redshift of source
 		,PosType *my_theta          /// position on the sky
-    ,PosType zero_point          /// magnitude zero point
-    ,Utilities::RandomNumbers_NR &ran
+     ,Utilities::RandomNumbers_NR &ran
 		): Source(0,Point_2d(0,0),0,-1,zero_point),index(0){
 	
-	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,Reff,Rdisk,PA,inclination,0,my_z,my_theta,zero_point,ran));
+	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,band,zero_point,Reff,Rdisk,PA,inclination,0,my_z,my_theta,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -61,7 +64,8 @@ SourceMultiAnaGalaxy::~SourceMultiAnaGalaxy()
 }
 
 /// read in galaxies from a Millennium simulation file
-void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran){
+void SourceMultiAnaGalaxy::readDataFileMillenn(std::map<Band,double> zeropoints
+                                               ,Utilities::RandomNumbers_NR &ran){
 
 	//int type;
 	//long galid,haloid;
@@ -243,37 +247,39 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(Utilities::RandomNumbers_NR &ran)
       //std::cout << "adding to galaxies" << std::endl;
 			/***************************/
     
-    SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge,Ref,Rdisk
-                                ,pa,inclination,HaloID,z_cosm,theta,getMagZeroPoint(),ran);
+    SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge
+                              ,Band::NoBand,0
+                              ,Ref,Rdisk
+                              ,pa,inclination,HaloID,z_cosm,theta,ran);
      //std::cout << "filling last galaxy" << std::endl;
 
-    galaxy.setMag(Band::SDSS_U,SDSS_u);
-    galaxy.setMagBulge(Band::SDSS_U,SDSS_u_Bulge);
-    galaxy.setMag(Band::SDSS_G,SDSS_g);
-    galaxy.setMagBulge(Band::SDSS_G,SDSS_g_Bulge);
-    galaxy.setMag(Band::SDSS_R,SDSS_r);
-    galaxy.setMagBulge(Band::SDSS_R,SDSS_r_Bulge);
-    galaxy.setMag(Band::SDSS_I,SDSS_i);
-    galaxy.setMagBulge(Band::SDSS_I,SDSS_i_Bulge);
-    galaxy.setMag(Band::SDSS_Z,SDSS_z);
-    galaxy.setMagBulge(Band::SDSS_Z,SDSS_z_Bulge);
-    galaxy.setMag(Band::J,J_band);
-    galaxy.setMagBulge(Band::J,J_band_Bulge);
-    galaxy.setMag(Band::H,H_band);
-    galaxy.setMagBulge(Band::H,H_band_Bulge);
-    galaxy.setMag(Band::Ks,Ks_band);
-    galaxy.setMagBulge(Band::Ks,Ks_band_Bulge);
+    galaxy.setMag(SDSS_u,Band::SDSS_U,0);
+    galaxy.setMagBulge(SDSS_u_Bulge,Band::SDSS_U,0);
+    galaxy.setMag(SDSS_g,Band::SDSS_G,0);
+    galaxy.setMagBulge(SDSS_g_Bulge,Band::SDSS_G,0);
+    galaxy.setMag(SDSS_r,Band::SDSS_R,0);
+    galaxy.setMagBulge(SDSS_r_Bulge,Band::SDSS_R,0);
+    galaxy.setMag(SDSS_i,Band::SDSS_I,0);
+    galaxy.setMagBulge(SDSS_i_Bulge,Band::SDSS_I,0);
+    galaxy.setMag(SDSS_z,Band::SDSS_Z,0);
+    galaxy.setMagBulge(SDSS_z_Bulge,Band::SDSS_Z,0);
+    galaxy.setMag(J_band,Band::J,0);
+    galaxy.setMagBulge(J_band_Bulge,Band::J,0);
+    galaxy.setMag(H_band,Band::H,0);
+    galaxy.setMagBulge(H_band_Bulge,Band::H,0);
+    galaxy.setMag(Ks_band,Band::Ks,0);
+    galaxy.setMagBulge(Ks_band_Bulge,Band::Ks,0);
 
-    galaxy.setMag(Band::Ks,Ks_band);
-    galaxy.setMagBulge(Band::Ks,Ks_band_Bulge);
+    galaxy.setMag(Ks_band,Band::Ks,0);
+    galaxy.setMagBulge(Ks_band_Bulge,Band::Ks,0);
 
       // The Euclid bands are not actually read in
-    galaxy.setMag(Band::EUC_VIS,SDSS_i);
-    galaxy.setMagBulge(Band::EUC_VIS,SDSS_i_Bulge);
-    galaxy.setMag(Band::EUC_H,H_band);
-    galaxy.setMagBulge(Band::EUC_H,H_band_Bulge);
-    galaxy.setMag(Band::EUC_J,J_band);
-    galaxy.setMagBulge(Band::EUC_J,J_band_Bulge);
+    galaxy.setMag(SDSS_i,Band::EUC_VIS,zeropoints[Band::EUC_VIS]);
+    galaxy.setMagBulge(SDSS_i_Bulge,Band::EUC_VIS,zeropoints[Band::EUC_VIS]);
+    galaxy.setMag(H_band,Band::EUC_H,zeropoints[Band::EUC_H]);
+    galaxy.setMagBulge(H_band_Bulge,Band::EUC_H,zeropoints[Band::EUC_H]);
+    galaxy.setMag(J_band,Band::EUC_J,zeropoints[Band::EUC_J]);
+    galaxy.setMagBulge(J_band_Bulge,Band::EUC_J,zeropoints[Band::EUC_J]);
 
     galaxy.changeBand(band);
       
@@ -353,11 +359,16 @@ void SourceMultiAnaGalaxy::multiplier(
 				theta[0] = x1[0] + (x2[0] - x1[0])*ran();
 				theta[1] = x1[1] + (x2[1] - x1[1])*ran();
 
-				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag()
-                                              ,galaxies[i].getMagBulge()
-                ,galaxies[i].getReff(),galaxies[i].getRdisk(),ran()*PI,ran()*2*PI
-					,Nold+NtoAdd,galaxies[i].getZ(),theta, getMagZeroPoint(), ran));
-
+//				galaxies.push_back(SourceOverzierPlus(galaxies[i].getMag()
+//                                              ,galaxies[i].getMagBulge()
+//                                              ,
+//                                              , getMagZeroPoint()
+//                ,galaxies[i].getReff(),galaxies[i].getRdisk(),ran()*PI,ran()*2*PI
+//					,Nold+NtoAdd,galaxies[i].getZ(),theta, ran));
+        galaxies.push_back(SourceOverzierPlus(galaxies[i]));
+        galaxies.back().setTheta(theta);
+        galaxies.back().randomize(ran);
+        
 				++NtoAdd;
 			}
 		}

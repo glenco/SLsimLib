@@ -7,7 +7,9 @@
  *      reads parameters for analytic lens model
  */
 
-#include "slsimlib.h"
+
+#include "lens_halos.h"
+#include "analytic_lens.h"
 
 using namespace std;
 

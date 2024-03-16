@@ -2628,7 +2628,8 @@ short Lens::ResetSourcePlane(
 	// distance to new source plane
 	PosType Ds = cosmo.coorDist(0,z);
 	// find bounding index
-	locateD(Dl.data()-1,lensing_planes.size(),Ds,&j);
+	if(Dl.size()>1) locateD(Dl.data()-1,lensing_planes.size(),Ds,&j);
+  else j=0;
 	// j is the index of the next plane at higher redshift, This plane will be temporarily replaced and used as a source plane
 	assert(j <= lensing_planes.size() && j >=0);
   

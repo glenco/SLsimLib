@@ -90,7 +90,6 @@ void Grid::map_images(
 			if(sb > 0.0){
 
 				newpoint = NewPointArray(1);
-        //newpoint = point_factory(1);
 				newpoint->x[0] = y[0] + source->getTheta()[0];
 				newpoint->x[1] = y[1] + source->getTheta()[1];
 				newpoint->image = newpoint;
@@ -1039,7 +1038,7 @@ bool ImageFinding::IF_routines::RefinePoint2(Point *point,TreeHndl i_tree,PosTyp
 	nearest->MoveToTop();
 	do{
 		borderSB += nearest->getCurrent()->surface_brightness;
-		maxdiff_sb = MAX(fabs(nearest->getCurrent()->surface_brightness - point->surface_brightness),maxdiff_sb);
+		maxdiff_sb = MAX<double>(fabs(nearest->getCurrent()->surface_brightness - point->surface_brightness),maxdiff_sb);
 	}while(nearest->Down());
 	borderSB /= nearest->Nunits();
 

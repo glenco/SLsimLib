@@ -755,13 +755,13 @@ public:
               ,const COSMOLOGY &cosmo
               ,EllipMethod my_ellip_method=EllipMethod::Pseudo
               );
-	//LensHaloNFW(InputParams& params);
+	
   LensHaloNFW(const LensHaloNFW &h):LensHalo(h){
-    ++count;
+    ++LensHaloNFW::count;
     gmax = h.gmax;
   }
   LensHaloNFW(const LensHaloNFW &&h):LensHalo(std::move(h)){
-    ++count;
+    ++LensHaloNFW::count;
     gmax = h.gmax;
   }
 
@@ -979,7 +979,7 @@ private:
 	inline PosType alpha_h(
                          PosType x  /// r/rscale
                          ) const{
-		if(x==0) x=1e-6*xmax;
+		if(x<xmax*1.0e-6) x=1e-6*xmax;
 		return -1.0*pow(x/xmax,-beta+2);
 	}
   /// this is kappa Sigma_crit PI (r/rscale)^2 / mass
@@ -1227,7 +1227,7 @@ public:
   LensHaloTEPL(float my_mass  /// total mass in Msun
                 ,PosType my_zlens /// redshift
                 ,PosType r_trunc  /// elliptical truncation radius in Mpc
-                ,PosType gamma    /// power-law index
+                ,PosType gamma    /// power-law index, gamm = -1 is isothermal
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the vertical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
@@ -1661,7 +1661,7 @@ struct NFW: public PROFILE
  
  The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
  
- The profile is fit Nradii proints logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
+ The profile is fit Nradii points logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
  Typically Nradii ~ 2 * Ngaussians.
  
  The mass is normalized so that mass_norm is within the elliptical distance Rnorm.  The total mass with be calculated and can be recovered after construction.
@@ -1851,9 +1851,8 @@ public:
     
     // find masses of Gaussian components
    {
-      double total = 0,mass_tmp = 0;
+      double mass_tmp = 0;
       for(int n=0 ; n<Ngaussians ; ++n){
-        total += scales[n]*scales[n]*masses[n];
         mass_tmp += scales[n]*scales[n]*masses[n]
         *( 1 - exp(-r_norm*r_norm / 2 / scales[n] /scales[n]) );
       }

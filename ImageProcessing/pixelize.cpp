@@ -5,25 +5,23 @@
  *      Author: R.B. Metcalf
  */
 
-#include "slsimlib.h"
-
-#include "cpfits.h"
-
+//#include "slsimlib.h"
 #include <fstream>
 #include <algorithm>
 #include <utility>
 #include <stdexcept>
 #include <thread>
-#include "image_processing.h"
-#include "point.h"
-#include "source.h"
-#include "gridmap.h"
-
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "cpfits.h"
+#include "image_processing.h"
+#include "point.h"
+#include "source.h"
+#include "gridmap.h"
+#include "grid_maintenance.h"
 
 /*#if __cplusplus < 201103L
 template<typename T>
@@ -78,8 +76,11 @@ std::string to_string(PixelMapUnits unit){
     case PixelMapUnits::mass_density:
       return "mass density";
       break;
-
+    case PixelMapUnits::ADU:
+      return "ADU";
+      break;
     default:
+      throw std::invalid_argument("No such unit");
       break;
   }
 };
@@ -100,9 +101,12 @@ PixelMap::PixelMap(const PixelMap& other)
 : map(other.map),
 Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), rangeY(other.rangeY),units(other.units)
 {
-  std::copy(other.center, other.center + 2, center);
-  std::copy(other.map_boundary_p1, other.map_boundary_p1 + 2, map_boundary_p1);
-  std::copy(other.map_boundary_p2, other.map_boundary_p2 + 2, map_boundary_p2);
+  center[0] = other.center[0];
+  center[1] = other.center[1];
+  map_boundary_p1[0] = other.map_boundary_p1[0];
+  map_boundary_p1[1] = other.map_boundary_p1[1];
+  map_boundary_p2[0] = other.map_boundary_p2[0];
+  map_boundary_p2[1] = other.map_boundary_p2[1];
 }
 
 // move constructor
@@ -277,25 +281,27 @@ PixelMap::PixelMap(
  * If the region exceeds the boundaries of the original map, the new map is completed with zeros.
  */
 PixelMap::PixelMap(const PixelMap& pmap,  /// Input PixelMap (from which the stamp is taken)
-                   const PosType* center, /// center of the region to be duplicated (in rads)
+                   const PosType* my_center, /// center of the region to be duplicated (in rads)
                    std::size_t my_Npixels /// size of the region to be duplicated (in pixels)
 )
 : map(0.0, my_Npixels*my_Npixels),
 Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
 ,units(pmap.units)
 {
-		std::copy(center, center + 2, this->center);
+		std::copy(my_center, my_center + 2, this->center);
 		rangeX = resolution*Nx;
 		rangeY = resolution*Ny;
   
-		map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
-		map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
-		map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
-		map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
-  
-		int edge[2];
-		edge[0] = (center[0]-pmap.map_boundary_p1[0])/resolution - Nx/2;
-		edge[1] = (center[1]-pmap.map_boundary_p1[1])/resolution - Ny/2;
+		map_boundary_p1[0] = my_center[0]-(Nx*resolution)/2.;
+		map_boundary_p1[1] = my_center[1]-(Ny*resolution)/2.;
+		map_boundary_p2[0] = my_center[0]+(Nx*resolution)/2.;
+		map_boundary_p2[1] = my_center[1]+(Ny*resolution)/2.;
+    
+    units = pmap.getUnits();
+		
+    int edge[2];
+		edge[0] = (my_center[0]-pmap.map_boundary_p1[0])/resolution - Nx/2;
+		edge[1] = (my_center[1]-pmap.map_boundary_p1[1])/resolution - Ny/2;
 		if (edge[0] > int(pmap.Nx) || edge[1] > int(pmap.Ny) || edge[0]+int(Nx) < 0 || edge[1]+int(Ny) < 0)
     {
       std::cout << "The region you selected is completely outside PixelMap!" << std::endl;
@@ -309,6 +315,44 @@ Nx(my_Npixels), Ny(my_Npixels), resolution(pmap.resolution)
       if (ix+edge[0] > 0 && ix+edge[0] < pmap.Nx && iy+edge[1] > 0 && iy+edge[1] < pmap.Ny)
         map[i] = pmap.map[ix+edge[0]+(iy+edge[1])*pmap.Nx];
     }
+}
+
+/// Produces a square cut-out of the input PixelMap
+PixelMap::PixelMap(const PixelMap& in_map,  /// Input PixelMap (from which the stamp is taken)
+                   long nx, /// lower left  pixels of in pmap
+                   long ny, /// lower left  pixels of in  pmap
+                   std::size_t my_Npixels /// size of the region to be duplicated (in pixels)
+)
+: map(0.0, my_Npixels*my_Npixels),
+Nx(my_Npixels), Ny(my_Npixels), resolution(in_map.resolution)
+,units(in_map.units)
+{
+
+  long iimin =  MAX<long>(0,nx);
+  long iimax =  MIN<long>(iimin+Nx,in_map.Nx);
+  long jjmin =  MAX<long>(0,ny);
+  long jjmax =  MIN(jjmin+Nx,in_map.Ny);
+
+  for(long ii=iimin ; ii < iimax ; ++ii){
+    long i = ii - nx;
+    for(long jj=jjmin; jj < jjmax ; ++jj){
+      long j = jj - ny;
+        
+      map[i + Nx*j] = in_map(ii,jj);
+    }
+  }
+  
+  rangeX = resolution*Nx;
+  rangeY = resolution*Ny;
+  
+  map_boundary_p1[0] = in_map.map_boundary_p1[0] + resolution*nx;
+  map_boundary_p1[1] = in_map.map_boundary_p1[1] + resolution*ny;
+  
+  map_boundary_p2[0] = map_boundary_p1[0] + resolution * Nx;
+  map_boundary_p2[1] = map_boundary_p1[1] + resolution * Ny;
+  
+  center[0] = (map_boundary_p2[0] + map_boundary_p1[0])/2;
+  center[1] = (map_boundary_p2[1] + map_boundary_p1[1])/2;
 }
 
 /** \brief Creates a PixelMap at a different resolution.
@@ -350,8 +394,8 @@ PixelMap::PixelMap(
     old_p1[0] = std::max(0,int(ix*res_ratio));
     old_p1[1] = std::max(0,int(iy*res_ratio));
     
-    old_p2[0] = MIN(old_Nx-1,int((ix+1.)*res_ratio));
-    old_p2[1] = MIN(old_Ny-1,int((iy+1.)*res_ratio));
+    old_p2[0] = MIN(old_Nx-1,long((ix+1.)*res_ratio));
+    old_p2[1] = MIN(old_Ny-1,long((iy+1.)*res_ratio));
     
     for (int old_iy = old_p1[1]; old_iy <= old_p2[1]; ++old_iy)
     {
@@ -512,11 +556,20 @@ PixelMap& PixelMap::operator*=(const PixelMap& rhs)
   return *this;
 }
 
+// multiply each pixel by a constant
 PixelMap& PixelMap::operator*=(PosType b)
 {
   for(size_t i=0;i<map.size();++i) map[i] *= b;
   //map *= rhs.map;
   return *this;
+}
+
+// multiply each pixel by a constant
+PixelMap PixelMap::operator*(PosType b) const
+{
+  PixelMap map(*this);
+  map *= b;
+  return map;
 }
 
 /// Multiply two PixelMaps.
@@ -530,22 +583,10 @@ PixelMap PixelMap::operator*(const PixelMap& a) const
 /// Multiply two PixelMaps.
 PixelMap PixelMap::operator/(const PixelMap& a) const
 {
-  PixelMap diff(a);
-  for(size_t i=0;i<map.size();++i) diff[i] = map[i]/a.map[i];
+  PixelMap diff(*this);
+  for(size_t i=0;i<map.size();++i) diff[i] /= a.map[i];
   return diff;
 }
-
-PosType PixelMap::ave() const{
-  return sum()/map.size();
-}
-PosType PixelMap::sum() const{
-  PosType tmp=0;
-  for(size_t i=0;i<map.size();++i){
-    tmp += map[i];
-  }
-  return tmp;
-}
-
 
 /** \brief Add an image to the map
  *
@@ -631,7 +672,7 @@ void PixelMap::AddGridBrightness(Grid &grid){
 
 void PixelMap::AddGridMapBrightness(const GridMap &grid){
   
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   try {
     // if GridMap res is an integer multiple of PixelMap res and they are aligned this will go
     grid.getPixelMapFlux(*this);
@@ -755,6 +796,292 @@ bool PixelMap::pixels_are_neighbors(size_t i,size_t j) const{
   if(std::abs(x) > 1) return false;
   return true;
 }
+
+void PixelMap::find_contour(double level
+                            ,std::vector<std::vector<Point_2d> > &points
+                            ,std::vector<bool> &hits_edge
+                            ) const {
+  
+  std::vector<bool> bitmap( map.size() );
+  
+  for(size_t i = 0 ; i<map.size() ; ++i) bitmap[i] = (map[i] > level);
+  
+  Utilities::find_boundaries<Point_2d>(bitmap,Nx,points,hits_edge,false);
+  
+  // rescale the points to PixelMap coordinates
+  Point_2d xo(map_boundary_p1[0] + resolution*0.5
+             ,map_boundary_p1[1] + resolution*0.5);
+  for(std::vector<Point_2d> &v : points){
+    for(Point_2d &p : v) p = p * resolution + xo;
+  }
+}
+
+void PixelMap::find_islands_holes(double level,
+                            std::vector<std::vector<size_t> > &points
+                            ) const {
+  
+  std::vector<bool> bitmap( map.size() );
+  std::vector<size_t> points_in;
+  
+  // excludes boundaries that will be set to false in Utilities::find_boundaries
+  for(size_t i = 1 ; i<Nx-1 ; ++i){
+    for(size_t j = 1 ; j<Ny-1 ; ++j){
+      size_t k = i + Nx*j;
+      if (map[k] > level){
+        bitmap[k] = true;
+        points_in.push_back(k);
+      }else{
+        bitmap[k] = false;
+      }
+    }
+  }
+  
+  std::vector<bool> hits_edge;
+  std::vector<std::vector<Point_2d> > boundaries;
+  Utilities::find_boundaries<Point_2d>(bitmap,Nx,boundaries,hits_edge,false);
+  points.resize(boundaries.size());
+  
+  if(boundaries.size() == 1){
+    std::swap(points[0],points_in);
+    return;
+  }
+  
+  for(auto &v : points) v.clear();
+  
+  size_t n=points_in.size();
+  size_t m=0;
+  for(size_t k=0 ; k<n ; ++k){
+    for(int i=0 ; i<boundaries.size() ; ++i){
+      if( incurve(points_in[k],boundaries[i]) ){
+        points[i].push_back(points_in[k]);
+        ++m;
+        break;
+      }
+    }
+  }
+  
+  // remove holes
+//  int i=0,k=points.size();
+//  while( i < k){
+//    m += points[i].size();
+//    if(points[i].size() == 0){
+//      std::swap(points[i],points[k-1]);
+//      --k;
+//    }else{
+//      ++i;
+//    }
+//  }
+//
+//  points.resize(k);
+  
+  assert(m == n && "In PixelMap::find_islands_holes");
+}
+
+/// find the index of the pixels that are larger than all its neighbors
+std::vector<size_t> PixelMap::maxima(double minlevel
+                            ) const {
+  std::vector<size_t> indexes;
+  if(map.max() < minlevel) return indexes;
+  
+  for(size_t j=1 ; j < Ny-1 ; ++j){
+    size_t k = Nx*j+1;
+    for(size_t i=1 ; i < Nx-1 ; ++i,++k){
+      if(map[k] > minlevel){
+        double val = map[k];
+        if(
+           val > map[k-1] &&
+           val > map[k+1] &&
+           val > map[k+Nx] &&
+           val > map[k+Nx-1] &&
+           val > map[k+Nx+1] &&
+           val > map[k-Nx] &&
+           val > map[k-Nx-1] &&
+           val > map[k-Nx+1]
+           ){
+             indexes.push_back(k);
+           }
+      }
+    }
+  }
+  return indexes;
+}
+
+bool  PixelMap::incurve(long k,std::vector<Point_2d> &curve) const{
+  int n=0;
+  long i = k % Nx , j = k / Nx;
+  for(Point_2d &p : curve){
+    if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
+  }
+  
+  return n%2 == 1;
+}
+
+
+void PixelMap::lens_definition(
+                            double min_sn_per_image
+                            ,double pixel_threshold
+                            ,int &Nimages
+                            ,double &total_sig_noise_source
+                            ,std::vector<size_t> &maxima_indexes
+                            ,std::vector<std::vector<size_t> > &image_points
+                            ,bool &lens_TF
+                            ,double &level
+                            ,size_t &n_pix_in_source
+                            ,bool verbose
+                            ){
+    
+  
+  // default
+  total_sig_noise_source = 0;
+  maxima_indexes.clear();
+  image_points.clear();
+  lens_TF = false;
+  level = 0;
+  n_pix_in_source = 0;
+  Nimages = 0;
+  
+  double sn_max = map.max();
+  if(sn_max < pixel_threshold) return;
+  
+  find_islands_holes(pixel_threshold,image_points);
+ 
+  total_sig_noise_source = 0;
+  if(verbose) std::cout << "Initial Number of islands : " << image_points.size() << std::endl;
+  std::vector<double> sig_noise(image_points.size(),0);
+  for(size_t i=0 ; i<image_points.size() ; ++i ){
+    for(size_t k : image_points[i] ){
+      sig_noise[i] += map[k];
+    }
+    if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
+    if(sig_noise[i] >= min_sn_per_image) total_sig_noise_source += sig_noise[i];
+  }
+  
+  
+  // remove holes
+
+  bool ring = false;
+  { // remove holes
+    int i=0,k=image_points.size();
+    while( i < k){
+      if(image_points[i].size() == 0){
+        std::swap(sig_noise[i],sig_noise[k-1]);
+        std::swap(image_points[i],image_points[k-1]);
+        --k;
+        ring = true;
+        if(verbose) std::cout << "There is a hole ! " << std::endl;
+      }else{
+        ++i;
+      }
+    }
+    image_points.resize(k);
+    sig_noise.resize(k);
+  }
+  
+  {
+    // remove low s/n images
+    long i=0,k=sig_noise.size();
+    while( i < k){
+      if(sig_noise[i] < min_sn_per_image){
+        std::swap(sig_noise[i],sig_noise[k-1]);
+        std::swap(image_points[i],image_points[k-1]);
+        --k;
+      }else{
+        ++i;
+      }
+    }
+    image_points.resize(k);
+    sig_noise.resize(k);
+  }
+  
+  for(auto &v : image_points){
+    for(size_t k : v){
+      double val = map[k];
+       if(
+          val > map[k-1] &&
+          val > map[k+1] &&
+          val > map[k+Nx] &&
+          val > map[k+Nx-1] &&
+          val > map[k+Nx+1] &&
+          val > map[k-Nx] &&
+          val > map[k-Nx-1] &&
+          val > map[k-Nx+1]
+          ){
+            maxima_indexes.push_back(k);
+          }
+    }
+  }
+  if(verbose) std::cout << "Number of maxima : " << maxima_indexes.size() << std::endl;
+  
+  
+  n_pix_in_source = 0;
+  for(auto &v : image_points) n_pix_in_source += v.size();
+  if(verbose) std::cout << "              total : " << total_sig_noise_source << "  " << n_pix_in_source << std::endl;
+
+  level = pixel_threshold;
+  Nimages = image_points.size();
+  
+  if( image_points.size() == 1 && !ring){
+    std::vector<std::vector<size_t> > new_image_points=image_points;
+    
+    while( new_image_points.size() == 1
+          && new_image_points[0].size() > 1
+          && !ring
+          && level < sn_max
+          ){
+      
+      std::sort(new_image_points[0].begin(),new_image_points[0].end()
+                ,[this](size_t i,size_t j){return map[i] < map[j];});
+      level = (map[ new_image_points[0][1] ] +  map[ new_image_points[0][0] ])/2;
+      
+      find_islands_holes(level,new_image_points);
+      if(verbose) std::cout << "    Number of islands : " << new_image_points.size() << "   level " << level << std::endl;
+      
+      // detect holes and delete holes
+      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+        if(new_image_points[i].size() == 0){
+          ring = true;
+          for(long k = i ; k<new_image_points.size()-1 ; ++k){
+            std::swap(new_image_points[k],new_image_points[k+1]);
+          }
+          new_image_points.pop_back();
+        }
+      }
+      
+      sig_noise.resize(new_image_points.size());
+      for(size_t i=0 ; i<new_image_points.size() ; ++i ){
+        sig_noise[i] = 0;
+        for(size_t k : new_image_points[i] ){
+          sig_noise[i] += map[k];
+        }
+        if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << new_image_points[i].size() << std::endl;
+      }
+
+      {
+        // remove low s/n images
+        int i=0,k=sig_noise.size();
+        while( i < k){
+          if(sig_noise[i] < 2 * pixel_threshold ){
+            std::swap(sig_noise[i],sig_noise[k-1]);
+            std::swap(new_image_points[i],new_image_points[k-1]);
+            --k;
+          }else{
+            ++i;
+          }
+        }
+
+        sig_noise.resize(k);
+        new_image_points.resize(k);
+      }
+      
+    }
+    // returns to one image in cases where peaks do not have enough S/N
+    Nimages = MAX(new_image_points.size(),image_points.size());
+  }
+  
+  lens_TF = Nimages > 1 || ring;
+  if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
+}
+
 
 int PixelMap::count_islands(std::vector<size_t> &pixel_index) const{
   
@@ -987,7 +1314,7 @@ void PixelMap::printFITS(std::string filename,bool flipX, bool verbose)
 }
 
 void PixelMap::printFITS(std::string filename
-                         ,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose)
+                         ,std::vector<std::tuple<std::string,double,std::string> > &extra_header_info, bool verbose)
 {
 
   if(filename.empty())
@@ -1038,6 +1365,22 @@ void PixelMap::printFITS(std::string filename
     cpfits.writeKey(std::get<0>(hp),std::get<1>(hp),std::get<2>(hp));
   }
 }
+void PixelMap::printFITS(std::string filename
+                         ,std::vector<std::string> &headercards)
+{
+
+  if(filename.empty())
+    throw std::invalid_argument("Please enter a valid filename for the FITS file output");
+  
+  CPFITS_WRITE cpfits(filename,false);
+  
+  std::vector<long> naxex(2);
+  naxex[0] = Nx;
+  naxex[1] = Ny;
+
+  cpfits.write_image(map,naxex);
+  cpfits.writeHeader(headercards);
+}
 
 /** 
  *
@@ -1049,7 +1392,7 @@ void PixelMap::smooth(PosType sigma){
   int Nmask,Nmask_half;
   int j_cen, k_cen;
   
-  sigma /= 3600.*180/PI;
+  sigma *= arcsecTOradians;
   Nmask=2*(int)(3*sigma/resolution + 1);
   std::cout << Nmask << std::endl;
   if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
@@ -1157,15 +1500,15 @@ void PixelMap::drawline(
 
 void PixelMap::DrawLine(long x0,long x1,long y0,long y1,double value,bool add) {
   
-  x0 = MAX(x0,0);
-  x0 = MIN(x0,Nx-1);
-  x1 = MAX(x1,0);
-  x1 = MIN(x1,Nx-1);
+  x0 = MAX<long>(x0,0);
+  x0 = MIN<long>(x0,Nx-1);
+  x1 = MAX<long>(x1,0);
+  x1 = MIN<long>(x1,Nx-1);
   
-  y0 = MAX(y0,0);
+  y0 = MAX<long>(y0,0);
   y0 = MIN(y0,Ny-1);
-  y1 = MAX(y1,0);
-  y1 = MIN(y1,Ny-1);
+  y1 = MAX<long>(y1,0);
+  y1 = MIN<long>(y1,Ny-1);
 
   long dx = abs(x1 - x0);
   int sx = x0 < x1 ? 1 : -1;
@@ -1212,7 +1555,7 @@ void PixelMap::DrawLineGS(long x0,long x1,long y0,long y1,double value,bool add)
     double s = dx / length;
     double c = dy / length;
     while (x <= x1) {
-      (*this)(x,MAX(y-1,0)) = value ;//* ( abs(D + c) < 1);
+      (*this)(x,MAX<long>(y-1,0)) = value ;//* ( abs(D + c) < 1);
       (*this)(x,y) = value * (D < 1);
       (*this)(x,MIN(y+1,Ny-1)) = value ;//* ( abs(D - c) < 1);
       
@@ -1566,14 +1909,11 @@ void PixelMap::AddGrid(const Grid &grid,LensingVariable val){
     //  }while(grid.i_tree->TreeWalkStep(allowDecent) && i < Nblocks);
   }while(treeit.TreeWalkStep(allowDecent) && i < Nblocks);
   
-  std::thread thr[16];
-  
+   std::vector<std::thread> thr;
   for(int i = 0; i< Nblocks ;++i){
-    thr[i] = std::thread(&PixelMap::AddGrid_,this,lists[i],val);
-    //thr[i] = std::async(&PixelMap::AddGrid_,this,lists[i],val);
+    thr.push_back(std::thread(&PixelMap::AddGrid_,this,lists[i],val));
   }
-  for(int ii=0;ii<Nblocks;++ii) thr[ii].join();
-
+  for(auto &t : thr) t.join();
 }
 
 void PixelMap::AddGrid_(const PointList &list,LensingVariable val){
@@ -2041,6 +2381,41 @@ void PixelMap::find_position(PosType x[],std::size_t const ix,std::size_t const 
   return;
 }
 
+PixelMap PixelMap::rotate(PosType theta,double scale){
+
+  double s=-sin(theta);
+  double c=cos(theta);
+  
+  long center[2] = {Nx/2,Ny/2};
+  Point_2d map_center = getCenter();
+  double f[2];
+  
+  PixelMap rot_map(map_center.data(),Nx,Ny,resolution,units);
+  
+  size_t N = Nx*Ny;
+  for(long k=0 ; k<N ; ++k){
+    long i = k%Nx-center[0];
+    long j = k/Nx-center[1];
+    
+    double x = (i*c - j*s)/scale + center[0];
+    if(x>=0 && x < Nx-1){
+      double y = (i*s + j*c)/scale + center[1];
+      if(y>=0 && y < Ny-1){
+        
+        long kk = (long)(x) + (long)(y)*Nx; // lower left
+        
+        f[0]= x - (long)(x);
+        f[1]= y - (long)(y);
+        
+        rot_map[k] = (1-f[0])*(1-f[1])*map[kk] + f[0]*(1-f[1])*map[kk+1] + f[0]*f[1]*map[kk+1+Nx]
+        + (1-f[0])*f[1]*map[kk+Nx];
+      }
+    }
+  }
+  
+  return rot_map;
+}
+
 PosType PixelMap::linear_interpolate(PosType x[]){
   long ix,iy;
   PosType f[2];
@@ -2241,7 +2616,7 @@ void MultiGridSmoother::smooth(int Nsmooth,PixelMap &map){
 }
 
 PosType PixelMap::AddSource(Source &source){
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   Point_2d s_center;
   source.getTheta(s_center);
   
@@ -2321,6 +2696,7 @@ void PixelMap::copy_in(
     return;
   }
   double res_ratio = resolution / pmap.resolution;
+  if(abs(res_ratio -1) < 1.0e-4) res_ratio = 1.0;
   double res_ratio2 = res_ratio*res_ratio;
   
   // check is maps overlap
@@ -2342,26 +2718,26 @@ void PixelMap::copy_in(
     double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
     double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
     
-    double xmin = MAX(0,ix - halfpixel);
-    double xmax = MIN(NNx,ix + halfpixel);
+    double xmin = MAX(0.0,ix - halfpixel);
+    double xmax = MIN<double>(NNx,ix + halfpixel);
     if(xmin >= xmax) continue;
 
-    double ymin = MAX(0,iy - halfpixel);
-    double ymax = MIN(NNy,iy + halfpixel);
+    double ymin = MAX(0.0,iy - halfpixel);
+    double ymax = MIN<double>(NNy,iy + halfpixel);
     if(ymin >= ymax) continue;
     
-    long imin = MIN((long)(xmin),NNx-1);
-    long imax = MIN((long)(xmax),NNx-1);
-    long jmin = MIN((long)(ymin),NNy-1);
-    long jmax = MIN((long)(ymax),NNy-1);
+    long imin = MIN<long>((long)(xmin),NNx-1);
+    long imax = MIN<long>((long)(xmax),NNx-1);
+    long jmin = MIN<long>((long)(ymin),NNy-1);
+    long jmax = MIN<long>((long)(ymax),NNy-1);
     long jj;
     
-    for(size_t j = jmin ; j <= jmax ; ++j ){
-      double area1 = MIN(ymax,j+1) -  MAX(ymin,j);
+    for(long j = jmin ; j <= jmax ; ++j ){
+      double area1 = MIN<double>(ymax,j+1) -  MAX<double>(ymin,j);
       if(area1 <= 0.0) continue;
       jj = NNx*j;
-      for(size_t i = imin ; i <= imax ; ++i ){
-        double area = (MIN(xmax,i+1) -  MAX(xmin,i)) * area1 ;
+      for(long i = imin ; i <= imax ; ++i ){
+        double area = (MIN<double>(xmax,i+1) -  MAX<double>(xmin,i)) * area1 ;
         map[ii] += pmap.map[i + jj]*area/res_ratio2;
       }
     }
@@ -2403,7 +2779,10 @@ void PixelMap::paste(const PixelMap& pmap){
   }
 }
 
-void PixelMap::paste(const PixelMap& pmap,long nx_ll,long ny_ll){
+void PixelMap::paste(const PixelMap& pmap
+                     ,long nx_ll    // lower left pixel of this
+                     ,long ny_ll
+                     ){
   
   if(resolution != pmap.resolution){
     std::cerr << "PixeLMap::paste() resolution of image pasted in must of equal or higher resolution" << std::endl;
@@ -2421,8 +2800,8 @@ void PixelMap::paste(const PixelMap& pmap,long nx_ll,long ny_ll){
   if(nx_ur > Nx) nx_ur = Nx;
   if(ny_ur > Ny) ny_ur = Ny;
  
-  for(long j = MAX(ny_ll,0) ; j<ny_ur ; ++j ){
-    for(long i= MAX(nx_ll,0) ; i<nx_ur ; ++i ){
+  for(long j = MAX<long>(ny_ll,0) ; j<ny_ur ; ++j ){
+    for(long i= MAX<long>(nx_ll,0) ; i<nx_ur ; ++i ){
       map[i+j*Nx] += pmap(i-nx_ll,j-ny_ll);
     }
   }

@@ -286,7 +286,7 @@ void ImageFinding::find_crit(
         crtcurve[ii].critical_center[1] += p[1];
         ++kk;
       }
-      crtcurve[ii].critical_center /= crtcurve[ii].critcurve.size();
+      crtcurve[ii].critical_center /= kk;
       
       Utilities::windings(crtcurve[ii].critical_center,crtcurve[ii].critcurve,&(crtcurve[ii].critical_area));
       
@@ -658,15 +658,22 @@ void ImageFinding::find_crit(
         crtcurve[ii].critical_center[1] += p[1];
         ++kk;
       }
-      crtcurve[ii].critical_center /= crtcurve[ii].critcurve.size();
+      crtcurve[ii].critical_center /= kk;
       
       Utilities::windings(crtcurve[ii].critical_center,crtcurve[ii].critcurve,&(crtcurve[ii].critical_area));
       
       //***************** move to source plane ************/
       
       //crtcurve[ii].caustic_curve_outline = Utilities::Geometry::MagicHull(crtcurve[ii].caustic_curve_intersecting);
-      crtcurve[ii].caustic_curve_outline =   Utilities::TightHull( crtcurve[ii].caustic_curve_intersecting );
 
+      try{
+        crtcurve[ii].caustic_curve_outline = Utilities::TighterHull( crtcurve[ii].caustic_curve_intersecting );
+      }catch(...){
+ //       crtcurve[ii].caustic_curve_outline =  crtcurve[ii].caustic_curve_intersecting ;
+ //       Utilities::RemoveIntersections(crtcurve[ii].caustic_curve_intersecting);
+        Utilities::convex_hull(crtcurve[ii].caustic_curve_intersecting
+                               ,crtcurve[ii].caustic_curve_outline);
+    }
       
       std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
       /*
@@ -1060,8 +1067,8 @@ void ImageFinding::find_crit(
  
     Utilities::windings(critcurves[i].critical_center,critcurves[i].critcurve,&(critcurves[i].critical_area));
    
-    
-    lens.rayshooterInternal(Npoints,critcurves[i].critcurve.data());
+    if(verbose) std::cout << "critical area = " << critcurves[i].critical_area/arcsecTOradians/arcsecTOradians << " arcsec^2" << std::endl;
+    lens.rayshooterInternal(critcurves[i].critcurve.size(),critcurves[i].critcurve.data());
     
     critcurves[i].caustic_center *= 0;
     critcurves[i].caustic_curve_intersecting.resize(Npoints);
@@ -1073,8 +1080,13 @@ void ImageFinding::find_crit(
     
     //critcurves[i].caustic_curve_outline = Utilities::Geometry::MagicHull(critcurves[i].caustic_curve_intersecting);
 
-    critcurves[i].caustic_curve_outline =   Utilities::TightHull( critcurves[i].caustic_curve_intersecting );
-
+    try{
+      critcurves[i].caustic_curve_outline = Utilities::TighterHull( critcurves[i].caustic_curve_intersecting );
+    }catch(...){
+ //     critcurves[i].caustic_curve_outline =  critcurves[i].caustic_curve_intersecting ;
+      Utilities::RemoveIntersections(critcurves[i].caustic_curve_outline);
+    }
+    
     Utilities::windings(critcurves[i].caustic_center,critcurves[i].caustic_curve_outline,&(critcurves[i].caustic_area));
     critcurves[i].caustic_intersections = -1;
     
@@ -2179,9 +2191,6 @@ void ImageFinding::find_contour(
     crtcurve[ii].caustic_center[1] /= hull.size();
     
     Utilities::windings(crtcurve[ii].caustic_center.x,hull.data(),hull.size(),&(crtcurve[ii].caustic_area));
-    
-    
-    
   }
   
   

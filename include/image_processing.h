@@ -7,21 +7,26 @@
 
 #ifndef IMAGE_PROCESSING_H_
 #define IMAGE_PROCESSING_H_
- 
-#include "Tree.h"
+
+#include <complex>
+#include <vector>
+#include <tuple>
+
+#include "point.h"
+#include "image_info.h"
+//#include "Tree.h"
+//#include "utilities_slsim.h"
+//#include "image_processing.h"
+#include "source.h"
+
 #ifdef ENABLE_FFTW
 #include "fftw3.h"
 #endif
 
-#include "utilities_slsim.h"
-#include "image_processing.h"
-#include "source.h"
-#include <complex>
-
 // forward declaration
 struct Grid;
 struct GridMap;
-class Source;
+//class Source;
 
 /// These are partial units for the pixel map that can be used to ensure consistency.  For example, maps with different units cannot be added together.  default: ndef
 enum class PixelMapUnits {
@@ -36,8 +41,7 @@ enum class PixelMapUnits {
 std::string to_string(PixelMapUnits unit);
 
 /**
- * \brief Takes image structure and pixelizes the flux into regular pixel grid which then
- * can be exported as a fits file, smoothed, etc. like an image.
+ * \brief Image structure that can be manipulated and exported to/from fits files.
  *
  */
 class PixelMap
@@ -48,6 +52,7 @@ public:
   PixelMap(const PixelMap& other);
   PixelMap(PixelMap&& other);
 	PixelMap(const PixelMap& pmap, const double* center, std::size_t Npixels);
+  PixelMap(const PixelMap& pmap,long nx,long ny, std::size_t Npixels);
 	PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
 	PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
 	PixelMap(std::string fitsfilename
@@ -121,7 +126,7 @@ public:
    **/
   void paste(const PixelMap& pmap);
 
-  /// paste a PixelMap on with the lower left pixel match to [nx,ny]
+  /// paste a PixelMap on with the lower left pixel match to [nx,ny] of this
   void paste(const PixelMap& pmap,long nx,long ny);
 
   /** \brief copy a PixelMap that must be the same without creating a new one..
@@ -136,10 +141,10 @@ public:
     Point_2d s_center;
     source.getTheta(s_center);
     
-    if( s_center[0] + source.getRadius() < map_boundary_p1[0] ) return 0.0;
-    if( s_center[0] - source.getRadius() > map_boundary_p2[0] ) return 0.0;
-    if( s_center[1] + source.getRadius() < map_boundary_p1[1] ) return 0.0;
-    if( s_center[1] - source.getRadius() > map_boundary_p2[1] ) return 0.0;
+    if( (s_center[0] + source.getRadius() ) < map_boundary_p1[0] ) return 0.0;
+    if( (s_center[0] - source.getRadius() ) > map_boundary_p2[0] ) return 0.0;
+    if( (s_center[1] + source.getRadius() ) < map_boundary_p1[1] ) return 0.0;
+    if( (s_center[1] - source.getRadius() ) > map_boundary_p2[1] ) return 0.0;
     
     int nthreads = Utilities::GetNThreads();
     PosType totals[nthreads];
@@ -175,25 +180,31 @@ public:
   void drawdisk(PosType r_center[],PosType radius,PosType value,int Nstrip);
 	void AddGrid(const Grid &grid,double value = 1.0);
   void AddGrid(const Grid &grid,LensingVariable val);
-
+  
 	void Renormalize(double factor);
 	void AddValue(std::size_t i, double value);
 	void AssignValue(std::size_t i, double value);
 	void printASCII() const;
 	void printASCIItoFile(std::string filename) const;
 	void printFITS(std::string filename,bool Xflip = false, bool verbose = false);
-  void printFITS(std::string filename,std::vector<std::tuple<std::string,double,std::string>> &extra_header_info, bool verbose);
+  void printFITS(std::string filename,std::vector< std::tuple<std::string,double,std::string> > &extra_header_info, bool verbose);
+  
+  /// This overides all header information and relaces it with the inputs. Meant for making a modified copy
+  void printFITS(std::string filename  /// file to create
+                ,std::vector<std::string> &headercards /// header information in cfitsio "card" format
+                 );
 
 	void smooth(double sigma);
 
 	inline double getValue(std::size_t i) const { return map[i]; }
   inline double & operator[](std::size_t i) { return map[i]; };
-  const double & operator[](std::size_t i) const { return map[i]; };
+  double operator[](std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i) const { return map[i]; };
   inline double operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
   inline double & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
   
 	PixelMap& operator+=(const PixelMap& rhs);
+  void operator+=(double f){map +=f;};
   //friend PixelMap operator+(const PixelMap&, const PixelMap&);
   PixelMap operator+(const PixelMap&) const;
 
@@ -207,10 +218,7 @@ public:
   PixelMap operator/(const PixelMap& a) const;
 
 	PixelMap& operator*=(PosType b);
-
- 	//friend PixelMap operator*(const PixelMap&, PosType b);
-  /// element wise multiplictioan
-  PixelMap operator*=(const PixelMap &m) const;
+  PixelMap operator*(PosType b) const;
 
 	std::valarray<double>& data() { return map; }
 	
@@ -221,12 +229,14 @@ public:
   static void swap(PixelMap&, PixelMap&);
   
   /// return average pixel value
-  PosType ave() const;
+  PosType ave() const {return map.sum()/map.size();}
   /// return sum of all pixel values
-  PosType sum() const;
+  PosType sum() const {return map.sum();};
   /// Total number of pixels
   size_t size(){return map.size();}
-	
+  double max() const{ return map.max(); }
+  double min() const{ return map.min(); }
+
   void FindArc(PosType &radius,PosType *xc,PosType *arc_center,PosType &arclength,PosType &width
                          ,PosType threshold);
   
@@ -244,6 +254,12 @@ public:
   void find_position(PosType x[],std::size_t const index) const;
   /// get the index for a position, returns -1 if out of map
   void find_position(PosType x[],std::size_t const ix,std::size_t const iy) const;
+  
+  /// rotate and scale the image while keeping pixels, resoluiton
+  PixelMap rotate(
+                  PosType theta  /// counter-clockwise rotation (radians)
+                  ,PosType scale=1  /// scale <1 shrinks it
+                  );
   
   /// interpolate to point x[]
   PosType linear_interpolate(PosType x[]);
@@ -267,8 +283,6 @@ public:
   /// Draw a rectangle
   void drawSquare(PosType p1[],PosType p2[],PosType value);
   void drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip);
-  
-#ifdef ENABLE_FFTW
 
   /// Find the power spectrum of the map
   void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
@@ -308,8 +322,50 @@ public:
     std::valarray<double> tmp = Utilities::AdaptiveSmooth(data(),Nx,Ny,value);
     map = tmp;
   }
-#endif
-
+  
+  /// returns a vector of  contour curves
+  void find_contour(double level
+                    ,std::vector<std::vector<Point_2d> > &points
+                    ,std::vector<bool> &hits_edge
+                    ) const;
+  /** find all the points above level divided into seprated groups
+   
+   Groups with points are connected regions above level.
+   Groups without points are regions surrounded by regions above level, i.e. holes.
+   */
+  
+  void find_islands_holes(double level,
+                    std::vector<std::vector<size_t> > &points
+                    ) const;
+  
+  /** This applies a definition of lesning for a resolved source based on that of Sonnenfeld et al. 2023
+   
+   This is meant to be used on a signal-to-noise map of the lensed source only.
+   
+   The definition does the following tests:
+   1) define a footprint at surface brightness level `pixel_threshold`
+   2) romove disconected region that have signal-to-noise below `min_sn_per_image `
+   3) if there are multiple images or a hole in the image `lens_TF =true`
+   4) if there is one image with no hole increase the threshold and apply 3) until the it is classified as a
+          lens or it reaches the maximum surface brightness level
+   
+   */
+  void lens_definition(double min_sn_per_image                 /// signal-to-noise required for a seporate image (ex 10)
+                       ,double pixel_threshold                 /// signal-to-noise threshold that defines the footprint (ex. 2)
+                       ,int &Nimages                           /// the number of images
+                       ,double &total_sig_noise_source         /// gives the total signal-to-noise of all images
+                       ,std::vector<size_t> &maxima_indexes    /// index of maxima
+                       ,std::vector<std::vector<size_t> > &image_points
+                       ,bool &lens_TF                          /// whether it passes lens diffintion
+                       ,double &level                          /// levels on which the multiple images are defined
+                       ,size_t &n_pix_in_source                 /// number of pixels in footprint
+                       ,bool verbose = false
+                       );
+ 
+  
+  /// find maxima that are above minlevel
+  std::vector<size_t> maxima(double minlevel) const;
+  
   /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
    
    On return, 'pixel_index' is ordered into groups and the 'heads' list points to the first elemant 
@@ -437,8 +493,8 @@ private:
   std::vector<std::tuple<std::string,std::string,std::string> > headers_string;
 
   std::valarray<double> map;
-	std::size_t Nx;
-	std::size_t Ny;
+	long Nx;
+	long Ny;
   double resolution,rangeX,rangeY,center[2];
   double RA=0,DEC=0; // optional coordinates of center
 	double map_boundary_p1[2],map_boundary_p2[2];
@@ -489,6 +545,8 @@ private:
     }
   }
   
+  // find if pixel k is in the curve which must be in pixel units, meant to be used in conjunction with Utilities::find_boundaries<>
+  bool incurve(long k,std::vector<Point_2d> &curve) const;
 };
 
 enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z};
@@ -514,7 +572,23 @@ public:
   size_t getNyOutput() const { return Npix_y_output;}
 
   std::valarray<double> getPSF(){return map_psf;}
-  void setPSF(std::string psf_file);
+  //void setPSF(std::string psf_file);
+  void setPSF(std::string psf_file,double resolution=0);
+  void setPSF(PixelMap &psf_map);
+  /// rotate and scale the psf from the original
+  void rotatePSF(double theta   /// counter-clockwise rotation (radians)
+                 ,double scale_x=1  /// scale <1 shrinks it
+                 ,double scale_y=1  /// scale <1 shrinks it
+  );
+  
+  /// add two PSFs to simulate stacking
+  void coaddPSF(double f         /// relative weight of the PSFs, 1 being equal weight
+                ,double theta1   /// ratation of first PSF
+                ,double theta2   /// rotation of second PSF
+                ,double scale_x  /// scale <1 shrinks it
+                ,double scale_y  /// scale <1 shrinks it
+                );
+ 
   void ApplyPSF(PixelMap &map_in,PixelMap &map_out);
   float getPixelSize() const {return pix_size;}
   void setNoiseCorrelation(std::string nc_file);
@@ -535,9 +609,12 @@ public:
   virtual float getBackgroundNoise() const = 0;
 
   /// convert using stan
-  virtual double mag_to_flux(double m) const = 0;
-  virtual double flux_to_mag(double flux) const = 0;
-  
+  virtual double mag_to_counts(double m) const = 0;
+  virtual double counts_to_mag(double flux) const = 0;
+  virtual double zeropoint() const = 0;
+  virtual void setZeropoint(double zpoint) = 0;
+
+
 protected:
 
   double pix_size; // pixel size (in rad)
@@ -549,7 +626,7 @@ protected:
   // the number of pixels in the oversamples image
   size_t Npix_x_input,Npix_y_input;
  
-  float oversample; // psf oversampling factor
+  float psf_oversample; // psf oversampling factor
   void downsample(PixelMap &map_in,PixelMap &map_out) const;  // downsize from Npix_input to Npix_output
   
   PixelMap map_scratch;
@@ -560,6 +637,7 @@ private:
 
   void fftpsf();  // FFT the psf for later use
   std::valarray<double> map_psf;  // array of the point spread function
+  std::valarray<double> map_psfo;  // initial array of the point spread function
   
   std::vector<std::complex<double> > fft_psf;
   std::vector<std::complex<double> > fft_padded;
@@ -596,20 +674,20 @@ private:
 class ObsVIS : public Obs{
 private:
   
-  // standard erg s−1 cm−2 Hz−1
-  double mag_zeropoint = -24.4;
-  double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
+  // standard from magnitude to e- per sec
+  double zero_point = 24.4;
+  //double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
   
-  double gain = 11160; // e-/ADU (Analog Digital Units)
+  //double gain = 11160; // e-/ADU (Analog Digital Units)
   //double exp_num = 4;
   //double exp_time = 2260.;  // seconds
-  double l = 7103.43;
-  double dl = 3318.28;
+  //double l = 7103.43;
+  //double dl = 3318.28;
   //double seeing = 0.18;
   
   // derived parameters;
   double sigma_background;  // background var in ergs / cm^2 / s / Hz
-  double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
+  //double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
 
   // adds random cosmic rays to the noise map
   void cosmics(PixelMap &error_map
@@ -619,45 +697,72 @@ private:
   
 public:
   
+  // exposure times are set to wide survey expectations
   ObsVIS(size_t Npix_x,size_t Npix_y
          ,int oversample
+         ,double resolution = 0.1*arcsecTOradians
          //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
   );
   
+  ObsVIS(size_t Npix_x
+         ,size_t Npix_y
+         ,const std::vector<double> &exposure_times  // in seconds
+         ,int oversample
+         );
+  
+  ObsVIS(size_t Npix_x
+         ,size_t Npix_y
+         ,const std::vector<double> &exposure_times  // in seconds
+         ,int oversample
+         ,double resolution
+         ,double background_sigma
+         );
   ~ObsVIS(){};
   
+  /// add poisson noise to an image that is in units of electrons
+  void AddPoisson(PixelMap &pmap
+                         ,Utilities::RandomNumbers_NR &ran
+                     );
   
   /// Applies  noise (read-out + Poisson) on an image, returns noise map
   void AddNoise(PixelMap &pmap
                  ,PixelMap &error_map
-                 ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+                 ,Utilities::RandomNumbers_NR &ran
+                ,bool cosmic=true);
 
   void Convert(PixelMap &map_in
                ,PixelMap &map_out
-               ,PixelMap &error_map  // this is 1/sigma^2
+               ,PixelMap &error_map  // this is sigma
                ,bool psf
                ,bool noise
-               ,Utilities::RandomNumbers_NR &ran,bool cosmic=true);
+               ,Utilities::RandomNumbers_NR &ran
+               ,bool cosmic=true);
   
  
-  double mag_to_flux(double m) const{
+  double mag_to_counts(double m) const{
     if(m == 100) return 0;
-    return pow(10,-0.4*(m - mag_zeropoint));
+    return pow(10,-0.4*(m + zero_point));
   }
-  double flux_to_mag(double flux) const{
+  double counts_to_mag(double flux) const{
     if(flux <=0) return 100;
-    return -2.5 * log10(flux) + mag_zeropoint;
+    return -2.5 * log10(flux) - zero_point;
   }
- 
-  double flux_to_counts(double flux) const{
-    if(flux <=0) return 100;
-    return -2.5 * log10(flux) + mag_zeropoint;
-  }
- 
-  // returns std of pixels in surface brightness
-  float getBackgroundNoise() const {return sigma_background;}
-};
 
+  double zeropoint() const {return zero_point;}
+  void setZeropoint(double zpoint){zero_point=zpoint;}
+ 
+  /// returns std of pixels in e-
+  float getBackgroundNoise() const {
+    double dt = Utilities::vec_sum(t_exp);// 3 * t1 + t2;
+    
+    return sigma_background / sqrt(dt);
+  }
+private:
+  //double t1;
+  //double t2;
+  std::vector<double> t_exp;  // exposure times
+
+};
 
 /** 
  * \brief It creates a realistic image from the output of a ray-tracing simulation.
@@ -670,7 +775,8 @@ public:
 class Observation : public Obs
 {
 public:
-	Observation(Telescope tel_name,size_t Npix_x,size_t Npix_y);
+	Observation(Telescope tel_name,double exposure_time,int exposure_num
+              ,size_t Npix_x,size_t Npix_y, float oversample);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise
               ,size_t Npix_x,size_t Npix_y,double pix_size,float seeing = 0.);
 	Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise ,std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample = 1.);
@@ -688,6 +794,7 @@ public:
   /// seeing in arcsecs
 	float getSeeing() const {return seeing;}
 	float getZeropoint() const {return mag_zeropoint;}
+  void setZeropoint(double zpoint){mag_zeropoint=zpoint;}
     /// pixel size in radians
   float getBackgroundNoise(float resolution, UnitType unit = UnitType::counts_x_sec) const;
   float getBackgroundNoise() const {return 0;};
@@ -700,7 +807,8 @@ public:
                ,bool psf
                ,bool noise
                ,Utilities::RandomNumbers_NR &ran
-               ,bool cosmics=0);
+               ,bool cosmic=false
+               );
  
   /// returns factor by which code image units need to be multiplied by to get flux units
   //double flux_convertion_factor(){ return pow(10,-0.4*mag_zeropoint); }
@@ -708,15 +816,17 @@ public:
   void setExpTime(float time){exp_time = time;}
   void setPixelSize(float pixel_size){pix_size=pixel_size;}
  
-  double mag_to_flux(double m) const {
+  double mag_to_counts(double m) const {
     if(m == 100) return 0;
     return pow(10,-0.4*(m - mag_zeropoint));
   }
-  double flux_to_mag(double flux) const{
+  double counts_to_mag(double flux) const{
     if(flux <=0) return 100;
     return -2.5 * log10(flux) + mag_zeropoint;
   }
-
+  double zeropoint() const{
+     return mag_zeropoint;
+   }
 private:
   
 	//float diameter;  // diameter of telescope (in cm)

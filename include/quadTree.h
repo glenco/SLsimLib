@@ -27,7 +27,7 @@
 
 /**
  * \brief TreeQuadParticles is a class for calculating the deflection, kappa and gamma by tree method.
- *
+ **<pre>
  * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
  * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
  * the tree is built in such a way the large particles are stored in branches that are no smaller
@@ -36,7 +36,11 @@
  *
  * The default value of theta = 0.1 generally gives better than 1% accuracy on alpha.
  * The shear and kappa are always more accurate than the deflection.
+ 
+ *  Parameters:
  *
+ *   inv_area - If not zero, there is an effective uniform negative mass sheet that compensates for the positive mass.  This should be this should be set to the area in Mpc^-2 over which the integral of the surface density should be zero.
+ *</pre>
  */
 
 template<typename PType>
@@ -47,7 +51,7 @@ public:
       ,IndexType Npoints
       ,float mass_fixed = -1
       ,float size_fixed = -1
-      ,PosType my_sigma_background = 0
+      ,PosType my_inv_area = 0 /// if the total mass in field is meant to be zero this should be set to the inverse of the area of the region in Mpc^-2
       ,int bucket = 5
       ,PosType theta_force = 0.1
       ,bool my_periodic_buffer = false
@@ -78,9 +82,10 @@ protected:
   double mass_fixed = 0.0;
   bool MultiRadius;
   double size_fixed = 0.0;
+  double inv_area;
 
   IndexType Nparticles;
-  PosType sigma_background;
+  //PosType sigma_background;
   int Nbucket;
   
   PosType force_theta;
@@ -245,7 +250,7 @@ TreeQuadParticles<PType>::TreeQuadParticles(
                    ,IndexType Npoints
                    ,float mass_fixed
                    ,float size_fixed
-                   ,PosType my_sigma_background /// background kappa that is subtracted
+                   ,PosType my_inv_area /// inverse of the area of the field, 0 for no background subtraction
                    ,int bucket
                    ,PosType theta_force
                    ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadParticles::force2D() for details.  See note for TreeQuadParticles::force2D_recur().
@@ -255,7 +260,7 @@ TreeQuadParticles<PType>::TreeQuadParticles(
 ):
 xxp(xpt)
 ,Nparticles(Npoints)
-,sigma_background(my_sigma_background)
+,inv_area(my_inv_area)
 ,Nbucket(bucket)
 ,force_theta(theta_force)
 ,max_range(maximum_range)
@@ -612,8 +617,10 @@ void TreeQuadParticles<PType>::CalcMoments(){
     
     rcom=sqrt(rcom);
     
-    if(force_theta > 0.0) cbranch->rcrit_angle = 1.15470*rcom/(force_theta);
-    else  cbranch->rcrit_angle=1.0e100;
+    if(force_theta > 0.0){
+      cbranch->r2crit_angle = 1.15470*rcom/(force_theta);
+      cbranch->r2crit_angle *= cbranch->r2crit_angle;
+    }else  cbranch->r2crit_angle=1.0e100;
     
   }while(tree->WalkStep(true));
   
@@ -687,10 +694,9 @@ void TreeQuadParticles<PType>::force2D(const PosType *ray,PosType *alpha,KappaTy
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
-  
-  *kappa -= sigma_background;
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+  //*kappa -= sigma_background;
   
   return;
 }
@@ -784,7 +790,6 @@ void TreeQuadParticles<PType>::walkTree_iter(
             xcm[0] = tree->xp[(*treeit)->particles[i]][0] - ray[0];
             xcm[1] = tree->xp[(*treeit)->particles[i]][1] - ray[1];
             
-            
             rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
             double screening = exp(-rcm2*inv_screening_scale2);
             if(rcm2 < 1e-20) rcm2 = 1e-20;
@@ -794,12 +799,12 @@ void TreeQuadParticles<PType>::walkTree_iter(
             //if(haloON){ prefac = halos[tmp_index]->get_mass(); }
             //else{ prefac = masses[tmp_index]; }
             
-            if(MultiMass) prefac = xxp[(*treeit)->particles[i]].Mass();
-            else prefac = mass_fixed;
+            double mass;
+            if(MultiMass) mass = xxp[(*treeit)->particles[i]].Mass();
+            else mass = mass_fixed;
             
-            prefac /= rcm2*PI/screening;
-            
-            tmp = -1.0*prefac;
+            prefac = mass/rcm2/PI*screening;
+            tmp = -mass*( screening/rcm2/PI - inv_area);
             
             alpha[0] += tmp*xcm[0];
             alpha[1] += tmp*xcm[1];
@@ -809,7 +814,8 @@ void TreeQuadParticles<PType>::walkTree_iter(
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += prefac*rcm2*0.5*log(rcm2);
+            *kappa -= mass*inv_area;
+            *phi += (prefac*log(rcm2) - mass*inv_area)*rcm2*0.5;
             
           } // end of for
         } // end of if(tree->atLeaf())
@@ -849,9 +855,11 @@ void TreeQuadParticles<PType>::walkTree_iter(
         
         allowDescent=false;
         
+        // monopole
         double screening = exp(-rcm2cell*inv_screening_scale2);
-        double tmp = -1.0*(*treeit)->mass/rcm2cell/PI*screening;
-        
+        //double tmp = -1.0*(*treeit)->mass/rcm2cell/PI*screening;
+        double tmp = (*treeit)->mass*( inv_area - screening/rcm2cell/PI );
+ 
         alpha[0] += tmp*xcm[0];
         alpha[1] += tmp*xcm[1];
         
@@ -877,6 +885,8 @@ void TreeQuadParticles<PType>::walkTree_iter(
         alpha[0] += tmp*xcm[0];
         alpha[1] += tmp*xcm[1];
         
+        *kappa -= (*treeit)->mass * inv_area;
+        *phi -= 0.5*(*treeit)->mass*inv_area;
       }
     }
   }while(treeit.TreeWalkStep(allowDescent));
@@ -884,12 +894,12 @@ void TreeQuadParticles<PType>::walkTree_iter(
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
-  {      //  taken out to speed up
-    *kappa -= sigma_background;
-    // *phi -= sigma_background * sigma_background ;
-  }
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0.0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0.0);
+  //{      //  taken out to speed up
+  //  *kappa -= sigma_background;
+  //  // *phi -= sigma_background * sigma_background ;
+  //}
   
   return;
 }
@@ -968,10 +978,10 @@ void TreeQuadParticles<PType>::force2D_recur(const PosType *ray,PosType *alpha,K
   
   // Subtract off uniform mass sheet to compensate for the extra mass
   //  added to the universe in the halos.
-  alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
-  alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[0] -= ray[0]*sigma_background*(inv_screening_scale2 == 0);
+  //alpha[1] -= ray[1]*sigma_background*(inv_screening_scale2 == 0);
   
-  *kappa -= sigma_background;
+  //*kappa -= sigma_background;
   
   return;
 }
@@ -997,7 +1007,7 @@ void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *r
     
     boxsize2 = (branch->boundary_p2[0]-branch->boundary_p1[0])*(branch->boundary_p2[0]-branch->boundary_p1[0]);
     
-    if( rcm2cell < (branch->rcrit_angle)*(branch->rcrit_angle) || rcm2cell < 5.83*boxsize2)
+    if( rcm2cell < branch->r2crit_angle || rcm2cell < 5.83*boxsize2)
     {
       
       // Treat all particles in a leaf as a point particle
@@ -1017,21 +1027,22 @@ void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *r
           
           //if(haloON ) { prefac = halos[tmp_index]->get_mass(); }
           //else{ prefac = masses[tmp_index]; }
-          prefac = xxp[tmp_index].mass();
-          prefac /= rcm2*PI/screening;
+          double mass = xxp[tmp_index].mass();
+          prefac = mass*screening/rcm2/PI;
+          //prefac /= rcm2*PI/screening;
           
           
-          alpha[0] += -1.0*prefac*xcm[0];
-          alpha[1] += -1.0*prefac*xcm[1];
+          alpha[0] += (inv_area*mass - prefac)*xcm[0];
+          alpha[1] += (inv_area*mass - prefac)*xcm[1];
           
           {
             tmp = -2.0*prefac/rcm2;
             
-            
             gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
             gamma[1] += xcm[0]*xcm[1]*tmp;
             
-            *phi += prefac*rcm2*0.5*log(rcm2);
+            *kappa -= mass*inv_area;
+            *phi += prefac*rcm2*0.5*log(rcm2) - mass*inv_area*rcm2/2;
           }
         }
       }
@@ -1079,7 +1090,7 @@ void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *r
     { // use whole cell
       
       double screening = exp(-rcm2cell*inv_screening_scale2);
-      double tmp = -1.0*branch->mass/rcm2cell/PI*screening;
+      double tmp = branch->mass*inv_area - branch->mass/rcm2cell/PI*screening;
       
       alpha[0] += tmp*xcm[0];
       alpha[1] += tmp*xcm[1];
@@ -1105,6 +1116,9 @@ void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *r
       
       alpha[0] += tmp*xcm[0];
       alpha[1] += tmp*xcm[1];
+      
+      *kappa -= inv_area * branch->mass;
+      *phi -= 0.5*branch->mass*rcm2cell*inv_area;
       
       return;
     }

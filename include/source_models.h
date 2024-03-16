@@ -5,15 +5,15 @@
  *      Author: bmetcalf
  */
 
-#ifndef source_declare
-#define source_declare
+#ifndef source_model_declare
+#define source_model_declare
 
-#include <source.h>
+#include "source.h"
 
 // Separate files
-double blr_surface_brightness_spherical(double x,SourceBLR *source);
-double blr_surface_brightness_spherical_random_motions(double x,SourceBLR *source);
-double blr_surface_brightness_spherical_circular_motions(double x,SourceBLR *source);
-double blr_surface_brightness_disk(double x[],SourceBLR *source);
+double blr_surface_brightness_spherical(double x,const SourceBLR *source);
+double blr_surface_brightness_spherical_random_motions(double x,const SourceBLR *source);
+double blr_surface_brightness_spherical_circular_motions(double x,const SourceBLR *source);
+double blr_surface_brightness_disk(double x[],const SourceBLR *source);
 
 #endif

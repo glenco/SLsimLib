@@ -4,7 +4,8 @@
  *  Created on: Sep 20, 2010
  *      Author: bmetcalf
  */
-#include "slsimlib.h"
+#include "source.h"
+#include "Tree.h"
 
 // computes the surface brightness associated with our simplest model
 // for the BLR. x is the projected "distance from center" coordinate
@@ -14,7 +15,7 @@
 // normalization is arbitrary for now.
 
 // inputs are in Mpc,days,Hz,Hz
-double blr_surface_brightness_spherical(double x,SourceBLR *source){
+double blr_surface_brightness_spherical(double x,const SourceBLR *source){
 
 	// some constants which need to be set in the real version but will be
 	// plucked from the air here
@@ -23,7 +24,7 @@ double blr_surface_brightness_spherical(double x,SourceBLR *source){
 	//static const float r_in = 2.3884456e-9; // Mpc
 	//static const float r_out = 4.2992021e-7; // Mpc
 	//static const float gam = -1.0;
-	float r,y,tau;
+	float r,tau;
 
 	tau = source->source_tau*8.39428142e-10;  // convert days to Mpc
 
@@ -31,14 +32,14 @@ double blr_surface_brightness_spherical(double x,SourceBLR *source){
 
 	if ( (r < source->source_r_in ) || (r > source->source_r_out) ) return 0.0;
 
-	y = r - tau;
+	//float y = r - tau;
 
 	//if( y < 0.0 ) return 0.0;  // optically thick accretion disk
 
 	return  x/pow(x*x + tau*tau,1.5) * pow(r/source->source_r_in,source->source_gamma-0.5);
 }
 
-double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
+double blr_surface_brightness_disk_old(double x[],const SourceBLR *source){
 
 	/* computes the surface brightness associated with our simplest model
 	// for the BLR. x is the projected "distance from center" coordinate
@@ -69,7 +70,7 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 	double zz_prime,xx_prime,yy_prime;
 	double sig_nu;
 
-	float DlDs = source->getDlDs();
+	double DlDs = source->getDlDs();
 
 	//printf("hi from BLR disk\n");
 
@@ -124,7 +125,7 @@ double blr_surface_brightness_disk_old(double x[],SourceBLR *source){
 		v_shift_z = v_shift_yprime * sin(source->source_inclination);
 
 		//sig_nu = sigma_0 * source->source_nuo;
-		sig_nu = MAX(sigma_0, 0.01 * vr) * source->source_nuo;
+		sig_nu = MAX<double>(sigma_0, 0.01 * vr) * source->source_nuo;
 		//sig_nu = 0.05 * vr * source->source_nuo;
 
 		nu_shift = v_shift_z * source->source_nuo;

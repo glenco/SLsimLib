@@ -5,7 +5,11 @@
  *      Author: mpetkova
  */
 
-#include "slsimlib.h"
+//#include "slsimlib.h"
+#include "lens_halos.h"
+#include "base_analens.h"
+#include "analytic_lens.h"
+#include "fitlens.h"
 
 template <typename T> PosType sgn(T val) {
     return (T(0) < val) - (val - T(0));

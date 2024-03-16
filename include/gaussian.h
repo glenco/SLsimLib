@@ -12,8 +12,10 @@
 #include <complex>
 #include <fstream>
 #include <vector>
-#include "slsimlib.h"
+//#include "slsimlib.h"
+#include "utilities_slsim.h"
 #include <functional>
+#include <valarray>
 
 
 #ifdef ENABLE_FFTW

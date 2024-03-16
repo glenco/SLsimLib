@@ -24,10 +24,10 @@ LensPlaneTree::LensPlaneTree(const LensPlaneTree &p)
   
   if(p.halo_tree->inv_screening_scale2 != 0){
     halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size()
-                                  ,p.halo_tree->sigma_background
+                                  ,p.halo_tree->inv_area
                                   ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
   }else{
-    halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->sigma_background);
+    halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->inv_area);
   }
 }
 
@@ -41,10 +41,10 @@ LensPlaneTree & LensPlaneTree::operator=(const LensPlaneTree &p){
     
     if(p.halo_tree->inv_screening_scale2 != 0){
       halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size()
-                                    ,p.halo_tree->sigma_background
+                                    ,p.halo_tree->inv_area
                                     ,5,0.1,true,sqrt(p.halo_tree->inv_screening_scale2));
     }else{
-      halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->sigma_background);
+      halo_tree = new TreeQuadHalos<LensHalo>(halos.data(),halos.size(),p.halo_tree->inv_area);
     }
   }
   
@@ -64,7 +64,7 @@ LensPlaneTree & LensPlaneTree::operator=(LensPlaneTree &&p){
 
 void LensPlaneTree::force(PosType *alpha,KappaType *kappa,KappaType *gamma
                           ,KappaType *phi,PosType *xx){
-	halo_tree->force2D_recur(xx,alpha,kappa,gamma,phi);
+	halo_tree->force2D(xx,alpha,kappa,gamma,phi);
 }
 
 

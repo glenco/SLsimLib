@@ -6,6 +6,7 @@
  */
 
 #include "slsimlib.h"
+#include "concave_hull.h"
 
 /**  orders points in a curve, separates disconnected curves
  *   curves[0...Maxcurves] must be allocated before
@@ -16,127 +17,127 @@
  *  can break down for crescent curves
  */
 
-void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
-  
-  //OldImageInfo* curves = new OldImageInfo(curves_in);
-  
-  long i,m,j,end;
-  //short spur,closed,attach;
-  unsigned long NpointsTotal;
-  PosType center[2],*theta;
-  //bool delta,tmp,step;
-  //ListHndl reservoir,orderedlist;
-  //Point *newpointarray;
-  
-  //std::printf("entering split_order_curve\n");
-  if(curves[0].Npoints==0){
-    *Ncurves=0;
-    return;
-  }
-  
-  NpointsTotal=curves[0].Npoints;
-  
-  splitter(curves,Maxcurves,Ncurves);
-  
-  /*
-   reservoir=NewList();
-   orderedlist=NewList();
-   
-   // copy points into a list
-   for(i=0;i<NpointsTotal;++i) InsertPointAfterCurrent(reservoir,&(curves[0].points[i]));
-   m=0;
-   i=0;
-   
-   // divide points into disconnected curves using neighbors-of-neighbors
-   while(reservoir->Npoints > 0 && i < Maxcurves){
-   curves[i].points=TakeOutCurrent(reservoir);
-   MoveToBottomList(orderedlist);
-   InsertPointAfterCurrent(orderedlist,curves[i].points);
-   MoveDownList(orderedlist);
-   NeighborsOfNeighbors(orderedlist,reservoir);
-   curves[i].Npoints=orderedlist->Npoints - m;
-   //std::printf("curves[%i].Npoints=%i %i %i\n",i,curves[i].Npoints,orderedlist->Npoints
-   //		,reservoir->Npoints);
-   m+=curves[i].Npoints;
-   ++i;
-   }
-   *Ncurves=i;
-   
-   // copy list back into array
-   point=curves[0].points;
-   newpointarray=NewPointArray(NpointsTotal);
-   MoveToTopList(orderedlist);
-   m=0;
-   i=0;
-   do{
-   if(i < *Ncurves && curves[i].points==orderedlist->current){
-			curves[i].points=&(newpointarray[m]);
-			++i;
-   }
-   PointCopyData(&(newpointarray[m]),orderedlist->current);
-   ++m;
-   }while(MoveDownList(orderedlist));
-   
-   assert(m == NpointsTotal);
-   */
-  // order curve points
-  theta=(PosType *)malloc(NpointsTotal*sizeof(PosType));
-  assert(theta);
-  for(i=0;i<*Ncurves;++i){
-    
-    if(curves[i].Npoints > 3){
-      // sort points by angle around center point
-      center[0]=center[1]=0;
-      for(m=0;m<curves[i].Npoints;++m){
-        center[0]+=curves[i].points[m].x[0];
-        center[1]+=curves[i].points[m].x[1];
-      }
-      center[0]/=curves[i].Npoints;
-      center[1]/=curves[i].Npoints;
-      
-      for(m=0;m<curves[i].Npoints;++m){
-        theta[m]=atan2(curves[i].points[m].x[1]-center[1]
-                       ,curves[i].points[m].x[0]-center[0]);
-      }
-      Utilities::quicksortPoints_multithread<4>(curves[i].points,theta,curves[i].Npoints);
-      
-      // check to make sure the center is inside the curves
-      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
-      
-      //std::printf("N=%i\n",curves[i].Npoints);
-      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)) > 0 );
-      
-      // find the last point that is a neighbor of the first point
-      m=curves[i].Npoints-1;
-      while(!AreBoxNeighbors(&(curves[i].points[0]),&(curves[i].points[m]))) --m;
-      end=m;
-      //assert(m > 0);
-      
-      //std::printf("windings = %i\n",windings(center,curves[i].points,curves[i].Npoints,&tmp1,0));
-      // walk curve to remove shadowing effect
-      j=0;
-      //end=0;
-      m=0;
-      while(j < curves[i].Npoints-1){
-        walkcurve(curves[i].points,curves[i].Npoints,&j,&end);
-        //std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,curves[i].Npoints,end+1,j);
-        if(j < curves[i].Npoints-1)
-          backtrack(curves[i].points,curves[i].Npoints,&j,-1,&end);
-        ++m;
-        assert(m < curves[i].Npoints);
-      }
-      //std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,curves[i].Npoints,end+1,j);
-      curves[i].Npoints=end+1;
-    }
-  }
-  
-  free(theta);
-  //free(reservoir);
-  //free(orderedlist);
-  //free(point);
-  
-  return ;
-}
+//void split_order_curve4(OldImageInfo *curves,int Maxcurves,int *Ncurves){
+//
+//  //OldImageInfo* curves = new OldImageInfo(curves_in);
+//
+//  long i,m,j,end;
+//  //short spur,closed,attach;
+//  unsigned long NpointsTotal;
+//  PosType center[2],*theta;
+//  //bool delta,tmp,step;
+//  //ListHndl reservoir,orderedlist;
+//  //Point *newpointarray;
+//
+//  //std::printf("entering split_order_curve\n");
+//  if(curves[0].Npoints==0){
+//    *Ncurves=0;
+//    return;
+//  }
+//
+//  NpointsTotal=curves[0].Npoints;
+//
+//  splitter(curves,Maxcurves,Ncurves);
+//
+//  /*
+//   reservoir=NewList();
+//   orderedlist=NewList();
+//
+//   // copy points into a list
+//   for(i=0;i<NpointsTotal;++i) InsertPointAfterCurrent(reservoir,&(curves[0].points[i]));
+//   m=0;
+//   i=0;
+//
+//   // divide points into disconnected curves using neighbors-of-neighbors
+//   while(reservoir->Npoints > 0 && i < Maxcurves){
+//   curves[i].points=TakeOutCurrent(reservoir);
+//   MoveToBottomList(orderedlist);
+//   InsertPointAfterCurrent(orderedlist,curves[i].points);
+//   MoveDownList(orderedlist);
+//   NeighborsOfNeighbors(orderedlist,reservoir);
+//   curves[i].Npoints=orderedlist->Npoints - m;
+//   //std::printf("curves[%i].Npoints=%i %i %i\n",i,curves[i].Npoints,orderedlist->Npoints
+//   //		,reservoir->Npoints);
+//   m+=curves[i].Npoints;
+//   ++i;
+//   }
+//   *Ncurves=i;
+//
+//   // copy list back into array
+//   point=curves[0].points;
+//   newpointarray=NewPointArray(NpointsTotal);
+//   MoveToTopList(orderedlist);
+//   m=0;
+//   i=0;
+//   do{
+//   if(i < *Ncurves && curves[i].points==orderedlist->current){
+//			curves[i].points=&(newpointarray[m]);
+//			++i;
+//   }
+//   PointCopyData(&(newpointarray[m]),orderedlist->current);
+//   ++m;
+//   }while(MoveDownList(orderedlist));
+//
+//   assert(m == NpointsTotal);
+//   */
+//  // order curve points
+//  theta=(PosType *)malloc(NpointsTotal*sizeof(PosType));
+//  assert(theta);
+//  for(i=0;i<*Ncurves;++i){
+//
+//    if(curves[i].Npoints > 3){
+//      // sort points by angle around center point
+//      center[0]=center[1]=0;
+//      for(m=0;m<curves[i].Npoints;++m){
+//        center[0]+=curves[i].points[m].x[0];
+//        center[1]+=curves[i].points[m].x[1];
+//      }
+//      center[0]/=curves[i].Npoints;
+//      center[1]/=curves[i].Npoints;
+//
+//      for(m=0;m<curves[i].Npoints;++m){
+//        theta[m]=atan2(curves[i].points[m].x[1]-center[1]
+//                       ,curves[i].points[m].x[0]-center[0]);
+//      }
+//      Utilities::quicksortPoints_multithread<4>(curves[i].points,theta,curves[i].Npoints);
+//
+//      // check to make sure the center is inside the curves
+//      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)));
+//
+//      //std::printf("N=%i\n",curves[i].Npoints);
+//      //assert(abs(windings(center,curves[i].points,curves[i].Npoints,&tmp1,0)) > 0 );
+//
+//      // find the last point that is a neighbor of the first point
+//      m=curves[i].Npoints-1;
+//      while(!AreBoxNeighbors(&(curves[i].points[0]),&(curves[i].points[m]))) --m;
+//      end=m;
+//      //assert(m > 0);
+//
+//      //std::printf("windings = %i\n",windings(center,curves[i].points,curves[i].Npoints,&tmp1,0));
+//      // walk curve to remove shadowing effect
+//      j=0;
+//      //end=0;
+//      m=0;
+//      while(j < curves[i].Npoints-1){
+//        walkcurve(curves[i].points,curves[i].Npoints,&j,&end);
+//        //std::printf("i = %i Npoints = %i end+1 = %i j = %i\n",i,curves[i].Npoints,end+1,j);
+//        if(j < curves[i].Npoints-1)
+//          backtrack(curves[i].points,curves[i].Npoints,&j,-1,&end);
+//        ++m;
+//        assert(m < curves[i].Npoints);
+//      }
+//      //std::printf("i = %i Npoints = %i end+1 = %i j=%i\n",i,curves[i].Npoints,end+1,j);
+//      curves[i].Npoints=end+1;
+//    }
+//  }
+//
+//  free(theta);
+//  //free(reservoir);
+//  //free(orderedlist);
+//  //free(point);
+//
+//  return ;
+//}
 namespace Utilities{
 
   /** 
@@ -232,7 +233,7 @@ namespace Utilities{
     newnumber = order_curve4(tmpcurve,curve->Nunits());
     
     // resort points in imagekist to match tmpcurve
-    for(i=0;i<Npoints;++i){
+    for(int i=0;i<Npoints;++i){
       curve->JumpDown(i);
       do{
         if(tmpcurve[Npoints-1-i].id == curve->getCurrent()->id){
@@ -1464,70 +1465,71 @@ short backtrack(Point *points,long Npoints,long *j,long jold,long *end){
 /** meant to be a sure fire way to split all points into separate images or
  *   curves into separate curves
  */
-void splitter(OldImageInfo *images,int Maximages,int *Nimages){
-  long i,m,j;
-  PointList imagelist;
-  unsigned long NpointsTotal=0;
-  Point *newpointarray;
-  
-  //assert(images[0].Npoints);
-  
-  if(images[0].Npoints==0){
-    *Nimages=0;
-    return;
-  }
-  
-  NpointsTotal = images[0].Npoints;
-  
-  PointList::iterator imagelist_it;
-  imagelist_it.current = imagelist.Bottom();
-  // copy image points into a list
-  for(i=0;i<images[0].Npoints;++i) imagelist.InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
-  
-  assert(imagelist.size() == images[0].Npoints);
-  //std::printf("imagelist = %il\n",imagelist->Npoints);
-  
-  splitlist(&imagelist,images,Nimages,Maximages);
-  //std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
-  assert(imagelist.size() == NpointsTotal);
-  
-  // copy list back into array
-  MemmoryBank<Point> factory;
-  //newpointarray = NewPointArray(NpointsTotal);
-  newpointarray = factory(NpointsTotal);
-
-  imagelist_it.current = imagelist.Top();
-  m=0;
-  i=0;
-  do{
-    if(i < *Nimages && images[i].points == *imagelist_it){
-      images[i].points=&(newpointarray[m]);
-      ++i;
-    }
-    PointCopyData(&(newpointarray[m]),*imagelist_it);
-    ++m;
-  }while(--imagelist_it);
-  
-  assert(m == NpointsTotal);
-  
-  // take out images that have no points in them
-  for(i=0;i<*Nimages;++i){
-    if(images[i].Npoints==0){
-      for(j=i;j<*Nimages-1;++j){
-        images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
-        images[j].Npoints=images[j+1].Npoints;
-        images[j].points=images[j+1].points;
-        images[j].area=images[j+1].area;
-        images[j].area_error=images[j+1].area_error;
-        for(m=0;m<3;++m) images[j].gridrange[m]=images[j+1].gridrange[m];
-      }
-      --(*Nimages);
-      --i;
-    }
-  }
-  
-  return ;
-}
+//void splitter(OldImageInfo *images,int Maximages,int *Nimages){
+//
+//  PointList imagelist;
+//  unsigned long NpointsTotal=0;
+//  //Point *newpointarray;
+//
+//  //assert(images[0].Npoints);
+//
+//  if(images[0].Npoints==0){
+//    *Nimages=0;
+//    return;
+//  }
+//
+//  NpointsTotal = images[0].Npoints;
+//
+//  PointList::iterator imagelist_it;
+//  imagelist_it.current = imagelist.Bottom();
+//  // copy image points into a list
+//  for(long i=0;i<images[0].Npoints;++i) imagelist.InsertPointAfterCurrent(imagelist_it,&(images[0].points[i]));
+//
+//  assert(imagelist.size() == images[0].Npoints);
+//  //std::printf("imagelist = %il\n",imagelist->Npoints);
+//
+//  splitlist(&imagelist,images,Nimages,Maximages);
+//  //std::printf("imagelist = %il NpointsTotal = %il\n",imagelist->Npoints,NpointsTotal);
+//  assert(imagelist.size() == NpointsTotal);
+//
+//  // copy list back into array
+//  //MemmoryBank<Point> factory;
+//  //newpointarray = NewPointArray(NpointsTotal);
+//  //newpointarray = factory(NpointsTotal);
+//  std::vector<Point> newpointarray(NpointsTotal);
+//
+//  imagelist_it.current = imagelist.Top();
+//  {
+//    long i=0,m=0;
+//    do{
+//      if(i < *Nimages && images[i].points == *imagelist_it){
+//        images[i].points=&(newpointarray[m]);
+//        ++i;
+//      }
+//      PointCopyData(&(newpointarray[m]),*imagelist_it);
+//      ++m;
+//    }while(--imagelist_it);
+//
+//    assert(m == NpointsTotal);
+//  }
+//  // take out images that have no points in them
+//  for(long i=0;i<*Nimages;++i){
+//    if(images[i].Npoints==0){
+//      for(long j=i;j<*Nimages-1;++j){
+//        images[j].ShouldNotRefine=images[j+1].ShouldNotRefine;
+//        images[j].Npoints=images[j+1].Npoints;
+//        images[j].points=images[j+1].points;
+//        images[j].area=images[j+1].area;
+//        images[j].area_error=images[j+1].area_error;
+//        for(int m=0;m<3;++m) images[j].gridrange[m]=images[j+1].gridrange[m];
+//      }
+//      --(*Nimages);
+//      --i;
+//    }
+//  }
+//
+//  return ;
+//}
 
 /** reorders imagelist into separate images using reliable
  *      neighbor-of-neighbor method
@@ -1705,8 +1707,8 @@ namespace Utilities{
     return wn;
   }
   int windings(
-               Point_2d &x              /// Point for which the winding number is calculated
-               ,std::vector<Point_2d> &point         /// The points on the border.  These must be ordered.
+               const Point_2d &x              /// Point for which the winding number is calculated
+               ,const std::vector<Point_2d> &point         /// The points on the border.  These must be ordered.
                ,PosType *area          /// returns absolute the area within the curve with oriented border
   ){
     int wn=0;
@@ -2160,7 +2162,31 @@ std::vector<double *> Utilities::convex_hull(std::vector<double *> &P)
   return H;
 }
 
+double Utilities::interior_mass(const std::vector<Point_2d> &alpha
+                     ,const std::vector<Point_2d> &x){
   
+  long n=x.size();
+  double ans = 0;
+  for(int i=0 ; i<n-1 ; ++i){
+    ans += (alpha[i+1]+alpha[i])^(x[i+1]-x[i]);
+  }
+  ans += (alpha[0]+alpha[n-1])^(x[0]-x[n-1]);
+
+  return ans / 4;
+}
+
+/// this returns area within the curve x average kappa iwithin the curve
+double Utilities::interior_mass(const std::vector<RAY> &rays){
+  
+  long n=rays.size();
+  double ans = 0;
+  for(int i=0 ; i<n-1 ; ++i){
+    ans += ( rays[i+1].alpha()+rays[i].alpha() )^( rays[i+1].x-rays[i].x );
+  }
+  ans += ( rays[0].alpha()+rays[n-1].alpha() )^( rays[0].x-rays[n-1].x );
+
+  return ans / 4;
+}
 
 /*
  double * convex_hull(double P1[],double P2[],std::vector<double *> P)
@@ -2727,3 +2753,603 @@ Point_2d Utilities::contour_center(std::vector<RAY> &P, unsigned long Npoints){
   center.x[1]=0.5*(ix[1]+jx[1]);
   return center;
 }
+
+void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
+                  ,long nx  // number of pixels in x direction
+                  ,std::vector<std::vector<long> > &indexes
+                  ,std::vector<bool> &hits_edge
+                  ,bool add_to_vector
+                  ){
+  
+  size_t n = bitmap.size();
+  long ny = n/nx;
+  
+  if(n != nx*ny){
+    std::cerr << "Wrong sizes in Utilities::find_boundaries." << std::endl;
+    throw std::invalid_argument("invalid size");
+  }
+  
+  std::vector<bool> not_used(n,true);
+  
+  // pad edge of field with bitmap=false
+  for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
+  size_t j = nx*(ny-1);
+  for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
+  for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
+  j = nx-1;
+  for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
+  
+  std::list< std::set<long> > contours;  // a set ensures that it is in assending order and no element is repeated
+  
+  if(!add_to_vector){
+    hits_edge.resize(0);
+  }
+  
+  bool done = false;
+  long kfirst_in_bound = -1;
+  while(!done){
+    // find first cell in edge
+    size_t k=0,k1,k2,k3;
+    int type;
+    for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
+      if(k % nx != nx-1){ // one less cells than points
+        type = 0;
+        if(bitmap[k] ) type +=1;
+        if(bitmap[k+1]) type += 10;
+        if(bitmap[k + nx]) type += 100;
+        if(bitmap[k + nx + 1]) type += 1000;
+        
+        if(type > 0
+           && type != 1111
+           && not_used[k]
+           ) break;
+      }
+    }
+    
+    kfirst_in_bound = k;
+    
+    if(k == n-nx){
+      done=true;
+    }else{ // found an edge
+      
+      contours.resize(contours.size() + 1);
+      std::set<long> &contour = contours.back();
+      hits_edge.push_back(false);
+      
+      
+      int type;
+      int face_in=0;
+      size_t n_edge = 0;
+      
+      // follow edge until we return to the first point
+      while(k != kfirst_in_bound || n_edge==0){
+        
+        if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
+        if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
+        
+        not_used[k] = false;
+        
+        ++n_edge;
+        type = 0;
+        
+        k1 = k+1;
+        k2 = k+nx;
+        k3 = k+nx+1;
+        
+        // find type of cell
+        if(bitmap[k]) type +=1;
+        if(bitmap[k1]) type += 10;
+        if(bitmap[k2]) type += 100;
+        if(bitmap[k3]) type += 1000;
+        
+        if(type == 0 || type == 1111){  // all in or all out
+          throw std::runtime_error("off edge!!");
+        }else if(type == 1 || type == 1110){ // lower left only
+          
+          if(type == 1) contour.insert(k);
+          if(type == 1110){
+            contour.insert(k1);
+            contour.insert(k2);
+            contour.insert(k3);
+          }
+          
+          if(face_in==0){
+            face_in=1;
+            k -= nx;
+          }else{
+            face_in=2;
+            k -= 1;
+          }
+          
+        }else if(type == 10 || type == 1101){ // lower right only
+          
+          if(type == 10) contour.insert(k1);
+          if(type == 1101){
+            contour.insert(k);
+            contour.insert(k2);
+            contour.insert(k3);
+          }
+          
+          if(face_in==2){
+            face_in=1;
+            k -= nx;
+          }else{
+            face_in=0;
+            k += 1;
+          }
+          
+        }else if(type == 100 || type == 1011){ // upper left only
+          
+          if(type == 100) contour.insert(k2);
+          if(type == 1011){
+            contour.insert(k);
+            contour.insert(k1);
+            contour.insert(k3);
+          }
+          
+          if(face_in==0){
+            face_in=3;
+            k += nx;
+          }else{
+            face_in=2;
+            k -= 1;
+          }
+          
+        }else if(type == 1000 || type == 111){ // upper right only
+          
+          if(type == 1000) contour.insert(k3);
+          if(type == 1011){
+            contour.insert(k);
+            contour.insert(k1);
+            contour.insert(k2);
+          }
+          
+          if(face_in==1){
+            face_in=0;
+            k += 1;
+          }else{
+            face_in=3;
+            k += nx;
+          }
+          
+        }else if(type == 11 || type == 1100){ // lower two
+          
+          if(type == 11){
+            contour.insert(k);
+            contour.insert(k1);
+          }
+          if(type == 1100){
+            contour.insert(k2);
+            contour.insert(k3);
+          }
+          
+          if(face_in==0){
+            k += 1;
+          }else{
+            face_in = 2;
+            k -= 1;
+          }
+          
+        }else if(type == 1010 || type == 101){ // right two
+          
+          if(type == 1010){
+            contour.insert(k1);
+            contour.insert(k3);
+          }
+          if(type == 101){
+            contour.insert(k);
+            contour.insert(k2);
+          }
+          
+          if(face_in==1){
+            k -= nx;
+          }else{
+            face_in = 3;
+            k += nx;
+          }
+          
+        }else if(type == 1001){ // lower left upper right
+          
+          contour.insert(k);
+          contour.insert(k3);
+          
+          if(face_in==0){
+            face_in=3;
+            k += nx;
+          }else if(face_in==1){
+            face_in=2;
+            k -= 1;
+          }else if(face_in==2){
+            face_in=1;
+            k -= nx;
+          }else{
+            face_in=0;
+            k += 1;
+          }
+          
+        }else if(type == 110){ // upper left lower right
+          
+          contour.insert(k1);
+          contour.insert(k2);
+          
+          if(face_in==0){
+            face_in=1;
+            k -= nx;
+          }else if(face_in==1){
+            face_in=0;
+            k += 1;
+          }else if(face_in==2){
+            face_in=3;
+            k += nx;
+          }else{
+            face_in=2;
+            k -= 1;
+          }
+        }
+      }
+      
+   
+      // fill in island
+      indexes.emplace_back();
+      std::vector<long> &index = indexes.back();
+      
+      long k=0;
+      for(auto it = contour.begin()
+            ; it != contour.end()
+            ; ++it
+            ){
+        if(k<*it){
+          k=*it;
+          while(bitmap[k]){
+            index.push_back(k);
+            ++k;
+          }
+        }
+      }
+      
+      
+    }
+  }
+}
+
+Point_2d Utilities::line_intersection(const Point_2d &v1,const Point_2d &v2,
+                            const Point_2d &w1,const Point_2d &w2){
+  Point_2d dv = v2-v1;
+  Point_2d dw = w2-w1;
+  double s = ( dw^(w1-v1) ) / (dw^dv);
+  return v1 + dv*s;
+}
+
+bool Utilities::circleIntersetsCurve(const Point_2d &x,double r,const std::vector<Point_2d> &v){
+  
+  int n=v.size();
+  double rr,B;
+  Point_2d dx,dl;
+  for(int i=0 ; i<n ; ++i){
+    dl = v[i]-x;
+    rr = dl.length();
+    if(rr <= r) return true;
+    dx = v[(i+1)%n]-v[i];
+    B = -(dx*dl)/dx.length_sqr();
+    if(B>0 && B<1){
+      if( dx*dx*B*B + dx*dl*2*B + rr*rr <= r*r) return true;
+    }
+  }
+  
+  return false;
+}
+
+bool Utilities::circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> &v){
+
+  double area;
+  // is center of circle inside curve
+  if(Utilities::windings(x,v,&area)) return true;
+  // if curve entirely within circle this will be true
+  if( (x-v[0]).length() < r) return true;
+  
+  return Utilities::circleIntersetsCurve(x,r,v);
+}
+
+std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w){
+  
+  size_t nv = v.size();
+  size_t nw = w.size();
+  //std::cout << nv << " " << nw << std::endl;
+  if(nv<3) return w;
+  if(nw<3) return v;
+  
+  Utilities::Geometry::CYCLIC cycv(nv);
+  Utilities::Geometry::CYCLIC cycw(nw);
+  Point_2d inter_p;
+  
+  bool intersecting = false;
+  // check if they intersect
+  long i,j;
+  for(i=0; i<nv && !intersecting ; ++i){
+    for(j=0; j<nw && !intersecting ; ++j){
+      if(Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
+                                        ,w[j].x,w[ cycw[j+1] ].x))
+        intersecting = true;
+        inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
+                        ,w[j].x,w[ cycw[j+1] ].x);
+    }
+  }
+  
+  if(intersecting == false){
+    if( Utilities::inCurve<Point_2d>(w[0],v)){
+      return v;
+    }
+    
+    if( Utilities::inCurve<Point_2d>(v[0],w)){
+      return w;
+    }
+
+    // case where they do not overlap
+    return std::vector<Point_2d>(0);
+  }
+  
+  // concatenate curves
+  std::vector<Point_2d> curve(w.size() + v.size() + 2);
+  long ii=0;
+  while(ii < nw ){
+    curve[ii++] = w[ cycw[j++] ];
+  }
+  curve[ii++] = inter_p;  // insert extra point where curves intersect
+  while(ii < curve.size() - 1 ){
+    curve[ii++] = v[ cycv[i++] ];
+  }
+  
+  curve[ii] = inter_p + ( curve[ii-1] - inter_p) * 0.01;  // insert extra point close to where curves intersect
+
+  try{
+    return Utilities::TighterHull(curve);
+  }catch(...){
+    std::vector<Point_2d> v_out;
+    Utilities::convex_hull(curve,v_out);
+    return v_out;
+  }
+}
+
+std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
+
+  if(vv.size() < 4 ) return vv;
+ 
+  std::vector<Point_2d> v = vv;
+  long nv = v.size();
+  
+  double length_scale=0;
+  for(long i=0 ; i<nv ; ++i){
+    double tmp = (v[i] - v[(i+1)%nv]).length();
+    if(tmp > length_scale) length_scale = tmp;
+  }
+  
+  length_scale *= 0.01;
+  
+  // remove repeated consecutive points
+  for(long i=0 ; i<nv-1 ; ++i){
+    if( (v[i] - v[i+1]).length() < length_scale ){
+      for(long k=i+1 ; k<nv-1 ; ++k){
+        std::swap(v[k],v[k+1]);
+      }
+      --nv;
+    }
+  }
+  while( ( (v[nv-1] - v[0]).length() < length_scale ) && nv>1) --nv;
+  assert(nv>1);
+  
+  v.resize(nv);
+  
+  Utilities::Geometry::CYCLIC cycv(nv);
+  
+  // displace points that are the same
+  {
+    Utilities::RandomNumbers_NR ran;
+  
+    for(long i=0 ; i<nv-1 ; ++i){
+      for(long j=i+1 ; j<nv ; ++j){
+        if( (v[i] - v[j]).length() < length_scale ){
+          Point_2d dw = v[cycv[j+1]]-v[j];
+          //Point_2d dv = v[cycv[i+1]]-v[i];
+          v[j] += dw * length_scale *(2*ran()-1)/dw.length();
+        }
+      }
+    }
+  }
+ 
+//  // check for colinear segments
+//  for(long i=0 ; i<nv-1 ; ++i){
+//    Point_2d dv = v[i+1]-v[i];
+//    for(long j=i+1 ; j<nv ; ++j){
+//
+//      long jp = cycv[j+1];
+//      if( ( dv^( v[j]-v[i]) ) == 0 && ( dv^( v[jp]-v[i]) ) == 0 ){  // colinear
+//        Point_2d dw = v[jp]-v[j];
+//
+//        double s =( dv*(v[j]-v[i]) )/dv.length_sqr();
+//        double s2 =( dv*(v[jp]-v[i]) )/dv.length_sqr();
+//        double s3 =( dw*(v[i]-v[j]) )/dw.length_sqr();
+//
+//        if(  (s >= 0 && s <= 1)
+//           || (s2 >= 0 && s2 <= 1)
+//           || (s3 >= 0 && s3 <= 1)
+//           ){  // overlapping
+//          // add small perturbation perpendiculare to segmant
+//          std::swap(dw[0],dw[1]);
+//          dw[0] *= -1;
+//          v[i] += dw*0.001;
+//          v[i+1] -= dw*0.001;
+//        }
+//      }
+//    }
+//  }
+
+  // find most left
+  size_t imax = 0;
+  {
+    double tmp = v[0][0];
+    for(int ii=1 ; ii<v.size() ; ++ii){
+      if(tmp > v[ii][0]){
+        tmp=v[ii][0];
+        imax = ii;
+      }
+    }
+  }
+  size_t i = imax;
+ 
+  //write_csv("v_pruned.csv",v);
+  
+  std::vector<Point_2d> env;
+
+  env.push_back(v[i]);
+
+  // orientation
+  int o = sign( (v[cycv[imax-1]]-v[imax])^(v[cycv[imax+1]]-v[imax])  );
+
+  int n_intersect=0,step=0;
+  long last_i = cycv[imax-o];
+  if(o==-1) last_i = imax;
+
+  while( env.size() <= 20*nv ){
+    ++step;
+
+    long j_int=-1;
+    double s=-1;//,p;
+    Point_2d dio = v[ cycv[i+o] ] - env.back();
+    n_intersect=0;
+    
+    double s_max = 1;
+    int jj_parallel = -1;
+    int o_par =0;
+    
+    for(int jj=0; jj<nv ; ++jj){
+      if(  jj != i && jj != last_i
+         && jj != cycv[i+o]
+         ){
+        
+        long jp = cycv[jj+1];
+        Point_2d dj = v[ jp ] - v[jj];
+        double pji = dj^dio;
+        
+        if(pji == 0  // parallel
+           && ( ( v[jj]-env.back() )^dio ) == 0   // colinear
+           ){ // colinear
+          
+          double sj = (v[jj]-env.back())*dio /dio.length_sqr();
+          double sjp = (v[jp]-env.back())*dio /dio.length_sqr();
+          
+          if(MAX(sj,sjp) > s_max  // new edge extends beyond current edge
+          && MIN(sj,sjp) < 1      // overlaps with current edge
+             ){
+            
+            if(sjp > sj){
+              jj_parallel = jj;
+              o_par = 1;
+              s_max = sjp;
+            }else{
+              jj_parallel = jp;
+              o_par = -1;
+              s_max = sj;
+            }
+          }
+          
+        }else if(
+            Utilities::Geometry::intersect(env.back().x,v[ cycv[i+o] ].x
+                                           ,v[jj].x,v[ jp ].x)  // does not include sheared endpoints
+           
+          ){
+           ++n_intersect;
+             
+            Point_2d inter_p = line_intersection(env.back().x,v[ cycv[i+o] ].x
+                                ,v[jj].x,v[ jp ].x);
+             
+            double s2 = ( (inter_p-env.back())*dio )/dio.length_sqr();
+            if(s2>1.0) s2=1.0; // roundoff error occurs sometimes.
+             
+             if( s2 > 0){
+               if(j_int==-1 ){
+                 j_int=jj;
+                 
+                 //p = pji;
+                 if( v[ cycv[i+o] ] == v[jj]){
+                   s=1;  // avoid numerical error
+                 }else{
+                   s = s2;
+                 }
+               }else{ // case of two crossings
+                 
+                 //double p2 = pji;
+                 //if( v[ cycv[i+o] ] == v[jj]){
+                 //  s2=1;  // avoid numerical error
+                 //}else{
+                 //  s2 = ( (inter_p-env.back())*di )/di.length_sqr();
+                 // }
+                 
+                 //assert(s <= 1);
+                 if(s > s2){
+                   j_int=jj;
+                   s=s2;
+                   //p=p2;
+                 }
+               }
+               assert(s>0);
+             }
+           
+         }
+      }
+    }
+
+    if(o==1) last_i = i;
+    else last_i = cycv[i-1];
+
+    if(j_int != -1){
+      
+      //Point_2d  v1 = v[ cycv[i+o] ] - env.back();
+      Point_2d  w1 = v[ cycv[j_int] ] - env.back();
+      Point_2d  w2 = v[ cycv[j_int+1] ] - env.back();
+ 
+      env.push_back(env.back() + dio*s );
+      assert(s >= 0);
+      assert(s <= 1);
+
+      //double tmp = w1^dio;
+      //Point_2d p = v[i];
+      
+      if( (w1^dio) < 0){
+        i = cycv[j_int+1];
+        o = -1;
+      }else if( (w2^dio) < 0){
+        i = j_int;
+        o = 1;
+      }else{ // case where neither point is above the line
+        i = cycv[i+o];
+        env.push_back(v[i]);
+        if(i==imax) break;
+      }
+      
+    }else if(jj_parallel != -1){
+      i=jj_parallel;
+      o = o_par;
+    }else{
+      // case of moving along in same direction
+      i = cycv[i+o];
+      env.push_back(v[i]);
+      if(i==imax) break;
+    }
+
+    //write_csv("hull.csv",env);
+  }
+
+  if(env.size() > 20*nv){
+    write_csv("test_curve.csv",v);
+    write_csv("test_hull.csv",env);
+    std::cerr << "Failure of TighterHull. See test_hull.csv and test_curve.csv." << std::endl;
+    throw std::runtime_error("Failure in TighterHull");
+  }
+ 
+  //assert(env.size() > 2);
+
+  env.pop_back();
+  return env;
+}
+

@@ -1363,7 +1363,7 @@ void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arcl
   
   double maxval = (*it).surface_brightness;
   for(it = imagekist->TopIt();!(it.atend());--it){
-    maxval = MAX(maxval,(*it).surface_brightness);
+    maxval = MAX<double>(maxval,(*it).surface_brightness);
   }
 
   ImageInfo tmp_image;

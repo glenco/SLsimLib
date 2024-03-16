@@ -5,10 +5,9 @@
  *      Author: Leier
  */
 
-
-#include "slsimlib.h"
-
-using namespace std;
+#include "cosmo.h"
+#include "lens_halos.h"
+#include "uniform_lens.h"
 
 /*
  * \brief Reads in a parameter file and sets up an uniform lens.
@@ -96,7 +95,7 @@ PosType LensHaloUniform::lens_expand(PosType *mod
                                      ,KappaType *phi
                                      )
 {
-  PosType theta,r,cosx,sinx,cos2theta,sin2theta;
+  PosType r,cosx,sinx,cos2theta,sin2theta;
 
    // add shear
   alpha[0] +=  x[0]*mod[1] + x[1]*mod[2];
@@ -114,7 +113,7 @@ PosType LensHaloUniform::lens_expand(PosType *mod
 
   if(r > 0)
   {
-    theta=atan2(x[1],x[0]);
+    //theta=atan2(x[1],x[0]);
     cosx=x[0]/r;
     sinx=x[1]/r;
 

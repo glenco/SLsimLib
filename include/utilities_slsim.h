@@ -12,14 +12,16 @@
 #include <iterator>
 #include <cstdlib>
 #include <random>
-#if __cplusplus >= 201103L
+//#if __cplusplus >= 201103L
 #include <typeindex>
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#endif
+#include <boost/variant.hpp>
+#include <set>
+#include <iomanip>
+#include <thread>
 
 namespace Utilities
 {
@@ -51,23 +53,30 @@ bool AlwaysTrue(T t){return true;}
 
 template <typename T>
 bool AlwaysFalse(T t){return false;}
+  
+template <typename T>
+T vec_sum(const std::vector<T> &v){
+  double sum=0.0;
+  for(const T &a : v) sum += a;
+  return sum;
+}
 
 // this is not for the user
 namespace detail
 {
-#if __cplusplus < 201103L
-class type_index
-{
-public:
-  type_index(const std::type_info& type) : t(type) {}
-  inline bool operator<(const type_index& rhs) const { return t.before(rhs.t); }
-  
-private:
-  const std::type_info& t;
-};
-#else
+//#if __cplusplus < 201103L
+//class type_index
+//{
+//public:
+//  type_index(const std::type_info& type) : t(type) {}
+//  inline bool operator<(const type_index& rhs) const { return t.before(rhs.t); }
+//
+//private:
+//  const std::type_info& t;
+//};
+//#else
 using std::type_index;
-#endif
+//#endif
 }
 
 template <class T>
@@ -1033,6 +1042,8 @@ class RandomNumbers_NR{
 public:
   
   RandomNumbers_NR(long seed);
+  // sets seed from clock
+  RandomNumbers_NR();
   
   PosType operator()(void);
   /// generates a Gaussian distributed number with unit variance by polar Box-Muller transform
@@ -1055,6 +1066,9 @@ public:
   };
   
   int poisson(double lam){
+    if(lam > 200){
+      return std::max<long>(std::lround( gauss()*sqrt(lam) + lam ) ,0);
+    }
     double L = exp(-lam),p=1;
     int k = 0;
     do{
@@ -1064,6 +1078,28 @@ public:
     
     return k-1;
   }
+  
+//  int poisson(double lam){
+//
+//    int step = 500;
+//    double Lam = lam,p=1;
+//    int k = 0;
+//    do{
+//      ++k;
+//      p *= operator()();
+//      while(p<1 && Lam>0){
+//        if(Lam > step){
+//          p *= exp(step);
+//          Lam -= step;
+//        }else{
+//          p *= exp(Lam);
+//          Lam=0;
+//        }
+//      }
+//    }while(p>1);
+//
+//    return k-1;
+//  }
   
   size_t calls = 0;  /// total number of calls
   
@@ -1123,8 +1159,7 @@ void sort_indexes(const std::vector<T> &v     /// the original data that is not 
   for (size_t i = 0; i != index.size(); ++i) index[i] = i;
   
   // sort indexes based on comparing values in v
-  std::sort(index.begin(), index.end(),
-            [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  std::sort(index.begin(), index.end(),[&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
 }
 
 template <typename T>
@@ -1295,7 +1330,7 @@ inline bool file_exists (const std::string& name) {
   struct stat buffer;
   return (stat (name.c_str(), &buffer) == 0);
 }
-
+  
   template <class T>
   void read1columnfile(
                        std::string filename    /// input file name
@@ -1983,7 +2018,7 @@ void writeCSV(const std::string filename              /// output file path/name
   
   std::ofstream s(filename + ".csv");
   
-  int ncol = header.size();
+  long ncol = header.size();
   assert(ncol == data.size() );
   for(int i = 0 ; i < header.size()-1 ; ++i){
     s << header[i] << ",";
@@ -2366,6 +2401,209 @@ double hypergeometric( T a, T b, T c, T x )
    return value;
 }
 
+class LOGDATA{
+
+public:
+  typedef boost::variant<int,long,size_t,float,double,std::string,bool> MULTITYPE;
+  typedef std::map<std::string,MULTITYPE> LINE;
+
+private:
+  std::vector<LINE> lines;
+  std::string filename;
+  std::string blank_val;
+  std::vector<std::string> header;
+  long nbatch;
+  int precision;
+  long last_line_printed;
+  int nlabels;
+  std::set<std::string> labels;
+  
+  std::map<std::string,std::string> label_comments;
+  
+  long nprints;
+  
+  void append_file(){
+    
+    const long default_precision = std::cout.precision();
+    std::ofstream logfile;
+    logfile.open(filename,std::ios_base::app);
+   
+    size_t n=labels.size();
+    if(n == nlabels && last_line_printed > 0){
+      std::cout << std::setprecision(precision);
+      for(size_t j=last_line_printed ; j<lines.size() ; ++j ){
+        int i=0;
+        for(auto &label : labels){
+          try{
+            if(label == "galaxy_halo_id"){
+              logfile << lines[j].at(label) << std::setprecision(12) ;
+              std::cout << std::setprecision(precision);
+            }else{
+              logfile << lines[j].at(label) << std::setprecision(precision);
+            }
+            if(i<n-1) logfile << ",";
+          }catch(std::exception& e){
+            logfile << blank_val << std::setprecision(precision);
+            if(i<n-1) logfile << ",";
+          }
+          ++i;
+        }
+        logfile << std::endl;
+      }
+      std::cout << std::setprecision(default_precision);
+      
+      last_line_printed = lines.size();
+    }else{
+      // number of labels has changed print from the beginning
+      print_to_file();
+    }
+  }
+  
+public:
+
+  LOGDATA(std::string file
+          ,std::string blanck_value = "0"
+          ,long Nbatch=1000
+          ):filename(file),blank_val(blanck_value)
+  ,nbatch(Nbatch),precision(std::cout.precision()),nprints(0)
+  ,last_line_printed(0),nlabels(0){
+    print_to_file();
+  };
+  
+  ~LOGDATA(){print_to_file();}
+  
+  std::string output_file(){return filename;}
+  
+  void set_precision(int p){
+    precision = p;
+  }
+  
+  // current number of columns
+  int ncol(){return labels.size();}
+  // names of columns
+  std::set<std::string> names = labels;
+  
+  void print_to_file(){
+    
+    const int default_precision = std::cout.precision();
+    //std::cout << std::setprecision(12);
+    
+    if(lines.size() == 0 ) return;
+    
+    std::ofstream logfile(filename);
+    
+    time_t now = time(0);
+    struct tm date = *localtime(&now);
+    logfile << "# " << date.tm_hour << ":" << date.tm_min << "   " << date.tm_mday << "/" << date.tm_mon << "/" << date.tm_year + 1900 << std::endl;
+    for(std::string &s : header){
+      logfile << "# " << s << std::endl;
+    }
+
+    // print comments on labels
+    {
+      int i=1;
+      for(auto &label : labels){
+        auto it = label_comments.find(label);
+        if(it == label_comments.end() ){
+          logfile << "# " << i << " " << label << " : no comment" << std::endl;
+        }else{
+          logfile << "# " << i << " " << it->first << " : " << it->second << std::endl;
+        }
+        ++i;
+      }
+    }
+    size_t i=0;
+    nlabels = labels.size();
+    for(auto &label : labels){
+      logfile << label;
+      if(i<nlabels-1) logfile << ",";
+      ++i;
+    }
+    logfile << std::endl;
+
+    std::cout << std::setprecision(precision);
+    for(LINE &line : lines){
+      i=0;
+      for(auto &label : labels){
+        try{
+          if(label == "galaxy_halo_id"){
+            logfile << line.at(label) << std::setprecision(12) ;
+            std::cout << std::setprecision(precision);
+          }else{
+            logfile << line.at(label) << std::setprecision(precision);
+          }
+          if(i<nlabels-1) logfile << ",";
+        }catch(std::exception& e){
+          logfile << blank_val << std::setprecision(precision);
+          if(i<nlabels-1) logfile << ",";
+        }
+        ++i;
+      }
+      logfile << std::endl;
+    }
+    std::cout << std::setprecision(default_precision);
+    
+    last_line_printed = lines.size();
+    ++nprints;
+  }
+  
+  /// add row
+  void add(const LINE &line){
+    for (auto itr = line.begin(); itr != line.end(); ++itr) labels.insert(itr->first);
+    lines.push_back(line);
+    if(lines.size() % nbatch == 0) append_file();
+  }
+  
+  /// replace last line
+  void replace(const LINE &line){
+    for (auto itr = line.begin(); itr != line.end(); ++itr) labels.insert(itr->first);
+    lines.back() = line;
+  }
+
+  /// add a general message at the head of the file
+  void header_comment(const std::string &s){
+    header.push_back(s);
+  }
+  
+  /// add description for a label.  They will appear at the head of the file in the same order as columns
+  void label_description(const std::string &name
+                     ,const std::string &description
+                     ){
+    label_comments[name] = description;
+  }
+};
+
+//  /// alternative to std::thread that counts threads
+//  template<class Function, class ... Args >
+//  class MyThread
+//  {
+//  private:
+//    std::thread thread_;
+//    
+//    static long count;
+//    static long unjoined;
+//  
+//  public:
+//    MyThread(Function&& f,Args&&... args)
+//    {
+//      if(count > 20) throw std::runtime_error("too many threads");
+//      thread_ = std::thread(std::forward<Function>(f),std::forward<Args>(args)...);
+//      ++count;
+//      ++unjoined;
+//    }
+//    
+//    ~MyThread(){
+//      --count;
+//    }
+//    
+//    void join(){
+//      thread_.join();
+//      --unjoined;
+//    }
+//    
+// 
+//  };
 }  // Utilities
 
+//#endif
 #endif

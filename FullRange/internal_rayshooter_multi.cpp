@@ -5,8 +5,10 @@
  *      Author: mpetkova, bmetcalf
  */
 
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include <powell.h>
+#include "lens.h"
+#include "concave_hull.h"
 
 /** 
  *
@@ -89,7 +91,7 @@ void Lens::rayshooterInternal(
   
   
   // For refining the grid and shoot new rays.
-  int nthreads, rc;
+  int nthreads;
   nthreads = Utilities::GetNThreads();
   
   int chunk_size;
@@ -152,7 +154,7 @@ void Lens::rayshooterInternal(
   if(Npoints == 0) return;
   
   // For refining the grid and shoot new rays.
-  int nthreads, rc;
+  int nthreads;
   nthreads = Utilities::GetNThreads();
   
   int chunk_size;
@@ -205,7 +207,7 @@ void Lens::rayshooterInternal(
   if(Npoints == 0) return;
   
   // For refining the grid and shoot new rays.
-  int nthreads, rc;
+  int nthreads;
   nthreads = Utilities::GetNThreads();
   
   int chunk_size;
@@ -232,6 +234,22 @@ void Lens::rayshooterInternal(
   for(int i = 0; i < nthreads; i++) thr[i].join();
 }
 
+void Lens::rayshooterInternal(RAY &ray){
+  
+  assert(plane_redshifts.size() > 0);
+  if(plane_redshifts.size() == 1){  // case of no lens plane
+
+    ray.y[0] = ray.x[0];
+    ray.y[1] = ray.x[1];
+    ray.dt = 0;
+    ray.A.setToI();
+    
+    return;
+  }
+  
+  compute_rays_parallel(0,1,&ray);
+}
+
 /** \brief Collects information about the halos and kappa contributions along the light path
  
  Information on the nearest halos is collected where nearest is defined by rmax and mode.
@@ -246,7 +264,7 @@ void Lens::info_rayshooter(
                            ,LensHalo &halo_max                /// halo with the larges kappa
                            ,KappaType &kappa_max              /// the kappa from that halo
                            ,KappaType gamma_max[]             /// shear from that halo
-                           ,PosType rmax
+                           ,PosType rmax                      /// distance for neighbors
                            ,int tag
                            ,short mode  /// 0:physical distance (Mpc), 1: comoving distance (Mpc), 2: angular distance (rad)
                            ,bool verbose
@@ -427,6 +445,84 @@ void Lens::info_rayshooter(
   return;
 }
 
+void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs to be set, all other quantities will be replaced
+                          ,std::vector<double> &masses     /// mass within curve on each lens plane
+                          ,bool verbose
+                          ){
+  int Nrays = rays.size();
+  
+  double source_z;
+  source_z = plane_redshifts.back();
+
+  long jmax = lensing_planes.size();
+  masses.resize(jmax);
+  
+  double Dls_Ds; // this is the ratio between of the distance between the last lens plane and the source to the distance to the source
+  double D_Ds; // this is the ratio between of the distance to the last lens plane and the source to the distance to the source
+
+  Dls_Ds = dDl.back() / Dl.back();
+  D_Ds = Dl[Dl.size() - 2] / Dl.back();
+  
+  PosType aa,bb;
+  KappaType kappa,gamma[3];
+  KappaType phi;
+  Matrix2x2<PosType> G;
+
+  std::vector<Point_2d> theta(Nrays);
+  std::vector<Point_2d> SumPrevAlphas(Nrays);
+  std::vector<Matrix2x2<PosType> > SumPrevAG(Nrays);
+  for(auto m : SumPrevAG) m.setToI();
+  
+  // find angular position on first lens plane
+  for(int i=0 ; i<Nrays ; ++i){
+    theta[i] = rays[i].x;
+    SumPrevAlphas[i] = rays[i].x;
+  }
+ 
+  // Begining of the loop through the planes :
+  std::vector<Point_2d> alphas(Nrays);
+  std::vector<Point_2d> xx(Nrays);
+  for(int j = 0; j < jmax ; ++j){
+    
+    // convert to physical coordinates on the plane j
+    double Dphysical = Dl[j]/(1 + plane_redshifts[j]);
+
+    for(int i=0 ; i<Nrays ; ++i){
+      
+      // convert to physical coordinates on the plane j, just for force calculation
+      xx[i] = theta[i] *  Dphysical;
+      
+      lensing_planes[j]->force(alphas[i].data(),&kappa,gamma,&phi,xx[i].data()); // Computed in physical coordinates.
+      
+      G[0] = kappa + gamma[0];    G[1] = gamma[1];
+      G[2] = gamma[1]; G[3] = kappa - gamma[0];
+      
+      G *= charge * Dl[j] / (1 + plane_redshifts[j]);
+      
+      PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j]
+                                          ,source_z);
+      
+      // kappa *= charge / SigmaCrit;
+      //alphas[i] *= charge;
+      SumPrevAlphas[i] -= alphas[i] * charge;
+      
+      if(j < jmax-1 ){
+        aa = dDl[j+1] / Dl[j+1];
+        bb = Dl[j] / Dl[j+1];
+      }else{
+        aa = Dls_Ds;
+        bb = D_Ds;
+      }
+      
+      theta[i] = theta[i] * bb + SumPrevAlphas[i] * aa;
+  
+    }
+  
+    masses[j] = abs(Utilities::interior_mass(alphas,xx)); 
+  } // End of the loop going through the planes
+
+  return;
+}
 
 void Lens::compute_rays_parallel(int start
                                  ,int chunk_size
@@ -534,7 +630,7 @@ void Lens::compute_rays_parallel(int start
         
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      assert(phi == phi);
+      //assert(phi == phi);
       
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j}
       // according to the corrected Eq. (18) of paper GLAMER II ---------------------------------
@@ -600,7 +696,7 @@ void Lens::compute_rays_parallel(int start
  This routine finds the image position by minimizing the seporation on the source plane with Powell's method of minimization.  This will not find all images.  For that you must use another routine.  In the weak lensing regiam this should be sufficient.
  */
 /*
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           Point_2d y_source     /// input position of source (radians)
           ,Point_2d &x_image    /// initialized with guess for image postion (radians)
           ,PosType z_source     /// redshift of source
@@ -637,7 +733,7 @@ RAY Lens::find_image(
 */
 
 
-RAY Lens::find_image(
+RAY Lens::find_image_min(
           Point &p              /// p[] is
           ,double zs           ///
           ,PosType ytol2        /// target tolerance in source position squared
@@ -646,7 +742,7 @@ RAY Lens::find_image(
 ){
 
   if(p.image == nullptr){
-    std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
+    std::cerr << " point in Lens::find_image_min() must have an attached image point" << std::endl;
   }
 
   int MaxSteps = 100;
@@ -662,7 +758,7 @@ RAY Lens::find_image(
   double invmago = p.invmag();
   
   Point_2d dy = *(p.image) - yo,dy_tmp;
-  if(dy.length_sqr() == 0) return p;
+  if(dy.length_sqr() == 0) return RAY(p,zs);
 
   if(!use_image_guess){
     // in this case the input image position is not used
@@ -726,22 +822,141 @@ RAY Lens::find_image(
   return RAY(p,zs);
 }
 
-RAY Lens::find_image(
-          RAY &ray             /// p[] is
-          ,PosType ytol2       /// target tolerance in source position squared
-          ,PosType &dy2        /// final value of Delta y ^2
-          ,bool use_image_guess
-                     ){
-  LinkedPoint pp;
-  pp[0] = ray.x[0];
-  pp[1] = ray.x[1];
-  pp.image->x[0] = ray.y[0];
-  pp.image->x[1] = ray.y[1];
+RAY Lens::find_image_min(const RAY &in_ray
+                         ,PosType ytol2        /// target tolerance in source position squared
+){
+
+  int MaxSteps = 100;
+  double dy2;
+  
+  RAY ray = in_ray;
+  const Point_2d &yo = in_ray.y;
+  
+  Point_2d dx;
+  rayshooterInternal(ray);
+  
+  double invmago = ray.invmag();
+  
+  Point_2d dy = ray.y - yo,dy_tmp;
+  if(dy.length_sqr() < ytol2) return ray;
+
+  // in this case the input image position is not used
+  ray.x = ray.x + dy;
+  rayshooterInternal(ray);
+  dy = ray.y - yo;
+  
+  dy2 = dy.length_sqr();
  
-  return find_image(pp,ray.z,ytol2,dy2,use_image_guess);
+  //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+ 
+  RAY pt=ray;
+  
+  int steps = 0;
+  double f = 1 , dy2_tmp,ddy2=ytol2;
+  while(dy2 > ytol2 && steps < MaxSteps){
+    
+    ++steps;
+    dx = ray.A.inverse() * dy * f;
+    while(dx.length_sqr() > dy2*1.0e2 ){ // don't take too big a step at once
+      dx /= 2;
+      f /= 2;
+    }
+
+    pt.x = ray.x - dx;
+
+    rayshooterInternal(pt);
+    
+    if(pt.invmag()*invmago < 0){ // prevents image from changing pairity
+      f /= 2;
+    }else{
+
+      dy_tmp = pt.y - yo;
+      dy2_tmp = dy.length_sqr();
+            
+      if(dy2_tmp > dy2){
+        f /= 2;
+        if(f < 0.01) break;
+      }else{
+        f = 1;
+        dy2= dy2_tmp;
+        dy = dy_tmp;
+        
+        ddy2 = (pt.y -  ray.y).length_sqr();
+        ray = pt;
+        //if(ddy2 < ytol2*1.0e-9) break;
+      }
+      
+      //std::cout << " dy = " << dy / arcsecTOradians << " |dy2| = " << sqrt(dy2) << std::endl;
+    }
+  }
+  
+  return ray;
 }
 
-RAY Lens::find_image(
+//RAY Lens::find_image_min(
+//          RAY &ray             /// p[] is
+//          ,PosType ytol2       /// target tolerance in source position squared
+//          ,PosType &dy2        /// final value of Delta y ^2
+//          ,bool use_image_guess
+//                     ){
+//  LinkedPoint pp;
+//  pp[0] = ray.x[0];
+//  pp[1] = ray.x[1];
+//  pp.image->x[0] = ray.y[0];
+//  pp.image->x[1] = ray.y[1];
+//
+//  return find_image_min(pp,ray.z,ytol2,dy2,use_image_guess);
+//}
+
+void Lens::find_images_min_parallel(std::vector<RAY> &rays
+                                      ,double ytol2
+                                      ,std::vector<bool> &success
+                                      ){
+  
+  int nthreads = Utilities::GetNThreads();
+  std::vector<std::thread> thr;
+  long m = 0,N = rays.size();
+  long n = (int)(N/nthreads + 1);
+  success.resize(N);
+  
+  for(int i=0 ; i<nthreads ; ++i ){
+
+    if(m > N-n ) n = N-m;
+    thr.push_back(std::thread(
+                              &Lens::_find_images_min_parallel_
+                              ,this
+                              ,rays.data()
+                              ,m
+                              ,m+n
+                              ,ytol2
+                              ,std::ref(success)
+                              )
+                  );
+    
+    m += n;
+  }
+  for(auto &t : thr) t.join();
+}
+
+void Lens::_find_images_min_parallel_(RAY *rays
+                                      ,size_t begin
+                                      ,size_t end
+                                      ,double ytol2
+                                      ,std::vector<bool> &success
+                                      ){
+  
+  size_t n = end-begin;
+  double dy2;
+  Point_2d yo;
+  for(size_t i = begin ; i<end ; ++i){
+    yo = rays[i].y;
+    rays[i] = find_image_min(rays[i],ytol2);
+    success[i] = ( (yo-rays[i].y).length_sqr()  < ytol2) ?  true : false;
+    rays[i].y = yo;
+  }
+}
+
+RAY Lens::find_image_min(
           Point &p             /// p[] is
           ,double zs           /// source redshift
           ,PosType ytol2        /// target tolerance in source position squared
@@ -750,7 +965,7 @@ RAY Lens::find_image(
 ){
 
   if(p.image == nullptr){
-    std::cerr << " point in Lens::find_image() must have an attached image point" << std::endl;
+    std::cerr << " point in Lens::find_image_min() must have an attached image point" << std::endl;
   }
 
   int MaxSteps = 100;
@@ -821,17 +1036,17 @@ RAY Lens::find_image(
   return RAY(p,zs);
 }
 
-RAY Lens::find_image(
-          RAY &ray       /// p[] is
-          ,PosType ytol2        /// target tolerance in source position squared
-          ,PosType &dy2        /// final value of Delta y ^2
-          ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
-                     ){
-  LinkedPoint pp;
-  pp[0] = ray.x[0];
-  pp[1] = ray.x[1];
-  pp.image->x[0] = ray.y[0];
-  pp.image->x[1] = ray.y[1];
- 
-  return find_image(pp,ray.z,ytol2,dy2,boundary);
-}
+//RAY Lens::find_image_min(
+//          RAY &ray       /// p[] is
+//          ,PosType ytol2        /// target tolerance in source position squared
+//          ,PosType &dy2        /// final value of Delta y ^2
+//          ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+//                     ){
+//  LinkedPoint pp;
+//  pp[0] = ray.x[0];
+//  pp[1] = ray.x[1];
+//  pp.image->x[0] = ray.y[0];
+//  pp.image->x[1] = ray.y[1];
+//
+//  return find_image_min(pp,ray.z,ytol2,dy2,boundary);
+//}

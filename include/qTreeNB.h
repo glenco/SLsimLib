@@ -8,6 +8,9 @@
 #ifndef qTreeNB_h
 #define qTreeNB_h
 
+#include "utilities.h"
+#include "cosmo.h"
+
 #ifndef PI
 #define PI  3.141593
 #endif
@@ -59,6 +62,8 @@ struct QBranchNB{
   PosType boundary_p1[2];
   /// top, right, front corner of box
   PosType boundary_p2[2];
+  PosType boxsize2;
+  
   QBranchNB *child0;
   QBranchNB *child1;
   QBranchNB *child2;
@@ -76,7 +81,7 @@ struct QBranchNB{
   /// largest dimension of box
   PosType rmax;
   /// the critical distance below which a branch is opened in the
-  PosType rcrit_angle;
+  PosType r2crit_angle;
   /* force calculation */
   PosType rcrit_part;
   //PosType cm[2]; /* projected center of mass */
@@ -141,7 +146,9 @@ QTreeNB<PType>::QTreeNB(PType *xp,IndexType *particles,IndexType nparticles
   top->boundary_p1[1] = boundary_p1[1];
   top->boundary_p2[0] = boundary_p2[0];
   top->boundary_p2[1] = boundary_p2[1];
-  
+                            
+  top->boxsize2 = (boundary_p2[0]-boundary_p1[0])*(boundary_p2[0]-boundary_p1[0]);
+                            
   top->nparticles = nparticles;
   top->level = 0;
   top->particles = particles;
@@ -168,10 +175,11 @@ class QBiterator{
 private:
   QBranchNB *current;
   QBranchNB *top;
+  size_t nbranches;
   
 public:
   /// Sets the top or root to the top of "tree".
-  QBiterator(QTreeNB<PType> * tree){current = top = tree->top;}
+  QBiterator(QTreeNB<PType> * tree){current = top = tree->top; nbranches = tree->getNbranches(); }
   /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
   QBiterator(QBranchNB *branch){current = top = branch;}
   
@@ -194,6 +202,8 @@ public:
     *(current->child2 == NULL)*(current->child3 == NULL);
   }
   bool TreeWalkStep(bool allowDescent);
+  
+  size_t getNbranches(){return nbranches;}
 };
 
 

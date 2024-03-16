@@ -1,6 +1,8 @@
-#include "slsimlib.h"
+//#include "slsimlib.h"
 #include <nrutil.h>
 #include <iomanip>      // std::setprecision
+#include "analytic_lens.h"
+#include "fitlens.h"
 
 using namespace std;
 
@@ -190,10 +192,9 @@ bool LensHaloFit::SafeFindLensSimple(
   double betaTMP = perturb_beta ;
   KappaType * gammaTMP = new KappaType [3];
   KappaType * phiTMP = new KappaType ;
-  KappaType kappaTMP;
+  KappaType kappaTMP=0;
   gammaTMP[0] = 0. ; gammaTMP[1] = 0. ; gammaTMP[2] = 0. ;
   *phiTMP = 0. ;
-  kappaTMP = 0. ;
   
   // Ratios for (y-x)/alpha :
   PosType ratioSourcePos [2] ;

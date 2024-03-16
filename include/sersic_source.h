@@ -32,13 +32,23 @@ public:
                ,double my_zeropoint     /// magnitude zero point
                //,const double *my_theta=0  /// optional angular position on the sky
   );
+  SourceSersic(
+                double my_mag            /// Total magnitude
+                ,Band band               ///
+                ,double my_zeropoint     /// zeropoint
+                ,double my_Reff          /// Bulge half light radius (arcs)
+                ,double my_PA            /// Position angle (radians)
+                ,double my_index         /// Sersic index
+                ,double my_q             /// axes ratio
+                ,double my_z             /// redshift
+  );
 	~SourceSersic();
   
   SourceSersic(const SourceSersic &p);
   SourceSersic & operator=(const SourceSersic &p);
 
 
-  void ReSet(PosType mag,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
+  void ReSet(PosType mag,Band band,PosType Reff,PosType PA,PosType my_index,PosType my_q,PosType my_z,const PosType *theta=0);
 
 	/// calculates radius where the surface brightness drops by a factor f with respect to the central peak in radians
 	inline PosType FractionRadius (PosType f) {return Reff*pow(-log (f)/bn,index);}
@@ -87,7 +97,7 @@ public:
 	
 	//inline PosType getTotalFlux() const { return flux_total; }
 	
-	PosType SurfaceBrightness(PosType *x);
+	PosType SurfaceBrightness(const PosType *x) const;
 	void printSource();
 	
 private:

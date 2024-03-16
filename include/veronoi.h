@@ -9,13 +9,15 @@
 #ifndef GLAMER_veronoi_h
 #define GLAMER_veronoi_h
 
+#include "point.h"
+
 class Point_Nd{
   
   Point_Nd(int Nin){
     dim = Nin;
-    x.resize(N);
+    x.resize(Nin);
   }
-  ~Point_Nd(){x.clear()};
+  ~Point_Nd(){x.clear();};
   
   Point_Nd(const Point_Nd &p){
     for(int i=0;i<dim;++i) x[i]=p.x[i];
@@ -35,12 +37,12 @@ class Point_Nd{
     return *this;
   }
   Point_Nd  operator+(const Point_Nd &p) const{
-    Point_Nd tmp;
+    Point_Nd tmp(p.dim);
     for(int i=0;i<dim;++i) tmp.x[i] = x[i] + p.x[i];
     return tmp;
   }
   Point_Nd  operator-(const Point_Nd &p) const{
-    Point_Nd tmp;
+    Point_Nd tmp(p.dim);
     for(int i=0;i<dim;++i) tmp.x[i] = x[i] - p.x[i];
     return tmp;
   }
@@ -78,7 +80,7 @@ class Point_Nd{
   
   PosType & operator[](size_t i){return x[i];}
 private:
-  vector<PosType> x;
+  std::vector<PosType> x;
   int dim;
 };
 

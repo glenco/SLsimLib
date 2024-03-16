@@ -137,6 +137,52 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
 //  return number == 0 ? 0 : 1;
 //}
 
+//std::vector<Point_2d> DeInterset(const std::vector<Point_2d> &points){
+//
+//  long Npoints = points.size();
+//  if(Npoints==0) return std::vector<Point_2d>();
+//  
+//  std::vector<Point_2d> hull(points.size());
+//  CYCLIC cyc(Npoints);
+//  
+//  // find left most point
+//  size_t ileft=0;
+//  for(size_t i=0 ; i<Npoints ; ++i){
+//    if(points[ileft][0] < points[i][0]){
+//      ileft = i;
+//    }
+//  }
+//  
+//  int orientation = sign( (points[cyc[ileft-1]] - points[ileft])^(points[cyc[ileft+1]] - points[ileft])  );
+// 
+//  size_t k = 0;
+//  for(size_t i = ileft ; i != ileft ; i = (i+1) % Npoints ){
+//    size_t ii = (i+1) % Npoints;
+//    hull[k++] = points[i];
+//    
+//    for(size_t j = ii ; j != ileft ; j = (j+1) % Npoints ){
+//      size_t jj = (j+1) % Npoints;
+//      
+//      if(Utilities::Geometry::intersect(points[i].x,points[ii].x
+//                                       ,points[j].x,points[jj].x)){
+//        
+//        double leftnessj = (points[j] - points[i])^(points[j] - points[i]) ;
+//        double leftnessjj = (points[jj] - points[i])^(points[jj] - points[i]) ;
+// 
+//        if( leftnessj > leftnessjj ){
+//          i = j;
+//          break;
+//        }else{
+//          i = jj;
+//          break;
+//        }
+//        
+//      }
+//    }
+//    
+//  }
+//  
+//}
 //std::vector<Point_2d> Utilities::Geometry::MagicHull(const std::vector<Point_2d> &points){
 //
 //  std::vector<Point_2d> hull;
@@ -227,7 +273,6 @@ double Utilities::Geometry::AngleBetween2d(double v1[],double v2[]){
 //
 //  return hull;
 //}
-
 
 /** test code for MagicHull
  

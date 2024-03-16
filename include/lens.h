@@ -346,7 +346,7 @@ public:
   void rayshooterInternal(unsigned long Npoints   /// number of points to be shot
                          ,RAY *rays            /// points on the image plane
                          );
-                          
+  void rayshooterInternal(RAY &ray);  /// single ray 
 
   void info_rayshooter(RAY &i_point
                       ,std::vector<Point_2d> & ang_positions
@@ -360,11 +360,18 @@ public:
                       ,short mode = 0  /// 0:physical distance, 1: comoving distance, 2: angular distance
                       ,bool verbose = false
                                        );
+  
+  /// finds the mass within a curve of rays one every lens plane im Msun
+  void mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs to be set
+                    ,std::vector<double> &masses     /// mass within curve on each lens plane
+                    ,bool verbose = false
+                    );
+  
   /** \brief  Find the image position of a source without grid refinement.
   
   This uses Powell's algorithm to minimise the distance between the source point of an image and the desired source point.  No grid is necessary.  This should be fast, but will miss multiple images.  This is useful for finding the position of weakly lensed images or the rough region where a grid should be put down for a strong lens.
   */
-  /*RAY find_image(
+  /*RAY find_image_min(
           Point_2d y_source    /// input position of source (radians)
           ,Point_2d &x_image    /// initial guess for image postion (radians)
           ,PosType z_source     /// redshift of source
@@ -383,29 +390,29 @@ public:
    
   */
 
-  RAY find_image(
+  RAY find_image_min(
             Point &p              ///  p.image->x should be set to source position
             ,double zs            /// redhsift of source
             ,PosType ytol2        /// target tolerance in source position squared
             ,PosType &dy2         /// final value of Delta y ^2
             ,bool use_image_guess /// if true p.x[] will be used as a guess for the image position
   );
-
-  /// this version uses the redshift stored in the ray
-  RAY find_image(
-            RAY &p               /// p.y[] should be set to source position
-            ,PosType ytol2       /// target tolerance in source position squared
-            ,PosType &dy2        /// final value of Delta y ^2
-            ,bool use_image_guess  /// if true p.x[] will be used as a guess for the image position
+  /** this version uses the redshift stored in the ray,
+  
+   Tthe ray is replaced with the best guess so the source position is replaced.
+   */
+  RAY find_image_min(const RAY &in_ray    /// p.y[] should be set to source position
+                     ,PosType ytol2       /// target tolerance in source position squared
   );
+  
   /// This is the same, but the image is forced to stay within boundary
-  RAY find_image(
-            RAY &p                /// p[] is
-            ,PosType ytol2        /// target tolerance in source position squared
-            ,PosType &dy2         /// final value of Delta y ^2
-            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
-  );
-  RAY find_image(
+//  RAY find_image_min(
+//            RAY &p                /// p[] is
+//            ,PosType ytol2        /// target tolerance in source position squared
+//            ,PosType &dy2         /// final value of Delta y ^2
+//            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
+//  );
+  RAY find_image_min(
             Point &p              /// p[] is
             ,double zs            /// source redshift
             ,PosType ytol2        /// target tolerance in source position squared
@@ -413,16 +420,35 @@ public:
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
 
-  void find_point_source_images(
-                              Grid &grid
+  /// finds images by telescoping triangle method
+  std::vector<RAY> find_images(Point_2d y_source
+                                    ,double z_source
+                                    ,Point_2d center
+                                    ,double range
+                                    ,double stop_res
+                                    );
+  /// finds images by telescoping triangle method
+  std::vector<RAY> find_images(GridMap &init_grid
                               ,Point_2d y_source
-                              ,PosType r_source
-                              ,PosType z_source
-                              ,std::vector<RAY> &images
-                              ,double dytol2
-                              ,double dxtol
-                              ,bool verbose = false
-                                 );
+                              ,double z_source
+                              ,double stop_res
+                              );
+  
+  void find_images_min_parallel(std::vector<RAY> &rays
+                                        ,double ytol2
+                                        ,std::vector<bool> &success
+                                      );
+//  void find_point_source_images(
+//                              Grid &grid
+//                              ,Point_2d y_source
+//                              ,PosType r_source
+//                              ,PosType z_source
+//                              ,std::vector<RAY> &images
+//                              ,double dytol2
+//                              ,double dxtol
+//                              ,bool verbose = false
+//                                 );
+  
   
 	// methods used for use with implanted sources
 
@@ -575,6 +601,9 @@ public:
     *this = std::move(lens);
   }
   
+  // get the adress of field_plane_redshifts
+  std::vector<PosType>  get_plane_redshifts () { return plane_redshifts; }
+ 
 private:
   Lens & operator=(const Lens &lens);   // block copy
   Lens(const Lens &lens);
@@ -585,7 +614,21 @@ protected:
 
 private:
 	GLAMER_TEST_FRIEND(LensTest)
-	
+  
+  /// iterative image finding using telescoping triangel method with telescoping GridMap s
+  void _find_images_(std::vector<RAY> &images
+                     ,RAY &center
+                     ,double range
+                     ,double stop_res
+                     );
+  
+  void _find_images_min_parallel_(RAY *rays
+                                  ,size_t begin
+                                  ,size_t end
+                                  ,double ytol2
+                                  ,std::vector<bool> &success
+                                  );
+  
 	// seed for random field generation
 	long *seed;
   
@@ -689,9 +732,6 @@ private:
   std::vector<PosType> sigma_back_Tab;
   
   /* ----- */
-  
-  // get the adress of field_plane_redshifts
-  std::vector<PosType> & get_field_plane_redshifts () { return field_plane_redshifts ; }
   
   /// Number of Field Halos
   size_t getNFieldHalos() const {return field_halos.size();}
@@ -1008,7 +1048,7 @@ void Lens::compute_points_parallel(int start
         
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
-      assert(phi == phi);
+      //assert(phi == phi);
       
       // This computes \vec{x}^{j+1} in terms of \vec{x}^{j}
       // according to the corrected Eq. (18) of paper GLAMER II ---------------------------------

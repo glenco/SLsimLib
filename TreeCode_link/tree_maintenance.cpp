@@ -422,6 +422,7 @@ void TreeStruct::_BuildTree(TreeStruct::iterator &current){
     Utilities::quicksortPoints_multithread<4>(points,func,cbranch->npoints);
     //Utilities::quicksortPoints(points,func,cbranch->npoints);
     //Utilities::quicksortPoints((*current)->points,x,cbranch->npoints);
+    //std::sort(points,points+cbranch->npoints,func); ??? not sure if func goes the right way
 
     if(func(points[0]) == func(points[cbranch->npoints-1])){
       dimension = !dimension;
@@ -1352,17 +1353,17 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 
 			if((*i_tree_current) != headbranch) i_tree->RemoveLeafFromTree(i_tree_current,&Ntmp);
 
-			//***************** test line  **************************
+			// ***************** test line  **************************
 			assert(*i_tree_current == branch);
 			assert(i == (*i_tree_current)->npoints);
 
-			//***************** test line  **************************
+			// ***************** test line  **************************
 			assert((*i_tree_current)->points->next || (*i_tree_current)->points->prev);
 
 			// in a square leaf cell take out extra points that have come up from below
 
 			if(i_tree_current.atLeaf() && (*i_tree_current)->refined){
-					//***************** test line  **************************
+					// ***************** test line  **************************
 				assert((*i_tree_current)->points->next || (*i_tree_current)->points->prev);
 
 				//std::printf("  collecting points from removed leaves\n");
@@ -1386,7 +1387,7 @@ unsigned long FreeBranchesBelow(TreeStruct::iterator &i_tree_current,TreeHndl i_
 						(*i_tree_pointlist_current)->image->gridsize = (*i_tree_pointlist_current)->gridsize;
 						(*i_tree_current)->points = (*i_tree_pointlist_current);
 
-						//***************** test line  **************************
+						// ***************** test line  **************************
 						assert((*i_tree_current)->points->next || (*i_tree_current)->points->prev);
 						assert((*i_tree_pointlist_current)->leaf == *i_tree_current);
 					}else{
