@@ -124,8 +124,11 @@ void ObsVIS::AddNoise(PixelMap &pmap
 //    }
   }
   for (unsigned long i = 0; i < N ; i++){
-    error_map[i] = sqrt( 1.0 / error_map[i] + MAX<float>(pmap[i] / dt,0) ) ;
+    pmap[i] = ran.poisson(MAX<float>(pmap[i] * dt,0))/dt;
     pmap[i] += ran.gauss() * error_map[i];
+    
+    error_map[i] = sqrt( 1.0 / error_map[i] + MAX<float>(pmap[i] / dt,0) ) ;
+ 
   }
 
   return;
