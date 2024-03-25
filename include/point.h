@@ -165,8 +165,10 @@ struct Point_2d{
     x[1] /= s;
   }
   
+  // returns a pointer to the position
   PosType* data(){return x;}
   
+  // array of size 2 containing the position
   PosType x[2];
   
   PosType & operator[](size_t i) {return x[i];}

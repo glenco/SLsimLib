@@ -686,7 +686,7 @@ private:
   //double seeing = 0.18;
   
   // derived parameters;
-  double sigma_background;  // background var in ergs / cm^2 / s / Hz
+  double sigma_background2;  // background variance x time
   //double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
 
   // adds random cosmic rays to the noise map
@@ -755,7 +755,7 @@ public:
   float getBackgroundNoise() const {
     double dt = Utilities::vec_sum(t_exp);// 3 * t1 + t2;
     
-    return sigma_background / sqrt(dt);
+    return sqrt( sigma_background2 / dt );
   }
 private:
   //double t1;

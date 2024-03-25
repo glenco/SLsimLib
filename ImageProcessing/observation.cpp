@@ -31,9 +31,7 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample,double resolution)
   //t1 = 560;
   //t2 = 89.5;
   t_exp = {560,560,560,560,89.5,89.5};
-  sigma_background = 0.002 * sqrt( Utilities::vec_sum(t_exp) );
-
-  //sigma_background = 0.002 * sqrt(4*t1 + 2*t2);
+  sigma_background2 = 0.002 * 0.002 * Utilities::vec_sum(t_exp) ;
 }
 
 ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
@@ -42,17 +40,18 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
                )
 :Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1),t_exp(exposure_times)
 {
-  sigma_background = 0.0015 * sqrt( Utilities::vec_sum(t_exp) );
+  sigma_background2 = 0.0015 * 0.0015 * ( Utilities::vec_sum(t_exp) );
 }
 
 ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
                ,const std::vector<double> &exposure_times  // in seconds
                ,int oversample
                ,double resolution
-               ,double my_background_sigma)
+               ,double my_background_sigma
+               ,double calibration_exposure_time)
 :Obs(Npix_x,Npix_y,resolution,oversample,1),t_exp(exposure_times)
 {
-  sigma_background = my_background_sigma * sqrt( Utilities::vec_sum(t_exp) );
+  sigma_background2 = my_background_sigma * my_background_sigma * calibration_exposure_time  ;
 }
 
 
@@ -82,9 +81,6 @@ void ObsVIS::AddNoise(PixelMap &pmap
     throw std::runtime_error("nonsquare");
   }
   
-  double sigma2 = sigma_background*sigma_background;
-  //  + pmap[i] / sb_to_e );
-  
   double dt = Utilities::vec_sum(t_exp);
   int missing_frame = -1;
   //int drop=0;
@@ -95,7 +91,7 @@ void ObsVIS::AddNoise(PixelMap &pmap
     //drop=1;
   }
 
-  double inv_sigma2 = (dt)/sigma2;
+  double inv_sigma2 = (dt)/sigma_background2;
   size_t N = pmap.size();
   for (unsigned long i = 0; i < N ; i++){
     error_map[i] = inv_sigma2;
@@ -114,7 +110,7 @@ void ObsVIS::AddNoise(PixelMap &pmap
         tt += t_exp[i];
       }
     
-      if(i != missing_frame) cosmics(error_map,t_exp[i]/sigma2,1,ran);
+      if(i != missing_frame) cosmics(error_map,t_exp[i]/sigma_background2,1,ran);
     }
     
 //    if(ran() < p ){
