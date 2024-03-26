@@ -160,10 +160,16 @@ Point_2d RandomInTriangle(const Point_2d &x1,
 /// return a point within a convex polygon
 Point_2d RandomInConvexPoly(const std::vector<Point_2d> &pp,
                             Utilities::RandomNumbers_NR &ran);
+std::vector<Point_2d> RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                                         int N,
+                                         Utilities::RandomNumbers_NR &ran);
 
 /// return a point within a polygon that doesn't need to be convex
 Point_2d RandomInPoly(std::vector<Point_2d> &pp,
                       Utilities::RandomNumbers_NR &ran);
+std::vector<Point_2d> RandomInPoly(std::vector<Point_2d> &pp,
+                                   int N,
+                                   Utilities::RandomNumbers_NR &ran);
 
 /** \brief finds ordered boundaries to regions where bitmap == true
 
@@ -528,7 +534,7 @@ std::vector<T> convex_hull(const std::vector<T> &PP)
   hull.resize(k);
   hull.pop_back();
   
-  return;
+  return hull;
 }
 
 /// Returns a vector of points on the convex hull in counter-clockwise order.
