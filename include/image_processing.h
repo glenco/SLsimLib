@@ -16,6 +16,7 @@
 #include "image_info.h"
 //#include "Tree.h"
 //#include "utilities_slsim.h"
+//#include "utilities_slsim.h"
 //#include "image_processing.h"
 #include "source.h"
 
@@ -424,6 +425,11 @@ public:
   PixelMap downsize(int n /// number of pixels each direction added into each new pixel
                     );
 
+  /** \brief Makes a PixelMap with resolution 1/n of the original with the values linearly interpolated.
+   
+   This normalizes so that the sum of the pixels is approximately constant.
+   */
+  PixelMap interpolate(int n);
 
   /// add a heaader keyword that will appear in fits output
    void addheader(std::string label,long value,std::string comment){
