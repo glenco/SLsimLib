@@ -435,6 +435,73 @@ PixelMap PixelMap::downsize(int n){
   return new_map;
 }
 
+PixelMap PixelMap::interpolate(int n){
+  size_t nx = n*(Nx-1)+1,ny = n*(Ny-1)+1;
+  //size_t nx = n*Nx,ny = n*Ny;
+  PixelMap new_map(center,nx,ny,resolution/n);
+  
+  long nn=n*n;
+  //long off = (1+nx)*(n-1)/2;
+  
+  for(long jj = 0 ; jj<Ny-1 ; ++jj){
+    long index = Nx*jj;
+    for(long ii = 0 ; ii<Nx-1 ; ++ii){
+
+      for(long j=0 ; j<n ; ++j){
+        long k = ii*n + (jj*n + j )*nx;
+        for(long i=0 ; i<n ; ++i){
+       
+          new_map[k] = (n-i)*(n-j)*map[index]
+            + i*(n-j)*map[index+1]
+            + i*j*map[index+1+Nx]
+            + (n-i)*j*map[index+Nx];
+          
+          new_map[k] /= nn;
+          ++k;
+        }
+      }
+      ++index;
+    }
+  }
+  {
+    long jj=Ny-1 ;
+    long index = Nx*jj;
+    for(long ii = 0 ; ii<Nx-1 ; ++ii){
+
+      long k = ii*n + (jj*n)*nx;
+      for(long i=0 ; i<n ; ++i){
+        
+        new_map[k] = (n-i)*map[index]
+            + i*map[index+1];
+          
+        new_map[k] /= n;
+        ++k;
+      }
+      ++index;
+    }
+  }
+  {
+    long ii = Nx-1;
+    for(long jj = 0 ; jj<Ny-1 ; ++jj){
+      long index = ii + Nx*jj;
+
+      long k = ii*n + (jj*n)*nx;
+      for(long j=0 ; j<n ; ++j){
+        
+        new_map[k] = (n-j)*map[index]
+          + j*map[index+Nx];
+          
+        new_map[k] /= n;
+        k += nx;
+      }
+    }
+  }
+  
+  new_map *= 1.0/nn;
+  
+  return new_map;
+}
+
 PixelMap& PixelMap::operator=(const PixelMap &other)
 {
   if(this != &other){
@@ -1459,9 +1526,9 @@ void PixelMap::drawline(
                         ,bool add        /// true : add value, false replace with value
 ){
   
-  PosType x[2],s1,s2,r;
-  long index;
-  PosType d = 0;
+  //PosType x[2],s1,s2,r;
+  //long index;
+  //PosType d = 0;
   
   long index0 = find_index(x1);
   long index1 = find_index(x2);
