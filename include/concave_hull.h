@@ -1427,6 +1427,7 @@ Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
   
   if(curve.size()==0) throw std::runtime_error("bad curve");
     
+  // find a bounding box for the curve
   Point_2d p1,p2,center;
   p1=p2=curve[0];
   for(const Point_2d &p : curve){
@@ -1442,6 +1443,7 @@ Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
     }
   }
   
+  // sample randomly
   if( p1==p2) return p1;
   Point_2d p;
   double area;

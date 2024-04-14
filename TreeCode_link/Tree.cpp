@@ -903,14 +903,17 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 
 void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng)
 {
-  CausticRange(p1,p2);
-  y.resize(N);
-  for(int ii=0;ii<N;++ii){
-    do{
-      y[ii][0] = (p2[0] - p1[0])*rng() + p1[0];
-      y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
-    }while(!inCausticCurve(y[ii]));
-  }
+  
+  y = Utilities::RandomInPoly(caustic_curve_intersecting,N, rng);
+  
+//  CausticRange(p1,p2);
+//  y.resize(N);
+//  for(int ii=0;ii<N;++ii){
+//    do{
+//      y[ii][0] = (p2[0] - p1[0])*rng() + p1[0];
+//      y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
+//    }while(!inCausticCurve(y[ii]));
+//  }
 }
 
 
