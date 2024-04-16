@@ -3487,3 +3487,36 @@ std::vector<Point_2d> Utilities::RandomInPoly(std::vector<Point_2d> &pp,
   }
   return output;
 }
+
+Point_2d Utilities::RandomNearPoly(std::vector<Point_2d> &pp,
+                                   double R,
+                                   Utilities::RandomNumbers_NR &ran
+               ){
+  Point_2d p = RandomInPoly(pp,ran);
+  
+  double r = R*sqrt(ran());
+  double theta = 2*PI*ran();
+  
+  p[0] = p[0] + r*cos(theta);
+  p[1] = p[1] + r*sin(theta);
+  
+  return p;
+}
+
+std::vector<Point_2d> Utilities::RandomNearPoly(std::vector<Point_2d> &pp,
+                                               int N,
+                                               double R,
+                                              Utilities::RandomNumbers_NR &ran
+                                             ){
+  std::vector<Point_2d> ps = RandomInPoly(pp,N,ran);
+  
+  for(Point_2d &p : ps){
+    double r = R*sqrt(ran());
+    double theta = 2*PI*ran();
+    
+    p[0] = p[0] + r*cos(theta);
+    p[1] = p[1] + r*sin(theta);
+  }
+  
+  return ps;
+}

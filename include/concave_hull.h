@@ -170,6 +170,17 @@ Point_2d RandomInPoly(std::vector<Point_2d> &pp,
 std::vector<Point_2d> RandomInPoly(std::vector<Point_2d> &pp,
                                    int N,
                                    Utilities::RandomNumbers_NR &ran);
+  
+/// return a point within distance E of a polygon, i.e. the center of a cicle that intersects the interior of a polygon
+Point_2d RandomNearPoly(std::vector<Point_2d> &pp
+                        ,double R
+                        ,Utilities::RandomNumbers_NR &ran);
+std::vector<Point_2d> RandomNearPoly(std::vector<Point_2d> &pp
+                                     ,int N
+                                     ,double R
+                                     ,Utilities::RandomNumbers_NR &ran);
+
+  
 
 /** \brief finds ordered boundaries to regions where bitmap == true
 
@@ -1422,79 +1433,81 @@ std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w);
 
 
-template <typename R>
-Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
-  
-  if(curve.size()==0) throw std::runtime_error("bad curve");
-    
-  // find a bounding box for the curve
-  Point_2d p1,p2,center;
-  p1=p2=curve[0];
-  for(const Point_2d &p : curve){
-    if(p[0] < p1[0]){
-      p1[0]=p[0];
-    }else if(p[0] > p2[0]){
-      p2[0]=p[0];
-    }
-    if(p[1] < p1[1]){
-      p1[1]=p[1];
-    }else if(p[1] > p2[1]){
-      p2[1]=p[1];
-    }
-  }
-  
-  // sample randomly
-  if( p1==p2) return p1;
-  Point_2d p;
-  double area;
-  do{
-    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
-    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
-
-  }while( Utilities::windings(p,curve,&area) == 0 );
-  
-  return p;
-}
-/** \brief Return a point that is either within the curve or within a distance r of the curve
+//template <typename R>
+//Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
+//
+//  if(curve.size()==0) throw std::runtime_error("bad curve");
+//
+//  // find a bounding box for the curve
+//  Point_2d p1,p2,center;
+//  p1=p2=curve[0];
+//  for(const Point_2d &p : curve){
+//    if(p[0] < p1[0]){
+//      p1[0]=p[0];
+//    }else if(p[0] > p2[0]){
+//      p2[0]=p[0];
+//    }
+//    if(p[1] < p1[1]){
+//      p1[1]=p[1];
+//    }else if(p[1] > p2[1]){
+//      p2[1]=p[1];
+//    }
+//  }
+//
+//  // sample randomly
+//  if( p1==p2) return p1;
+//  Point_2d p;
+//  double area;
+//  do{
+//    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
+//    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
+//
+//  }while( Utilities::windings(p,curve,&area) == 0 );
+//
+//  return p;
+//}
+/* \brief Return a point that is either within the curve or within a distance r of the curve
  */
-template <typename R>
-Point_2d RandomPointTouchingCurve(const std::vector<Point_2d> &curve
-                                  ,double r
-                                  ,R &ran){
-  
-  if(curve.size()==0) throw std::runtime_error("bad curve");
-    
-  Point_2d p1,p2,center;
-  p1=p2=curve[0];
-  for(const Point_2d &p : curve){
-    if(p[0] < p1[0]){
-      p1[0]=p[0];
-    }else if(p[0] > p2[0]){
-      p2[0]=p[0];
-    }
-    if(p[1] < p1[1]){
-      p1[1]=p[1];
-    }else if(p[1] > p2[1]){
-      p2[1]=p[1];
-    }
-  }
-
-  p1[0] -= r;
-  p1[1] -= r;
-  p2[0] += r;
-  p2[1] += r;
-
-  Point_2d p;
-  double area;
-  do{
-    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
-    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
-  }while( Utilities::windings(p.x,curve,&area) == 0
-         && Utilities::circleOverlapsCurve(p,r,curve) == false
-         );
-  
-  return p;
-}
+//template <typename R>
+//Point_2d RandomPointTouchingCurve(const std::vector<Point_2d> &curve
+//                                  ,double r
+//                                  ,R &ran){
+//
+//  if(curve.size()==0) throw std::runtime_error("bad curve");
+//  return Utilities::RandomNearPoly(curve,r,ran);
+//
+//
+//  Point_2d p1,p2,center;
+//  p1=p2=curve[0];
+//  for(const Point_2d &p : curve){
+//    if(p[0] < p1[0]){
+//      p1[0]=p[0];
+//    }else if(p[0] > p2[0]){
+//      p2[0]=p[0];
+//    }
+//    if(p[1] < p1[1]){
+//      p1[1]=p[1];
+//    }else if(p[1] > p2[1]){
+//      p2[1]=p[1];
+//    }
+//  }
+//
+//  p1[0] -= r;
+//  p1[1] -= r;
+//  p2[0] += r;
+//  p2[1] += r;
+//
+//  Point_2d p;
+//  double area;
+//  do{
+//    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
+//    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
+//  }while( Utilities::windings(p.x,curve,&area) == 0
+//         && Utilities::circleOverlapsCurve(p,r,curve) == false
+//         );
+//
+//  return p;
+//}
 
 }
 #endif /* concave_hull_h */

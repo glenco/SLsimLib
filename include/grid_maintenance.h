@@ -376,11 +376,30 @@ namespace ImageFinding{
     
     /** \brief Returns a vector of random point within the caustic.  It is more efficient to call this once for many point rather than repeatedly one at a time.
      */
-    void RandomSourceWithinCaustic(
+    void RandomSourcesWithinCaustic(
                                    int N                   /// number of points needed
                                    ,std::vector<Point_2d> &y  /// output vector of points
                                    ,Utilities::RandomNumbers_NR &rng  /// random number generator
                                    );
+    
+    Point_2d RandomSourceWithinCaustic(
+                                   Utilities::RandomNumbers_NR &rng  /// random number generator
+                                   );
+
+    /** \brief Returns a vector of random point within distance R or filly within the caustic.
+     */
+    void RandomSourcesNearCaustic(double R
+                                   ,int N                   /// number of points needed
+                                   ,std::vector<Point_2d> &y  /// output vector of points
+                                   ,Utilities::RandomNumbers_NR &rng  /// random number generator
+                                   );
+    /** \brief Returns a random point within distance R or filly within the caustic.
+     */
+    Point_2d RandomSourceNearCaustic(double R
+                                   ,Utilities::RandomNumbers_NR &rng  /// random number generator
+                                   );
+
+    
     /** \brief Returns a vector of random point strictly within the caustic (i.e. not touching the border).  It is more efficient to call this once for many point rather than repeatedly one at a time.
      */
     void RandomSourceStrictlyWithinCaustic(int N                              /// number of points needed

@@ -901,10 +901,9 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 	return false;
 }*/
 
-void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng)
-{
+void ImageFinding::CriticalCurve::RandomSourcesWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng){
   
-  y = Utilities::RandomInPoly(caustic_curve_intersecting,N, rng);
+  return Utilities::RandomInPoly(caustic_curve_intersecting,N, rng);
   
 //  CausticRange(p1,p2);
 //  y.resize(N);
@@ -914,6 +913,24 @@ void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Po
 //      y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
 //    }while(!inCausticCurve(y[ii]));
 //  }
+}
+
+Point_2d ImageFinding::CriticalCurve::RandomSourceWithinCaustic(Utilities::RandomNumbers_NR &rng){
+  return Utilities::RandomInPoly(caustic_curve_outline, rng);
+}
+
+void ImageFinding::CriticalCurve::RandomSourcesNearCaustic(double R
+                               ,int N
+                               ,std::vector<Point_2d> &y
+                               ,Utilities::RandomNumbers_NR &rng
+){
+  y = Utilities::RandomNearPoly(caustic_curve_outline,N,R,rng);
+}
+
+Point_2d ImageFinding::CriticalCurve::RandomSourceNearCaustic(double R
+                               ,Utilities::RandomNumbers_NR &rng
+){
+  return Utilities::RandomNearPoly(caustic_curve_outline,R,rng);
 }
 
 
