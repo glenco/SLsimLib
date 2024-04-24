@@ -670,12 +670,26 @@ private:
   }
 public:
   
-  CPFITS_READ_TABLES(std::string filename,bool verbose = false) {
+  CPFITS_READ_TABLES(std::string filename,int hdunum,bool verbose = false) {
 
     int status = 0;
     fits_open_table(&fptr,filename.c_str(), READONLY, &status);
     check_status(status,"Problem with input fits file.");
-    
+    if(hdunum>0){
+      int num;
+      fits_get_num_hdus(fptr, &num, &status);
+      if(hdunum > num-1){
+        throw std::runtime_error("Not enough HDUs in " + filename);
+      }
+      int hdutype;
+      fits_movabs_hdu(fptr,hdunum, &hdutype,  &status);
+      check_status(status,"Problem with input fits file. HDU "+std::to_string(hdunum));
+      if(hdutype != BINARY_TBL){
+        std::cerr << "HDU " << hdunum << " in " << filename << " is not a binary table" << std::endl;
+        throw std::runtime_error("wrong HDUs in " + filename);
+      }
+    }
+
     reset_tableInfo();
     get_colnames(col_names);
     
@@ -879,7 +893,9 @@ public:
     DataFrameFits(
                   std::string datafile   /// input catalog file in fits format
                   ,std::vector<std::string> &columns  /// if empty all columns are read and this will contain thier names, if not, only the listed columns are read
-    ):filename(datafile),cpfits(filename,true),n0(1){
+                  ,int hdu
+                  ,bool verbose = false
+    ):filename(datafile),cpfits(filename,hdu,verbose),n0(1){
    
       all_column_names = cpfits.get_colnames();
       
