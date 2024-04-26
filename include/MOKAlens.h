@@ -200,8 +200,9 @@ public:
   
 	//LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
+  template<typename T>
   LensHaloMassMap(
-                  const PixelMap &MassMap   /// mass map
+                  const PixelMap<T> &MassMap   /// mass map
                   ,double massconvertion    /// convertion factor from pixel units to solar masses
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
@@ -278,7 +279,8 @@ public:
 	void getDims();
 	void readMap();
   // set up map from a PixelMap of the surface density
-  void setMap(const PixelMap &inputmap,double convertionfactor,double z);
+  template<typename T>
+  void setMap(const PixelMap<T> &inputmap,double convertionfactor,double z);
 
 	void writeImage(std::string fn);
   

@@ -1284,6 +1284,7 @@ void powerspectrum2d(
                      ,std::vector<double> &Pl      /// output binned power spectrum
                      ,double zeropaddingfactor
                      );
+
 void powerspectrum2d(
                      std::valarray<double> &aa      /// first realspace map to be
                      ,int nx                       /// number of pixels in x direction
@@ -1293,6 +1294,7 @@ void powerspectrum2d(
                      ,std::vector<double> &ll      /// output multiplot number of bins
                      ,std::vector<double> &Pl      /// output binned power spectrum
 );
+
 void powerspectrum2dprebin(
                      std::valarray<double> &aa      /// first realspace map to be
                      ,int nx                       /// number of pixels in x direction
@@ -1304,21 +1306,41 @@ void powerspectrum2dprebin(
                      ,std::vector<double> &llave     /// average value of Fourier node in bins
 );
 
+void powerspectrum2d(
+                     std::valarray<float> const &aa      /// first realspace map to be
+                     ,std::valarray<float> const &bb     /// second realspace map, same as aa to get power spectrum
+                     ,int nx                       /// number of pixels in x direction
+                     ,int ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+                     ,double zeropaddingfactor
+                     );
+
+void powerspectrum2d(
+                     std::valarray<float> &aa      /// first realspace map to be
+                     ,int nx                       /// number of pixels in x direction
+                     ,int ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+);
+
+void powerspectrum2dprebin(
+                     std::valarray<float> &aa      /// first realspace map to be
+                     ,int nx                       /// number of pixels in x direction
+                     ,int ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,const std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+                     ,std::vector<double> &llave     /// average value of Fourier node in bins
+);
+
 #endif
 
-
-/** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
- 
- The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
- The
- **/
-std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value);
-
-/** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
- 
- The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
- **/
-std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
 
 /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
 int GetNThreads();
@@ -2603,7 +2625,56 @@ public:
 //    
 // 
 //  };
+
+
+/** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
+ 
+ The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
+ **/
+
+template <typename T>
+std::valarray<T> AdaptiveSmooth(const std::valarray<T> &map_in,size_t Nx,size_t Ny,T value){
+    
+    std::valarray<T> map_out(map_in.size());
+    long r,area;
+    T val;
+    for(long i=0;i<Nx;++i){
+      for(long j=0;j<Ny;++j){
+        r = 0;
+        val = map_in[i+j*Nx];
+        while(val < value && r < std::min(Nx, Ny) ){
+          
+          area = 0;
+          val = 0;
+          long imin,imax,jmin,jmax;
+          
+          imin = (i-r < 0) ? 0 : i-r;
+          imax = (i+r > Nx-1) ? Nx-1 : i+r;
+          
+          jmin = (j-r < 0) ? 0 : j-r;
+          jmax = (j+r > Ny-1) ? Ny-1 : j+r;
+          
+          
+          for(long ii=imin;ii<=imax;++ii){
+            for(long jj=jmin;jj<=jmax;++jj){
+              if( (ii-i)*(ii-i) + (jj-j)*(jj-j) < r){
+                val += map_in[ii+jj*Nx];
+                ++area;
+              }
+            }
+          }
+          ++r;
+        }
+        
+        map_out[i+j*Nx] = val/area;
+      }
+    }
+    
+    return map_out;
+  }
 }  // Utilities
 
 //#endif
+
+
 #endif

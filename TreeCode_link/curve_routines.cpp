@@ -2402,7 +2402,7 @@ std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
  */
 std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool test )
 {
-  PixelMap *testmap;
+  PixelMap<float> *testmap;
   int nt=0;
   
   
@@ -2435,7 +2435,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
     }
     center[0] = (bound_p2[0] + bound_p1[0])/2;
     center[1] = (bound_p2[1] + bound_p1[1])/2;
-    testmap = new PixelMap(center,512
+    testmap = new PixelMap<float>(center,512
                            ,1.05*MAX((bound_p2[0] - bound_p1[0]),(bound_p2[1] - bound_p1[1]))/512);
     
     testmap->drawPoints(P,0,1.0);
@@ -2584,7 +2584,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
           testmap->printFITS("!test_"+std::to_string(nt)+".fits");
           
           assert(hull[j] != hull[j-1]);
-          PixelMap map(hull.back()->x,512,
+          PixelMap<float> map(hull.back()->x,512,
                        MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
           
           map.drawPoints(P,0,1.0);
@@ -2613,7 +2613,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
             testmap->drawCurve(hull,2.0);
             testmap->printFITS("!test_"+std::to_string(nt)+".fits");
             
-            PixelMap map(Res[ii]->x,512,
+            PixelMap<float> map(Res[ii]->x,512,
                          MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
             
             map.drawPoints(P,0,1.0);

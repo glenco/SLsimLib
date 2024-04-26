@@ -56,4 +56,5 @@ add_sources(
 	quadTreeHalos.h
 	powell.h
 	slicer.h
+	pixelmap.h
 )

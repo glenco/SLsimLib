@@ -1389,9 +1389,9 @@ void ImageInfo::FindArc(PosType &radius,PosType *xc,PosType *arc_c,PosType &arcl
   xcenter[0] = (xrange[0]+xrange[1])/2;
   xcenter[1] = (yrange[0]+yrange[1])/2;
   
-  PixelMap map(xcenter, Npixels, resolution);
+  PixelMap<float> map(xcenter, Npixels, resolution);
   map.AddImages(&tmp_image,1);
-  double minval = 0;
+  float minval = 0;
   for(size_t i=0;i<map.size();++i){
     if(map[i] != 0.0){
       if(minval ==0) minval = map[i];

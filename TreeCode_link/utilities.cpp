@@ -447,7 +447,7 @@ IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
     if ((temp=AM*iy) > RNMX) return RNMX;
     else return temp;
   }
-    
+  
   void powerspectrum2d(
                        std::valarray<double> const &aa
                        ,std::valarray<double> const &bb
@@ -588,7 +588,29 @@ IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
     delete [] nc;
   }
   
-  void powerspectrum2d(
+void powerspectrum2d(
+                     std::valarray<float> const &aa
+                     ,std::valarray<float> const &bb
+                     ,int nx
+                     ,int ny
+                     ,double boxlx
+                     ,double boxly
+                     ,std::vector<double> &ll
+                     ,std::vector<double> &Pl
+                     ,double zeropaddingfactor
+                     ){
+  size_t n = aa.size();
+  std::valarray<double> da(n);
+  for(size_t i = 0 ; i<n ; ++i) da[i] = aa[i];
+  n = bb.size();
+  std::valarray<double> db(n);
+  for(size_t i = 0 ; i<n ; ++i) db[i] = bb[i];
+  
+  powerspectrum2d(da,db,nx,ny,boxlx,boxly,ll,Pl,zeropaddingfactor);
+}
+
+
+void powerspectrum2d(
                        std::valarray<double> &aa
                        ,int nx
                        ,int ny
@@ -675,7 +697,23 @@ IQ2(52774),IR1(12211),IR2(3791),EPS(1.2e-7),idum2(123456789),iy(0),
       }
     }
     delete [] fNa;
-  }
+}
+
+void powerspectrum2d(
+                       std::valarray<float> &aa
+                       ,int nx
+                       ,int ny
+                       ,double boxlx
+                       ,double boxly
+                       ,std::vector<double> &ll
+                       ,std::vector<double> &Pl
+                     ){
+  size_t n = aa.size();
+  std::valarray<double> dd(n);
+  for(size_t i = 0 ; i<n ; ++i) dd[i] = aa[i];
+  powerspectrum2d(dd,nx,ny,boxlx,boxly,ll,Pl);
+}
+
 
 void powerspectrum2dprebin(
                      std::valarray<double> &aa
@@ -758,90 +796,23 @@ void powerspectrum2dprebin(
   }
   delete [] fNa;
 }
-  
-std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
-    
-    std::valarray<double> map_out(map_in.size());
-    long r,area;
-    double val;
-    for(long i=0;i<Nx;++i){
-      for(long j=0;j<Ny;++j){
-        r = 0;
-        val = map_in[i+j*Nx];
-        while(val < value && r < std::min(Nx, Ny) ){
-          
-          area = 0;
-          val = 0;
-          long imin,imax,jmin,jmax;
-          
-          imin = (i-r < 0) ? 0 : i-r;
-          imax = (i+r > Nx-1) ? Nx-1 : i+r;
-          
-          jmin = (j-r < 0) ? 0 : j-r;
-          jmax = (j+r > Ny-1) ? Ny-1 : j+r;
-          
-          
-          for(long ii=imin;ii<=imax;++ii){
-            for(long jj=jmin;jj<=jmax;++jj){
-              if( (ii-i)*(ii-i) + (jj-j)*(jj-j) < r){
-                val += map_in[ii+jj*Nx];
-                ++area;
-              }
-            }
-          }
-          ++r;
-        }
-        
-        map_out[i+j*Nx] = val/area;
-      }
-    }
-    
-    return map_out;
-  }
-  /** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
-   
-   The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
-   The
-   **/
-  std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value){
-    
-    std::vector<double> map_out(map_in.size());
-    long r,area;
-    double val;
-    for(long i=0;i<Nx;++i){
-      for(long j=0;j<Ny;++j){
-        r = 0;
-        val = map_in[i+j*Nx];
-        while(val < value && r < std::min(Nx, Ny) ){
-          
-          area = 0;
-          val = 0;
-          long imin,imax,jmin,jmax;
-          
-          imin = (i-r < 0) ? 0 : i-r;
-          imax = (i+r > Nx-1) ? Nx-1 : i+r;
-          
-          jmin = (j-r < 0) ? 0 : j-r;
-          jmax = (j+r > Ny-1) ? Ny-1 : j+r;
-          
-          
-          for(long ii=imin;ii<=imax;++ii){
-            for(long jj=jmin;jj<=jmax;++jj){
-              if( (ii-i)*(ii-i) + (jj-j)*(jj-j) < r){
-                val += map_in[ii+jj*Nx];
-                ++area;
-              }
-            }
-          }
-          ++r;
-        }
-        
-        map_out[i+j*Nx] = val/area;
-      }
-    }
-    
-    return map_out;
-  }
+
+void powerspectrum2dprebin(
+                     std::valarray<float> &aa
+                     ,int nx
+                     ,int ny
+                     ,double boxlx
+                     ,double boxly
+                     ,const std::vector<double> &ll  /// pre-set bins,  one more value than number of bins
+                     ,std::vector<double> &Pl
+                     ,std::vector<double> &llave     /// average value of Fourier node in bins
+                     )
+{
+  size_t n = aa.size();
+  std::valarray<double> dd(n);
+  for(size_t i = 0 ; i<n ; ++i) dd[i] = aa[i];
+  powerspectrum2dprebin(dd,nx,ny,boxlx,boxly,ll,Pl,llave);
+}
 
   int GetNThreads(){return N_THREADS;}
 }

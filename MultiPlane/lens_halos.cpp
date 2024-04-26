@@ -266,7 +266,7 @@ void LensHalo::assignParams(InputParams& params,bool needRsize){
 //  }
 //}
 
-PixelMap LensHalo::map_variables(
+PixelMap<double> LensHalo::map_variables(
                        LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI  in units of sigma crit
                        ,size_t Nx
                        ,size_t Ny
@@ -274,7 +274,7 @@ PixelMap LensHalo::map_variables(
 ){
   
   Point_2d center;
-  PixelMap map(center.data(),Nx,Ny,res);
+  PixelMap<double> map(center.data(),Nx,Ny,res);
   Point_2d x,alpha;
   size_t N = Nx*Ny;
   KappaType kappa,phi,gamma[3];

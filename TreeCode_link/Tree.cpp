@@ -1005,7 +1005,8 @@ std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p)
   return os;
 }
 
-PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+template<typename T>
+PixelMap<T> ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
                                          ,int Nx) {
   
   int i_max = 0,i=0;
@@ -1033,7 +1034,7 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   Point_2d center = (p_max + p_min)/2;
   double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
   
-  PixelMap map(center.x,Nx,range/Nx);
+  PixelMap<T> map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
     map.AddCurve(c.critcurve, int(c.type) + 1);
@@ -1042,7 +1043,8 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   return map;
 }
 
-PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+template<typename T>
+PixelMap<T> ImageFinding::mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
                                          ,int Nx) {
   
   int i_max = 0,i=0;
@@ -1069,7 +1071,7 @@ PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::Critical
   Point_2d center = (p_max + p_min)/2;
   double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
   
-  PixelMap map(center.x,Nx,range/Nx);
+  PixelMap<T> map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
     map.AddCurve(c.caustic_curve_intersecting, int(c.type) + 1);

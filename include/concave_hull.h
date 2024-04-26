@@ -653,7 +653,7 @@ void concave(std::vector<T> &init_points
   
   if(TEST){
     PosType cent[] ={0.5,0.5};
-    PixelMap map(cent,256, 1.0/256);
+    PixelMap<float> map(cent,256, 1.0/256);
     
     map.drawgrid(10,0.5);
     
@@ -772,7 +772,7 @@ void concave(std::vector<T> &init_points
     
     if(TEST){
       PosType cent[] ={0.5,0.5};
-      PixelMap map(cent,256, 1.0/256);
+      PixelMap<float> map(cent,256, 1.0/256);
       
       map.drawgrid(10,0.5);
       
@@ -821,7 +821,7 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
   
   if(TEST){
     PosType cent[] ={0.5,0.5};
-    PixelMap map(cent,256, 1.0/256);
+    PixelMap<float> map(cent,256, 1.0/256);
     
     map.drawgrid(10,0.5);
     
@@ -939,7 +939,7 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
     
     if(TEST){
       PosType cent[] ={0.5,0.5};
-      PixelMap map(cent,256, 1.0/256);
+      PixelMap<float> map(cent,256, 1.0/256);
       
       map.drawgrid(10,0.5);
       
@@ -1404,7 +1404,7 @@ void testconcaveK(){
   int k = 5;
   std::vector<Ptype> hull = concaveK(points,k);
   Ptype center;
-  PixelMap map(center.x, 512, 3. / 512.);
+  PixelMap<float> map(center.x, 512, 3. / 512.);
   
   map.drawCurve(hull,1);
   map.drawPoints(points,0,2);

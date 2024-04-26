@@ -445,11 +445,11 @@ void ImageFinding::find_crit(
           Point_2d p1,p2;
           crit.CritRange(p1,p2);
           PosType range = 2.3*r_closest;
-          PixelMap map(crit.critical_center.x,1000,range/1000);
+          PixelMap<float> map(crit.critical_center.x,1000,range/1000);
           map.AddCurve(crit.critcurve,1.0);
           map.printFITS("!orphin_pseudo.fits");
           
-          grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+          grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
           map.Clean();
           
           for(auto &critt : crtcurve){
@@ -510,11 +510,11 @@ void ImageFinding::find_crit(
             Point_2d p1,p2;
             crit.CritRange(p1,p2);
             PosType range = 2.3*r_closest;
-            PixelMap map(crit.critical_center.x,1000,range/1000);
+            PixelMap<float> map(crit.critical_center.x,1000,range/1000);
             map.AddCurve(crit.critcurve,1.0);
             map.printFITS("!orphin_pseudo.fits");
             
-            grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+            grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
             map.Clean();
             
             for(auto &critt : crtcurve){
@@ -930,11 +930,11 @@ void ImageFinding::find_crit(
           Point_2d p1,p2;
           crit.CritRange(p1,p2);
           PosType range = 2.3*r_closest;
-          PixelMap map(crit.critical_center.x,1000,range/1000);
+          PixelMap<float> map(crit.critical_center.x,1000,range/1000);
           map.AddCurve(crit.critcurve,1.0);
           map.printFITS("!orphin_pseudo.fits");
           
-          grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+          grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
           map.Clean();
           
           for(auto &critt : crtcurve){
@@ -995,11 +995,11 @@ void ImageFinding::find_crit(
             Point_2d p1,p2;
             crit.CritRange(p1,p2);
             PosType range = 2.3*r_closest;
-            PixelMap map(crit.critical_center.x,1000,range/1000);
+            PixelMap<float> map(crit.critical_center.x,1000,range/1000);
             map.AddCurve(crit.critcurve,1.0);
             map.printFITS("!orphin_pseudo.fits");
             
-            grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+            grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
             map.Clean();
             
             for(auto &critt : crtcurve){
