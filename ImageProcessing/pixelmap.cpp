@@ -1299,7 +1299,7 @@ void PixelMap<T>::printFITS(std::string filename,bool flipX, bool verbose)
   naxex[1] = Ny;
 
   if(flipX){
-    std::valarray<double> map_inv(map.size());
+    std::valarray<T> map_inv(map.size());
     size_t s = 0;
     for(size_t i=0 ; i<Ny ; ++i){
       for(size_t j=1 ; j<=Nx ; ++j){
@@ -1784,7 +1784,7 @@ void PixelMap<T>::drawBox(PosType p1[],PosType p2[],PosType value,int Nstrip)
 {
   PosType x1ini[2],x2ini[2];
   PosType x1[2],x2[2];
-  PosType N = double(Nstrip);
+  double N = double(Nstrip);
   
   // To do the frame (easy) :
   // ------------------------

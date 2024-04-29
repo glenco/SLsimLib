@@ -546,8 +546,8 @@ void ObsVIS::Convert(
   
   if (psf == true){
     PixelMap<T> map_scratch(Point_2d(0,0).x
-                            , psf_oversample * Npix_x_output
-                            , psf_oversample * Npix_y_input, pix_size);
+                            , Npix_x_input
+                            , Npix_y_input, pix_size);
     ApplyPSF<T>(map_in,map_scratch);
     downsample<T>(map_scratch,map_out);
   }else{
@@ -824,8 +824,8 @@ void Observation::Convert(PixelMap<T> &map_in
   map_out.Clean();
   if (psf == true){
     PixelMap<T> map_scratch(Point_2d(0,0).x
-                            , psf_oversample * Npix_x_output
-                            , psf_oversample * Npix_y_input, pix_size);
+                            , Npix_x_input
+                            , Npix_y_input, pix_size);
     ApplyPSF<T>(map_in,map_scratch);
     downsample<T>(map_scratch,map_out);
   }else{
