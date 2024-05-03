@@ -56,9 +56,15 @@ public:
   PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
   PixelMap(std::string fitsfilename
            ,double resolution = -1,PixelMapUnits u = PixelMapUnits::ndef);
+  
+  // for conversion from double to float
+  template<typename OtherT>
+  PixelMap(const PixelMap<OtherT>&);
+  
   ~PixelMap(){
     map.resize(0);
   };
+ 
   
   PixelMap<T>& operator=(const PixelMap<T> &other);
   PixelMap<T>& operator=(PixelMap<T> &&other);

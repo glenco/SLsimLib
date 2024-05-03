@@ -38,6 +38,25 @@ Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), 
   map_boundary_p2[1] = other.map_boundary_p2[1];
 }
 
+template<>
+template<>
+PixelMap<float>::PixelMap(const PixelMap<double>& other):
+Nx(other.getNx()), Ny(other.getNy()), resolution(other.getResolution())
+, rangeX(other.getRangeX()), rangeY(other.getRangeY()),units(other.getUnits())
+{
+  size_t n = Nx*Ny;
+  map.resize(n);
+  for(int i=0 ; i<n ; ++i) map[i] = other[i];
+  Point_2d c=other.getCenter();
+  center[0] = c[0];
+  center[1] = c[1];
+  
+  map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
+  map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
+  map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
+  map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
+}
+
 // move constructor
 template <typename T>
 PixelMap<T>::PixelMap(PixelMap&& other)
@@ -90,13 +109,13 @@ Nx(Npixels), Ny(Npixels), resolution(resolution),units(u)
 template <typename T>
 PixelMap<T>::PixelMap(
                    const PosType* center,  /// The location of the center of the map
-                   std::size_t Nx,  /// Number of pixels in x dimension of map.
-                   std::size_t Ny,  /// Number of pixels in y dimension of map.
+                   std::size_t myNx,  /// Number of pixels in x dimension of map.
+                   std::size_t myNy,  /// Number of pixels in y dimension of map.
                    PosType resolution  /// One dimensional range of map in whatever units the point positions are in
                    ,PixelMapUnits u
 )
-: map(0.0, Nx*Ny),
-Nx(Nx), Ny(Ny), resolution(resolution),units(u)
+: map(0.0, myNx*myNy),
+Nx(myNx), Ny(myNy), resolution(resolution),units(u)
 {
   
   std::copy(center, center + 2, this->center);
