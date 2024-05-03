@@ -32,19 +32,37 @@ T to_numeric(const std::string &str) {
 };
 template<>
 inline long to_numeric<long>(const std::string &str) {
-  return std::stol(str);
+  try{
+    return std::stol(str);
+  }catch(...){
+    return -500;
+  }
 };
 template<>
 inline int to_numeric<int>(const std::string &str) {
   return std::stoi(str);
+  try{
+    return std::stoi(str);
+  }catch(...){
+    return -500;
+  }
 };
 template<>
 inline float to_numeric<float>(const std::string &str) {
   return std::stof(str);
+  try{
+    return std::stof(str);
+  }catch(...){
+    return -500;
+  }
 };
 template<>
 inline double to_numeric<double>(const std::string &str) {
-  return std::stod(str);
+  try{
+    return std::stod(str);
+  }catch(...){
+    return -500;
+  }
 };
 //********************************************************
 
@@ -2159,6 +2177,8 @@ void splitstring(std::string &line,std::vector<std::string> &vec,const std::stri
  * The accept function can be used to limit the amount of data added.  If there is an object, a, used to
  *    make this selection this can be done like [&a](str::vector<T> &v}{return a.itsok(v[3],v[4]);}
  *         where v corresponds to a row in the data file in order.
+ *
+ *  Entries that throw an exception when converting to T are replaced with -500
  */
 template< typename T>
 class DataFrame{
