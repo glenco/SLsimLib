@@ -2588,6 +2588,55 @@ void PixelMap<T>::paste(const PixelMap& pmap
 }
 
 template <typename T>
+PixelMap<T> PixelMap<T>::convolve(const PixelMap<T>& kernel){
+  int nx = kernel.getNx();
+  int ny = kernel.getNy();
+  
+  int dx = nx/2+1;
+  int dy = ny/2+1;
+  
+  PixelMap<T> copy(center,Nx,Ny,resolution);
+  
+  for(long ii = 0 ; ii< Nx ; ++ii){
+    long imin = (ii > dx) ? -dx : -ii ;
+    long imax = (Nx-ii > dx) ? dx : Nx-ii ;
+    
+    for(long jj = 0 ; jj<Ny ; ++jj){
+      long jmin = (jj > dy) ? -dy : -jj ;
+      long jmax = (Ny-jj > dx) ? dy : Ny-jj ;
+      
+      T &a = copy(ii,jj);
+      a=0;
+      
+      for(long i=imin  ; i<imax ; ++i){
+        for(long j=jmin ; j<jmax ; ++j){
+          a += kernel(i,j) * copy(ii + i ,jj + j);
+        }
+      }
+    }
+  }
+  
+  return copy;
+}
+
+template <typename T>
+PixelMap<T> PixelMap<T>::cutout(long xmin,long xmax,long ymin,long ymax){
+  long nx = xmax-xmin;
+  long ny = ymax-ymin;
+  
+  PixelMap<T> copy(center,nx,ny,resolution);
+
+  for(long i=0  ; i<nx ; ++i){
+    for(long j=0 ; j<ny ; ++j){
+      copy[i + nx*j] = map[ (xmin+i) + Nx*(ymin+j) ];
+    }
+  }
+  
+  return copy;
+}
+
+
+template <typename T>
 void PixelMap<T>::recenter(PosType c[2] /// new center
 ){
   double dc[2];

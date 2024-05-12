@@ -133,6 +133,22 @@ public:
 
   /// paste a PixelMap on with the lower left pixel match to [nx,ny] of this
   void paste(const PixelMap& pmap,long nx,long ny);
+  
+  /** \brief convolve the image with a kernel.
+   
+   It is assumed that the kernal has the same pixel size as the image.
+   
+   The center of the kernel is at N/2+1.  If it has an odd number  of pixels
+   in both directions this will be the center.
+   **/
+  PixelMap<T> convolve(const PixelMap<T> &kernel);
+  
+  /** \brief cut out a part of the PixelMap
+   
+   Inputs are in pixels. xmax and xmin are one after the disired region
+   so that the output size is (xmax-xmin) x (ymax-ymin)
+   **/
+  PixelMap<T> cutout(long xmin,long xmax,long ymin,long ymax);
 
   /** \brief copy a PixelMap that must be the same without creating a new one..
    
