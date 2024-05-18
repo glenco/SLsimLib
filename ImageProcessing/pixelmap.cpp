@@ -2589,32 +2589,35 @@ void PixelMap<T>::paste(const PixelMap& pmap
 
 template <typename T>
 PixelMap<T> PixelMap<T>::convolve(const PixelMap<T>& kernel){
-  int nx = kernel.getNx();
-  int ny = kernel.getNy();
+  long nx = kernel.getNx();
+  long ny = kernel.getNy();
   
-  int dx = nx/2+1;
-  int dy = ny/2+1;
+  long dx = nx/2+1;
+  long dy = ny/2+1;
   
   PixelMap<T> copy(center,Nx,Ny,resolution);
   
   for(long ii = 0 ; ii< Nx ; ++ii){
     long imin = (ii > dx) ? -dx : -ii ;
-    long imax = (Nx-ii > dx) ? dx : Nx-ii ;
+    long imax = (Nx-ii > dx) ? dx-1 : Nx-ii-1 ;
     
     for(long jj = 0 ; jj<Ny ; ++jj){
       long jmin = (jj > dy) ? -dy : -jj ;
-      long jmax = (Ny-jj > dx) ? dy : Ny-jj ;
+      long jmax = (Ny-jj > dx) ? dy-1 : Ny-jj-1 ;
       
-      T &a = copy(ii,jj);
+      T &a = copy[ii + Nx*jj];
       a=0;
       
       for(long i=imin  ; i<imax ; ++i){
         for(long j=jmin ; j<jmax ; ++j){
-          a += kernel(i,j) * copy(ii + i ,jj + j);
+          a += kernel[i+dx + nx*(j+dy)] * map[ ii + i + Nx*(jj + j) ];
+          //assert(a == 0);
         }
       }
     }
   }
+  
+  copy.units = units;
   
   return copy;
 }
@@ -2625,7 +2628,8 @@ PixelMap<T> PixelMap<T>::cutout(long xmin,long xmax,long ymin,long ymax){
   long ny = ymax-ymin;
   
   PixelMap<T> copy(center,nx,ny,resolution);
-
+  copy.units = units;
+  
   for(long i=0  ; i<nx ; ++i){
     for(long j=0 ; j<ny ; ++j){
       copy[i + nx*j] = map[ (xmin+i) + Nx*(ymin+j) ];
@@ -2709,11 +2713,11 @@ void PixelMap<T>::AddSource(Source &source,int oversample){
 }
 */
 
-/** \brief convolve the image with a kernel.
+/* \brief convolve the image with a kernel.
  
  It is assumed that the size of the kernel is much smaller than the image and
  that the kernal has the same pixel size as the image.
- **/
+ **
 template <typename T>
 void PixelMap<T>::convolve(PixelMap<T> &kernel,long center_x,long center_y){
   std::valarray<T> output(Nx*Ny);
@@ -2756,7 +2760,7 @@ void PixelMap<T>::convolve(PixelMap<T> &kernel,long center_x,long center_y){
   }
   
   std::swap(map,output);
-}
+}*/
 
 template class PixelMap<double>;
 template class PixelMap<float>;

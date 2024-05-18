@@ -87,6 +87,9 @@ public:
   }
   inline double getResolution() const { return resolution; }
   
+  // coordinates of lower left corner 
+  inline Point_2d getLLBoundary() const{ return Point_2d(map_boundary_p1[0],map_boundary_p1[1]); }
+  
   /// returns right accention of center
   double getRA(){return RA;}
   /// returns declination of center
@@ -219,7 +222,8 @@ public:
 
   inline T getValue(std::size_t i) const { return map[i]; }
   inline T & operator[](std::size_t i) { return map[i]; };
-  T operator[](std::size_t i) const { return map[i]; };
+  inline T operator[](std::size_t i) const { return map[i]; };
+  inline T & operator()(std::size_t i) { return map[i]; };
   inline T operator()(std::size_t i) const { return map[i]; };
   inline T operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
   inline T & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
@@ -431,12 +435,12 @@ public:
   void recenter(Point_2d newcenter /// in radians
                  );
   
-  /** \brief convolve the image with a kernel.
+  /* \brief convolve the image with a kernel.
    
    It is assumed that the size of the kernel is much smaller than the image and
    that the kernal has the same pixel size as the image.
    **/
-  void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
+  //void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
  
   /** \brief Creates a PixelMap with a lower resolution.
    *  The value of the pixels are added for the new pixels.

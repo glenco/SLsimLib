@@ -874,27 +874,6 @@ private: /* input */
   PosType sim_angular_radius;
   /// inverse of the angular screening scale in the tree force calculation
   PosType inv_ang_screening_scale;
-  
-  struct MINyFunction{
-     MINyFunction(Lens &mylens,Point_2d y,int sign):lens(mylens),y(y),sign(sign),r2max(0){}
-
-    double operator()(double *x){
-      point.x[0] = x[1];
-      point.x[1] = x[2];
-      lens.rayshooterInternal(1,&point);
-      double r2 = (y[0]-point.image->x[0])*(y[0]-point.image->x[0])
-      + (y[1]-point.image->x[1])*(y[1]-point.image->x[1]);
-      
-      r2max = MAX(r2,r2max);
-      return r2 + r2max*abs(sign - sgn(point.invmag()));
-    }
-    
-    Lens &lens;
-    Point_2d y;
-    int sign;
-    double r2max;
-    LinkedPoint point;
-  };
 };
 
 inline std::size_t Lens::getNMainHalos() const

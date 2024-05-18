@@ -691,46 +691,6 @@ void Lens::compute_rays_parallel(int start
 }
 
 
-/**  \brief Find an image position for a source position.
- 
- This routine finds the image position by minimizing the seporation on the source plane with Powell's method of minimization.  This will not find all images.  For that you must use another routine.  In the weak lensing regiam this should be sufficient.
- */
-/*
-RAY Lens::find_image_min(
-          Point_2d y_source     /// input position of source (radians)
-          ,Point_2d &x_image    /// initialized with guess for image postion (radians)
-          ,PosType z_source     /// redshift of source
-          ,PosType ytol2        /// target tolerance in source position squared
-          ,PosType &dy2        /// final value of Delta y ^2
-          ,int sign             /// sign of magnification
-){
-  
-  PosType tmp_zs = getSourceZ();
-  if(tmp_zs != zsource) ResetSourcePlane(z_source,false);
-  
-  LinkedPoint p;
-  if(sign==0){
-    // get sign of magnification at inital point
-    p[0]=x_image[0];
-    p[1]=x_image[1];
-    rayshooterInternal(1,&p);
-    sign = sgn(p.invmag());
-  }
-  
-  MINyFunction minfunc(*this,y_source,sign);
-  int iter;
-  
-  powell_tp(x_image.x,2,ytol2,&iter,&dy2,minfunc);
-  
-  p[0]=x_image[0];
-  p[1]=x_image[1];
-  rayshooterInternal(1,&p);
-  
-  ResetSourcePlane(tmp_zs,false);
-  
-  return RAY(p);
-}
-*/
 
 
 RAY Lens::find_image_min(
