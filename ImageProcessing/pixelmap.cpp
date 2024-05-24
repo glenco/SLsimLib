@@ -38,6 +38,25 @@ Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), 
   map_boundary_p2[1] = other.map_boundary_p2[1];
 }
 
+template<>
+template<>
+PixelMap<float>::PixelMap(const PixelMap<double>& other):
+Nx(other.getNx()), Ny(other.getNy()), resolution(other.getResolution())
+, rangeX(other.getRangeX()), rangeY(other.getRangeY()),units(other.getUnits())
+{
+  size_t n = Nx*Ny;
+  map.resize(n);
+  for(int i=0 ; i<n ; ++i) map[i] = other[i];
+  Point_2d c=other.getCenter();
+  center[0] = c[0];
+  center[1] = c[1];
+  
+  map_boundary_p1[0] = center[0]-(Nx*resolution)/2.;
+  map_boundary_p1[1] = center[1]-(Ny*resolution)/2.;
+  map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
+  map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
+}
+
 // move constructor
 template <typename T>
 PixelMap<T>::PixelMap(PixelMap&& other)
@@ -90,13 +109,13 @@ Nx(Npixels), Ny(Npixels), resolution(resolution),units(u)
 template <typename T>
 PixelMap<T>::PixelMap(
                    const PosType* center,  /// The location of the center of the map
-                   std::size_t Nx,  /// Number of pixels in x dimension of map.
-                   std::size_t Ny,  /// Number of pixels in y dimension of map.
+                   std::size_t myNx,  /// Number of pixels in x dimension of map.
+                   std::size_t myNy,  /// Number of pixels in y dimension of map.
                    PosType resolution  /// One dimensional range of map in whatever units the point positions are in
                    ,PixelMapUnits u
 )
-: map(0.0, Nx*Ny),
-Nx(Nx), Ny(Ny), resolution(resolution),units(u)
+: map(0.0, myNx*myNy),
+Nx(myNx), Ny(myNy), resolution(resolution),units(u)
 {
   
   std::copy(center, center + 2, this->center);
@@ -2569,6 +2588,59 @@ void PixelMap<T>::paste(const PixelMap& pmap
 }
 
 template <typename T>
+PixelMap<T> PixelMap<T>::convolve(const PixelMap<T>& kernel){
+  long nx = kernel.getNx();
+  long ny = kernel.getNy();
+  
+  long dx = nx/2+1;
+  long dy = ny/2+1;
+  
+  PixelMap<T> copy(center,Nx,Ny,resolution);
+  
+  for(long ii = 0 ; ii< Nx ; ++ii){
+    long imin = (ii > dx) ? -dx : -ii ;
+    long imax = (Nx-ii > dx) ? dx-1 : Nx-ii-1 ;
+    
+    for(long jj = 0 ; jj<Ny ; ++jj){
+      long jmin = (jj > dy) ? -dy : -jj ;
+      long jmax = (Ny-jj > dx) ? dy-1 : Ny-jj-1 ;
+      
+      T &a = copy[ii + Nx*jj];
+      a=0;
+      
+      for(long i=imin  ; i<imax ; ++i){
+        for(long j=jmin ; j<jmax ; ++j){
+          a += kernel[i+dx + nx*(j+dy)] * map[ ii + i + Nx*(jj + j) ];
+          //assert(a == 0);
+        }
+      }
+    }
+  }
+  
+  copy.units = units;
+  
+  return copy;
+}
+
+template <typename T>
+PixelMap<T> PixelMap<T>::cutout(long xmin,long xmax,long ymin,long ymax){
+  long nx = xmax-xmin;
+  long ny = ymax-ymin;
+  
+  PixelMap<T> copy(center,nx,ny,resolution);
+  copy.units = units;
+  
+  for(long i=0  ; i<nx ; ++i){
+    for(long j=0 ; j<ny ; ++j){
+      copy[i + nx*j] = map[ (xmin+i) + Nx*(ymin+j) ];
+    }
+  }
+  
+  return copy;
+}
+
+
+template <typename T>
 void PixelMap<T>::recenter(PosType c[2] /// new center
 ){
   double dc[2];
@@ -2641,11 +2713,11 @@ void PixelMap<T>::AddSource(Source &source,int oversample){
 }
 */
 
-/** \brief convolve the image with a kernel.
+/* \brief convolve the image with a kernel.
  
  It is assumed that the size of the kernel is much smaller than the image and
  that the kernal has the same pixel size as the image.
- **/
+ **
 template <typename T>
 void PixelMap<T>::convolve(PixelMap<T> &kernel,long center_x,long center_y){
   std::valarray<T> output(Nx*Ny);
@@ -2688,7 +2760,7 @@ void PixelMap<T>::convolve(PixelMap<T> &kernel,long center_x,long center_y){
   }
   
   std::swap(map,output);
-}
+}*/
 
 template class PixelMap<double>;
 template class PixelMap<float>;

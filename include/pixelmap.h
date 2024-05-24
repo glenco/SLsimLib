@@ -56,9 +56,15 @@ public:
   PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
   PixelMap(std::string fitsfilename
            ,double resolution = -1,PixelMapUnits u = PixelMapUnits::ndef);
+  
+  // for conversion from double to float
+  template<typename OtherT>
+  PixelMap(const PixelMap<OtherT>&);
+  
   ~PixelMap(){
     map.resize(0);
   };
+ 
   
   PixelMap<T>& operator=(const PixelMap<T> &other);
   PixelMap<T>& operator=(PixelMap<T> &&other);
@@ -80,6 +86,9 @@ public:
     return c;
   }
   inline double getResolution() const { return resolution; }
+  
+  // coordinates of lower left corner 
+  inline Point_2d getLLBoundary() const{ return Point_2d(map_boundary_p1[0],map_boundary_p1[1]); }
   
   /// returns right accention of center
   double getRA(){return RA;}
@@ -127,6 +136,22 @@ public:
 
   /// paste a PixelMap on with the lower left pixel match to [nx,ny] of this
   void paste(const PixelMap& pmap,long nx,long ny);
+  
+  /** \brief convolve the image with a kernel.
+   
+   It is assumed that the kernal has the same pixel size as the image.
+   
+   The center of the kernel is at N/2+1.  If it has an odd number  of pixels
+   in both directions this will be the center.
+   **/
+  PixelMap<T> convolve(const PixelMap<T> &kernel);
+  
+  /** \brief cut out a part of the PixelMap
+   
+   Inputs are in pixels. xmax and xmin are one after the disired region
+   so that the output size is (xmax-xmin) x (ymax-ymin)
+   **/
+  PixelMap<T> cutout(long xmin,long xmax,long ymin,long ymax);
 
   /** \brief copy a PixelMap that must be the same without creating a new one..
    
@@ -197,7 +222,8 @@ public:
 
   inline T getValue(std::size_t i) const { return map[i]; }
   inline T & operator[](std::size_t i) { return map[i]; };
-  T operator[](std::size_t i) const { return map[i]; };
+  inline T operator[](std::size_t i) const { return map[i]; };
+  inline T & operator()(std::size_t i) { return map[i]; };
   inline T operator()(std::size_t i) const { return map[i]; };
   inline T operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
   inline T & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
@@ -409,12 +435,12 @@ public:
   void recenter(Point_2d newcenter /// in radians
                  );
   
-  /** \brief convolve the image with a kernel.
+  /* \brief convolve the image with a kernel.
    
    It is assumed that the size of the kernel is much smaller than the image and
    that the kernal has the same pixel size as the image.
    **/
-  void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
+  //void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
  
   /** \brief Creates a PixelMap with a lower resolution.
    *  The value of the pixels are added for the new pixels.

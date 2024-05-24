@@ -400,7 +400,7 @@ PixelMap<T> GridMap::getPixelMapFlux(int resf) const{
   return map;
 }
 
-/// surface brightness map
+/// Flux in pixels map
 template<typename T>
 void GridMap::getPixelMapFlux(PixelMap<T> &map) const{
   

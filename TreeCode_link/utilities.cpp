@@ -838,7 +838,7 @@ bool Utilities::IO::make_directories(const std::string &root_dir){
 void Utilities::IO::ReadFileNames(
                    std::string dir              /// path to directory containing fits files
                    ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
-                   ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                   ,std::vector<std::string> & filenames  /// output vector of file names
                    ,bool verbose){
   
   DIR *dp = opendir( dir.c_str() );
