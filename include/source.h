@@ -13,7 +13,6 @@
 #include "image_processing.h"
 #include "point.h"
 
-//class PixelMap;
 double mag_to_jansky_AB(double);
 double jansky_to_mag_AB(double flux);
 
