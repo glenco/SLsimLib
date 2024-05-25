@@ -1,3 +1,3 @@
 add_sources(
-	gadget.cpp
+	#gadgetio.cpp
 )
