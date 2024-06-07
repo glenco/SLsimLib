@@ -20,9 +20,7 @@
 //#include "utilities_slsim.h"
 //#include "utilities_slsim.h"
 //#include "image_processing.h"
-//#include "source.h"
-
-class Source;
+#include "source.h"
 #include "fftw3.h"
 
 // forward declaration
