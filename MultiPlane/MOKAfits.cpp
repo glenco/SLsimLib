@@ -9,10 +9,7 @@
 #include <fstream>
 
 #include "cpfits.h"
-
-#ifdef ENABLE_FFTW
 #include "fftw3.h"
-#endif
 
 // carlo test begin
 /*

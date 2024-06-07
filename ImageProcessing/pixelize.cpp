@@ -1459,9 +1459,9 @@ void PixelMap::drawline(
                         ,bool add        /// true : add value, false replace with value
 ){
   
-  PosType x[2],s1,s2,r;
-  long index;
-  PosType d = 0;
+  //PosType x[2];
+  //long index;
+  //PosType d = 0;
   
   long index0 = find_index(x1);
   long index1 = find_index(x2);
@@ -2709,7 +2709,7 @@ void PixelMap::copy_in(
   double halfpixel = res_ratio/2;
   PosType x[2];
   size_t NNx = pmap.getNx(),NNy = pmap.getNy();
-  size_t Npmap = NNx*NNy;
+  //size_t Npmap = NNx*NNy;
   
   for(size_t ii=0 ; ii < map.size() ; ++ii){
     

@@ -1,3 +1,3 @@
 add_sources(
-	simpleTree.cpp
+	#simpleTree.cpp
 )

@@ -38,10 +38,14 @@ LensHaloMultiMap::LensHaloMultiMap(
                  ,double gfactor
                  ,double rsmooth2
                  ):
-LensHalo(redshift,c),write_shorts(write_subfields)
-,cosmo(c),cpfits(dir_data + fitsfile),ave_ang_sd(0)
-,mass_unit(mass_unit),fitsfilename(dir_data + fitsfile),gfactor(gfactor),ffactor(ffactor)
+LensHalo(redshift,c)
+,ffactor(ffactor),gfactor(gfactor)
+,write_shorts(write_subfields)
+,cosmo(c),cpfits(dir_data + fitsfile)
+,ave_ang_sd(0)
 ,rsmooth2(rsmooth2)
+,mass_unit(mass_unit)
+,fitsfilename(dir_data + fitsfile)
 {
   
   ++count;

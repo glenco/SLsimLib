@@ -18,10 +18,7 @@
 //#include "utilities_slsim.h"
 //#include "image_processing.h"
 #include "source.h"
-
-#ifdef ENABLE_FFTW
 #include "fftw3.h"
-#endif
 
 // forward declaration
 struct Grid;
