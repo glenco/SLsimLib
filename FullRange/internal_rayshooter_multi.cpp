@@ -312,7 +312,7 @@ void Lens::info_rayshooter(
   PosType aa,bb;
   PosType alpha[2],alpha_tmp[2];
   
-  KappaType kappa,gamma[3];
+  KappaType gamma[3];
   KappaType phi;
   
   Matrix2x2<PosType> G;
@@ -499,8 +499,8 @@ void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs 
       
       G *= charge * Dl[j] / (1 + plane_redshifts[j]);
       
-      PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j]
-                                          ,source_z);
+      //PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j]
+      //                                    ,source_z);
       
       // kappa *= charge / SigmaCrit;
       //alphas[i] *= charge;
@@ -905,8 +905,8 @@ void Lens::_find_images_min_parallel_(RAY *rays
                                       ,std::vector<bool> &success
                                       ){
   
-  size_t n = end-begin;
-  double dy2;
+  //size_t n = end-begin;
+  //double dy2;
   Point_2d yo;
   for(size_t i = begin ; i<end ; ++i){
     yo = rays[i].y;

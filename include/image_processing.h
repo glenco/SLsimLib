@@ -15,6 +15,7 @@
 #include "point.h"
 #include "image_info.h"
 #include "pixelmap.h"
+#include "fftw3.h"
 //#include "Tree.h"
 //#include "utilities_slsim.h"
 //#include "utilities_slsim.h"

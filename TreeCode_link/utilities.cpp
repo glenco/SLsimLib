@@ -8,6 +8,7 @@
 
 #include "slsimlib.h"
 #include "utilities_slsim.h"
+#include "fftw3.h"
 #include <random>
 
 

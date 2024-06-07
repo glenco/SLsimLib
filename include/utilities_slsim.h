@@ -2507,8 +2507,8 @@ public:
           ,std::string blanck_value = "0"
           ,long Nbatch=1000
           ):filename(file),blank_val(blanck_value)
-  ,nbatch(Nbatch),precision(std::cout.precision()),nprints(0)
-  ,last_line_printed(0),nlabels(0){
+  ,nbatch(Nbatch),precision(std::cout.precision())
+  ,last_line_printed(0),nlabels(0),nprints(0){
     print_to_file();
   };
   

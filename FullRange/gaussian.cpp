@@ -11,10 +11,6 @@
 #include <fstream>
 #include <functional>
 
-#ifdef ENABLE_FFTW
-#include "fftw3.h"
-#endif
-
 void GaussianField::GaussianField2D(double *image
                                     ,std::function<double(double,double)> PofK
                                     ,double boxlrad

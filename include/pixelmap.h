@@ -10,7 +10,6 @@
 
 #include <vector>
 #include <tuple>
-//#include <format>
 #include <type_traits>
 
 #include "utilities_slsim.h"
@@ -250,8 +249,8 @@ public:
   /// Check whether two PixelMaps agree in their physical dimensions.
   bool agrees(const PixelMap& other) const;
   
-  friend void swap(PixelMap&, PixelMap&);
-  static void swap(PixelMap&, PixelMap&);
+  //friend void swap(PixelMap&, PixelMap&);
+  static void swap(PixelMap<T>&, PixelMap<T>&);
   
   /// return average pixel value
   PosType ave() const {return map.sum()/map.size();}
@@ -313,40 +312,16 @@ public:
   void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
                      ,std::vector<PosType> &lvec            /// output l values of bands
                      ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
-                     ){
-    
-    if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
-    
-    if(overwrite){
-      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY, lvec, power_spectrum);
-    }else{
-      std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,tmp_power);
-      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
-    }
-  }
+                     );
 
   /// Find the power spectrum of the map
   void PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
                      ,const std::vector<PosType> &lbins            /// output l values of bands
                      ,std::vector<PosType> &lave            /// output l values of bands
                      ,bool overwrite = true                 /// if false add power to existing power_spectrum (used for averaging over many fields
-                     ){
-    
-    if(overwrite){
-      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,power_spectrum,lave);
-    }else{
-      if(power_spectrum.size() != lbins.size()-1) throw std::invalid_argument("these must be the same size");
-      std::vector<PosType> tmp_power(power_spectrum.size());
-      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,tmp_power,lave);
-      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
-    }
-  }
+                     );
 
-  void AdaptiveSmooth(PosType value){
-    std::valarray<T> tmp = Utilities::AdaptiveSmooth<T>(data(),Nx,Ny,value);
-    map = tmp;
-  }
+  void AdaptiveSmooth(PosType value);
   
   /// returns a vector of  contour curves
   void find_contour(T level
