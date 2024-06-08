@@ -1,0 +1,1 @@
+slsimlib_files += files(['fitlens.cpp'])
