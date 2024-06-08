@@ -23,10 +23,7 @@
 //#include "source.h"
 
 class Source;
-
-#ifdef ENABLE_FFTW
 #include "fftw3.h"
-#endif
 
 // forward declaration
 //struct Grid;
@@ -732,8 +729,6 @@ void Obs::CorrelateNoise(PixelMap<T> &pmap)
     std::cout << "Observation::CorrelateNoise() Map must have the same dimensions as the observation." << std::endl;
     throw std::runtime_error("nonsquare");
   }
-
-#ifdef ENABLE_FFTW
   
     // creates plane for fft of map, sets properly input and output data, then performs fft
     assert(Npix_x_output == Npix_y_output);
@@ -788,10 +783,6 @@ void Obs::CorrelateNoise(PixelMap<T> &pmap)
       }
     }
     return;
-#else
-    std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
-    exit(1);
-#endif
 }
 
 

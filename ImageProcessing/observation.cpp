@@ -8,10 +8,7 @@
 #include "image_processing.h"
 
 #include "cpfits.h"
-
-#ifdef ENABLE_FFTW
 #include "fftw3.h"
-#endif
 
 #include <fstream>
 #include <limits>

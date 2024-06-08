@@ -1286,7 +1286,6 @@ void apply_permutation(
   apply_permutation(vec.data(),p);
 }
 
-#ifdef ENABLE_FFTW
 /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
  *
  *   Adaptied from Carlo Giocoli's pl() routine.
@@ -1356,9 +1355,6 @@ void powerspectrum2dprebin(
                      ,std::vector<double> &Pl      /// output binned power spectrum
                      ,std::vector<double> &llave     /// average value of Fourier node in bins
 );
-
-#endif
-
 
 /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
 int GetNThreads();
