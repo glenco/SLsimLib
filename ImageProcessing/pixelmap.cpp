@@ -11,6 +11,7 @@
 #include "pixelmap.h"
 #include "grid_maintenance.h"
 #include "gridmap.h"
+#include "utilities_slsim.h"
 
 
 template <typename T>

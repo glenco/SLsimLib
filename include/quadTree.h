@@ -259,8 +259,8 @@ TreeQuadParticles<PType>::TreeQuadParticles(
 
 ):
 xxp(xpt)
-,Nparticles(Npoints)
 ,inv_area(my_inv_area)
+,Nparticles(Npoints)
 ,Nbucket(bucket)
 ,force_theta(theta_force)
 ,max_range(maximum_range)

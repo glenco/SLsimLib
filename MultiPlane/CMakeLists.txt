@@ -5,7 +5,7 @@ add_sources(
 	lens_halos.cpp
 	lens_multi_dark.cpp
 	planes.cpp
-	profile.cpp
+	#profile.cpp
 	particle_lens.cpp
 	multimap.cpp
 )

@@ -647,8 +647,11 @@ Observation::Observation(Telescope tel_name
  * \param read_out_noise Read-out noise in electrons/pixel
  * \param seeing FWHM in arcsecs of the image
  */
-Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float read_out_noise, size_t Npix_x,size_t Npix_y,double pix_size,float seeing):
-    Obs(Npix_x,Npix_y,pix_size,1,seeing),exp_time(exp_time), exp_num(exp_num), back_mag(back_mag),read_out_noise(read_out_noise)
+Observation::Observation(float diameter, float transmission, float my_exp_time, int my_exp_num
+, float my_back_mag, float my_read_out_noise
+, size_t Npix_x,size_t Npix_y,double my_pix_size,float my_seeing):
+    Obs(Npix_x,Npix_y,my_pix_size,1,my_seeing),exp_time(my_exp_time), exp_num(my_exp_num)
+    , back_mag(my_back_mag),read_out_noise(my_read_out_noise)
 {
   mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
   telescope = false;
@@ -667,8 +670,11 @@ Observation::Observation(float diameter, float transmission, float exp_time, int
  * \param psf_file Input PSF image
  * \param oversample Oversampling rate of the PSF image
  */
-Observation::Observation(float diameter, float transmission, float exp_time, int exp_num, float back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y,double pix_size, float oversample):
-    Obs(Npix_x,Npix_y,pix_size,oversample), exp_time(exp_time), exp_num(exp_num), back_mag(back_mag) , read_out_noise(read_out_noise)
+Observation::Observation(float diameter, float transmission, float my_exp_time, int my_exp_num
+, float my_back_mag, float ron, std::string psf_file,size_t Npix_x,size_t Npix_y
+,double my_pix_size, float oversample):
+    Obs(Npix_x,Npix_y,my_pix_size,oversample), exp_time(my_exp_time), exp_num(my_exp_num)
+    , back_mag(my_back_mag) , read_out_noise(0)
 		{
       //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
       mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));

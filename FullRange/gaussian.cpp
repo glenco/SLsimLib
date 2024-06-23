@@ -10,6 +10,7 @@
 #include <complex>
 #include <fstream>
 #include <functional>
+#include "fftw3.h"
 
 void GaussianField::GaussianField2D(double *image
                                     ,std::function<double(double,double)> PofK

@@ -185,13 +185,14 @@ std::vector<Point_2d> RandomNearPoly(std::vector<Point_2d> &pp
 /** \brief finds ordered boundaries to regions where bitmap == true
 
  This can be used to find critical curves or contours.
- `bitmap` should be the same size as the `Gridmap`
- If the boundary curve  touches the edge of the `GridMap` it will be indicated in `hits_boundary` as
+ If the boundary curve  touches the edge of the `bitmap` it will be indicated in `hits_boundary` as
  `true`.
  
- Boundaries will never cross or lead off the grid.  On the edges they will leave the edge pixels out even if they should be in.  This is a technical comprimise.
+ Boundaries will never cross or lead off the grid.  
+ On the edges they will leave the edge pixels out even if they 
+ should be in.  This is a technical compromise.
  
- Output points are in pixel units with (0,0) being pioint (0,0)
+ Output points are in pixel units with (0,0) being point (0,0)
 */
 template <typename P>
 void find_boundaries(std::vector<bool> &bitmap  // = true inside
@@ -267,7 +268,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
         if(n_edge >= n){  // infinite loop, output debugging data
           std::cerr << "Too many points in Utilities::find_boundaries()." << std::endl;
           std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
-          std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
+          std::cerr << "  contour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
           {
             std::ofstream file("bitmap_error_file.csv");
             file << "in,x,y" << std::endl;

@@ -499,8 +499,7 @@ void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs 
       
       G *= charge * Dl[j] / (1 + plane_redshifts[j]);
       
-      //PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j]
-      //                                    ,source_z);
+      //PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j],source_z);
       
       // kappa *= charge / SigmaCrit;
       //alphas[i] *= charge;

@@ -206,9 +206,9 @@ struct GridMap{
   
   /** \brief finds the boundary of the region on the source plane where there are more than one image
 
-   Warning : slow but perhaps reliable than find_caustics() when no radial caustic is found.
+   Warning : slow but perhaps more reliable than find_caustics() when no radial caustic is found.
    
-   This uses the triangle method to determin which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
+   This uses the triangle method to determine which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
 
    This should not be as susceptible to missing the radial caustic because of resolution in the image plane.
    */
