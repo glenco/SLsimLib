@@ -975,6 +975,26 @@ void Utilities::powerspectrum2d(
     delete [] nk;
     delete [] nc;
   }
+
+// this copies the float arrays into double arrays.  It could be better.
+void Utilities::powerspectrum2d(
+                       std::valarray<float> const &aa
+                       ,std::valarray<float> const &bb
+                       ,long nx
+                       ,long ny
+                       ,double boxlx
+                       ,double boxly
+                       ,std::vector<double> &ll
+                       ,std::vector<double> &Pl
+                       ,double zeropaddingfactor
+                                ){
+  size_t n = aa.size();
+  std::valarray<double> ad(n);
+  for(size_t i=0 ; i<n ; ++i) ad[i]= aa[i];
+  std::valarray<double> bd(n);
+  for(size_t i=0 ; i<n ; ++i) bd[i]= bb[i];
+  Utilities::powerspectrum2d(ad,bd,nx,ny,boxlx,boxly,ll,Pl,zeropaddingfactor);
+}
   
   void Utilities::powerspectrum2d(
                        std::valarray<double> &aa
@@ -1065,3 +1085,19 @@ void Utilities::powerspectrum2d(
     delete [] fNa;
   }
 
+// this copies the float arrays into double arrays.  It could be better.
+void Utilities::powerspectrum2d(
+                     std::valarray<float> &aa
+                     ,long nx
+                     ,long ny
+                     ,double boxlx
+                     ,double boxly
+                     ,std::vector<double> &ll
+                     ,std::vector<double> &Pl
+                     )
+{
+  size_t n = aa.size();
+  std::valarray<double> ad(n);
+  for(size_t i=0 ; i<n ; ++i) ad[i]= aa[i];
+  Utilities::powerspectrum2d(ad,nx,ny,boxlx,boxly,ll,Pl);
+}
