@@ -873,6 +873,8 @@ public:
 };
 
 /*** \brief Data frame for reading fits tables and minipulating the results.
+ 
+ Missing entries are replaced with -100
  */
 
   template< typename T>
@@ -889,7 +891,7 @@ public:
     std::vector<int> column_index;
   
   public:
-    /// The data frame is atached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a seporate function.
+    /// The data frame is attached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a seporate function.
     DataFrameFits(
                   std::string datafile   /// input catalog file in fits format
                   ,std::vector<std::string> &columns  /// if empty all columns are read and this will contain thier names, if not, only the listed columns are read
@@ -1139,7 +1141,7 @@ public:
       return data[i];
     };
     
-    // sort by one of the columns
+    // sort by one of the columns in ascending order
     void sortby(std::string name){
       std::vector<size_t> index(data[0].size());
       size_t N = index.size();

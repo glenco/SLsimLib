@@ -145,6 +145,8 @@ public:
    in both directions this will be the center.
    **/
   PixelMap<T> convolve(const PixelMap<T> &kernel);
+  PixelMap<T> convolve2(const PixelMap<T> &kernel);
+
   
   /** \brief cut out a part of the PixelMap
    

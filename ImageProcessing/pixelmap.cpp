@@ -2592,26 +2592,61 @@ PixelMap<T> PixelMap<T>::convolve(const PixelMap<T>& kernel){
   long nx = kernel.getNx();
   long ny = kernel.getNy();
   
-  long dx = nx/2+1;
-  long dy = ny/2+1;
+  //long dx = nx/2+1;
+  //long dy = ny/2+1;
+  
+  long dx = nx/2;
+  long dy = ny/2;
   
   PixelMap<T> copy(center,Nx,Ny,resolution);
   
   for(long ii = 0 ; ii< Nx ; ++ii){
-    long imin = (ii > dx) ? -dx : -ii ;
-    long imax = (Nx-ii > dx) ? dx-1 : Nx-ii-1 ;
-    
+    long imin = (ii > dx) ? 0 : dx - ii;
+    long imax = (Nx-ii > dx) ? nx-1 : Nx-ii-1+dx ;
+
     for(long jj = 0 ; jj<Ny ; ++jj){
-      long jmin = (jj > dy) ? -dy : -jj ;
-      long jmax = (Ny-jj > dx) ? dy-1 : Ny-jj-1 ;
-      
+      long jmin = (jj > dy) ? 0 : dy - jj ;
+      long jmax = (Ny-jj > dx) ? ny-1 : Ny-jj-1+dy ;
+
       T &a = copy[ii + Nx*jj];
       a=0;
       
-      for(long i=imin  ; i<imax ; ++i){
-        for(long j=jmin ; j<jmax ; ++j){
-          a += kernel[i+dx + nx*(j+dy)] * map[ ii + i + Nx*(jj + j) ];
-          //assert(a == 0);
+      for(long i=imin  ; i<=imax ; ++i){
+        for(long j=jmin ; j<=jmax ; ++j){
+          a += kernel[ i + nx*j ] * map[ ii + i - dx + Nx*(jj + j - dy) ];
+        }
+      }
+    }
+  }
+  
+  copy.units = units;
+  
+  return copy;
+}
+
+template <typename T>
+PixelMap<T> PixelMap<T>::convolve2(const PixelMap<T>& kernel){
+  long nx = kernel.getNx();
+  long ny = kernel.getNy();
+  
+  long dx = nx/2;
+  long dy = ny/2;
+  
+  PixelMap<T> copy(center,Nx,Ny,resolution);
+  
+  for(long ii = 0 ; ii< Nx ; ++ii){
+    for(long jj = 0 ; jj<Ny ; ++jj){
+
+      T &a = copy[ii + Nx*jj];
+      a=0;
+      
+      for(long i=0  ; i<nx ; ++i){
+        long k = ii + i - dx;
+        if(k > -1 && k < Nx){
+          for(long j=0 ; j<ny ; ++j){
+            long kk = jj + j - dy;
+            if(kk > -1 && kk < Ny ) a += kernel[ i + nx*j ] * map[ k + Nx*kk ];
+          }
         }
       }
     }

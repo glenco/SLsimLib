@@ -2457,7 +2457,7 @@ private:
   long nbatch;
   int precision;
   long last_line_printed;
-  int nlabels;
+  long nlabels;
   std::set<std::string> labels;
   
   std::map<std::string,std::string> label_comments;
@@ -2477,15 +2477,18 @@ private:
         int i=0;
         for(auto &label : labels){
           try{
-            if(label == "galaxy_halo_id"){
-              logfile << lines[j].at(label) << std::setprecision(12) ;
+            if(label == "ID"){
+              logfile << std::setprecision(17) << lines[j].at(label);
               std::cout << std::setprecision(precision);
+            }else if(label == "RA" || label == "DEC" ){
+                logfile << std::setprecision(8) << lines[j].at(label)  ;
+                std::cout << std::setprecision(precision);
             }else{
-              logfile << lines[j].at(label) << std::setprecision(precision);
+              logfile << std::setprecision(precision) << lines[j].at(label) ;
             }
             if(i<n-1) logfile << ",";
           }catch(std::exception& e){
-            logfile << blank_val << std::setprecision(precision);
+            logfile << std::setprecision(precision) << blank_val ;
             if(i<n-1) logfile << ",";
           }
           ++i;
@@ -2521,7 +2524,7 @@ public:
   }
   
   // current number of columns
-  int ncol(){return labels.size();}
+  size_t ncol(){return labels.size();}
   // names of columns
   std::set<std::string> names = labels;
   
@@ -2568,15 +2571,18 @@ public:
       i=0;
       for(auto &label : labels){
         try{
-          if(label == "galaxy_halo_id"){
-            logfile << line.at(label) << std::setprecision(12) ;
+          if(label == "ID"){
+            logfile << std::setprecision(17) << line.at(label)  ;
+            std::cout << std::setprecision(precision);
+          }else if(label == "RA" || label == "DEC" ){
+            logfile << std::setprecision(8) << line.at(label)  ;
             std::cout << std::setprecision(precision);
           }else{
-            logfile << line.at(label) << std::setprecision(precision);
+            logfile  << std::setprecision(precision) << line.at(label);
           }
           if(i<nlabels-1) logfile << ",";
         }catch(std::exception& e){
-          logfile << blank_val << std::setprecision(precision);
+          logfile << std::setprecision(precision) << blank_val;
           if(i<nlabels-1) logfile << ",";
         }
         ++i;

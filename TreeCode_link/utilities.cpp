@@ -848,7 +848,7 @@ void Utilities::IO::ReadFileNames(
   
   if (dp == NULL)
   {
-    std::cerr << "Cannot find directory" << std::endl;
+    std::cerr << "Cannot find directory : " << dir << std::endl;
     throw std::runtime_error("error opening directory");
     return;
   }
