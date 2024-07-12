@@ -470,6 +470,9 @@ namespace ImageFinding{
       rave /= caustic_curve_outline.size();
     }
 
+    /// returns an estimate of the area inside and within distance R of the caustic
+    double AreaNearCaustic(double R /// distance in radians
+                           );
     
   private:
     Point_2d p1,p2;

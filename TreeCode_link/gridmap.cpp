@@ -571,67 +571,13 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     for(Point_2d &p : curves[i]) p = p * resolution + i_points[0];
   }
   
-  //for(int i=0; i<curves.size() ; ++i) write_csv("test_crits" + std::to_string(i) + ".csv",curves[i]);
-  // if radial caustic has not been found, estimate a pseudo caustic
+  // if radial caustic has not been found, estimate a pseudo caustic as the convex hull of negative magnification images
   int ii_tan=0;
   for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
         if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
           
-          // find maximum kappa in negative mag region
-          //std::vector<size_t> maxima;
-          //double max=0;
-//          for(size_t i : indexes[ii]){
-            
-//            double tmp =  i_points[i].kappa();
-//            max=MAX(tmp,max);
-//            if(tmp > i_points[i-1].kappa() &&
-//               tmp > i_points[i+1].kappa() &&
-//               tmp > i_points[i+Ngrid_init].kappa() &&
-//               tmp > i_points[i-Ngrid_init].kappa() &&
-//               tmp > i_points[i-1-Ngrid_init].kappa() &&
-//               tmp > i_points[i-1+Ngrid_init].kappa() &&
-//               tmp > i_points[i+1-Ngrid_init].kappa() &&
-//               tmp > i_points[i+1+Ngrid_init].kappa()
-//               ){
-//
-//              maxima.push_back(i);
-//            }
-//          }
-//          if(maxima.size()==0) maxima.push_back(max);
-//
-//          assert(maxima.size() > 0);
-//          std::vector<size_t> hull_index;
-//          if(maxima.size() > 0){  // avoids point masses in uniform background
-//
-//            std::vector<long> tmp_index;
-//            tmp_index.reserve(9*maxima.size());
-//            for(size_t kmax : maxima){
-//              // include all 8 neighbors i
-//              long k=kmax-1-Ngrid_init;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//              k+=Ngrid_init;
-//              tmp_index.push_back(k);
-//              --k;
-//              tmp_index.push_back(k);
-//              --k;
-//              tmp_index.push_back(k);
-//              k+=Ngrid_init;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//            }
-//
             std::vector<Point_2d> psudo(indexes[ii_tan].size());
-            //psudo.reserve(9*maxima.size());
-            //for(size_t k : tmp_index) psudo.push_back(s_points[k]);
-            //for(size_t k : indexes[ii]) psudo.push_back(s_points[k]);
             
             for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
            
@@ -656,9 +602,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
 		hits_boundary[k] = hits_boundary[k-1];
 		hits_boundary[k-1] = tmp;
 	      }
-              //std::swap(hits_boundary[k],hits_boundary[k-1]);
             }
-          //}  // more than one maximum
         } // radial missing
         ++ii_tan;
       } // is a tangent

@@ -2669,8 +2669,8 @@ void PixelMap<T>::PowerSpectrum(std::vector<PosType> &power_spectrum   /// outpu
                      ,std::vector<PosType> &lvec            /// output l values of bands
                      ,bool overwrite                /// if false add power to existing power_spectrum (used for averaging over many fields
                      ){
-    
-    if(power_spectrum.size() != lvec.size()) throw std::invalid_argument("these must be the same size");
+                       
+    power_spectrum.resize(lvec.size());
     
     if(overwrite){
       Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,power_spectrum);
@@ -2679,11 +2679,11 @@ void PixelMap<T>::PowerSpectrum(std::vector<PosType> &power_spectrum   /// outpu
       Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,tmp_power);
       for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
     }
-  }
+}
 
 template <typename T>
 void PixelMap<T>::PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
-                     ,const std::vector<PosType> &lbins            /// output l values of bands
+                     ,const std::vector<PosType> &lbins            /// input l values of bands
                      ,std::vector<PosType> &lave            /// output l values of bands
                      ,bool overwrite                /// if false add power to existing power_spectrum (used for averaging over many fields
                      ){

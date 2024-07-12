@@ -228,13 +228,16 @@ public:
   inline T & operator()(std::size_t i,std::size_t j) { return map[i + Nx*j]; };
   
   PixelMap& operator+=(const PixelMap& rhs);
-  void operator+=(T f){map +=f;};
+  void operator+=(float f){map +=f;};
+  void operator+=(double f){map +=f;};
   //friend PixelMap operator+(const PixelMap&, const PixelMap&);
   PixelMap operator+(const PixelMap&) const;
 
   PixelMap& operator-=(const PixelMap& rhs);
   //friend PixelMap operator-(const PixelMap&, const PixelMap&);
   PixelMap operator-(const PixelMap&) const;
+  void operator-=(float f){map -=f;};
+  void operator-=(double f){map -=f;};
 
   PixelMap& operator*=(const PixelMap& rhs);
   //friend PixelMap operator*(const PixelMap&, const PixelMap&);

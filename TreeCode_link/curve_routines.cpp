@@ -3050,6 +3050,107 @@ bool Utilities::circleOverlapsCurve(const Point_2d &x,double r,const std::vector
   return Utilities::circleIntersetsCurve(x,r,v);
 }
 
+std::vector<std::vector<Point_2d> > Utilities::thicken_poly(
+                                const std::vector<Point_2d> &v
+                                ,double R){
+  
+  std::vector<std::vector<Point_2d> > output;
+  if(v.size() == 0) return output;
+  if(R <= 0){
+    output.push_back(v);
+    return output;
+  }
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  
+  double resolution=R/10,f=1.2;
+  double caustic_size = MIN(ur[0]-ll[0],ur[1]-ll[1]);
+  
+  //resolution = MAX(resolution,caustic_size/100);
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  long nv = v.size();
+  
+  if(nx > 500 || ny > 500){
+    output.resize(2);
+    output[0].resize(2*nv);
+    output[1].resize(2*nv);
+    for(long i=0 ; i<nv ; ++i){
+      Point_2d d = v[ (i+1)%nv ] - v[i];
+      d *= R/d.length();
+      std::swap(d[0],d[1]);
+      d[0] *= -1;
+      
+      Point_2d x = (v[ (i+1)%nv ] - v[i])*0.1  + v[i];
+      output[0][2*i] = x + d;
+      output[1][2*i] = x - d;
+      
+      x = (v[ (i+1)%nv ] - v[i])*0.9  + v[i];
+      output[0][2*i + 1] = x + d;
+      output[1][2*i + 1] = x - d;
+ 
+    }
+    
+  }else{
+    
+    bool too_small = true;
+    while(too_small ){
+      too_small= false;
+      ll[0] -= f*R;
+      ll[1] -= f*R;
+      ur[0] += f*R;
+      ur[1] += f*R;
+      
+      nx = (ur[0]-ll[0])/resolution;
+      ny = (ur[1]-ll[1])/resolution;
+      
+      long count=0;
+      Point_2d p = ll;
+      std::vector<bool> bitmap(nx*ny,false);
+      for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+        p[0] = ll[0];
+        for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+          long m = i + nx*j;
+          for(long k=0 ; k < nv ; ++k){
+            if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ]) ){
+              bitmap[m] = true;
+              ++count;
+              break;
+            }
+          }
+        }
+      }
+      
+      std::vector<bool> hits_edge;
+      Utilities::find_boundaries(bitmap,nx,output,hits_edge);
+      // check that it doesn't touch an edge
+      for(bool a : hits_edge){
+        if(a){
+          too_small = true;
+          f *= 1.5;
+        }
+      }
+      
+    }
+    
+    // rescale
+    for(int i = 0 ; i<output.size() ; ++i){
+      for(Point_2d &p : output[i]) p = ll + p * resolution;
+    }
+  }
+  return output;
+}
+
 std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
   

@@ -171,7 +171,7 @@ std::vector<Point_2d> RandomInPoly(std::vector<Point_2d> &pp,
                                    int N,
                                    Utilities::RandomNumbers_NR &ran);
   
-/// return a point within distance E of a polygon, i.e. the center of a cicle that intersects the interior of a polygon
+/// return a point within distance R of a polygon, i.e. the center of a cicle that intersects the interior of a polygon
 Point_2d RandomNearPoly(std::vector<Point_2d> &pp
                         ,double R
                         ,Utilities::RandomNumbers_NR &ran);
@@ -958,6 +958,24 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
   return hull;
 }
 
+// shortest distance between P and the segment (S1,S2)
+template <typename Ptype>
+double distance_to_segment(const Ptype &P
+                           ,const Ptype &S1
+                           ,const Ptype &S2
+                           ){
+  
+  Ptype D = S2-S1;
+  double s = (P-S1)*D / D.length_sqr();
+  if(s<=0){
+    return (P-S1).length();
+  }else if(s>=1){
+    return (P-S2).length();
+  }else{
+    return (S1 + D*s - P).length();
+  }
+}
+
 template <typename Ptype>
 bool segments_cross(const Ptype &a1,const Ptype &a2
                     ,const Ptype &b1,const Ptype &b2){
@@ -1433,6 +1451,16 @@ bool circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> 
 std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w);
 
+/** \brief return the boundaries of the region that is within R of the curve v
+ 
+ If the radius R is small compared to the dimenstions of the polygon an approximation is make
+ to save time in which parallel segments to each side of the polygon are used.
+ 
+ If the radius R is not small a gridding method is used which is more reliable.
+ */
+std::vector<std::vector<Point_2d> > thicken_poly(
+                                const std::vector<Point_2d> &v
+                               ,double R);
 
 //template <typename R>
 //Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
