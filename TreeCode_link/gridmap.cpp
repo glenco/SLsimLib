@@ -487,10 +487,41 @@ double GridMap::AddPointSource(const Point_2d &y,double flux){
   return total_flux;
 }
 
+void GridMap::find_magnification_contour(
+  std::vector<std::vector<Point_2d> > &curves
+  ,std::vector<bool> &hits_boundary
+  ,double invmag
+  ){
+  curves.resize(0);
+  
+  size_t N = Ngrid_init * Ngrid_init2;
+  std::vector<bool> bitmap(N);
+  size_t count = 0;
+  // find tangential critical curves
+  for(size_t k = 0 ; k < N ; ++k){
+    if(i_points[k].invmag() < invmag){
+      bitmap[k] = true;
+      ++count;
+    } else {
+      bitmap[k] = false;
+    }
+  }
+  std::vector<std::vector<long> > indexes;
+  if(count>0){
+    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,false);
+    //Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
+  }
+  // rescale from pixel units to those of grid
+  double resolution = getResolution();
+  for(int i=0; i<curves.size() ; ++i){
+    for(Point_2d &p : curves[i]) p = p * resolution + i_points[0];
+  }
+}
+
 void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
                ,std::vector<bool> &hits_boundary
-               ,std::vector<CritType> &crit_type
-                        ){
+               ,std::vector<CritType> &crit_type                      
+  ){
   
   curves.resize(0);
   
@@ -597,11 +628,11 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
             for(int k=curves.size()-1 ; k>j+1 ; --k){
               std::swap(curves[k],curves[k-1]);
               std::swap(crit_type[k],crit_type[k-1]);
-	      {
-		bool tmp = hits_boundary[k];
-		hits_boundary[k] = hits_boundary[k-1];
-		hits_boundary[k-1] = tmp;
-	      }
+	            {
+		            bool tmp = hits_boundary[k];
+		            hits_boundary[k] = hits_boundary[k-1];
+	      	      hits_boundary[k-1] = tmp;
+	            }
             }
         } // radial missing
         ++ii_tan;

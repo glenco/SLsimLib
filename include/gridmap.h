@@ -300,6 +300,15 @@ struct GridMap{
                  ,std::vector<bool> &hits_boundary
                  ,std::vector<CritType> &crit_type
                  );
+
+  /** \brief Find image-plane contours of magnification.  
+   * This is usually only used within ImageFinding:: functions where it will also find the contours on the source plane.
+   */
+  void find_magnification_contour(
+      std::vector<std::vector<Point_2d> > &curves
+      ,std::vector<bool> &hits_boundary
+      ,double invmag
+  );
   
 //  void find_crit_boundary(std::vector<std::vector<Point_2d> > &points
 //                          ,std::vector<bool> &hits_boundary

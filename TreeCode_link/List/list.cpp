@@ -343,6 +343,17 @@ void write_csv(std::string filename,const std::vector<Point_2d> &v){
   file << "x,y" << std::endl;
   for(const Point_2d &p : v) file << p[0] << "," << p[1] << std::endl;
 }
+void write_csv(std::string filename,const std::vector<RAY> &v){
+  std::ofstream file(filename);
+  file << "x1,x2,y1,y2,kappa,gamma1,gamma2,z" << std::endl;
+  for(const RAY &p : v){
+    file << p.x[0] << "," << p.x[1] << ","
+    << p.y[0] << "," << p.y[1] << ","
+    << p.kappa() << "," << p.gamma1() << "," << p.gamma2() << ","
+    << p.z
+    << std::endl;
+  }
+}
 
 std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == CritType::ND) return os << "not determined";
@@ -351,10 +362,3 @@ std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == CritType::radial) return os << "Radial";
   return os << "not determined";
 }
-
-//std::string to_string(const CritType &p){
-//  if(p == CritType::ND) return "not determined";
-//  if(p == CritType::pseudo) return "Pseudo";
-//  if(p == CritType::tangential) return "Tangential";
-//  return "Radial";
-//}

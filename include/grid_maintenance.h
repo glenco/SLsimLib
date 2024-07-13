@@ -473,7 +473,7 @@ namespace ImageFinding{
     /// returns an estimate of the area inside and within distance R of the caustic
     double AreaNearCaustic(double R /// distance in radians
                            );
-    
+      
   private:
     Point_2d p1,p2;
   };
@@ -503,7 +503,16 @@ namespace ImageFinding{
   void find_crit(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &crtcurve,int *Ncrits
                  ,double resolution,double invmag_min = 0.0,bool verbose = false,bool test=false);
   void find_crit(Lens &lens,GridMap &gridmap,std::vector<CriticalCurve> &crtcurves,bool verbose = false);
- 
+  
+  // finds the contours of magnification and source plane curve
+  void find_magnification_contour(
+    Lens &lens
+    ,GridMap &gridmap
+    ,double invmag
+    ,std::vector<std::vector<RAY> > &contour
+    ,std::vector<bool> &hits_boundary
+  );
+
   //void find_crit2(LensHndl lens,GridHndl grid,std::vector<CriticalCurve> &critcurve,int *Ncrits
   //                ,double resolution,bool *orderingsuccess,bool ordercurve,bool dividecurves,double invmag_min = 0.0,bool verbose = false);
   

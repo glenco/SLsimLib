@@ -1091,6 +1091,30 @@ void ImageFinding::find_crit(
 
 }
 
+void ImageFinding::find_magnification_contour(
+  Lens &lens
+  ,GridMap &gridmap
+  ,double invmag
+  ,std::vector<std::vector<RAY> > &contour
+  ,std::vector<bool> &hits_boundary
+){
+
+  std::vector<std::vector<Point_2d> > image_plane_contour;
+  gridmap.find_magnification_contour(image_plane_contour,hits_boundary,invmag);
+
+  int n = image_plane_contour.size();
+  contour.resize(n);
+  for(int i = 0 ; i<n ; ++i){
+    int m = image_plane_contour[i].size();
+    contour[i].resize(m);
+    for(int j = 0 ; j<m ; ++j){
+      contour[i][j].x = image_plane_contour[i][j];
+      contour[i][j].z = lens.getSourceZ();
+    }
+    lens.rayshooterInternal(m,contour[i].data());
+  }
+}
+
 /*  This function is not meant for an external user.  It is only used by
  find_crit(). paritypoints must be empty on first entry.
  */
