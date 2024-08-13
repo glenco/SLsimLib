@@ -65,6 +65,9 @@ size_t RemoveIntersections(std::vector<T> &curve){
 ///  Will fail if there are overlapping segments on the hull.
 std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 
+///Finds a concave envolope for an arbitrary closed curve.  This is done by gridding and then finding points that are withing a sertain distance of a segment of the curve.  The outer bounding curve is found and then the cuve is shrunck to the closest point on a segment.  This should be fool proof, but is relatively slow and might clip some points.
+std::vector<Point_2d> TightestHull(const std::vector<Point_2d> &v);
+
 //template <typename T>
 //std::vector<T> TightHull(const std::vector<T> &curve){
 //
@@ -200,6 +203,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
                      ,std::vector<std::vector<P> > &points
                      ,std::vector<bool> &hits_edge
                      ,bool add_to_vector=false
+                     ,bool outer_only=false    /// finds only the fist boundary which will be the outer one if there are not seporated islands
                      ){
   
   size_t n = bitmap.size();
@@ -465,6 +469,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
       //}
       
     }
+    if(outer_only) break;
   }
   
   long offset = 0;
@@ -972,6 +977,26 @@ double distance_to_segment(const Ptype &P
   }else if(s>=1){
     return (P-S2).length();
   }else{
+    return (S1 + D*s - P).length();
+  }
+}
+template <typename Ptype>
+double distance_to_segment(const Ptype &P
+                           ,const Ptype &S1
+                           ,const Ptype &S2
+                           ,Ptype &closest_point
+                           ){
+  
+  Ptype D = S2-S1;
+  double s = (P-S1)*D / D.length_sqr();
+  if(s<=0){
+    closest_point = S1;
+    return (P-S1).length();
+  }else if(s>=1){
+    closest_point = S2;
+    return (P-S2).length();
+  }else{
+    closest_point = S1 + D*s;
     return (S1 + D*s - P).length();
   }
 }

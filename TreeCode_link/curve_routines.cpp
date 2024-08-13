@@ -3452,6 +3452,90 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   return env;
 }
 
+
+std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
+  
+  
+  if(v.size() <= 3) return v;
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  
+  std::vector<Point_2d> output;
+  double resolution =  MIN(ur[0]-ll[0],ur[1]-ll[1]) /100;
+  if(resolution==0){
+    output.push_back(ll);
+    output.push_back(ur);
+    return output;
+  }
+    
+  double R = resolution*sqrt(2);
+  
+  ll[0] -= R;
+  ll[1] -= R;
+  ur[0] += R;
+  ur[1] += R;
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  long nv = v.size();
+  
+  long count=0;
+  Point_2d p = ll;
+  std::vector<bool> bitmap(nx*ny,false);
+  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+    p[0] = ll[0];
+    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+      long m = i + nx*j;
+      
+      for(long k=0 ; k < nv ; ++k){
+        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+    }
+  }
+  
+  if(count > 0){
+    std::vector<std::vector<Point_2d> > envelopes;
+    std::vector<bool> hits_edge;
+    
+    Utilities::find_boundaries(bitmap,nx,envelopes,hits_edge,false,true);
+    
+    for(Point_2d &p : envelopes[0]) p = ll + p * resolution;
+    
+    size_t n = envelopes[0].size();
+    output.resize(n);
+    Point_2d p,closest_point;
+    double min_d,tmp_d;
+    for(long i=0 ; i<n ; ++i){
+      
+      min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
+      
+      for(long k=1 ; k < nv ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],v[k],v[(k+1)%nv],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      
+      output[i] = closest_point;
+    }
+  }
+  return output;
+}
+
 Point_2d Utilities::RandomInTriangle(const Point_2d &x1,
                                      const Point_2d &x2,
                                      const Point_2d &x3,
