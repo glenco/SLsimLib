@@ -153,6 +153,10 @@ private:
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
  * Input must be in ergs/(s*cm^2*Hz).
  *
+ *  The `oversample` parameter is the ratio between the pixel size of the input image to the output image.
+ *  The input image must have the same resolution as the PSF so  `oversample` is slao the oversampling
+ *  of the PSF.
+ *
  *  see https://www.ucolick.org/~bolte/AY257/s_n.pdf
  */
 
@@ -183,26 +187,27 @@ private:
   
 public:
   
-  // exposure times are set to wide survey expectations
-  ObsVIS(size_t Npix_x,size_t Npix_y
-         ,int oversample
-         ,double resolution = 0.1*arcsecTOradians
-         //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
+  /// exposure times are set to wide survey expectations
+  ObsVIS(size_t Npix_x      /// number of pixels in final observation
+         ,size_t Npix_y     /// number of pixels in final observation
+         ,int oversample    /// oversampling factor for input image,  >= 1
+         ,double resolution = 0.1*arcsecTOradians  /// pixel size in radians
   );
   
-  ObsVIS(size_t Npix_x
-         ,size_t Npix_y
-         ,const std::vector<double> &exposure_times  // in seconds
-         ,int oversample
+  ///  background set to 0.0015 and 0.1'' pixels
+  ObsVIS(size_t Npix_x    /// number of pixels in final observation
+         ,size_t Npix_y   /// number of pixels in final observation
+         ,const std::vector<double> &exposure_times  /// in seconds for each dither
+         ,int oversample          /// oversampling factor for input image,  >= 1
          );
   
-  ObsVIS(size_t Npix_x
-         ,size_t Npix_y
-         ,const std::vector<double> &exposure_times  // in seconds
-         ,int oversample
-         ,double resolution
-         ,double background_sigma
-         ,double calibration_exposure_time
+  ObsVIS(size_t Npix_x    /// number of pixels in final observation
+         ,size_t Npix_y   /// number of pixels in final observation
+         ,const std::vector<double> &exposure_times  /// in seconds for each dither
+         ,int oversample         /// oversampling factor for input image,  >= 1
+         ,double resolution        /// pixel size in radians
+         ,double background_sigma  /// background rms in output units
+         ,double calibration_exposure_time  /// the exposure time corresponding to background_sigma
          );
   ~ObsVIS(){};
   
