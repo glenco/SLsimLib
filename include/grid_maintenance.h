@@ -35,9 +35,9 @@ struct Grid{
   //unsigned long PruneTrees(double resolution,bool useSB,double fluxlimit);
   //unsigned long PrunePointsOutside(double resolution,double *y,double r_in ,double r_out);
   
-  double RefreshSurfaceBrightnesses(SourceHndl source);
+  double RefreshSurfaceBrightnesses(Source* source);
   
-  double AddSurfaceBrightnesses(SourceHndl source);
+  double AddSurfaceBrightnesses(Source* source);
   
   
   double mark_closest_point_source_images(

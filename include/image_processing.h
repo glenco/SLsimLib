@@ -57,6 +57,9 @@ public:
   void setPSF(std::string psf_file,double resolution=0);
   template <typename T>
   void setPSF(PixelMap<T> &psf_map);
+  /// set the seeing that, if no psf map is set, will be used for gaussian smoothing
+  void setSeeing(double s  /// FWHM in arcsec
+                 ){seeing=s;}
   /// rotate and scale the psf from the original
   void rotatePSF(double theta   /// counter-clockwise rotation (radians)
                  ,double scale_x=1  /// scale <1 shrinks it
@@ -231,7 +234,7 @@ public:
                ,bool psf
                ,bool noise
                ,Utilities::RandomNumbers_NR &ran
-               ,bool cosmic=true);
+               ,bool cosmic=false);
   
  
   double mag_to_counts(double m) const{

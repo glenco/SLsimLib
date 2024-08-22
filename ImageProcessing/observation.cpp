@@ -15,7 +15,7 @@
 
 
 ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y,int oversample,double resolution)
-:Obs(Npix_x,Npix_y,resolution,oversample,1)
+:Obs(Npix_x,Npix_y,resolution,oversample,0)
 {
   //sigma_background = 0.00365150 * sqrt(2366.);
 
@@ -35,7 +35,7 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
                ,const std::vector<double> &exposure_times  // in seconds
                ,int oversample
                )
-:Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,1),t_exp(exposure_times)
+:Obs(Npix_x,Npix_y,0.1*arcsecTOradians,oversample,0),t_exp(exposure_times)
 {
   sigma_background2 = 0.0015 * 0.0015 * ( Utilities::vec_sum(t_exp) );
 }
@@ -46,7 +46,7 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
                ,double resolution
                ,double my_background_sigma
                ,double calibration_exposure_time)
-:Obs(Npix_x,Npix_y,resolution,oversample,1),t_exp(exposure_times)
+:Obs(Npix_x,Npix_y,resolution,oversample,0),t_exp(exposure_times)
 {
   sigma_background2 = my_background_sigma * my_background_sigma * calibration_exposure_time  ;
 }
@@ -55,10 +55,10 @@ ObsVIS::ObsVIS(size_t Npix_x,size_t Npix_y
 Obs::Obs(size_t Npix_xx,size_t Npix_yy  /// number of pixels in observation
     ,double pix_size               /// pixel size (in rad)
     ,int oversample          /// oversampling for input image
-    ,float seeing // seeing in arcsec
+    ,float my_seeing // seeing in arcsec
     ):
   pix_size(pix_size)
-,seeing(seeing)
+,seeing(my_seeing)
 ,Npix_x_output(Npix_xx)
 ,Npix_y_output(Npix_yy)
 ,psf_oversample(oversample)

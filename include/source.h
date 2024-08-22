@@ -188,21 +188,36 @@ protected:
   
   long id;
   double mag_zero_point;
-
 };
-
-typedef Source *SourceHndl;
 
 class SourceColored : public Source{
 public:
   SourceColored(PosType magnitude,PosType r,Point_2d x,PosType z
-                ,PosType SBlimit,double zero_point)
-  :Source(r,x,z,SBlimit,zero_point)
+                ,PosType SBlimit,Band band)
+  :Source(r,x,z,SBlimit,zeropoints.at(band))
   {
-    zeropoints[Band::NoBand] = zero_point;
-    current_band = Band::NoBand;
+    if(zeropoints.find(band) == zeropoints.end()){
+      std::cerr << "SourceColored band " << to_string(band) << " zeropoint needs to be set." << std::endl;
+      throw std::runtime_error("unset zeropoint");
+    }
+    //zeropoints[Band::NoBand] = zero_point;
+    current_band = band;
     
     mag_map[current_band]=magnitude;
+    mag = magnitude;
+    flux_total = mag_to_flux(mag,zeropoints.at(band));
+    setID(-1);
+  }
+  
+  SourceColored(PosType magnitude,PosType r,Point_2d x,PosType z
+                ,PosType SBlimit,double zero_point,Band band)
+  :Source(r,x,z,SBlimit,zero_point)
+  {
+    zeropoints[band] = zero_point;
+    current_band = band;
+    
+    mag_map[current_band]=magnitude;
+    mag = magnitude;
     flux_total = mag_to_flux(mag,zero_point);
     setID(-1);
   }
@@ -342,9 +357,9 @@ public:
   
   friend SourceMultiShapelets;
     //SourceShapelets();
-	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center, PosType my_ang,PosType zero_point);
-	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center, PosType my_ang, PosType zero_point);
-  SourceShapelets(std::string shap_file, PosType my_ang, PosType zero_point);
+	SourceShapelets(PosType my_z, PosType my_mag, PosType my_scale, std::valarray<PosType> my_coeff, PosType* my_center, PosType my_ang,PosType zero_point,Band band);
+	SourceShapelets(PosType my_z, PosType my_mag, std::string shap_file, PosType *my_center, PosType my_ang, PosType zero_point,Band band);
+  SourceShapelets(std::string shap_file, PosType my_ang, PosType zero_point,Band band);
   
   ~SourceShapelets(){--count;}
   
@@ -473,8 +488,8 @@ public:
               ,PosType magnitude         /// unlensed brightness
               ,PosType radius_in_radians  /// radius of source in radians
               ,double SBlimit      /// minimum surface brightness limit
-              ,PosType zero_point  /// radius of source in radians
-):SourceColored(magnitude,radius_in_radians,position,z,SBlimit,zero_point)
+              ,Band band  /// radius of source in radians
+):SourceColored(magnitude,radius_in_radians,position,z,SBlimit,band)
 {
     sed_type = 1;
   };

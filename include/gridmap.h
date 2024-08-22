@@ -52,7 +52,7 @@ struct GridMap{
    *
    * returns the sum of the surface brightnesses
    */
-  double RefreshSurfaceBrightnesses(SourceHndl source);
+  double RefreshSurfaceBrightnesses(Source* source);
   /**
    Oversample some pixels where the usrface brightness is not smooth and update surface brighnesses to be the average inside the pixel.
    
@@ -66,7 +66,7 @@ struct GridMap{
    *
    * returns total flux from the new source
    */
-  double AddSurfaceBrightnesses(SourceHndl source);
+  double AddSurfaceBrightnesses(Source* source);
 
   /// get the image point for a index number
   Point_2d image_point(size_t index){return i_points[index];}

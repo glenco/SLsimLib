@@ -1458,7 +1458,7 @@ void PixelMap<T>::smooth(PosType sigma){
   
   sigma *= arcsecTOradians;
   Nmask=2*(int)(3*sigma/resolution + 1);
-  std::cout << Nmask << std::endl;
+  //::cout << Nmask << std::endl;
   if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
   
   Nmask_half = int(Nmask/2);

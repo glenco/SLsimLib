@@ -167,7 +167,7 @@ void GridMap::deLens(){
   }
 }
 
-double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
+double GridMap::RefreshSurfaceBrightnesses(Source* source){
   PosType total=0,tmp;
   
   double res2 = pow(getResolution(),2);
@@ -253,7 +253,7 @@ bool GridMap::to_refine(long i,long j,double total,double f) const {
   return false;
 }
 
-double GridMap::AddSurfaceBrightnesses(SourceHndl source){
+double GridMap::AddSurfaceBrightnesses(Source* source){
   PosType total=0,tmp;
   
   for(size_t i=0;i <s_points[0].head;++i){

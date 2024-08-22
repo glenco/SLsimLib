@@ -312,7 +312,7 @@ void Grid::ReShoot(LensHndl lens){
  *
  * returns total flux
  */
-PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
+PosType Grid::RefreshSurfaceBrightnesses(Source* source){
   PosType total=0,tmp;
   
   SourcePoint *sp = dynamic_cast<SourcePoint *>(source);
@@ -341,7 +341,7 @@ PosType Grid::RefreshSurfaceBrightnesses(SourceHndl source){
  *
  * returns the total flux from new source
  */
-PosType Grid::AddSurfaceBrightnesses(SourceHndl source){
+PosType Grid::AddSurfaceBrightnesses(Source* source){
   PosType total=0,tmp;
   
   SourcePoint *sp = dynamic_cast<SourcePoint *>(source);

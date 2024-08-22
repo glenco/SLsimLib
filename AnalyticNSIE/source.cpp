@@ -502,8 +502,9 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang					/// rotation angle (in rad)
                                  , PosType zeropoint       /// magnitude zero point
+                                 , Band band               ///
 )
-:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource,-1,zeropoint)
+:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource,-1,zeropoint,band)
 {
 
   assert(my_center != NULL);
@@ -529,8 +530,9 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang			/// rotation angle (in rad)
                                  , PosType zeropoint       /// magnitude zero point
+                                 , Band band               ///
 )
-:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z,-1,zeropoint)
+:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z,-1,zeropoint,band)
 {
   
   assert(my_center != NULL);
@@ -567,8 +569,9 @@ SourceShapelets::SourceShapelets(
                                  std::string shap_file		/// fits file with coefficients in a square array. Mag and redshift are read from the header.
                                  , PosType my_ang         /// rotation angle (in rad)
                                  , PosType zeropoint      /// magnitude zero point
+                                 , Band band///
  )
-:SourceColored(0,0,Point_2d(0,0),0,-1,zeropoint)
+:SourceColored(0,0,Point_2d(0,0),0,-1,zeropoint,band)
 {
   
   cos_sin[0] = cos(my_ang);
@@ -847,7 +850,7 @@ void SourceMultiShapelets::readCatalog()
     std::ifstream shap_input(shap_file.c_str());
     if (shap_input)
     {
-      SourceShapelets s(shap_file.c_str(),0,0);
+      SourceShapelets s(shap_file.c_str(),0,0,Band::NoBand);
       
       s.setID(i);
 

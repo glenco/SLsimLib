@@ -24,7 +24,7 @@ SourceOverzier::SourceOverzier(
 		,double my_z            /// optional redshift
 		,const double *my_theta          /// optional angular position on the sky
 		):Source(0,Point_2d(0,0),my_z,-1,zeropoint),
- spheroid(my_mag_bulge,band,zeropoint,my_Reff,0,4,(1-0.5*sin(my_inclination)),my_z)
+ spheroid(my_mag_bulge,my_Reff,0,4,(1-0.5*sin(my_inclination)),my_z,zeropoint,band)
 {
   current.band = band;
   zeropoints[band] = my_mag;
@@ -190,7 +190,7 @@ SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
                                        ,Utilities::RandomNumbers_NR &ran
                                        ):
 SourceOverzier(my_mag,my_mag_bulge,band,zeropoint,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
-,spheroid(my_mag_bulge,band,zeropoint,my_Reff, my_PA,4,1,my_z)
+,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint,band)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -247,7 +247,7 @@ SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
                                        ,Utilities::RandomNumbers_NR &ran
                                        ):
 SourceOverzier(my_mag,my_mag_bulge,band,zeropoint,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
-,spheroid(my_mag_bulge,band,zeropoint,my_Reff, my_PA,4,1,my_z)
+,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint,band)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
