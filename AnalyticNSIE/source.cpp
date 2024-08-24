@@ -622,9 +622,9 @@ SourceShapelets::SourceShapelets(
   std::vector<long> size;
   cpfits.read(coeff,size);
 
-  setMag(getMag(Band::KiDS_I),Band::EUC_VIS,zeropoints.at(Band::EUC_VIS));
-  setMag(getMag(Band::F110W),Band::EUC_J,zeropoints.at(Band::EUC_J));
-  setMag(getMag(Band::F160W),Band::EUC_H,zeropoints.at(Band::EUC_H));
+  setMag(getMag(Band::KiDS_I),Band::EUC_VIS);
+  setMag(getMag(Band::F110W),Band::EUC_J);
+  setMag(getMag(Band::F160W),Band::EUC_H);
 
 
   // ??? kluge
@@ -857,13 +857,13 @@ void SourceMultiShapelets::readCatalog()
       s.sed_type = viz_cat[j][4];
       
       assert(viz_cat.size() > j );
-      s.setMag(viz_cat[j][2],Band::EUC_VIS,s.getMagZeroPoint(Band::EUC_VIS));
+      s.setMag(viz_cat[j][2],Band::EUC_VIS);
       assert(y_cat.size() > j );
-      s.setMag(y_cat[j][2],Band::EUC_Y,s.getMagZeroPoint(Band::EUC_Y));
+      s.setMag(y_cat[j][2],Band::EUC_Y);
       assert(j_cat.size() > j );
-      s.setMag(j_cat[j][2],Band::EUC_J,s.getMagZeroPoint(Band::EUC_J));
+      s.setMag(j_cat[j][2],Band::EUC_J);
       assert(h_cat.size() > j );
-      s.setMag(h_cat[j++][2],Band::EUC_H,s.getMagZeroPoint(Band::EUC_H));
+      s.setMag(h_cat[j++][2],Band::EUC_H);
       
       //s.setActiveBand(band);
       if (s.getMag() > 0.

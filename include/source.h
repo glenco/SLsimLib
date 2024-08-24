@@ -267,7 +267,11 @@ public:
   
   void setSEDtype(float sed) {sed_type = sed;}
   static void setMagZeroPoint(Band band,double zeropoint){zeropoints[band]=zeropoint;}
-  static void setMagZeroPoints(std::map<Band,PosType> &zero_points){zeropoints=zero_points;}
+  static void setMagZeroPoints(std::map<Band,PosType> &zero_points){
+    for(auto &p : zero_points){
+      zeropoints[p.first] = p.second;
+    }
+  }
  
   void setActiveBand(Band band);
   
@@ -276,6 +280,12 @@ public:
     mag_map[band]=magnitude;
     zeropoints[band]=zeropoint;
     if(band==current_band) flux_total = mag_to_flux(mag,zeropoint);
+  }
+  
+  /// this sets the magnitude in a band without changing the current band
+  void setMag(float magnitude,Band band){
+    mag_map[band]=magnitude;
+    if(band==current_band) flux_total = mag_to_flux(mag,zeropoints.at(band));
   }
   
   // rotate on the sky
