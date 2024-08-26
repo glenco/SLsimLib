@@ -1470,10 +1470,21 @@ bool circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> 
 
 /** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
  
+ v and w can be non-self intersecting
+ If they do not intersect and one is not inside the other an empty vector is returned.
+ 
+ Unlike `Utilities::envelope()`, this algorithm is pretty foolproof.  It uses the same concept as `Utilities::TightestHull()`.
+ There may be small segements that are not in either curve, but they should increase the area be a small fraction.
+ */
+std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w);
+
+/** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
+ 
  v and w must be non-self intersecting
  If they do not intersect and one is not inside the other an empty vector is returned
  */
-std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
+std::vector<Point_2d> envelope2(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w);
 
 /** \brief return the boundaries of the region that is within R of the curve v
