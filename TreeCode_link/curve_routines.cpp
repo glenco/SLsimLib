@@ -3151,7 +3151,7 @@ std::vector<std::vector<Point_2d> > Utilities::thicken_poly(
   return output;
 }
 
-std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
+std::vector<Point_2d> Utilities::envelope2(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
   
   size_t nv = v.size();
@@ -3208,6 +3208,148 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   }catch(...){
     return Utilities::convex_hull(curve);
   }
+}
+
+std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w){
+  
+  size_t nv = v.size();
+  size_t nw = w.size();
+  //std::cout << nv << " " << nw << std::endl;
+  if(nv<3) return w;
+  if(nw<3) return v;
+  
+  Utilities::Geometry::CYCLIC cycv(nv);
+  Utilities::Geometry::CYCLIC cycw(nw);
+  Point_2d inter_p;
+  
+  bool intersecting = false;
+  // check if they intersect
+  long i,j;
+  for(i=0; i<nv && !intersecting ; ++i){
+    for(j=0; j<nw && !intersecting ; ++j){
+      if(Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
+                                        ,w[j].x,w[ cycw[j+1] ].x))
+        intersecting = true;
+        inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
+                        ,w[j].x,w[ cycw[j+1] ].x);
+    }
+  }
+  
+  if(intersecting == false){
+    if( Utilities::inCurve<Point_2d>(w[0],v)){
+      return v;
+    }
+    
+    if( Utilities::inCurve<Point_2d>(v[0],w)){
+      return w;
+    }
+
+    // case where they do not overlap
+    return std::vector<Point_2d>(0);
+  }
+  
+  // this is basicly TightestHull but using the segments of both curves
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  for(const Point_2d &p : w){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+
+  std::vector<Point_2d> output;
+  double resolution =  MIN(ur[0]-ll[0],ur[1]-ll[1]) /100;
+  if(resolution==0){
+    output.push_back(ll);
+    output.push_back(ur);
+    return output;
+  }
+    
+  double R = resolution*sqrt(2);
+  
+  ll[0] -= R;
+  ll[1] -= R;
+  ur[0] += R;
+  ur[1] += R;
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  
+  long count=0;
+  Point_2d p = ll;
+  std::vector<bool> bitmap(nx*ny,false);
+  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+    p[0] = ll[0];
+    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+      long m = i + nx*j;
+      
+      for(long k=0 ; k < nv ; ++k){
+        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+      if( bitmap[m] == false){
+        for(long k=0 ; k < nw ; ++k){
+          if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
+            bitmap[m] = true;
+            ++count;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  if(count > 0){
+    std::vector<std::vector<Point_2d> > envelopes;
+    std::vector<bool> hits_edge;
+    
+    Utilities::find_boundaries(bitmap,nx,envelopes,hits_edge,false,true);
+    
+    for(Point_2d &p : envelopes[0]) p = ll + p * resolution;
+    
+    size_t n = envelopes[0].size();
+    output.resize(n);
+    Point_2d p,closest_point;
+    double min_d,tmp_d;
+    for(long i=0 ; i<n ; ++i){
+      
+      min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
+      
+      for(long k=1 ; k < nv ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],v[k],v[(k+1)%nv],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      for(long k=0 ; k < nw ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],w[k],w[(k+1)%nw],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      
+      output[i] = closest_point;
+    }
+  }
+  
+  return output;
 }
 
 std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
@@ -3450,6 +3592,90 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
 
   env.pop_back();
   return env;
+}
+
+
+std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
+  
+  
+  if(v.size() <= 3) return v;
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  
+  std::vector<Point_2d> output;
+  double resolution =  MIN(ur[0]-ll[0],ur[1]-ll[1]) /100;
+  if(resolution==0){
+    output.push_back(ll);
+    output.push_back(ur);
+    return output;
+  }
+    
+  double R = resolution*sqrt(2);
+  
+  ll[0] -= R;
+  ll[1] -= R;
+  ur[0] += R;
+  ur[1] += R;
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  long nv = v.size();
+  
+  long count=0;
+  Point_2d p = ll;
+  std::vector<bool> bitmap(nx*ny,false);
+  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+    p[0] = ll[0];
+    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+      long m = i + nx*j;
+      
+      for(long k=0 ; k < nv ; ++k){
+        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+    }
+  }
+  
+  if(count > 0){
+    std::vector<std::vector<Point_2d> > envelopes;
+    std::vector<bool> hits_edge;
+    
+    Utilities::find_boundaries(bitmap,nx,envelopes,hits_edge,false,true);
+    
+    for(Point_2d &p : envelopes[0]) p = ll + p * resolution;
+    
+    size_t n = envelopes[0].size();
+    output.resize(n);
+    Point_2d p,closest_point;
+    double min_d,tmp_d;
+    for(long i=0 ; i<n ; ++i){
+      
+      min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
+      
+      for(long k=1 ; k < nv ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],v[k],v[(k+1)%nv],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      
+      output[i] = closest_point;
+    }
+  }
+  return output;
 }
 
 Point_2d Utilities::RandomInTriangle(const Point_2d &x1,
