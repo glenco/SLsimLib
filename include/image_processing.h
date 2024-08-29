@@ -96,10 +96,10 @@ public:
   virtual float getBackgroundNoise() const = 0;
 
   /// convert using stan
-  virtual double mag_to_counts(double m) const = 0;
-  virtual double counts_to_mag(double flux) const = 0;
-  virtual double zeropoint() const = 0;
-  virtual void setZeropoint(double zpoint) = 0;
+  //virtual double mag_to_counts(double m) const = 0;
+  //virtual double counts_to_mag(double flux) const = 0;
+  //virtual double zeropoint() const = 0;
+  //virtual void setZeropoint(double zpoint) = 0;
 
 
 protected:
@@ -167,7 +167,7 @@ class ObsVIS : public Obs{
 private:
   
   // standard from magnitude to e- per sec
-  double zero_point = 24.4;
+  //double zero_point = 24.4;
   //double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
   
   //double gain = 11160; // e-/ADU (Analog Digital Units)
@@ -237,17 +237,17 @@ public:
                ,bool cosmic=false);
   
  
-  double mag_to_counts(double m) const{
-    if(m == 100) return 0;
-    return pow(10,-0.4*(m + zero_point));
-  }
-  double counts_to_mag(double flux) const{
-    if(flux <=0) return 100;
-    return -2.5 * log10(flux) - zero_point;
-  }
+//  double mag_to_counts(double m) const{
+//    if(m == 100) return 0;
+//    return pow(10,-0.4*(m + zero_point));
+//  }
+//  double counts_to_mag(double flux) const{
+//    if(flux <=0) return 100;
+//    return -2.5 * log10(flux) - zero_point;
+//  }
 
-  double zeropoint() const {return zero_point;}
-  void setZeropoint(double zpoint){zero_point=zpoint;}
+  //double zeropoint() const {return zero_point;}
+  //void setZeropoint(double zpoint){zero_point=zpoint;}
  
   /// returns std of pixels in e-
   float getBackgroundNoise() const {
