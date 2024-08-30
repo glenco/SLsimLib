@@ -1077,12 +1077,12 @@ void ImageFinding::find_crit(
     critcurves[i].caustic_center /= Npoints;
     
     //critcurves[i].caustic_curve_outline = Utilities::Geometry::MagicHull(critcurves[i].caustic_curve_intersecting);
- //   try{
+    try{
       critcurves[i].caustic_curve_outline = Utilities::TighterHull( critcurves[i].caustic_curve_intersecting );
- //   }catch(...){
+    }catch(...){
  //     critcurves[i].caustic_curve_outline =  critcurves[i].caustic_curve_intersecting ;
       Utilities::RemoveIntersections(critcurves[i].caustic_curve_outline);
- //   }
+    }
     
     Utilities::windings(critcurves[i].caustic_center,critcurves[i].caustic_curve_outline,&(critcurves[i].caustic_area));
     critcurves[i].caustic_intersections = -1;
