@@ -1,0 +1,1 @@
+slsimlib_files += files(['blr_surface_brightness.cpp','blr_surface_brightness2.0.cpp'])

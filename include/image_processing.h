@@ -15,6 +15,7 @@
 #include "point.h"
 #include "image_info.h"
 #include "pixelmap.h"
+#include "fftw3.h"
 //#include "Tree.h"
 //#include "utilities_slsim.h"
 //#include "utilities_slsim.h"
@@ -22,10 +23,7 @@
 //#include "source.h"
 
 class Source;
-
-#ifdef ENABLE_FFTW
 #include "fftw3.h"
-#endif
 
 // forward declaration
 //struct Grid;
@@ -59,6 +57,9 @@ public:
   void setPSF(std::string psf_file,double resolution=0);
   template <typename T>
   void setPSF(PixelMap<T> &psf_map);
+  /// set the seeing that, if no psf map is set, will be used for gaussian smoothing
+  void setSeeing(double s  /// FWHM in arcsec
+                 ){seeing=s;}
   /// rotate and scale the psf from the original
   void rotatePSF(double theta   /// counter-clockwise rotation (radians)
                  ,double scale_x=1  /// scale <1 shrinks it
@@ -155,6 +156,10 @@ private:
  * It translates pixel values in observed units (counts/sec), applies PSF and noise.
  * Input must be in ergs/(s*cm^2*Hz).
  *
+ *  The `oversample` parameter is the ratio between the pixel size of the input image to the output image.
+ *  The input image must have the same resolution as the PSF so  `oversample` is slao the oversampling
+ *  of the PSF.
+ *
  *  see https://www.ucolick.org/~bolte/AY257/s_n.pdf
  */
 
@@ -185,26 +190,27 @@ private:
   
 public:
   
-  // exposure times are set to wide survey expectations
-  ObsVIS(size_t Npix_x,size_t Npix_y
-         ,int oversample
-         ,double resolution = 0.1*arcsecTOradians
-         //,double t = 5.085000000000E+03  // observation time in seconds. default is for SC8
+  /// exposure times are set to wide survey expectations
+  ObsVIS(size_t Npix_x      /// number of pixels in final observation
+         ,size_t Npix_y     /// number of pixels in final observation
+         ,int oversample    /// oversampling factor for input image,  >= 1
+         ,double resolution = 0.1*arcsecTOradians  /// pixel size in radians
   );
   
-  ObsVIS(size_t Npix_x
-         ,size_t Npix_y
-         ,const std::vector<double> &exposure_times  // in seconds
-         ,int oversample
+  ///  background set to 0.0015 and 0.1'' pixels
+  ObsVIS(size_t Npix_x    /// number of pixels in final observation
+         ,size_t Npix_y   /// number of pixels in final observation
+         ,const std::vector<double> &exposure_times  /// in seconds for each dither
+         ,int oversample          /// oversampling factor for input image,  >= 1
          );
   
-  ObsVIS(size_t Npix_x
-         ,size_t Npix_y
-         ,const std::vector<double> &exposure_times  // in seconds
-         ,int oversample
-         ,double resolution
-         ,double background_sigma
-         ,double calibration_exposure_time
+  ObsVIS(size_t Npix_x    /// number of pixels in final observation
+         ,size_t Npix_y   /// number of pixels in final observation
+         ,const std::vector<double> &exposure_times  /// in seconds for each dither
+         ,int oversample         /// oversampling factor for input image,  >= 1
+         ,double resolution        /// pixel size in radians
+         ,double background_sigma  /// background rms in output units
+         ,double calibration_exposure_time  /// the exposure time corresponding to background_sigma
          );
   ~ObsVIS(){};
   
@@ -228,7 +234,7 @@ public:
                ,bool psf
                ,bool noise
                ,Utilities::RandomNumbers_NR &ran
-               ,bool cosmic=true);
+               ,bool cosmic=false);
   
  
   double mag_to_counts(double m) const{
@@ -731,8 +737,6 @@ void Obs::CorrelateNoise(PixelMap<T> &pmap)
     std::cout << "Observation::CorrelateNoise() Map must have the same dimensions as the observation." << std::endl;
     throw std::runtime_error("nonsquare");
   }
-
-#ifdef ENABLE_FFTW
   
     // creates plane for fft of map, sets properly input and output data, then performs fft
     assert(Npix_x_output == Npix_y_output);
@@ -787,10 +791,6 @@ void Obs::CorrelateNoise(PixelMap<T> &pmap)
       }
     }
     return;
-#else
-    std::cerr << "Please enable the preprocessor flag ENABLE_FFTW !" << std::endl;
-    exit(1);
-#endif
 }
 
 

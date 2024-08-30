@@ -11,6 +11,7 @@
 #include "pixelmap.h"
 #include "grid_maintenance.h"
 #include "gridmap.h"
+#include "utilities_slsim.h"
 
 
 template <typename T>
@@ -478,7 +479,7 @@ PixelMap<T>& PixelMap<T>::operator=(PixelMap &&other)
 }
 
 template <typename T>
-void PixelMap<T>::swap(PixelMap &map1,PixelMap &map2)
+void PixelMap<T>::swap(PixelMap<T> &map1,PixelMap<T> &map2)
 {
 
   std::swap(map1.map,map2.map);
@@ -1457,7 +1458,7 @@ void PixelMap<T>::smooth(PosType sigma){
   
   sigma *= arcsecTOradians;
   Nmask=2*(int)(3*sigma/resolution + 1);
-  std::cout << Nmask << std::endl;
+  //::cout << Nmask << std::endl;
   if(Nmask < 4 ) std::cout << "WARNING: pixels are large compare to psf Nmask=" << Nmask << std::endl;
   
   Nmask_half = int(Nmask/2);
@@ -2487,7 +2488,7 @@ void PixelMap<T>::copy_in(
   double halfpixel = res_ratio/2;
   PosType x[2];
   size_t NNx = pmap.getNx(),NNy = pmap.getNy();
-  size_t Npmap = NNx*NNy;
+  //size_t Npmap = NNx*NNy;
   
   for(size_t ii=0 ; ii < map.size() ; ++ii){
     
@@ -2697,6 +2698,46 @@ void PixelMap<T>::recenter(Point_2d c /// new center
 ){
   recenter(c.x);
 }
+
+template <typename T>
+void PixelMap<T>::PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
+                     ,std::vector<PosType> &lvec            /// output l values of bands
+                     ,bool overwrite                /// if false add power to existing power_spectrum (used for averaging over many fields
+                     ){
+                       
+    power_spectrum.resize(lvec.size());
+    
+    if(overwrite){
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,power_spectrum);
+    }else{
+      std::vector<PosType> tmp_power(power_spectrum.size());
+      Utilities::powerspectrum2d(map,Nx,Ny,rangeX,rangeY,lvec,tmp_power);
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+    }
+}
+
+template <typename T>
+void PixelMap<T>::PowerSpectrum(std::vector<PosType> &power_spectrum   /// output power spectrum
+                     ,const std::vector<PosType> &lbins            /// input l values of bands
+                     ,std::vector<PosType> &lave            /// output l values of bands
+                     ,bool overwrite                /// if false add power to existing power_spectrum (used for averaging over many fields
+                     ){
+    
+    if(overwrite){
+      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,power_spectrum,lave);
+    }else{
+      if(power_spectrum.size() != lbins.size()-1) throw std::invalid_argument("these must be the same size");
+      std::vector<PosType> tmp_power(power_spectrum.size());
+      Utilities::powerspectrum2dprebin(map,Nx,Ny,rangeX,rangeY,lbins,tmp_power,lave);
+      for(size_t ii=0;ii<power_spectrum.size();++ii) power_spectrum[ii] += tmp_power[ii];
+    }
+  }
+
+template <typename T>
+void PixelMap<T>::AdaptiveSmooth(PosType value){
+    std::valarray<T> tmp = Utilities::AdaptiveSmooth<T>(data(),Nx,Ny,value);
+    map = tmp;
+  }
 
 /*
 template <typename T>

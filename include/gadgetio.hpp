@@ -1,6 +1,5 @@
 //
 //  gadgetio.hpp
-//  NR
 //
 //  Created by bmetcalf on 07.11.18.
 //

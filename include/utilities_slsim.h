@@ -1286,16 +1286,15 @@ void apply_permutation(
   apply_permutation(vec.data(),p);
 }
 
-#ifdef ENABLE_FFTW
 /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
  *
- *   Adaptied from Carlo Giocoli's pl() routine.
+ *   Adapted from Carlo Giocoli's pl() routine.
  */
 void powerspectrum2d(
                      std::valarray<double> const &aa      /// first realspace map to be
                      ,std::valarray<double> const &bb     /// second realspace map, same as aa to get power spectrum
-                     ,int nx                       /// number of pixels in x direction
-                     ,int ny                       /// number of pixels in y direction
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
                      ,double boxlx                 /// range of image in x direction
                      ,double boxly                 /// range of image in y direction
                      ,std::vector<double> &ll      /// output multiplot number of bins
@@ -1305,8 +1304,8 @@ void powerspectrum2d(
 
 void powerspectrum2d(
                      std::valarray<double> &aa      /// first realspace map to be
-                     ,int nx                       /// number of pixels in x direction
-                     ,int ny                       /// number of pixels in y direction
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
                      ,double boxlx                 /// range of image in x direction
                      ,double boxly                 /// range of image in y direction
                      ,std::vector<double> &ll      /// output multiplot number of bins
@@ -1315,8 +1314,8 @@ void powerspectrum2d(
 
 void powerspectrum2dprebin(
                      std::valarray<double> &aa      /// first realspace map to be
-                     ,int nx                       /// number of pixels in x direction
-                     ,int ny                       /// number of pixels in y direction
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
                      ,double boxlx                 /// range of image in x direction
                      ,double boxly                 /// range of image in y direction
                      ,const std::vector<double> &ll      /// output multiplot number of bins
@@ -1327,8 +1326,8 @@ void powerspectrum2dprebin(
 void powerspectrum2d(
                      std::valarray<float> const &aa      /// first realspace map to be
                      ,std::valarray<float> const &bb     /// second realspace map, same as aa to get power spectrum
-                     ,int nx                       /// number of pixels in x direction
-                     ,int ny                       /// number of pixels in y direction
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
                      ,double boxlx                 /// range of image in x direction
                      ,double boxly                 /// range of image in y direction
                      ,std::vector<double> &ll      /// output multiplot number of bins
@@ -1338,8 +1337,8 @@ void powerspectrum2d(
 
 void powerspectrum2d(
                      std::valarray<float> &aa      /// first realspace map to be
-                     ,int nx                       /// number of pixels in x direction
-                     ,int ny                       /// number of pixels in y direction
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
                      ,double boxlx                 /// range of image in x direction
                      ,double boxly                 /// range of image in y direction
                      ,std::vector<double> &ll      /// output multiplot number of bins
@@ -1356,9 +1355,6 @@ void powerspectrum2dprebin(
                      ,std::vector<double> &Pl      /// output binned power spectrum
                      ,std::vector<double> &llave     /// average value of Fourier node in bins
 );
-
-#endif
-
 
 /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
 int GetNThreads();
@@ -2510,8 +2506,8 @@ public:
           ,std::string blanck_value = "0"
           ,long Nbatch=1000
           ):filename(file),blank_val(blanck_value)
-  ,nbatch(Nbatch),precision(std::cout.precision()),nprints(0)
-  ,last_line_printed(0),nlabels(0){
+  ,nbatch(Nbatch),precision(std::cout.precision())
+  ,last_line_printed(0),nlabels(0),nprints(0){
     print_to_file();
   };
   

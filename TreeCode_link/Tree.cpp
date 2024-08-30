@@ -903,7 +903,7 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 
 void ImageFinding::CriticalCurve::RandomSourcesWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng){
   
-  return Utilities::RandomInPoly(caustic_curve_intersecting,N, rng);
+  y = Utilities::RandomInPoly(caustic_curve_intersecting,N, rng);
   
 //  CausticRange(p1,p2);
 //  y.resize(N);
@@ -933,6 +933,23 @@ Point_2d ImageFinding::CriticalCurve::RandomSourceNearCaustic(double R
   return Utilities::RandomNearPoly(caustic_curve_outline,R,rng);
 }
 
+double  ImageFinding::CriticalCurve::AreaNearCaustic(double R /// distance in radians
+){
+  std::vector<std::vector<Point_2d> > vv = Utilities::thicken_poly(caustic_curve_outline,R);
+
+  if(vv.size()==0) return 0.0;
+  double area=0;
+  Utilities::windings(vv[0][0], vv[0], &area);
+  area = abs(area);
+  if(vv.size()>1){
+    double tmp=0;
+    for(int i=1 ; i < vv.size() ; ++i){
+      Utilities::windings(vv[i][0], vv[i], &tmp);
+      area = MAX(area,abs(tmp));
+    }
+  }
+  return area;
+}
 
 /**
  *  Returns N source positions which are not overlapping with the caustic lines.

@@ -17,10 +17,7 @@
 #include <functional>
 #include <valarray>
 
-
-#ifdef ENABLE_FFTW
 #include "fftw3.h"
-#endif
 
 class GaussianField{
 public:

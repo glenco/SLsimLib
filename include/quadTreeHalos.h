@@ -138,9 +138,9 @@ TreeQuadHalos<LensHaloType>::TreeQuadHalos(
 ):
 MultiMass(true),MultiRadius(true)//,masses(NULL),sizes(NULL)
 ,Nparticles(Npoints),inv_area(my_inv_area),Nbucket(bucket)
-,force_theta(my_theta_force),halos(my_halos),periodic_buffer(periodic_buffer)
+,force_theta(my_theta_force)
+,max_range(maximum_range),halos(my_halos),periodic_buffer(periodic_buffer)
 ,inv_screening_scale2(my_inv_screening_scale*my_inv_screening_scale)
-,max_range(maximum_range)
 {
   index.resize(Npoints);
   IndexType ii;

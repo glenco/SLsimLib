@@ -244,13 +244,8 @@ void TreeForce::force2D(PosType const *ray
 				  alpha[0] += tmp*xcm[0];
 				  alpha[1] += tmp*xcm[1];
 
-<<<<<<< mine
-				  // can turn off kappa and gamma calculations to save times
-				  {
-=======
 				  // can turn off kappa and gamma calculations to save time
 				  if(!no_kappa){
->>>>>>> theirs
 					  tmp = -2.0*prefac/rcm2;
 
 					  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -258,11 +253,7 @@ void TreeForce::force2D(PosType const *ray
 				  }
 
 				  if(haloON){
-<<<<<<< mine
-					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,true); // PHI BY Fabien
-=======
 					  halos[index].force_halo(alpha,kappa,gamma,phi,xcm,no_kappa,true);
->>>>>>> theirs
 				  }else{  // case of no halos just particles and no class derived from TreeQuad
 
 					  arg1 = rcm2/(rsph[index*MultiRadius]*rsph[index*MultiRadius]);

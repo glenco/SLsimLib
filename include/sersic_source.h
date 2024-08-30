@@ -29,18 +29,17 @@ public:
                ,double my_index         /// Sersic index
                ,double my_q             /// axes ratio
                ,double my_z             /// redshift
-               ,double my_zeropoint     /// magnitude zero point
-               //,const double *my_theta=0  /// optional angular position on the sky
+               ,Band band               /// band of my_mag
   );
   SourceSersic(
                 double my_mag            /// Total magnitude
-                ,Band band               ///
-                ,double my_zeropoint     /// zeropoint
                 ,double my_Reff          /// Bulge half light radius (arcs)
                 ,double my_PA            /// Position angle (radians)
                 ,double my_index         /// Sersic index
                 ,double my_q             /// axes ratio
                 ,double my_z             /// redshift
+                ,double my_zeropoint     /// zeropoint
+                ,Band band               /// band
   );
 	~SourceSersic();
   

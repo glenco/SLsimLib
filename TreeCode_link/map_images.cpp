@@ -1183,13 +1183,13 @@ double Grid::refine_on_surfacebrightness(
   double f = 1.0e-3,grad;
   double total_flux = RefreshSurfaceBrightnesses(&source),flux;
   if(total_flux <= 0) return 0;
-  double init_flux = total_flux;
+  //double init_flux = total_flux;
   
   std::vector<Point *> ps_to_refine;
   std::list<Branch *>::iterator it;
   Point *p;
   size_t N;
-  Point *next;
+  //Point *next;
 
   int iterations = 0;
   do{

@@ -52,7 +52,7 @@ struct GridMap{
    *
    * returns the sum of the surface brightnesses
    */
-  double RefreshSurfaceBrightnesses(SourceHndl source);
+  double RefreshSurfaceBrightnesses(Source* source);
   /**
    Oversample some pixels where the usrface brightness is not smooth and update surface brighnesses to be the average inside the pixel.
    
@@ -66,7 +66,7 @@ struct GridMap{
    *
    * returns total flux from the new source
    */
-  double AddSurfaceBrightnesses(SourceHndl source);
+  double AddSurfaceBrightnesses(Source* source);
 
   /// get the image point for a index number
   Point_2d image_point(size_t index){return i_points[index];}
@@ -206,9 +206,9 @@ struct GridMap{
   
   /** \brief finds the boundary of the region on the source plane where there are more than one image
 
-   Warning : slow but perhaps reliable than find_caustics() when no radial caustic is found.
+   Warning : slow but perhaps more reliable than find_caustics() when no radial caustic is found.
    
-   This uses the triangle method to determin which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
+   This uses the triangle method to determine which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
 
    This should not be as susceptible to missing the radial caustic because of resolution in the image plane.
    */
@@ -300,6 +300,15 @@ struct GridMap{
                  ,std::vector<bool> &hits_boundary
                  ,std::vector<CritType> &crit_type
                  );
+
+  /** \brief Find image-plane contours of magnification.  
+   * This is usually only used within ImageFinding:: functions where it will also find the contours on the source plane.
+   */
+  void find_magnification_contour(
+      std::vector<std::vector<Point_2d> > &curves
+      ,std::vector<bool> &hits_boundary
+      ,double invmag
+  );
   
 //  void find_crit_boundary(std::vector<std::vector<Point_2d> > &points
 //                          ,std::vector<bool> &hits_boundary

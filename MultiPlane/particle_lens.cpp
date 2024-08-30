@@ -172,7 +172,7 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift,doub
     halos.pop_back();
   }
   
-  double vol = (bbox_ur[0] - bbox_ll[0])*(bbox_ur[1] - bbox_ll[1])*(bbox_ur[2] - bbox_ll[2]);
+  //double vol = (bbox_ur[0] - bbox_ll[0])*(bbox_ur[1] - bbox_ll[1])*(bbox_ur[2] - bbox_ll[2]);
  //***
   /// how do you set up inv_area in general ???
   //if(!compensate) inv_area = 0;

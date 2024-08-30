@@ -167,7 +167,7 @@ void GridMap::deLens(){
   }
 }
 
-double GridMap::RefreshSurfaceBrightnesses(SourceHndl source){
+double GridMap::RefreshSurfaceBrightnesses(Source* source){
   PosType total=0,tmp;
   
   double res2 = pow(getResolution(),2);
@@ -253,7 +253,7 @@ bool GridMap::to_refine(long i,long j,double total,double f) const {
   return false;
 }
 
-double GridMap::AddSurfaceBrightnesses(SourceHndl source){
+double GridMap::AddSurfaceBrightnesses(Source* source){
   PosType total=0,tmp;
   
   for(size_t i=0;i <s_points[0].head;++i){
@@ -487,10 +487,41 @@ double GridMap::AddPointSource(const Point_2d &y,double flux){
   return total_flux;
 }
 
+void GridMap::find_magnification_contour(
+  std::vector<std::vector<Point_2d> > &curves
+  ,std::vector<bool> &hits_boundary
+  ,double invmag
+  ){
+  curves.resize(0);
+  
+  size_t N = Ngrid_init * Ngrid_init2;
+  std::vector<bool> bitmap(N);
+  size_t count = 0;
+  // find tangential critical curves
+  for(size_t k = 0 ; k < N ; ++k){
+    if(i_points[k].invmag() < invmag){
+      bitmap[k] = true;
+      ++count;
+    } else {
+      bitmap[k] = false;
+    }
+  }
+  std::vector<std::vector<long> > indexes;
+  if(count>0){
+    Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,false);
+    //Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
+  }
+  // rescale from pixel units to those of grid
+  double resolution = getResolution();
+  for(int i=0; i<curves.size() ; ++i){
+    for(Point_2d &p : curves[i]) p = p * resolution + i_points[0];
+  }
+}
+
 void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
                ,std::vector<bool> &hits_boundary
-               ,std::vector<CritType> &crit_type
-                        ){
+               ,std::vector<CritType> &crit_type                      
+  ){
   
   curves.resize(0);
   
@@ -571,67 +602,13 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     for(Point_2d &p : curves[i]) p = p * resolution + i_points[0];
   }
   
-  //for(int i=0; i<curves.size() ; ++i) write_csv("test_crits" + std::to_string(i) + ".csv",curves[i]);
-  // if radial caustic has not been found, estimate a pseudo caustic
+  // if radial caustic has not been found, estimate a pseudo caustic as the convex hull of negative magnification images
   int ii_tan=0;
   for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
         if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
           
-          // find maximum kappa in negative mag region
-          //std::vector<size_t> maxima;
-          //double max=0;
-//          for(size_t i : indexes[ii]){
-            
-//            double tmp =  i_points[i].kappa();
-//            max=MAX(tmp,max);
-//            if(tmp > i_points[i-1].kappa() &&
-//               tmp > i_points[i+1].kappa() &&
-//               tmp > i_points[i+Ngrid_init].kappa() &&
-//               tmp > i_points[i-Ngrid_init].kappa() &&
-//               tmp > i_points[i-1-Ngrid_init].kappa() &&
-//               tmp > i_points[i-1+Ngrid_init].kappa() &&
-//               tmp > i_points[i+1-Ngrid_init].kappa() &&
-//               tmp > i_points[i+1+Ngrid_init].kappa()
-//               ){
-//
-//              maxima.push_back(i);
-//            }
-//          }
-//          if(maxima.size()==0) maxima.push_back(max);
-//
-//          assert(maxima.size() > 0);
-//          std::vector<size_t> hull_index;
-//          if(maxima.size() > 0){  // avoids point masses in uniform background
-//
-//            std::vector<long> tmp_index;
-//            tmp_index.reserve(9*maxima.size());
-//            for(size_t kmax : maxima){
-//              // include all 8 neighbors i
-//              long k=kmax-1-Ngrid_init;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//              k+=Ngrid_init;
-//              tmp_index.push_back(k);
-//              --k;
-//              tmp_index.push_back(k);
-//              --k;
-//              tmp_index.push_back(k);
-//              k+=Ngrid_init;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//              ++k;
-//              tmp_index.push_back(k);
-//            }
-//
             std::vector<Point_2d> psudo(indexes[ii_tan].size());
-            //psudo.reserve(9*maxima.size());
-            //for(size_t k : tmp_index) psudo.push_back(s_points[k]);
-            //for(size_t k : indexes[ii]) psudo.push_back(s_points[k]);
             
             for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
            
@@ -651,14 +628,12 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
             for(int k=curves.size()-1 ; k>j+1 ; --k){
               std::swap(curves[k],curves[k-1]);
               std::swap(crit_type[k],crit_type[k-1]);
-	      {
-		bool tmp = hits_boundary[k];
-		hits_boundary[k] = hits_boundary[k-1];
-		hits_boundary[k-1] = tmp;
-	      }
-              //std::swap(hits_boundary[k],hits_boundary[k-1]);
+	            {
+		            bool tmp = hits_boundary[k];
+		            hits_boundary[k] = hits_boundary[k-1];
+	      	      hits_boundary[k-1] = tmp;
+	            }
             }
-          //}  // more than one maximum
         } // radial missing
         ++ii_tan;
       } // is a tangent
@@ -1111,7 +1086,7 @@ void GridMap::_find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RA
   std::vector<Point_2d> x;
   std::vector<Triangle> triangles;
   rays.resize(0);
-  auto itr = rays.begin();
+  //auto itr = rays.begin();
   for(long k=0 ; k<Nys ; ++k){
     find_images(ys[k],x,triangles);
     rays.emplace_back();
