@@ -87,9 +87,9 @@ maptype(my_maptype), cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_ze
  The pixel map should be defined with physical Mpc dimensions.
  
  */
-template<typename T>
+
 LensHaloMassMap::LensHaloMassMap(
-                                 const PixelMap<T> &MassMap   /// mass map
+                                 const PixelMap<double> &MassMap   /// mass map
                                  ,double massconvertion    /// convertion factor from pixel units to solar masses
                                  ,double redshift          /// redshift of lens
                                  ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 1 is no padding, 2 FFT grid is twice as big as original map
@@ -101,7 +101,27 @@ LensHaloMassMap::LensHaloMassMap(
 {
   rscale = 1.0;
 
-  setMap<T>(MassMap,massconvertion,redshift);
+  setMap<double>(MassMap,massconvertion,redshift);
+  
+  LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
+  
+  setZlensDist(map.zlens,cosmo);
+}
+
+LensHaloMassMap::LensHaloMassMap(
+                                 const PixelMap<float> &MassMap   /// mass map
+                                 ,double massconvertion    /// convertion factor from pixel units to solar masses
+                                 ,double redshift          /// redshift of lens
+                                 ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 1 is no padding, 2 FFT grid is twice as big as original map
+                                 ,bool my_zeromean         /// if true, subtracts average density
+                                 ,const COSMOLOGY& lenscosmo  /// cosmology
+)
+:LensHalo()
+, flag_MOKA_analyze(0),flag_background_field(0),maptype(PixelMapType::pix_map),cosmo(lenscosmo),zerosize(pixel_map_zeropad),zeromean(my_zeromean)
+{
+  rscale = 1.0;
+
+  setMap<float>(MassMap,massconvertion,redshift);
   
   LensHalo::setTheta(MassMap.getCenter()[0],MassMap.getCenter()[1]);
   
