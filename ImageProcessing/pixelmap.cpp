@@ -1306,7 +1306,7 @@ void PixelMap<T>::printASCIItoFile(std::string filename) const
 }
 /// Output the pixel map as a fits file.
 template <typename T>
-void PixelMap<T>::printFITS(std::string filename,bool flipX, bool verbose)
+void PixelMap<T>::printFITS(std::string filename,bool flipX, bool verbose,bool ctype=false)
 {
 
   if(filename.empty())
@@ -1357,11 +1357,14 @@ void PixelMap<T>::printFITS(std::string filename,bool flipX, bool verbose)
   
   cpfits.writeKey("UNITS",to_string(units),"");
   
-  //cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
-  //cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
-  //cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
-  //cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
-
+  if(ctype){
+    cpfits.writeKey("CTYPE1", "RA---TAN", "the coordinate type for the first axis");
+    cpfits.writeKey("CTYPE2", "DEC--TAN", "the coordinate type for the second axis");
+    cpfits.writeKey("RADESYS", "ICRS", "");
+    cpfits.writeKey("CUNIT1", "deg     ", "the coordinate unit for the first axis");
+    cpfits.writeKey("CUNIT2", "deg     ", "the coordinate unit for the second axis");
+  }
+  
   for(auto &h : headers_float){
     cpfits.writeKey(std::get<0>(h),std::get<1>(h),std::get<2>(h));
   }
