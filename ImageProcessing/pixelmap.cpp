@@ -1306,7 +1306,7 @@ void PixelMap<T>::printASCIItoFile(std::string filename) const
 }
 /// Output the pixel map as a fits file.
 template <typename T>
-void PixelMap<T>::printFITS(std::string filename,bool flipX, bool verbose,bool ctype=false)
+void PixelMap<T>::printFITS(std::string filename,bool flipX, bool verbose,bool ctype)
 {
 
   if(filename.empty())
