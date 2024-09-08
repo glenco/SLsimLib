@@ -32,19 +32,37 @@ T to_numeric(const std::string &str) {
 };
 template<>
 inline long to_numeric<long>(const std::string &str) {
-  return std::stol(str);
+  try{
+    return std::stol(str);
+  }catch(...){
+    return -500;
+  }
 };
 template<>
 inline int to_numeric<int>(const std::string &str) {
   return std::stoi(str);
+  try{
+    return std::stoi(str);
+  }catch(...){
+    return -500;
+  }
 };
 template<>
 inline float to_numeric<float>(const std::string &str) {
   return std::stof(str);
+  try{
+    return std::stof(str);
+  }catch(...){
+    return -500;
+  }
 };
 template<>
 inline double to_numeric<double>(const std::string &str) {
-  return std::stod(str);
+  try{
+    return std::stod(str);
+  }catch(...){
+    return -500;
+  }
 };
 //********************************************************
 
@@ -1271,7 +1289,7 @@ void apply_permutation(
 
 /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
  *
- *   Adaptied from Carlo Giocoli's pl() routine.
+ *   Adapted from Carlo Giocoli's pl() routine.
  */
 void powerspectrum2d(
                      std::valarray<double> const &aa      /// first realspace map to be
@@ -1284,6 +1302,7 @@ void powerspectrum2d(
                      ,std::vector<double> &Pl      /// output binned power spectrum
                      ,double zeropaddingfactor
                      );
+
 void powerspectrum2d(
                      std::valarray<double> &aa      /// first realspace map to be
                      ,long nx                       /// number of pixels in x direction
@@ -1293,6 +1312,7 @@ void powerspectrum2d(
                      ,std::vector<double> &ll      /// output multiplot number of bins
                      ,std::vector<double> &Pl      /// output binned power spectrum
 );
+
 void powerspectrum2dprebin(
                      std::valarray<double> &aa      /// first realspace map to be
                      ,long nx                       /// number of pixels in x direction
@@ -1304,19 +1324,38 @@ void powerspectrum2dprebin(
                      ,std::vector<double> &llave     /// average value of Fourier node in bins
 );
 
+void powerspectrum2d(
+                     std::valarray<float> const &aa      /// first realspace map to be
+                     ,std::valarray<float> const &bb     /// second realspace map, same as aa to get power spectrum
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+                     ,double zeropaddingfactor
+                     );
 
-/** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
- 
- The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
- The
- **/
-std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value);
+void powerspectrum2d(
+                     std::valarray<float> &aa      /// first realspace map to be
+                     ,long nx                       /// number of pixels in x direction
+                     ,long ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+);
 
-/** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
- 
- The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
- **/
-std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value);
+void powerspectrum2dprebin(
+                     std::valarray<float> &aa      /// first realspace map to be
+                     ,int nx                       /// number of pixels in x direction
+                     ,int ny                       /// number of pixels in y direction
+                     ,double boxlx                 /// range of image in x direction
+                     ,double boxly                 /// range of image in y direction
+                     ,const std::vector<double> &ll      /// output multiplot number of bins
+                     ,std::vector<double> &Pl      /// output binned power spectrum
+                     ,std::vector<double> &llave     /// average value of Fourier node in bins
+);
 
 /// returns the compiler variable N_THREADS that is maximum number of threads to be used.
 int GetNThreads();
@@ -2135,6 +2174,8 @@ void splitstring(std::string &line,std::vector<std::string> &vec,const std::stri
  * The accept function can be used to limit the amount of data added.  If there is an object, a, used to
  *    make this selection this can be done like [&a](str::vector<T> &v}{return a.itsok(v[3],v[4]);}
  *         where v corresponds to a row in the data file in order.
+ *
+ *  Entries that throw an exception when converting to T are replaced with -500
  */
 template< typename T>
 class DataFrame{
@@ -2413,7 +2454,7 @@ private:
   long nbatch;
   int precision;
   long last_line_printed;
-  int nlabels;
+  long nlabels;
   std::set<std::string> labels;
   
   std::map<std::string,std::string> label_comments;
@@ -2433,15 +2474,18 @@ private:
         int i=0;
         for(auto &label : labels){
           try{
-            if(label == "galaxy_halo_id"){
-              logfile << lines[j].at(label) << std::setprecision(12) ;
+            if(label == "ID"){
+              logfile << std::setprecision(17) << lines[j].at(label);
               std::cout << std::setprecision(precision);
+            }else if(label == "RA" || label == "DEC" ){
+                logfile << std::setprecision(8) << lines[j].at(label)  ;
+                std::cout << std::setprecision(precision);
             }else{
-              logfile << lines[j].at(label) << std::setprecision(precision);
+              logfile << std::setprecision(precision) << lines[j].at(label) ;
             }
             if(i<n-1) logfile << ",";
           }catch(std::exception& e){
-            logfile << blank_val << std::setprecision(precision);
+            logfile << std::setprecision(precision) << blank_val ;
             if(i<n-1) logfile << ",";
           }
           ++i;
@@ -2477,7 +2521,7 @@ public:
   }
   
   // current number of columns
-  int ncol(){return labels.size();}
+  size_t ncol(){return labels.size();}
   // names of columns
   std::set<std::string> names = labels;
   
@@ -2524,15 +2568,18 @@ public:
       i=0;
       for(auto &label : labels){
         try{
-          if(label == "galaxy_halo_id"){
-            logfile << line.at(label) << std::setprecision(12) ;
+          if(label == "ID"){
+            logfile << std::setprecision(17) << line.at(label)  ;
+            std::cout << std::setprecision(precision);
+          }else if(label == "RA" || label == "DEC" ){
+            logfile << std::setprecision(8) << line.at(label)  ;
             std::cout << std::setprecision(precision);
           }else{
-            logfile << line.at(label) << std::setprecision(precision);
+            logfile  << std::setprecision(precision) << line.at(label);
           }
           if(i<nlabels-1) logfile << ",";
         }catch(std::exception& e){
-          logfile << blank_val << std::setprecision(precision);
+          logfile << std::setprecision(precision) << blank_val;
           if(i<nlabels-1) logfile << ",";
         }
         ++i;
@@ -2601,7 +2648,56 @@ public:
 //    
 // 
 //  };
+
+
+/** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
+ 
+ The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
+ **/
+
+template <typename T>
+std::valarray<T> AdaptiveSmooth(const std::valarray<T> &map_in,size_t Nx,size_t Ny,T value){
+    
+    std::valarray<T> map_out(map_in.size());
+    long r,area;
+    T val;
+    for(long i=0;i<Nx;++i){
+      for(long j=0;j<Ny;++j){
+        r = 0;
+        val = map_in[i+j*Nx];
+        while(val < value && r < std::min(Nx, Ny) ){
+          
+          area = 0;
+          val = 0;
+          long imin,imax,jmin,jmax;
+          
+          imin = (i-r < 0) ? 0 : i-r;
+          imax = (i+r > Nx-1) ? Nx-1 : i+r;
+          
+          jmin = (j-r < 0) ? 0 : j-r;
+          jmax = (j+r > Ny-1) ? Ny-1 : j+r;
+          
+          
+          for(long ii=imin;ii<=imax;++ii){
+            for(long jj=jmin;jj<=jmax;++jj){
+              if( (ii-i)*(ii-i) + (jj-j)*(jj-j) < r){
+                val += map_in[ii+jj*Nx];
+                ++area;
+              }
+            }
+          }
+          ++r;
+        }
+        
+        map_out[i+j*Nx] = val/area;
+      }
+    }
+    
+    return map_out;
+  }
 }  // Utilities
 
 //#endif
+
+
 #endif

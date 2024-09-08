@@ -165,16 +165,16 @@ struct Point_2d{
     x[1] /= s;
   }
   
+  // returns a pointer to the position
   PosType* data(){return x;}
   
+  // array of size 2 containing the position
   PosType x[2];
   
   PosType & operator[](size_t i) {return x[i];}
   const PosType & operator[](size_t i) const {return x[i];}
 };
 
-std::ostream &operator<<(std::ostream &os, Point_2d const &p);
-void write_csv(std::string filename,const std::vector<Point_2d> &v);
 
 template <typename T>
 struct Matrix2x2{
@@ -612,6 +612,10 @@ struct RAY{
   /// deflection angle, x-y
   Point_2d alpha() const {return x - y;}
 };
+
+std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+void write_csv(std::string filename,const std::vector<Point_2d> &v);
+void write_csv(std::string filename,const std::vector<RAY> &v);
 
 //inline std::string to_string(RAY &r) {
 //  std::string s = "[" + std::to_string(r.x[0]) + "," + r.x[1] + ",[" + r.y[0] + "," + r.y[1]

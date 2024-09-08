@@ -9,8 +9,6 @@
 
 using namespace std;
 
-
-
 /*
  * \brief  Implant or randomize stars into the lens around the images.
  *

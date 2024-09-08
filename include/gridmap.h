@@ -52,7 +52,7 @@ struct GridMap{
    *
    * returns the sum of the surface brightnesses
    */
-  double RefreshSurfaceBrightnesses(SourceHndl source);
+  double RefreshSurfaceBrightnesses(Source* source);
   /**
    Oversample some pixels where the usrface brightness is not smooth and update surface brighnesses to be the average inside the pixel.
    
@@ -66,7 +66,7 @@ struct GridMap{
    *
    * returns total flux from the new source
    */
-  double AddSurfaceBrightnesses(SourceHndl source);
+  double AddSurfaceBrightnesses(Source* source);
 
   /// get the image point for a index number
   Point_2d image_point(size_t index){return i_points[index];}
@@ -86,29 +86,38 @@ struct GridMap{
   double getResolution() const {return x_range/(Ngrid_init-1);}
   
    /// make pixel map of lensing quantities at the resolution of the GridMap
-  PixelMap writePixelMap(LensingVariable lensvar);
+  template<typename T>
+  PixelMap<T> writePixelMap(LensingVariable lensvar);
    /// fits output of lensing quantities at the resolution of the GridMap
+  template <typename T>
   void writeFits(LensingVariable lensvar,std::string filensame);
 
-  void writePixelMapUniform(PixelMap &map,LensingVariable lensvar);
+  template<typename T>
+  void writePixelMapUniform(PixelMap<T> &map,LensingVariable lensvar);
+  template <typename T>
   void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
-  PixelMap writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
+  template<typename T>
+  PixelMap<T> writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
 
   /// this will make a fits map of the grid as is.
+  template<typename T>
   void writeFitsUniform(
                         LensingVariable lensvar    ///< quantity to be output
                         ,std::string filename     ///< name of output fits file
                         ){
-    PixelMap map = writePixelMap(lensvar);
+    PixelMap<T> map = writePixelMap<T>(lensvar);
     map.printFITS(filename);
   }
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
-  PixelMap getPixelMapFlux(int res) const;
+  template<typename T>
+  PixelMap<T> getPixelMapFlux(int res) const;
+  
   /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
   /// The map must have precisely the right size and center to match or an exception will be thrown.
   /// Constructing the map with PixelMap getPixelMapFlux(int res) will insure that it does.
-  void getPixelMapFlux(PixelMap &map) const;
+  template<typename T>
+  void getPixelMapFlux(PixelMap<T> &map) const;
   
   /// returns the area (radians^2) of the region with negative magnification at resolution of fixed grid
   PosType EinsteinArea() const;
@@ -197,9 +206,9 @@ struct GridMap{
   
   /** \brief finds the boundary of the region on the source plane where there are more than one image
 
-   Warning : slow but perhaps reliable than find_caustics() when no radial caustic is found.
+   Warning : slow but perhaps more reliable than find_caustics() when no radial caustic is found.
    
-   This uses the triangle method to determin which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
+   This uses the triangle method to determine which points in a source plane grid of the same size and resolution as the image plane grid have multiple images.  This boundary will surround all caustics unlike for GridMap::find_crit.
 
    This should not be as susceptible to missing the radial caustic because of resolution in the image plane.
    */
@@ -291,6 +300,15 @@ struct GridMap{
                  ,std::vector<bool> &hits_boundary
                  ,std::vector<CritType> &crit_type
                  );
+
+  /** \brief Find image-plane contours of magnification.  
+   * This is usually only used within ImageFinding:: functions where it will also find the contours on the source plane.
+   */
+  void find_magnification_contour(
+      std::vector<std::vector<Point_2d> > &curves
+      ,std::vector<bool> &hits_boundary
+      ,double invmag
+  );
   
 //  void find_crit_boundary(std::vector<std::vector<Point_2d> > &points
 //                          ,std::vector<bool> &hits_boundary
@@ -337,7 +355,8 @@ private:
   unsigned long pointID;
   PosType axisratio;
   PosType x_range;
-  void writePixelMapUniform_(Point* points,size_t size,PixelMap *map,LensingVariable val);
+  template<typename T>
+  void writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,LensingVariable val);
   
   std::vector<Point> i_points;
   std::vector<Point> s_points;
@@ -354,5 +373,332 @@ private:
                    ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
   ) const;
 };
+
+/// Output a PixelMap of the surface brightness with same res as the GridMap
+template<typename T>
+PixelMap<T> GridMap::getPixelMapFlux(int resf) const{
+  
+  if(resf <=0){
+    ERROR_MESSAGE();
+    throw std::invalid_argument("resf must be > 0");
+  }
+  
+  // The number of pixels on a side of the new map will be
+  // N = (Ngrid_init-1)/resf + 1;
+  // so that the resolution is resf x the GridMap resolution
+  
+  PixelMap<T> map(center.x,(Ngrid_init-1)/resf + 1 ,(Ngrid_init2-1)/resf + 1,resf*x_range/(Ngrid_init-1));
+  
+  int factor = resf*resf;
+  size_t index;
+   size_t n = Ngrid_init*Ngrid_init2;
+   for(size_t i=0 ; i<n ; ++i){
+     index = map.find_index(i_points[i].x);
+     map.data()[index] = i_points[i].surface_brightness/factor;
+   }
+  
+  //for(size_t i = 0 ; i < Ngrid_init ; ++i){
+  //  for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+  //    map.data()[i/resf + map.getNx() * (j / resf)] +=
+  //    i_points[ i + Ngrid_init * j].surface_brightness/factor;
+  //  }
+  //}
+  
+  map.Renormalize(map.getResolution()*map.getResolution());
+  
+  return map;
+}
+
+/// Flux in pixels map
+template<typename T>
+void GridMap::getPixelMapFlux(PixelMap<T> &map) const{
+  
+  int resf = (Ngrid_init-1)/(map.getNx()-1);
+  
+  if(resf*map.getNx() != Ngrid_init-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  //if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  
+  if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
+  if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
+  
+  if(resf <=0){
+    ERROR_MESSAGE();
+    throw std::invalid_argument("resf must be > 0");
+  }
+  
+  map.Clean();
+  
+  int factor = resf*resf;
+/*  size_t index;
+  size_t n = Ngrid_init*Ngrid_init2;
+  std::vector<int> counts(map.size(),0);
+  for(size_t i=0 ; i<n ; ++i){
+    index = map.find_index(i_points[i].x);
+    ++counts[index];
+    map.data()[index] = i_points[i].surface_brightness;
+  }
+  index = map.size();
+  for(size_t i=0 ; i<index ; ++i) map[i] /= counts[i];
+  */
+  
+  long nx = map.getNx();
+  for(size_t i = 0 ; i < Ngrid_init ; ++i){
+    size_t ii = i/resf;
+    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+      size_t jj = j/resf;
+      map.data()[ii + nx * jj ] +=
+      i_points[ i + Ngrid_init * j].surface_brightness/factor;
+    }
+  }
+  
+  map.Renormalize(map.getResolution()*map.getResolution());
+}
+
+/** \brief Make a Pixel map of the without distribution the pixels.
+ *
+ *  This will be faster than Grid::writePixelMap() and Grid::writeFits().
+ *  But it puts each grid pixel in one pixelmap pixel and if there are two
+ *  grid pixels in one pixelmap pixel it uses one at random.  This is meant
+ *  for uniform maps to make equal sized PixelMaps.
+ */
+template<typename T>
+PixelMap<T> GridMap::writePixelMapUniform(
+                                       const PosType center[]  /// center of image
+                                       ,size_t Nx       /// number of pixels in image in on dimension
+                                       ,size_t Ny       /// number of pixels in image in on dimension
+                                       ,LensingVariable lensvar  /// which quantity is to be displayed
+){
+  
+  if(getNumberOfPoints() == 0 ) return PixelMap<T>();
+  PixelMap<T> map(center, Nx, Ny,x_range/(Nx-1));
+  
+  map.Clean();
+  
+  writePixelMapUniform(map,lensvar);
+  
+  return map;
+}
+
+template<typename T>
+void GridMap::writeFits(
+                        LensingVariable lensvar /// which quantity is to be displayed
+                        ,std::string filename  /// output files
+                        ){
+                          PixelMap<T> map = writePixelMap<T>(lensvar);
+                          map.printFITS(filename);
+}
+
+template<typename T>
+PixelMap<T> GridMap::writePixelMap(
+              LensingVariable lensvar  /// which quantity is to be displayed
+){
+  size_t Nx =  Ngrid_init;
+  size_t Ny = Ngrid_init2;
+  
+  PixelMap<T> map( center.x, Nx, Ny,x_range/(Nx-1) );
+  
+  size_t N = map.size();
+  assert(N == Nx*Ny);
+  
+  double tmp2[2];
+  switch (lensvar) {
+    case LensingVariable::ALPHA:
+      for(size_t i=0 ; i<N ; ++i){
+        tmp2[0] = i_points[i].x[0] - i_points[i].image->x[0];
+        tmp2[1] = i_points[i].x[1] - i_points[i].image->x[1];
+        map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+      }
+      break;
+    case LensingVariable::ALPHA1:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = (i_points[i].x[0] - i_points[i].image->x[0]);
+      break;
+    case LensingVariable::ALPHA2:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = (i_points[i].x[1] - i_points[i].image->x[1]);
+      break;
+    case LensingVariable::KAPPA:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].kappa();
+      break;
+    case LensingVariable::GAMMA:
+       for(size_t i=0 ; i<N ; ++i){
+         tmp2[0] = i_points[i].gamma1();
+         tmp2[1] = i_points[i].gamma2();
+         map[i] = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+      }
+      break;
+    case LensingVariable::GAMMA1:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma1();
+      break;
+    case LensingVariable::GAMMA2:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma2();
+      break;
+    case LensingVariable::GAMMA3:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].gamma3();
+      break;
+    case LensingVariable::INVMAG:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].invmag();
+      break;
+    case LensingVariable::DELAYT:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].dt;
+      break;
+    case LensingVariable::SurfBrightness:
+      for(size_t i=0 ; i<N ; ++i)
+        map[i] = i_points[i].surface_brightness;
+      break;
+    default:
+      std::cerr << "GridMap::writePixelMapUniform() does not work for the input LensingVariable" << std::endl;
+      throw std::runtime_error("GridMap::writePixelMapUniform() does not work for the input LensingVariable");
+      break;
+      // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+  }
+  return map;
+}
+template <typename T>
+void GridMap::writePixelMapUniform(
+                                   PixelMap<T> &map
+                                   ,LensingVariable lensvar  /// which quantity is to be displayed
+){
+  
+  if(getNumberOfPoints() ==0 ) return;
+  
+  map.Clean();
+  
+  //writePixelMapUniform_(i_points,getNumberOfPoints(),&map,lensvar);
+  //return;
+  
+  std::vector<std::thread> thr;
+  int nthreads = Utilities::GetNThreads();
+  
+  int chunk_size;
+  do{
+    chunk_size =  getNumberOfPoints()/nthreads;
+    if(chunk_size == 0) nthreads /= 2;
+  }while(chunk_size == 0);
+  
+  size_t size = chunk_size;
+  for(int ii = 0; ii < nthreads ;++ii){
+    if(ii == nthreads-1)
+    size = getNumberOfPoints() - (nthreads-1)*chunk_size;
+    thr.push_back(std::thread(&GridMap::writePixelMapUniform_<T>,this,&(i_points[ii*chunk_size]),size,&map,lensvar));
+  }
+  for(auto &t : thr) t.join();
+}
+
+template <typename T>
+void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,LensingVariable val){
+  double tmp;
+  PosType tmp2[2];
+  long index;
+  
+  for(size_t i = 0; i< size; ++i){
+    switch (val) {
+      case LensingVariable::ALPHA:
+        tmp2[0] = points[i].x[0] - points[i].image->x[0];
+        tmp2[1] = points[i].x[1] - points[i].image->x[1];
+        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+        break;
+      case LensingVariable::ALPHA1:
+        tmp = (points[i].x[0] - points[i].image->x[0]);
+        break;
+      case LensingVariable::ALPHA2:
+        tmp = (points[i].x[1] - points[i].image->x[1]);
+        break;
+      case LensingVariable::KAPPA:
+        tmp = points[i].kappa();
+        break;
+      case LensingVariable::GAMMA:
+        tmp2[0] = points[i].gamma1();
+        tmp2[1] = points[i].gamma2();
+        tmp = sqrt(tmp2[0]*tmp2[0] + tmp2[1]*tmp2[1]);
+        break;
+      case LensingVariable::GAMMA1:
+        tmp = points[i].gamma1();
+        break;
+      case LensingVariable::GAMMA2:
+        tmp = points[i].gamma2();
+        break;
+      case LensingVariable::GAMMA3:
+        tmp = points[i].gamma3();
+        break;
+      case LensingVariable::INVMAG:
+        tmp = points[i].invmag();
+        break;
+      case LensingVariable::DELAYT:
+        tmp = points[i].dt;
+        break;
+      case LensingVariable::SurfBrightness:
+        tmp = points[i].surface_brightness;
+        break;
+      default:
+        std::cerr << "PixelMap<T>::AddGrid() does not work for the input LensingVariable" << std::endl;
+        throw std::runtime_error("PixelMap<T>::AddGrid() does not work for the input LensingVariable");
+        break;
+        // If this list is to be expanded to include ALPHA or GAMMA take care to add them as vectors
+    }
+    
+    index = map->find_index(points[i].x);
+    if(index != -1)(*map)[index] = tmp;
+  }
+}
+
+template <typename T>
+void GridMap::writeFitsUniform(
+                               const PosType center[]  /// center of image
+                               ,size_t Nx       /// number of pixels in image in on dimension
+                               ,size_t Ny       /// number of pixels in image in on dimension
+                               ,LensingVariable lensvar  /// which quantity is to be displayed
+                               ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+){
+  std::string tag;
+  
+  switch (lensvar) {
+    case LensingVariable::DELAYT:
+      tag = ".dt.fits";
+      break;
+    case LensingVariable::ALPHA1:
+      tag = ".alpha1.fits";
+      break;
+    case LensingVariable::ALPHA2:
+      tag = ".alpha2.fits";
+      break;
+    case LensingVariable::ALPHA:
+      tag = ".alpha.fits";
+      break;
+    case LensingVariable::KAPPA:
+      tag = ".kappa.fits";
+      break;
+    case LensingVariable::GAMMA1:
+      tag = ".gamma1.fits";
+      break;
+    case LensingVariable::GAMMA2:
+      tag = ".gamma2.fits";
+      break;
+    case LensingVariable::GAMMA3:
+      tag = ".gamma3.fits";
+      break;
+    case LensingVariable::GAMMA:
+      tag = ".gamma.fits";
+      break;
+    case LensingVariable::INVMAG:
+      tag = ".invmag.fits";
+      break;
+    case LensingVariable::SurfBrightness:
+      tag = ".surfbright.fits";
+      break;
+ default:
+      break;
+  }
+  
+  PixelMap<T> map = writePixelMapUniform<T>(center,Nx,Ny,lensvar);
+  map.printFITS(filename + tag);
+}
 
 #endif // defined(__GLAMER__gridmap__)

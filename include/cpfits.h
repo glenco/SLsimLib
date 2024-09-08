@@ -670,12 +670,26 @@ private:
   }
 public:
   
-  CPFITS_READ_TABLES(std::string filename,bool verbose = false) {
+  CPFITS_READ_TABLES(std::string filename,int hdunum=2,bool verbose = false) {
 
     int status = 0;
     fits_open_table(&fptr,filename.c_str(), READONLY, &status);
     check_status(status,"Problem with input fits file.");
-    
+    if(hdunum>0){
+      int num;
+      fits_get_num_hdus(fptr, &num, &status);
+      if(hdunum > num){
+        throw std::runtime_error("Not enough HDUs in " + filename);
+      }
+      int hdutype;
+      fits_movabs_hdu(fptr,hdunum, &hdutype,  &status);
+      check_status(status,"Problem with input fits file. HDU "+std::to_string(hdunum));
+      if(hdutype != BINARY_TBL){
+        std::cerr << "HDU " << hdunum << " in " << filename << " is not a binary table" << std::endl;
+        throw std::runtime_error("wrong HDUs in " + filename);
+      }
+    }
+
     reset_tableInfo();
     get_colnames(col_names);
     
@@ -859,6 +873,8 @@ public:
 };
 
 /*** \brief Data frame for reading fits tables and minipulating the results.
+ 
+ Missing entries are replaced with -100
  */
 
   template< typename T>
@@ -875,11 +891,13 @@ public:
     std::vector<int> column_index;
   
   public:
-    /// The data frame is atached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a seporate function.
+    /// The data frame is attached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a seporate function.
     DataFrameFits(
                   std::string datafile   /// input catalog file in fits format
                   ,std::vector<std::string> &columns  /// if empty all columns are read and this will contain thier names, if not, only the listed columns are read
-    ):filename(datafile),cpfits(filename,true),n0(1){
+                  ,int hdu = 2
+                  ,bool verbose = false
+    ):filename(datafile),cpfits(filename,hdu,verbose),n0(1){
    
       all_column_names = cpfits.get_colnames();
       
@@ -1123,7 +1141,7 @@ public:
       return data[i];
     };
     
-    // sort by one of the columns
+    // sort by one of the columns in ascending order
     void sortby(std::string name){
       std::vector<size_t> index(data[0].size());
       size_t N = index.size();

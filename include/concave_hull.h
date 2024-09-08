@@ -65,6 +65,9 @@ size_t RemoveIntersections(std::vector<T> &curve){
 ///  Will fail if there are overlapping segments on the hull.
 std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 
+///Finds a concave envolope for an arbitrary closed curve.  This is done by gridding and then finding points that are withing a sertain distance of a segment of the curve.  The outer bounding curve is found and then the cuve is shrunck to the closest point on a segment.  This should be fool proof, but is relatively slow and might clip some points.
+std::vector<Point_2d> TightestHull(const std::vector<Point_2d> &v);
+
 //template <typename T>
 //std::vector<T> TightHull(const std::vector<T> &curve){
 //
@@ -151,17 +154,48 @@ std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 //  return hull;
 //}
 
+/// returns random point within a trinagle
+Point_2d RandomInTriangle(const Point_2d &x1,
+                          const Point_2d &x2,
+                          const Point_2d &x3,
+                          Utilities::RandomNumbers_NR &ran);
 
-/** finds ordered boundaries to regions where bitmap == true
+/// return a point within a convex polygon
+Point_2d RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                            Utilities::RandomNumbers_NR &ran);
+std::vector<Point_2d> RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                                         int N,
+                                         Utilities::RandomNumbers_NR &ran);
+
+/// return a point within a polygon that doesn't need to be convex
+Point_2d RandomInPoly(std::vector<Point_2d> &pp,
+                      Utilities::RandomNumbers_NR &ran);
+std::vector<Point_2d> RandomInPoly(std::vector<Point_2d> &pp,
+                                   int N,
+                                   Utilities::RandomNumbers_NR &ran);
+  
+/// return a point within distance R of a polygon, i.e. the center of a cicle that intersects the interior of a polygon
+Point_2d RandomNearPoly(std::vector<Point_2d> &pp
+                        ,double R
+                        ,Utilities::RandomNumbers_NR &ran);
+std::vector<Point_2d> RandomNearPoly(std::vector<Point_2d> &pp
+                                     ,int N
+                                     ,double R
+                                     ,Utilities::RandomNumbers_NR &ran);
+
+  
+
+/** \brief finds ordered boundaries to regions where bitmap == true
 
  This can be used to find critical curves or contours.
- `bitmap` should be the same size as the `Gridmap`
- If the boundary curve  touches the edge of the `GridMap` it will be indicated in `hits_boundary` as
+ If the boundary curve  touches the edge of the `bitmap` it will be indicated in `hits_boundary` as
  `true`.
  
- Boundaries will never cross or lead off the grid.  On the edges they will leave the edge pixels out even if they should be in.  This is a technical comprimise.
+ Boundaries will never cross or lead off the grid.  
+ On the edges they will leave the edge pixels out even if they 
+ should be in.  This is a technical compromise.
  
- Output points are in pixel units with (0,0) being pioint (0,0)
+ Output points are in pixel units with (0,0) being point (0,0)
 */
 template <typename P>
 void find_boundaries(std::vector<bool> &bitmap  // = true inside
@@ -169,6 +203,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
                      ,std::vector<std::vector<P> > &points
                      ,std::vector<bool> &hits_edge
                      ,bool add_to_vector=false
+                     ,bool outer_only=false    /// finds only the fist boundary which will be the outer one if there are not seporated islands
                      ){
   
   size_t n = bitmap.size();
@@ -237,7 +272,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
         if(n_edge >= n){  // infinite loop, output debugging data
           std::cerr << "Too many points in Utilities::find_boundaries()." << std::endl;
           std::cerr << "kfirst_in_bound " << kfirst_in_bound << std::endl;
-          std::cerr << "  countour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
+          std::cerr << "  contour is output to boundary_error_file.csv and bitmap_error_file.csv" << std::endl;
           {
             std::ofstream file("bitmap_error_file.csv");
             file << "in,x,y" << std::endl;
@@ -434,6 +469,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
       //}
       
     }
+    if(outer_only) break;
   }
 
   
@@ -475,19 +511,18 @@ double interior_mass(const std::vector<RAY> &rays);
 
 /// Returns a vector of points on the convex hull in counter-clockwise order.
 template<typename T>
-void convex_hull(std::vector<T> &P,std::vector<T> &hull_out)
+std::vector<T> convex_hull(const std::vector<T> &PP)
 {
-  
-  if(P.size() <= 3){
-    hull_out = P;
-    return;
+ 
+  if(PP.size() <= 3){
+    return PP;
   }
-  
-  std::vector<T> hull;
-  
+
+  std::vector<T> P=PP;
+
   size_t n = P.size();
   size_t k = 0;
-  hull.resize(2*n);
+  std::vector<T> hull(2*n);
   
   // Sort points lexicographically
   std::sort(P.begin(), P.end(),
@@ -517,9 +552,7 @@ void convex_hull(std::vector<T> &P,std::vector<T> &hull_out)
   hull.resize(k);
   hull.pop_back();
   
-  std::swap(hull,hull_out);
-  
-  return;
+  return hull;
 }
 
 /// Returns a vector of points on the convex hull in counter-clockwise order.
@@ -606,10 +639,8 @@ void concave(std::vector<T> &init_points
   
   bool TEST = false;
   
-  std::vector<T> hull;
-  
   // find the convex hull
-  convex_hull(init_points,hull);
+  std::vector<T> hull = convex_hull(init_points);
   
   if(init_points.size() == hull.size()) return;
   
@@ -629,7 +660,7 @@ void concave(std::vector<T> &init_points
   
   if(TEST){
     PosType cent[] ={0.5,0.5};
-    PixelMap map(cent,256, 1.0/256);
+    PixelMap<float> map(cent,256, 1.0/256);
     
     map.drawgrid(10,0.5);
     
@@ -748,7 +779,7 @@ void concave(std::vector<T> &init_points
     
     if(TEST){
       PosType cent[] ={0.5,0.5};
-      PixelMap map(cent,256, 1.0/256);
+      PixelMap<float> map(cent,256, 1.0/256);
       
       map.drawgrid(10,0.5);
       
@@ -776,10 +807,8 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
   
   bool TEST = false;
   
-  std::vector<T> hull;
-  
   // find the convex hull
-  convex_hull(init_points,hull);
+  std::vector<T> hull = convex_hull(init_points);
   
   if(init_points.size() == hull.size()) return hull;
   
@@ -799,7 +828,7 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
   
   if(TEST){
     PosType cent[] ={0.5,0.5};
-    PixelMap map(cent,256, 1.0/256);
+    PixelMap<float> map(cent,256, 1.0/256);
     
     map.drawgrid(10,0.5);
     
@@ -917,7 +946,7 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
     
     if(TEST){
       PosType cent[] ={0.5,0.5};
-      PixelMap map(cent,256, 1.0/256);
+      PixelMap<float> map(cent,256, 1.0/256);
       
       map.drawgrid(10,0.5);
       
@@ -933,6 +962,44 @@ std::vector<T> concave2(std::vector<T> &init_points,double scale)
   //Utilities::RemoveIntersections(hull);
   
   return hull;
+}
+
+// shortest distance between P and the segment (S1,S2)
+template <typename Ptype>
+double distance_to_segment(const Ptype &P
+                           ,const Ptype &S1
+                           ,const Ptype &S2
+                           ){
+  
+  Ptype D = S2-S1;
+  double s = (P-S1)*D / D.length_sqr();
+  if(s<=0){
+    return (P-S1).length();
+  }else if(s>=1){
+    return (P-S2).length();
+  }else{
+    return (S1 + D*s - P).length();
+  }
+}
+template <typename Ptype>
+double distance_to_segment(const Ptype &P
+                           ,const Ptype &S1
+                           ,const Ptype &S2
+                           ,Ptype &closest_point
+                           ){
+  
+  Ptype D = S2-S1;
+  double s = (P-S1)*D / D.length_sqr();
+  if(s<=0){
+    closest_point = S1;
+    return (P-S1).length();
+  }else if(s>=1){
+    closest_point = S2;
+    return (P-S2).length();
+  }else{
+    closest_point = S1 + D*s;
+    return (S1 + D*s - P).length();
+  }
 }
 
 template <typename Ptype>
@@ -1177,7 +1244,7 @@ std::vector<Ptype> concaveK(std::vector<Ptype> &points,int &k,bool check=true)
       TreeSimpleVec<Ptype> tree(points.data(),npoints,2);
       
       if(k>=points.size()){
-        convex_hull(points,hull);
+        hull = convex_hull(points);
         return hull;
       }
       
@@ -1382,7 +1449,7 @@ void testconcaveK(){
   int k = 5;
   std::vector<Ptype> hull = concaveK(points,k);
   Ptype center;
-  PixelMap map(center.x, 512, 3. / 512.);
+  PixelMap<float> map(center.x, 512, 3. / 512.);
   
   map.drawCurve(hull,1);
   map.drawPoints(points,0,2);
@@ -1404,84 +1471,33 @@ bool circleOverlapsCurve(const Point_2d &x,double r,const std::vector<Point_2d> 
 
 /** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
  
- v and w must be non-self intersecting
- If they do not intersect and one is not inside the other an empty vector is returned
+ v and w can be non-self intersecting
+ If they do not intersect and one is not inside the other an empty vector is returned.
+ 
+ Unlike `Utilities::envelope()`, this algorithm is pretty foolproof.  It uses the same concept as `Utilities::TightestHull()`.
+ There may be small segements that are not in either curve, but they should increase the area be a small fraction.
  */
 std::vector<Point_2d> envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w);
 
-
-template <typename R>
-Point_2d RandomPointWithinCurve(const std::vector<Point_2d> &curve,R &ran){
-  
-  if(curve.size()==0) throw std::runtime_error("bad curve");
-    
-  Point_2d p1,p2,center;
-  p1=p2=curve[0];
-  for(const Point_2d &p : curve){
-    if(p[0] < p1[0]){
-      p1[0]=p[0];
-    }else if(p[0] > p2[0]){
-      p2[0]=p[0];
-    }
-    if(p[1] < p1[1]){
-      p1[1]=p[1];
-    }else if(p[1] > p2[1]){
-      p2[1]=p[1];
-    }
-  }
-  
-  if( p1==p2) return p1;
-  Point_2d p;
-  double area;
-  do{
-    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
-    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
-
-  }while( Utilities::windings(p,curve,&area) == 0 );
-  
-  return p;
-}
-/** \brief Return a point that is either within the curve or within a distance r of the curve
+/** \brief Find a curve that is made up of segments from v and w that surrounds them and does not self intersect
+ 
+ v and w must be non-self intersecting
+ If they do not intersect and one is not inside the other an empty vector is returned
  */
-template <typename R>
-Point_2d RandomPointTouchingCurve(const std::vector<Point_2d> &curve
-                                  ,double r
-                                  ,R &ran){
-  
-  if(curve.size()==0) throw std::runtime_error("bad curve");
-    
-  Point_2d p1,p2,center;
-  p1=p2=curve[0];
-  for(const Point_2d &p : curve){
-    if(p[0] < p1[0]){
-      p1[0]=p[0];
-    }else if(p[0] > p2[0]){
-      p2[0]=p[0];
-    }
-    if(p[1] < p1[1]){
-      p1[1]=p[1];
-    }else if(p[1] > p2[1]){
-      p2[1]=p[1];
-    }
-  }
+std::vector<Point_2d> envelope2(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w);
 
-  p1[0] -= r;
-  p1[1] -= r;
-  p2[0] += r;
-  p2[1] += r;
-
-  Point_2d p;
-  double area;
-  do{
-    p[0] = p1[0] + ran()*( p2[0]- p1[0] );
-    p[1] = p1[1] + ran()*( p2[1]- p1[1] );
-  }while( Utilities::windings(p.x,curve,&area) == 0
-         && Utilities::circleOverlapsCurve(p,r,curve) == false
-         );
-  
-  return p;
-}
+/** \brief return the boundaries of the region that is within R of the curve v
+ 
+ If the radius R is small compared to the dimenstions of the polygon an approximation is make
+ to save time in which parallel segments to each side of the polygon are used.
+ 
+ If the radius R is not small a gridding method is used which is more reliable.
+ */
+std::vector<std::vector<Point_2d> > thicken_poly(
+                                const std::vector<Point_2d> &v
+                               ,double R);
 
 }
 #endif /* concave_hull_h */

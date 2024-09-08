@@ -1,7 +1,7 @@
 add_sources(
 	analytic_lens.h
 	base_analens.h
-	causticdata.h
+	#causticdata.h
 	divide_images.h
 	doc.h
 	fitlens.h
@@ -28,7 +28,7 @@ add_sources(
 	quadTree.h
 	sersic_source.h
 	simpleTree.h
-        simpleTreeVec.h
+    simpleTreeVec.h
 	slsimlib.h
 	source.h
 	source_models.h
@@ -37,15 +37,15 @@ add_sources(
 	Tree.h
 	#TreeKist.h
 	tree_maintenance.h
-        qTreeNB.h
+    qTreeNB.h
 	uniform_lens.h
 	utilities_slsim.h
-        geometry.h
-        elliptic.h
+    geometry.h
+    elliptic.h
 	gridmap.h
 	particle_halo.h
 	concave_hull.h
-        bands_etc.h
+    bands_etc.h
 	gaussian.h
 	gadget.hh
 	particle_types.h
@@ -56,4 +56,5 @@ add_sources(
 	quadTreeHalos.h
 	powell.h
 	slicer.h
+	pixelmap.h
 )

@@ -253,41 +253,6 @@ SourcePixelled::SourcePixelled(
   calcSize();
 }
 
-/** \brief Creates a SourcePixelled from a PixelMap image.
- *  The idea is to use stamps of observed galaxies as input sources for simuations.
- *  Surface brightness of the source is conserved, taking into account the input pixel size.
- *  Factor allows for rescaling of the flux, in case one wants to simulate a different observation.
- */
-SourcePixelled::SourcePixelled(
-                               const PixelMap& gal_map  /// Input image and information
-                               , PosType my_z                 /// redshift of the source
-                               , PosType factor                /// optional rescaling factor for the flux
-                               , PosType zero_point
-)
-:Source(0,Point_2d(0,0),0,-1,zero_point){
-  if(gal_map.getNx() != gal_map.getNy()){
-    std::cout << "SourcePixelled::SourcePixelled() Doesn't work on nonsquare maps" << std::endl;
-    throw std::runtime_error("nonsquare");
-  }
-  
-  zsource = my_z;
-  resolution = gal_map.getResolution();
-  Npixels = gal_map.getNx();
-  range = resolution*(Npixels-1);
-  source_x[0] = gal_map.getCenter()[0];
-  source_x[1] = gal_map.getCenter()[1];
-  source_r =  range/sqrt(2.);
-  values.resize(Npixels*Npixels);
-  
-  double convertion = 1.0/resolution/resolution*factor;
-  for (int i = 0; i < Npixels*Npixels; i++)
-    values[i] = gal_map(i)*convertion;
-  
-  calcTotalFlux();
-  calcCentroid();
-  calcEll();
-  calcSize();
-}
 
 SourcePixelled::~SourcePixelled(){
 }
@@ -537,8 +502,9 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang					/// rotation angle (in rad)
                                  , PosType zeropoint       /// magnitude zero point
+                                 , Band band               ///
 )
-:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource,-1,zeropoint)
+:SourceColored(my_mag,my_scale,Point_2d(my_center[0],my_center[1]),zsource,-1,zeropoint,band)
 {
 
   assert(my_center != NULL);
@@ -564,8 +530,9 @@ SourceShapelets::SourceShapelets(
                                  , PosType* my_center           			/// center (in rad)
                                  , PosType my_ang			/// rotation angle (in rad)
                                  , PosType zeropoint       /// magnitude zero point
+                                 , Band band               ///
 )
-:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z,-1,zeropoint)
+:SourceColored(my_mag,0,Point_2d(my_center[0],my_center[1]),my_z,-1,zeropoint,band)
 {
   
   assert(my_center != NULL);
@@ -602,8 +569,9 @@ SourceShapelets::SourceShapelets(
                                  std::string shap_file		/// fits file with coefficients in a square array. Mag and redshift are read from the header.
                                  , PosType my_ang         /// rotation angle (in rad)
                                  , PosType zeropoint      /// magnitude zero point
+                                 , Band band///
  )
-:SourceColored(0,0,Point_2d(0,0),0,-1,zeropoint)
+:SourceColored(0,0,Point_2d(0,0),0,-1,zeropoint,band)
 {
   
   cos_sin[0] = cos(my_ang);
@@ -654,9 +622,9 @@ SourceShapelets::SourceShapelets(
   std::vector<long> size;
   cpfits.read(coeff,size);
 
-  setMag(getMag(Band::KiDS_I),Band::EUC_VIS,zeropoints.at(Band::EUC_VIS));
-  setMag(getMag(Band::F110W),Band::EUC_J,zeropoints.at(Band::EUC_J));
-  setMag(getMag(Band::F160W),Band::EUC_H,zeropoints.at(Band::EUC_H));
+  setMag(getMag(Band::KiDS_I),Band::EUC_VIS);
+  setMag(getMag(Band::F110W),Band::EUC_J);
+  setMag(getMag(Band::F160W),Band::EUC_H);
 
 
   // ??? kluge
@@ -882,20 +850,20 @@ void SourceMultiShapelets::readCatalog()
     std::ifstream shap_input(shap_file.c_str());
     if (shap_input)
     {
-      SourceShapelets s(shap_file.c_str(),0,0);
+      SourceShapelets s(shap_file.c_str(),0,0,Band::NoBand);
       
       s.setID(i);
 
       s.sed_type = viz_cat[j][4];
       
       assert(viz_cat.size() > j );
-      s.setMag(viz_cat[j][2],Band::EUC_VIS,s.getMagZeroPoint(Band::EUC_VIS));
+      s.setMag(viz_cat[j][2],Band::EUC_VIS);
       assert(y_cat.size() > j );
-      s.setMag(y_cat[j][2],Band::EUC_Y,s.getMagZeroPoint(Band::EUC_Y));
+      s.setMag(y_cat[j][2],Band::EUC_Y);
       assert(j_cat.size() > j );
-      s.setMag(j_cat[j][2],Band::EUC_J,s.getMagZeroPoint(Band::EUC_J));
+      s.setMag(j_cat[j][2],Band::EUC_J);
       assert(h_cat.size() > j );
-      s.setMag(h_cat[j++][2],Band::EUC_H,s.getMagZeroPoint(Band::EUC_H));
+      s.setMag(h_cat[j++][2],Band::EUC_H);
       
       //s.setActiveBand(band);
       if (s.getMag() > 0.

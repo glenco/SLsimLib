@@ -5,7 +5,7 @@
 //  Created by bmetcalf on 5/6/13.
 //
 //
-
+/*
 #include "causticdata.h"
 
 CausticDataStore::CausticDataStore(std::string filename,bool verbose)
@@ -191,19 +191,7 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
       if(verbose) std::cout << "   skipped line " << i << std::endl;
 			continue;
     }
-	/*
-	 if(causticdata[i].crit_radius[0] > 0 ){
-	 // *** need to calculate area and max min sizes
-	 catalog_caustic << z_sources
-	 << " " << causticdata[i].crit_center[0] << " " << causticdata[i].crit_center[1]
-	 << " " << causticdata[i].crit_radius[0] << " " << causticdata[i].crit_radius[2]
-	 << " "<< causticdata[i].crit_radius[1]  << " " << imageinfo[i].area
-	 << " " << causticdata[i].caustic_center[0] << " " << causticdata[i].caustic_center[1]
-	 << " " << causticdata[i].caustic_radius[0] << " " << causticdata[i].caustic_radius[2]   << " "
-	 << causticdata[i].caustic_radius[1]
-	 << " " << causticdata[i].caustic_area
-	 << std::endl;
-	 }*/
+	
 
 		for(int l=0;l<ncolumns; l++){
 			pos = myline.find("|");
@@ -282,10 +270,10 @@ void CausticDataStore::readfile(std::string filename,bool verbose){
     data.push_back(tmp_data);
   }
   
-  /*for(i=0; i < 20; ++i){
-    std::cout << data[i].redshift << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
-    << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[1]<< " " << data[i].crit_radius[2] << std::endl;
-  }*/
+  //for(i=0; i < 20; ++i){
+  //  std::cout << data[i].redshift << " " << data[i].crit_center[0] << " " << data[i].crit_center[1]
+  //  << " " << data[i].crit_radius[0] << " " << data[i].crit_radius[1]<< " " << data[i].crit_radius[2] << std::endl;
+  //}
 
   if(data.size() > 1) SetSearchTree();
  }
@@ -298,11 +286,11 @@ void CausticDataStore::SetSearchTree(){
     delete searchtreevec;
     //Utilities::free_PosTypeMatrix(xp,Nxp, 2);
   }
- /* xp = Utilities::PosTypeMatrix(data.size(), 2);
-  for(size_t i=0;i<data.size();++i){
-    xp[i][0] = data[i].crit_center[0];
-    xp[i][1] = data[i].crit_center[1];
-  }*/
+  //xp = Utilities::PosTypeMatrix(data.size(), 2);
+  //for(size_t i=0;i<data.size();++i){
+  //  xp[i][0] = data[i].crit_center[0];
+  //  xp[i][1] = data[i].crit_center[1];
+  //}
   //searchtree = new TreeSimple(xp,data.size(),1);
   //searchtreevec = new TreeSimpleVec<CausticStructure>(data.data(),data.size(),1,2,true,crit_center);
   
@@ -329,21 +317,21 @@ bool CausticDataStore::findNearestCrit(PosType *x,long &index){
 
 //searchtreevec->NearestNeighbors(x,1,&radius,&index);
   
-  /*********************** test result ***************
-  PosType rmin = 1.0e60,r;
-  size_t t_index=0;
+  // *********************** test result ***************
+  //PosType rmin = 1.0e60,r;
+  //size_t t_index=0;
   
-  for(size_t i=0;i<data.size();++i){
+  //for(size_t i=0;i<data.size();++i){
 
-      r = (data[i].crit_center[0]-x[0])*(data[i].crit_center[0]-x[0])
-      + (data[i].crit_center[1]-x[1])*(data[i].crit_center[1]-x[1]);
-      if(rmin > r){
-        rmin = r;
-        t_index = i;
-      }
+  //    r = (data[i].crit_center[0]-x[0])*(data[i].crit_center[0]-x[0])
+  //    + (data[i].crit_center[1]-x[1])*(data[i].crit_center[1]-x[1]);
+  //    if(rmin > r){
+  //      rmin = r;
+  //      t_index = i;
+  //    }
     
-  }
-  assert(index == t_index);*/
+  //}
+  assert(index == t_index);
 
   return (data[index].crit_radius[2] > radius);
 
@@ -351,7 +339,7 @@ bool CausticDataStore::findNearestCrit(PosType *x,long &index){
 
 /** \brief Finds the nearest critical curve to the point x[] of type 'type'.
  There are two bool types: found returns true if any neighbour was found, found_type is true if a neighbour with correct CritType "type" was found. If there are no caustics of CritType "type" index will be set to -1.
- */
+ *
 bool CausticDataStore::findNearestCrit(PosType *x,long &index,CritType type){
   
   if(data.size() == 0){
@@ -496,7 +484,7 @@ void CausticDataStore::SortByCausticArea(){
   if(data.size() > 1) SetSearchTree();
   constructIndexes();
 }
-*/
+*
 
 size_t CausticDataStore::init_for_random(
                        short type              /// select according to: (1) critical curve area, (2) caustic curve area
@@ -544,5 +532,5 @@ std::ostream &operator<<(std::ostream &os, CausticSummary const &caust) {
   return os << " crit center: " << caust.crit_center << " caustic center: "
   << caust.caustic_center << " type : " << to_string(caust.crit_type);
 }
-
+*/
 

@@ -445,11 +445,11 @@ void ImageFinding::find_crit(
           Point_2d p1,p2;
           crit.CritRange(p1,p2);
           PosType range = 2.3*r_closest;
-          PixelMap map(crit.critical_center.x,1000,range/1000);
+          PixelMap<float> map(crit.critical_center.x,1000,range/1000);
           map.AddCurve(crit.critcurve,1.0);
           map.printFITS("!orphin_pseudo.fits");
           
-          grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+          grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
           map.Clean();
           
           for(auto &critt : crtcurve){
@@ -510,11 +510,11 @@ void ImageFinding::find_crit(
             Point_2d p1,p2;
             crit.CritRange(p1,p2);
             PosType range = 2.3*r_closest;
-            PixelMap map(crit.critical_center.x,1000,range/1000);
+            PixelMap<float> map(crit.critical_center.x,1000,range/1000);
             map.AddCurve(crit.critcurve,1.0);
             map.printFITS("!orphin_pseudo.fits");
             
-            grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+            grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
             map.Clean();
             
             for(auto &critt : crtcurve){
@@ -665,15 +665,16 @@ void ImageFinding::find_crit(
       //***************** move to source plane ************/
       
       //crtcurve[ii].caustic_curve_outline = Utilities::Geometry::MagicHull(crtcurve[ii].caustic_curve_intersecting);
-
-      try{
-        crtcurve[ii].caustic_curve_outline = Utilities::TighterHull( crtcurve[ii].caustic_curve_intersecting );
-      }catch(...){
+      
+ //     try{
+        crtcurve[ii].caustic_curve_outline = Utilities::TightestHull( crtcurve[ii].caustic_curve_intersecting );
+ //     }
+ //     catch(...){
  //       crtcurve[ii].caustic_curve_outline =  crtcurve[ii].caustic_curve_intersecting ;
  //       Utilities::RemoveIntersections(crtcurve[ii].caustic_curve_intersecting);
-        Utilities::convex_hull(crtcurve[ii].caustic_curve_intersecting
-                               ,crtcurve[ii].caustic_curve_outline);
-    }
+ //       Utilities::convex_hull(crtcurve[ii].caustic_curve_intersecting
+ //                              ,crtcurve[ii].caustic_curve_outline);
+ //   }
       
       std::vector<Point_2d> &short_cac = crtcurve[ii].caustic_curve_outline;
       /*
@@ -932,11 +933,11 @@ void ImageFinding::find_crit(
           Point_2d p1,p2;
           crit.CritRange(p1,p2);
           PosType range = 2.3*r_closest;
-          PixelMap map(crit.critical_center.x,1000,range/1000);
+          PixelMap<float> map(crit.critical_center.x,1000,range/1000);
           map.AddCurve(crit.critcurve,1.0);
           map.printFITS("!orphin_pseudo.fits");
           
-          grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+          grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
           map.Clean();
           
           for(auto &critt : crtcurve){
@@ -997,11 +998,11 @@ void ImageFinding::find_crit(
             Point_2d p1,p2;
             crit.CritRange(p1,p2);
             PosType range = 2.3*r_closest;
-            PixelMap map(crit.critical_center.x,1000,range/1000);
+            PixelMap<float> map(crit.critical_center.x,1000,range/1000);
             map.AddCurve(crit.critcurve,1.0);
             map.printFITS("!orphin_pseudo.fits");
             
-            grid->writeFits(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
+            grid->writeFits<float>(crit.critical_center.x,1000,range/1000,LensingVariable::INVMAG,"!orphin_pseudo");
             map.Clean();
             
             for(auto &critt : crtcurve){
@@ -1080,18 +1081,42 @@ void ImageFinding::find_crit(
     
     //critcurves[i].caustic_curve_outline = Utilities::Geometry::MagicHull(critcurves[i].caustic_curve_intersecting);
 
-    try{
-      critcurves[i].caustic_curve_outline = Utilities::TighterHull( critcurves[i].caustic_curve_intersecting );
-    }catch(...){
+ //   try{
+      critcurves[i].caustic_curve_outline = Utilities::TightestHull( critcurves[i].caustic_curve_intersecting );
+ //   }catch(...){
  //     critcurves[i].caustic_curve_outline =  critcurves[i].caustic_curve_intersecting ;
-      Utilities::RemoveIntersections(critcurves[i].caustic_curve_outline);
-    }
+ //     Utilities::RemoveIntersections(critcurves[i].caustic_curve_outline);
+ //   }
     
     Utilities::windings(critcurves[i].caustic_center,critcurves[i].caustic_curve_outline,&(critcurves[i].caustic_area));
     critcurves[i].caustic_intersections = -1;
     
   }
 
+}
+
+void ImageFinding::find_magnification_contour(
+  Lens &lens
+  ,GridMap &gridmap
+  ,double invmag
+  ,std::vector<std::vector<RAY> > &contour
+  ,std::vector<bool> &hits_boundary
+){
+
+  std::vector<std::vector<Point_2d> > image_plane_contour;
+  gridmap.find_magnification_contour(image_plane_contour,hits_boundary,invmag);
+
+  int n = image_plane_contour.size();
+  contour.resize(n);
+  for(int i = 0 ; i<n ; ++i){
+    int m = image_plane_contour[i].size();
+    contour[i].resize(m);
+    for(int j = 0 ; j<m ; ++j){
+      contour[i][j].x = image_plane_contour[i][j];
+      contour[i][j].z = lens.getSourceZ();
+    }
+    lens.rayshooterInternal(m,contour[i].data());
+  }
 }
 
 /*  This function is not meant for an external user.  It is only used by

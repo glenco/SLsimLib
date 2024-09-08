@@ -263,7 +263,7 @@ public:
    
    */
 
-  PixelMap map_variables(
+  PixelMap<double> map_variables(
                          LensingVariable lensvar /// lensing variable - KAPPA, ALPHA1, ALPHA2, GAMMA1, GAMMA2 or PHI
                          ,size_t Nx
                          ,size_t Ny

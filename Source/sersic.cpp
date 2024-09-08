@@ -7,7 +7,7 @@
 #include "slsimlib.h"
 
 SourceSersic::SourceSersic()
-: SourceColored(0,0,Point_2d(0,0),0,-1,-48.6)
+: SourceColored(0,0,Point_2d(0,0),0,-1,-48.6,Band::NoBand)
 {
   /// set to values that hopefully will cause an error if it is used
   zeropoints[Band::NoBand] = 0;
@@ -22,26 +22,26 @@ SourceSersic::SourceSersic(
               ,double my_index         /// Sersic index
               ,double my_q             /// axes ratio
               ,double my_z             /// redshift
-              ,double my_zeropoint     /// redshift
+              ,Band band               /// band
         )
-: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z, -1,my_zeropoint)
+: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z, -1,band)
 {
   if(my_q > 1) my_q = 1/my_q;
-    sed_type = 1;
-    assert(my_Reff > 0);
-    ReSet(my_mag,Band::NoBand,my_Reff,my_PA,my_index,my_q,my_z,0);
+  sed_type = 1;
+  assert(my_Reff > 0);
+  ReSet(my_mag,band,my_Reff,my_PA,my_index,my_q,my_z,0);
 }
 SourceSersic::SourceSersic(
               double my_mag            /// Total magnitude
-              ,Band band               ///
-              ,double my_zeropoint     /// zeropoint
               ,double my_Reff          /// Bulge half light radius (arcs)
               ,double my_PA            /// Position angle (radians)
               ,double my_index         /// Sersic index
               ,double my_q             /// axes ratio
               ,double my_z             /// redshift
+              ,double my_zeropoint     /// zeropoint
+              ,Band band               /// band
         )
-: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z, -1,my_zeropoint)
+: SourceColored(my_mag,5*my_Reff*arcsecTOradians,Point_2d(0,0),my_z, -1,my_zeropoint,band)
 {
   setMag(my_mag,band,my_zeropoint);
   if(my_q > 1) my_q = 1/my_q;

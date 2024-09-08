@@ -901,18 +901,55 @@ bool TreeStruct::TreeWalkStep(bool allowDescent){
 	return false;
 }*/
 
-void ImageFinding::CriticalCurve::RandomSourceWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng)
-{
-  CausticRange(p1,p2);
-  y.resize(N);
-  for(int ii=0;ii<N;++ii){
-    do{
-      y[ii][0] = (p2[0] - p1[0])*rng() + p1[0];
-      y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
-    }while(!inCausticCurve(y[ii]));
-  }
+void ImageFinding::CriticalCurve::RandomSourcesWithinCaustic(int N,std::vector<Point_2d> &y,Utilities::RandomNumbers_NR &rng){
+  
+  y = Utilities::RandomInPoly(caustic_curve_intersecting,N, rng);
+  
+//  CausticRange(p1,p2);
+//  y.resize(N);
+//  for(int ii=0;ii<N;++ii){
+//    do{
+//      y[ii][0] = (p2[0] - p1[0])*rng() + p1[0];
+//      y[ii][1] = (p2[1] - p1[1])*rng() + p1[1];
+//    }while(!inCausticCurve(y[ii]));
+//  }
 }
 
+Point_2d ImageFinding::CriticalCurve::RandomSourceWithinCaustic(Utilities::RandomNumbers_NR &rng){
+  return Utilities::RandomInPoly(caustic_curve_outline, rng);
+}
+
+void ImageFinding::CriticalCurve::RandomSourcesNearCaustic(double R
+                               ,int N
+                               ,std::vector<Point_2d> &y
+                               ,Utilities::RandomNumbers_NR &rng
+){
+  y = Utilities::RandomNearPoly(caustic_curve_outline,N,R,rng);
+}
+
+Point_2d ImageFinding::CriticalCurve::RandomSourceNearCaustic(double R
+                               ,Utilities::RandomNumbers_NR &rng
+){
+  return Utilities::RandomNearPoly(caustic_curve_outline,R,rng);
+}
+
+double  ImageFinding::CriticalCurve::AreaNearCaustic(double R /// distance in radians
+){
+  std::vector<std::vector<Point_2d> > vv = Utilities::thicken_poly(caustic_curve_outline,R);
+
+  if(vv.size()==0) return 0.0;
+  double area=0;
+  Utilities::windings(vv[0][0], vv[0], &area);
+  area = abs(area);
+  if(vv.size()>1){
+    double tmp=0;
+    for(int i=1 ; i < vv.size() ; ++i){
+      Utilities::windings(vv[i][0], vv[i], &tmp);
+      area = MAX(area,abs(tmp));
+    }
+  }
+  return area;
+}
 
 /**
  *  Returns N source positions which are not overlapping with the caustic lines.
@@ -985,7 +1022,8 @@ std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p)
   return os;
 }
 
-PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+template<typename T>
+PixelMap<T> ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
                                          ,int Nx) {
   
   int i_max = 0,i=0;
@@ -1013,7 +1051,7 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   Point_2d center = (p_max + p_min)/2;
   double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
   
-  PixelMap map(center.x,Nx,range/Nx);
+  PixelMap<T> map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
     map.AddCurve(c.critcurve, int(c.type) + 1);
@@ -1022,7 +1060,8 @@ PixelMap ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Critica
   return map;
 }
 
-PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
+template<typename T>
+PixelMap<T> ImageFinding::mapCausticCurves(const std::vector<ImageFinding::CriticalCurve> &critcurves
                                          ,int Nx) {
   
   int i_max = 0,i=0;
@@ -1049,7 +1088,7 @@ PixelMap ImageFinding::mapCausticCurves(const std::vector<ImageFinding::Critical
   Point_2d center = (p_max + p_min)/2;
   double range = 1.05*MAX(p_max[0]-p_min[0],p_max[1]-p_min[1]);
   
-  PixelMap map(center.x,Nx,range/Nx);
+  PixelMap<T> map(center.x,Nx,range/Nx);
   
   for(auto c : critcurves){
     map.AddCurve(c.caustic_curve_intersecting, int(c.type) + 1);

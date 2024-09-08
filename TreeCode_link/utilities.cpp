@@ -8,6 +8,7 @@
 
 #include "slsimlib.h"
 #include "utilities_slsim.h"
+#include "fftw3.h"
 #include <random>
 #include "fftw3.h"
 
@@ -531,90 +532,23 @@ void powerspectrum2dprebin(
   }
   delete [] fNa;
 }
-  
-std::valarray<double> AdaptiveSmooth(const std::valarray<double> &map_in,size_t Nx,size_t Ny,double value){
-    
-    std::valarray<double> map_out(map_in.size());
-    long r,area;
-    double val;
-    for(long i=0;i<Nx;++i){
-      for(long j=0;j<Ny;++j){
-        r = 0;
-        val = map_in[i+j*Nx];
-        while(val < value && r < std::min(Nx, Ny) ){
-          
-          area = 0;
-          val = 0;
-          long imin,imax,jmin,jmax;
-          
-          imin = (i-r < 0) ? 0 : i-r;
-          imax = (i+r > Nx-1) ? Nx-1 : i+r;
-          
-          jmin = (j-r < 0) ? 0 : j-r;
-          jmax = (j+r > Ny-1) ? Ny-1 : j+r;
-          
-          
-          for(long ii=imin;ii<=imax;++ii){
-            for(long jj=jmin;jj<=jmax;++jj){
-              if( (ii-i)*(ii-i) + (jj-j)*(jj-j) < r){
-                val += map_in[ii+jj*Nx];
-                ++area;
-              }
-            }
-          }
-          ++r;
-        }
-        
-        map_out[i+j*Nx] = val/area;
-      }
-    }
-    
-    return map_out;
-  }
-  /** \brief Smooth a 2 dimensional map stored in a valarray with a density dependent kernel.
-   
-   The smoothing is done by finding the circle around each point whose total pixel values are larger than value.  In the case of a density map made from particles if value = (mass of particle)*(number of neighbours) an approximate N nearest neighbour smoothing is done.
-   The
-   **/
-  std::vector<double> AdaptiveSmooth(const std::vector<double> &map_in,size_t Nx,size_t Ny,double value){
-    
-    std::vector<double> map_out(map_in.size());
-    long r,area;
-    double val;
-    for(long i=0;i<Nx;++i){
-      for(long j=0;j<Ny;++j){
-        r = 0;
-        val = map_in[i+j*Nx];
-        while(val < value && r < std::min(Nx, Ny) ){
-          
-          area = 0;
-          val = 0;
-          long imin,imax,jmin,jmax;
-          
-          imin = (i-r < 0) ? 0 : i-r;
-          imax = (i+r > Nx-1) ? Nx-1 : i+r;
-          
-          jmin = (j-r < 0) ? 0 : j-r;
-          jmax = (j+r > Ny-1) ? Ny-1 : j+r;
-          
-          
-          for(long ii=imin;ii<=imax;++ii){
-            for(long jj=jmin;jj<=jmax;++jj){
-              if( (ii-i)*(ii-i) + (jj-j)*(jj-j) < r){
-                val += map_in[ii+jj*Nx];
-                ++area;
-              }
-            }
-          }
-          ++r;
-        }
-        
-        map_out[i+j*Nx] = val/area;
-      }
-    }
-    
-    return map_out;
-  }
+
+void powerspectrum2dprebin(
+                     std::valarray<float> &aa
+                     ,int nx
+                     ,int ny
+                     ,double boxlx
+                     ,double boxly
+                     ,const std::vector<double> &ll  /// pre-set bins,  one more value than number of bins
+                     ,std::vector<double> &Pl
+                     ,std::vector<double> &llave     /// average value of Fourier node in bins
+                     )
+{
+  size_t n = aa.size();
+  std::valarray<double> dd(n);
+  for(size_t i = 0 ; i<n ; ++i) dd[i] = aa[i];
+  powerspectrum2dprebin(dd,nx,ny,boxlx,boxly,ll,Pl,llave);
+}
 
   int GetNThreads(){return N_THREADS;}
 }
@@ -640,7 +574,7 @@ bool Utilities::IO::make_directories(const std::string &root_dir){
 void Utilities::IO::ReadFileNames(
                    std::string dir              /// path to directory containing fits files
                    ,const std::string filespec /// string of charactors in file name that are matched. It can be an empty string.
-                   ,std::vector<std::string> & filenames  /// output vector of PixelMaps
+                   ,std::vector<std::string> & filenames  /// output vector of file names
                    ,bool verbose){
   
   DIR *dp = opendir( dir.c_str() );
@@ -650,7 +584,7 @@ void Utilities::IO::ReadFileNames(
   
   if (dp == NULL)
   {
-    std::cerr << "Cannot find directory" << std::endl;
+    std::cerr << "Cannot find directory : " << dir << std::endl;
     throw std::runtime_error("error opening directory");
     return;
   }
@@ -1041,6 +975,26 @@ void Utilities::powerspectrum2d(
     delete [] nk;
     delete [] nc;
   }
+
+// this copies the float arrays into double arrays.  It could be better.
+void Utilities::powerspectrum2d(
+                       std::valarray<float> const &aa
+                       ,std::valarray<float> const &bb
+                       ,long nx
+                       ,long ny
+                       ,double boxlx
+                       ,double boxly
+                       ,std::vector<double> &ll
+                       ,std::vector<double> &Pl
+                       ,double zeropaddingfactor
+                                ){
+  size_t n = aa.size();
+  std::valarray<double> ad(n);
+  for(size_t i=0 ; i<n ; ++i) ad[i]= aa[i];
+  std::valarray<double> bd(n);
+  for(size_t i=0 ; i<n ; ++i) bd[i]= bb[i];
+  Utilities::powerspectrum2d(ad,bd,nx,ny,boxlx,boxly,ll,Pl,zeropaddingfactor);
+}
   
   void Utilities::powerspectrum2d(
                        std::valarray<double> &aa
@@ -1130,4 +1084,21 @@ void Utilities::powerspectrum2d(
     }
     delete [] fNa;
   }
+
+// this copies the float arrays into double arrays.  It could be better.
+void Utilities::powerspectrum2d(
+                     std::valarray<float> &aa
+                     ,long nx
+                     ,long ny
+                     ,double boxlx
+                     ,double boxly
+                     ,std::vector<double> &ll
+                     ,std::vector<double> &Pl
+                     )
+{
+  size_t n = aa.size();
+  std::valarray<double> ad(n);
+  for(size_t i=0 ; i<n ; ++i) ad[i]= aa[i];
+  Utilities::powerspectrum2d(ad,nx,ny,boxlx,boxly,ll,Pl);
+}
 

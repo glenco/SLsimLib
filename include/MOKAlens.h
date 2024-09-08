@@ -201,14 +201,22 @@ public:
 	//LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
   LensHaloMassMap(
-                  const PixelMap &MassMap   /// mass map
+                  const PixelMap<double> &MassMap   /// mass map
                   ,double massconvertion    /// convertion factor from pixel units to solar masses
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
                   ,bool my_zeromean         /// if true, subtracts average density
                   ,const COSMOLOGY& lenscosmo  /// cosmology
   );
-  
+  LensHaloMassMap(
+                  const PixelMap<float> &MassMap   /// mass map
+                  ,double massconvertion    /// convertion factor from pixel units to solar masses
+                  ,double redshift          /// redshift of lens
+                  ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
+                  ,bool my_zeromean         /// if true, subtracts average density
+                  ,const COSMOLOGY& lenscosmo  /// cosmology
+  );
+
   /// This makes a uniform rectangular mass sheat
   LensHaloMassMap(double mass           /// total mass in rectangle
                   ,Point_2d center      /// center of rectangle
@@ -263,7 +271,7 @@ public:
 
 	void checkCosmology();
 	
-	void saveImage(bool saveprofile=true);
+	//void saveImage(bool saveprofile=true);
 	//void saveKappaProfile();
 	//void saveGammaProfile();
 	//void saveProfiles(double &RE3, double &xxc, double &yyc);
@@ -278,7 +286,8 @@ public:
 	void getDims();
 	void readMap();
   // set up map from a PixelMap of the surface density
-  void setMap(const PixelMap &inputmap,double convertionfactor,double z);
+  template<typename T>
+  void setMap(const PixelMap<T> &inputmap,double convertionfactor,double z);
 
 	void writeImage(std::string fn);
   

@@ -16,7 +16,7 @@
 #include "simpleTreeVec.h"
 #include "grid_maintenance.h"
 
-
+/*
 struct CausticSummary{
   CausticSummary(){}
   CausticSummary(const CausticSummary &tmp){
@@ -78,7 +78,7 @@ struct CausticSummary{
  *
  *  Information about individual caustics/critical curves are stored in a CausticStructure class that can be obtained
  *  with the [] operator.
- */
+ *
 class CausticDataStore{
   
   /// A class used within CausticDataStore class to store information on a caustic and critical curve pair
@@ -135,17 +135,17 @@ public:
         short type              /// select according to: (1) critical curve area, (2) caustic curve area
         ,double limit = 0.0     /// minimum accepted area
   );
-  
+  */
   /**
    \brief Returns the index for a caustic that is chosen randomly in proportion to area of 
    its critical curve or caustic depending on how init_for_random() was set.
-  */
-#ifdef ENABLE_CLANG
+  *
+
   int RandomLens(Utilities::RandomNumbers &ran){
     if(cummulative_area.size() == 0 ) throw std::runtime_error("CausticDataStore::RandomLens - CausticDataStore::init_for_random() must be set before using this!   You can also not reorder the caustics without reinitializing.");
       return Utilities::locate<double>(cummulative_area,ran()*cummulative_area.back());
   }
-#endif
+
 
   int RandomLens(Utilities::RandomNumbers_NR &ran);
   bool findNearestCrit(PosType *x,long &index);
@@ -174,7 +174,8 @@ private:
   void constructIndexes();
   
 };
+*/
 
-std::ostream &operator<<(std::ostream &os, CausticSummary const &caust);
+//std::ostream &operator<<(std::ostream &os, CausticSummary const &caust);
 
 #endif /* defined(__SLsimLib__causticdata__) */

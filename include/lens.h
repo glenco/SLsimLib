@@ -22,7 +22,7 @@ GLAMER_TEST_USES(LensTest)
  *	The rays are traced through multiple deflections.  On each plane there is a deflection
  *	solver.  An LensHaloAnaNSIE or LensHaloMassMap can be put on one of the planes.  The other planes can be
  *	populated with random field_halos drawn from a mass function or they can be retrieved from an
- *	external catalog.
+ *	extern&al catalog.
  *
  *   Input Parameters (variable names):
  *
@@ -862,26 +862,6 @@ private: /* input */
   /// inverse of the angular screening scale in the tree force calculation
   PosType inv_ang_screening_scale;
   
-  struct MINyFunction{
-     MINyFunction(Lens &mylens,Point_2d y,int sign):lens(mylens),y(y),sign(sign),r2max(0){}
-
-    double operator()(double *x){
-      point.x[0] = x[1];
-      point.x[1] = x[2];
-      lens.rayshooterInternal(1,&point);
-      double r2 = (y[0]-point.image->x[0])*(y[0]-point.image->x[0])
-      + (y[1]-point.image->x[1])*(y[1]-point.image->x[1]);
-      
-      r2max = MAX(r2,r2max);
-      return r2 + r2max*abs(sign - sgn(point.invmag()));
-    }
-    
-    Lens &lens;
-    Point_2d y;
-    int sign;
-    double r2max;
-    LinkedPoint point;
-  };
   /* TO BE DEPRICATED
    Add random halos to the light cone according to standard structure formation theory.  A new realization of the light-cone can be made with Lens::resetFieldHalos() after this function is called once.
    
@@ -896,6 +876,7 @@ private: /* input */
                           ,double buffer = 1.0 /// buffer in Mpc for cone
                           ,bool verbose = false
                 );
+
 
 };
 

@@ -44,6 +44,6 @@
 #include "sourceAnaGalaxy.h"
 #include "overzier_source.h"
 #include "sersic_source.h"
-#include "causticdata.h"
+//#include "causticdata.h"
 
 #endif

@@ -2066,7 +2066,7 @@ int windings(
   {
     return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   }
-  PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B)
+  PosType crossD(const Point_2d &O,const Point_2d &A,const Point_2d &B)
   {
     return (A[0] - O[0]) * (B[1] - O[1]) - (A[1] - O[1]) * (B[0] - O[0]);
   }
@@ -2402,7 +2402,7 @@ std::vector<double *> Utilities::concave_hull(std::vector<double *> &P,int k )
  */
 std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool test )
 {
-  PixelMap *testmap;
+  PixelMap<float> *testmap;
   int nt=0;
   
   
@@ -2435,7 +2435,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
     }
     center[0] = (bound_p2[0] + bound_p1[0])/2;
     center[1] = (bound_p2[1] + bound_p1[1])/2;
-    testmap = new PixelMap(center,512
+    testmap = new PixelMap<float>(center,512
                            ,1.05*MAX((bound_p2[0] - bound_p1[0]),(bound_p2[1] - bound_p1[1]))/512);
     
     testmap->drawPoints(P,0,1.0);
@@ -2584,7 +2584,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
           testmap->printFITS("!test_"+std::to_string(nt)+".fits");
           
           assert(hull[j] != hull[j-1]);
-          PixelMap map(hull.back()->x,512,
+          PixelMap<float> map(hull.back()->x,512,
                        MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
           
           map.drawPoints(P,0,1.0);
@@ -2613,7 +2613,7 @@ std::vector<Point *> Utilities::concave_hull(std::vector<Point *> &P,int k,bool 
             testmap->drawCurve(hull,2.0);
             testmap->printFITS("!test_"+std::to_string(nt)+".fits");
             
-            PixelMap map(Res[ii]->x,512,
+            PixelMap<float> map(Res[ii]->x,512,
                          MAX(fabs(hull[j]->x[0] - hull[j-1]->x[0]),fabs(hull[j]->x[1] - hull[j-1]->x[1]))/5 );
             
             map.drawPoints(P,0,1.0);
@@ -3050,7 +3050,108 @@ bool Utilities::circleOverlapsCurve(const Point_2d &x,double r,const std::vector
   return Utilities::circleIntersetsCurve(x,r,v);
 }
 
-std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
+std::vector<std::vector<Point_2d> > Utilities::thicken_poly(
+                                const std::vector<Point_2d> &v
+                                ,double R){
+  
+  std::vector<std::vector<Point_2d> > output;
+  if(v.size() == 0) return output;
+  if(R <= 0){
+    output.push_back(v);
+    return output;
+  }
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  
+  double resolution=R/10,f=1.2;
+  double caustic_size = MIN(ur[0]-ll[0],ur[1]-ll[1]);
+  
+  //resolution = MAX(resolution,caustic_size/100);
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  long nv = v.size();
+  
+  if(nx > 500 || ny > 500){
+    output.resize(2);
+    output[0].resize(2*nv);
+    output[1].resize(2*nv);
+    for(long i=0 ; i<nv ; ++i){
+      Point_2d d = v[ (i+1)%nv ] - v[i];
+      d *= R/d.length();
+      std::swap(d[0],d[1]);
+      d[0] *= -1;
+      
+      Point_2d x = (v[ (i+1)%nv ] - v[i])*0.1  + v[i];
+      output[0][2*i] = x + d;
+      output[1][2*i] = x - d;
+      
+      x = (v[ (i+1)%nv ] - v[i])*0.9  + v[i];
+      output[0][2*i + 1] = x + d;
+      output[1][2*i + 1] = x - d;
+ 
+    }
+    
+  }else{
+    
+    bool too_small = true;
+    while(too_small ){
+      too_small= false;
+      ll[0] -= f*R;
+      ll[1] -= f*R;
+      ur[0] += f*R;
+      ur[1] += f*R;
+      
+      nx = (ur[0]-ll[0])/resolution;
+      ny = (ur[1]-ll[1])/resolution;
+      
+      long count=0;
+      Point_2d p = ll;
+      std::vector<bool> bitmap(nx*ny,false);
+      for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+        p[0] = ll[0];
+        for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+          long m = i + nx*j;
+          for(long k=0 ; k < nv ; ++k){
+            if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ]) ){
+              bitmap[m] = true;
+              ++count;
+              break;
+            }
+          }
+        }
+      }
+      
+      std::vector<bool> hits_edge;
+      Utilities::find_boundaries(bitmap,nx,output,hits_edge);
+      // check that it doesn't touch an edge
+      for(bool a : hits_edge){
+        if(a){
+          too_small = true;
+          f *= 1.5;
+        }
+      }
+      
+    }
+    
+    // rescale
+    for(int i = 0 ; i<output.size() ; ++i){
+      for(Point_2d &p : output[i]) p = ll + p * resolution;
+    }
+  }
+  return output;
+}
+
+std::vector<Point_2d> Utilities::envelope2(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
   
   size_t nv = v.size();
@@ -3105,10 +3206,150 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   try{
     return Utilities::TighterHull(curve);
   }catch(...){
-    std::vector<Point_2d> v_out;
-    Utilities::convex_hull(curve,v_out);
-    return v_out;
+    return Utilities::convex_hull(curve);
   }
+}
+
+std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
+                               ,const std::vector<Point_2d> &w){
+  
+  size_t nv = v.size();
+  size_t nw = w.size();
+  //std::cout << nv << " " << nw << std::endl;
+  if(nv<3) return w;
+  if(nw<3) return v;
+  
+  Utilities::Geometry::CYCLIC cycv(nv);
+  Utilities::Geometry::CYCLIC cycw(nw);
+  Point_2d inter_p;
+  
+  bool intersecting = false;
+  // check if they intersect
+  long i,j;
+  for(i=0; i<nv && !intersecting ; ++i){
+    for(j=0; j<nw && !intersecting ; ++j){
+      if(Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
+                                        ,w[j].x,w[ cycw[j+1] ].x))
+        intersecting = true;
+        inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
+                        ,w[j].x,w[ cycw[j+1] ].x);
+    }
+  }
+  
+  if(intersecting == false){
+    if( Utilities::inCurve<Point_2d>(w[0],v)){
+      return v;
+    }
+    
+    if( Utilities::inCurve<Point_2d>(v[0],w)){
+      return w;
+    }
+
+    // case where they do not overlap
+    return std::vector<Point_2d>(0);
+  }
+  
+  // this is basicly TightestHull but using the segments of both curves
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  for(const Point_2d &p : w){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+
+  std::vector<Point_2d> output;
+  double resolution =  MIN(ur[0]-ll[0],ur[1]-ll[1]) /100;
+  if(resolution==0){
+    output.push_back(ll);
+    output.push_back(ur);
+    return output;
+  }
+    
+  double R = resolution*sqrt(2);
+  
+  ll[0] -= R;
+  ll[1] -= R;
+  ur[0] += R;
+  ur[1] += R;
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  
+  long count=0;
+  Point_2d p = ll;
+  std::vector<bool> bitmap(nx*ny,false);
+  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+    p[0] = ll[0];
+    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+      long m = i + nx*j;
+      
+      for(long k=0 ; k < nv ; ++k){
+        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+      if( bitmap[m] == false){
+        for(long k=0 ; k < nw ; ++k){
+          if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
+            bitmap[m] = true;
+            ++count;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  if(count > 0){
+    std::vector<std::vector<Point_2d> > envelopes;
+    std::vector<bool> hits_edge;
+    
+    Utilities::find_boundaries(bitmap,nx,envelopes,hits_edge,false,true);
+    
+    for(Point_2d &p : envelopes[0]) p = ll + p * resolution;
+    
+    size_t n = envelopes[0].size();
+    output.resize(n);
+    Point_2d p,closest_point;
+    double min_d,tmp_d;
+    for(long i=0 ; i<n ; ++i){
+      
+      min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
+      
+      for(long k=1 ; k < nv ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],v[k],v[(k+1)%nv],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      for(long k=0 ; k < nw ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],w[k],w[(k+1)%nw],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      
+      output[i] = closest_point;
+    }
+  }
+  
+  return output;
 }
 
 std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
@@ -3353,3 +3594,256 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   return env;
 }
 
+
+std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
+  
+  
+  if(v.size() <= 3) return v;
+  
+  // find bounding box
+  Point_2d ll,ur;
+  ll = ur = v[0];
+  for(const Point_2d &p : v){
+    ll[0] = MIN(p[0],ll[0]);
+    ll[1] = MIN(p[1],ll[1]);
+    
+    ur[0] = MAX(p[0],ur[0]);
+    ur[1] = MAX(p[1],ur[1]);
+  }
+  
+  std::vector<Point_2d> output;
+  double resolution =  MIN(ur[0]-ll[0],ur[1]-ll[1]) /100;
+  if(resolution==0){
+    output.push_back(ll);
+    output.push_back(ur);
+    return output;
+  }
+    
+  double R = resolution*sqrt(2);
+  
+  ll[0] -= R;
+  ll[1] -= R;
+  ur[0] += R;
+  ur[1] += R;
+  
+  long nx = (ur[0]-ll[0])/resolution;
+  long ny = (ur[1]-ll[1])/resolution;
+  long nv = v.size();
+  
+  long count=0;
+  Point_2d p = ll;
+  std::vector<bool> bitmap(nx*ny,false);
+  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+    p[0] = ll[0];
+    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+      long m = i + nx*j;
+      
+      for(long k=0 ; k < nv ; ++k){
+        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+    }
+  }
+  
+  if(count > 0){
+    std::vector<std::vector<Point_2d> > envelopes;
+    std::vector<bool> hits_edge;
+    
+    Utilities::find_boundaries(bitmap,nx,envelopes,hits_edge,false,true);
+    
+    for(Point_2d &p : envelopes[0]) p = ll + p * resolution;
+    
+    size_t n = envelopes[0].size();
+    output.resize(n);
+    Point_2d p,closest_point;
+    double min_d,tmp_d;
+    for(long i=0 ; i<n ; ++i){
+      
+      min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
+      
+      for(long k=1 ; k < nv ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],v[k],v[(k+1)%nv],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+      
+      output[i] = closest_point;
+    }
+  }
+  return output;
+}
+
+Point_2d Utilities::RandomInTriangle(const Point_2d &x1,
+                                     const Point_2d &x2,
+                                     const Point_2d &x3,
+                                     Utilities::RandomNumbers_NR &ran
+                                     ){
+  double u1=ran(),u2=ran();
+  if(u1+u2 > 1){
+    u1=1-u1;
+    u2=1-u2;
+  }
+   
+  return x1*u1 + x2*u2 + x3*(1-u1-u2);
+}
+
+Point_2d Utilities::RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                                     Utilities::RandomNumbers_NR &ran
+               ){
+  assert(pp.size() >0);
+  int n=pp.size();
+  if(n==2){
+    return pp[0] + (pp[1]-pp[0])*ran();
+  }else if(n==3){
+    return RandomInTriangle(pp[0],pp[1],pp[2],ran);
+  }
+  std::vector<double> areas(n-1,0);
+  for(int i=1 ; i<n-1 ; ++i){
+    areas[i] =  areas[i-1] + abs( (pp[i]-pp[0])^(pp[i+1]-pp[0]) );
+  }
+  double tmp = ran()*areas.back();
+  
+  int i=1;
+  while(tmp > areas[i]) ++i;
+  
+  assert(i<n-1);
+  return RandomInTriangle(pp[i],pp[i+1],pp[0],ran);
+}
+
+std::vector<Point_2d> Utilities::RandomInConvexPoly(const std::vector<Point_2d> &pp,
+                                                    int N,
+                                                    Utilities::RandomNumbers_NR &ran
+               ){
+  assert(pp.size() >0);
+  std::vector<Point_2d> output(N);
+  int n=pp.size();
+  if(n==2){
+    for(Point_2d &p : output) p = pp[0] + (pp[1]-pp[0])*ran();
+    return output;
+  }else if(n==3){
+    for(Point_2d &p : output) p =  RandomInTriangle(pp[0],pp[1],pp[2],ran);
+    return output;
+  }
+  std::vector<double> areas(n-1,0);
+  for(int i=1 ; i<n-1 ; ++i){
+    areas[i] =  areas[i-1] + abs( (pp[i]-pp[0])^(pp[i+1]-pp[0]) );
+  }
+  for(Point_2d &p : output){
+    double tmp = ran()*areas.back();
+  
+    int i=1;
+    while(tmp > areas[i]) ++i;
+  
+    assert(i<n-1);
+    p = RandomInTriangle(pp[i],pp[i+1],pp[0],ran);
+  }
+  return output;
+}
+
+Point_2d Utilities::RandomInPoly(std::vector<Point_2d> &pp,
+                                Utilities::RandomNumbers_NR &ran
+               ){
+  assert(pp.size() >0);
+  int n=pp.size();
+  if(n==2){
+    return pp[0] + (pp[1]-pp[0])*ran();
+  }else if(n==3){
+    return RandomInTriangle(pp[0],pp[1],pp[2],ran);
+  }
+  
+  std::vector<Point_2d> hull = convex_hull(pp);
+  
+  n=hull.size();
+  std::vector<double> areas(n-1,0);
+  for(int i=1 ; i<n-1 ; ++i){
+    areas[i] =  areas[i-1] + abs( (hull[i]-hull[0])^(hull[i+1]-hull[0]) );
+  }
+  
+  Point_2d p;
+  do{
+    double tmp = ran()*areas.back();
+  
+    int i=1;
+    while(tmp > areas[i]) ++i;
+  
+    assert(i<n-1);
+    p = RandomInTriangle(hull[i],hull[i+1],hull[0],ran);
+  }while( !inCurve(p,pp) );
+         
+  return p;
+}
+
+std::vector<Point_2d> Utilities::RandomInPoly(std::vector<Point_2d> &pp,
+                                              int N,
+                                              Utilities::RandomNumbers_NR &ran
+               ){
+  assert(pp.size() >0);
+  std::vector<Point_2d> output(N);
+  int n=pp.size();
+  if(n==2){
+    for(Point_2d &p : output) p = pp[0] + (pp[1]-pp[0])*ran();
+    return output;
+  }else if(n==3){
+    for(Point_2d &p : output) p =  RandomInTriangle(pp[0],pp[1],pp[2],ran);
+    return output;
+  }
+  
+  std::vector<Point_2d> hull = convex_hull(pp);
+  
+  n=hull.size();
+  std::vector<double> areas(n-1,0);
+  for(int i=1 ; i<n-1 ; ++i){
+    areas[i] =  areas[i-1] + abs( (hull[i]-hull[0])^(hull[i+1]-hull[0]) );
+  }
+  
+  for(Point_2d &p : output){
+    do{
+      double tmp = ran()*areas.back();
+      
+      int i=1;
+      while(tmp > areas[i]) ++i;
+      
+      assert(i<n-1);
+      p = RandomInTriangle(hull[i],hull[i+1],hull[0],ran);
+    }while( !inCurve(p,pp) );
+  }
+  return output;
+}
+
+Point_2d Utilities::RandomNearPoly(std::vector<Point_2d> &pp,
+                                   double R,
+                                   Utilities::RandomNumbers_NR &ran
+               ){
+  Point_2d p = RandomInPoly(pp,ran);
+  
+  double r = R*sqrt(ran());
+  double theta = 2*PI*ran();
+  
+  p[0] = p[0] + r*cos(theta);
+  p[1] = p[1] + r*sin(theta);
+  
+  return p;
+}
+
+std::vector<Point_2d> Utilities::RandomNearPoly(std::vector<Point_2d> &pp,
+                                               int N,
+                                               double R,
+                                              Utilities::RandomNumbers_NR &ran
+                                             ){
+  std::vector<Point_2d> ps = RandomInPoly(pp,N,ran);
+  
+  for(Point_2d &p : ps){
+    double r = R*sqrt(ran());
+    double theta = 2*PI*ran();
+    
+    p[0] = p[0] + r*cos(theta);
+    p[1] = p[1] + r*sin(theta);
+  }
+  
+  return ps;
+}

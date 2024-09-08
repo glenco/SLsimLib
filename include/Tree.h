@@ -473,7 +473,7 @@ bool yorder(Point *p1,Point *p2);
 
 PosType cross(const Point *O, const Point *A, const Point *B);
 PosType crossD(const double *O, const double *A, const double *B);
-PosType crossD(Point_2d &O,Point_2d &A,Point_2d &B);
+PosType crossD(const Point_2d &O,const Point_2d &A,const Point_2d &B);
 
 std::vector<Point *> convex_hull(std::vector<Point *> &P);
 std::vector<double *> convex_hull(std::vector<double *> &P);
