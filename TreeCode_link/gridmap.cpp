@@ -509,7 +509,6 @@ void GridMap::find_magnification_contour(
   std::vector<std::vector<long> > indexes;
   if(count>0){
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,false);
-    //Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
   }
   // rescale from pixel units to those of grid
   double resolution = getResolution();
@@ -517,6 +516,9 @@ void GridMap::find_magnification_contour(
     for(Point_2d &p : curves[i]) p = p * resolution + i_points[0];
   }
 }
+
+
+
 
 void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
                ,std::vector<bool> &hits_boundary
@@ -1089,17 +1091,16 @@ void GridMap::_find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RA
   //auto itr = rays.begin();
   for(long k=0 ; k<Nys ; ++k){
     find_images(ys[k],x,triangles);
-    rays.emplace_back();
-    RAY &ray = rays.back();
     multiplicity[k] = x.size();
     for(int i=0 ; i < x.size() ; ++i){
-      ray.x=x[i];
-      ray.y = ys[k];
-      ray.A *= 0;
+      rays.emplace_back();
+      rays.back().x = x[i];
+      rays.back().y = ys[k];
+      rays.back().A *= 0;
       for(int j=0 ; j<3 ; ++j){
-        ray.A = ray.A  + i_points[triangles[i][j]].A;
+        rays.back().A = rays.back().A  + i_points[triangles[i][j]].A;
       }
-      ray.A /= 3;
+      rays.back().A /= 3;
     }
   }
   
