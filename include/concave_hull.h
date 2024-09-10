@@ -65,7 +65,7 @@ size_t RemoveIntersections(std::vector<T> &curve){
 ///  Will fail if there are overlapping segments on the hull.
 std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 
-///Finds a concave envolope for an arbitrary closed curve.  This is done by gridding and then finding points that are withing a sertain distance of a segment of the curve.  The outer bounding curve is found and then the cuve is shrunck to the closest point on a segment.  This should be fool proof, but is relatively slow and might clip some points.
+///Finds a concave envelope for an arbitrary closed curve.  This is done by gridding and then finding points that are withing a sertain distance of a segment of the curve.  The outer bounding curve is found and then the cuve is shrunck to the closest point on a segment.  This should be fool proof, but is relatively slow and might clip some points.
 std::vector<Point_2d> TightestHull(const std::vector<Point_2d> &v);
 
 //template <typename T>
@@ -990,6 +990,10 @@ double distance_to_segment(const Ptype &P
   
   Ptype D = S2-S1;
   double s = (P-S1)*D / D.length_sqr();
+  if(isnan(s)){
+    closest_point = S1;
+    return (P-S1).length();
+  }
   if(s<=0){
     closest_point = S1;
     return (P-S1).length();

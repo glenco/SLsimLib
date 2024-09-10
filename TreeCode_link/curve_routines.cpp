@@ -3324,12 +3324,15 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
     
     size_t n = envelopes[0].size();
     output.resize(n);
-    Point_2d p,closest_point;
+    
     double min_d,tmp_d;
     for(long i=0 ; i<n ; ++i){
       
-      min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
-      
+      Point_2d p,closest_point;
+      double min_d = Utilities::distance_to_segment(envelopes[0][i],v[0],v[1],closest_point);
+      //assert(!isnan(closest_point[0]));
+      //assert(!isnan(closest_point[1]));
+
       for(long k=1 ; k < nv ; ++k){
         tmp_d = Utilities::distance_to_segment(envelopes[0][i],v[k],v[(k+1)%nv],p);
         if(tmp_d<min_d){
@@ -3337,15 +3340,10 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
           closest_point = p;
         }
       }
-      for(long k=0 ; k < nw ; ++k){
-        tmp_d = Utilities::distance_to_segment(envelopes[0][i],w[k],w[(k+1)%nw],p);
-        if(tmp_d<min_d){
-          min_d=tmp_d;
-          closest_point = p;
-        }
-      }
       
       output[i] = closest_point;
+      //assert(!isnan(output[i][0]));
+      //assert(!isnan(output[i][1]));
     }
   }
   
