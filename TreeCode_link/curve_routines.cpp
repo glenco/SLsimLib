@@ -3341,6 +3341,15 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
         }
       }
       
+      for(long k=0 ; k < nw ; ++k){
+        tmp_d = Utilities::distance_to_segment(envelopes[0][i],w[k],w[(k+1)%nw],p);
+        if(tmp_d<min_d){
+          min_d=tmp_d;
+          closest_point = p;
+        }
+      }
+
+      
       output[i] = closest_point;
       //assert(!isnan(output[i][0]));
       //assert(!isnan(output[i][1]));
