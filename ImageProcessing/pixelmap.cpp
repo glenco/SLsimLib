@@ -397,6 +397,7 @@ PixelMap<T> PixelMap<T>::interpolate(int n){
   size_t nx = n*(Nx-1)+1,ny = n*(Ny-1)+1;
   //size_t nx = n*Nx,ny = n*Ny;
   PixelMap new_map(center,nx,ny,resolution/n);
+  new_map.units = units;
   
   long nn=n*n;
   //long off = (1+nx)*(n-1)/2;
