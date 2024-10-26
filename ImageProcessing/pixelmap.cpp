@@ -38,7 +38,7 @@ Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), 
   map_boundary_p2[0] = other.map_boundary_p2[0];
   map_boundary_p2[1] = other.map_boundary_p2[1];
 }
-
+/*
 template<>
 template<>
 PixelMap<float>::PixelMap(const PixelMap<double>& other):
@@ -57,7 +57,7 @@ Nx(other.getNx()), Ny(other.getNy()), resolution(other.getResolution())
   map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
   map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
 }
-
+*/
 // move constructor
 template <typename T>
 PixelMap<T>::PixelMap(PixelMap&& other)
@@ -137,6 +137,7 @@ PixelMap<T>::PixelMap(
                    std::string fitsfilename   /// file name of fits file to be read
                     ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
                    ,PixelMapUnits u
+                   ,std::string extension  /// fits extension 1,2,,...
 ):units(u)
 {
   
@@ -151,7 +152,8 @@ PixelMap<T>::PixelMap(
 
   std::vector<long> cpsize;
   
-  CPFITS_READ cpfits(fitsfilename);
+  CPFITS_READ cpfits(fitsfilename,extension);
+  
   //int bitpix;
   cpfits.imageDimensions(cpsize);
   
