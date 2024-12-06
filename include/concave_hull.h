@@ -1022,36 +1022,30 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
   return true;
 }
 
+/// @brief returns true if x is within the polygon H
 template <typename Ptype>
 bool inCurve(const Ptype &x,const std::vector<Ptype> &H){
-  
-  size_t n = H.size();
-  if(n <=2) return false;
+  Point_2d<double> p1,p2;
   long w=0;
-  Ptype dH,dD;
-  double B,A;
-  for(size_t i=0 ; i<n-1 ; ++i){
-    dH = H[i+1]-H[i];
-    if(dH[1] == 0){  // // horizontal segment
-      if(x[1] == H[i][1]){
-        B = (x[0]-H[i][0])/dH[0];
-        if( B>=0 && B<=1 ) return true;  // point on boundary
-      }
-    }else{
-      dD = x-H[i];
-      A = dD[1]/dH[1];
-      if( A > 1 || A <= 0) continue;
-      B = (dH^dD)/dH[1];
-      if(B==0){               // on the boundary
-        return true;          // boundaries are always in
-      }else if(B>0){
-        if(dH[1] > 0) ++w;
-        else --w;
+  for(size_t i=0 ; i<n ; ++i){
+    size_t j = (i+1)%n;
+    if(H[j][1] != H[i][1]){ // ignore horizontal segments
+      p1 = H[i] - x;
+      p2 = H[j] - x;
+      if( p1[1]*p2[1] <= 0 && p2[1] != 0 ){
+        if(p1[0]>=0 && p2[0]>0){
+          w += 2*( p1[1] >= 0 ) - 1;
+        }else if(p1[0] >= 0 || p2[0] > 0){
+          double s = p1[0] - (p2[0]-p1[0])*p1[1]/(p2[1]-p1[1]);
+          if(s >= 0){
+            w += 2*( p1[1] >= 0 ) - 1;
+          }
+        }
       }
     }
   }
   
-  return w;
+  return w != 0;
 }
 
 template <typename Ptype>
