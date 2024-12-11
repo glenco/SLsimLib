@@ -201,7 +201,7 @@ class SymmetricMatrix{
   int n;
   int m;
 public:
-  SymmetricMatrix(size_t n):n(n){
+  SymmetricMatrix(int n):n(n){
     v.resize(n*(n+1)/2);
     m = 2*n-1;
   }
@@ -1779,15 +1779,15 @@ int ReadCSVnumerical1(std::string filename                              /// file
         cell = line.substr(n,m-n);
         /// clean blank spaces
         cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
-        if (cell.size() > 0){
-          for(char c : cell){
-            if(std::isdigit(c) == false){
-              std::cerr << "In file " << filename << " column -" << column_names[i]
-              << "- appears not to be numeric." << std::endl;
-              throw (-1);
-            }
-          }
-        }/*else{
+        //if (cell.size() > 0){
+          //for(char c : cell){
+        //    if(std::isdigit(cell[0]) == false){
+        //      std::cerr << "In file " << filename << " column -" << column_names[i]
+        //      << "- appears not to be numeric." << std::endl;
+        //      throw (-1);
+        //    }
+          //}
+        /*}/*else{
           std::cout << "In file " << filename << " column -" << column_names[i]
           << "- is empty." << std::endl;
           throw (-1);
