@@ -1025,7 +1025,8 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
 /// @brief returns true if x is within the polygon H
 template <typename Ptype>
 bool inCurve(const Ptype &x,const std::vector<Ptype> &H){
-  Point_2d<double> p1,p2;
+  Point_2d p1,p2;
+  long n=H.size();
   long w=0;
   for(size_t i=0 ; i<n ; ++i){
     size_t j = (i+1)%n;
