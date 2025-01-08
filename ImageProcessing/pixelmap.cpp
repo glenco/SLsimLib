@@ -967,7 +967,7 @@ bool  PixelMap<T>::incurve(long k,std::vector<Point_2d> &curve) const{
   for(Point_2d &p : curve){
     if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
   }
-  
+
   return n%2 == 1;
 }
 

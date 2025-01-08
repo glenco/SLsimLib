@@ -370,11 +370,6 @@ bool onSegment(const PosType p[], const PosType q[], const PosType r[]);
 
 /// returns the angle between two 2 dimensional vectors in radians.
 double AngleBetween2d(double v1[],double v2[]);
-/**   \brief returns 1 if it is in the curve and 0 if it is out.  Borders count as in.
- *
- *  This is faster than the windings() functions which also calulate the area
- */
-//int incurve(PosType x[],std::vector<double *> &curve);
 
 }
 }
