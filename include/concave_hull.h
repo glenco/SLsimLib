@@ -1025,26 +1025,44 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
 /// @brief returns true if x is within the polygon H
 template <typename Ptype>
 bool inCurve(const Ptype &x,const std::vector<Ptype> &H){
-  Point_2d<double> p1,p2;
+  if(H.size() < 3);
+  Point_2d p1,p2;
   long w=0;
+  size_t n=H.size();
   for(size_t i=0 ; i<n ; ++i){
     size_t j = (i+1)%n;
     if(H[j][1] != H[i][1]){ // ignore horizontal segments
-      p1 = H[i] - x;
-      p2 = H[j] - x;
-      if( p1[1]*p2[1] <= 0 && p2[1] != 0 ){
-        if(p1[0]>=0 && p2[0]>0){
+      p1[1] = H[i][1] - x[1];
+      p2[1] = H[j][1] - x[1];
+      if( p1[1]*p2[1] < 0  ){
+        p1[0] = H[i][0] - x[0];
+        p2[0] = H[j][0] - x[0];
+
+        if(p1[0]>=0 && p2[0]>=0){
           w += 2*( p1[1] >= 0 ) - 1;
-        }else if(p1[0] >= 0 || p2[0] > 0){
+        }else if(p1[0] > 0 || p2[0] > 0){
           double s = p1[0] - (p2[0]-p1[0])*p1[1]/(p2[1]-p1[1]);
           if(s >= 0){
             w += 2*( p1[1] >= 0 ) - 1;
           }
         }
+      }else if(p2[1]==0){  // second point on lines
+        p2[0] = H[j][0] - x[0];
+        // this needs to be handled separately because of the 
+        // possibility that the curve touches the line a one vertex 
+        // but does not cross it.
+        if(p2[0] >= 0){
+
+          size_t k = (j+1)%n;
+          while( H[k][1] - x[1] == 0 && k!=i) k = (k+1)%n;
+
+          if(k!=i && p1[1]*( H[k][1] - x[1] ) <= 0){
+            w +=  2*( p1[1] >= 0 ) - 1;
+          }
+        }
       }
     }
   }
-  
   return w != 0;
 }
 

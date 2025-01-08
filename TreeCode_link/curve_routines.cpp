@@ -3539,10 +3539,10 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
     
   double R = resolution*sqrt(2);
   
-  ll[0] -= R;
-  ll[1] -= R;
-  ur[0] += R;
-  ur[1] += R;
+  ll[0] -= 2*R;
+  ll[1] -= 2*R;
+  ur[0] += 2*R;
+  ur[1] += 2*R;
   
   long nx = (ur[0]-ll[0])/resolution;
   long ny = (ur[1]-ll[1])/resolution;
