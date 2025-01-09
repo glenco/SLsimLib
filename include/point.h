@@ -164,6 +164,13 @@ struct Point_2d{
     x[0] /= s;
     x[1] /= s;
   }
+
+  /// rescale to make a unit length vector
+  Point_2d unit() const {
+    PosType s = length();
+    return Point_2d(x[0]/s,x[1]/s);
+  }
+
   
   // returns a pointer to the position
   PosType* data(){return x;}
@@ -1000,6 +1007,11 @@ struct Point_3d{
     x[0] /= s;
     x[1] /= s;
     x[2] /= s;
+  }
+
+  Point_3d<T> unit() const {
+    PosType s = length();
+    return Point_3d<T>(x[0]/s,x[1]/s,x[2]/s);
   }
   
   /// returns the unit vector in the direction of the right handed spherical coordinate Phi

@@ -56,6 +56,21 @@ public:
     return (r==p.r)*(theta==p.theta)*(phi==p.phi);
   }
   
+  SphericalPoint operator*(T a){
+    SphericalPoint<T> p = *this;
+    p.r *= a;
+    return p;
+  }
+  
+  SphericalPoint & operator*=(T a){
+    r *= a;
+    return *this;
+  }
+  
+  /// dot product
+  T operator*(const SphericalPoint<T> &p){
+    return r * p.r * ( cos(theta)*cos(p.theta)*cos(phi-p.phi) + sin(theta)*sin(p.theta) );
+  }
   
   T r;
   T theta;
@@ -90,9 +105,9 @@ public:
   }
   
   /// unit vector in phi direction
-  Point_3d<T> unitPhi();
+  Point_3d<T> unitPhi(){return phi_hat();};
   /// unit vector in theta direction
-  Point_3d<T> unitTheta();
+  Point_3d<T> unitTheta(){return theta_hat();};
   
   /// the angle between the orthographic x-axis  and the constant theta curve
   T OrthographicAngleTheta(const SphericalPoint &central);
@@ -101,22 +116,12 @@ public:
   
   // returns the unit theta vector
   Point_3d<T> theta_hat() const{
-    Point_3d<T> p;
-    p[0] = -sin(theta)*cos(phi);
-    p[1] = -sin(theta)*sin(phi);
-    p[2] = cos(theta);
-    
-    return p;
+    return Point_3d<T>(-cos(phi)*sin(theta),-sin(theta)*sin(phi),cos(theta));
   }
   
   // returns the unit phi vector
   Point_3d<T> phi_hat() const{
-    Point_3d<T> p;
-    p[0] = -sin(phi);
-    p[1] =  cos(phi);
-    p[2] = 0;
-    
-    return p;
+    return Point_3d<T>(-sin(phi),cos(phi),0);
   }
   
 };
@@ -556,16 +561,6 @@ SphericalPoint<T> SphericalPoint<T>::InverseOrthographicProjection(
                           - x[1]*sin(theta)*sin(c) );
   
   return SphericalPoint<T>(1,new_theta,new_phi);
-}
-
-template <typename T>
-Point_3d<T> SphericalPoint<T>::unitPhi(){
-  return Point_3d<T>(-sin(phi),cos(phi),0);
-}
-
-template <typename T>
-Point_3d<T> SphericalPoint<T>::unitTheta(){
-  return Point_3d<T>(-cos(phi)*sin(theta),-sin(theta)*sin(phi),cos(theta));
 }
 
 ///  3 dimensional distance between points
