@@ -1866,93 +1866,6 @@ int windings(
       return wn;
     }
   
-//  int incurve(PosType x[],std::vector<Point *> &curve){
-//    
-//    if(curve.size() < 3) return 0;
-//    
-//    int number = 0;
-//    size_t i;
-//    
-//    // The reason this does not return the winding number is because horizontal
-//    //  sections of the curve can be overcounted if they are colinear with x
-//    
-//    Point point;
-//    for(i=0;i<curve.size()-1;++i){
-//      
-//      if( (x[1] >= curve[i]->x[1])*(x[1] <= curve[i+1]->x[1]) ){
-//        if(Utilities::Geometry::orientation(curve[i]->x, x, curve[i+1]->x) <= 1) ++number;
-//      }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[i+1]->x[1]) ){
-//        if(Utilities::Geometry::orientation(curve[i]->x, x, curve[i+1]->x) == 2) --number;
-//      }
-//      
-//    }
-//    
-//    if( (x[1] >= curve[i]->x[1])*(x[1] <= curve[0]->x[1]) ){
-//      if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) <= 1) ++number;
-//    }else if( (x[1] <= curve[i]->x[1])*(x[1] > curve[0]->x[1]) ){
-//      if(Utilities::Geometry::orientation(curve[i]->x, x, curve[0]->x) == 2) --number;
-//    }
-//    
-//    return number == 0 ? 0 : 1;
-//  }
-//  int incurve(PosType x[],std::vector<Point_2d> &curve){
-//
-//    if(curve.size() < 3) return 0;
-//
-//    int number = 0;
-//    size_t i;
-//
-//    // The reason this does not return the winding number is because horizontal
-//    //  sections of the curve can be overcounted if they are colinear with x
-//
-//    Point point;
-//    for(i=0;i<curve.size()-1;++i){
-//
-//      if( (x[1] >= curve[i][1])*(x[1] <= curve[i+1][1]) ){
-//        if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) <= 1) ++number;
-//      }else if( (x[1] <= curve[i][1])*(x[1] > curve[i+1][1]) ){
-//        if(Utilities::Geometry::orientation(curve[i].x, x, curve[i+1].x) == 2) --number;
-//      }
-//
-//    }
-//
-//    if( (x[1] >= curve[i][1])*(x[1] <= curve[0][1]) ){
-//      if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) <= 1) ++number;
-//    }else if( (x[1] <= curve[i][1])*(x[1] > curve[0][1]) ){
-//      if(Utilities::Geometry::orientation(curve[i].x, x, curve[0].x) == 2) --number;
-//    }
-//
-//    return number == 0 ? 0 : 1;
-//  }
-//
-//  // in the critical curve, not the caustic
-//int incurve(PosType x[],std::vector<RAY> &curve){
-//
-//  if(curve.size() < 3) return 0;
-//
-//  int number = 0;
-//  size_t i;
-//
-//  // The reason this does not return the winding number is because horizontal
-//  //  sections of the curve can be overcounted if they are colinear with x
-//  for(i=0;i<curve.size()-1;++i){
-//    
-//    if( (x[1] >= curve[i].x[1])*(x[1] <= curve[i+1].x[1]) ){
-//      if(Utilities::Geometry::orientation(curve[i].x.x, x, curve[i+1].x.x) <= 1) ++number;
-//    }else if( (x[1] <= curve[i].x[1])*(x[1] > curve[i+1].x[1]) ){
-//      if(Utilities::Geometry::orientation(curve[i].x.x, x, curve[i+1].x.x) == 2) --number;
-//    }
-//
-//  }
-//
-//  if( (x[1] >= curve[i].x[1])*(x[1] <= curve[0].x[1]) ){
-//    if(Utilities::Geometry::orientation(curve[i].x.x, x, curve[0].x.x) <= 1) ++number;
-//  }else if( (x[1] <= curve[i].x[1])*(x[1] > curve[0].x[1]) ){
-//    if(Utilities::Geometry::orientation(curve[i].x.x, x, curve[0].x.x) == 2) --number;
-//  }
-//
-//  return number == 0 ? 0 : 1;
-//}
 
   /**
    * writes in four files the critical curves and the caustics for all the curves found and also for a
@@ -3604,8 +3517,6 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
 
 
 std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
-  
-  
   if(v.size() <= 3) return v;
   
   // find bounding box
@@ -3629,10 +3540,10 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
     
   double R = resolution*sqrt(2.5);
   
-  ll[0] -= R;
-  ll[1] -= R;
-  ur[0] += R;
-  ur[1] += R;
+  ll[0] -= 2*R;
+  ll[1] -= 2*R;
+  ur[0] += 2*R;
+  ur[1] += 2*R;
   
   long nx = (ur[0]-ll[0])/resolution;
   long ny = (ur[1]-ll[1])/resolution;

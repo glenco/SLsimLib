@@ -908,7 +908,9 @@ void PixelMap<T>::find_islands_holes(T level,
   size_t m=0;
   for(size_t k=0 ; k<n ; ++k){
     for(int i=0 ; i<boundaries.size() ; ++i){
-      if( incurve(points_in[k],boundaries[i]) ){
+      //if( incurve(points_in[k],boundaries[i]) ){
+      if( Utilities::inCurve( Point_2d( points_in[k]%Nx ,points_in[k]/Nx ) ,boundaries[i]) ){
+ 
         points[i].push_back(points_in[k]);
         ++m;
         break;
@@ -963,14 +965,16 @@ std::vector<size_t> PixelMap<T>::maxima(T minlevel
   return indexes;
 }
 
+// return true if pont k is in curve assuming points in curve are on the grid
+// and it is not self-intersecting
 template <typename T>
 bool  PixelMap<T>::incurve(long k,std::vector<Point_2d> &curve) const{
   int n=0;
   long i = k % Nx , j = k / Nx;
   for(Point_2d &p : curve){
-    if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
+    if( long(p[0]+0.5) > i && (j - long(p[1]+0.5) ) == 0 ) ++n;
   }
-  
+
   return n%2 == 1;
 }
 

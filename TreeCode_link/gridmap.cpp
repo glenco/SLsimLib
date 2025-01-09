@@ -577,10 +577,9 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   // reorder them so that radial curves follow the tangential curves they are within
   for(long j=ntange ; j<m ; ++j){
     // pixel in radial critical curve
-    long q = long(curves[j][0][0]) + Ngrid_init*long(curves[j][0][1]);
-    
     for(int i=0 ; i<j ;++i){
-      if(crit_type[i] == CritType::tangential && incurve(q,curves[i])
+      if(crit_type[i] == CritType::tangential 
+        && Utilities::inCurve(curves[j][0] ,curves[i] )
          ){
         for(long k=j ; k>i+1 ; --k){
           std::swap(curves[k],curves[k-1]);
@@ -1111,7 +1110,7 @@ bool  GridMap::incurve(long k,std::vector<Point_2d> &curve) const{
   int n=0;
   long i = k % Ngrid_init , j = k / Ngrid_init;
   for(Point_2d &p : curve){
-    if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
+     if( long(p[0]+0.5) > i && (j - long(p[1]+0.5) ) == 0 ) ++n;
   }
   
   return n%2 == 1;
