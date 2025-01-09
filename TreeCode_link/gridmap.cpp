@@ -523,7 +523,7 @@ void GridMap::find_magnification_contour(
 void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
                ,std::vector<bool> &hits_boundary
                ,std::vector<CritType> &crit_type                      
-  ){
+                        ){
   
   curves.resize(0);
   
@@ -549,10 +549,10 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     
     Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
   }
-
+  
   crit_type.resize(curves.size());
   for(CritType &b : crit_type) b = CritType::tangential;
-  int ntange = curves.size();  // number of tangential curves
+  long ntange = curves.size();  // number of tangential curves
   
   // find radial critical curves
   count=0;
@@ -570,26 +570,26 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,true);
   }
   
-  int m=curves.size();
+  long m=curves.size();
   crit_type.resize(m);
-  for(int i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
+  for(long i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
   
-  // reorder them so that radial curves follow the tangential curves they are within them
-  for(int j=ntange ; j<m ; ++j){
+  // reorder them so that radial curves follow the tangential curves they are within
+  for(long j=ntange ; j<m ; ++j){
     // pixel in radial critical curve
     long q = long(curves[j][0][0]) + Ngrid_init*long(curves[j][0][1]);
-
+    
     for(int i=0 ; i<j ;++i){
       if(crit_type[i] == CritType::tangential && incurve(q,curves[i])
          ){
-        for(int k=j ; k>i+1 ; --k){
+        for(long k=j ; k>i+1 ; --k){
           std::swap(curves[k],curves[k-1]);
           std::swap(crit_type[k],crit_type[k-1]);
-	  {
-	    bool tmp = hits_boundary[k];
-	    hits_boundary[k] = hits_boundary[k-1];
-	    hits_boundary[k-1] = tmp;
-	  }
+          {
+            bool tmp = hits_boundary[k];
+            hits_boundary[k] = hits_boundary[k-1];
+            hits_boundary[k-1] = tmp;
+          }
           //std::swap(hits_boundary[k],hits_boundary[k-1]);
         }
         
@@ -608,38 +608,38 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   int ii_tan=0;
   for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
-        if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
-          
-            std::vector<Point_2d> psudo(indexes[ii_tan].size());
-            
-            for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
-           
-            std::vector<size_t> hull_index;
-            Utilities::convex_hull(psudo,hull_index);
-            
-            std::vector<Point_2d> v(hull_index.size());
-            curves.push_back(v);
-            
-            for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
-            
-            //write_csv("test_pseud.csv", curves.back());
-            
-            crit_type.push_back(CritType::pseudo);
-            hits_boundary.push_back(false);
-            
-            for(int k=curves.size()-1 ; k>j+1 ; --k){
-              std::swap(curves[k],curves[k-1]);
-              std::swap(crit_type[k],crit_type[k-1]);
-	            {
-		            bool tmp = hits_boundary[k];
-		            hits_boundary[k] = hits_boundary[k-1];
-	      	      hits_boundary[k-1] = tmp;
-	            }
-            }
-        } // radial missing
-        ++ii_tan;
-      } // is a tangent
-    } // loop through all
+      if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
+        
+        std::vector<Point_2d> psudo(indexes[ii_tan].size());
+        
+        for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
+        
+        std::vector<size_t> hull_index;
+        Utilities::convex_hull(psudo,hull_index);
+        
+        std::vector<Point_2d> v(hull_index.size());
+        curves.push_back(v);
+        
+        for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
+        
+        //write_csv("test_pseud.csv", curves.back());
+        
+        crit_type.push_back(CritType::pseudo);
+        hits_boundary.push_back(false);
+        
+        for(int k=curves.size()-1 ; k>j+1 ; --k){
+          std::swap(curves[k],curves[k-1]);
+          std::swap(crit_type[k],crit_type[k-1]);
+          {
+            bool tmp = hits_boundary[k];
+            hits_boundary[k] = hits_boundary[k-1];
+            hits_boundary[k-1] = tmp;
+          }
+        }
+      } // radial missing
+      ++ii_tan;
+    } // is a tangent
+  } // loop through all
   assert(2*ntange <= curves.size());
 }
 

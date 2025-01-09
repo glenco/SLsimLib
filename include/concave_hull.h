@@ -972,7 +972,7 @@ double distance_to_segment(const Ptype &P
   
   Ptype D = S2-S1;
   double s = (P-S1)*D / D.length_sqr();
-  if(s<=0){
+  if(isnan(s) || s<=0){
     return (P-S1).length();
   }else if(s>=1){
     return (P-S2).length();
@@ -989,20 +989,14 @@ double distance_to_segment(const Ptype &P
   
   Ptype D = S2-S1;
   double s = (P-S1)*D / D.length_sqr();
-  if(isnan(s)){
+  if(isnan(s) || s<=0){
     closest_point = S1;
-    return (P-S1).length();
-  }
-  if(s<=0){
-    closest_point = S1;
-    return (P-S1).length();
   }else if(s>=1){
     closest_point = S2;
-    return (P-S2).length();
   }else{
     closest_point = S1 + D*s;
-    return (S1 + D*s - P).length();
   }
+  return (closest_point - P).length();
 }
 
 template <typename Ptype>
