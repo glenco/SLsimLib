@@ -2462,6 +2462,89 @@ double hypergeometric( T a, T b, T c, T x )
    return value;
 }
 
+class LOGPARAMS{
+
+public:
+  typedef boost::variant<int,size_t,long,float,double,std::string,bool> MULTITYPE;
+  typedef std::map<std::string,MULTITYPE> LINE;
+  typedef std::map<std::string,std::vector<double> > VLINE;
+  typedef std::map<std::string,std::vector<bool> > BLINE;
+
+private:
+  time_t to;
+  
+  LINE lines;
+  VLINE vlines;
+  BLINE blines;
+  std::string filename;
+  std::string blanck_val;
+public:
+
+  LOGPARAMS(std::string file,std::string blanck_value = "0"):filename(file),blanck_val(blanck_value){
+    time(&to);
+  };
+  
+  ~LOGPARAMS(){
+    print_file(filename);
+  }
+  
+  void operator()(std::string label,MULTITYPE v){lines[label] = v;}
+  void operator()(std::string label,const std::vector<double> &v){vlines[label] = v;}
+  void operator()(std::string label,const std::vector<bool> &v){blines[label] = v;}
+  void operator()(std::string label){lines[label] = "-----";}
+
+  
+  MULTITYPE operator[](std::string label){return lines[label];}
+  void setlogfile(std::string name){filename = name;}
+  
+  void print(){
+    for(auto a : lines){
+      std::cout << std::left << std::setw(25) << a.first << " " << a.second << std::endl;
+    }
+    for(auto a : vlines){
+      std::cout << std::left << std::setw(25) << a.first << " : ";
+      for(double x : a.second ) std::cout << x << " ";
+      std::cout << std::endl;
+    }
+    for(auto a : blines){
+      std::cout << std::left << a.first << " : ";
+      for(double x : a.second ) std::cout << x << " ";
+      std::cout << std::endl;
+    }
+    time_t now = time(0);
+    std::cout << "log has existed for " << difftime(now,to)/60 << " min" << std::endl;
+  }
+  
+  void print_to_file(){
+    print_file(filename);
+  }
+  
+  void print_file(std::string filename){
+    //printrow(std::cout, it->first, it->second, comment->second);
+
+    std::ofstream logfile(filename);
+    time_t now = time(0);
+    struct tm date = *localtime(&now);
+    logfile << date.tm_hour << ":" << date.tm_min << "   " << date.tm_mday << "/" << date.tm_mon << "/" << date.tm_year + 1900 << std::endl;
+    logfile << "log has existed for " << difftime(now,to)/60 << " min" << std::endl;
+    for(auto a : lines){
+      logfile << std::left << std::setw(23) << a.first << " " << a.second << std::endl;
+    }
+    for(auto a : vlines){
+      logfile << std::left << std::setw(23) << a.first << " : ";
+      for(double x : a.second ) logfile << x << " ";
+      logfile << std::endl;
+    }
+    for(auto a : blines){
+      logfile << std::left << a.first << " : ";
+      for(double x : a.second ) logfile << x << " ";
+      logfile << std::endl;
+    }
+  }
+
+};
+
+
 class LOGDATA{
 
 public:
