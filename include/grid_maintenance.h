@@ -255,6 +255,8 @@ namespace ImageFinding{
       type = CritType::ND;
       caustic_intersections = -1;
       touches_edge = false;
+      crit_id = -1;
+
     };
     
     CriticalCurve(const CriticalCurve &p){
@@ -273,6 +275,7 @@ namespace ImageFinding{
       type = p.type;
       caustic_intersections = p.caustic_intersections;
       touches_edge = p.touches_edge;
+      crit_id = p.crit_id;
    }
 
     CriticalCurve & operator=(const CriticalCurve &p){
@@ -293,6 +296,7 @@ namespace ImageFinding{
       type = p.type;
       caustic_intersections = p.caustic_intersections;
       touches_edge = p.touches_edge;
+      crit_id = p.crit_id;
       return *this;
     }
     
@@ -324,6 +328,9 @@ namespace ImageFinding{
     
     /// touches the edge of the gridded region
     bool touches_edge;
+
+    /// id of the critical curve. prefered to use this to identify the tangential critical curve
+    int crit_id;
     
     /// return true if x is inside or on the border of the caustic curve
 
