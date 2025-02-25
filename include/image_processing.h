@@ -554,8 +554,12 @@ void ObsVIS::Convert(
     PixelMap<T> map_scratch(Point_2d(0,0).x
                             , Npix_x_input
                             , Npix_y_input, pix_size);
+    //std::cout << "Test of psf flux conservation" << std::endl;
+    //std::cout << map_in.sum() << std::endl;
     ApplyPSF<T>(map_in,map_scratch);
+    //std::cout << map_scratch.sum() << std::endl;
     downsample<T>(map_scratch,map_out);
+    //std::cout << map_out.sum() << std::endl;
   }else{
     downsample<T>(map_in,map_out);
   }
@@ -827,8 +831,14 @@ void Observation::Convert(PixelMap<T> &map_in
     PixelMap<T> map_scratch(Point_2d(0,0).x
                             , Npix_x_input
                             , Npix_y_input, pix_size);
+    
+    //std::cout << "Test of psf flux conservation" << std::endl;
+    //std::cout << map_in.sum() << std::endl;
     ApplyPSF<T>(map_in,map_scratch);
+    //std::cout << map_scratch.sum() << std::endl;
     downsample<T>(map_scratch,map_out);
+    //std::cout << map_out.sum() << std::endl;
+
   }else{
     downsample<T>(map_in,map_out);
   }
