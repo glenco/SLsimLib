@@ -3192,10 +3192,10 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
     
   double R = resolution*sqrt(2);
   
-  ll[0] -= R;
-  ll[1] -= R;
-  ur[0] += R;
-  ur[1] += R;
+  ll[0] -= 2*R;
+  ll[1] -= 2*R;
+  ur[0] += 2*R;
+  ur[1] += 2*R;
   
   long nx = (ur[0]-ll[0])/resolution;
   long ny = (ur[1]-ll[1])/resolution;
@@ -3560,6 +3560,10 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
         if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
           bitmap[m] = true;
           ++count;
+          assert(i != 0);  // should not touch the edge
+          assert(j != 0);
+          assert(i != nx-1);
+          assert(j != ny-1);
           break;
         }
       }
