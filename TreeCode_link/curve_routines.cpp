@@ -3279,6 +3279,7 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   std::vector<Point_2d> v = vv;
   long nv = v.size();
   
+  // find length of largest edge
   double length_scale=0;
   for(long i=0 ; i<nv ; ++i){
     double tmp = (v[i] - v[(i+1)%nv]).length();
@@ -3537,7 +3538,7 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
     return output;
   }
     
-  double R = resolution*sqrt(2);
+  double R = resolution*sqrt(2.5);
   
   ll[0] -= 2*R;
   ll[1] -= 2*R;

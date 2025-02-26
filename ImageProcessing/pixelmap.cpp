@@ -38,7 +38,7 @@ Nx(other.Nx), Ny(other.Ny), resolution(other.resolution), rangeX(other.rangeX), 
   map_boundary_p2[0] = other.map_boundary_p2[0];
   map_boundary_p2[1] = other.map_boundary_p2[1];
 }
-
+/*
 template<>
 template<>
 PixelMap<float>::PixelMap(const PixelMap<double>& other):
@@ -57,7 +57,7 @@ Nx(other.getNx()), Ny(other.getNy()), resolution(other.getResolution())
   map_boundary_p2[0] = center[0]+(Nx*resolution)/2.;
   map_boundary_p2[1] = center[1]+(Ny*resolution)/2.;
 }
-
+*/
 // move constructor
 template <typename T>
 PixelMap<T>::PixelMap(PixelMap&& other)
@@ -137,6 +137,7 @@ PixelMap<T>::PixelMap(
                    std::string fitsfilename   /// file name of fits file to be read
                     ,double my_res         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
                    ,PixelMapUnits u
+                   ,std::string extension  /// fits extension 1,2,,...
 ):units(u)
 {
   
@@ -151,7 +152,8 @@ PixelMap<T>::PixelMap(
 
   std::vector<long> cpsize;
   
-  CPFITS_READ cpfits(fitsfilename);
+  CPFITS_READ cpfits(fitsfilename,extension);
+  
   //int bitpix;
   cpfits.imageDimensions(cpsize);
   
@@ -397,6 +399,7 @@ PixelMap<T> PixelMap<T>::interpolate(int n){
   size_t nx = n*(Nx-1)+1,ny = n*(Ny-1)+1;
   //size_t nx = n*Nx,ny = n*Ny;
   PixelMap new_map(center,nx,ny,resolution/n);
+  new_map.units = units;
   
   long nn=n*n;
   //long off = (1+nx)*(n-1)/2;
@@ -722,8 +725,10 @@ void PixelMap<T>::AddGridMapBrightness(const GridMap &grid){
     grid.getPixelMapFlux(*this);
   } catch (const std::invalid_argument& ia) {
     // dimensions and/or alignment do not match
-    PixelMap<T> newmap = grid.getPixelMapFlux<T>(1);
+    PixelMap<T> newmap = grid.getPixelMapFlux<T>();
+    //double tmp = newmap.sum() + sum();
     copy_in(newmap);
+    //std::cout << " flux conservation " << sum() << " " << tmp << std::endl;
   }
   
   return;
@@ -2477,11 +2482,16 @@ void PixelMap<T>::copy_in(
 )
 {
   
+  if(pmap.resolution > resolution){
+    std::cerr << "ERROR: PixelMap::copy_in() - map copied in must have higher resolution." << std::endl;
+    throw std::invalid_argument("bad resolution");
+  }
+  
   if(agrees(pmap)){  // maps are the same dimensions and position
     for(size_t i=0;i<map.size();++i) map[i] += pmap.map[i];
     return;
   }
-  double res_ratio = resolution / pmap.resolution;
+  double res_ratio =  pmap.resolution /resolution;
   if(abs(res_ratio -1) < 1.0e-4) res_ratio = 1.0;
   double res_ratio2 = res_ratio*res_ratio;
   
@@ -2491,43 +2501,76 @@ void PixelMap<T>::copy_in(
   if(map_boundary_p1[1] > pmap.map_boundary_p2[1] ) return;
   if(map_boundary_p2[1] < pmap.map_boundary_p1[1] ) return;
 
-  
-  double halfpixel = res_ratio/2;
-  PosType x[2];
-  size_t NNx = pmap.getNx(),NNy = pmap.getNy();
-  //size_t Npmap = NNx*NNy;
-  
-  for(size_t ii=0 ; ii < map.size() ; ++ii){
-    
-    find_position(x,ii);
-      // find range if this pixel in pmap's pixel space
-    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
-    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
-    
-    double xmin = MAX(0.0,ix - halfpixel);
-    double xmax = MIN<double>(NNx,ix + halfpixel);
-    if(xmin >= xmax) continue;
+  Point_2d xo(pmap.map_boundary_p1[0]-map_boundary_p1[0],pmap.map_boundary_p1[1]-map_boundary_p1[1]);
+  xo /= resolution;
+ 
+  double x = xo[0];
 
-    double ymin = MAX(0.0,iy - halfpixel);
-    double ymax = MIN<double>(NNy,iy + halfpixel);
-    if(ymin >= ymax) continue;
+  for(long i=0 ; i<pmap.Nx ; ++i){
+    double x1 = xo[0] + res_ratio*(i+1);
+    long i1 = floor(x);
+    long i2 = floor(x1);
     
-    long imin = MIN<long>((long)(xmin),NNx-1);
-    long imax = MIN<long>((long)(xmax),NNx-1);
-    long jmin = MIN<long>((long)(ymin),NNy-1);
-    long jmax = MIN<long>((long)(ymax),NNy-1);
-    long jj;
-    
-    for(long j = jmin ; j <= jmax ; ++j ){
-      double area1 = MIN<double>(ymax,j+1) -  MAX<double>(ymin,j);
-      if(area1 <= 0.0) continue;
-      jj = NNx*j;
-      for(long i = imin ; i <= imax ; ++i ){
-        double area = (MIN<double>(xmax,i+1) -  MAX<double>(xmin,i)) * area1 ;
-        map[ii] += pmap.map[i + jj]*area/res_ratio2;
+    for(long ii=std::max<long>(i1,0) ; ii <= std::min(i2,Nx-1) ; ++ii ){
+      double y = xo[1];
+
+      double f = ( std::min<double>(ii+1,x1)-std::max<double>(ii,x) )/res_ratio;
+      
+      for(long j=0 ; j<pmap.Ny ; ++j){
+        double y1 = xo[1] + res_ratio*(j+1);
+        long j1 = floor(y);
+        long j2 = floor(y1);
+        
+        for(long jj=std::max<long>(j1,0) ; jj <= std::min(j2,Ny-1) ; ++jj ){
+          long k = ii + jj*Nx;
+          
+          double ff = f*( std::min<double>(jj+1,y1)-std::max<double>(jj,y) )/res_ratio;
+          
+          if(ff>0) map[k] += pmap(i,j)*ff;
+        }
+        y = y1;
       }
+      
     }
+    x = x1;
   }
+  
+//  double halfpixel = res_ratio/2;
+//  PosType x[2];
+//  size_t NNx = pmap.getNx(),NNy = pmap.getNy();
+//  //size_t Npmap = NNx*NNy;
+//
+//  for(size_t ii=0 ; ii < map.size() ; ++ii){
+//
+//    find_position(x,ii);
+//      // find range if this pixel in pmap's pixel space
+//    double ix = (x[0] - pmap.map_boundary_p1[0])/pmap.resolution;
+//    double iy = (x[1] - pmap.map_boundary_p1[1])/pmap.resolution;
+//
+//    double xmin = MAX(0.0,ix - halfpixel);
+//    double xmax = MIN<double>(NNx,ix + halfpixel);
+//    if(xmin >= xmax) continue;
+//
+//    double ymin = MAX(0.0,iy - halfpixel);
+//    double ymax = MIN<double>(NNy,iy + halfpixel);
+//    if(ymin >= ymax) continue;
+//
+//    long imin = MIN<long>((long)(xmin),NNx-1);
+//    long imax = MIN<long>((long)(xmax),NNx-1);
+//    long jmin = MIN<long>((long)(ymin),NNy-1);
+//    long jmax = MIN<long>((long)(ymax),NNy-1);
+//    long jj;
+//
+//    for(long j = jmin ; j <= jmax ; ++j ){
+//      double area1 = MIN<double>(ymax,j+1) -  MAX<double>(ymin,j);
+//      if(area1 <= 0.0) continue;
+//      jj = NNx*j;
+//      for(long i = imin ; i <= imax ; ++i ){
+//        double area = (MIN<double>(xmax,i+1) -  MAX<double>(xmin,i)) * area1 ;
+//        map[ii] += pmap.map[i + jj]*area/res_ratio2;
+//      }
+//    }
+//  }
 }
 template <typename T>
 void PixelMap<T>::paste(const PixelMap<T>& pmap){

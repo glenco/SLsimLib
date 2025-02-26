@@ -52,9 +52,18 @@ public:
   PixelMap(const PixelMap<T>& pmap, const double* center, std::size_t Npixels);
   PixelMap(const PixelMap<T>& pmap,long nx,long ny, std::size_t Npixels);
   PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
-  PixelMap(const double* center, std::size_t Nx, std::size_t Ny, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
-  PixelMap(std::string fitsfilename
-           ,double resolution = -1,PixelMapUnits u = PixelMapUnits::ndef);
+  PixelMap(const double* center
+           , std::size_t Nx, std::size_t Ny
+           , double resolution
+           ,PixelMapUnits u = PixelMapUnits::ndef);
+  //PixelMap(std::string fitsfilename
+  //         ,std::string extension = ""
+  //         );
+  PixelMap(std::string fitsfilename   /// file name of fits file to be read
+          ,double my_res=-1         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
+          ,PixelMapUnits u = PixelMapUnits::ndef
+          ,std::string extension = ""  /// fits extension 1,2,,...
+  );
   
   // for conversion from double to float
   template<typename OtherT>

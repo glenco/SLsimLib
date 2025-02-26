@@ -111,11 +111,11 @@ struct GridMap{
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
   template<typename T>
-  PixelMap<T> getPixelMapFlux(int res) const;
+  PixelMap<T> getPixelMapFlux() const;
   
-  /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
+  /// update a PixelMap with the flux in pixels.
   /// The map must have precisely the right size and center to match or an exception will be thrown.
-  /// Constructing the map with PixelMap getPixelMapFlux(int res) will insure that it does.
+  /// Constructing the map with PixelMap getPixelMapFlux(i) will insure that it does.
   template<typename T>
   void getPixelMapFlux(PixelMap<T> &map) const;
   
@@ -363,25 +363,22 @@ private:
 
 /// Output a PixelMap of the surface brightness with same res as the GridMap
 template<typename T>
-PixelMap<T> GridMap::getPixelMapFlux(int resf) const{
-  
-  if(resf <=0){
-    ERROR_MESSAGE();
-    throw std::invalid_argument("resf must be > 0");
-  }
+PixelMap<T> GridMap::getPixelMapFlux() const{
   
   // The number of pixels on a side of the new map will be
   // N = (Ngrid_init-1)/resf + 1;
   // so that the resolution is resf x the GridMap resolution
   
-  PixelMap<T> map(center.x,(Ngrid_init-1)/resf + 1 ,(Ngrid_init2-1)/resf + 1,resf*x_range/(Ngrid_init-1));
+  PixelMap<T> map(center.x
+                  ,Ngrid_init
+                  ,Ngrid_init2
+                  ,x_range/(Ngrid_init-1));
   
-  int factor = resf*resf;
   size_t index;
    size_t n = Ngrid_init*Ngrid_init2;
    for(size_t i=0 ; i<n ; ++i){
      index = map.find_index(i_points[i].x);
-     map.data()[index] = i_points[i].surface_brightness/factor;
+     map.data()[index] = i_points[i].surface_brightness;
    }
   
   //for(size_t i = 0 ; i < Ngrid_init ; ++i){
@@ -400,44 +397,35 @@ PixelMap<T> GridMap::getPixelMapFlux(int resf) const{
 template<typename T>
 void GridMap::getPixelMapFlux(PixelMap<T> &map) const{
   
-  int resf = (Ngrid_init-1)/(map.getNx()-1);
+  //int resf = (Ngrid_init-1)/(map.getNx()-1);
   
-  if(resf*map.getNx() != Ngrid_init-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
-  if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(map.getNx() != Ngrid_init) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(map.getNy() != Ngrid_init2) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
   //if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
   
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
   
-  if(resf <=0){
-    ERROR_MESSAGE();
-    throw std::invalid_argument("resf must be > 0");
-  }
+  double res = getResolution();
+  if((map.getResolution()-res) < 1.0e-6*res ) throw std::invalid_argument("PixelMap resolution does not match GripMap!");
   
   map.Clean();
   
-  int factor = resf*resf;
-/*  size_t index;
-  size_t n = Ngrid_init*Ngrid_init2;
-  std::vector<int> counts(map.size(),0);
-  for(size_t i=0 ; i<n ; ++i){
-    index = map.find_index(i_points[i].x);
-    ++counts[index];
-    map.data()[index] = i_points[i].surface_brightness;
-  }
-  index = map.size();
-  for(size_t i=0 ; i<index ; ++i) map[i] /= counts[i];
-  */
+  //long nx = map.getNx();
+  //for(size_t i = 0 ; i < Ngrid_init ; ++i){
+  //  for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+  //    size_t k = i + nx * j;
+  //    map.data()[k] += i_points[k].surface_brightness;
+  //  }
+  //}
   
-  long nx = map.getNx();
-  for(size_t i = 0 ; i < Ngrid_init ; ++i){
-    size_t ii = i/resf;
-    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
-      size_t jj = j/resf;
-      map.data()[ii + nx * jj ] +=
-      i_points[ i + Ngrid_init * j].surface_brightness/factor;
-    }
-  }
+   size_t index;
+   size_t n = Ngrid_init*Ngrid_init2;
+   for(size_t i=0 ; i<n ; ++i){
+     index = map.find_index(i_points[i].x);
+     map.data()[index] = i_points[i].surface_brightness;
+   }
+  
   
   map.Renormalize(map.getResolution()*map.getResolution());
 }

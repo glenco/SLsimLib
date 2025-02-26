@@ -92,6 +92,7 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
   
   if( (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size > 1.0e-3){
     std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
+    std::cout << (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size << std::endl;
     throw std::runtime_error("");
   }
                            
