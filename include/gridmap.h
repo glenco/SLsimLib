@@ -72,6 +72,8 @@ struct GridMap{
   Point_2d image_point(size_t index){return i_points[index];}
   /// get the image point for a index number
   Point_2d source_point(size_t index){return s_points[index];}
+  /// get the image point for a index number
+  RAY ray(size_t index){return i_points[index];}
  
   void ClearSurfaceBrightnesses();
   void assertNAN(); // check for nan in surface prightness
@@ -183,6 +185,11 @@ struct GridMap{
       index[1] = j;
       index[2] = k;
     }
+    Triangle(){
+      index[0] = 0;
+      index[1] = 0;
+      index[2] = 0;
+    }
     size_t index[3];
     size_t & operator[](int i){return index[i];}
   };
@@ -204,6 +211,11 @@ struct GridMap{
   /** find all images by triangle method
    */
   void find_images(Point_2d y
+                   ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
+                   ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+  ) const ;
+  
+  void find_images2(Point_2d y
                    ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
                    ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
   ) const ;
@@ -353,6 +365,12 @@ private:
   static std::mutex grid_mutex;
   
   void _find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RAY> &rays) const;
+  void _find_images2_(size_t j1
+                              ,size_t j2
+                              ,std::list<Point_2d> &image_points
+                              ,std::list<Triangle> &triangles
+                              ,Point_2d y
+                              ) const;
 
   // find if there are images of y in specific cells
   void limited_image_search(Point_2d &y
