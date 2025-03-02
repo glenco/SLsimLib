@@ -1066,6 +1066,50 @@ void GridMap::find_images2(Point_2d y
   }
   assert(j2==Ngrid_init2-1);
   
+
+  std::list<Triangle> tris;
+  for (const auto& l : tri_lists) {
+    tris.insert(tris.end(), l.begin(), l.end());
+  }
+  
+  if(tris.size() > 1){
+    std::vector<long[4]> boxes(tris.size());
+    int i=0;
+    for(auto &tri : tris){
+      boxes[i][0] = tri[0]%Ngrid_init;
+      boxes[i][1] = tri[1]/Ngrid_init;
+      boxes[i][2] = boxes[i][0] + 1;
+      boxes[i][3] = boxes[i][1] + 1;
+    }
+ 
+    int w=0;
+    while(w < boxes.size()-1){
+      for(int w2=w+1;w2< boxes.size();){
+        
+        if(   boxes[w][1]>=boxes[w2][0]
+           && boxes[w][0]<=boxes[w2][1]
+           && boxes[w][3]>=boxes[w2][2]
+           && boxes[w][2]<=boxes[w2][3]
+           ){
+          
+          boxes[w][0] = min(boxes[w][0],boxes[w2][0]);
+          boxes[w][1] = min(boxes[w][1],boxes[w2][1]);
+          boxes[w][2] = max(boxes[w][2],boxes[w2][2]);
+          boxes[w][3] = max(boxes[w][3],boxes[w2][3]);
+          
+          std::swap(boxes[w2],boxes.back());
+          boxes.pop_back();
+          w=0;
+          w2=1;
+        }else{
+          ++w2;
+        }
+      }
+      ++w;
+    }
+    
+  }
+  
   int n=0;
   for(auto li : image_lists) n += li.size();
   image_points.resize(n);
@@ -1078,12 +1122,11 @@ void GridMap::find_images2(Point_2d y
   }
   triangles.resize(n);
   i=0;
-  for(auto li : tri_lists){
-    for(Triangle &p : li){
-      triangles[i] = p;
-      ++i;
-    }
+  for(Triangle &p : tris){
+    triangles[i] = p;
+    ++i;
   }
+  
   
   return;
 }

@@ -201,7 +201,7 @@ struct GridMap{
    output rays will be the same as the sources with multiple images consecutive.  The number
       of images for each source position is given by the `multiplicity` array.
    
-   No new rays are shot.  The image positions and amgnification matrix are interpolated from the nearest
+   No new rays are shot.  The image positions and magnification matrix are interpolated from the nearest
       image points already in the GridMap.
    */
   std::list<RAY> find_images(std::vector<Point_2d> &ys
@@ -215,6 +215,8 @@ struct GridMap{
                    ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
   ) const ;
   
+  /** parallel version of find_images()
+   */
   void find_images2(Point_2d y
                    ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
                    ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
