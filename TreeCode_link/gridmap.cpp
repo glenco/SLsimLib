@@ -1032,19 +1032,28 @@ void GridMap::find_images2(Point_2d y
                  ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
 ) const {
   
+  
   image_points.clear();
   triangles.clear();
-  std::vector<std::thread> thr;
+  if(Ngrid_init2 <2 || Ngrid_init<2){
+    return;
+  }
+  
   int nthreads = Utilities::GetNThreads();
   
-  std::vector<std::list<Point_2d>> image_lists(nthreads);
-  std::vector<std::list<Triangle>> tri_lists(nthreads);
-  
   long block = (Ngrid_init2-1)/(nthreads-1);
+  if(Ngrid_init2 < nthreads){
+    nthreads = Ngrid_init2-1;
+    block=1;
+  }
   size_t j1 = 0;
   size_t j2 = min<long>(j1+block,Ngrid_init2-1);
   
-  for(int t=0 ; t<nthreads ; t++){
+  std::vector<std::list<Point_2d>> image_lists(nthreads);
+  std::vector<std::list<Triangle>> tri_lists(nthreads);
+  std::vector<std::thread> thr;
+  {
+    for(int t=0 ; t<nthreads ; t++){
       thr.push_back(std::thread(&GridMap::_find_images2_,this
                                 ,j1,j2
                                 ,std::ref(image_lists[t])
@@ -1052,12 +1061,10 @@ void GridMap::find_images2(Point_2d y
                                 ,y));
       j1=j2;
       j2 = min<long>(j1+block,Ngrid_init2-1);
+    }
+    for(auto &t : thr) t.join();
   }
-  for(auto &t : thr) t.join();
-  
   assert(j2==Ngrid_init2-1);
-  
- 
   
   int n=0;
   for(auto li : image_lists) n += li.size();

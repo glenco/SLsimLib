@@ -1161,7 +1161,7 @@ std::vector<RAY> Lens::find_images(GridMap &init_grid
     std::vector<Point_2d> image_points;
     std::vector<GridMap::Triangle> tr;
   
-    init_grid.find_images(y_source,image_points,tr);
+    init_grid.find_images2(y_source,image_points,tr);
    
     RAY center_ray;
     center_ray.y = y_source;
