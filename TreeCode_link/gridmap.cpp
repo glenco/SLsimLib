@@ -55,19 +55,23 @@ GridMap::GridMap(
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init2);
  
-  int i;
+  long i;
   // set grid of positions
-  for(int ii=0;ii<Ngrid_init;++ii){
-    for(int jj=0;jj<Ngrid_init2;++jj){
+  double xo= center[0] - 0.5*rangeX;
+  double yo= center[1] - 0.5*rangeY;
+  double res=rangeX/(Ngrid_init-1);
+  for(long ii=0;ii<Ngrid_init;++ii){
+    double xx = xo + ii*res;
+    for(long jj=0;jj<Ngrid_init2;++jj){
       
       i = ii + jj*Ngrid_init;
       
       i_points[i].id=pointID;
       ++pointID;
       
-      i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
-      i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
-      i_points[i].gridsize=rangeX/(Ngrid_init-1);
+      i_points[i].x[0] = xx;
+      i_points[i].x[1] = yo + jj*res;
+      i_points[i].gridsize=res;
     }
   }
   
@@ -982,7 +986,7 @@ void GridMap::_find_images2_(size_t j1
       sig_sum = sig1 + sig2 + sig3;
       if(abs(sig_sum) == 3){ // inside
         image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
-        triangles.push_back(Triangle(k,k1,k2));
+        triangles.emplace_back(k,k1,k2);
       }else if(abs(sig_sum) == 2){ // on edge
         if(sig_sum > 0){
           if(sig1 == 0){
@@ -1041,7 +1045,7 @@ void GridMap::find_images2(Point_2d y
   
   int nthreads = Utilities::GetNThreads();
   
-  long block = (Ngrid_init2-1)/(nthreads-1);
+  long block = (Ngrid_init2-1)/nthreads + 1;
   if(Ngrid_init2 < nthreads){
     nthreads = Ngrid_init2-1;
     block=1;
@@ -1054,13 +1058,13 @@ void GridMap::find_images2(Point_2d y
   std::vector<std::thread> thr;
   {
     for(int t=0 ; t<nthreads ; t++){
+      j2 = min<long>(j1+block,Ngrid_init2-1);
       thr.push_back(std::thread(&GridMap::_find_images2_,this
                                 ,j1,j2
                                 ,std::ref(image_lists[t])
                                 ,std::ref(tri_lists[t])
                                 ,y));
       j1=j2;
-      j2 = min<long>(j1+block,Ngrid_init2-1);
     }
     for(auto &t : thr) t.join();
   }
@@ -1070,44 +1074,6 @@ void GridMap::find_images2(Point_2d y
   std::list<Triangle> tris;
   for (const auto& l : tri_lists) {
     tris.insert(tris.end(), l.begin(), l.end());
-  }
-  
-  if(tris.size() > 1){
-    std::vector<long[4]> boxes(tris.size());
-    int i=0;
-    for(auto &tri : tris){
-      boxes[i][0] = tri[0]%Ngrid_init;
-      boxes[i][1] = tri[1]/Ngrid_init;
-      boxes[i][2] = boxes[i][0] + 1;
-      boxes[i][3] = boxes[i][1] + 1;
-    }
- 
-    int w=0;
-    while(w < boxes.size()-1){
-      for(int w2=w+1;w2< boxes.size();){
-        
-        if(   boxes[w][1]>=boxes[w2][0]
-           && boxes[w][0]<=boxes[w2][1]
-           && boxes[w][3]>=boxes[w2][2]
-           && boxes[w][2]<=boxes[w2][3]
-           ){
-          
-          boxes[w][0] = min(boxes[w][0],boxes[w2][0]);
-          boxes[w][1] = min(boxes[w][1],boxes[w2][1]);
-          boxes[w][2] = max(boxes[w][2],boxes[w2][2]);
-          boxes[w][3] = max(boxes[w][3],boxes[w2][3]);
-          
-          std::swap(boxes[w2],boxes.back());
-          boxes.pop_back();
-          w=0;
-          w2=1;
-        }else{
-          ++w2;
-        }
-      }
-      ++w;
-    }
-    
   }
   
   int n=0;
@@ -1131,6 +1097,106 @@ void GridMap::find_images2(Point_2d y
   return;
 }
 
+inline bool GridMap::touch(const Rectangle &tr1,const Rectangle &tr2) const{
+  if(tr1[0]/Ngrid_init <= tr2[1]/Ngrid_init
+  && tr1[1]/Ngrid_init >= tr2[0]/Ngrid_init
+  && tr1[0]%Ngrid_init <= tr2[1]%Ngrid_init
+  && tr1[1]%Ngrid_init >= tr2[0]%Ngrid_init
+     ) return true;
+  return false;
+}
+
+std::vector<GridMap::Rectangle> GridMap::merge_boxes(std::list<Triangle> &triangles
+  ) const{
+  
+  std::vector<Rectangle> boxes(triangles.size());
+  if(triangles.size()==0) return boxes;
+  int i=0;
+  long n=Ngrid_init*Ngrid_init2 -1;
+  for(auto &tri : triangles){
+    long x=tri[0]%Ngrid_init;
+    long y=tri[0]/Ngrid_init;
+
+    if(x>0) --x;
+    if(y>0) --y;
+    boxes[i][0] = x + y*Ngrid_init;
+    
+    x=tri[1]%Ngrid_init;
+    y=tri[1]/Ngrid_init;
+    if(x<Ngrid_init-1) ++x;
+    if(y<Ngrid_init2-1) ++y;
+    boxes[i][1] = x + y*Ngrid_init;
+ 
+    ++i;
+  }
+  
+  
+  for(int i=0 ; i<boxes.size() ; ++i){
+    for(int j=i+1 ; j<boxes.size() ; ++j){
+      if(touch(boxes[i],boxes[j])){
+        
+        boxes[i][0] = min(boxes[i][0]%Ngrid_init,boxes[j][0]%Ngrid_init)
+        + min(boxes[i][0]/Ngrid_init,boxes[j][0]/Ngrid_init)*Ngrid_init;
+        boxes[i][1] = max(boxes[i][1]%Ngrid_init,boxes[j][1]%Ngrid_init)
+        + max(boxes[i][1]/Ngrid_init,boxes[j][1]/Ngrid_init)*Ngrid_init;
+        
+        boxes[j] = boxes.back();
+        boxes.pop_back();
+        --i;
+        break;
+      }
+    }
+  }
+  
+  return boxes;
+}
+
+std::vector<GridMap::Rectangle> GridMap::merge_boxes(std::vector<Triangle> &triangles
+  ) const{
+  
+  std::vector<Rectangle> boxes(triangles.size());
+  if(triangles.size()==0) return boxes;
+  
+  int i=0;
+  long n=Ngrid_init*Ngrid_init2 -1;
+  for(auto &tri : triangles){
+    long x=tri[0]%Ngrid_init;
+    long y=tri[0]/Ngrid_init;
+
+    if(x>0) --x;
+    if(y>0) --y;
+    boxes[i][0] = x + y*Ngrid_init;
+    
+    long x1=tri[1]%Ngrid_init;
+    long y1=tri[1]/Ngrid_init;
+    if(x1<Ngrid_init-1) ++x1;
+    if(y1<Ngrid_init2-1) ++y1;
+    boxes[i][1] = x1 + y1*Ngrid_init;
+ 
+    assert(x1>x);
+    assert(y1>y);
+    ++i;
+  }
+  
+  for(int i=0 ; i<boxes.size() ; ++i){
+    for(int j=i+1 ; j<boxes.size() ; ++j){
+      if(touch(boxes[i],boxes[j])){
+        
+        boxes[i][0] = min(boxes[i][0]%Ngrid_init,boxes[j][0]%Ngrid_init)
+        + min(boxes[i][0]/Ngrid_init,boxes[j][0]/Ngrid_init)*Ngrid_init;
+        boxes[i][1] = max(boxes[i][1]%Ngrid_init,boxes[j][1]%Ngrid_init)
+        + max(boxes[i][1]/Ngrid_init,boxes[j][1]/Ngrid_init)*Ngrid_init;
+        
+        boxes[j] = boxes.back();
+        boxes.pop_back();
+        --i;
+        break;
+      }
+    }
+  }
+  
+  return boxes;
+}
 
 void GridMap::find_images(Point_2d y
                  ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap

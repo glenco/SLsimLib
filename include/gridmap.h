@@ -190,11 +190,56 @@ struct GridMap{
       index[1] = 0;
       index[2] = 0;
     }
-    size_t index[3];
-    size_t & operator[](int i){return index[i];}
+    Triangle(const Triangle &tri){
+      index[0] = tri[0];
+      index[1] = tri[1];
+      index[2] = tri[2];
+    }
+    Triangle & operator=(const Triangle &tri){
+      index[0] = tri[0];
+      index[1] = tri[1];
+      index[2] = tri[2];
+      return *this;
+    }
+    ~Triangle(){};
+    std::vector<long> index = {0,0,0};
+    long & operator[](int i){return index[i];}
+    long operator[](int i) const {return index[i];}
+  };
+  struct Rectangle{
+    Rectangle(size_t i,size_t j){
+      index[0] = i;
+      index[1] = j;
+    }
+    Rectangle(){
+      index[0] = 0;
+      index[1] = 0;
+    }
+    Rectangle(const Rectangle &rec){
+      index[0] = rec[0];
+      index[1] = rec[1];
+    }
+    Rectangle & operator=(Rectangle &rec){
+      index[0] = rec[0];
+      index[1] = rec[1];
+      return *this;
+    }
+    ~Rectangle(){};
+    std::vector<long> index = {0,0};
+    long & operator[](int i){return index[i];}
+    long operator[](int i) const {return index[i];}
   };
   
-    
+  // determines if two rectangles touch
+  inline bool touch(const Rectangle &tr1,const Rectangle &tr2) const;
+  
+  // returns a vector of rectangles that encompase all triangles with one rectangle for each touching group
+  std::vector<Rectangle> merge_boxes(
+                   std::list<Triangle> &triangles
+                   ) const;
+  std::vector<Rectangle> merge_boxes(
+                   std::vector<Triangle> &triangles
+                   ) const;
   /*** \brief Returns a list of  RAYs from a set of source positions.
    
    The image positions are found in parallel by the triangle method.  The order of the

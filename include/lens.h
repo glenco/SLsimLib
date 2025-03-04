@@ -617,8 +617,10 @@ private:
   
   /// iterative image finding using telescoping triangel method with telescoping GridMap s
   void _find_images_(std::vector<RAY> &images
-                     ,RAY &center
-                     ,double range
+                     ,Point_2d &y
+                     ,Point_2d ll
+                     ,Point_2d ur
+                     ,double resolution
                      ,double stop_res
                      );
   

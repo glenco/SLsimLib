@@ -1136,9 +1136,23 @@ std::vector<RAY> Lens::find_images(
   RAY center_ray;
   center_ray.y = y_source;
   center_ray.z = z_source;
- 
-  _find_images_(images,center_ray,range,stop_res);
   
+  Point_2d ll = center;
+  ll[0] -= range/2;
+  ll[1] -= range/2;
+  Point_2d ur = center;
+  ur[0] += range/2;
+  ur[1] += range/2;
+ 
+  _find_images_(images
+                ,y_source
+                ,ll
+                ,ur
+                ,range
+                ,stop_res
+                );
+  
+  for(auto ray : images) ray.z=z_source;
   ResetSourcePlane(ztmp);
   
   return images;
@@ -1162,17 +1176,19 @@ std::vector<RAY> Lens::find_images(GridMap &init_grid
     std::vector<GridMap::Triangle> tr;
   
     init_grid.find_images2(y_source,image_points,tr);
+    std::vector<GridMap::Rectangle> recs = init_grid.merge_boxes(tr);
    
-    RAY center_ray;
-    center_ray.y = y_source;
-    center_ray.z = z_source;
- 
-    for(Point_2d center : image_points){
-      center_ray.x = center;
-      _find_images_(images,center_ray,3*init_grid.getResolution(),stop_res);
+    for(int i=0 ; i<recs.size() ; ++i){
+      assert(recs[i][0] < recs[i][1]);
+      _find_images_(images,y_source
+                    ,init_grid.image_point(recs[i][0])
+                    ,init_grid.image_point(recs[i][1])
+                    ,init_grid.getResolution()
+                    ,stop_res
+                    );
     }
   }
-  
+  for(auto ray : images) ray.z=z_source;
   ResetSourcePlane(ztmp);
   
   return images;
@@ -1213,34 +1229,60 @@ std::vector<RAY> Lens::find_images(GridMap &init_grid
 //}
 
 
-void Lens::_find_images_(
-                        std::vector<RAY> &images
-                       ,RAY &center
-                       ,double range
-                       ,double stop_resolution
+void Lens::_find_images_(std::vector<RAY> &images
+                         ,Point_2d &y
+                         ,Point_2d ll
+                         ,Point_2d ur
+                         ,double resolution
+                         ,double stop_resolution
                        ){
   
-  if(range <= stop_resolution){
-    for(auto &p : images){  // check that this point hasn't been found already
-      if( (p.x-center.x).length() < stop_resolution ) return;
-    }
-    images.push_back(center);
-    return;
-  }
-  
-  int n = 9;
-  GridMap gridmap(this,n,center.x.x,range);
+  Point_2d center = (ur+ll)/2;
+  assert(ur[0]-ll[0] > 0);
+  assert(ur[1]-ll[1] > 0);
+  int n = 9*(int)((ur[0]-ll[0])/resolution);
+  GridMap gridmap(this,n,center.x, ur[0]-ll[0], ur[1]-ll[1] );
+  //GridMap gridmap(this,n,center.x.x,range);
   std::vector<Point_2d> image_points;
   std::vector<GridMap::Triangle> tr;
   
-  gridmap.find_images(center.y,image_points,tr);
+  gridmap.find_images2(y,image_points,tr);
+  std::vector<GridMap::Rectangle> recs = gridmap.merge_boxes(tr);
   
+  if(recs.size()==0) return;
+  
+  double min_mag= fabs(gridmap.i_points[ tr[0][0] ].invmag());
   for(int i=0 ; i < image_points.size() ; ++i){
-    center.x = gridmap.i_points[ tr[i][2] ];
-    center.A = gridmap.i_points[ tr[i][2] ].A;
+    min_mag = min(fabs(gridmap.i_points[ tr[i][0] ].invmag()) , min_mag);
+    min_mag = min(fabs(gridmap.i_points[ tr[i][1] ].invmag()) , min_mag);
+    min_mag = min(fabs(gridmap.i_points[ tr[i][2] ].invmag()) , min_mag);
+  }
+  
+  if((gridmap.getResolution() <= stop_resolution
+     && recs.size() == image_points.size() ) || min_mag > 1000
+      ){
+    RAY ray;
+    ray.y = y;
+    for(int i=0 ; i < image_points.size() ; ++i){
+      ray.x = (gridmap.i_points[ tr[i][0] ] + gridmap.i_points[ tr[i][1] ] + gridmap.i_points[ tr[i][2] ])/3;
+      ray.A = (gridmap.i_points[ tr[i][0] ].A + gridmap.i_points[ tr[i][1] ].A + gridmap.i_points[ tr[i][2] ].A)/3;
+      if(fabs(ray.invmag()) < 1000) images.push_back(ray);
+    }
+    return;
+  }
+  
+  for(int i=0 ; i < recs.size() ; ++i){
+    assert(recs[i][0] < recs[i][1]);
+    Point_2d db = gridmap.image_point(recs[i][1]) - gridmap.image_point(recs[i][0]);
+    if(db[0] <= 0){
+      std::cout << recs[i][1]%(gridmap.Ngrid_init) << " " << recs[i][0]%(gridmap.Ngrid_init) << std::endl;
+    }
+    assert(db[1] > 0);
     _find_images_(images
-                  ,center
-                  ,3*gridmap.getResolution()
+                  ,y
+                  ,gridmap.image_point(recs[i][0])
+                  ,gridmap.image_point(recs[i][1])
+                  ,gridmap.getResolution()
                   ,stop_resolution
                   );
   }
