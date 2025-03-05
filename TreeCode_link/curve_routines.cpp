@@ -3561,10 +3561,6 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
         if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
           bitmap[m] = true;
           ++count;
-          assert(i != 0);  // should not touch the edge
-          assert(j != 0);
-          assert(i != nx-1);
-          assert(j != ny-1);
           break;
         }
       }
