@@ -1153,6 +1153,9 @@ std::vector<RAY> Lens::find_images(
                 );
   
   for(auto ray : images) ray.z=z_source;
+  // set correct source positions
+  rayshooterInternal(images.size(),images.data());
+  
   ResetSourcePlane(ztmp);
   
   return images;
@@ -1175,7 +1178,7 @@ std::vector<RAY> Lens::find_images(GridMap &init_grid
     std::vector<Point_2d> image_points;
     std::vector<GridMap::Triangle> tr;
   
-    init_grid.find_images2(y_source,image_points,tr);
+    init_grid.find_images(y_source,image_points,tr);
     std::vector<GridMap::Rectangle> recs = init_grid.merge_boxes(tr);
    
     for(int i=0 ; i<recs.size() ; ++i){
@@ -1189,6 +1192,8 @@ std::vector<RAY> Lens::find_images(GridMap &init_grid
     }
   }
   for(auto ray : images) ray.z=z_source;
+  // set correct source positions
+  rayshooterInternal(images.size(),images.data());
   ResetSourcePlane(ztmp);
   
   return images;
@@ -1246,7 +1251,7 @@ void Lens::_find_images_(std::vector<RAY> &images
   std::vector<Point_2d> image_points;
   std::vector<GridMap::Triangle> tr;
   
-  gridmap.find_images2(y,image_points,tr);
+  gridmap.find_images(y,image_points,tr);
   std::vector<GridMap::Rectangle> recs = gridmap.merge_boxes(tr);
   
   if(recs.size()==0) return;

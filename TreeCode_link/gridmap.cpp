@@ -1031,7 +1031,7 @@ void GridMap::_find_images2_(size_t j1
   }
 }
 
-void GridMap::find_images2(Point_2d y
+void GridMap::find_images(Point_2d y
                  ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
                  ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
 ) const {
@@ -1198,78 +1198,79 @@ std::vector<GridMap::Rectangle> GridMap::merge_boxes(std::vector<Triangle> &tria
   return boxes;
 }
 
-void GridMap::find_images(Point_2d y
-                 ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
-                 ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
-                 ) const {
-  
-  image_points.clear();
-  triangles.clear();
-  
-  size_t k;
-  size_t k1;
-  size_t k2;
-  size_t k3;
-  
-  int sig1,sig2,sig3,sig_sum;
-
-  for(size_t i=0 ; i< Ngrid_init-1 ; i++){
-    for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
-      k = i + j*Ngrid_init;
-      k1 = k + Ngrid_init + 1;
-      
-      k2 = k + 1;
-      k3 = k + Ngrid_init;
-
-      sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
-      sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
-      sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
-      
-      sig_sum = sig1 + sig2 + sig3;
-      if(abs(sig_sum) == 3){ // inside
-        image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
-        triangles.push_back(Triangle(k,k1,k2));
-      }else if(abs(sig_sum) == 2){ // on edge
-        if(sig_sum > 0){
-          if(sig1 == 0){
-            image_points.push_back( ( i_points[k] + i_points[k1])/2  );
-          }else if(sig2 == 0){
-            image_points.push_back( ( i_points[k1] + i_points[k2])/2  );
-          }else{
-            image_points.push_back( ( i_points[k2] + i_points[k])/2  );
-          }
-          triangles.push_back(Triangle(k,k1,k2));
-        }
-      }else if (sig1 == 0 && sig3 == 0){ // a vertex
-        image_points.push_back( i_points[k] );
-        triangles.push_back(Triangle(k,k1,k2));
-      }
-     
-      //sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
-      sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
-      sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
-      
-      sig_sum = sig1 + sig2 + sig3;
-      if(abs(sig_sum) == 3){ // inside
-        image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k3] )/3  );
-        triangles.push_back(Triangle(k,k1,k3));
-      }else if(abs(sig_sum) == 2){ // on edge
-        if(sig_sum > 0){
-          if(sig1 == 0){
-            image_points.push_back( ( i_points[k] + i_points[k1] )/2  );
-          }else if(sig2 == 0){
-            image_points.push_back( ( i_points[k1] + i_points[k3] )/2  );
-          }else{
-            image_points.push_back( ( i_points[k3] + i_points[k] )/2  );
-          }
-          triangles.push_back(Triangle(k,k1,k3));
-        }
-      }
-    }
-  }
-  
-  return;
-}
+// depricated non-parallel version
+//void GridMap::find_images(Point_2d y
+//                 ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
+//                 ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+//                 ) const {
+//
+//  image_points.clear();
+//  triangles.clear();
+//
+//  size_t k;
+//  size_t k1;
+//  size_t k2;
+//  size_t k3;
+//
+//  int sig1,sig2,sig3,sig_sum;
+//
+//  for(size_t i=0 ; i< Ngrid_init-1 ; i++){
+//    for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
+//      k = i + j*Ngrid_init;
+//      k1 = k + Ngrid_init + 1;
+//
+//      k2 = k + 1;
+//      k3 = k + Ngrid_init;
+//
+//      sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+//      sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
+//      sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
+//
+//      sig_sum = sig1 + sig2 + sig3;
+//      if(abs(sig_sum) == 3){ // inside
+//        image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
+//        triangles.push_back(Triangle(k,k1,k2));
+//      }else if(abs(sig_sum) == 2){ // on edge
+//        if(sig_sum > 0){
+//          if(sig1 == 0){
+//            image_points.push_back( ( i_points[k] + i_points[k1])/2  );
+//          }else if(sig2 == 0){
+//            image_points.push_back( ( i_points[k1] + i_points[k2])/2  );
+//          }else{
+//            image_points.push_back( ( i_points[k2] + i_points[k])/2  );
+//          }
+//          triangles.push_back(Triangle(k,k1,k2));
+//        }
+//      }else if (sig1 == 0 && sig3 == 0){ // a vertex
+//        image_points.push_back( i_points[k] );
+//        triangles.push_back(Triangle(k,k1,k2));
+//      }
+//
+//      //sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+//      sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
+//      sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
+//
+//      sig_sum = sig1 + sig2 + sig3;
+//      if(abs(sig_sum) == 3){ // inside
+//        image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k3] )/3  );
+//        triangles.push_back(Triangle(k,k1,k3));
+//      }else if(abs(sig_sum) == 2){ // on edge
+//        if(sig_sum > 0){
+//          if(sig1 == 0){
+//            image_points.push_back( ( i_points[k] + i_points[k1] )/2  );
+//          }else if(sig2 == 0){
+//            image_points.push_back( ( i_points[k1] + i_points[k3] )/2  );
+//          }else{
+//            image_points.push_back( ( i_points[k3] + i_points[k] )/2  );
+//          }
+//          triangles.push_back(Triangle(k,k1,k3));
+//        }
+//      }
+//    }
+//  }
+//
+//  return;
+//}
 
 void GridMap::limited_image_search(Point_2d &y
                  ,std::vector<size_t> &cell_numbers  /// positions of the images limited by resolution of the gridmap

@@ -380,13 +380,14 @@ public:
           ,int sign=0             /// sign of magnification, it is found automatically if left out
   );*/
   
-  /** \brief  Find the image position of a source without grid refinement.
+  /** \brief  Find the ONE image position of a source without grid refinement.
   
-  This finds an image position given a source postion.  No grid is necessary.
+   This finds an image position given a source postion by minimizing the difference
+   between source positions.
    
    If use_image_guess=true the input image position will be used as a first guess and the output image will be guarenteed to have the same pairity.
    
-   This is useful for finding the position of weakly lensed images or for refining the image positions that are found on a finite grid.
+   This is useful for finding the position of weakly lensed images or for refining the image positions that are found on a finite grid (i.e. Lens::find_image()).
    
   */
 
@@ -398,20 +399,12 @@ public:
             ,bool use_image_guess /// if true p.x[] will be used as a guess for the image position
   );
   /** this version uses the redshift stored in the ray,
-  
-   Tthe ray is replaced with the best guess so the source position is replaced.
    */
   RAY find_image_min(const RAY &in_ray    /// p.y[] should be set to source position
                      ,PosType ytol2       /// target tolerance in source position squared
   );
   
   /// This is the same, but the image is forced to stay within boundary
-//  RAY find_image_min(
-//            RAY &p                /// p[] is
-//            ,PosType ytol2        /// target tolerance in source position squared
-//            ,PosType &dy2         /// final value of Delta y ^2
-//            ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
-//  );
   RAY find_image_min(
             Point &p              /// p[] is
             ,double zs            /// source redshift
@@ -419,25 +412,34 @@ public:
             ,PosType &dy2         /// final value of Delta y ^2
             ,std::vector<Point_2d> &boundary   /// image will be limited to within this boundary
   );
-
-  /// finds images by telescoping triangle method
+  /// This is a version that minimizes many rays in parallel.  Useful for weak lensing.
+  void find_images_min_parallel(std::vector<RAY> &rays
+                                        ,double ytol2
+                                        ,std::vector<bool> &success
+                                      );
+  
+  /** \brief finds images by telescoping triangle method.
+  
+  Each image is zoomed into until a resolution of stop_res is reached and no images are separated by more than a two pixel.  This eliminates most sperious low magnification images.
+  */
   std::vector<RAY> find_images(Point_2d y_source
                                     ,double z_source
                                     ,Point_2d center
-                                    ,double range
+                                    ,double range  /// initial range within which images are searched for (radians)
                                     ,double stop_res
                                     );
-  /// finds images by telescoping triangle method
+  /** \brief finds images by telescoping triangle method.
+   
+   This version starts with an input GridMap and then zooms in.  If stop_res is set
+   to the resolution of init_grid, no refinement will be done unless the images are not separated by more than a two pixel.  This eliminates most sperious low magnification images.
+   */
   std::vector<RAY> find_images(GridMap &init_grid
                               ,Point_2d y_source
                               ,double z_source
                               ,double stop_res
                               );
   
-  void find_images_min_parallel(std::vector<RAY> &rays
-                                        ,double ytol2
-                                        ,std::vector<bool> &success
-                                      );
+ 
 //  void find_point_source_images(
 //                              Grid &grid
 //                              ,Point_2d y_source

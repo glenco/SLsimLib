@@ -240,32 +240,32 @@ struct GridMap{
   std::vector<Rectangle> merge_boxes(
                    std::vector<Triangle> &triangles
                    ) const;
-  /*** \brief Returns a list of  RAYs from a set of source positions.
+  
+  /** \brief Returns a list of RAYs from a set of source positions.
    
    The image positions are found in parallel by the triangle method.  The order of the
    output rays will be the same as the sources with multiple images consecutive.  The number
       of images for each source position is given by the `multiplicity` array.
    
-   No new rays are shot.  The image positions and magnification matrix are interpolated from the nearest
-      image points already in the GridMap.
+   No new rays are shot.  The image positions and magnification matrix are interpolated from the nearest image points already in the GridMap.
+   
+   See also Lens::find_images()
    */
   std::list<RAY> find_images(std::vector<Point_2d> &ys
                              ,std::vector<int> &multiplicity
                              ) const;
 
-  /** find all images by triangle method
+  /** \brief Find all images by triangle method.
+   
+   No new rays are shot so the accuracy is limited to the resolution of the GridMap.
+   
+   See also Lens::find_images()
    */
   void find_images(Point_2d y
                    ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
                    ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
   ) const ;
-  
-  /** parallel version of find_images()
-   */
-  void find_images2(Point_2d y
-                   ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
-                   ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
-  ) const ;
+
   
   /** \brief finds the boundary of the region on the source plane where there are more than one image
 
