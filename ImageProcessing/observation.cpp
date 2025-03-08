@@ -92,6 +92,7 @@ void Obs::setPSF(std::string psf_file  /// name of fits file with psf
   
   if( (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size > 1.0e-3){
     std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
+    std::cout << (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size << std::endl;
     throw std::runtime_error("");
   }
                            
@@ -422,76 +423,76 @@ Observation::Observation(Telescope tel_name
  
   float diameter,transmission;
   switch (tel_name) {
-    case Telescope::Euclid_VIS:
-      // from Eric
-      // Equivalent gain is 11160 e-/ADU (Analog Digital Units)
-      // Saturation is 71 ADU
-      // Equivalent exposure time with 4 frames is 2260s
-      // Magnitude Zeropoint is 23.9
-      
-      gain = 11160;
-      //exp_time = 1800.;
-      //exp_time = 2260.;
-      //exp_num = 4;
-      mag_zeropoint = 23.9;
-      
-      back_mag = 22.8;  //back_mag = 25.0; // ?????
-      read_out_noise = 5.; //read_out_noise = 1.0; //read_out_noise = 0.01; // ?????
-      seeing = 0.18;
-      pix_size = 0.1*arcsecTOradians;
-      
-      break;
-    case Telescope::Euclid_Y:
-      diameter = 119.;
-      transmission = 0.0961;
-      
-      gain = 0;
-      //exp_time = 264.;
-      //exp_num = 3;
-      back_mag = 22.57;
-      read_out_noise = 5.;
-      seeing = 0.3;
-      pix_size = .3*arcsecTOradians;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
-      
-      mag_zeropoint = 25.04;
-      
-      break;
-    case Telescope::Euclid_J:
-      diameter = 119.;
-      transmission = 0.0814;
-      
-      gain = 0;
-      //exp_time = 270.;
-      //exp_num = 3;
-      back_mag = 22.53;
-      read_out_noise = 5.;
-      seeing = 0.3;
-      pix_size = .3*arcsecTOradians;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
-      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
-      
-      mag_zeropoint = 25.26;
-      break;
-    case Telescope::Euclid_H:
-      diameter = 119.;
-      transmission = 0.1692;
-      gain = 0;
-      //exp_time = 162.;
-      //exp_num = 3;
-      back_mag = 22.59;
-      read_out_noise = 5.;
-      seeing = 0.3;
-      pix_size = .3/60./60./180.*PI;
-      
-      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
-      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
-       
-      mag_zeropoint = 25.21;
-      break;
+//    case Telescope::Euclid_VIS:
+//      // from Eric
+//      // Equivalent gain is 11160 e-/ADU (Analog Digital Units)
+//      // Saturation is 71 ADU
+//      // Equivalent exposure time with 4 frames is 2260s
+//      // Magnitude Zeropoint is 23.9
+//
+//      gain = 11160;
+//      //exp_time = 1800.;
+//      //exp_time = 2260.;
+//      //exp_num = 4;
+//      mag_zeropoint = 23.9;
+//
+//      back_mag = 22.8;  //back_mag = 25.0; // ?????
+//      read_out_noise = 5.; //read_out_noise = 1.0; //read_out_noise = 0.01; // ?????
+//      seeing = 0.18;
+//      pix_size = 0.1*arcsecTOradians;
+//
+//      break;
+//    case Telescope::Euclid_Y:
+//      diameter = 119.;
+//      transmission = 0.0961;
+//
+//      gain = 0;
+//      //exp_time = 264.;
+//      //exp_num = 3;
+//      back_mag = 22.57;
+//      read_out_noise = 5.;
+//      seeing = 0.3;
+//      pix_size = .3*arcsecTOradians;
+//
+//      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+//      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
+//
+//      mag_zeropoint = 25.04;
+//
+//      break;
+//    case Telescope::Euclid_J:
+//      diameter = 119.;
+//      transmission = 0.0814;
+//
+//      gain = 0;
+//      //exp_time = 270.;
+//      //exp_num = 3;
+//      back_mag = 22.53;
+//      read_out_noise = 5.;
+//      seeing = 0.3;
+//      pix_size = .3*arcsecTOradians;
+//
+//      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;
+//      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
+//
+//      mag_zeropoint = 25.26;
+//      break;
+//    case Telescope::Euclid_H:
+//      diameter = 119.;
+//      transmission = 0.1692;
+//      gain = 0;
+//      //exp_time = 162.;
+//      //exp_num = 3;
+//      back_mag = 22.59;
+//      read_out_noise = 5.;
+//      seeing = 0.3;
+//      pix_size = .3/60./60./180.*PI;
+//
+//      //mag_zeropoint = 2.5*log10(diameter*diameter*transmission*PI/4./hplanck) + AB_zeropoint;   // convert from flux to magnitudes
+//      //mag_zeropoint = mag_to_counts(1.0/(diameter*diameter*transmission*PI/4.));
+//
+//      mag_zeropoint = 25.21;
+//      break;
     case Telescope::KiDS_u:
       diameter = 265.;
       transmission = 0.032;
@@ -742,9 +743,6 @@ const {
 }
 
 void Observation::set_up(){
-  //zero_point_flux = pow(10,-0.4*mag_zeropoint);  // erg/s/Hz/cm**2
-  //e_per_s_to_ergs_s_cm2 = pow(10,0.4*(mag_zeropoint-AB_zeropoint));
-  
   e_per_s_to_ergs_s_cm2 = 1.0/(mag_to_counts(mag_zeropoint));
   background_flux = pow(10,-0.4*(back_mag-mag_zeropoint ));
  }

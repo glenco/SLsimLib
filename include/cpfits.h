@@ -723,8 +723,12 @@ public:
     
     fits_get_colnum(fptr, CASEINSEN,(char*)(colname.c_str())
     , &col, &status);
-    check_status(status,"Column does not exist.");
-    
+    try{
+      check_status(status,"Column does not exist.");
+    }catch(...){
+      std::cerr << "Missing column : " << colname << std::endl;
+      throw std::invalid_argument("missing column");
+    }
     return col;
   }
 
@@ -827,21 +831,21 @@ public:
     return typecode;
   }
   
-  int read_column(int column_index,std::vector<float> &vecf){
+  int read_column(int col_index,std::vector<float> &vecf){
    
     int status=0,anyval=0;
 
-    if(column_index < 1){
+    if(col_index < 1){
       std::cerr << "CPFITS: column number must be > 0" << std::endl;
       throw std::invalid_argument("Error in CPFITS");
     }
-    if(column_index > Ncol){
+    if(col_index > Ncol){
       std::cerr << "CPFITS: there are only " << Ncol << " columns." << std::endl;
       throw std::invalid_argument("Error in CPFITS");
     }
     if(vecf.size() < Nrow ) vecf.resize(Nrow);
     
-    fits_read_col_flt(fptr, column_index, 1, 1,Nrow,0,
+    fits_read_col_flt(fptr, col_index, 1, 1,Nrow,0,
                       vecf.data(),&anyval, &status);
 
     return status;
@@ -891,7 +895,7 @@ public:
     std::vector<int> column_index;
   
   public:
-    /// The data frame is attached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a seporate function.
+    /// The data frame is attached to a file, but the constructor will not read all the data in the table.  Reading needs to be done with a separate function.
     DataFrameFits(
                   std::string datafile   /// input catalog file in fits format
                   ,std::vector<std::string> &columns  /// if empty all columns are read and this will contain thier names, if not, only the listed columns are read

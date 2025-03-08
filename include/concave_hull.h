@@ -973,7 +973,7 @@ double distance_to_segment(const Ptype &P
   
   Ptype D = S2-S1;
   double s = (P-S1)*D / D.length_sqr();
-  if(s<=0){
+  if(isnan(s) || s<=0){
     return (P-S1).length();
   }else if(s>=1){
     return (P-S2).length();
@@ -990,20 +990,15 @@ double distance_to_segment(const Ptype &P
   
   Ptype D = S2-S1;
   double s = (P-S1)*D / D.length_sqr();
-  if(isnan(s)){
+
+  if(isnan(s) || s<=0){
     closest_point = S1;
-    return (P-S1).length();
-  }
-  if(s<=0){
-    closest_point = S1;
-    return (P-S1).length();
   }else if(s>=1){
     closest_point = S2;
-    return (P-S2).length();
   }else{
     closest_point = S1 + D*s;
-    return (S1 + D*s - P).length();
   }
+  return (closest_point - P).length();
 }
 
 template <typename Ptype>
@@ -1023,36 +1018,48 @@ bool segments_cross(const Ptype &a1,const Ptype &a2
   return true;
 }
 
+/// @brief returns true if x is within the polygon H
 template <typename Ptype>
 bool inCurve(const Ptype &x,const std::vector<Ptype> &H){
-  
-  size_t n = H.size();
-  if(n <=2) return false;
+  if(H.size() < 3) return false;
+  Point_2d p1,p2;
   long w=0;
-  Ptype dH,dD;
-  double B,A;
-  for(size_t i=0 ; i<n-1 ; ++i){
-    dH = H[i+1]-H[i];
-    if(dH[1] == 0){  // // horizontal segment
-      if(x[1] == H[i][1]){
-        B = (x[0]-H[i][0])/dH[0];
-        if( B>=0 && B<=1 ) return true;  // point on boundary
-      }
-    }else{
-      dD = x-H[i];
-      A = dD[1]/dH[1];
-      if( A > 1 || A <= 0) continue;
-      B = (dH^dD)/dH[1];
-      if(B==0){               // on the boundary
-        return true;          // boundaries are always in
-      }else if(B>0){
-        if(dH[1] > 0) ++w;
-        else --w;
+  size_t n=H.size();
+  for(size_t i=0 ; i<n ; ++i){
+    size_t j = (i+1)%n;
+    if(H[j][1] != H[i][1]){ // ignore horizontal segments
+      p1[1] = H[i][1] - x[1];
+      p2[1] = H[j][1] - x[1];
+      if( p1[1]*p2[1] < 0  ){
+        p1[0] = H[i][0] - x[0];
+        p2[0] = H[j][0] - x[0];
+
+        if(p1[0]>=0 && p2[0]>=0){
+          w += 2*( p1[1] >= 0 ) - 1;
+        }else if(p1[0] > 0 || p2[0] > 0){
+          double s = p1[0] - (p2[0]-p1[0])*p1[1]/(p2[1]-p1[1]);
+          if(s >= 0){
+            w += 2*( p1[1] >= 0 ) - 1;
+          }
+        }
+      }else if(p2[1]==0){  // second point on lines
+        p2[0] = H[j][0] - x[0];
+        // this needs to be handled separately because of the 
+        // possibility that the curve touches the line a one vertex 
+        // but does not cross it.
+        if(p2[0] >= 0){
+
+          size_t k = (j+1)%n;
+          while( H[k][1] - x[1] == 0 && k!=i) k = (k+1)%n;
+
+          if(k!=i && p1[1]*( H[k][1] - x[1] ) <= 0){
+            w +=  2*( p1[1] >= 0 ) - 1;
+          }
+        }
       }
     }
   }
-  
-  return w;
+  return w != 0;
 }
 
 template <typename Ptype>

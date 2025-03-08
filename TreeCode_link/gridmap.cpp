@@ -55,19 +55,23 @@ GridMap::GridMap(
   
   i_points = NewPointArray(Ngrid_init*Ngrid_init2);
  
-  int i;
+  long i;
   // set grid of positions
-  for(int ii=0;ii<Ngrid_init;++ii){
-    for(int jj=0;jj<Ngrid_init2;++jj){
+  double xo= center[0] - 0.5*rangeX;
+  double yo= center[1] - 0.5*rangeY;
+  double res=rangeX/(Ngrid_init-1);
+  for(long ii=0;ii<Ngrid_init;++ii){
+    double xx = xo + ii*res;
+    for(long jj=0;jj<Ngrid_init2;++jj){
       
       i = ii + jj*Ngrid_init;
       
       i_points[i].id=pointID;
       ++pointID;
       
-      i_points[i].x[0] = center[0] + rangeX*ii/(Ngrid_init-1) - 0.5*rangeX;
-      i_points[i].x[1] = center[1] + rangeX*jj/(Ngrid_init-1) - 0.5*rangeY;
-      i_points[i].gridsize=rangeX/(Ngrid_init-1);
+      i_points[i].x[0] = xx;
+      i_points[i].x[1] = yo + jj*res;
+      i_points[i].gridsize=res;
     }
   }
   
@@ -523,7 +527,7 @@ void GridMap::find_magnification_contour(
 void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
                ,std::vector<bool> &hits_boundary
                ,std::vector<CritType> &crit_type                      
-  ){
+                        ){
   
   curves.resize(0);
   
@@ -549,10 +553,10 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     
     Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
   }
-
+  
   crit_type.resize(curves.size());
   for(CritType &b : crit_type) b = CritType::tangential;
-  int ntange = curves.size();  // number of tangential curves
+  long ntange = curves.size();  // number of tangential curves
   
   // find radial critical curves
   count=0;
@@ -570,26 +574,25 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,true);
   }
   
-  int m=curves.size();
+  long m=curves.size();
   crit_type.resize(m);
-  for(int i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
+  for(long i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
   
-  // reorder them so that radial curves follow the tangential curves they are within them
-  for(int j=ntange ; j<m ; ++j){
+  // reorder them so that radial curves follow the tangential curves they are within
+  for(long j=ntange ; j<m ; ++j){
     // pixel in radial critical curve
-    long q = long(curves[j][0][0]) + Ngrid_init*long(curves[j][0][1]);
-
     for(int i=0 ; i<j ;++i){
-      if(crit_type[i] == CritType::tangential && incurve(q,curves[i])
+      if(crit_type[i] == CritType::tangential 
+        && Utilities::inCurve(curves[j][0] ,curves[i] )
          ){
-        for(int k=j ; k>i+1 ; --k){
+        for(long k=j ; k>i+1 ; --k){
           std::swap(curves[k],curves[k-1]);
           std::swap(crit_type[k],crit_type[k-1]);
-	  {
-	    bool tmp = hits_boundary[k];
-	    hits_boundary[k] = hits_boundary[k-1];
-	    hits_boundary[k-1] = tmp;
-	  }
+          {
+            bool tmp = hits_boundary[k];
+            hits_boundary[k] = hits_boundary[k-1];
+            hits_boundary[k-1] = tmp;
+          }
           //std::swap(hits_boundary[k],hits_boundary[k-1]);
         }
         
@@ -608,38 +611,38 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   int ii_tan=0;
   for(int j=0 ; j<curves.size() ; ++j){
     if(crit_type[j] == CritType::tangential){
-        if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
-          
-            std::vector<Point_2d> psudo(indexes[ii_tan].size());
-            
-            for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
-           
-            std::vector<size_t> hull_index;
-            Utilities::convex_hull(psudo,hull_index);
-            
-            std::vector<Point_2d> v(hull_index.size());
-            curves.push_back(v);
-            
-            for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
-            
-            //write_csv("test_pseud.csv", curves.back());
-            
-            crit_type.push_back(CritType::pseudo);
-            hits_boundary.push_back(false);
-            
-            for(int k=curves.size()-1 ; k>j+1 ; --k){
-              std::swap(curves[k],curves[k-1]);
-              std::swap(crit_type[k],crit_type[k-1]);
-	            {
-		            bool tmp = hits_boundary[k];
-		            hits_boundary[k] = hits_boundary[k-1];
-	      	      hits_boundary[k-1] = tmp;
-	            }
-            }
-        } // radial missing
-        ++ii_tan;
-      } // is a tangent
-    } // loop through all
+      if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
+        
+        std::vector<Point_2d> psudo(indexes[ii_tan].size());
+        
+        for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
+        
+        std::vector<size_t> hull_index;
+        Utilities::convex_hull(psudo,hull_index);
+        
+        std::vector<Point_2d> v(hull_index.size());
+        curves.push_back(v);
+        
+        for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
+        
+        //write_csv("test_pseud.csv", curves.back());
+        
+        crit_type.push_back(CritType::pseudo);
+        hits_boundary.push_back(false);
+        
+        for(int k=curves.size()-1 ; k>j+1 ; --k){
+          std::swap(curves[k],curves[k-1]);
+          std::swap(crit_type[k],crit_type[k-1]);
+          {
+            bool tmp = hits_boundary[k];
+            hits_boundary[k] = hits_boundary[k-1];
+            hits_boundary[k-1] = tmp;
+          }
+        }
+      } // radial missing
+      ++ii_tan;
+    } // is a tangent
+  } // loop through all
   assert(2*ntange <= curves.size());
 }
 
@@ -959,29 +962,23 @@ std::list<RAY> GridMap::find_images(std::vector<Point_2d> &ys
   return v_of_lists[0];
 }
 
-void GridMap::find_images(Point_2d y
-                 ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
-                 ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
-                 ) const {
-  
-  image_points.clear();
-  triangles.clear();
-  
-  size_t k;
-  size_t k1;
-  size_t k2;
-  size_t k3;
-  
+void GridMap::_find_images2_(size_t j1
+                            ,size_t j2
+                            ,std::list<Point_2d> &image_points
+                            ,std::list<Triangle> &triangles
+                            ,Point_2d y
+                            ) const {
   int sig1,sig2,sig3,sig_sum;
 
-  for(size_t i=0 ; i< Ngrid_init-1 ; i++){
-    for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
-      k = i + j*Ngrid_init;
-      k1 = k + Ngrid_init + 1;
-      
-      k2 = k + 1;
-      k3 = k + Ngrid_init;
-
+  for(size_t j=j1 ; j< j2 ; j++){
+    size_t k=j*Ngrid_init;
+    size_t k1 = k + Ngrid_init + 1;
+    
+    size_t k2 = k + 1;
+    size_t k3 = k + Ngrid_init;
+    
+    for(size_t i=0 ; i< Ngrid_init-1 ; i++){
+    
       sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
       sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
       sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
@@ -989,7 +986,7 @@ void GridMap::find_images(Point_2d y
       sig_sum = sig1 + sig2 + sig3;
       if(abs(sig_sum) == 3){ // inside
         image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
-        triangles.push_back(Triangle(k,k1,k2));
+        triangles.emplace_back(k,k1,k2);
       }else if(abs(sig_sum) == 2){ // on edge
         if(sig_sum > 0){
           if(sig1 == 0){
@@ -1005,7 +1002,7 @@ void GridMap::find_images(Point_2d y
         image_points.push_back( i_points[k] );
         triangles.push_back(Triangle(k,k1,k2));
       }
-     
+      
       //sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
       sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
       sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
@@ -1026,11 +1023,254 @@ void GridMap::find_images(Point_2d y
           triangles.push_back(Triangle(k,k1,k3));
         }
       }
+      ++k;
+      ++k1;
+      ++k2;
+      ++k3;
     }
   }
+}
+
+void GridMap::find_images(Point_2d y
+                 ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
+                 ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+) const {
+  
+  
+  image_points.clear();
+  triangles.clear();
+  if(Ngrid_init2 <2 || Ngrid_init<2){
+    return;
+  }
+  
+  int nthreads = Utilities::GetNThreads();
+  
+  long block = (Ngrid_init2-1)/nthreads + 1;
+  if(Ngrid_init2 < nthreads){
+    nthreads = Ngrid_init2-1;
+    block=1;
+  }
+  size_t j1 = 0;
+  size_t j2 = min<long>(j1+block,Ngrid_init2-1);
+  
+  std::vector<std::list<Point_2d>> image_lists(nthreads);
+  std::vector<std::list<Triangle>> tri_lists(nthreads);
+  std::vector<std::thread> thr;
+  {
+    for(int t=0 ; t<nthreads ; t++){
+      j2 = min<long>(j1+block,Ngrid_init2-1);
+      thr.push_back(std::thread(&GridMap::_find_images2_,this
+                                ,j1,j2
+                                ,std::ref(image_lists[t])
+                                ,std::ref(tri_lists[t])
+                                ,y));
+      j1=j2;
+    }
+    for(auto &t : thr) t.join();
+  }
+  assert(j2==Ngrid_init2-1);
+  
+
+  std::list<Triangle> tris;
+  for (const auto& l : tri_lists) {
+    tris.insert(tris.end(), l.begin(), l.end());
+  }
+  
+  int n=0;
+  for(auto li : image_lists) n += li.size();
+  image_points.resize(n);
+  int i=0;
+  for(auto li : image_lists){
+    for(Point_2d &p : li){
+      image_points[i] = p;
+      ++i;
+    }
+  }
+  triangles.resize(n);
+  i=0;
+  for(Triangle &p : tris){
+    triangles[i] = p;
+    ++i;
+  }
+  
   
   return;
 }
+
+inline bool GridMap::touch(const Rectangle &tr1,const Rectangle &tr2) const{
+  if(tr1[0]/Ngrid_init <= tr2[1]/Ngrid_init
+  && tr1[1]/Ngrid_init >= tr2[0]/Ngrid_init
+  && tr1[0]%Ngrid_init <= tr2[1]%Ngrid_init
+  && tr1[1]%Ngrid_init >= tr2[0]%Ngrid_init
+     ) return true;
+  return false;
+}
+
+std::vector<GridMap::Rectangle> GridMap::merge_boxes(std::list<Triangle> &triangles
+  ) const{
+  
+  std::vector<Rectangle> boxes(triangles.size());
+  if(triangles.size()==0) return boxes;
+  int i=0;
+  long n=Ngrid_init*Ngrid_init2 -1;
+  for(auto &tri : triangles){
+    long x=tri[0]%Ngrid_init;
+    long y=tri[0]/Ngrid_init;
+
+    if(x>0) --x;
+    if(y>0) --y;
+    boxes[i][0] = x + y*Ngrid_init;
+    
+    x=tri[1]%Ngrid_init;
+    y=tri[1]/Ngrid_init;
+    if(x<Ngrid_init-1) ++x;
+    if(y<Ngrid_init2-1) ++y;
+    boxes[i][1] = x + y*Ngrid_init;
+ 
+    ++i;
+  }
+  
+  
+  for(int i=0 ; i<boxes.size() ; ++i){
+    for(int j=i+1 ; j<boxes.size() ; ++j){
+      if(touch(boxes[i],boxes[j])){
+        
+        boxes[i][0] = min(boxes[i][0]%Ngrid_init,boxes[j][0]%Ngrid_init)
+        + min(boxes[i][0]/Ngrid_init,boxes[j][0]/Ngrid_init)*Ngrid_init;
+        boxes[i][1] = max(boxes[i][1]%Ngrid_init,boxes[j][1]%Ngrid_init)
+        + max(boxes[i][1]/Ngrid_init,boxes[j][1]/Ngrid_init)*Ngrid_init;
+        
+        boxes[j] = boxes.back();
+        boxes.pop_back();
+        --i;
+        break;
+      }
+    }
+  }
+  
+  return boxes;
+}
+
+std::vector<GridMap::Rectangle> GridMap::merge_boxes(std::vector<Triangle> &triangles
+  ) const{
+  
+  std::vector<Rectangle> boxes(triangles.size());
+  if(triangles.size()==0) return boxes;
+  
+  int i=0;
+  long n=Ngrid_init*Ngrid_init2 -1;
+  for(auto &tri : triangles){
+    long x=tri[0]%Ngrid_init;
+    long y=tri[0]/Ngrid_init;
+
+    if(x>0) --x;
+    if(y>0) --y;
+    boxes[i][0] = x + y*Ngrid_init;
+    
+    long x1=tri[1]%Ngrid_init;
+    long y1=tri[1]/Ngrid_init;
+    if(x1<Ngrid_init-1) ++x1;
+    if(y1<Ngrid_init2-1) ++y1;
+    boxes[i][1] = x1 + y1*Ngrid_init;
+ 
+    assert(x1>x);
+    assert(y1>y);
+    ++i;
+  }
+  
+  for(int i=0 ; i<boxes.size() ; ++i){
+    for(int j=i+1 ; j<boxes.size() ; ++j){
+      if(touch(boxes[i],boxes[j])){
+        
+        boxes[i][0] = min(boxes[i][0]%Ngrid_init,boxes[j][0]%Ngrid_init)
+        + min(boxes[i][0]/Ngrid_init,boxes[j][0]/Ngrid_init)*Ngrid_init;
+        boxes[i][1] = max(boxes[i][1]%Ngrid_init,boxes[j][1]%Ngrid_init)
+        + max(boxes[i][1]/Ngrid_init,boxes[j][1]/Ngrid_init)*Ngrid_init;
+        
+        boxes[j] = boxes.back();
+        boxes.pop_back();
+        --i;
+        break;
+      }
+    }
+  }
+  
+  return boxes;
+}
+
+// depricated non-parallel version
+//void GridMap::find_images(Point_2d y
+//                 ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
+//                 ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
+//                 ) const {
+//
+//  image_points.clear();
+//  triangles.clear();
+//
+//  size_t k;
+//  size_t k1;
+//  size_t k2;
+//  size_t k3;
+//
+//  int sig1,sig2,sig3,sig_sum;
+//
+//  for(size_t i=0 ; i< Ngrid_init-1 ; i++){
+//    for(size_t j=0 ; j< Ngrid_init2-1 ; j++){
+//      k = i + j*Ngrid_init;
+//      k1 = k + Ngrid_init + 1;
+//
+//      k2 = k + 1;
+//      k3 = k + Ngrid_init;
+//
+//      sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+//      sig2 = sign( (y-s_points[k1])^(s_points[k2]-s_points[k1]) );
+//      sig3 = sign( (y-s_points[k2])^(s_points[k]-s_points[k2]) );
+//
+//      sig_sum = sig1 + sig2 + sig3;
+//      if(abs(sig_sum) == 3){ // inside
+//        image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k2] )/3  );
+//        triangles.push_back(Triangle(k,k1,k2));
+//      }else if(abs(sig_sum) == 2){ // on edge
+//        if(sig_sum > 0){
+//          if(sig1 == 0){
+//            image_points.push_back( ( i_points[k] + i_points[k1])/2  );
+//          }else if(sig2 == 0){
+//            image_points.push_back( ( i_points[k1] + i_points[k2])/2  );
+//          }else{
+//            image_points.push_back( ( i_points[k2] + i_points[k])/2  );
+//          }
+//          triangles.push_back(Triangle(k,k1,k2));
+//        }
+//      }else if (sig1 == 0 && sig3 == 0){ // a vertex
+//        image_points.push_back( i_points[k] );
+//        triangles.push_back(Triangle(k,k1,k2));
+//      }
+//
+//      //sig1 = sign( (y-s_points[k])^(s_points[k1]-s_points[k]) );
+//      sig2 = sign( (y-s_points[k1])^(s_points[k3]-s_points[k1]) );
+//      sig3 = sign( (y-s_points[k3])^(s_points[k]-s_points[k3]) );
+//
+//      sig_sum = sig1 + sig2 + sig3;
+//      if(abs(sig_sum) == 3){ // inside
+//        image_points.push_back( ( i_points[k] + i_points[k1] + i_points[k3] )/3  );
+//        triangles.push_back(Triangle(k,k1,k3));
+//      }else if(abs(sig_sum) == 2){ // on edge
+//        if(sig_sum > 0){
+//          if(sig1 == 0){
+//            image_points.push_back( ( i_points[k] + i_points[k1] )/2  );
+//          }else if(sig2 == 0){
+//            image_points.push_back( ( i_points[k1] + i_points[k3] )/2  );
+//          }else{
+//            image_points.push_back( ( i_points[k3] + i_points[k] )/2  );
+//          }
+//          triangles.push_back(Triangle(k,k1,k3));
+//        }
+//      }
+//    }
+//  }
+//
+//  return;
+//}
 
 void GridMap::limited_image_search(Point_2d &y
                  ,std::vector<size_t> &cell_numbers  /// positions of the images limited by resolution of the gridmap
@@ -1111,7 +1351,7 @@ bool  GridMap::incurve(long k,std::vector<Point_2d> &curve) const{
   int n=0;
   long i = k % Ngrid_init , j = k / Ngrid_init;
   for(Point_2d &p : curve){
-    if( p[0] > i && fabs(j - p[1]) < 0.1 ) ++n;
+     if( long(p[0]+0.5) > i && (j - long(p[1]+0.5) ) == 0 ) ++n;
   }
   
   return n%2 == 1;

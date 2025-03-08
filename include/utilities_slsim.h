@@ -201,7 +201,7 @@ class SymmetricMatrix{
   int n;
   int m;
 public:
-  SymmetricMatrix(size_t n):n(n){
+  SymmetricMatrix(int n):n(n){
     v.resize(n*(n+1)/2);
     m = 2*n-1;
   }
@@ -1728,57 +1728,84 @@ int ReadCSVnumerical1(std::string filename                              /// file
                       ,char deliniator = ','                            /// deliniator between values
                       ,std::string replace = "\\N"                      /// replace this string with zero
                       ,std::function<bool(std::vector<T> &)> accept = [](std::vector<T> &v){return true;}  /// function that determines if a row should be accepted
-){
-  
-  bool verbose = false;
-  
-  std::ifstream file(filename);
-  // find number of particles
-  if (!file.is_open()){
-    std::cerr << "file " << filename << " cann't be opened." << std::endl;
-    throw std::runtime_error("no file");
-  }
-  
-  int count_preamble=0;
-  std::string line;
-  // read comment lines and first data line
-  do{
-    std::getline(file,line);
-    ++count_preamble;
-    if(!file) break;  // probably EOF
-  }while(line[0] == comment_char);
-  
-  // read the names
-  std::stringstream          lineStream(line);
-  std::string                cell;
-  column_names.empty();
-  while(std::getline(lineStream,cell, deliniator))
-  {
-    column_names.push_back(cell);
-  }
-  // This checks for a trailing comma with no data after it.
-  if (!lineStream && cell.empty())
-  {
-    column_names.push_back("");
-  }
-  
-  if(verbose){ // print colum names
-    int i = 0;
-    for(auto st : column_names){
-      std::cout << i++ << " " << st << std::endl;
+  ){
+    
+    bool verbose = false;
+    
+    std::ifstream file(filename);
+    // find number of particles
+    if (!file.is_open()){
+      std::cerr << "file " << filename << " cann't be opened." << std::endl;
+      throw std::runtime_error("no file");
     }
-  }
-  
-  int columns = NumberOfEntries(line,deliniator);
+    
+    int count_preamble=0;
+    std::string line;
+    // read comment lines and first data line
+    do{
+      std::getline(file,line);
+      ++count_preamble;
+      if(!file) break;  // probably EOF
+    }while(line[0] == comment_char);
+    
+    // read the names
+    std::stringstream          lineStream(line);
+    std::string                cell;
+    column_names.empty();
+    while(std::getline(lineStream,cell, deliniator))
+    {
+      column_names.push_back(cell);
+    }
+    // This checks for a trailing comma with no data after it.
+    if (!lineStream && cell.empty())
+    {
+      column_names.push_back("");
+    }
+    
+    if(verbose){ // print column names
+      int i = 0;
+      for(auto st : column_names){
+        std::cout << i++ << " " << st << std::endl;
+      }
+    }
+    
+    int ncolumns = NumberOfEntries(line,deliniator);
+    
+    // check if any of the columns are strings
+    std::getline(file,line);
+    {
+      size_t n=0,m = 0,i=0;
+      do{
+        m = line.find(",",n);
+        cell = line.substr(n,m-n);
+        /// clean blank spaces
+        cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
+        //if (cell.size() > 0){
+          //for(char c : cell){
+        //    if(std::isdigit(cell[0]) == false){
+        //      std::cerr << "In file " << filename << " column -" << column_names[i]
+        //      << "- appears not to be numeric." << std::endl;
+        //      throw (-1);
+        //    }
+          //}
+        /*}/*else{
+          std::cout << "In file " << filename << " column -" << column_names[i]
+          << "- is empty." << std::endl;
+          throw (-1);
+        }*/
+        n = m+1;
+        ++i;
+      }while(m != std::string::npos);
+    }
   
   // count number of data line
-  size_t number_of_data_lines = 0;
+  size_t number_of_data_lines = 1;
   while(std::getline(file, line) && number_of_data_lines < MaxNumber ) ++number_of_data_lines;
   
   //std::vector<std::vector<T> > tmp_data(columns,std::vector<T>(number_of_data_lines));
-  std::vector<std::vector<T> > tmp_data(columns,std::vector<T>(0));
+  std::vector<std::vector<T> > tmp_data(ncolumns,std::vector<T>(0));
   swap(data,tmp_data);
-  std::vector<T> tmp_row(columns);
+  std::vector<T> tmp_row(ncolumns);
   
   /// return to first data line
   //file.seekg(std::ios::beg);
@@ -1788,11 +1815,8 @@ int ReadCSVnumerical1(std::string filename                              /// file
   for(int i=0; i < count_preamble; ++i){
     file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
   }
-  //std::getline(file,line);
   
   size_t rows = 0;
-  //data.resize(columns);
-  //for(auto &v : data ) v.empty();
   while(std::getline(file,line) && rows < MaxNumber){
     // read the names
     std::stringstream          lineStream(line);
@@ -1808,11 +1832,11 @@ int ReadCSVnumerical1(std::string filename                              /// file
       //data[i].push_back(to_numeric<T>(cell));
       //data[i][rows] = to_numeric<T>(cell);
       tmp_row[i] = to_numeric<T>(cell);
-      i = (i+1)%columns;
+      i = (i+1)%ncolumns;
     }
     if(accept(tmp_row)){
       ++rows;
-      for(int i=0 ; i < columns ; ++i) data[i].push_back(tmp_row[i]);
+      for(int i=0 ; i < ncolumns ; ++i) data[i].push_back(tmp_row[i]);
     }
   }
   return 1;
@@ -2201,7 +2225,6 @@ public:
   ){
     filename = datafile;
     Utilities::IO::ReadCSVnumerical1(datafile,data,column_names,MaxNumber,'#',',',replace,accept);
-    
     for(int i=0 ; i<column_names.size() ; ++i) datamap[column_names[i]] = i;
   };
 
@@ -2226,9 +2249,9 @@ public:
       throw std::invalid_argument("no label");
     }
     return data[datamap[label]];
-    for(auto c : column_names ) std::cout << c << " ";
-    std::cout << std::endl;
-    throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    //for(auto c : column_names ) std::cout << c << " ";
+    //std::cout << std::endl;
+    //throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
   };
   
   /// add a column to the data frame.  This does a copy.
@@ -2439,6 +2462,89 @@ double hypergeometric( T a, T b, T c, T x )
 
    return value;
 }
+
+class LOGPARAMS{
+
+public:
+  typedef boost::variant<int,size_t,long,float,double,std::string,bool> MULTITYPE;
+  typedef std::map<std::string,MULTITYPE> LINE;
+  typedef std::map<std::string,std::vector<double> > VLINE;
+  typedef std::map<std::string,std::vector<bool> > BLINE;
+
+private:
+  time_t to;
+  
+  LINE lines;
+  VLINE vlines;
+  BLINE blines;
+  std::string filename;
+  std::string blanck_val;
+public:
+
+  LOGPARAMS(std::string file,std::string blanck_value = "0"):filename(file),blanck_val(blanck_value){
+    time(&to);
+  };
+  
+  ~LOGPARAMS(){
+    print_file(filename);
+  }
+  
+  void operator()(std::string label,MULTITYPE v){lines[label] = v;}
+  void operator()(std::string label,const std::vector<double> &v){vlines[label] = v;}
+  void operator()(std::string label,const std::vector<bool> &v){blines[label] = v;}
+  void operator()(std::string label){lines[label] = "-----";}
+
+  
+  MULTITYPE operator[](std::string label){return lines[label];}
+  void setlogfile(std::string name){filename = name;}
+  
+  void print(){
+    for(auto a : lines){
+      std::cout << std::left << std::setw(25) << a.first << " " << a.second << std::endl;
+    }
+    for(auto a : vlines){
+      std::cout << std::left << std::setw(25) << a.first << " : ";
+      for(double x : a.second ) std::cout << x << " ";
+      std::cout << std::endl;
+    }
+    for(auto a : blines){
+      std::cout << std::left << a.first << " : ";
+      for(double x : a.second ) std::cout << x << " ";
+      std::cout << std::endl;
+    }
+    time_t now = time(0);
+    std::cout << "log has existed for " << difftime(now,to)/60 << " min" << std::endl;
+  }
+  
+  void print_to_file(){
+    print_file(filename);
+  }
+  
+  void print_file(std::string filename){
+    //printrow(std::cout, it->first, it->second, comment->second);
+
+    std::ofstream logfile(filename);
+    time_t now = time(0);
+    struct tm date = *localtime(&now);
+    logfile << date.tm_hour << ":" << date.tm_min << "   " << date.tm_mday << "/" << date.tm_mon << "/" << date.tm_year + 1900 << std::endl;
+    logfile << "log has existed for " << difftime(now,to)/60 << " min" << std::endl;
+    for(auto a : lines){
+      logfile << std::left << std::setw(23) << a.first << " " << a.second << std::endl;
+    }
+    for(auto a : vlines){
+      logfile << std::left << std::setw(23) << a.first << " : ";
+      for(double x : a.second ) logfile << x << " ";
+      logfile << std::endl;
+    }
+    for(auto a : blines){
+      logfile << std::left << a.first << " : ";
+      for(double x : a.second ) logfile << x << " ";
+      logfile << std::endl;
+    }
+  }
+
+};
+
 
 class LOGDATA{
 

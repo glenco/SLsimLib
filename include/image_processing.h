@@ -95,10 +95,10 @@ public:
   virtual float getBackgroundNoise() const = 0;
 
   /// convert using stan
-  virtual double mag_to_counts(double m) const = 0;
-  virtual double counts_to_mag(double flux) const = 0;
-  virtual double zeropoint() const = 0;
-  virtual void setZeropoint(double zpoint) = 0;
+  //virtual double mag_to_counts(double m) const = 0;
+  //virtual double counts_to_mag(double flux) const = 0;
+  //virtual double zeropoint() const = 0;
+  //virtual void setZeropoint(double zpoint) = 0;
 
 
 protected:
@@ -166,7 +166,7 @@ class ObsVIS : public Obs{
 private:
   
   // standard from magnitude to e- per sec
-  double zero_point = 24.4;
+  //double zero_point = 24.4;
   //double sigma_back_per_qsrttime = 0.00267 * sqrt(5.085000000000E+03);
   
   //double gain = 11160; // e-/ADU (Analog Digital Units)
@@ -236,17 +236,17 @@ public:
                ,bool cosmic=false);
   
  
-  double mag_to_counts(double m) const{
-    if(m == 100) return 0;
-    return pow(10,-0.4*(m + zero_point));
-  }
-  double counts_to_mag(double flux) const{
-    if(flux <=0) return 100;
-    return -2.5 * log10(flux) - zero_point;
-  }
+//  double mag_to_counts(double m) const{
+//    if(m == 100) return 0;
+//    return pow(10,-0.4*(m + zero_point));
+//  }
+//  double counts_to_mag(double flux) const{
+//    if(flux <=0) return 100;
+//    return -2.5 * log10(flux) - zero_point;
+//  }
 
-  double zeropoint() const {return zero_point;}
-  void setZeropoint(double zpoint){zero_point=zpoint;}
+  //double zeropoint() const {return zero_point;}
+  //void setZeropoint(double zpoint){zero_point=zpoint;}
  
   /// returns std of pixels in e-
   float getBackgroundNoise() const {
@@ -553,8 +553,12 @@ void ObsVIS::Convert(
     PixelMap<T> map_scratch(Point_2d(0,0).x
                             , Npix_x_input
                             , Npix_y_input, pix_size);
+    //std::cout << "Test of psf flux conservation" << std::endl;
+    //std::cout << map_in.sum() << std::endl;
     ApplyPSF<T>(map_in,map_scratch);
+    //std::cout << map_scratch.sum() << std::endl;
     downsample<T>(map_scratch,map_out);
+    //std::cout << map_out.sum() << std::endl;
   }else{
     downsample<T>(map_in,map_out);
   }
@@ -574,6 +578,7 @@ void Obs::setPSF(PixelMap<T> &psf_map/// name of fits file with psf
   
   if( (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size > 1.0e-3){
     std::cout << "Obs::setPSF() - psf is not resolved." << std::endl;
+    std::cout << (input_psf_pixel_size - pix_size/psf_oversample)/input_psf_pixel_size << std::endl;
     throw std::runtime_error("");
   }
   
@@ -825,8 +830,14 @@ void Observation::Convert(PixelMap<T> &map_in
     PixelMap<T> map_scratch(Point_2d(0,0).x
                             , Npix_x_input
                             , Npix_y_input, pix_size);
+    
+    //std::cout << "Test of psf flux conservation" << std::endl;
+    //std::cout << map_in.sum() << std::endl;
     ApplyPSF<T>(map_in,map_scratch);
+    //std::cout << map_scratch.sum() << std::endl;
     downsample<T>(map_scratch,map_out);
+    //std::cout << map_out.sum() << std::endl;
+
   }else{
     downsample<T>(map_in,map_out);
   }

@@ -72,6 +72,8 @@ struct GridMap{
   Point_2d image_point(size_t index){return i_points[index];}
   /// get the image point for a index number
   Point_2d source_point(size_t index){return s_points[index];}
+  /// get the image point for a index number
+  RAY ray(size_t index){return i_points[index];}
  
   void ClearSurfaceBrightnesses();
   void assertNAN(); // check for nan in surface prightness
@@ -111,11 +113,11 @@ struct GridMap{
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
   template<typename T>
-  PixelMap<T> getPixelMapFlux(int res) const;
+  PixelMap<T> getPixelMapFlux() const;
   
-  /// update a PixelMap with the flux in pixels at a resolution of res times the original resolution.
+  /// update a PixelMap with the flux in pixels.
   /// The map must have precisely the right size and center to match or an exception will be thrown.
-  /// Constructing the map with PixelMap getPixelMapFlux(int res) will insure that it does.
+  /// Constructing the map with PixelMap getPixelMapFlux(i) will insure that it does.
   template<typename T>
   void getPixelMapFlux(PixelMap<T> &map) const;
   
@@ -183,30 +185,87 @@ struct GridMap{
       index[1] = j;
       index[2] = k;
     }
-    size_t index[3];
-    size_t & operator[](int i){return index[i];}
+    Triangle(){
+      index[0] = 0;
+      index[1] = 0;
+      index[2] = 0;
+    }
+    Triangle(const Triangle &tri){
+      index[0] = tri[0];
+      index[1] = tri[1];
+      index[2] = tri[2];
+    }
+    Triangle & operator=(const Triangle &tri){
+      index[0] = tri[0];
+      index[1] = tri[1];
+      index[2] = tri[2];
+      return *this;
+    }
+    ~Triangle(){};
+    std::vector<long> index = {0,0,0};
+    long & operator[](int i){return index[i];}
+    long operator[](int i) const {return index[i];}
+  };
+  struct Rectangle{
+    Rectangle(size_t i,size_t j){
+      index[0] = i;
+      index[1] = j;
+    }
+    Rectangle(){
+      index[0] = 0;
+      index[1] = 0;
+    }
+    Rectangle(const Rectangle &rec){
+      index[0] = rec[0];
+      index[1] = rec[1];
+    }
+    Rectangle & operator=(Rectangle &rec){
+      index[0] = rec[0];
+      index[1] = rec[1];
+      return *this;
+    }
+    ~Rectangle(){};
+    std::vector<long> index = {0,0};
+    long & operator[](int i){return index[i];}
+    long operator[](int i) const {return index[i];}
   };
   
-    
-  /*** \brief Returns a list of  RAYs from a set of source positions.
+  // determines if two rectangles touch
+  inline bool touch(const Rectangle &tr1,const Rectangle &tr2) const;
+  
+  // returns a vector of rectangles that encompase all triangles with one rectangle for each touching group
+  std::vector<Rectangle> merge_boxes(
+                   std::list<Triangle> &triangles
+                   ) const;
+  std::vector<Rectangle> merge_boxes(
+                   std::vector<Triangle> &triangles
+                   ) const;
+  
+  /** \brief Returns a list of RAYs from a set of source positions.
    
    The image positions are found in parallel by the triangle method.  The order of the
    output rays will be the same as the sources with multiple images consecutive.  The number
       of images for each source position is given by the `multiplicity` array.
    
-   No new rays are shot.  The image positions and amgnification matrix are interpolated from the nearest
-      image points already in the GridMap.
+   No new rays are shot.  The image positions and magnification matrix are interpolated from the nearest image points already in the GridMap.
+   
+   See also Lens::find_images()
    */
   std::list<RAY> find_images(std::vector<Point_2d> &ys
                              ,std::vector<int> &multiplicity
                              ) const;
 
-  /** find all images by triangle method
+  /** \brief Find all images by triangle method.
+   
+   No new rays are shot so the accuracy is limited to the resolution of the GridMap.
+   
+   See also Lens::find_images()
    */
   void find_images(Point_2d y
                    ,std::vector<Point_2d> &image_points  /// positions of the images limited by resolution of the gridmap
                    ,std::vector<Triangle> &triangles     /// index's of the points that form the triangles that the images are in
   ) const ;
+
   
   /** \brief finds the boundary of the region on the source plane where there are more than one image
 
@@ -353,6 +412,12 @@ private:
   static std::mutex grid_mutex;
   
   void _find_images_(Point_2d *ys,int *multiplicity,long Nys,std::list<RAY> &rays) const;
+  void _find_images2_(size_t j1
+                              ,size_t j2
+                              ,std::list<Point_2d> &image_points
+                              ,std::list<Triangle> &triangles
+                              ,Point_2d y
+                              ) const;
 
   // find if there are images of y in specific cells
   void limited_image_search(Point_2d &y
@@ -363,25 +428,22 @@ private:
 
 /// Output a PixelMap of the surface brightness with same res as the GridMap
 template<typename T>
-PixelMap<T> GridMap::getPixelMapFlux(int resf) const{
-  
-  if(resf <=0){
-    ERROR_MESSAGE();
-    throw std::invalid_argument("resf must be > 0");
-  }
+PixelMap<T> GridMap::getPixelMapFlux() const{
   
   // The number of pixels on a side of the new map will be
   // N = (Ngrid_init-1)/resf + 1;
   // so that the resolution is resf x the GridMap resolution
   
-  PixelMap<T> map(center.x,(Ngrid_init-1)/resf + 1 ,(Ngrid_init2-1)/resf + 1,resf*x_range/(Ngrid_init-1));
+  PixelMap<T> map(center.x
+                  ,Ngrid_init
+                  ,Ngrid_init2
+                  ,x_range/(Ngrid_init-1));
   
-  int factor = resf*resf;
   size_t index;
    size_t n = Ngrid_init*Ngrid_init2;
    for(size_t i=0 ; i<n ; ++i){
      index = map.find_index(i_points[i].x);
-     map.data()[index] = i_points[i].surface_brightness/factor;
+     map.data()[index] = i_points[i].surface_brightness;
    }
   
   //for(size_t i = 0 ; i < Ngrid_init ; ++i){
@@ -400,44 +462,35 @@ PixelMap<T> GridMap::getPixelMapFlux(int resf) const{
 template<typename T>
 void GridMap::getPixelMapFlux(PixelMap<T> &map) const{
   
-  int resf = (Ngrid_init-1)/(map.getNx()-1);
+  //int resf = (Ngrid_init-1)/(map.getNx()-1);
   
-  if(resf*map.getNx() != Ngrid_init-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
-  if(resf*map.getNy() != Ngrid_init2-1+resf) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(map.getNx() != Ngrid_init) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
+  if(map.getNy() != Ngrid_init2) throw std::invalid_argument("PixelMap does not match GripMap! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
   //if(map.getResolution() != x_range*resf/(Ngrid_init-1)) throw std::invalid_argument("PixelMap does not match GripMap resolution! Use the other GridMap::getPixelMapFlux() to contruct a PixelMap.");
   
   if(map.getCenter()[0] != center[0]) throw std::invalid_argument("PixelMap does not match GripMap!");
   if(map.getCenter()[1] != center[1]) throw std::invalid_argument("PixelMap does not match GripMap!");
   
-  if(resf <=0){
-    ERROR_MESSAGE();
-    throw std::invalid_argument("resf must be > 0");
-  }
+  double res = getResolution();
+  if((map.getResolution()-res) < 1.0e-6*res ) throw std::invalid_argument("PixelMap resolution does not match GripMap!");
   
   map.Clean();
   
-  int factor = resf*resf;
-/*  size_t index;
-  size_t n = Ngrid_init*Ngrid_init2;
-  std::vector<int> counts(map.size(),0);
-  for(size_t i=0 ; i<n ; ++i){
-    index = map.find_index(i_points[i].x);
-    ++counts[index];
-    map.data()[index] = i_points[i].surface_brightness;
-  }
-  index = map.size();
-  for(size_t i=0 ; i<index ; ++i) map[i] /= counts[i];
-  */
+  //long nx = map.getNx();
+  //for(size_t i = 0 ; i < Ngrid_init ; ++i){
+  //  for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
+  //    size_t k = i + nx * j;
+  //    map.data()[k] += i_points[k].surface_brightness;
+  //  }
+  //}
   
-  long nx = map.getNx();
-  for(size_t i = 0 ; i < Ngrid_init ; ++i){
-    size_t ii = i/resf;
-    for(size_t j = 0 ; j < Ngrid_init2 ; ++j){
-      size_t jj = j/resf;
-      map.data()[ii + nx * jj ] +=
-      i_points[ i + Ngrid_init * j].surface_brightness/factor;
-    }
-  }
+   size_t index;
+   size_t n = Ngrid_init*Ngrid_init2;
+   for(size_t i=0 ; i<n ; ++i){
+     index = map.find_index(i_points[i].x);
+     map.data()[index] = i_points[i].surface_brightness;
+   }
+  
   
   map.Renormalize(map.getResolution()*map.getResolution());
 }

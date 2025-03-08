@@ -164,6 +164,13 @@ struct Point_2d{
     x[0] /= s;
     x[1] /= s;
   }
+
+  /// rescale to make a unit length vector
+  Point_2d unit() const {
+    PosType s = length();
+    return Point_2d(x[0]/s,x[1]/s);
+  }
+
   
   // returns a pointer to the position
   PosType* data(){return x;}
@@ -1001,6 +1008,11 @@ struct Point_3d{
     x[1] /= s;
     x[2] /= s;
   }
+
+  Point_3d<T> unit() const {
+    PosType s = length();
+    return Point_3d<T>(x[0]/s,x[1]/s,x[2]/s);
+  }
   
   /// returns the unit vector in the direction of the right handed spherical coordinate Phi
   Point_3d<T> unitPhi(){
@@ -1026,6 +1038,25 @@ struct Point_3d{
 template <typename T>
 std::ostream &operator<<(std::ostream &os, Point_3d<T> const &p) {
   return os << p.x[0] << " " << p.x[1] << " " << p.x[2];
+}
+template <typename T>
+void write_csv(std::string filename,const std::vector<Point_3d<T> > &v){
+  std::ofstream file(filename);
+  file << "x,y,z" << std::endl;
+  for(const Point_3d<T> &p : v) file << p[0] << "," << p[1] << "," << p[2] << std::endl;
+}
+
+template <typename T>
+void write_csv(std::string filename,const std::vector<T> &x,const std::vector<T> &y){
+  std::ofstream file(filename);
+  if(x.size() != y.size()){
+    throw std::invalid_argument("mismatch");
+  }
+  int n=x.size();
+  file << "x,y" << std::endl;
+  for(int i=0 ; i<n ; ++i){
+    file << x[i] << "," << y[i] << std::endl;
+  }
 }
 
 inline double pointx(Point &p){return p.x[0];}
