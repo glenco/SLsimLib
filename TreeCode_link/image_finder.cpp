@@ -1191,7 +1191,7 @@ std::vector<RAY> Lens::find_images(GridMap &init_grid
                     );
     }
   }
-  for(auto ray : images) ray.z=z_source;
+  for(RAY &ray : images) ray.z=z_source;
   // set correct source positions
   rayshooterInternal(images.size(),images.data());
   ResetSourcePlane(ztmp);
