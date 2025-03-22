@@ -1077,10 +1077,10 @@ void GridMap::find_images(Point_2d y
   }
   
   int n=0;
-  for(auto li : image_lists) n += li.size();
+  for(const auto &li : image_lists) n += li.size();
   image_points.resize(n);
   int i=0;
-  for(auto li : image_lists){
+  for(auto &li : image_lists){
     for(Point_2d &p : li){
       image_points[i] = p;
       ++i;

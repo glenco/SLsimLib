@@ -424,9 +424,9 @@ namespace ImageFinding{
                                            ,PosType distSourceToCaustic       /// distance wanted between the source and the caustic line (must be larger than sourceRadius)
                                            );
     /// find rectangular region enclosing critical curve
-    void CritRange(Point_2d &p1,Point_2d &p2);
+    void CritRange(Point_2d &p1,Point_2d &p2) const;
     /// find rectangular region enclosing caustic curve
-    void CausticRange(Point_2d &p1,Point_2d &p2);
+    void CausticRange(Point_2d &p1,Point_2d &p2) const;
     
     /// find 3 measures of the critical curve radius
     void CriticalRadius(PosType &rmax,PosType &rmin,PosType &rave) const{

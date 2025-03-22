@@ -471,7 +471,7 @@ void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs 
   std::vector<Point_2d> theta(Nrays);
   std::vector<Point_2d> SumPrevAlphas(Nrays);
   std::vector<Matrix2x2<PosType> > SumPrevAG(Nrays);
-  for(auto m : SumPrevAG) m.setToI();
+  for(auto &m : SumPrevAG) m.setToI();
   
   // find angular position on first lens plane
   for(int i=0 ; i<Nrays ; ++i){

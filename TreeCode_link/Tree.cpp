@@ -969,7 +969,7 @@ void ImageFinding::CriticalCurve::RandomSourceStrictlyWithinCaustic(int N,std::v
 }
 
 
-void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
+void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2) const {
   if(critcurve.size() == 0){
     my_p1 *= 0;
     my_p2 *= 0;
@@ -984,7 +984,7 @@ void ImageFinding::CriticalCurve::CritRange(Point_2d &my_p1,Point_2d &my_p2){
     if(critcurve[ii].x[1] > my_p2[1] ) my_p2[1] = critcurve[ii].x[1];
   }
 }
-void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2){
+void ImageFinding::CriticalCurve::CausticRange(Point_2d &my_p1,Point_2d &my_p2) const{
   if(caustic_curve_intersecting.size() == 0){
     my_p1 *= 0;
     my_p2 *= 0;
@@ -1007,7 +1007,7 @@ void ImageFinding::printCriticalCurves(std::string filename
   std::ofstream myfile(filename);
   myfile << "caustic_center_x,caustic_center_y,caustic_area,critical_center_x,critical_center_y,critical_area,z_source,type,touches_edge"
   << std::endl;
-  for(auto cr : critcurves){
+  for(auto &cr : critcurves){
     myfile << cr << std::endl;
   }
 }
@@ -1032,7 +1032,7 @@ PixelMap<T> ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Crit
   Point_2d p1,p2,p_min,p_max;
   p1 = p2 = p_min = p_max = critcurves[0].critical_center;
   
-  for(auto c : critcurves){
+  for(auto &c : critcurves){
     if(c.critical_area > area){
       i_max = i;
       area = c.critical_area;
@@ -1053,7 +1053,7 @@ PixelMap<T> ImageFinding::mapCriticalCurves(const std::vector<ImageFinding::Crit
   
   PixelMap<T> map(center.x,Nx,range/Nx);
   
-  for(auto c : critcurves){
+  for(auto &c : critcurves){
     map.AddCurve(c.critcurve, int(c.type) + 1);
   }
   
@@ -1069,7 +1069,7 @@ PixelMap<T> ImageFinding::mapCausticCurves(const std::vector<ImageFinding::Criti
   Point_2d p1,p2,p_min,p_max;
   p1 = p2 = p_min = p_max = critcurves[0].caustic_center;
   
-  for(auto c : critcurves){
+  for(auto &c : critcurves){
     if(c.caustic_area > area){
       i_max = i;
       area = c.caustic_area;
@@ -1090,7 +1090,7 @@ PixelMap<T> ImageFinding::mapCausticCurves(const std::vector<ImageFinding::Criti
   
   PixelMap<T> map(center.x,Nx,range/Nx);
   
-  for(auto c : critcurves){
+  for(auto &c : critcurves){
     map.AddCurve(c.caustic_curve_intersecting, int(c.type) + 1);
   }
   

@@ -654,10 +654,10 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
 {
   Utilities::IO::ReadCSVnumerical2<double>(datafile,data,column_names,MaxNumber);
   if(verbose){
-    for(auto name : column_names){ std::cout << name << " " ;}
+    for(const auto &name : column_names){ std::cout << name << " " ;}
     std::cout << std::endl;
     for(int i=0 ; i < 1 ; ++i){
-      for(auto v : data[i] ) std::cout << v << " " ;
+      for(const auto &v : data[i] ) std::cout << v << " " ;
       std::cout << std::endl;
     }
     std::cout << data.size() << " rows with " << column_names.size() << " columns read." << std::endl;
@@ -665,7 +665,7 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
   
   int i=0;
   Xindex = Yindex = -1;
-  for(auto name : column_names){
+  for(const auto &name : column_names){
     if(name == Xlabel) Xindex = i;
     if(name == Ylabel) Yindex = i;
     ++i;
@@ -677,7 +677,7 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
   if(Yindex == -1){
     std::cerr << filename << " needs a column named " << Ylabel << std::endl
     << " They are :" << std::endl;
-    for(auto c : column_names ) std::cout << c << " ";
+    for(const auto &c : column_names ) std::cout << c << " ";
     std::cout << std::endl;
     throw std::invalid_argument("No column named: " + Ylabel);
   }
@@ -736,10 +736,10 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
   
   Utilities::IO::ReadCSVnumerical2<double>(datafile,data,column_names,MaxNumber);
   if(verbose){
-    for(auto name : column_names){ std::cout << name << " " ;}
+    for(const auto &name : column_names){ std::cout << name << " " ;}
     std::cout << std::endl;
     for(int i=0 ; i < 1 ; ++i){
-      for(auto v : data[i] ) std::cout << v << " " ;
+      for(const auto &v : data[i] ) std::cout << v << " " ;
       std::cout << std::endl;
     }
     std::cout << data.size() << " rows with " << column_names.size() << " columns read." << std::endl;
@@ -747,7 +747,7 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
   
   int i=0;
   Xindex = Yindex = -1;
-  for(auto name : column_names){
+  for(const auto &name : column_names){
     if(name == Xlabel) Xindex = i;
     if(name == Ylabel) Yindex = i;
     ++i;
@@ -759,7 +759,7 @@ Utilities::IO::XYcsvLookUp::XYcsvLookUp(
   if(Yindex == -1){
     std::cerr << filename << " needs a column named " << Ylabel << std::endl
     << " They are :" << std::endl;
-    for(auto c : column_names ) std::cout << c << " ";
+    for(const auto &c : column_names ) std::cout << c << " ";
     std::cout << std::endl;
     throw std::invalid_argument("No column named: " + Ylabel);
   }
@@ -814,13 +814,13 @@ double Utilities::IO::XYcsvLookUp::Ymax(double x) const{
 
 double Utilities::IO::XYcsvLookUp::operator[](std::string label) const{
   int i = 0;
-  for(auto name : column_names){
+  for(const auto &name : column_names){
     if(name == label){
       return (*current)[i];
     }
     ++i;
   }
-  for(auto c : column_names ) std::cout << c << " ";
+  for(const auto &c : column_names ) std::cout << c << " ";
   std::cout << std::endl;
   throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
 }
