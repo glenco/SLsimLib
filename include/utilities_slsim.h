@@ -1780,19 +1780,6 @@ int ReadCSVnumerical1(std::string filename                              /// file
         cell = line.substr(n,m-n);
         /// clean blank spaces
         cell.erase(remove_if(cell.begin(),cell.end(), isspace), cell.end());
-        //if (cell.size() > 0){
-          //for(char c : cell){
-        //    if(std::isdigit(cell[0]) == false){
-        //      std::cerr << "In file " << filename << " column -" << column_names[i]
-        //      << "- appears not to be numeric." << std::endl;
-        //      throw (-1);
-        //    }
-          //}
-        /*}/*else{
-          std::cout << "In file " << filename << " column -" << column_names[i]
-          << "- is empty." << std::endl;
-          throw (-1);
-        }*/
         n = m+1;
         ++i;
       }while(m != std::string::npos);

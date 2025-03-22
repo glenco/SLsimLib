@@ -1152,7 +1152,7 @@ std::vector<RAY> Lens::find_images(
                 ,stop_res
                 );
   
-  for(auto ray : images) ray.z=z_source;
+  for(auto &ray : images) ray.z=z_source;
   // set correct source positions
   rayshooterInternal(images.size(),images.data());
   

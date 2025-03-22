@@ -1009,7 +1009,7 @@ public:
   Point_3d<> getCenterOfMass() const{return cm;}
   
   /// returns the location of the densest particle in (Mpc/h)
-  Point_3d<> densest_particle() const;
+  Point_3d<> densest_particle();
 
   /// return the maximum and minimum coordinates of the particles in each dimension in for the original simulation in Mpc/h
   void getBoundingBox(Point_3d<> &Xmin,Point_3d<> &Xmax) const{

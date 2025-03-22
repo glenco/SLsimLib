@@ -79,7 +79,7 @@ MakeParticleLenses::MakeParticleLenses(
   bbox_ll[1] = bbox_ur[1] = data[0][1];
   bbox_ll[2] = bbox_ur[2] = data[0][2];
   double m=0;
-  for(auto p : data){
+  for(auto &p : data){
     for(int i=0 ; i < 3 ; ++i){
       cm[i] += p[i]*p.Mass;
     
@@ -119,7 +119,7 @@ MakeParticleLenses::MakeParticleLenses(const std::string &filename  /// path / n
   // find center of mass
   cm[0]=cm[1]=cm[2]=0;
   double m=0;
-  for(auto p : data){
+  for(auto &p : data){
     for(int i=0 ; i < 3 ; ++i){
       cm[i] += p[i]*p.Mass;
       
@@ -477,11 +477,11 @@ void MakeParticleLenses::radialCut(Point_3d<> center,double radius){
   }
 }
 
-Point_3d<> MakeParticleLenses::densest_particle() const{
+Point_3d<> MakeParticleLenses::densest_particle() {
   
   double dmax = -1,d;
   Point_3d<> x;
-  for(auto p : data){
+  for(auto &p : data){
     d = p.mass()/p.size()/p.size()/p.size();
     if(d > dmax){
       dmax = d;

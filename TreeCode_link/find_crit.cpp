@@ -315,7 +315,7 @@ void ImageFinding::find_crit(
       // center of caustic
       crtcurve[ii].caustic_center[0] = 0;
       crtcurve[ii].caustic_center[1] = 0;
-      for(auto p  : short_cac){
+      for(auto &p  : short_cac){
         crtcurve[ii].caustic_center[0] += p[0];
         crtcurve[ii].caustic_center[1] += p[1];
       }
@@ -702,7 +702,7 @@ void ImageFinding::find_crit(
       // center of caustic
       crtcurve[ii].caustic_center[0] = 0;
       crtcurve[ii].caustic_center[1] = 0;
-      for(auto p  : short_cac){
+      for(auto &p  : short_cac){
         crtcurve[ii].caustic_center[0] += p[0];
         crtcurve[ii].caustic_center[1] += p[1];
       }
