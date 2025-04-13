@@ -1227,7 +1227,7 @@ public:
   LensHaloTEPL(float my_mass  /// total mass in Msun
                 ,PosType my_zlens /// redshift
                 ,PosType r_trunc  /// elliptical truncation radius in Mpc
-                ,PosType gamma    /// power-law index, gamm = -1 is isothermal
+                ,PosType gamma    /// power-law index, gamma = -1 is isothermal
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the vertical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology

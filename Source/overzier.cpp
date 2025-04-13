@@ -187,10 +187,13 @@ SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
                                        ,unsigned long my_id
                                        ,PosType my_z
                                        ,const PosType *theta
+                                       ,PosType my_sersic_index_max
+                                       ,PosType my_sersic_index_min
                                        ,Utilities::RandomNumbers_NR &ran
                                        ):
 SourceOverzier(my_mag,my_mag_bulge,band,zeropoint,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
 ,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint,band)
+,sersic_index_max(my_sersic_index_max),sersic_index_min(my_sersic_index_min)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -204,12 +207,7 @@ SourceOverzier(my_mag,my_mag_bulge,band,zeropoint,my_Reff,my_Rdisk,0,inclination
   Ad = minA + (maxA-minA)*ran();
   
   // extra sersic component
-  //double index = 4 + 3*(ran()-0.5)*2;
-  
-  //double index = 4*pow(MAX(getBtoT(),0.03),0.4)*pow(10,0.2*(ran()-0.5));
-  //double index = ran() + 3.5 ;
-  double index = 3.5 + 0.5*ran();  // ????
-  //double index = 4;  // ????
+  double index = sersic_index_min + (sersic_index_max-sersic_index_min)*ran();
   double q = 1 - 0.5*ran();
   spheroid.setSersicIndex(index);
   
@@ -248,6 +246,7 @@ SourceOverzierPlus::SourceOverzierPlus(PosType my_mag
                                        ):
 SourceOverzier(my_mag,my_mag_bulge,band,zeropoint,my_Reff,my_Rdisk,0,inclination,my_id,my_z,0)
 ,spheroid(my_mag_bulge,my_Reff, my_PA,4,1,my_z,zeropoint,band)
+,sersic_index_max(my_bulge_index),sersic_index_min(my_bulge_index)
 {
   assert(my_mag_bulge >= my_mag);
   //std::cout << "SourceOverzierPlus constructor" << std::endl;
@@ -483,7 +482,7 @@ void SourceOverzierPlus::randomize(Utilities::RandomNumbers_NR &ran){
   //double index = 4*pow(MAX(BtoT,0.03),0.4)*pow(10,0.2*(ran()-0.5));
   //double index = 4*pow(10,0.2*(ran()-0.5));
   //double index = ran() + 3.5;  //
-  double index = 3.5 + 0.5*ran();  // ???
+  double index = sersic_index_min + (sersic_index_max-sersic_index_min)*ran();
   assert(index > 0.5 && index < 9);
   double q = 1 + (0.5-1)*ran();
   

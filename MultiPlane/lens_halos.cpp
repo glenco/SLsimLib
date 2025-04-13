@@ -961,6 +961,14 @@ void LensHaloTNSIE::force_halo(
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
  
+  if(rcm2==0.0){
+    alpha[0] = alpha[1] = gamma[0] = gamma[1] = 0.0;
+    *kappa = 1.0e50;
+    *phi = -1.0e50;  // arbitrary large numbers
+
+    return;
+  }
+
   if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
                  ,subtract_point,screening)) return;
 
@@ -1543,7 +1551,7 @@ void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,Kappa
 }
 
 /*
- Used in derived classes to subtract the point mass if necescary and take care of quantities beyond Rmax
+ Used in derived classes to subtract the point mass if necessary and take care of quantities beyond Rmax
  
  Returns true when no further calculation of the quantities should be done.
  

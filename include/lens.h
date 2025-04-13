@@ -1014,6 +1014,11 @@ void Lens::compute_points_parallel(int start
       
       ////////////////////////////////////////////////////////
       
+      // if(alpha[0] != alpha[0] || alpha[1] != alpha[1]){
+      //   std::cout << "xx[0] = " << xx[0] << " xx[1] = " << xx[1] << std::endl ;
+      //   std::cout << "alpha = " << alpha[0] << " " << alpha[1] << std::endl ;
+      //   throw std::runtime_error("alpha is NaN");
+      // }
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);
