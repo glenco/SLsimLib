@@ -249,8 +249,10 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(std::map<Band,double> zeropoints
     
     SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge
                               ,Band::NoBand,0
-                              ,Ref,Rdisk
-                              ,pa,inclination,HaloID,z_cosm,3.5,4,theta,ran);
+                              ,Ref,3.5,4
+							  ,Rdisk
+                              ,pa,inclination,HaloID
+							  ,z_cosm,theta,ran);
      //std::cout << "filling last galaxy" << std::endl;
 
     galaxy.setMag(SDSS_u,Band::SDSS_U,0);

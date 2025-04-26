@@ -646,7 +646,7 @@ void PixelMap<T>::AddImages(
 
 ){
   
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -770,7 +770,7 @@ void PixelMap<T>::AddUniformImages(
                       ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
                       ,int Nimages,T value){
   
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -2432,7 +2432,7 @@ PosType PixelMap<T>::AddSource(Source &source){
 
 template <typename T>
 PosType PixelMap<T>::AddSource(Source &source,int oversample){
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
 
   Point_2d s_center;
   source.getTheta(s_center);

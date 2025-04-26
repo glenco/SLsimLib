@@ -17,7 +17,6 @@
 #include "concave_hull.h"
 
 class LensHaloBaseNSIE;
-//class LensHaloMassMap;
 
 /** 
  * \brief Structure to contain both source and image trees.
@@ -578,9 +577,6 @@ namespace ImageFinding{
 
 
 std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p);
-
-//void saveImage(LensHaloMassMap *mokahalo, GridHndl grid, bool saveprofile=true);
-
 
 /// Outputs a fits image of a lensing variable of choice
 template <typename T>

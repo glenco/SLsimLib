@@ -224,12 +224,6 @@ PosType SourceBLRSph2::SurfaceBrightness(const PosType *y) const{
   return blr_surface_brightness_spherical_random_motions(sqrt((pow(y[0]-getTheta()[0],2) + pow(y[1]-getTheta()[1],2))),this);
 }
 
-//void in_source(PosType *y_source,ListHndl sourcelist){
-//  return;
-//}
-//SourcePixelled::SourcePixelled(InputParams& params)
-//{}
-
 SourcePixelled::SourcePixelled(
                                PosType my_z            /// redshift of the source
                                , PosType* my_center  /// center (in rad)

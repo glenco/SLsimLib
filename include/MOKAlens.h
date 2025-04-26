@@ -179,10 +179,11 @@ struct MOKAmap{
 /**
  *  \brief A class that includes the MOKA lens map
  *
- * A class, where the lens is represented by a MOKA cluster in the form of a
- * MOKAmap object (see the description of MOKAmap). It can either be used with the
- * Lens model or by itself.
- *
+ * The class represents a pixelixed mass map as a lens.  The mass map can come from 
+ * the output of a nbody/hydro simulation or from anywhere else.  
+ * 
+ * An alternative way of using the output of a particle-based simulation is to use a LensHaloParticles. 
+ * 
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.
  */
@@ -195,13 +196,9 @@ public:
                   ,bool my_zeromean
                   ,const COSMOLOGY& lenscosmo
                   );
-  
-  //LensHaloMassMap(PixelMap &map,double massconvertion,double zlens,double zsource,int pixel_map_zeropad,const COSMOLOGY& lenscosmo);
-  
-	//LensHaloMassMap(InputParams& params, COSMOLOGY& lenscosmo);
 	
   LensHaloMassMap(
-                  const PixelMap<double> &MassMap   /// mass map
+                  const PixelMap<double> &MassMap   /// mass map, resolution/range in radians, PixelMapUnits setting is ignored
                   ,double massconvertion    /// convertion factor from pixel units to solar masses
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
@@ -209,7 +206,7 @@ public:
                   ,const COSMOLOGY& lenscosmo  /// cosmology
   );
   LensHaloMassMap(
-                  const PixelMap<float> &MassMap   /// mass map
+                  const PixelMap<float> &MassMap   /// mass map, resolution/range in radians, PixelMapUnits setting is ignored
                   ,double massconvertion    /// convertion factor from pixel units to solar masses
                   ,double redshift          /// redshift of lens
                   ,int pixel_map_zeropad    /// factor by which to zero pad in FFTs, ex. 4
