@@ -2657,7 +2657,8 @@ short Lens::ResetSourcePlane(
 }
 
 void Lens::FindSourcePlane(PosType zs,long &jmax,double &Dls,double &Ds){
-                          
+      
+  assert(zs >= 0.0);
   Ds = cosmo.coorDist(zs);
   
   if(zs <=  plane_redshifts[0]){

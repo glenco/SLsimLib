@@ -621,8 +621,12 @@ struct RAY{
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+
 void write_csv(std::string filename,const std::vector<Point_2d> &v);
 void write_csv(std::string filename,const std::vector<RAY> &v);
+void write_csv(std::string filename,const std::vector<float> &v);
+void write_csv(std::string filename,const std::vector<double> &v);
+void write_csv(std::string filename,const std::vector<int> &v);
 
 //inline std::string to_string(RAY &r) {
 //  std::string s = "[" + std::to_string(r.x[0]) + "," + r.x[1] + ",[" + r.y[0] + "," + r.y[1]
@@ -1039,6 +1043,7 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, Point_3d<T> const &p) {
   return os << p.x[0] << " " << p.x[1] << " " << p.x[2];
 }
+
 template <typename T>
 void write_csv(std::string filename,const std::vector<Point_3d<T> > &v){
   std::ofstream file(filename);

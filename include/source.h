@@ -319,12 +319,15 @@ private:
  *  The sources are created as a square array of pixels of dimension Npixels x Npixels and pixel size equal to resolution.
  *
  */
-class SourcePixelled: public Source{
+class SourcePixelled: public SourceColored{
 public:
-	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val,PosType zero_point);
+	SourcePixelled(PosType my_z, PosType* center
+    , int Npixels, PosType resolution, PosType* arr_val
+    ,PosType zero_point,Band my_band);
   template <typename T>
-	SourcePixelled(const PixelMap<T>& gal_map, PosType z, PosType factor, PosType zero_point);
-	//SourcePixelled(InputParams& params);
+	SourcePixelled(const PixelMap<T>& gal_map
+    , PosType z,PosType factor, PosType zero_point,Band my_band);
+	
   
 	~SourcePixelled();
 	PosType SurfaceBrightness(const PosType *y) const;
@@ -727,6 +730,10 @@ SourcePixelled::SourcePixelled(
     values[i] = gal_map(i)*convertion;
   
   calcTotalFlux();
+  float mag = SourceColored::flux_to_mag(flux);
+
+  setMag(mag,band);
+  
   calcCentroid();
   calcEll();
   calcSize();

@@ -355,6 +355,23 @@ void write_csv(std::string filename,const std::vector<RAY> &v){
   }
 }
 
+void write_csv(std::string filename,const std::vector<float> &v){
+  std::ofstream file(filename);
+  file << "x" << std::endl;
+  for(const float &p : v) file << p << std::endl;
+}
+
+void write_csv(std::string filename,const std::vector<double> &v){
+  std::ofstream file(filename);
+  file << "x" << std::endl;
+  for(const double &p : v) file << p << std::endl;
+}
+void write_csv(std::string filename,const std::vector<int> &v){
+  std::ofstream file(filename);
+  file << "x" << std::endl;
+  for(const int &p : v) file << p << std::endl;
+}
+
 std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == CritType::ND) return os << "not determined";
   if(p == CritType::pseudo) return os << "Pseudo";

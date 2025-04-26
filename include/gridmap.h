@@ -419,6 +419,21 @@ private:
                               ,Point_2d y
                               ) const;
 
+  void _magnificationFlux_parallel(
+    long start
+    ,long end
+    ,double &magnified_flux
+    ,double &unmagnified_flux
+    ,Source &source
+  ) const;
+
+  void _AddSurfaceBrightnesses_parallel(
+    long start
+    ,long end
+    ,double &flux
+    ,Source *source
+  );
+
   // find if there are images of y in specific cells
   void limited_image_search(Point_2d &y
                    ,std::vector<size_t> &cell_numbers  /// positions of the images limited by resolution of the gridmap
@@ -439,11 +454,9 @@ PixelMap<T> GridMap::getPixelMapFlux() const{
                   ,Ngrid_init2
                   ,x_range/(Ngrid_init-1));
   
-  size_t index;
    size_t n = Ngrid_init*Ngrid_init2;
    for(size_t i=0 ; i<n ; ++i){
-     index = map.find_index(i_points[i].x);
-     map.data()[index] = i_points[i].surface_brightness;
+     map.data()[map.find_index(i_points[i].x)] = i_points[i].surface_brightness;
    }
   
   //for(size_t i = 0 ; i < Ngrid_init ; ++i){
@@ -617,17 +630,17 @@ void GridMap::writePixelMapUniform(
   std::vector<std::thread> thr;
   int nthreads = Utilities::GetNThreads();
   
-  int chunk_size;
-  do{
-    chunk_size =  getNumberOfPoints()/nthreads;
-    if(chunk_size == 0) nthreads /= 2;
-  }while(chunk_size == 0);
-  
+  size_t Npoints = getNumberOfPoints();
+  if(nthreads >= Npoints) nthreads = 1;
+  size_t chunk_size = (Npoints + nthreads - 1) / nthreads; // divide by threads rounded up
+
   size_t size = chunk_size;
   for(int ii = 0; ii < nthreads ;++ii){
-    if(ii == nthreads-1)
-    size = getNumberOfPoints() - (nthreads-1)*chunk_size;
-    thr.push_back(std::thread(&GridMap::writePixelMapUniform_<T>,this,&(i_points[ii*chunk_size]),size,&map,lensvar));
+    long start = ii*chunk_size;
+    long end = start + chunk_size;
+    if(end > Npoints) end = Npoints;
+    thr.push_back(std::thread(&GridMap::writePixelMapUniform_<T>,this,&(i_points[start])
+    ,end-start,&map,lensvar));
   }
   for(auto &t : thr) t.join();
 }

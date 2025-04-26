@@ -25,11 +25,6 @@
 class Source;
 #include "fftw3.h"
 
-// forward declaration
-//struct Grid;
-//struct GridMap;
-//class Source;
-
 enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z};
 
 enum class UnitType {counts_x_sec, flux} ;
@@ -404,7 +399,7 @@ void ObsVIS::AddNoise(PixelMap<T> &pmap
                       ,PixelMap<T> &error_map
                       ,Utilities::RandomNumbers_NR &ran,bool cosmic
                       ){
-  if(pmap.units != PixelMapUnits::count_per_sec){
+  if(pmap.getUnits() != PixelMapUnits::count_per_sec){
     std::cerr << "ObsVIS::AddNoise() Map must be in counts_per_sec at this stage." << std::endl;
     throw std::runtime_error("wrong uits");
   }

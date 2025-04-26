@@ -231,8 +231,10 @@ SourcePixelled::SourcePixelled(
                                , PosType my_resolution  /// resolution (in rad)
                                , PosType* arr_val          /// array of pixel values (must be of size = Npixels*Npixels)
                                , PosType zero_point        /// magnitude zero point
+                               , Band band            /// band of the source
 )
-:Source(0,my_center,my_z,-1,zero_point), resolution(my_resolution), Npixels (my_Npixels){
+:SourceColored(0,my_resolution*my_Npixels/sqrt(2.0)
+               ,Point_2d(my_center[0],my_center[1]),my_z, -1.0e100,zero_point,band){
   zsource = my_z;
   
   range = resolution*(Npixels-1);
@@ -242,6 +244,9 @@ SourcePixelled::SourcePixelled(
     values[i] = arr_val[i];
   source_r =  range/sqrt(2.);
   calcTotalFlux();
+  float mag = SourceColored::flux_to_mag(flux);
+  setMag(mag,band);
+
   calcCentroid();
   calcEll();
   calcSize();

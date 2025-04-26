@@ -94,24 +94,19 @@ void Lens::rayshooterInternal(
   int nthreads;
   nthreads = Utilities::GetNThreads();
   
-  int chunk_size;
-  do{
-    chunk_size = (int)Npoints/nthreads;
-    if(chunk_size == 0) nthreads /= 2;
-  }while(chunk_size == 0);
-  
+  if(nthreads >= Npoints) nthreads = 1;
+  size_t chunk_size = (Npoints + nthreads - 1) / nthreads; // divide by threads rounded up
+
   std::thread thr[nthreads];
   
   // This is for multi-threading :
   for(int i=0; i<nthreads;i++)
   {
+    long start = i*chunk_size;
+    long end = start + chunk_size;
+    if(end > Npoints) end = Npoints;
     
-    int size = chunk_size;
-    if(i == nthreads-1)
-      size = (int)Npoints - (nthreads-1)*chunk_size;
-    int start = i*chunk_size;
-    
-    thr[i] = std::thread(&Lens::compute_points_parallel<Point>,this,start,size,i_points,&source_z,false,false);
+    thr[i] = std::thread(&Lens::compute_points_parallel<Point>,this,start,end-start,i_points,&source_z,false,false);
   }
  
   for(int i = 0; i < nthreads; i++) thr[i].join();
@@ -157,24 +152,18 @@ void Lens::rayshooterInternal(
   int nthreads;
   nthreads = Utilities::GetNThreads();
   
-  int chunk_size;
-  do{
-    chunk_size = (int)Npoints/nthreads;
-    if(chunk_size == 0) nthreads /= 2;
-  }while(chunk_size == 0);
-  
+  if(nthreads >= Npoints) nthreads = 1;
+  long chunk_size = (Npoints + nthreads - 1) / nthreads; // divide by threads rounded up
   std::thread thr[nthreads];
   
   // This is for multi-threading :
   for(int i=0; i<nthreads;i++)
   {
+    long start = i*chunk_size;
+    long end = start + chunk_size;
+    if(end > Npoints) end = Npoints;
     
-    int size = chunk_size;
-    if(i == nthreads-1)
-      size = (int)Npoints - (nthreads-1)*chunk_size;
-    int start = i*chunk_size;
-    
-    thr[i] = std::thread(&Lens::compute_points_parallel<LinkedPoint>,this,start,size,i_points
+    thr[i] = std::thread(&Lens::compute_points_parallel<LinkedPoint>,this,start,end-start,i_points
                          ,source_zs.data(),true,false);
   }
  
@@ -207,27 +196,21 @@ void Lens::rayshooterInternal(
   if(Npoints == 0) return;
   
   // For refining the grid and shoot new rays.
-  int nthreads;
-  nthreads = Utilities::GetNThreads();
+  int nthreads = Utilities::GetNThreads();
   
-  int chunk_size;
-  do{
-    chunk_size = (int)Npoints/nthreads;
-    if(chunk_size == 0) nthreads /= 2;
-  }while(chunk_size == 0);
-  
+  if(nthreads >= Npoints) nthreads = 1;
+  size_t chunk_size = (Npoints + nthreads - 1) / nthreads; // divide by threads rounded up
   std::thread thr[nthreads];
   
   // This is for multi-threading :
   for(int i=0; i<nthreads;i++)
   {
     
-    int size = chunk_size;
-    if(i == nthreads-1)
-      size = (int)Npoints - (nthreads-1)*chunk_size;
-    int start = i*chunk_size;
+    long start = i*chunk_size;
+    long end = start + chunk_size;
+    if(end > Npoints) end = Npoints;
     
-    thr[i] = std::thread(&Lens::compute_rays_parallel,this,start,size,rays
+    thr[i] = std::thread(&Lens::compute_rays_parallel,this,start,end-start,rays
                          ,false);
   }
  
@@ -584,6 +567,7 @@ void Lens::compute_rays_parallel(int start
     
     //0.5*( p->i_points[i].image->x[0]*p->i_points[i].image->x[0] + p->i_points[i].image->x[1]*p->i_points[i].image->x[1] )/ p->dDl[0] ;
     
+    assert(rays[i].z >= 0);
     {
       PosType Dls,Ds;
       FindSourcePlane(rays[i].z,jmax,Dls,Ds);

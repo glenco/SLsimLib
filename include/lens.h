@@ -914,7 +914,7 @@ void Lens::compute_points_parallel(int start
                                  ,bool multiZs
                                  ,bool verbose)
 {
-  int end        = start + chunk_size;
+  int end = start + chunk_size;
 
   int i, j;
   

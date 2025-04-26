@@ -3134,7 +3134,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   
   Utilities::Geometry::CYCLIC cycv(nv);
   Utilities::Geometry::CYCLIC cycw(nw);
-  Point_2d inter_p;
+  //Point_2d inter_p;
   
   bool intersecting = false;
   // check if they intersect
@@ -3144,8 +3144,8 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
       if(Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
                                         ,w[j].x,w[ cycw[j+1] ].x))
         intersecting = true;
-        inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
-                        ,w[j].x,w[ cycw[j+1] ].x);
+        //inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
+        //                ,w[j].x,w[ cycw[j+1] ].x);
     }
   }
   
