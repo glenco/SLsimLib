@@ -3123,6 +3123,46 @@ std::vector<Point_2d> Utilities::envelope2(const std::vector<Point_2d> &v
   }
 }
 
+void Utilities::_set_bitmap2(std::vector<bool> &bitmap,
+  const std::vector<Point_2d> &v,
+  const std::vector<Point_2d> &w,
+  double R,
+  long start,
+  long end,
+  long nx,
+  double resolution,
+  long &count,
+  Point_2d ll){
+  
+  count=0;
+  Point_2d p = ll;
+  long nv = v.size();
+  long nw = w.size();
+
+  for(long m=start ; m<end ; ++m){
+    bitmap[m] = false;
+    p[0] = ll[0] + (m%nx)*resolution;
+    p[1] = ll[1] + (m/nx)*resolution;
+
+    for(long k=0 ; k < nv ; ++k){                              
+      if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){                              
+        bitmap[m] = true;                              
+        ++count;
+        break;
+      }
+    }
+    if( bitmap[m] == false){
+      for(long k=0 ; k < nw ; ++k){
+        if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+    }                        
+  }
+}
+
 std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
   
@@ -3203,29 +3243,64 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   long count=0;
   Point_2d p = ll;
   std::vector<bool> bitmap(nx*ny,false);
-  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
-    p[0] = ll[0];
-    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
-      long m = i + nx*j;
-      
-      for(long k=0 ; k < nv ; ++k){
-        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
-          bitmap[m] = true;
-          ++count;
-          break;
-        }
-      }
-      if( bitmap[m] == false){
-        for(long k=0 ; k < nw ; ++k){
-          if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
-            bitmap[m] = true;
-            ++count;
-            break;
-          }
-        }
-      }
+
+  {
+    long N = bitmap.size();
+    int nthreads;
+    nthreads = Utilities::GetNThreads();
+    
+    if(nthreads >= N) nthreads = 1;
+    long chunk_size = (N + nthreads - 1) / nthreads; // divide by threads rounded up
+    std::vector<long> counts(nthreads,0);
+    
+    std::thread thr[nthreads];
+    for(int i=0; i<nthreads;i++){
+      long start = i*chunk_size;
+      long end = start + chunk_size;
+      if(end > N) end = N;
+    
+      thr[i] = std::thread(Utilities::_set_bitmap2,
+                            std::ref(bitmap),
+                            std::ref(v),
+                            std::ref(w),
+                            R,
+                            start,
+                            end,
+                            nx,
+                            resolution,
+                            std::ref(counts[i]),
+                            ll);
     }
+    for(int i=0; i<nthreads;i++) thr[i].join();
+    count = 0;
+    for(int i=0; i<nthreads;i++) count += counts[i];
   }
+
+
+
+  // for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+  //   p[0] = ll[0];
+  //   for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+  //     long m = i + nx*j;
+      
+  //     for(long k=0 ; k < nv ; ++k){
+  //       if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+  //         bitmap[m] = true;
+  //         ++count;
+  //         break;
+  //       }
+  //     }
+  //     if( bitmap[m] == false){
+  //       for(long k=0 ; k < nw ; ++k){
+  //         if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
+  //           bitmap[m] = true;
+  //           ++count;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   
   if(count > 0){
     std::vector<std::vector<Point_2d> > envelopes;
@@ -3515,6 +3590,34 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   return env;
 }
 
+void Utilities::_set_bitmap(std::vector<bool> &bitmap,
+                            const std::vector<Point_2d> &v,
+                            double R,
+                            long start,
+                            long end,
+                            long nx,
+                            double resolution,
+                            long &count,
+                            Point_2d ll){
+  count=0;
+  Point_2d p = ll;
+  long nv = v.size();
+  
+  for(long m=start ; m<end ; ++m){
+    bitmap[m] = false;
+    p[0] = ll[0] + (m%nx)*resolution;
+    p[1] = ll[1] + (m/nx)*resolution;
+   
+    for(long k=0 ; k < nv ; ++k){                              
+      if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){                              
+        bitmap[m] = true;                              
+        ++count;                              
+        break;                           
+      }                              
+    }                              
+  }                          
+}
+
 
 std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
   if(v.size() <= 3) return v;
@@ -3548,24 +3651,54 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
   long nx = (ur[0]-ll[0])/resolution;
   long ny = (ur[1]-ll[1])/resolution;
   long nv = v.size();
-  
+
   long count=0;
   Point_2d p = ll;
-  std::vector<bool> bitmap(nx*ny,false);
-  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
-    p[0] = ll[0];
-    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
-      long m = i + nx*j;
-      
-      for(long k=0 ; k < nv ; ++k){
-        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
-          bitmap[m] = true;
-          ++count;
-          break;
-        }
-      }
+  std::vector<bool> bitmap(nx*ny);
+  {
+    long N = bitmap.size();
+    int nthreads;
+    nthreads = Utilities::GetNThreads();
+    
+    if(nthreads >= N) nthreads = 1;
+    long chunk_size = (N + nthreads - 1) / nthreads; // divide by threads rounded up
+    std::vector<long> counts(nthreads,0);
+    
+    std::thread thr[nthreads];
+    for(int i=0; i<nthreads;i++){
+      long start = i*chunk_size;
+      long end = start + chunk_size;
+      if(end > N) end = N;
+    
+      thr[i] = std::thread(Utilities::_set_bitmap,
+                            std::ref(bitmap),
+                            std::ref(v),
+                            R,
+                            start,
+                            end,
+                            nx,
+                            resolution,
+                            std::ref(counts[i]),
+                            ll);
     }
+    for(int i=0; i<nthreads;i++) thr[i].join();
+    count = 0;
+    for(int i=0; i<nthreads;i++) count += counts[i];
   }
+  // for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+  //   p[0] = ll[0];
+  //   for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+  //     long m = i + nx*j;
+      
+  //     for(long k=0 ; k < nv ; ++k){
+  //       if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+  //         bitmap[m] = true;
+  //         ++count;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
   
   if(count > 0){
     std::vector<std::vector<Point_2d> > envelopes;

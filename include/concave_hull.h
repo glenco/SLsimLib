@@ -68,6 +68,29 @@ std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 ///Finds a concave envelope for an arbitrary closed curve.  This is done by gridding and then finding points that are withing a sertain distance of a segment of the curve.  The outer bounding curve is found and then the cuve is shrunck to the closest point on a segment.  This should be fool proof, but is relatively slow and might clip some points.
 std::vector<Point_2d> TightestHull(const std::vector<Point_2d> &v);
 
+// finds the points that are within a distance R of the curve.
+// Used within TightestHull()
+void _set_bitmap(std::vector<bool> &bitmap,
+  const std::vector<Point_2d> &v,
+  double R,
+  long start,
+  long end,
+  long nx,
+  double resolution,
+  long &count,
+  Point_2d ll);
+
+  void _set_bitmap2(std::vector<bool> &bitmap,
+    const std::vector<Point_2d> &v,
+    const std::vector<Point_2d> &w,
+    double R,
+    long start,
+    long end,
+    long nx,
+    double resolution,
+    long &count,
+    Point_2d ll);
+
 //template <typename T>
 //std::vector<T> TightHull(const std::vector<T> &curve){
 //

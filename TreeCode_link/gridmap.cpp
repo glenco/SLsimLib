@@ -257,16 +257,65 @@ bool GridMap::to_refine(long i,long j,double total,double f) const {
   return false;
 }
 
-double GridMap::AddSurfaceBrightnesses(Source* source){
-  PosType total=0,tmp;
-  
-  for(size_t i=0;i <s_points[0].head;++i){
+void GridMap::_AddSurfaceBrightnesses_parallel(
+  long start
+  ,long end
+  ,double &flux
+  ,Source *source
+) {
+
+  double tmp;
+  flux=0;
+  for(size_t i=start;i<end;++i){
     tmp = source->SurfaceBrightness(s_points[i].x);
     s_points[i].surface_brightness += tmp;
     s_points[i].image->surface_brightness += tmp;
-    total += tmp;
+    flux += tmp;
     s_points[i].in_image = s_points[i].image->in_image = NO;
   }
+}
+
+double GridMap::AddSurfaceBrightnesses(Source* source){
+  
+  int nthreads = Utilities::GetNThreads();
+  size_t N = s_points[0].head;
+  if(N==0) return 0;
+  
+  if(nthreads >= N) nthreads = 1;
+  size_t chunk_size = (N + nthreads - 1) / nthreads; // divide by threads rounded up
+  
+  std::vector<double> fluxes(nthreads);
+
+  std::vector<std::thread> thr(nthreads);
+  for(int i=0; i<nthreads; i++){
+    long start = i*chunk_size;
+    long end = start + chunk_size;
+    if(end > N) end = N;
+    
+    thr[i] = std::thread(
+                          &GridMap::_AddSurfaceBrightnesses_parallel
+                          ,this
+                          ,start
+                          ,end
+                          ,std::ref(fluxes[i])
+                          ,source
+                          );
+  }
+
+  for(auto &t : thr) t.join();
+
+  double total = 0;
+  for(int i=0; i<nthreads; i++){
+    total += fluxes[i];
+  }
+
+  //for(size_t i=0;i <s_points[0].head;++i){
+  //  tmp = source->SurfaceBrightness(s_points[i].x);
+  //  s_points[i].surface_brightness += tmp;
+  //  s_points[i].image->surface_brightness += tmp;
+  //  total += tmp;
+  //  s_points[i].in_image = s_points[i].image->in_image = NO;
+  //}
   
   return total * pow(getResolution(),2);
 }
@@ -341,15 +390,59 @@ PosType GridMap::EinsteinArea() const{
 //  return flux/mag;
 //}
 
-PosType GridMap::magnificationFlux(Source &source) const{
-
-  double magnified_flux = 0,unmagnified_flux = 0;
-  size_t N = Ngrid_init*Ngrid_init2;
-  for(size_t i=0;i<N;++i){
-    magnified_flux += source.SurfaceBrightness(s_points[i].x);
+void GridMap::_magnificationFlux_parallel(
+  long start
+  ,long end
+  ,double &magnified_flux
+  ,double &unmagnified_flux
+  ,Source &source
+) const {
+  magnified_flux = 0;
+  unmagnified_flux = 0;
+  for(size_t i=start;i<end;++i){
+    magnified_flux += s_points[i].surface_brightness;
     unmagnified_flux += source.SurfaceBrightness(i_points[i].x);
   }
-  return magnified_flux / unmagnified_flux ;
+}
+
+PosType GridMap::magnificationFlux(Source &source) const{
+
+  int nthreads = Utilities::GetNThreads();
+  size_t N = Ngrid_init*Ngrid_init2;
+  if(N==0) return 0;
+  
+  if(nthreads >= N) nthreads = 1;
+  size_t chunk_size = (N + nthreads - 1) / nthreads; // divide by threads rounded up
+  
+  std::vector<double> magnified_flux(nthreads);
+  std::vector<double> unmagnified_flux(nthreads);
+
+  std::vector<std::thread> thr;
+  for(int i=0; i<nthreads; i++){
+    long start = i*chunk_size;
+    long end = start + chunk_size;
+    if(end > N) end = N;
+    
+    thr.push_back(std::thread(
+                              &GridMap::_magnificationFlux_parallel
+                              ,this
+                              ,start
+                              ,end
+                              ,std::ref(magnified_flux[i])
+                              ,std::ref(unmagnified_flux[i])
+                              ,std::ref(source)
+                              )
+                  );
+  }
+  for(auto &t : thr) t.join();
+
+  double tot_magnified_flux = 0;
+  double tot_unmagnified_flux = 0;
+  for(size_t i=0;i<N;++i){
+    tot_magnified_flux += magnified_flux[i];
+    tot_unmagnified_flux += unmagnified_flux[i];
+  }
+  return tot_magnified_flux / tot_unmagnified_flux ;
 }
 
 double GridMap::magnificationTr() const {
