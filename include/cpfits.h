@@ -1145,7 +1145,7 @@ public:
       return data[i];
     };
     
-    // sort by one of the columns in ascending order
+    /// sort by one of the columns in ascending order
     void sortby(std::string name){
       std::vector<size_t> index(data[0].size());
       size_t N = index.size();
@@ -1159,6 +1159,18 @@ public:
           tmp_v[i] = data[j][index[i]];
         }
         swap(data[j],tmp_v);
+      }
+    }
+    
+    /// remove all rows that are not in the index
+    void filter(const std::vector<long> &index){
+      
+      std::vector<T> tmp_v(index.size());
+      for(size_t j=0 ; j<data.size() ; ++j){
+        for(size_t i=0 ; i<index.size() ; ++i){
+          tmp_v[i] = data[j][index[i]];
+        }
+        data[j] = tmp_v;
       }
     }
     
