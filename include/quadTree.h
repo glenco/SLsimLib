@@ -30,7 +30,7 @@
  **<pre>
  * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
  * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
- * the tree is built in such a way the large particles are stored in branches that are no smaller
+ * the tree is built in such a way that the large particles are stored in branches that are no smaller
  * than their size.  In this way particles are stored on all levels of the tree and not just in the
  * leaves.  This improves efficiency when particles of a wide range of sizes overlap in 2D.
  *
@@ -39,7 +39,8 @@
  
  *  Parameters:
  *
- *   inv_area - If not zero, there is an effective uniform negative mass sheet that compensates for the positive mass.  This should be this should be set to the area in Mpc^-2 over which the integral of the surface density should be zero.
+ *   inv_area - If not zero, there is an effective uniform negative mass sheet that compensates for the positive mass.  
+ *              This should be set to the area in Mpc^-2 over which the integral of the surface density should be zero.
  *</pre>
  */
 
@@ -240,8 +241,6 @@ protected:
   PosType phiintconst;
 };
 
-
-
 /** \brief Constructor meant for point particles, simulation particles
  */
 template<typename PType>
@@ -344,8 +343,7 @@ void TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
   
   /* visit every branch to find center of mass and cutoff scale */
   tree->moveTop();
-  
-  //return tree;
+
   return;
 }
 

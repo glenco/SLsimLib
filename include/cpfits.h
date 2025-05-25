@@ -1161,7 +1161,7 @@ public:
         swap(data[j],tmp_v);
       }
     }
-    
+
     /// remove all rows that are not in the index
     void filter(const std::vector<long> &index){
       
