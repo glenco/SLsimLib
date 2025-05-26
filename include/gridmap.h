@@ -132,7 +132,7 @@ struct GridMap{
   /// returns centroid of flux on the grid
   Point_2d centroid() const;
   
-  Point_2d getCenter(){return center;}
+  Point_2d getCenter() const {return center;}
   
   Point * operator[](size_t i){return i_points.data() + i;};
   
@@ -295,9 +295,19 @@ struct GridMap{
   }
   
   /**
-   Calculate the magnification of one source by adding up its flux for the lensed image and an image made on an unlensed regulare grid
+   Calculate two estimates of the magnification of a source.
+
+   Flux in the images that are outside of the grid region is not included in the magnification.
+   
+   The first estimate is the ratio of the flux of the lensed images on the grid to the flux of 
+   the unlensed source taken from the source object.
+
+   The second one is the ratio of the flux of the lensed images on the grid to the flux of the unlensed 
+   source evaluated at each point on the grid.  If the unlensed source position is outside 
+   of the grid region
+ 
    */
-  PosType magnificationFlux(Source &source) const ;
+  Point_2d magnificationFlux(Source &source) const ;
   
   /**\brief calculate the LOCAL magnification by triangel method weighted by interpolated surface brightness
    
@@ -418,6 +428,22 @@ private:
                               ,std::list<Triangle> &triangles
                               ,Point_2d y
                               ) const;
+
+  void _magnificationFlux_parallel(
+    long start
+    ,long end
+    ,double &magnified_flux
+    ,double &unmagnified_flux
+    ,Source &source
+    //,Point_2d &recenter
+  ) const;
+
+  void _AddSurfaceBrightnesses_parallel(
+    long start
+    ,long end
+    ,double &flux
+    ,Source *source
+  );
 
   // find if there are images of y in specific cells
   void limited_image_search(Point_2d &y
