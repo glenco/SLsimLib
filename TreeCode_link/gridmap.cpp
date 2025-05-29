@@ -413,10 +413,21 @@ Point_2d GridMap::magnificationFlux(Source &source) const{
   int nthreads = Utilities::GetNThreads();
   size_t N = Ngrid_init*Ngrid_init2;
   if(N==0) return 0;
+  double tot_magnified_flux = 0;
+  double tot_unmagnified_flux = 0;
+  if(N<10000){  // no need for parallelization for small grids
+    _magnificationFlux_parallel(0,N
+                              ,tot_magnified_flux
+                              ,tot_unmagnified_flux
+                              ,source
+                              );
+
+    return Point_2d(tot_magnified_flux * getResolution() * getResolution() / source.getTotalFlux()
+                 ,tot_magnified_flux / tot_unmagnified_flux);
+  }
   
   //Point_2d recenter(source.getTheta());
   //recenter -= getCenter(); // recenter to the center of the grid
-
   //recenter *= 0; // ??????
 
   if(nthreads >= N) nthreads = 1;
@@ -446,8 +457,7 @@ Point_2d GridMap::magnificationFlux(Source &source) const{
   }
   for(auto &t : thr) t.join();
 
-  double tot_magnified_flux = 0;
-  double tot_unmagnified_flux = 0;
+  
   for(size_t i=0;i<nthreads;++i){
     tot_magnified_flux += magnified_flux[i];
     tot_unmagnified_flux += unmagnified_flux[i];
