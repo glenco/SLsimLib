@@ -13,8 +13,8 @@
 /*
  * Programmer:    R Ben Metcalf
  */
-#ifndef QUAD_TREE_H_
-#define QUAD_TREE_H_
+#ifndef QUAD_TREE_HALO_
+#define QUAD_TREE_HALO_
 
 //#include "utilities_slsim.h"
 //#include "utilities.h"
@@ -22,9 +22,9 @@
 #include "qTreeNB.h"
 
 /**
- * \brief TreeQuadParticles is a class for calculating the deflection, kappa and gamma by tree method.
+ * \brief TreeQuadHalos is a class for calculating the deflection, kappa and gamma by tree method.
  **<pre>
- * TreeQuadParticles is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
+ * TreeQuadHalos is evolved from TreeSimple and TreeForce.  It splits each cell into four equal area
  * subcells instead of being a binary tree like TreeSimple.  When the "particles" are given sizes
  * the tree is built in such a way that the large particles are stored in branches that are no smaller
  * than their size.  In this way particles are stored on all levels of the tree and not just in the
@@ -41,44 +41,31 @@
  */
 
 template<typename PType>
-class TreeQuadParticles {
+class TreeQuadHalos {
 public:
-  TreeQuadParticles(
-			PType *xpt
+  TreeQuadHalos(
+	  PType *xpt
       ,IndexType Npoints
-      ,float mass_fixed = -1
-      ,float size_fixed = -1
       ,PosType my_inv_area = 0 /// if the total mass in field is meant to be zero this should be set to the inverse of the area of the region in Mpc^-2
       ,int bucket = 5
       ,PosType theta_force = 0.1
-      ,bool my_periodic_buffer = false
       ,PosType my_inv_screening_scale = 0
-      ,PosType maximum_range = -1
       );
  
-	~TreeQuadParticles();
+	~TreeQuadHalos();
   
   void force2D(PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma
                        ,KappaType *phi) const;
-
-  void force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa
-                             ,KappaType *gamma,KappaType *phi);
   
   /// find all points within rmax of ray in 2D
   void neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const;
-  //void neighbors(PosType ray[],PosType rmax,std::vector<PType *> &neighbors) const;
   
   void printParticlesInBranch(unsigned long number);
-  
-	void printBranchs(int level = -1);
+  void printBranchs(int level = -1);
   
 protected:
   
-	PType *xxp;
-  bool MultiMass;
-  double mass_fixed = 0.0;
-  bool MultiRadius;
-  double size_fixed = 0.0;
+  PType *xxp;
   double inv_area;
 
   IndexType Nparticles;
@@ -105,7 +92,7 @@ protected:
   void BuildQTreeNB(PType *xp,IndexType Nparticles);
   void _BuildQTreeNB(IndexType nparticles,IndexType *particles);
   
-  inline short WhichQuad(PosType *x,QBranchNB &branch);
+  inline short WhichQuad(PosType *x,QBranch &branch);
   
   //inline bool atLeaf();
   inline bool inbox(const PosType *ray,const PosType *p1,const PosType *p2){
@@ -131,120 +118,82 @@ protected:
     //exit(1);
     return 0;
   }
-  
-  
-  /* cubic B-spline kernel for particle profile
-   
-   The lensing quantities are added to and a point mass is subtracted
-   */
-  inline void b_spline_profile(
-                               PosType *xcm       // vector in Mpc connecting ray to center of particle
-                               ,PosType r         // distance from center in Mpc
-                               ,PosType Mass      // mass in solar masses
-                               ,PosType size      // size scale in Mpc
-                               ,PosType *alpha    // deflection angle times Sigma_crit
-                               ,KappaType *kappa  // surface density
-                               ,KappaType *gamma  // shear times Sigma_crit
-                               ,KappaType *phi
-                               ) const {
-    
-    PosType q = r/size;
-    PosType M,sigma;
-    if(q > 2){
-      sigma = 0;
-      M = 1;
-    }else{
-      PosType q2=q*q,q3=q2*q,q4=q2*q2,q5=q4*q;
-      
-      sigma = (8 - 12*q + 6*q2 - q3)/4;
-      if(q > 1){
-        sigma *= 10/size/size/7/PI;
-        M = (-1 + 20*q2*(1 - q + 3*q2/8 - q3/20) )/7;
-        *phi += Mass*(-1232. + 1200*q2 - 800.*q3 + 225.*q4 - 24*q5 + 120*log(2./q) )/840/PI;
-      }else{
-        sigma = 10*( sigma - 1 + 3*q - 3*q2 + q3)/size/size/7/PI;
-        M = 10*q2*(1 - 3*q/4 + 3*q3/10)/7;
-        
-        *phi += Mass*( phiintconst + 10*(q2/2 - 3*q4/4 + 3*q5/50)/7
-                      )/PI;
-      }
-    }
-    
-    PosType alpha_r,gt;  // deflection * Sig_crit / Mass
-    alpha_r = (M-1)/PI/r;
-    gt = alpha_r/r - sigma;
-    
-    alpha[0] -= Mass*alpha_r*xcm[0]/r;
-    alpha[1] -= Mass*alpha_r*xcm[1]/r;
-    gamma[0] -= gt*Mass*(xcm[0]*xcm[0]-xcm[1]*xcm[1])/r/r;
-    gamma[1] -= gt*Mass*2*xcm[0]*xcm[1]/r/r;
-    *kappa += Mass*sigma;
-    *phi -= Mass*log(r)/PI;
-  }
-  
-  /* Exponential kernel for particle profile
-   
-   The lensing quantities are added to and a point mass is subtracted
-   */
-  inline void exponential_profile(
-                                  PosType *xcm
-                                  ,PosType rcm2       // distance from center in Mpc
-                                  ,PosType Mass
-                                  ,PosType size    // size scale in Mpc
-                                  ,PosType *alpha
-                                  ,KappaType *kappa
-                                  ,KappaType *gamma
-                                  ,KappaType *phi
-                                  ) const {
-    
-    
-    PosType prefac = Mass/rcm2/PI;
-    PosType arg1 = rcm2/(size*size);
-    
-    PosType tmp = (alpha_h(arg1,size) + 1.0)*prefac;
-    alpha[0] += tmp*xcm[0];
-    alpha[1] += tmp*xcm[1];
-    
-    *kappa += kappa_h(arg1,size)*prefac;
-    
-    tmp = (gamma_h(arg1,size) + 2.0)*prefac/rcm2;
-    
-    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-    gamma[1] += xcm[0]*xcm[1]*tmp;
-    
-    // TODO: makes sure the normalization of phi_h agrees with this
-    //*phi += (phi_h(arg1,size) + 0.5*log(rcm2))*prefac*rcm2;
-  }
-  
-	//QTreeNB<PType> * rotate_simulation(PType *xp,IndexType Nparticles,IndexType *particles
-	//		,PosType **coord,PosType theta,float *rsph,float *mass
-	//		,bool MultiRadius,bool MultiMass);
-	//QTreeNB<PType> * rotate_project(PType *xp,IndexType Nparticles,IndexType *particles
-	//		,PosType **coord,PosType theta,float *rsph,float *mass
-	//		,bool MultiRadius,bool MultiMass);
-	 void cuttoffscale(QTreeNB<PType> * tree,PosType *theta);
-
-  void walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi);
 
   void walkTree_iter(QBiterator<PType> &treeit, PosType const *ray,PosType *alpha,KappaType *kappa
                      ,KappaType *gamma,KappaType *phi) const;
   
   PosType phiintconst;
+
+  struct QBranch{
+      QBranch(QBranch *parent):prev(parent){
+        static unsigned long n=0;
+        child0 = NULL;
+        child1 = NULL;
+        child2 = NULL;
+        child3 = NULL;
+        brother = NULL;
+        particles = NULL;
+        nparticles = 0;
+        number = n;
+        ++n;
+      };
+  
+      ~QBranch(){ };
+  
+      /// array of particles in QBranch
+    IndexType *particles;
+    std::unique_ptr<IndexType[]> big_particles;
+    IndexType nparticles;
+    /// the number of particles that aren't in children
+    IndexType Nbig_particles;
+    /// Size of largest particle in branch
+    PosType maxrsph;
+    /// center of mass
+    PosType center[2];
+    PosType mass;
+    /// level in tree
+    int level;
+    unsigned long number;
+    /// bottom, left, back corner of box
+    PosType boundary_p1[2];
+    /// top, right, front corner of box
+    PosType boundary_p2[2];
+    PosType boxsize2;
+  
+    QBranch *child0;
+    QBranch *child1;
+    QBranch *child2;
+    QBranch *child3;
+  
+      /// father of branch
+    QBranch *prev;
+    /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
+    /// Used for iterative tree walk.
+    QBranch *brother;
+  
+    /// quadropole moment of branch
+    PosType quad[3];
+    /// largest dimension of box
+    PosType rmax;
+    /// the critical distance below which a branch is opened in the
+    PosType r2crit_angle;
+    /* force calculation */
+    PosType rcrit_part;
+    //PosType cm[2]; /* projected center of mass */
+    };
 };
 
 /** \brief Constructor meant for point particles, simulation particles
  */
 template<typename PType>
-TreeQuadParticles<PType>::TreeQuadParticles(
+TreeQuadHalos<PType>::TreeQuadHalos(
                     PType *xpt
                    ,IndexType Npoints
-                   ,float mass_fixed
-                   ,float size_fixed
                    ,PosType my_inv_area /// inverse of the area of the field, 0 for no background subtraction
                    ,int bucket
                    ,PosType theta_force
-                   ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadParticles::force2D() for details.  See note for TreeQuadParticles::force2D_recur().
-                   ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadParticles::force2D_recur().
+                   ,bool my_periodic_buffer  /// if true a periodic buffer will be imposed in the force calulation.  See documentation on TreeQuadHalos::force2D() for details.  See note for TreeQuadHalos::force2D_recur().
+                   ,PosType my_inv_screening_scale   /// the inverse of the square of the sreening length. See note for TreeQuadHalos::force2D_recur().
                    ,PosType maximum_range  /// if set this will cause the tree not be fully construct down to the bucket size outside this range
 
 ):
@@ -276,15 +225,15 @@ xxp(xpt)
 
 /// Particle positions and other data are not destroyed.
 template<typename PType>
-TreeQuadParticles<PType>::~TreeQuadParticles()
+TreeQuadHalos<PType>::~TreeQuadHalos()
 {
   if(Nparticles == 0) return;
   return;
 }
 
 template<typename PType>
-//QTreeNB<PType> * TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles,IndexType *particles){
-void TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
+//QTreeNB<PType> * TreeQuadHalos<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles,IndexType *particles){
+void TreeQuadHalos<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
   IndexType i;
   short j;
   PosType p1[2],p2[2];
@@ -323,7 +272,6 @@ void TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
   p2[j] = p1[j] + lengths[!j];
   
   /* Initialize tree root */
-  //tree = new QTreeNB<PType>(xxp,particles,Nparticles,p1,p2);
   tree.reset( new QTreeNB<PType>(xxp,index.data(),Nparticles,p1,p2) );
 
   /* build the tree */
@@ -340,15 +288,15 @@ void TreeQuadParticles<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
 
 /// returns an index for which of the four quadrangles of the branch the point x[] is in
 template<typename PType>
-inline short TreeQuadParticles<PType>::WhichQuad(PosType *x,QBranchNB &branch){
+inline short TreeQuadHalos<PType>::WhichQuad(PosType *x,QBranch &branch){
   return (x[0] < branch.center[0]) + 2*(x[1] < branch.center[1]);
 }
 
 /// tree must be created and first branch must be set before start
 template<typename PType>
-void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
+void TreeQuadHalos<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *particles){
   
-  QBranchNB *cbranch = tree->current; // pointer to current branch
+  QBranch *cbranch = tree->current; // pointer to current branch
   IndexType i,j,cut,cut2;
   
   cbranch->center[0] = (cbranch->boundary_p1[0] + cbranch->boundary_p2[0])/2;
@@ -370,18 +318,15 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
      ){
     PosType r;
     cbranch->Nbig_particles = 0;
-    PosType boxsize = cbranch->boundary_p2[0] - cbranch->boundary_p1[0];
+    PosType boxsize = cbranch->boundary_p2[0]-cbranch->boundary_p1[0];
     for(i=0;i<cbranch->nparticles;++i){
-      r = xxp[particles[i]*MultiRadius].size();
-      if(r < boxsize) ++cbranch->Nbig_particles;
+      if(xxp[particles[i]*MultiRadius].size() < boxsize) ++cbranch->Nbig_particles;
     }
     if(cbranch->Nbig_particles){
-      //cbranch->big_particles = new IndexType[cbranch->Nbig_particles];
       cbranch->big_particles.reset(new IndexType[cbranch->Nbig_particles]);
       
       for(i=0,j=0;i<cbranch->nparticles;++i){
-        r = xxp[particles[i]*MultiRadius].size();
-        if(r < boxsize) cbranch->big_particles[j++] = particles[i];
+        if(xxp[particles[i]*MultiRadius].size() < boxsize) cbranch->big_particles[j++] = particles[i];
       }
     }else{
       cbranch->big_particles.reset(nullptr);
@@ -444,10 +389,10 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
   IndexType cutx,cuty;
   PosType xcut,ycut;
   
-  QBranchNB *child0 = new QBranchNB(cbranch);
-  QBranchNB *child1 = new QBranchNB(cbranch);
-  QBranchNB *child2 = new QBranchNB(cbranch);
-  QBranchNB *child3 = new QBranchNB(cbranch);
+  QBranch *child0 = new QBranch(cbranch);
+  QBranch *child1 = new QBranch(cbranch);
+  QBranch *child2 = new QBranch(cbranch);
+  QBranch *child3 = new QBranch(cbranch);
   
   tree->attachChildrenToCurrent(child0,child1,child2,child3);
   
@@ -556,12 +501,12 @@ void TreeQuadParticles<PType>::_BuildQTreeNB(IndexType nparticles,IndexType *par
 
 // calculates moments of the mass and the cutoff scale for each box
 template<typename PType>
-void TreeQuadParticles<PType>::CalcMoments(){
+void TreeQuadHalos<PType>::CalcMoments(){
   
   //*** make compatable
   IndexType i;
   PosType rcom,xcm[2],xcut;
-  QBranchNB *cbranch;
+  QBranch *cbranch;
   PosType tmp;
   double absmass; // absolute magnitude of mass
   
@@ -619,7 +564,7 @@ void TreeQuadParticles<PType>::CalcMoments(){
 
 /// simple rotates the coordinates in the xp array
 template<typename PType>
-void TreeQuadParticles<PType>::rotate_coordinates(PosType **coord){
+void TreeQuadHalos<PType>::rotate_coordinates(PosType **coord){
   IndexType i;
   short j;
   PosType tmp[3];
@@ -660,7 +605,7 @@ void TreeQuadParticles<PType>::rotate_coordinates(PosType **coord){
  * */
 
 template<typename PType>
-void TreeQuadParticles<PType>::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi) const{
+void TreeQuadHalos<PType>::force2D(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi) const{
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
   *kappa=*phi=0.0;
@@ -696,7 +641,7 @@ void TreeQuadParticles<PType>::force2D(const PosType *ray,PosType *alpha,KappaTy
 /** \brief Returns the halos that are within rmax of ray[]
  */
 template<typename PType>
-void TreeQuadParticles<PType>::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const{
+void TreeQuadHalos<PType>::neighbors(PosType ray[],PosType rmax,std::list<IndexType> &neighbors) const{
   QBiterator<PType> it(tree);
   neighbors.clear();
   
@@ -724,7 +669,7 @@ void TreeQuadParticles<PType>::neighbors(PosType ray[],PosType rmax,std::list<In
 }
 
 template<typename PType>
-void TreeQuadParticles<PType>::walkTree_iter(
+void TreeQuadHalos<PType>::walkTree_iter(
                              QBiterator<PType> &treeit,
                              const PosType *ray
                              ,PosType *alpha
@@ -900,7 +845,7 @@ void TreeQuadParticles<PType>::walkTree_iter(
 /** \brief Force2D_recur calculates the defection, convergence and shear using
  *   the plane-lens approximation.
  *
- *  This function should do the same work as TreeQuadParticles::force2D() except it is
+ *  This function should do the same work as TreeQuadHalos::force2D() except it is
  *  done recursively instead of iteratively.  This is done to enable multi-threading
  *  of the force calculation.
  *
@@ -922,7 +867,7 @@ void TreeQuadParticles<PType>::walkTree_iter(
  * */
 
 template<typename PType>
-void TreeQuadParticles<PType>::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
+void TreeQuadHalos<PType>::force2D_recur(const PosType *ray,PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi){
   
   
   alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
@@ -980,7 +925,7 @@ void TreeQuadParticles<PType>::force2D_recur(const PosType *ray,PosType *alpha,K
 
 
 template<typename PType>
-void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
+void TreeQuadHalos<PType>::walkTree_recur(QBranch *branch,PosType const *ray,PosType *alpha,KappaType *kappa,KappaType *gamma, KappaType *phi){
   
   PosType xcm[2],rcm2cell,rcm2,tmp,boxsize2;
   IndexType i;
@@ -1123,7 +1068,7 @@ void TreeQuadParticles<PType>::walkTree_recur(QBranchNB *branch,PosType const *r
  * given branch of the tree.
  */
 template<typename PType>
-void TreeQuadParticles<PType>::printParticlesInBranch(unsigned long number){
+void TreeQuadHalos<PType>::printParticlesInBranch(unsigned long number){
   unsigned long i;
   
   tree->moveTop();
@@ -1145,7 +1090,7 @@ void TreeQuadParticles<PType>::printParticlesInBranch(unsigned long number){
  * If level < 0 or not specified the whole tree will be printed.
  */
 template<typename PType>
-void TreeQuadParticles<PType>::printBranchs(int level){
+void TreeQuadHalos<PType>::printBranchs(int level){
   
   bool decend = true;
   tree->moveTop();
