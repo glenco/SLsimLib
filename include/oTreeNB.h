@@ -11,6 +11,7 @@
 
 #include "utilities.h"
 #include "cosmo.h"
+#include "point.h"
 
 #ifndef PI
 #define PI 3.141593
@@ -27,17 +28,26 @@ typedef unsigned long IndexType;
  */
 struct OBranchNB
 {
-  OBranchNB(OBranchNB *parent) : prev(parent)
+  OBranchNB()
   {
-    static unsigned long n = 0;
-
-    child = NULL;
-    brother = NULL;
-    particles = NULL;
+    prev = nullptr;
+    child = nullptr;
+    brother = nullptr;
+    particles = nullptr;
     nparticles = 0;
-    number = n;
-    ++n;
+    level = -1;
+    boxsize = 0.0;
+    root_density = 0.0;
   };
+
+  //OBranchNB(OBranchNB *parent) : prev(parent)
+  //{
+  //  child = nullptr;
+  //  brother = nullptr;
+  //  particles = nullptr;
+  //  nparticles = 0;
+  //  level = parent->level + 1;
+  //};
 
   ~OBranchNB() {};
 
@@ -46,19 +56,18 @@ struct OBranchNB
   IndexType nparticles;
 
   /// bottom, left, back corner of box
-  PosType boundary_p1[3];
+  Point_3d<PosType> boundary_p1;
   /// top, right, front corner of box
-  PosType boundary_p2[3];
+  Point_3d<PosType> boundary_p2;
 
-  bool cubic = false;
-  PosType boxsize;
-  PosType boxsize2;
+  PosType boxsize;  // one dimensional size of box
+  PosType root_density;  // cube root of number density in branch
   /// level in tree
   int level;
-  unsigned long number;
+  //unsigned long number;
 
   // std::vector<OBranchNB> children;
-  std::unique_ptr<int[]> children;
+  std::unique_ptr<OBranchNB> children;
 
   OBranchNB *child;
   /// father of branch
@@ -67,12 +76,11 @@ struct OBranchNB
   /// Used for iterative tree walk.
   OBranchNB *brother;
 
-  /* projected quantities */
-  /// quadropole moment of branch
-  /// center of mass
-  // PosType center[3];
-  // PosType quad[3];
-  // PosType mass;
+  // projected quantities   
+  // center of mass  
+  PosType xcm[3] = {0.0, 0.0, 0.0}; 
+  // quadropole moment of branch in particle mass units
+  PosType quad[3] = {0.0, 0.0, 0.0};
 };
 
 /** \brief
@@ -85,16 +93,112 @@ struct OBranchNB
 template <typename PType = double *>
 struct OTreeNB
 {
-  OTreeNB(PType *xp, IndexType *particles, IndexType nparticles, PosType boundary_p1[], PosType boundary_p2[]);
-  ~OTreeNB();
+  OTreeNB(PType *xp,IndexType nparticles,int Nbucket=1):
+  xxp(xp),bucket(Nbucket)
+  {
+    index.resize(nparticles);
+    for(unsigned long i=0;i<nparticles;++i) index[i] = i;
+    Nbranches = 1;
+    top.particles = index.data();
+    //std::cout << top.particles[10] << std::endl;
+    top.nparticles = nparticles;
+     
+    top.level = 0;
+    top.boundary_p1[0] = top.boundary_p2[0] = xp[0][0];
+    top.boundary_p1[1] = top.boundary_p2[1] = xp[0][1];
+    top.boundary_p1[2] = top.boundary_p2[2] = xp[0][2];
+  
+    for(IndexType i = 1 ; i < nparticles ; ++i)
+    {
+      for(int j=0;j<3;++j){
+        top.boundary_p1[j] = min(top.boundary_p1[j], xp[i][j]);
+        top.boundary_p2[j] = max(top.boundary_p2[j], xp[i][j]);
+      }
+    }
 
-  unsigned long Nbranches() { return Nbranches; };
+    // make it into a cube
+    Point_3d<PosType> length = top.boundary_p2 - top.boundary_p1;
+    PosType max_length = length[0];
+    int dim = 0;
+    for(int j=1;j<3;++j){
+      if(length[j] > max_length){
+        max_length = length[j];
+        dim = j;
+      }
+    }
+    for(int j=0;j<3;++j){
+      if(j != dim){
+        top.boundary_p2[j] = top.boundary_p1[j] + max_length;
+      }
+    }
+
+    top.boxsize =  max_length;
+    top.root_density = pow(top.nparticles,1.0/3.)/max_length;
+  }
+  ~OTreeNB(){};
+
+  // returns number of branches in tree
+  unsigned long size() { return Nbranches; };
+
+  void build(){  // build the tree down to bucket size
+    auto it = begin();
+      span8(*it);
+      while(it.walk(true,begin())){
+     
+      std::cout << "level : " << (*it)->level << std::endl;
+      std::cout << (*it)->boundary_p1 << std::endl;
+      std::cout << (*it)->boundary_p2 << std::endl;
+      std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
+      span8(*it);
+    }
+  }
+
+  // calculate the moments assuming the particles are equal mass and symmetric
+  void calcMoments_p(double particle_mass){
+    auto it = begin();
+    while(it.walk(true,begin())){
+
+      OBranchNB *branch = *it;
+      if(branch->nparticles == 0) continue;
+      
+      // calculate center of mass
+      branch->xcm[0] = 0.0; // reset center
+      branch->xcm[1] = 0.0;
+      branch->xcm[2] = 0.0;
+      for(IndexType i=0;i<branch->nparticles;++i){
+        PType &x = xxp[branch->particles[i]];
+        branch->xcm[0] += x[0];
+        branch->xcm[1] += x[1];
+        branch->xcm[2] += x[2];
+      }
+      branch->xcm[0] /= branch->nparticles;
+      branch->xcm[1] /= branch->nparticles;
+      branch->xcm[2] /= branch->nparticles;
+
+      // calculate quadropole moment of branch
+      Point_2d dxcm;
+      branch->quad[0]=branch->quad[1]=branch->quad[2]=0;
+      for(IndexType i=0;i<branch->nparticles;++i){
+        PType &x = xxp[branch->particles[i]];
+        dxcm[0] = x[0] - branch->xcm[0];
+        dxcm[1] = x[1] - branch->xcm[1];
+
+        double r2 = dxcm[0]*dxcm[0] + dxcm[1]*dxcm[1];
+        branch->quad[0] += (r2-2*dxcm[0]*dxcm[0]);
+        branch->quad[1] += (r2-2*dxcm[1]*dxcm[1]);
+        branch->quad[2] += -2*dxcm[0]*dxcm[1];
+      }
+      branch->quad[0] *= particle_mass;
+      branch->quad[1] *= particle_mass;
+      branch->quad[2] *= particle_mass;
+    }
+  }
+
 
   /**
    \brief A iterator class that allows for movement through the tree without changing
        anything in the tree itself.
  */
-  template <typename PType>
   class iterator
   {
 
@@ -107,7 +211,15 @@ struct OTreeNB
     /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
     iterator(OBranchNB *branch) { current = branch; }
 
-    iterator operator=(OBranchNB *branch)
+    
+    iterator& operator=(iterator &it)
+    {
+      current = it.current;
+      return *this;
+    }
+  
+
+    iterator& operator=(OBranchNB *branch)
     {
       current = branch;
       return *this;
@@ -118,9 +230,9 @@ struct OTreeNB
 
     bool up()
     {
-      if (current->prev == NULL)
+      if (current->prev == nullptr)
       {
-        current = NULL;
+        current = nullptr;
         return false; // at top
       }
       current = current->prev;
@@ -136,7 +248,7 @@ struct OTreeNB
 
     bool atTop() const
     {
-      if (current->prev == NULL)
+      if (current->prev == nullptr)
         return true;
       return false;
     }
@@ -145,86 +257,99 @@ struct OTreeNB
     {
       for (int i = 0; i < 8; ++i)
       {
-        if (current->children[i] != NULL)
+        if (current->child != nullptr)
           return false;
       }
       return true;
     }
 
-    // returns true if not at the end of the tree
-    bool TreeWalkStep(bool allowDescent)
+    /**  walk the tree, returns false if the next step would be to move to the 
+     brother of the end iterator
+
+     end = tree.begin() if it is going to the end of the tree
+     allowDescent = true if it is allowed to go down to the child
+                   , false if it should only go to the next brother
+     */
+    bool walk(bool allowDescent,iterator end)
     {
-      if (allowDescent)
-      {
-        if (current->children[i] != NULL)
-        {
-          down();
-          return true;
-        }
-      }
-      if (current->brother != NULL)
-      {
-        current = current->brother;
+      if (current == nullptr)
+        return false; // at top
+
+      // if there is a valid chaild, go down
+      if (allowDescent && current->child != nullptr){
+        current = current->child;
         return true;
       }
-      return false;
-    }
+
+      if (current->brother != end.current->brother)
+        {
+          current = current->brother;
+          return true;
+        }
+        current = end.current;
+        return false;  // at end
+      }
+
   };
 
-  size_t getNbranches() { return nbranches; }
+  size_t getNbranches() { return Nbranches; }
 
-  iterator<PType> begin()
+  iterator begin()
   {
-    return iterator<PType>(&top);
+    return iterator(&top);
   }
 
   void span8(OBranchNB *current);
-  void span4(OBranchNB *current, int dim); // dim is the dimension that is not divided
-  void span2(OBranchNB *current, int dim); // dim is the dimension that IS divided
-
+  
+  // maximum depth of tree
+  int getDepth() const
+  {
+    return depth;
+  }
+  
 private:
   OBranchNB top;
   /// Array of particle positions
   PType *xxp;
+  std::vector<unsigned long> index;
 
   /// number of branches in tree
   unsigned long Nbranches;
+  unsigned long total_branches = 1;
+  int bucket;
+  int depth = 1; // maximum depth of tree, used for debugging
 };
 
 // creates 8 children to current with links to their parent and brother
 // and sets their center and boxsize
 template <typename PType>
-void OTreeNB<PType>::span8(OBranchNB *current, IndexType *particles, IndexType nparticles)
+void OTreeNB<PType>::span8(OBranchNB *current)
 {
-  if (current == NULL)
+  if (current == nullptr)
   {
     ERROR_MESSAGE();
     std::cerr << "OTreeNB Error: calling spon() on empty tree" << std::endl;
     exit(1);
   }
+  
+  if(current->nparticles <= bucket) return;
 
   current->children.reset(new OBranchNB[8]);
-  current->child = children.get();
+  OBranchNB *children = current->children.get();
 
-  for (auto &child : current->children)
+  for(int i=0; i<8; ++i)
   {
-    child->prev = current;
-    child->level = current->level + 1;
-    child->boxsize = current->boxsize / 2.0;
-    child->boxsize2 = child->boxsize * child->boxsize;
+    children[i].prev = current;
+    children[i].level = current->level + 1;
   }
-  for (int i = 0; i < 7; ++i)
-  {
-    current->children[i]->brother = current->children[i + 1];
-  }
-  current->children[7]->brother = current->brother;
-
-  PosType half_box = current->boxsize / 2.0;
+  total_branches += 8;
+  if(depth < current->level + 1) depth = current->level + 1;
 
   PosType center[3];
   center[0] = (current->boundary_p1[0] + current->boundary_p2[0]) / 2.0;
   center[1] = (current->boundary_p1[1] + current->boundary_p2[1]) / 2.0;
   center[2] = (current->boundary_p1[2] + current->boundary_p2[2]) / 2.0;
+  PosType boxsize = current->boxsize / 2.0;
 
   size_t m = 0;
   for (int i = -1; i < 2; i += 2)
@@ -234,17 +359,21 @@ void OTreeNB<PType>::span8(OBranchNB *current, IndexType *particles, IndexType n
       for (int k = -1; k < 2; k += 2)
       {
 
-        current->children[m].boundary_p1[0] = ((1 - i) / 2) * current->boundary_p1[0] + ((1 + i) / 2) * center[0];
+        children[m].boundary_p1[0] = ((1 - i) / 2) * current->boundary_p1[0] 
+                                              + ((1 + i) / 2) * center[0];
+        children[m].boundary_p1[1] = ((1 - j) / 2) * current->boundary_p1[1] 
+                                              + ((1 + j) / 2) * center[1];
+        children[m].boundary_p1[2] = ((1 - k) / 2) * current->boundary_p1[2] 
+                                              + ((1 + k) / 2) * center[2];
 
-        current->children[m].boundary_p1[1] = ((1 - j) / 2) * current->boundary_p1[1] + ((1 + j) / 2) * center[1];
+        children[m].boundary_p2[0] = ((1 + i) / 2) * current->boundary_p2[0]
+                                              + ((1 - i) / 2) * center[0];
+        children[m].boundary_p2[1] = ((1 + j) / 2) * current->boundary_p2[1]
+                                              + ((1 - j) / 2) * center[1];
+        children[m].boundary_p2[2] = ((1 + k) / 2) * current->boundary_p2[2]
+                                              + ((1 - k) / 2) * center[2];
 
-        current->children[m].boundary_p1[2] = ((1 - k) / 2) * current->boundary_p1[2] + ((1 + k) / 2) * center[2];
-
-        current->children[m].boundary_p2[0] = ((1 + i) / 2) * current->boundary_p2[0] + ((1 - i) / 2) * center[0];
-
-        current->children[m].boundary_p2[1] = ((1 + j) / 2) * current->boundary_p2[1] + ((1 - j) / 2) * center[1];
-
-        current->children[m].boundary_p2[2] = ((1 + k) / 2) * current->boundary_p2[2] + ((1 - k) / 2) * center[2];
+        children[m].boxsize = boxsize;
         ++m;
       }
     }
@@ -252,231 +381,57 @@ void OTreeNB<PType>::span8(OBranchNB *current, IndexType *particles, IndexType n
 
   // sort particles into children
   IndexType *p = current->particles;
+  //std::cout << p[0] << " " << p[1] << " " << p[2] << std::endl;
   IndexType *p_end = p + current->nparticles;
   IndexType np = 0;
   for (int m = 0; m < 7; ++m)
   {
     children[m].particles = p;
-    children[m].nparticles = 0;
-    if (m == 3)
+    IndexType *pp = p;
+    //std::cout << pp[0] << " " << pp[1] << " " << pp[2] << std::endl;
+    //std::cout << xxp[pp[0]][1] << " " << xxp[*pp][1] << " " << pp[2] << std::endl;
+  
+    while (pp != p_end)
     {
-      children[m].nparticles = current->nparticles - np;
-    }
-    else
-    {
-      IndexType *pp = p;
-      while (pp != p_end)
+      PType &x = xxp[*pp];
+      if (x[0] >= children[m].boundary_p1[0] &&
+          x[0] < children[m].boundary_p2[0] &&
+          x[1] >= children[m].boundary_p1[1] &&
+          x[1] < children[m].boundary_p2[1] &&
+          x[2] >= children[m].boundary_p1[2] &&
+          x[2] < children[m].boundary_p2[2])
       {
-        Ptype &x = xxp[*pp];
-        if (x[0] >= current->children[m].boundary_p1[0] &&
-            x[0] < current->children[m].boundary_p2[0] &&
-            x[1] >= current->children[m].boundary_p1[1] &&
-            x[1] < current->children[m].boundary_p2[1] &&
-            x[2] >= current->children[m].boundary_p1[2] &&
-            x[2] < current->children[m].boundary_p2[2])
-        {
-          std::swap(*p, *pp);
-          children[m].nparticles++;
-          ++p;
-        }
-        ++pp;
+        std::swap(*p, *pp);
+        children[m].nparticles++;
+        ++p;
       }
-      np += children[m].nparticles;
+      ++pp;
     }
+    np += children[m].nparticles;
+    
+    children[m].root_density = pow(children[m].nparticles,1.0/3.)/children[m].boxsize; // reset density
   }
-  Nbranches += 8;
+  children[7].particles = p;
+  children[7].nparticles = current->nparticles - np;
+  children[7].root_density = pow(children[7].nparticles,1.0/3.)/children[7].boxsize; // reset root_density
+  
+  // remove empty branches from the brotherhood
+  int i=0;
+  while(children[i].nparticles==0 && i<8) ++i;
+  assert(i != 8);
+  current->child = children+i;
+  ++Nbranches;
+  int j=i+1;
+  while(j<8){
+    if(children[j].nparticles > 0){
+      children[i].brother = children + j;
+      i=j;
+      ++Nbranches;
+    }
+    ++j; 
+  }
+  children[i].brother = current->brother;
 }
 
-template <typename PType>
-void OTreeNB<PType>::span4(OBranchNB *current, int dim, )
-{
-  if (current == NULL)
-  {
-    ERROR_MESSAGE();
-    std::cerr << "OTreeNB Error: calling spon() on empty tree" << std::endl;
-    exit(1);
-  }
-
-  current->children.reset(new OBranchNB[4]);
-  current->child = children.get();
-
-  for (auto &child : current->children)
-  {
-    child->prev = current;
-    child->level = current->level + 1;
-    child->boxsize = current->boxsize / 2.0;
-    child->boxsize2 = child->boxsize * child->boxsize;
-    child->cubic = current->cubic;
-  }
-  for (int i = 0; i < 3; ++i)
-  {
-    current->children[i]->brother = current->children[i + 1];
-  }
-  current->children[3]->brother = current->brother;
-
-  PosType center[3];
-  center[0] = (current->boundary_p1[0] + current->boundary_p2[0]) / 2.0;
-  center[1] = (current->boundary_p1[1] + current->boundary_p2[1]) / 2.0;
-  center[2] = (current->boundary_p1[2] + current->boundary_p2[2]) / 2.0;
-
-  size_t m = 0;
-  for (int i = -1; i < 2; i += 2)
-  {
-    for (int j = -1; j < 2; j += 2)
-    {
-      if (dim == 0)
-      {
-        current->children[m].boundary_p1[0] = current->boundary_p1[0];
-
-        current->children[m].boundary_p1[1] = ((1 - i) / 2) * current->boundary_p1[1] + ((1 + i) / 2) * center[1];
-
-        current->children[m].boundary_p1[2] = ((1 - j) / 2) * current->boundary_p1[2] + ((1 + j) / 2) * center[2];
-
-        current->children[m].boundary_p2[0] = current->boundary_p2[0];
-
-        current->children[m].boundary_p2[1] = ((1 + i) / 2) * current->boundary_p2[1] + ((1 - i) / 2) * center[1];
-
-        current->children[m].boundary_p2[2] = ((1 + j) / 2) * current->boundary_p2[2] + ((1 - j) / 2) * center[2];
-      }
-      else if (dim == 1)
-      {
-        current->children[m].boundary_p1[0] = ((1 - i) / 2) * current->boundary_p1[0] + ((1 + i) / 2) * center[0];
-
-        current->children[m].boundary_p1[1] = current->boundary_p1[1];
-
-        current->children[m].boundary_p1[2] = ((1 - j) / 2) * current->boundary_p1[2] + ((1 + j) / 2) * center[2];
-
-        current->children[m].boundary_p2[0] = ((1 + i) / 2) * current->boundary_p2[0] + ((1 - i) / 2) * center[0];
-
-        current->children[m].boundary_p2[1] = current->boundary_p2[1];
-
-        current->children[m].boundary_p2[2] = ((1 + j) / 2) * current->boundary_p2[2] + ((1 - j) / 2) * center[2];
-      }
-      else
-      {
-        current->children[m].boundary_p1[0] = ((1 - i) / 2) * current->boundary_p1[0] + ((1 + i) / 2) * center[0];
-
-        current->children[m].boundary_p1[1] = ((1 - j) / 2) * current->boundary_p1[1] + ((1 + j) / 2) * center[1];
-
-        current->children[m].boundary_p1[2] = current->boundary_p1[2];
-
-        current->children[m].boundary_p2[0] = ((1 + i) / 2) * current->boundary_p2[0] + ((1 - i) / 2) * center[0];
-
-        current->children[m].boundary_p2[1] = ((1 + j) / 2) * current->boundary_p2[1] + ((1 - j) / 2) * center[1];
-
-        current->children[m].boundary_p2[2] = current->boundary_p2[2];
-      }
-      ++m;
-    }
-  }
-
-  // sort particles into children
-  IndexType *p = current->particles;
-  IndexType *p_end = p + current->nparticles;
-  IndexType np = 0;
-  for (int m = 0; m < 4; ++m)
-  {
-    children[m].particles = p;
-    children[m].nparticles = 0;
-    if (m == 3)
-    {
-      children[m].nparticles = current->nparticles - np;
-    }
-    else
-    {
-      IndexType *pp = p;
-      while (pp != p_end)
-      {
-        Ptype &x = xxp[*pp];
-        if (x[0] >= current->children[m].boundary_p1[0] &&
-            x[0] < current->children[m].boundary_p2[0] &&
-            x[1] >= current->children[m].boundary_p1[1] &&
-            x[1] < current->children[m].boundary_p2[1] &&
-            x[2] >= current->children[m].boundary_p1[2] &&
-            x[2] < current->children[m].boundary_p2[2])
-        {
-          std::swap(*p, *pp);
-          children[m].nparticles++;
-          ++p;
-        }
-        ++pp;
-      }
-      np += children[m].nparticles;
-    }
-  }
-  Nbranches += 4;
-}
-
-template <typename PType>
-void OTreeNB<PType>::span2(OBranchNB *current, int dim)
-{
-  if (current == NULL)
-  {
-    ERROR_MESSAGE();
-    std::cerr << "OTreeNB Error: calling spon() on empty tree" << std::endl;
-    exit(1);
-  }
-
-  current->children.reset(new OBranchNB[2]);
-  current->child = children.get();
-
-  for (auto &child : current->children)
-  {
-    child->prev = current;
-    child->level = current->level + 1;
-  }
-
-  current->children[0]->brother = current->children[1];
-  current->children[1]->brother = current->brother;
-
-  for (int m = 0; m < 2; ++m)
-  {
-    current->children[m].boundary_p1[0] = current->boundary_p1[0];
-    current->children[m].boundary_p1[1] = current->boundary_p1[1];
-    current->children[m].boundary_p1[2] = current->boundary_p1[2];
-
-    current->children[m].boundary_p2[0] = current->boundary_p2[0];
-    current->children[m].boundary_p2[1] = current->boundary_p2[1];
-    current->children[m].boundary_p2[2] = current->boundary_p2[2];
-  }
-
-  PosType center = (current->boundary_p1[dim] + current->boundary_p2[dim]) / 2.0;
-  current->children[0].boundary_p2[dim] = center;
-  current->children[1].boundary_p1[dim] = center;
-
-  // sort particles into children
-  IndexType *p = current->particles;
-  IndexType *p_end = p + current->nparticles;
-  for (int m = 0; m < 2; ++m)
-  {
-    children[m].particles = p;
-    children[m].nparticles = 0;
-    if (m == 1)
-    {
-      children[m].nparticles = current->nparticles - current->children[0].nparticles;
-    }
-    else
-    {
-      IndexType *pp = p;
-      while (pp != p_end)
-      {
-        Ptype &x = xxp[*pp];
-        if (x[0] >= current->children[m].boundary_p1[0] &&
-            x[0] < current->children[m].boundary_p2[0] &&
-            x[1] >= current->children[m].boundary_p1[1] &&
-            x[1] < current->children[m].boundary_p2[1] &&
-            x[2] >= current->children[m].boundary_p1[2] &&
-            x[2] < current->children[m].boundary_p2[2])
-        {
-          std::swap(*p, *pp);
-          children[m].nparticles++;
-          ++p;
-        }
-        ++pp;
-      }
-    }
-  }
-  Nbranches += 2;
-}
 
 #endif /* OTreeNB_h */
