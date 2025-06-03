@@ -93,8 +93,8 @@ struct OBranchNB
 template <typename PType = double *>
 struct OTreeNB
 {
-  OTreeNB(PType *xp,IndexType nparticles,int Nbucket=1):
-  xxp(xp),bucket(Nbucket)
+  OTreeNB(PType *xp,IndexType nparticles):
+  xxp(xp)
   {
     index.resize(nparticles);
     for(unsigned long i=0;i<nparticles;++i) index[i] = i;
@@ -140,21 +140,48 @@ struct OTreeNB
   // returns number of branches in tree
   unsigned long size() { return Nbranches; };
 
-  void build(){  // build the tree down to bucket size
+  // build the tree down to bucket size, does not require the particles to have sizes
+  void build(int Nbucket){ 
     auto it = begin();
-      span8(*it);
-      while(it.walk(true,begin())){
+    if((*it)->child != nullptr){
+      throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
+    }
+    span8(*it);
+    while(it.walk(true,begin())){
      
       std::cout << "level : " << (*it)->level << std::endl;
       std::cout << (*it)->boundary_p1 << std::endl;
       std::cout << (*it)->boundary_p2 << std::endl;
       std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
-      span8(*it);
+
+      if((*it)->nparticles > Nbucket) span8(*it);
+    }
+  }
+
+  // build the tree down to bucket size, does not require the particles to have sizes
+  void build_size(int Nbucket){ 
+    auto it = begin();
+    if((*it)->child != nullptr){
+      throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
+    }
+    span8(*it);
+    while(it.walk(true,begin())){
+     
+      // find largest particle in branch
+      double max_size = 0.0;
+      for(IndexType i=0;i<(*it)->nparticles;++i){
+        max_size = max(max_size, xxp[(*it)->particles[i]].size);
+      }
+      //std::cout << "level : " << (*it)->level << std::endl;
+      //std::cout << (*it)->boundary_p1 << std::endl;
+      //std::cout << (*it)->boundary_p2 << std::endl;
+      //std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
+      if((*it)->nparticles > Nbucket && max_size < (*it)->boxsize ) span8(*it);
     }
   }
 
   // calculate the moments assuming the particles are equal mass and symmetric
-  void calcMoments_p(double particle_mass){
+  void calcMoments_point(double particle_mass){
     auto it = begin();
     while(it.walk(true,begin())){
 
@@ -316,7 +343,6 @@ private:
   /// number of branches in tree
   unsigned long Nbranches;
   unsigned long total_branches = 1;
-  int bucket;
   int depth = 1; // maximum depth of tree, used for debugging
 };
 
@@ -331,8 +357,6 @@ void OTreeNB<PType>::span8(OBranchNB *current)
     std::cerr << "OTreeNB Error: calling spon() on empty tree" << std::endl;
     exit(1);
   }
-  
-  if(current->nparticles <= bucket) return;
 
   current->children.reset(new OBranchNB[8]);
   OBranchNB *children = current->children.get();
