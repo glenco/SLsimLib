@@ -92,12 +92,13 @@ struct GridMap{
   PixelMap<T> writePixelMap(LensingVariable lensvar);
    /// fits output of lensing quantities at the resolution of the GridMap
   template <typename T>
-  void writeFits(LensingVariable lensvar,std::string filensame);
+  void writeFits(LensingVariable lensvar,std::string filensame,bool flipX = false);
 
   template<typename T>
-  void writePixelMapUniform(PixelMap<T> &map,LensingVariable lensvar);
+  void writePixelMapUniform(PixelMap<T> &map,LensingVariable lensvar,bool flipX = false);
   template <typename T>
-  void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
+  void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar
+    ,std::string filename,bool flipX = false);
   template<typename T>
   PixelMap<T> writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
 
@@ -106,9 +107,10 @@ struct GridMap{
   void writeFitsUniform(
                         LensingVariable lensvar    ///< quantity to be output
                         ,std::string filename     ///< name of output fits file
+                        ,bool xflip = false ///< flip the x axis
                         ){
     PixelMap<T> map = writePixelMap<T>(lensvar);
-    map.printFITS(filename);
+    map.printFITS(filename,xflip);
   }
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
@@ -548,9 +550,10 @@ template<typename T>
 void GridMap::writeFits(
                         LensingVariable lensvar /// which quantity is to be displayed
                         ,std::string filename  /// output files
+                        ,bool xflip ///< flip the x axis
                         ){
                           PixelMap<T> map = writePixelMap<T>(lensvar);
-                          map.printFITS(filename);
+                          map.printFITS(filename,xflip);
 }
 
 template<typename T>
@@ -629,6 +632,7 @@ template <typename T>
 void GridMap::writePixelMapUniform(
                                    PixelMap<T> &map
                                    ,LensingVariable lensvar  /// which quantity is to be displayed
+                                   ,bool flipX ///< flip the x axis
 ){
   
   if(getNumberOfPoints() ==0 ) return;
@@ -720,6 +724,7 @@ void GridMap::writeFitsUniform(
                                ,size_t Ny       /// number of pixels in image in on dimension
                                ,LensingVariable lensvar  /// which quantity is to be displayed
                                ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                               ,bool xflip ///< flip the x axis
 ){
   std::string tag;
   
@@ -762,7 +767,7 @@ void GridMap::writeFitsUniform(
   }
   
   PixelMap<T> map = writePixelMapUniform<T>(center,Nx,Ny,lensvar);
-  map.printFITS(filename + tag);
+  map.printFITS(filename + tag,xflip);
 }
 
 #endif // defined(__GLAMER__gridmap__)
