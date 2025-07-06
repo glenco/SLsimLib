@@ -24,64 +24,6 @@
 typedef unsigned long IndexType;
 #endif
 
-/** \brief Box representing a branch in a tree.  It has four children.  Used in OTreeNB which is used in TreeQuad.
- */
-struct OBranchNB
-{
-  OBranchNB()
-  {
-    prev = nullptr;
-    child = nullptr;
-    brother = nullptr;
-    particles = nullptr;
-    nparticles = 0;
-    level = -1;
-    boxsize = 0.0;
-    root_density = 0.0;
-  };
-
-  //OBranchNB(OBranchNB *parent) : prev(parent)
-  //{
-  //  child = nullptr;
-  //  brother = nullptr;
-  //  particles = nullptr;
-  //  nparticles = 0;
-  //  level = parent->level + 1;
-  //};
-
-  ~OBranchNB() {};
-
-  /// array of particles in OBranchNB
-  IndexType *particles;
-  IndexType nparticles;
-
-  /// bottom, left, back corner of box
-  Point_3d<PosType> boundary_p1;
-  /// top, right, front corner of box
-  Point_3d<PosType> boundary_p2;
-
-  PosType boxsize;  // one dimensional size of box
-  PosType root_density;  // cube root of number density in branch
-  /// level in tree
-  int level;
-  //unsigned long number;
-
-  // std::vector<OBranchNB> children;
-  std::unique_ptr<OBranchNB> children;
-
-  OBranchNB *child;
-  /// father of branch
-  OBranchNB *prev;
-  /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
-  /// Used for iterative tree walk.
-  OBranchNB *brother;
-
-  // projected quantities   
-  // center of mass  
-  PosType xcm[3] = {0.0, 0.0, 0.0}; 
-  // quadropole moment of branch in particle mass units
-  PosType quad[3] = {0.0, 0.0, 0.0};
-};
 
 /** \brief
  * OTreeNB: Tree structure used for force calculation with particles (i.e. stars, Nbody or halos).
@@ -93,134 +35,72 @@ struct OBranchNB
 template <typename PType = double *>
 struct OTreeNB
 {
-  OTreeNB(PType *xp,IndexType nparticles):
-  xxp(xp)
+
+  ///  classes
+  /** \brief Box representing a branch in a tree.  It has four children.  Used in OTreeNB which is used in TreeQuad.
+ */
+struct Branch
+{
+  Branch()
   {
-    index.resize(nparticles);
-    for(unsigned long i=0;i<nparticles;++i) index[i] = i;
-    Nbranches = 1;
-    top.particles = index.data();
-    //std::cout << top.particles[10] << std::endl;
-    top.nparticles = nparticles;
-     
-    top.level = 0;
-    top.boundary_p1[0] = top.boundary_p2[0] = xp[0][0];
-    top.boundary_p1[1] = top.boundary_p2[1] = xp[0][1];
-    top.boundary_p1[2] = top.boundary_p2[2] = xp[0][2];
-  
-    for(IndexType i = 1 ; i < nparticles ; ++i)
-    {
-      for(int j=0;j<3;++j){
-        top.boundary_p1[j] = min(top.boundary_p1[j], xp[i][j]);
-        top.boundary_p2[j] = max(top.boundary_p2[j], xp[i][j]);
-      }
-    }
+    prev = nullptr;
+    child = nullptr;
+    brother = nullptr;
+    particles = nullptr;
+    nparticles = 0;
+    level = -1;
+    boxsize = 0.0;
+    root_inv_density = 0.0;
+    ++Nbranches;
+  };
 
-    // make it into a cube
-    Point_3d<PosType> length = top.boundary_p2 - top.boundary_p1;
-    PosType max_length = length[0];
-    int dim = 0;
-    for(int j=1;j<3;++j){
-      if(length[j] > max_length){
-        max_length = length[j];
-        dim = j;
-      }
-    }
-    for(int j=0;j<3;++j){
-      if(j != dim){
-        top.boundary_p2[j] = top.boundary_p1[j] + max_length;
-      }
-    }
+  static int Nbranches;  ///< number of branches in tree, used for debugging
+  //Branch(Branch *parent) : prev(parent)
+  //{
+  //  child = nullptr;
+  //  brother = nullptr;
+  //  particles = nullptr;
+  //  nparticles = 0;
+  //  level = parent->level + 1;
+  //};
 
-    top.boxsize =  max_length;
-    top.root_density = pow(top.nparticles,1.0/3.)/max_length;
-  }
-  ~OTreeNB(){};
+  ~Branch() {
+    //std::cout << " deleting branch " << Nbranches << " "; 
+    --Nbranches; 
+    delete[] children;
+  };//{std::cout << "Branch destructor called" << std::endl; };
 
-  // returns number of branches in tree
-  unsigned long size() { return Nbranches; };
+  /// array of particles in Branch
+  IndexType *particles;
+  IndexType nparticles;
 
-  // build the tree down to bucket size, does not require the particles to have sizes
-  void build(int Nbucket){ 
-    auto it = begin();
-    if((*it)->child != nullptr){
-      throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
-    }
-    span8(*it);
-    while(it.walk(true,begin())){
-     
-      std::cout << "level : " << (*it)->level << std::endl;
-      std::cout << (*it)->boundary_p1 << std::endl;
-      std::cout << (*it)->boundary_p2 << std::endl;
-      std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
+  /// bottom, left, back corner of box
+  Point_3d<PosType> boundary_p1;
+  /// top, right, front corner of box
+  Point_3d<PosType> boundary_p2;
 
-      if((*it)->nparticles > Nbucket) span8(*it);
-    }
-  }
+  PosType boxsize;  // one dimensional size of box
+  PosType root_inv_density;  // cube root of number density in branch
+  /// level in tree
+  int level;
+  //unsigned long number;
 
-  // build the tree down to bucket size, does not require the particles to have sizes
-  void build_size(int Nbucket){ 
-    auto it = begin();
-    if((*it)->child != nullptr){
-      throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
-    }
-    span8(*it);
-    while(it.walk(true,begin())){
-     
-      // find largest particle in branch
-      double max_size = 0.0;
-      for(IndexType i=0;i<(*it)->nparticles;++i){
-        max_size = max(max_size, xxp[(*it)->particles[i]].size);
-      }
-      //std::cout << "level : " << (*it)->level << std::endl;
-      //std::cout << (*it)->boundary_p1 << std::endl;
-      //std::cout << (*it)->boundary_p2 << std::endl;
-      //std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
-      if((*it)->nparticles > Nbucket && max_size < (*it)->boxsize ) span8(*it);
-    }
-  }
+  // std::vector<Branch> children;
+  Branch *children;
 
-  // calculate the moments assuming the particles are equal mass and symmetric
-  void calcMoments_point(double particle_mass){
-    auto it = begin();
-    while(it.walk(true,begin())){
+  Branch *child;
+  /// father of branch
+  Branch *prev;
+  /// Either child2 of father is branch is child1 and child2 exists or the brother of the father.
+  /// Used for iterative tree walk.
+  Branch *brother;
 
-      OBranchNB *branch = *it;
-      if(branch->nparticles == 0) continue;
-      
-      // calculate center of mass
-      branch->xcm[0] = 0.0; // reset center
-      branch->xcm[1] = 0.0;
-      branch->xcm[2] = 0.0;
-      for(IndexType i=0;i<branch->nparticles;++i){
-        PType &x = xxp[branch->particles[i]];
-        branch->xcm[0] += x[0];
-        branch->xcm[1] += x[1];
-        branch->xcm[2] += x[2];
-      }
-      branch->xcm[0] /= branch->nparticles;
-      branch->xcm[1] /= branch->nparticles;
-      branch->xcm[2] /= branch->nparticles;
-
-      // calculate quadropole moment of branch
-      Point_2d dxcm;
-      branch->quad[0]=branch->quad[1]=branch->quad[2]=0;
-      for(IndexType i=0;i<branch->nparticles;++i){
-        PType &x = xxp[branch->particles[i]];
-        dxcm[0] = x[0] - branch->xcm[0];
-        dxcm[1] = x[1] - branch->xcm[1];
-
-        double r2 = dxcm[0]*dxcm[0] + dxcm[1]*dxcm[1];
-        branch->quad[0] += (r2-2*dxcm[0]*dxcm[0]);
-        branch->quad[1] += (r2-2*dxcm[1]*dxcm[1]);
-        branch->quad[2] += -2*dxcm[0]*dxcm[1];
-      }
-      branch->quad[0] *= particle_mass;
-      branch->quad[1] *= particle_mass;
-      branch->quad[2] *= particle_mass;
-    }
-  }
-
+  // projected quantities   
+  // center of mass  
+  PosType xcm[3] = {0.0, 0.0, 0.0}; 
+  // quadropole moment of branch in particle mass units
+  PosType quad[3] = {0.0, 0.0, 0.0};
+};
 
   /**
    \brief A iterator class that allows for movement through the tree without changing
@@ -230,30 +110,28 @@ struct OTreeNB
   {
 
   private:
-    OBranchNB *current;
+    Branch *current;
 
   public:
     /// Sets the top or root to the top of "tree".
     iterator(OTreeNB<PType> *tree) { current = tree->top; }
     /// Sets the root to the input branch so that this will be a subtree in branch is not the real root.
-    iterator(OBranchNB *branch) { current = branch; }
+    iterator(Branch *branch) { current = branch; }
 
-    
     iterator& operator=(iterator &it)
     {
       current = it.current;
       return *this;
     }
-  
 
-    iterator& operator=(OBranchNB *branch)
+    iterator& operator=(const Branch *branch)
     {
       current = branch;
       return *this;
     }
 
     /// Returns a pointer to the current Branch.
-    OBranchNB *operator*() { return current; }
+    Branch *operator*() { return current; }
 
     bool up()
     {
@@ -318,24 +196,234 @@ struct OTreeNB
       }
 
   };
+  
 
-  size_t getNbranches() { return Nbranches; }
+  OTreeNB(PType *xp,IndexType nparticles):
+  xxp(xp)
+  {
+    index.resize(nparticles);
+    for(unsigned long i=0;i<nparticles;++i) index[i] = i;
+    Nbranches = 1;
+    top.particles = index.data();
+    //std::cout << top.particles[10] << std::endl;
+    top.nparticles = nparticles;
+     
+    top.level = 0;
+    top.boundary_p1[0] = top.boundary_p2[0] = xp[0][0];
+    top.boundary_p1[1] = top.boundary_p2[1] = xp[0][1];
+    top.boundary_p1[2] = top.boundary_p2[2] = xp[0][2];
+  
+    for(IndexType i = 1 ; i < nparticles ; ++i)
+    {
+      for(int j=0;j<3;++j){
+        top.boundary_p1[j] = min(top.boundary_p1[j], xp[i][j]);
+        top.boundary_p2[j] = max(top.boundary_p2[j], xp[i][j]);
+      }
+    }
+
+    // make it into a cube
+    Point_3d<PosType> length = top.boundary_p2 - top.boundary_p1;
+    PosType max_length = length[0];
+    int dim = 0;
+    for(int j=1;j<3;++j){
+      if(length[j] > max_length){
+        max_length = length[j];
+        dim = j;
+      }
+    }
+    for(int j=0;j<3;++j){
+      if(j != dim){
+        top.boundary_p2[j] = top.boundary_p1[j] + max_length;
+      }
+    }
+
+    top.boxsize =  max_length;
+    top.root_inv_density = pow(top.nparticles,1.0/3.)/max_length;
+  }
+  ~OTreeNB(){ };  // all the Branches are deleted in the destructor of Branch
+
+
+  // returns number of branches in tree
+  unsigned long size() { return Nbranches; };
+
+  // build the tree down to bucket size, does not require the particles to have sizes
+  void build(int Nbucket){ 
+    auto it = begin();
+    if((*it)->child != nullptr){
+      throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
+    }
+    span8(*it);
+    assert(total_branches ==  Branch::Nbranches);
+    while(it.walk(true,begin())){
+     
+      std::cout << "level : " << (*it)->level << std::endl;
+      std::cout << (*it)->boundary_p1 << std::endl;
+      std::cout << (*it)->boundary_p2 << std::endl;
+      std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
+
+      if((*it)->nparticles > Nbucket) span8(*it);
+    }
+  }
+
+  // build the tree down to bucket size, does not require the particles to have sizes
+  void build_size(int Nbucket){ 
+    auto it = begin();
+    if((*it)->child != nullptr){
+      throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
+    }
+    span8(*it);
+    while(it.walk(true,begin())){
+     
+      // find largest particle in branch
+      double max_size = 0.0;
+      for(IndexType i=0;i<(*it)->nparticles;++i){
+        max_size = max(max_size, xxp[(*it)->particles[i]].size);
+      }
+      //std::cout << "level : " << (*it)->level << std::endl;
+      //std::cout << (*it)->boundary_p1 << std::endl;
+      //std::cout << (*it)->boundary_p2 << std::endl;
+      //std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
+      if((*it)->nparticles > Nbucket && max_size < (*it)->boxsize ) span8(*it);
+    }
+  }
+
+  // calculate the moments assuming the particles are equal mass and symmetric
+  void calcMoments_point(double particle_mass){
+    auto it = begin();
+    while(it.walk(true,begin())){
+
+      Branch *branch = *it;
+      if(branch->nparticles == 0) continue;
+      
+      // calculate center of mass
+      branch->xcm[0] = 0.0; // reset center
+      branch->xcm[1] = 0.0;
+      branch->xcm[2] = 0.0;
+      for(IndexType i=0;i<branch->nparticles;++i){
+        PType &x = xxp[branch->particles[i]];
+        branch->xcm[0] += x[0];
+        branch->xcm[1] += x[1];
+        branch->xcm[2] += x[2];
+      }
+      branch->xcm[0] /= branch->nparticles;
+      branch->xcm[1] /= branch->nparticles;
+      branch->xcm[2] /= branch->nparticles;
+
+      // calculate quadropole moment of branch
+      Point_2d dxcm;
+      branch->quad[0]=branch->quad[1]=branch->quad[2]=0;
+      for(IndexType i=0;i<branch->nparticles;++i){
+        PType &x = xxp[branch->particles[i]];
+        dxcm[0] = x[0] - branch->xcm[0];
+        dxcm[1] = x[1] - branch->xcm[1];
+
+        double r2 = dxcm[0]*dxcm[0] + dxcm[1]*dxcm[1];
+        branch->quad[0] += (r2-2*dxcm[0]*dxcm[0]);
+        branch->quad[1] += (r2-2*dxcm[1]*dxcm[1]);
+        branch->quad[2] += -2*dxcm[0]*dxcm[1];
+      }
+      branch->quad[0] *= particle_mass;
+      branch->quad[1] *= particle_mass;
+      branch->quad[2] *= particle_mass;
+    }
+  }
+  void force2D(const PosType *ray
+      ,PosType particle_mass
+      ,PosType smooth_factor
+      ,PosType theta2   // opening angle in radians
+      ,PosType inv_area // compensating negative mass area 
+      ,PosType *alpha   // not zeroed
+      ,KappaType *kappa // not zeroed
+      ,KappaType *gamma // not zeroed
+      ,KappaType *phi   // not zeroed
+    ) {
+
+      //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+      //*kappa=*phi=0.0;
+
+      PosType xcm[2],r2cm;
+      auto it = begin();
+      bool decend = true;
+      while(it.walk(decend,begin())){
+
+        xcm[0] = (*it)->xcm[0] - ray[0];
+        xcm[1] = (*it)->xcm[1] - ray[1];
+        r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
+        if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
+            //????? use moments
+          double mass = (*it)->nparticles * particle_mass;
+          double prefac = mass/r2cm/PI;
+          double tmp = -( prefac - mass*inv_area);
+            
+          alpha[0] += tmp*xcm[0];
+          alpha[1] += tmp*xcm[1];
+            
+          tmp = -2.0*prefac/r2cm;
+            
+          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+          gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+          *kappa -= mass*inv_area;
+          *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
+          decend = false;
+        }else{
+        
+          if((*it)->child == nullptr){ // leaf
+          
+            for(IndexType i=0;i<(*it)->nparticles;++i){
+
+              b_spline_profile(xcm
+                    ,sqrt(r2cm)
+                    ,particle_mass
+                    ,smooth_factor*(*it)->root_inv_density
+                    ,alpha,kappa,gamma,phi
+                  );
+
+              //double mass = particle_mass;
+              if(inv_area > 0.0){
+                double prefac = particle_mass/r2cm/PI;
+                double tmp = particle_mass*inv_area;
+            
+                alpha[0] += tmp*xcm[0];
+                alpha[1] += tmp*xcm[1];
+            
+                tmp = -2.0*prefac/r2cm;
+            
+                gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+                gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+                *kappa -= mass*inv_area;
+                *phi -= particle_mass*inv_area*r2cm*0.5;
+              }
+            }
+          }else{
+            // decend
+            decend = true;
+          }
+
+        }
+    }
+  }
+  size_t getUsedBranches() { return Nbranches; }
+  size_t getTotalBranches() { return total_branches; }
 
   iterator begin()
   {
     return iterator(&top);
   }
-
-  void span8(OBranchNB *current);
-  
+ 
   // maximum depth of tree
   int getDepth() const
   {
     return depth;
   }
-  
+
 private:
-  OBranchNB top;
+
+  void span8(Branch *current);
+ 
+  Branch top;
   /// Array of particle positions
   PType *xxp;
   std::vector<unsigned long> index;
@@ -344,12 +432,65 @@ private:
   unsigned long Nbranches;
   unsigned long total_branches = 1;
   int depth = 1; // maximum depth of tree, used for debugging
+
+  PosType phiintconst = (120*log(2.) - 631.)/840 + 19./70; // ????
+
+  /* cubic B-spline kernel for particle profile
+   
+   The lensing quantities are added to and a point mass is subtracted
+   */
+  inline void b_spline_profile(
+                               PosType *xcm       // vector in Mpc connecting ray to center of particle
+                               ,PosType r         // distance from center in Mpc
+                               ,PosType Mass      // mass in solar masses
+                               ,PosType size      // size scale in Mpc
+                               ,PosType *alpha    // deflection angle times Sigma_crit
+                               ,KappaType *kappa  // surface density
+                               ,KappaType *gamma  // shear times Sigma_crit
+                               ,KappaType *phi
+                               ) const {
+    
+    
+    PosType q = r/size;
+    PosType M,sigma;
+    if(q > 2){
+      sigma = 0;
+      M = 1;
+    }else{
+      PosType q2=q*q,q3=q2*q,q4=q2*q2,q5=q4*q;
+      
+      sigma = (8 - 12*q + 6*q2 - q3)/4;
+      if(q > 1){
+        sigma *= 10/size/size/7/PI;
+        M = (-1 + 20*q2*(1 - q + 3*q2/8 - q3/20) )/7;
+        *phi += Mass*(-1232. + 1200*q2 - 800.*q3 + 225.*q4 - 24*q5 + 120*log(2./q) )/840/PI;
+      }else{
+        sigma = 10*( sigma - 1 + 3*q - 3*q2 + q3)/size/size/7/PI;
+        M = 10*q2*(1 - 3*q/4 + 3*q3/10)/7;
+        
+        *phi += Mass*( phiintconst + 10*(q2/2 - 3*q4/4 + 3*q5/50)/7
+                      )/PI;
+      }
+    }
+    
+    PosType alpha_r,gt;  // deflection * Sig_crit / Mass
+    alpha_r = (M-1)/PI/r;
+    gt = alpha_r/r - sigma;
+    
+    alpha[0] -= Mass*alpha_r*xcm[0]/r;
+    alpha[1] -= Mass*alpha_r*xcm[1]/r;
+    gamma[0] -= gt*Mass*(xcm[0]*xcm[0]-xcm[1]*xcm[1])/r/r;
+    gamma[1] -= gt*Mass*2*xcm[0]*xcm[1]/r/r;
+    *kappa += Mass*sigma;
+    *phi -= Mass*log(r)/PI;
+  }
+  
 };
 
 // creates 8 children to current with links to their parent and brother
 // and sets their center and boxsize
 template <typename PType>
-void OTreeNB<PType>::span8(OBranchNB *current)
+void OTreeNB<PType>::span8(Branch *current)
 {
   if (current == nullptr)
   {
@@ -358,8 +499,8 @@ void OTreeNB<PType>::span8(OBranchNB *current)
     exit(1);
   }
 
-  current->children.reset(new OBranchNB[8]);
-  OBranchNB *children = current->children.get();
+  current->children = new Branch[8];
+  Branch *children = current->children;
 
   for(int i=0; i<8; ++i)
   {
@@ -433,11 +574,11 @@ void OTreeNB<PType>::span8(OBranchNB *current)
     }
     np += children[m].nparticles;
     
-    children[m].root_density = pow(children[m].nparticles,1.0/3.)/children[m].boxsize; // reset density
+    children[m].root_inv_density = pow(children[m].nparticles,1.0/3.)/children[m].boxsize; // reset density
   }
   children[7].particles = p;
   children[7].nparticles = current->nparticles - np;
-  children[7].root_density = pow(children[7].nparticles,1.0/3.)/children[7].boxsize; // reset root_density
+  children[7].root_inv_density = pow(children[7].nparticles,1.0/3.)/children[7].boxsize; // reset root_density
   
   // remove empty branches from the brotherhood
   int i=0;
@@ -457,5 +598,7 @@ void OTreeNB<PType>::span8(OBranchNB *current)
   children[i].brother = current->brother;
 }
 
+template <typename PType>
+int OTreeNB<PType>::Branch::Nbranches = 0; 
 
 #endif /* OTreeNB_h */
