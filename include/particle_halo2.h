@@ -11,8 +11,7 @@
 #include "lens_halos.h"
 #include "oTreeNB.h"
 
-typedef double PType;
-
+template<typename DType = float >
 class LensHaloParticlesO : public LensHalo
 {
   public:
@@ -48,7 +47,7 @@ class LensHaloParticlesO : public LensHalo
 
     /// create from a vector of particles
     LensHaloParticlesO(
-      std::vector<Point_3d<PType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
       ,double my_inv_area           /// inverse area for mass compensation
       ,PosType mass_particle  /// rescale particle masses
@@ -66,14 +65,94 @@ class LensHaloParticlesO : public LensHalo
       setUp(recenter,verbose);
     }
 
+    ~LensHaloParticlesO(){};
+    
+    /// does not zero lens quantities
+    void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+    ){
+
+      *kappa = *phi = 0.0;
+      gamma[0] = gamma[1] = 0.0;
+      alpha[0] = alpha[1] = 0.0; // ?????
+      otree->force2D(xcm,particle_mass,Nsmooth,theta2,inv_area
+        ,alpha,kappa,gamma,phi);
+  
+      alpha[0] *= -1;
+      alpha[1] *= -1;
+    };
+
+    size_t getN() const { return pp.size(); };
+
+    /// get current center of mass in input coordinates
+    Point_3d<DType> CenterOfMass(){return mcenter;}
+
+    LensHaloParticlesO(LensHaloParticlesO &&h):LensHalo(std::move(h)){
+      mcenter = h.mcenter;
+      pp = std::move(h.pp);
+      inv_area = h.inv_area;
+      Nsmooth = h.Nsmooth;
+      theta2 = h.theta2;
+      particle_mass = h.particle_mass;
+      Nbucket = h.Nbucket;
+      otree = std::move(h.otree);
+   }
+    LensHaloParticlesO & operator=(LensHaloParticlesO &&h){
+    if(this == &h) return *this;
+      LensHalo::operator=(std::move(h));
+      mcenter = h.mcenter;
+      pp = std::move(h.pp);
+      inv_area = h.inv_area;
+      Nsmooth = h.Nsmooth;
+      theta2 = h.theta2;
+      particle_mass = h.particle_mass;
+      Nbucket = h.Nbucket;
+      otree = std::move(h.otree);
+      return *this;
+    }
+
+    /// rotate particles around the point xo by theta_x and theta_y
+    void rotate_particles(
+      PosType theta_x
+      ,PosType theta_y
+      ,Point_3d<DType> &xo);
+
+    static std::vector< LensHaloParticlesO<DType> > MakeLensHaloParticle();
+
+protected :
+    Point_3d<DType> mcenter;
+    //DType *pp;
+    std::vector<Point_3d<DType> > pp;
+    int Nsmooth;  ///< number of neighbours for adaptive smoothing
+    int Nbucket;  ///< number of buckets in tree
+    double theta2;  ///< square of opening angle for tree
+    double particle_mass;  ///< mass
+  
+    PosType inv_area;
+    std::unique_ptr<OTreeNB<Point_3d<DType> > > otree;
+
+    void readPositionFileASCII(const std::string &filename);
     // construct tree, particles positions must already by stored in comoving Mpc
     void setUp(
+        bool recenter           /// center on center of mass
+        ,bool verbose
+    );
+
+};
+
+// construct tree, particles positions must already by stored in comoving Mpc
+template<typename DType>
+void LensHaloParticlesO<DType>::setUp(
         bool recenter           /// center on center of mass
         ,bool verbose
     ){
         long Npoints = pp.size();
   
-          // convert from comoving to physical coordinates
+        // convert from comoving to physical coordinates
         PosType scale_factor = 1/(1 + getZlens());
         Point_3d<double> mcenter(0,0,0);
 
@@ -105,78 +184,13 @@ class LensHaloParticlesO : public LensHalo
         LensHalo::mass = particle_mass * pp.size();
         LensHalo::set_flag_elliptical(false); // shouldn't do anything
 
-        otree.reset( new OTreeNB<Point_3d<PType> >(pp.data(),pp.size()) );
+        otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
         otree->build(Nbucket);
         //otree->calcMoments_point();
-    }
-
-    ~LensHaloParticlesO(){};
-    
-    /// does not zero lens quantities
-    void force_halo(double *alpha
-        ,KappaType *kappa
-        ,KappaType *gamma
-        ,KappaType *phi
-        ,double const *xcm 
-        ,bool subtract_point=false,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
-    ){
-
-      *kappa = *phi = 0.0;
-      gamma[0] = gamma[1] = 0.0;
-      alpha[0] = alpha[1] = 0.0; // ?????
-      otree->force2D(xcm,particle_mass,Nsmooth,theta2,inv_area
-        ,alpha,kappa,gamma,phi);
-  
-      alpha[0] *= -1;
-      alpha[1] *= -1;
-    };
-
-    size_t getN() const { return pp.size(); };
-
-    /// get current center of mass in input coordinates
-    Point_3d<> CenterOfMass(){return mcenter;}
-
-    LensHaloParticlesO(LensHaloParticlesO &&h):LensHalo(std::move(h)){
-      mcenter = h.mcenter;
-      pp = std::move(h.pp);
-      inv_area = h.inv_area;
-      Nsmooth = h.Nsmooth;
-      theta2 = h.theta2;
-      particle_mass = h.particle_mass;
-      Nbucket = h.Nbucket;
-      otree = std::move(h.otree);
-   }
-    LensHaloParticlesO & operator=(LensHaloParticlesO &&h){
-    if(this == &h) return *this;
-      LensHalo::operator=(std::move(h));
-      mcenter = h.mcenter;
-      pp = std::move(h.pp);
-      inv_area = h.inv_area;
-      Nsmooth = h.Nsmooth;
-      theta2 = h.theta2;
-      particle_mass = h.particle_mass;
-      Nbucket = h.Nbucket;
-      otree = std::move(h.otree);
-      return *this;
-    }
-
-    friend class MakeParticleLenses;
-protected :
-    Point_3d<double> mcenter;
-    //PType *pp;
-    std::vector<Point_3d<PType> > pp;
-    int Nsmooth;  ///< number of neighbours for adaptive smoothing
-    int Nbucket;  ///< number of buckets in tree
-    double theta2;  ///< square of opening angle for tree
-    double particle_mass;  ///< mass
-  
-    PosType inv_area;
-    std::unique_ptr<OTreeNB<Point_3d<double> > > otree;
-
-    void readPositionFileASCII(const std::string &filename);
 };
 
-void LensHaloParticlesO::readPositionFileASCII(const std::string &filename
+template<typename DType>
+void LensHaloParticlesO<DType>::readPositionFileASCII(const std::string &filename
                                                      ){
   
   int ncoll = Utilities::IO::CountColumns(filename);
@@ -249,6 +263,48 @@ void LensHaloParticlesO::readPositionFileASCII(const std::string &filename
   }
   
   std::cout << Npoints << " particle positions read from file " << filename << std::endl;
+};
+
+template<typename DType>
+void  LensHaloParticlesO<DType>::rotate_particles(PosType theta_x,PosType theta_y
+      ,Point_3d<DType> &xo){
+
+  if(theta_x == 0.0 && theta_y == 0.0) return;
+  
+  PosType coord[3][3];
+  PosType cx,cy,sx,sy;
+  
+  cx = cos(theta_x); sx = sin(theta_x);
+  cy = cos(theta_y); sy = sin(theta_y);
+  
+  coord[0][0] = cy;  coord[1][0] = -sy*sx; coord[2][0] = cx;
+  coord[0][1] = 0;   coord[1][1] = cx;     coord[2][1] = sx;
+  coord[0][2] = -sy; coord[1][2] = -cy*sx; coord[2][2] = cy*cx;
+  
+  Point_3d<DType> tmp;
+      // rotate particle positions 
+  for(auto &p : pp){
+    tmp *= 0;
+    for(int j=0;j<3;++j){
+      double tmp2 = p[j] - xo[j];
+      tmp[0] += coord[0][j]*tmp2;
+      tmp[1] += coord[1][j]*tmp2;
+      tmp[2] += coord[2][j]*tmp2;
+    }
+    for(int j=0;j<3;++j) p[j]=tmp[j] + xo[j];
+  }
+
+      // rotate center of mass
+  tmp *= 0.0;
+  for(int j=0;j<3;++j){
+    tmp[0] += coord[0][j]*(mcenter[j] - xo[j]);
+    tmp[1] += coord[1][j]*(mcenter[j] - xo[j]);
+    tmp[2] += coord[2][j]*(mcenter[j] - xo[j]);
+  }
+  mcenter = tmp + xo;
+
+  otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
+  otree->build(Nbucket);
 };
 
 #endif

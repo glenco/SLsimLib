@@ -31,8 +31,13 @@ typedef unsigned long IndexType;
  * The tree also contains pointers to the list of positions, sizes and masses of the particles.
  * Also flags for the number of dimensions the tree is defined in (2 or 3), and if multiple
  * masses and sizes should be used.
+ * 
+ * The template parameter PType is the structure 
+ * used to store the particle positions.  
+ * It must operators [0], [1], [2] and operator - defined.
+ * Point_3d<float> for example
  */
-template <typename PType = double *>
+template <typename PType = Point_3d<PosType> >
 struct OTreeNB
 {
 
@@ -75,9 +80,9 @@ struct Branch
   IndexType nparticles;
 
   /// bottom, left, back corner of box
-  Point_3d<PosType> boundary_p1;
+  PType boundary_p1;
   /// top, right, front corner of box
-  Point_3d<PosType> boundary_p2;
+  PType boundary_p2;
 
   PosType boxsize;  // one dimensional size of box
   PosType root_inv_density;  // cube root of number density in branch
@@ -216,13 +221,16 @@ struct Branch
     for(IndexType i = 1 ; i < nparticles ; ++i)
     {
       for(int j=0;j<3;++j){
-        top.boundary_p1[j] = min(top.boundary_p1[j], xp[i][j]);
-        top.boundary_p2[j] = max(top.boundary_p2[j], xp[i][j]);
+        top.boundary_p1[j] = top.boundary_p1[j] < xp[i][j] ? top.boundary_p1[j] : xp[i][j];
+        top.boundary_p2[j] = top.boundary_p2[j] > xp[i][j] ? top.boundary_p1[j] : xp[i][j];
+
+        //top.boundary_p1[j] = min<PType>(top.boundary_p1[j], xp[i][j]);
+        //top.boundary_p2[j] = max<PType>(top.boundary_p2[j], xp[i][j]);
       }
     }
 
     // make it into a cube
-    Point_3d<PosType> length = top.boundary_p2 - top.boundary_p1;
+    PType length = top.boundary_p2 - top.boundary_p1;
     PosType max_length = length[0];
     int dim = 0;
     for(int j=1;j<3;++j){
