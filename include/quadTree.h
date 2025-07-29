@@ -170,9 +170,9 @@ protected:
       }
     }
     
-    PosType alpha_r,gt;  // deflection * Sig_crit / Mass
-    alpha_r = (M-1)/PI/r;
-    gt = alpha_r/r - sigma;
+    // deflection * Sig_crit / Mass
+    PosType alpha_r = (M-1)/PI/r;
+    PosType gt = alpha_r/r - sigma;
     
     alpha[0] -= Mass*alpha_r*xcm[0]/r;
     alpha[1] -= Mass*alpha_r*xcm[1]/r;

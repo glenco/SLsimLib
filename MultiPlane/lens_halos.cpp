@@ -1509,30 +1509,7 @@ std::complex<double> LensHaloGaussian::my_erfc(std::complex<double> z) const{
 
 #endif
 
-/*
- void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){
-	mass = my_mass;
-	rcore = 0.0;
-	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
- //std::cout << "Warning: All galaxies are spherical" << std::endl;
-	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
-	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
- 
-	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
- 
-	assert(Rmax >= Rsize);
- }
- 
- void LensHaloRealNSIE::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
-	initFromMass(my_mass,seed);
- }
- 
- void LensHaloRealNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
-	initFromMass(my_mass,seed);
- }
- */
-
+// this function is usually overridden in derived classes
 void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening)
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -1595,12 +1572,6 @@ bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,Kapp
     
     *phi += 0.5*mass*log(rcm2) / PI;
   }
-//  else{
-//    alpha[0] = alpha[1] = 0.0;
-//    gamma[0] = gamma[1] = gamma[2] = 0.0;
-//    *kappa = 0.0;
-//    *phi = 0.0 ;
-//  }
   
   return true;
 }

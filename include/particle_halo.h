@@ -20,7 +20,9 @@
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
  
-   You can create a LensHaloParticles<> directly from a file, but it is recommended that you use the MakeParticleLenses class to create them and then move them to a Lens object.
+   You can create a LensHaloParticles<> directly from a file, 
+   but it is recommended that you use the MakeParticleLenses class 
+   to create them and then move them to a Lens object.
  
    Smoothing is done according to the density of particles in 3D.  Smoothing sizes are
    either read in from a file (names simulation_filename + "." + Nsmooth + "sizes") or calculated
@@ -55,6 +57,7 @@ public:
                     ,bool verbose=false
   );
  
+  /// create from a vector of particles
   LensHaloParticles(std::vector<PType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
@@ -179,8 +182,8 @@ public:
   
 protected:
   // constructure for derived classes
-  LensHaloParticles(float redshift        /// redshift of origin
-                    ,const COSMOLOGY& cosmo  /// cosmology
+  LensHaloParticles(float redshift        // redshift of origin
+                    ,const COSMOLOGY& cosmo  // cosmology
   ): LensHalo(redshift,cosmo){}
 
   // This constructor is really only for use by MakeParticleLenses. It does not take
@@ -245,10 +248,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
-  //stars_N = 0;
-  //stars_implanted = false;
-  
-  Rmax = 1.0e3;
+  Rmax = 1.0e3; // set to something large
   LensHalo::setRsize(Rmax);
   
   switch (format) {
@@ -874,7 +874,9 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
 /** \brief A class for constructing LensHalos from particles in a data file.
  
  <p>
- The particle data is stored in this structure so the LensHaloParticles should not be copied and then this object allowed to be destroyed.  The halos will be destroyed when this structure is destroyed.
+ The particle data is stored in this structure so the LensHaloParticles should 
+ not be copied and then this object allowed to be destroyed.  The halos will 
+ be destroyed when this structure is destroyed.
  
  A separate LensHaloParticles is made for each type of particle that is present in the gadget file.
  The nearest N neighbour smoothing is done in 3D on construction separately for
@@ -895,8 +897,9 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
  are the positions.  Next columns are used for the other formats being and
  interpreted as (column 4) masses are in Msun/h, (column 5) the paricle smoothing
  size in Mpc/h and (column 6) an integer for type of particle.  There can be more
- columns in the file than are uesed.  In the case of csv6, when there are more then one
- type of halo each type will be in a differeent LensHaloParticles with differnt smoothing.
+ columns in the file than are used.  In the case of csv6, when there are more 
+ then one type of halo each type will be in a differeent LensHaloParticles with 
+ differnt smoothing.
  
  glmb - This is a binary format internal to GLAMER used to store
  the positions, masses and sizes of the particles.  If
@@ -945,7 +948,7 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
  halomaker.CreateHalos(cosmo,zl);
 
  for(auto h : halomaker.halos){
- lens.insertMainHalo(h,zl, true);
+   lens.insertMainHalo(h,zl, true);
  }
  
  GridMap gridmap(&lens, 2049,center.x,range);

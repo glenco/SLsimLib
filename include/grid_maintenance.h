@@ -241,6 +241,7 @@ std::string to_string(CritType crit);
 // in image_finder_kist.c
 namespace ImageFinding{
   
+  /// \brief Structure to contain information and functions for critical curves and caustics.
   struct CriticalCurve{
     
     CriticalCurve(){
@@ -472,6 +473,44 @@ namespace ImageFinding{
     /// returns an estimate of the area inside and within distance R of the caustic
     double AreaNearCaustic(double R /// distance in radians
                            );
+
+    /// print the critical curves and caustic curves to a csv file
+    static void print(std::string filename,std::vector<ImageFinding::CriticalCurve> &critcurves) {
+
+      std::ofstream os(filename.c_str());
+     
+      os <<"# type : "
+                << (int)(CritType::tangential) << " - tangential  "
+                << (int)(CritType::radial) << " - radial  "
+                << (int)(CritType::pseudo) << " - pseudo" 
+                << std::endl;
+      os <<"# plane : "
+                << 0 << " - caustic  "
+                << 1 << " - critical curve  "
+                << std::endl;
+      
+      os <<"caustic_num,plane,x,y,type" << std::endl;
+      
+      int i=0;
+      Point_2d xo(0,0);
+      for(auto &curve : critcurves){
+                  
+        if(curve.type == CritType::tangential){
+          for(Point_2d &p : curve.caustic_curve_outline){
+            os << i << ",0," << p.x[0] - xo[0] <<"," << p.x[1] - xo[1] <<","<< (int)(curve.type) << std::endl;
+          }
+        }else{
+          for(Point_2d &p : curve.caustic_curve_intersecting){
+            os << i << ",0," << p.x[0] - xo[0] <<","<< p.x[1] - xo[1] <<","<< (int)(curve.type) << std::endl;
+          }
+        }
+        for(RAY &p : curve.critcurve){
+          os << i << ",1," << p.x[0] - xo[0] <<","<< p.x[1] - xo[1] <<","<< (int)(curve.type) << std::endl;
+        }
+        ++i;
+      }
+      os.close();
+    }
       
   private:
     Point_2d p1,p2;

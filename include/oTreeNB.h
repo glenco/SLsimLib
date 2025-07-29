@@ -238,7 +238,7 @@ struct Branch
     }
 
     top.boxsize =  max_length;
-    top.root_inv_density = pow(top.nparticles,1.0/3.)/max_length;
+    top.root_inv_density = max_length/pow(top.nparticles,1.0/3.);
   }
   ~OTreeNB(){ };  // all the Branches are deleted in the destructor of Branch
 
@@ -256,10 +256,10 @@ struct Branch
     assert(total_branches ==  Branch::Nbranches);
     while(it.walk(true,begin())){
      
-      std::cout << "level : " << (*it)->level << std::endl;
-      std::cout << (*it)->boundary_p1 << std::endl;
-      std::cout << (*it)->boundary_p2 << std::endl;
-      std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
+      //std::cout << "level : " << (*it)->level << std::endl;
+      //std::cout << (*it)->boundary_p1 << std::endl;
+      //std::cout << (*it)->boundary_p2 << std::endl;
+      //std::cout << "N : " << (*it)->nparticles << std::endl << std::endl;
 
       if((*it)->nparticles > Nbucket) span8(*it);
     }
@@ -288,7 +288,7 @@ struct Branch
   }
 
   // calculate the moments assuming the particles are equal mass and symmetric
-  void calcMoments_point(double particle_mass){
+  void calcMoments_point(){
     auto it = begin();
     while(it.walk(true,begin())){
 
@@ -322,9 +322,6 @@ struct Branch
         branch->quad[1] += (r2-2*dxcm[1]*dxcm[1]);
         branch->quad[2] += -2*dxcm[0]*dxcm[1];
       }
-      branch->quad[0] *= particle_mass;
-      branch->quad[1] *= particle_mass;
-      branch->quad[2] *= particle_mass;
     }
   }
   void force2D(const PosType *ray
@@ -372,15 +369,31 @@ struct Branch
           if((*it)->child == nullptr){ // leaf
           
             for(IndexType i=0;i<(*it)->nparticles;++i){
-
+              PType &x = xxp[(*it)->particles[i]];
+              xcm[0] = x[0] - ray[0];
+              xcm[1] = x[1] - ray[1];
+              r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+         
+              double prefac = particle_mass /r2cm/PI;
+            
+              alpha[0] -= prefac*xcm[0];
+              alpha[1] -= prefac*xcm[1];
+            
+              double tmp = -2.0*prefac/r2cm;
+            
+              gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+              gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+              *phi += (prefac*log(r2cm))*r2cm*0.5;
+              
               b_spline_profile(xcm
                     ,sqrt(r2cm)
                     ,particle_mass
                     ,smooth_factor*(*it)->root_inv_density
                     ,alpha,kappa,gamma,phi
-                  );
+                );
 
-              //double mass = particle_mass;
+
               if(inv_area > 0.0){
                 double prefac = particle_mass/r2cm/PI;
                 double tmp = particle_mass*inv_area;
@@ -393,10 +406,11 @@ struct Branch
                 gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
                 gamma[1] += xcm[0]*xcm[1]*tmp;
             
-                *kappa -= mass*inv_area;
+                *kappa -= particle_mass*inv_area;
                 *phi -= particle_mass*inv_area*r2cm*0.5;
               }
             }
+            decend = false;
           }else{
             // decend
             decend = true;
@@ -574,12 +588,11 @@ void OTreeNB<PType>::span8(Branch *current)
     }
     np += children[m].nparticles;
     
-    children[m].root_inv_density = pow(children[m].nparticles,1.0/3.)/children[m].boxsize; // reset density
+    children[m].root_inv_density = children[m].boxsize/pow(children[m].nparticles,1.0/3.); // reset density
   }
   children[7].particles = p;
   children[7].nparticles = current->nparticles - np;
-  children[7].root_inv_density = pow(children[7].nparticles,1.0/3.)/children[7].boxsize; // reset root_density
-  
+  children[7].root_inv_density = children[7].boxsize/pow(children[7].nparticles,1.0/3.);
   // remove empty branches from the brotherhood
   int i=0;
   while(children[i].nparticles==0 && i<8) ++i;
