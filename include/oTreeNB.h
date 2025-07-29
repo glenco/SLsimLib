@@ -348,56 +348,39 @@ struct Branch
         r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 
         if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
+
+          if(r2cm*inv_area < 1){
             //????? use moments
-          double mass = (*it)->nparticles * particle_mass;
-          double prefac = mass/r2cm/PI;
-          double tmp = -( prefac - mass*inv_area);
+            double mass = (*it)->nparticles * particle_mass;
+            double prefac = mass/r2cm/PI;
+            double tmp = -( prefac - mass*inv_area);
             
-          alpha[0] += tmp*xcm[0];
-          alpha[1] += tmp*xcm[1];
+            alpha[0] += tmp*xcm[0];
+            alpha[1] += tmp*xcm[1];
             
-          tmp = -2.0*prefac/r2cm;
+            tmp = -2.0*prefac/r2cm;
             
-          gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-          gamma[1] += xcm[0]*xcm[1]*tmp;
+            gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+            gamma[1] += xcm[0]*xcm[1]*tmp;
             
-          *kappa -= mass*inv_area;
-          *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
+            *kappa -= mass*inv_area;
+            *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
+          }
           decend = false;
         }else{
         
           if((*it)->child == nullptr){ // leaf
           
             for(IndexType i=0;i<(*it)->nparticles;++i){
+
               PType &x = xxp[(*it)->particles[i]];
               xcm[0] = x[0] - ray[0];
               xcm[1] = x[1] - ray[1];
               r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-         
-              double prefac = particle_mass /r2cm/PI;
-            
-              alpha[0] -= prefac*xcm[0];
-              alpha[1] -= prefac*xcm[1];
-            
-              double tmp = -2.0*prefac/r2cm;
-            
-              gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
-              gamma[1] += xcm[0]*xcm[1]*tmp;
-            
-              *phi += (prefac*log(r2cm))*r2cm*0.5;
-              
-              b_spline_profile(xcm
-                    ,sqrt(r2cm)
-                    ,particle_mass
-                    ,smooth_factor*(*it)->root_inv_density
-                    ,alpha,kappa,gamma,phi
-                );
-
-
-              if(inv_area > 0.0){
-                double prefac = particle_mass/r2cm/PI;
-                double tmp = particle_mass*inv_area;
-            
+              if(r2cm*inv_area < 1){
+                double prefac = particle_mass /r2cm/PI;
+                double tmp = -( prefac - particle_mass*inv_area);
+             
                 alpha[0] += tmp*xcm[0];
                 alpha[1] += tmp*xcm[1];
             
@@ -407,7 +390,19 @@ struct Branch
                 gamma[1] += xcm[0]*xcm[1]*tmp;
             
                 *kappa -= particle_mass*inv_area;
-                *phi -= particle_mass*inv_area*r2cm*0.5;
+                *phi += (prefac*log(r2cm)- particle_mass*inv_area)*r2cm*0.5;
+
+                double scale = smooth_factor*(*it)->root_inv_density;
+                if(r2cm < 4*scale*scale){
+                  // cubic B-spline profile
+                  b_spline_profile(
+                    xcm
+                    ,sqrt(r2cm)
+                    ,particle_mass
+                    ,scale
+                    ,alpha,kappa,gamma,phi
+                  );
+                }
               }
             }
             decend = false;
