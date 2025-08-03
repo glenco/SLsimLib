@@ -72,7 +72,7 @@ struct Branch
   ~Branch() {
     //std::cout << " deleting branch " << Nbranches << " "; 
     --Nbranches; 
-    delete[] children;
+    if(children != nullptr) delete[] children;
   };//{std::cout << "Branch destructor called" << std::endl; };
 
   /// array of particles in Branch
@@ -83,6 +83,8 @@ struct Branch
   PType boundary_p1;
   /// top, right, front corner of box
   PType boundary_p2;
+  ///< center of box
+  PType center;  
 
   PosType boxsize;  // one dimensional size of box
   PosType root_inv_density;  // cube root of number density in branch
@@ -91,7 +93,7 @@ struct Branch
   //unsigned long number;
 
   // std::vector<Branch> children;
-  Branch *children;
+  Branch *children = nullptr;
 
   Branch *child;
   /// father of branch
@@ -222,12 +224,13 @@ struct Branch
     {
       for(int j=0;j<3;++j){
         top.boundary_p1[j] = top.boundary_p1[j] < xp[i][j] ? top.boundary_p1[j] : xp[i][j];
-        top.boundary_p2[j] = top.boundary_p2[j] > xp[i][j] ? top.boundary_p1[j] : xp[i][j];
+        top.boundary_p2[j] = top.boundary_p2[j] > xp[i][j] ? top.boundary_p2[j] : xp[i][j];
 
         //top.boundary_p1[j] = min<PType>(top.boundary_p1[j], xp[i][j]);
         //top.boundary_p2[j] = max<PType>(top.boundary_p2[j], xp[i][j]);
       }
     }
+
 
     // make it into a cube
     PType length = top.boundary_p2 - top.boundary_p1;
@@ -245,6 +248,7 @@ struct Branch
       }
     }
 
+    top.center = (top.boundary_p1 + top.boundary_p2) * 0.5;
     top.boxsize =  max_length;
     top.root_inv_density = max_length/pow(top.nparticles,1.0/3.);
   }
@@ -271,6 +275,7 @@ struct Branch
 
       if((*it)->nparticles > Nbucket) span8(*it);
     }
+     calcMoments_point();
   }
 
   // build the tree down to bucket size, does not require the particles to have sizes
@@ -317,7 +322,7 @@ struct Branch
       branch->xcm[1] /= branch->nparticles;
       branch->xcm[2] /= branch->nparticles;
 
-      // calculate quadropole moment of branch
+      /** calculate quadropole moment of branch
       Point_2d dxcm;
       branch->quad[0]=branch->quad[1]=branch->quad[2]=0;
       for(IndexType i=0;i<branch->nparticles;++i){
@@ -329,7 +334,7 @@ struct Branch
         branch->quad[0] += (r2-2*dxcm[0]*dxcm[0]);
         branch->quad[1] += (r2-2*dxcm[1]*dxcm[1]);
         branch->quad[2] += -2*dxcm[0]*dxcm[1];
-      }
+      }*/
     }
   }
   void force2D(const PosType *ray
@@ -421,6 +426,158 @@ struct Branch
 
         }
     }
+  }
+  void force2D_hole(const PosType *ray
+      ,PosType particle_mass
+      ,PosType smooth_factor
+      ,PosType theta2   // opening angle in radians
+      ,PosType inv_area // compensating negative mass area 
+      ,PosType rmin     // minimum radius for hole
+      ,PosType *xo      // center of hole in Mpc
+      ,PosType *alpha   // not zeroed
+      ,KappaType *kappa // not zeroed
+      ,KappaType *gamma // not zeroed
+      ,KappaType *phi   // not zeroed
+    ) {
+
+      //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+      //*kappa=*phi=0.0;
+
+      PosType xcm[2],r2cm,dx[2];
+
+      auto it = begin();
+      bool decend = true;
+      while(it.walk(decend,begin())){
+
+        dx[0] = (*it)->center[0] - xo[0];
+        dx[1] = (*it)->center[1] - xo[1];
+        PosType d = sqrt(dx[0]*dx[0] + dx[1]*dx[1]); // distance to center of branch
+        
+        if(d < rmin - (*it)->boxsize) {
+          // branch is inside hole, skip it
+          decend = false;
+          continue;
+        }
+
+        xcm[0] = (*it)->xcm[0] - ray[0];
+        xcm[1] = (*it)->xcm[1] - ray[1];
+        r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
+        if(d > rmin + (*it)->boxsize){
+          if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
+
+            if(r2cm*inv_area < 1){
+              //????? use moments
+              double mass = (*it)->nparticles * particle_mass;
+              double prefac = mass/r2cm/PI;
+              double tmp = -( prefac - mass*inv_area);
+            
+              alpha[0] += tmp*xcm[0];
+              alpha[1] += tmp*xcm[1];
+            
+              tmp = -2.0*prefac/r2cm;
+            
+              gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+              gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+              *kappa -= mass*inv_area;
+              *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
+            }
+            decend = false;
+          }else{
+        
+            if((*it)->child == nullptr){ // leaf
+          
+              for(IndexType i=0;i<(*it)->nparticles;++i){
+
+                PType &x = xxp[(*it)->particles[i]];
+                xcm[0] = x[0] - ray[0];
+                xcm[1] = x[1] - ray[1];
+                r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+                if(r2cm*inv_area < 1){
+                  double prefac = particle_mass /r2cm/PI;
+                  double tmp = -( prefac - particle_mass*inv_area);
+             
+                  alpha[0] += tmp*xcm[0];
+                  alpha[1] += tmp*xcm[1];
+            
+                  tmp = -2.0*prefac/r2cm;
+            
+                  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+                  gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+                  *kappa -= particle_mass*inv_area;
+                  *phi += (prefac*log(r2cm)- particle_mass*inv_area)*r2cm*0.5;
+
+                  double scale = smooth_factor*(*it)->root_inv_density;
+                  if(r2cm < 4*scale*scale){
+                    // cubic B-spline profile
+                    b_spline_profile(
+                      xcm
+                      ,sqrt(r2cm)
+                      ,particle_mass
+                      ,scale
+                      ,alpha,kappa,gamma,phi
+                    );
+                  }
+               }
+             }
+             decend = false;
+            }else{
+              // decend
+              decend = true;
+            }
+          }
+        }else{
+          // possible particle in and outside of hole
+            if((*it)->child == nullptr){ // leaf
+          
+              for(IndexType i=0;i<(*it)->nparticles;++i){
+
+                PType &x = xxp[(*it)->particles[i]];
+                xcm[0] = x[0] - ray[0];
+                xcm[1] = x[1] - ray[1];
+                r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+                
+                dx[0] = x[0] - xo[0];
+                dx[1] = x[1] - xo[1];
+
+                if( dx[0]*dx[0] + dx[1]*dx[1] > rmin*rmin &&
+                  r2cm*inv_area < 1){
+                  double prefac = particle_mass /r2cm/PI;
+                  double tmp = -( prefac - particle_mass*inv_area);
+             
+                  alpha[0] += tmp*xcm[0];
+                  alpha[1] += tmp*xcm[1];
+            
+                  tmp = -2.0*prefac/r2cm;
+            
+                  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+                  gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+                  *kappa -= particle_mass*inv_area;
+                  *phi += (prefac*log(r2cm)- particle_mass*inv_area)*r2cm*0.5;
+
+                  double scale = smooth_factor*(*it)->root_inv_density;
+                  if(r2cm < 4*scale*scale){
+                    // cubic B-spline profile
+                    b_spline_profile(
+                      xcm
+                      ,sqrt(r2cm)
+                      ,particle_mass
+                      ,scale
+                      ,alpha,kappa,gamma,phi
+                    );
+                  }
+                }
+              }
+              decend = false;
+            }else{
+              // decend
+              decend = true;
+            }
+        }
+      }
   }
   size_t getUsedBranches() { return Nbranches; }
   size_t getTotalBranches() { return total_branches; }
@@ -527,10 +684,10 @@ void OTreeNB<PType>::span8(Branch *current)
   total_branches += 8;
   if(depth < current->level + 1) depth = current->level + 1;
 
-  PosType center[3];
-  center[0] = (current->boundary_p1[0] + current->boundary_p2[0]) / 2.0;
-  center[1] = (current->boundary_p1[1] + current->boundary_p2[1]) / 2.0;
-  center[2] = (current->boundary_p1[2] + current->boundary_p2[2]) / 2.0;
+  PType &center = current->center;
+  //center[0] = (current->boundary_p1[0] + current->boundary_p2[0]) / 2.0;
+  //center[1] = (current->boundary_p1[1] + current->boundary_p2[1]) / 2.0;
+  //center[2] = (current->boundary_p1[2] + current->boundary_p2[2]) / 2.0;
   PosType boxsize = current->boxsize / 2.0;
 
   size_t m = 0;
@@ -554,6 +711,8 @@ void OTreeNB<PType>::span8(Branch *current)
                                               + ((1 - j) / 2) * center[1];
         children[m].boundary_p2[2] = ((1 + k) / 2) * current->boundary_p2[2]
                                               + ((1 - k) / 2) * center[2];
+
+        children[m].center = (children[m].boundary_p1 + children[m].boundary_p2) * 0.5;
 
         children[m].boxsize = boxsize;
         ++m;

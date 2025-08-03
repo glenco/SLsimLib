@@ -37,6 +37,7 @@ public:
   std::string filebasename;
   
   GadgetFile (string inpfn,std::vector<PType> &data);
+  GadgetFile (string inpfn);
   ~GadgetFile(){};
   
   void checkMultiple ();
@@ -44,6 +45,7 @@ public:
   void closeFile ();
   
   void readBlock (const char *blockname);
+  void readPOS ();
   
   int find_block(FILE *fd,const char *label);
   
@@ -58,6 +60,7 @@ public:
 
 private:
   
+  void getMasses();
   struct pvector{
     float x,y,z;
   };
@@ -82,6 +85,14 @@ private:
 template<typename PType>
 GadgetFile<PType>::GadgetFile(string inpfn,std::vector<PType> &data):
 multipleFiles(false),numfiles(0),filebasename(inpfn),p_data(data),swap(0)
+,filecnt(0),np_file_start(0),np_file_end(-1)
+{
+  checkMultiple();
+}
+
+template<typename PType>
+GadgetFile<PType>::GadgetFile(string inpfn) :
+multipleFiles(false),numfiles(0),filebasename(inpfn),swap(0)
 ,filecnt(0),np_file_start(0),np_file_end(-1)
 {
   checkMultiple();
@@ -175,13 +186,7 @@ void GadgetFile<PType>::checkMultiple(){
   //now create a vector of particles
   printf("Allocating memory for a total of %zu particles...\n",ntot);
  
-  p_data.resize(ntot);
-  
-  // pv.reserve(ntot);
-  // for (int k=0; k<ntot; k++){
-  //   particle* temp= new particle();
-  //   pv.push_back(temp);
-  // }
+  //p_data.resize(ntot);
   
   cout << "done" << endl;
 }
@@ -221,9 +226,9 @@ void GadgetFile<PType>::openFile () {
     
     for (int ips=0; ips<6; ips++){
       if (npart[ips]>0){
-        for (int i=nstart; i<nstart+npart[ips]; i++){
-          p_data[i].type = ips;
-        }
+        //for (int i=nstart; i<nstart+npart[ips]; i++){
+        //  p_data[i].type = ips;
+        //}
         nstart=nstart+npart[ips];
       }
     }
@@ -258,10 +263,10 @@ void GadgetFile<PType>::openFile () {
     
     for (int ips=0; ips<6; ips++){
       if (npart[ips]>0){
-        for (int i=nstart; i<nstart+npart[ips]; i++){
+        //for (int i=nstart; i<nstart+npart[ips]; i++){
           //pv[i]->setPtype(ips);
-          p_data[i].type = ips;
-        }
+          //p_data[i].type = ips;
+        //}
         nstart=nstart+npart[ips];
         np_in_file=np_in_file+npart[ips];
       }
@@ -458,9 +463,80 @@ bool GadgetFile<PType>::FileExists(string strFilename) {
 }
 
 template<typename PType>
-void GadgetFile<PType>::readBlock(const char *blockname) {
-  
+void GadgetFile<PType>::readPOS() {
   float umass = 1.0; // ????
+
+  p_data.resize(ntot);
+  
+  getMasses();
+  
+  int n;
+  int np_in_file=np_file_end-np_file_start+1;
+  
+  cout << "Reading block POS block" << endl;
+  pvector *pos=new pvector[ntot];
+  cout << "...memory allocated." << endl;
+  n = read_gadget_float3((float*)pos,"POS ",fd);
+  cout << "...data are in memory." << endl;
+  for (int i=0; i<=np_in_file-1; i++) {
+      //pv[i+np_file_start]->setPos(pos[i].x,pos[i].y,pos[i].z);
+    p_data[i+np_file_start][0] = pos[i].x;
+    p_data[i+np_file_start][1] = pos[i].y;
+    p_data[i+np_file_start][2] = pos[i].z;
+  }
+  delete [] pos;
+  return;
+}
+
+// this specialization avoids copying data to a temporary vector
+template<>
+void GadgetFile<Point_3d<float> >::readPOS() {
+  
+  getMasses();
+  
+  cout << "Reading POS block" << endl;
+  p_data.resize(ntot);
+  cout << "...memory allocated." << endl;
+  int n = read_gadget_float3((float*)(p_data.data()),"POS ",fd);
+  cout << "...data are in memory." << endl;
+
+  return;
+}
+
+// This reads the particle masses for the different particle types.
+// The masses are sometimes missing from the header.  This function
+// assumes particls of the same type have the same mass.  
+// If they don't readBlock("MASS") must be called instead.
+template<typename PType>
+void GadgetFile<PType>::getMasses(){
+
+    long nmass=0;
+    for (int i=0; i<=5; i++) {
+      if (masstab[i]==0.0) {nmass=nmass+npart[i];}}
+
+    if(nmass >0){
+      float *mass=new float[nmass];
+      cout << "...memory allocated..." << endl;
+      long n = read_gadget_float((float*)mass,"MASS",fd);
+      cout << "...data is in memory." << endl;
+      int icounter=0;
+      for (int i=0; i<=5; i++) {
+        if (masstab[i]==0.0) masstab[i] = mass[icounter];
+        icounter += npart[i];
+      }
+
+      delete [] mass;
+    }
+    return;
+}
+
+// more general way to read quantities from the file
+template<typename PType>
+void GadgetFile<PType>::readBlock(const char *blockname) {
+
+  float umass = 1.0; // ????
+
+  p_data.resize(ntot);
   
   int n;
   int np_in_file=np_file_end-np_file_start+1;
@@ -506,10 +582,8 @@ void GadgetFile<PType>::readBlock(const char *blockname) {
     for (int i=0; i<=np_in_file-1; i++) {
       int ips=p_data[i+np_file_start].type;
       if (masstab[ips] > 0.0) {
-        //pv[i+np_file_start]->setMass(masstab[ips]*umass);
         p_data[i+np_file_start].Mass = masstab[ips]*umass;
       } else {
-        //pv[i+np_file_start]->setMass(mass[icounter]*umass);
         p_data[i+np_file_start].Mass = mass[icounter]*umass;
         icounter++;
       }
