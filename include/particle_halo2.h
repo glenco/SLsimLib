@@ -16,13 +16,13 @@
   particles by tree code.
 
    You can create a LensHaloParticles<> directly from a vector of paritcle positions,
-   from a file, or use the LensHaloParticlesO::MakeLensHaloParticle() static function 
-   to create a vector of LensHaloParticlesO from a simulation snapshot, one for each 
+   from a file, or use the LensHaloParticles::MakeLensHaloParticle() static function 
+   to create a vector of LensHaloParticles from a simulation snapshot, one for each 
    type of particle.  The latter should be used to interface with Gardget2 format 
    files.
 
    Smoothing is done according to the density of particles in 3D.  All the particles 
-   in a single LensHaloParticlesO object must have the same mass.
+   in a single LensHaloParticles object must have the same mass.
 
    Rays are always shot in the direction of the z-axis, the third coordinate, but 
    the particles can be rotated at the expence of having to rebuild the tree.
@@ -34,10 +34,10 @@
              Only one type of particle in a single input file.
 */
 template<typename DType = float >
-class LensHaloParticlesO : public LensHalo
+class LensHaloParticles : public LensHalo
 {
   public:
-    LensHaloParticlesO(
+    LensHaloParticles(
       const std::string& simulation_filename /// name of data files
       ,SimFileFormat format   /// format of data file
       ,PosType redshift        /// redshift of origin
@@ -75,7 +75,7 @@ class LensHaloParticlesO : public LensHalo
     }
 
     /// create from a vector of particles
-    LensHaloParticlesO(
+    LensHaloParticles(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
       ,double my_inv_area      /// inverse area for mass compensation
@@ -94,7 +94,7 @@ class LensHaloParticlesO : public LensHalo
       setUp(recenter,verbose);
     }
 
-    ~LensHaloParticlesO(){};
+    ~LensHaloParticles(){};
     
     /// does not zero lens quantities
     void force_halo(double *alpha
@@ -120,7 +120,7 @@ class LensHaloParticlesO : public LensHalo
     /// get current center of mass in input coordinates
     Point_3d<DType> CenterOfMass(){return mcenter;}
 
-    LensHaloParticlesO(LensHaloParticlesO &&h):LensHalo(std::move(h)){
+    LensHaloParticles(LensHaloParticles &&h):LensHalo(std::move(h)){
       mcenter = h.mcenter;
       pp = std::move(h.pp);
       inv_area = h.inv_area;
@@ -130,7 +130,7 @@ class LensHaloParticlesO : public LensHalo
       Nbucket = h.Nbucket;
       otree = std::move(h.otree);
    }
-    LensHaloParticlesO & operator=(LensHaloParticlesO &&h){
+    LensHaloParticles & operator=(LensHaloParticles &&h){
     if(this == &h) return *this;
       LensHalo::operator=(std::move(h));
       mcenter = h.mcenter;
@@ -163,11 +163,11 @@ class LensHaloParticlesO : public LensHalo
     /// by getTheta() and set with setTheta()
     void translate_particles(Point_3d<DType> &xo);
 
-    /// This is a static function that creats a vector of LensHaloParticlesO 
+    /// This is a static function that creats a vector of LensHaloParticles 
     /// from a simulations output file.  Each one needs to be moved into a 
     /// Lens object before it can be used.
     ///
-    /// Each type of particle will be put into a separate LensHaloParticlesO object.
+    /// Each type of particle will be put into a separate LensHaloParticles object.
     /// The particles are assumed to be in comoving coordinates.
     /// In the case of Gadget2 files, the masses and reshift are read from the 
     /// file assuming stadard units (comoving kpc/h and 1e10 Msun/h).
@@ -178,7 +178,7 @@ class LensHaloParticlesO : public LensHalo
     ///
     /// The particles can be limited to a sphere of radius rmax centered on xo.
     /// These are comoving Mpc, i.e. simulation units times a.
-    static std::vector< LensHaloParticlesO<DType> > make(
+    static std::vector< LensHaloParticles<DType> > make(
       std::string filename     /// name of data files
       ,SimFileFormat format    /// format of data file
       ,float umass             /// rescale particle masses, this times value in file is in solar masses / h
@@ -241,11 +241,11 @@ class LensHaloParticlesO : public LensHalo
               }
               tmpdata.clear();
 
-              std::vector< LensHaloParticlesO<DType> > halos;
+              std::vector< LensHaloParticles<DType> > halos;
               ntypes = 0;
               for(int i=0; i<6 ; ++i){
                 if(gadget_file.npart[i] > 0){
-                  halos.push_back( LensHaloParticlesO<DType>(
+                  halos.push_back( LensHaloParticles<DType>(
                     pos[i]
                     ,gadget_file.redshift
                     ,inv_area
@@ -264,7 +264,7 @@ class LensHaloParticlesO : public LensHalo
             }
             break;
           default:
-            std::cerr << "LensHaloParticlesO does not accept format of particle data file." << std::endl;
+            std::cerr << "LensHaloParticles does not accept format of particle data file." << std::endl;
             throw std::invalid_argument("bad format");
         }
       }
@@ -297,7 +297,7 @@ protected :
 
 // construct tree, particles positions must already by stored in comoving Mpc
 template<typename DType>
-void LensHaloParticlesO<DType>::setUp(
+void LensHaloParticles<DType>::setUp(
         bool recenter           /// center on center of mass
         ,bool verbose
     ){
@@ -336,7 +336,7 @@ void LensHaloParticlesO<DType>::setUp(
 };
 
 template<typename DType>
-void LensHaloParticlesO<DType>::readPositionFileASCII(const std::string &filename
+void LensHaloParticles<DType>::readPositionFileASCII(const std::string &filename
                                                      ){
   
   int ncoll = Utilities::IO::CountColumns(filename);
@@ -344,7 +344,7 @@ void LensHaloParticlesO<DType>::readPositionFileASCII(const std::string &filenam
     std::cerr << filename << " should have three columns!" << std::endl;
   }
   if(ncoll > 4 ){
-    std::cerr << filename << " Warning! : LensHaloParticlesO is not using masses." << std::endl;
+    std::cerr << filename << " Warning! : LensHaloParticles is not using masses." << std::endl;
   }
   
   std::ifstream myfile(filename);
@@ -412,7 +412,7 @@ void LensHaloParticlesO<DType>::readPositionFileASCII(const std::string &filenam
 };
 
 template<typename DType>
-void LensHaloParticlesO<DType>::rotate(PosType theta_x,PosType theta_y
+void LensHaloParticles<DType>::rotate(PosType theta_x,PosType theta_y
       ,Point_3d<DType> &xo){
 
   if(theta_x == 0.0 && theta_y == 0.0) return;
@@ -454,7 +454,7 @@ void LensHaloParticlesO<DType>::rotate(PosType theta_x,PosType theta_y
 };
 
 template<typename DType>
-void LensHaloParticlesO<DType>::translate_particles(Point_3d<DType> &xo){
+void LensHaloParticles<DType>::translate_particles(Point_3d<DType> &xo){
 
   if(xo[0] == 0.0 && xo[1] == 0.0) return;
   
@@ -471,7 +471,7 @@ void LensHaloParticlesO<DType>::translate_particles(Point_3d<DType> &xo){
 };
 
 template<typename DType = float >
-class LensHaloParticlesC : public LensHaloParticlesO<DType>
+class LensHaloParticlesC : public LensHaloParticles<DType>
 {
 public:
   LensHaloParticlesC(
@@ -488,7 +488,7 @@ public:
     ,float theta = 0.1      /// opening angle for tree
     ,bool recenter = false /// re-center on center of mass
     ,bool verbose = false
-  ) : LensHaloParticlesO<DType>(simulation_filename,format,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
+  ) : LensHaloParticles<DType>(simulation_filename,format,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
   ,xc(x_hole),rhole(hole_radius)
   {};
 
