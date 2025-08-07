@@ -150,7 +150,7 @@ class LensHaloParticlesO : public LensHalo
       PosType theta_x
       ,PosType theta_y
       ,Point_3d<DType> &xo);
-
+    
     // reset the opening angle used in the tree force calculation
     void resetForceAngle(double theta){
       theta2 = theta*theta;
@@ -178,9 +178,11 @@ class LensHaloParticlesO : public LensHalo
     ///
     /// The particles can be limited to a sphere of radius rmax centered on xo.
     /// These are comoving Mpc, i.e. simulation units times a.
-    static std::vector< LensHaloParticlesO<DType> > MakeLensHaloParticle(
+    static std::vector< LensHaloParticlesO<DType> > make(
       std::string filename     /// name of data files
-      ,SimFileFormat format    /// format of data file   
+      ,SimFileFormat format    /// format of data file
+      ,float umass             /// rescale particle masses, this times value in file is in solar masses / h
+      ,float ulength           /// rescale length, this times value in file is in pc / h
       ,double inv_area         /// inverse area for mass compensation
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int Nsmooth = 5         /// number of neighbours for adaptive smoothing
@@ -191,16 +193,25 @@ class LensHaloParticlesO : public LensHalo
       ,bool verbose = false
     ){
       double r2max= rmax*rmax;
+      
         switch (format) {
           case SimFileFormat::gadget2 : 
             {
+
               std::vector<Point_3d<DType> > tmpdata;
               GadgetFile<Point_3d<DType> > gadget_file(filename,tmpdata);
               gadget_file.openFile();
               gadget_file.readPOS();
               gadget_file.closeFile();
 
-              double a = 1.0e-3/(1 + gadget_file.redshift)/gadget_file.hubble; // scaling is done in constructor
+              if(rmax <= 0){
+                r2max = 0; // no excision
+                xo[0] = gadget_file.boxl/2; // center of box
+                xo[1] = gadget_file.boxl/2;
+                xo[2] = gadget_file.boxl/2;
+              }
+              // convert to physical Mpc
+              const double a = ulength*1.0e-6/(1 + gadget_file.redshift)/gadget_file.hubble;
               // split particles into different types
               std::vector< std::vector<Point_3d<DType> > > pos(6);
               size_t n=0;
@@ -215,13 +226,16 @@ class LensHaloParticlesO : public LensHalo
                       pos[i][k] = tmpdata[n++];
                       dx = pos[i][k] - xo;
                       if(dx.length_sqr() < r2max){ 
+                        pos[i][k] -= xo;
                         pos[i][k] *= a; // convert to physical Mpc
                         ++k;
                       }
                   }
+                  pos[i].resize(k); // resize to number of particles in sphere
+                  gadget_file.npart[i] = k; // update number of particles
                 }else{
-                for(size_t j=0; j<gadget_file.npart[i]; ++j){
-                      pos[i][j] = tmpdata[n++]*a;
+                  for(size_t j=0; j<gadget_file.npart[i]; ++j){
+                      pos[i][j] = (tmpdata[n++]-xo)*a;
                   }
                 }
               }
@@ -235,7 +249,7 @@ class LensHaloParticlesO : public LensHalo
                     pos[i]
                     ,gadget_file.redshift
                     ,inv_area
-                    ,gadget_file.masstab[i]*1.0e10/gadget_file.hubble
+                    ,gadget_file.masstab[i]*umass/gadget_file.hubble
                     ,cosmo
                     ,Nsmooth
                     ,Nbucket
@@ -250,11 +264,17 @@ class LensHaloParticlesO : public LensHalo
             }
             break;
           default:
-            std::cerr << "LensHaloParticles does not accept format of particle data file." << std::endl;
+            std::cerr << "LensHaloParticlesO does not accept format of particle data file." << std::endl;
             throw std::invalid_argument("bad format");
         }
       }
 
+      void getBoundingBox(
+        Point_3d<DType> &p1,  ///< bottom, left, front corner of box
+        Point_3d<DType> &p2   ///< top, right, back corner of box
+      ) const {
+        otree->getBoundingBox(p1,p2);
+      }
 protected :
     Point_3d<DType> mcenter;
     //DType *pp;
@@ -309,8 +329,10 @@ void LensHaloParticlesO<DType>::setUp(
         LensHalo::mass = particle_mass * pp.size();
         LensHalo::set_flag_elliptical(false); // shouldn't do anything
 
+        if(verbose) std::cout << "   Creating particle tree ... " << std::endl;
         otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
         otree->build(Nbucket);
+        if(verbose) std::cout << "done." << std::endl;
 };
 
 template<typename DType>
@@ -322,7 +344,7 @@ void LensHaloParticlesO<DType>::readPositionFileASCII(const std::string &filenam
     std::cerr << filename << " should have three columns!" << std::endl;
   }
   if(ncoll > 4 ){
-    std::cerr << filename << " Warning! : LensHaloParticles is not using masses." << std::endl;
+    std::cerr << filename << " Warning! : LensHaloParticlesO is not using masses." << std::endl;
   }
   
   std::ifstream myfile(filename);
@@ -446,6 +468,62 @@ void LensHaloParticlesO<DType>::translate_particles(Point_3d<DType> &xo){
   /// reconstruct the tree
   otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
   otree->build(Nbucket);
+};
+
+template<typename DType = float >
+class LensHaloParticlesC : public LensHaloParticlesO<DType>
+{
+public:
+  LensHaloParticlesC(
+    const std::string& simulation_filename /// name of data files
+    ,SimFileFormat format    /// format of data file
+    ,PosType redshift        /// redshift of origin
+    ,double my_inv_area      /// inverse area for mass compensation
+    ,PosType mass_particle   /// rescale particle masses
+    ,Point_2d x_hole         /// center of hole in comoving Mpc
+    ,DType hole_radius       /// radius of hole physical Mpc
+    ,const COSMOLOGY& cosmo  /// cosmology
+    ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+    ,float Nbucket = 8  /// buckets size in tree
+    ,float theta = 0.1      /// opening angle for tree
+    ,bool recenter = false /// re-center on center of mass
+    ,bool verbose = false
+  ) : LensHaloParticlesO<DType>(simulation_filename,format,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
+  ,xc(x_hole),rhole(hole_radius)
+  {};
+
+  /// does not zero lens quantities
+  void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false
+        ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+  ){
+
+    *kappa = *phi = 0.0;
+    gamma[0] = gamma[1] = 0.0;
+    alpha[0] = alpha[1] = 0.0; // ?????
+    this->otree->force2D_hole(xcm,this->particle_mass,this->Nsmooth,this->theta2,this->inv_area
+        ,rhole,xc.data()
+        ,alpha,kappa,gamma,phi);
+  
+    alpha[0] *= -1;
+    alpha[1] *= -1;
+  };
+
+  void setHole(
+    Point_2d &x_hole,DType hole_radius
+  ){
+    xc[0] = x_hole[0];
+    xc[1] = x_hole[1];
+    rhole = hole_radius;
+  };
+
+ private:
+  Point_2d xc;
+  PosType rhole;
 };
 
 #endif

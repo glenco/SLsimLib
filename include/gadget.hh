@@ -33,11 +33,10 @@ public:
   bool multipleFiles;
   int numfiles;
   size_t ntot=0;
-  double time,redshift,omega,lambda,hubble;
+  double time,redshift,omega,lambda,hubble,boxl;
   std::string filebasename;
   
   GadgetFile (string inpfn,std::vector<PType> &data);
-  GadgetFile (string inpfn);
   ~GadgetFile(){};
   
   void checkMultiple ();
@@ -91,14 +90,6 @@ multipleFiles(false),numfiles(0),filebasename(inpfn),p_data(data),swap(0)
 }
 
 template<typename PType>
-GadgetFile<PType>::GadgetFile(string inpfn) :
-multipleFiles(false),numfiles(0),filebasename(inpfn),swap(0)
-,filecnt(0),np_file_start(0),np_file_end(-1)
-{
-  checkMultiple();
-}
-
-template<typename PType>
 void GadgetFile<PType>::checkMultiple(){
   
   char *filename = new char [filebasename.size()+1];
@@ -125,8 +116,7 @@ void GadgetFile<PType>::checkMultiple(){
         printf("PartSpecies %d, anz=%d, masstab=%f\n",i,npart[i],masstab[i]);
         ntot += npart[i];
       }
-      printf("Omage %f Lambda %f hubble %f\n",omega,lambda,hubble);
-      //numfiles = 1;
+      printf("Omage %f Lambda %f hubble %f boxl %f\n",omega,lambda,hubble,boxl);
     }
     fclose(fd);
   } else {
@@ -304,10 +294,8 @@ int GadgetFile<PType>::read_gadget_head(int *npart,double *massarr,double *time,
   
   int dummyint;
   int dummyarr[6];
-  double boxl;
   
   blocksize = find_block(fd,"HEAD");
-  
   
   if(blocksize <= 0)
   {

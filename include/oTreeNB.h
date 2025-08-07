@@ -59,7 +59,7 @@ struct Branch
     ++Nbranches;
   };
 
-  static int Nbranches;  ///< number of branches in tree, used for debugging
+  int Nbranches;  ///< number of branches in tree, used for debugging
   //Branch(Branch *parent) : prev(parent)
   //{
   //  child = nullptr;
@@ -265,7 +265,7 @@ struct Branch
       throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
     }
     span8(*it);
-    assert(total_branches ==  Branch::Nbranches);
+    assert(total_branches ==  Nbranches);
     while(it.walk(true,begin())){
      
       //std::cout << "level : " << (*it)->level << std::endl;
@@ -309,7 +309,7 @@ struct Branch
       if(branch->nparticles == 0) continue;
       
       // calculate center of mass
-      branch->xcm[0] = 0.0; // reset center
+      branch->xcm[0] = 0.0;
       branch->xcm[1] = 0.0;
       branch->xcm[2] = 0.0;
       for(IndexType i=0;i<branch->nparticles;++i){
@@ -593,6 +593,13 @@ struct Branch
     return depth;
   }
 
+  void getBoundingBox(
+    PType &p1,  ///< bottom, left, back corner of box
+    PType &p2   ///< top, right, front corner of box
+  ) const {
+    p1 = top.boundary_p1;
+    p2 = top.boundary_p2;
+  }
 private:
 
   void span8(Branch *current);
@@ -772,8 +779,5 @@ void OTreeNB<PType>::span8(Branch *current)
   }
   children[i].brother = current->brother;
 }
-
-template <typename PType>
-int OTreeNB<PType>::Branch::Nbranches = 0; 
 
 #endif /* OTreeNB_h */
