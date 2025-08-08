@@ -18,7 +18,9 @@
 #include "quadTreeHalos.h"
 
 /**
- *  \brief A class that represents the lensing by a collection of simulation particles.
+ *  \brief This class is depricated and replaced with LensHaloParticles
+ * 
+ * A class that represents the lensing by a collection of simulation particles.
  
    You can create a LensHaloParticlesDep<> directly from a file, 
    but it is recommended that you use the MakeParticleLenses class 
