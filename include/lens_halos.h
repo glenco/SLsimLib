@@ -14,6 +14,7 @@
 #include "quadTree.h"
 #include "particle_types.h"
 #include "image_processing.h"
+#include "fftw3.h"
 
 #include <complex>
 #include <complex.h>

@@ -565,8 +565,7 @@ struct RAY{
     y[1] = p.image->x[1];
 
     dt = p.dt;
-
-        
+   
     A = p.A;
     z = -1;
 

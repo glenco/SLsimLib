@@ -192,7 +192,7 @@ void MakeParticleLenses::CreateHalos(const COSMOLOGY &cosmo,double redshift,doub
        ,theta_rotate
        ,false
        ,0);*/
-      halos.push_back(new LensHaloParticles<ParticleType<float> >(
+      halos.push_back(new LensHaloParticlesDep<ParticleType<float> >(
                                                                   pp
                                                                   ,nparticles[i]
                                                                   ,redshift
@@ -331,7 +331,7 @@ bool MakeParticleLenses::readCSV(int columns_used){
         pp = data.data() + skip;  // pointer to first particle of type
         size_t N = nparticles[i];
       
-        LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+        LensHaloParticlesDep<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
       }
       skip += nparticles[i];
     }
@@ -377,14 +377,14 @@ bool MakeParticleLenses::readGadget2(bool ignore_type){
          pp = data.data() + skip;  // pointer to first particle of type
          size_t N = gadget_file.npart[i];
    
-         LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
+         LensHaloParticlesDep<ParticleType<float> >::calculate_smoothing(Nsmooth,pp,N);
        }
        skip += gadget_file.npart[i];
      }
    }
   
   if(ignore_type){
-    LensHaloParticles<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),gadget_file.ntot);
+    LensHaloParticlesDep<ParticleType<float> >::calculate_smoothing(Nsmooth,data.data(),gadget_file.ntot);
   }
   
   return true;

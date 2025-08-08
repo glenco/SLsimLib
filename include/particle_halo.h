@@ -20,7 +20,9 @@
 /**
  *  \brief A class that represents the lensing by a collection of simulation particles.
  
-   You can create a LensHaloParticles<> directly from a file, but it is recommended that you use the MakeParticleLenses class to create them and then move them to a Lens object.
+   You can create a LensHaloParticlesDep<> directly from a file, 
+   but it is recommended that you use the MakeParticleLenses class 
+   to create them and then move them to a Lens object.
  
    Smoothing is done according to the density of particles in 3D.  Smoothing sizes are
    either read in from a file (names simulation_filename + "." + Nsmooth + "sizes") or calculated
@@ -37,11 +39,11 @@
 */
 
 template<typename PType>
-class LensHaloParticles : public LensHalo
+class LensHaloParticlesDep : public LensHalo
 {
 public:
   
-  LensHaloParticles(const std::string& simulation_filename /// name of data files
+  LensHaloParticlesDep(const std::string& simulation_filename /// name of data files
                     ,SimFileFormat format   /// format of data file
                     ,PosType redshift        /// redshift of origin
                     ,int Nsmooth             /// number of neighbours for adaptive smoothing
@@ -55,7 +57,8 @@ public:
                     ,bool verbose=false
   );
  
-  LensHaloParticles(std::vector<PType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+  /// create from a vector of particles
+  LensHaloParticlesDep(std::vector<PType> &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
                     ,Point_2d theta_rotate   /// rotation of particles around the origin
@@ -75,7 +78,7 @@ public:
   }
 
   /// this constructor does not take possession of the particles
-  LensHaloParticles(
+  LensHaloParticlesDep(
                     PType *begin /// pointer to first particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
                     ,size_t n
                     ,float redshift        /// redshift of origin
@@ -91,9 +94,9 @@ public:
     pp = begin;
     set_up(redshift,cosmo,theta_rotate,max_range,recenter,verbose);
   }
-  ~LensHaloParticles();
+  ~LensHaloParticlesDep();
   
-  LensHaloParticles(LensHaloParticles &&h):LensHalo(std::move(h)){
+  LensHaloParticlesDep(LensHaloParticlesDep &&h):LensHalo(std::move(h)){
     mcenter = h.mcenter;
     densest_point = h.densest_point;
     trash_collector =std::move(h.trash_collector);
@@ -111,7 +114,7 @@ public:
     qtree = h.qtree;
     h.qtree = nullptr;
   }
-  LensHaloParticles<PType> & operator=(LensHaloParticles<PType> &&h);
+  LensHaloParticlesDep<PType> & operator=(LensHaloParticlesDep<PType> &&h);
 
 
   void force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,double const *xcm
@@ -127,7 +130,7 @@ public:
   /// get the densistt point in input coordinates
    Point_3d<> DensestPoint(){return densest_point;}
 
-  /** \brief This is a test static function that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
+  /** \brief This is a test static function that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticlesDep.
    
    This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
    */
@@ -141,11 +144,11 @@ public:
                       ,Utilities::RandomNumbers_NR &ran
                       );
   
-  /** \brief This is a test static function that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticles.
+  /** \brief This is a test static function that makes a truncated SIE out of particles and puts it into a file in the right format for constructing a LensHaloParticlesDep.
     
     This is useful for calculating the level of shot noise and finite source size.  The particles are distributed in 3D according to the SIE profile with only the perpendicular coordinates (1st and 2nd) distorted into an elliptical shape. If the halo is rotated from the original orientation it will not be a oblate spheroid.
     */
-  static LensHaloParticles<ParticleTypeSimple> SIE(
+  static LensHaloParticlesDep<ParticleTypeSimple> SIE(
             PosType redshift     /// redshift of particles
             ,double particle_mass /// particle mass
             ,double total_mass  /// total mass of SIE
@@ -179,13 +182,13 @@ public:
   
 protected:
   // constructure for derived classes
-  LensHaloParticles(float redshift        /// redshift of origin
-                    ,const COSMOLOGY& cosmo  /// cosmology
+  LensHaloParticlesDep(float redshift        // redshift of origin
+                    ,const COSMOLOGY& cosmo  // cosmology
   ): LensHalo(redshift,cosmo){}
 
   // This constructor is really only for use by MakeParticleLenses. It does not take
   // possession of the data and so they will not be deleted on destruction
-  LensHaloParticles(PType  *pdata          /// particle data (all physical distances)
+  LensHaloParticlesDep(PType  *pdata          /// particle data (all physical distances)
                     ,size_t Nparticles
                     ,float redshift        /// redshift of origin
                     ,const COSMOLOGY& cosmo  /// cosmology
@@ -225,7 +228,7 @@ protected:
 };
 
 template<typename PType>
-LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filename
+LensHaloParticlesDep<PType>::LensHaloParticlesDep(const std::string& simulation_filename
                                             ,SimFileFormat format
                                             ,PosType redshift
                                             ,int Nsmooth
@@ -245,10 +248,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
   LensHalo::setCosmology(cosmo);
   LensHalo::set_flag_elliptical(false);
   
-  //stars_N = 0;
-  //stars_implanted = false;
-  
-  Rmax = 1.0e3;
+  Rmax = 1.0e3; // set to something large
   LensHalo::setRsize(Rmax);
   
   switch (format) {
@@ -256,7 +256,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
       readPositionFileASCII(simulation_filename);
       break;
     default:
-      std::cerr << "LensHaloParticles does not accept format of particle data file." << std::endl;
+      std::cerr << "LensHaloParticlesDep does not accept format of particle data file." << std::endl;
       throw std::invalid_argument("bad format");
   }
   
@@ -339,7 +339,7 @@ LensHaloParticles<PType>::LensHaloParticles(const std::string& simulation_filena
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::set_up(
+void LensHaloParticlesDep<PType>::set_up(
                                  float redshift        /// redshift of origin
                                  ,const COSMOLOGY& cosmo  /// cosmology
                                  ,Point_2d theta_rotate   /// rotation of particles around the origin
@@ -419,12 +419,12 @@ void LensHaloParticles<PType>::set_up(
 
 
 template<typename PType>
-LensHaloParticles<PType>::~LensHaloParticles(){
+LensHaloParticlesDep<PType>::~LensHaloParticlesDep(){
   delete qtree;
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
+void LensHaloParticlesDep<PType>::force_halo(double *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi
                                           ,double const *xcm
                                           ,bool subtract_point,PosType screening){
   qtree->force2D_recur(xcm,alpha,kappa,gamma,phi);
@@ -435,7 +435,7 @@ void LensHaloParticles<PType>::force_halo(double *alpha,KappaType *kappa,KappaTy
 
 /// rotate simulation
 template<typename PType>
-void LensHaloParticles<PType>::rotate(Point_2d theta){
+void LensHaloParticlesDep<PType>::rotate(Point_2d theta){
   rotate_particles(theta[0],theta[1]);
   delete qtree;
 
@@ -450,7 +450,7 @@ void LensHaloParticles<PType>::rotate(Point_2d theta){
  * Coordinates of particles are in physical Mpc units.
  */
 template<typename PType>
-void LensHaloParticles<PType>::readPositionFileASCII(const std::string &filename
+void LensHaloParticlesDep<PType>::readPositionFileASCII(const std::string &filename
                                                      ){
   
   int ncoll = Utilities::IO::CountColumns(filename);
@@ -554,7 +554,7 @@ void LensHaloParticles<PType>::readPositionFileASCII(const std::string &filename
 }
 
 template<typename PType>
-bool LensHaloParticles<PType>::readSizesFile(const std::string &filename
+bool LensHaloParticlesDep<PType>::readSizesFile(const std::string &filename
                                              ,PType * pp
                                              ,size_t Npoints
                                              ,int Nsmooth
@@ -632,7 +632,7 @@ bool LensHaloParticles<PType>::readSizesFile(const std::string &filename
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y){
+void LensHaloParticlesDep<PType>::rotate_particles(PosType theta_x,PosType theta_y){
   
   if(theta_x == 0.0 && theta_y == 0.0) return;
   
@@ -680,7 +680,7 @@ void LensHaloParticles<PType>::rotate_particles(PosType theta_x,PosType theta_y)
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
+void LensHaloParticlesDep<PType>::calculate_smoothing(int Nsmooth,PType *pp
                                                    ,size_t Npoints
                                                    ,bool verbose
                                                    ){
@@ -711,7 +711,7 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
         N = Npoints - ii*chunksize;
       }else N = chunksize;
       
-      thr[ii] = std::thread(LensHaloParticles<PType>::smooth_,&tree3d
+      thr[ii] = std::thread(LensHaloParticlesDep<PType>::smooth_,&tree3d
                             ,&(pp[ii*chunksize]),N,Nsmooth);
     }
     for(int ii = 0; ii < nthreads ;++ii) thr[ii].join();
@@ -721,7 +721,7 @@ void LensHaloParticles<PType>::calculate_smoothing(int Nsmooth,PType *pp
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *pp,size_t N,int Nsmooth){
+void LensHaloParticlesDep<PType>::smooth_(TreeSimple<PType> *tree3d,PType *pp,size_t N,int Nsmooth){
   
   //IndexType neighbors[Nsmooth];
   for(size_t i=0;i<N;++i){
@@ -731,7 +731,7 @@ void LensHaloParticles<PType>::smooth_(TreeSimple<PType> *tree3d,PType *pp,size_
 
 
 template<typename PType>
-void LensHaloParticles<PType>::writeSizes(const std::string &filename,int Nsmooth
+void LensHaloParticlesDep<PType>::writeSizes(const std::string &filename,int Nsmooth
                                           ,const PType *pp,size_t Npoints
                                           ){
   
@@ -762,7 +762,7 @@ void LensHaloParticles<PType>::writeSizes(const std::string &filename,int Nsmoot
 }
 
 template<typename PType>
-void LensHaloParticles<PType>::makeSIE(
+void LensHaloParticlesDep<PType>::makeSIE(
                                        std::string new_filename  /// file name
                                        ,PosType redshift     /// redshift of particles
                                        ,double particle_mass /// particle mass
@@ -802,7 +802,7 @@ void LensHaloParticles<PType>::makeSIE(
 }
 
   template<typename PType>
-  LensHaloParticles<ParticleTypeSimple> LensHaloParticles<PType>::SIE(
+  LensHaloParticlesDep<ParticleTypeSimple> LensHaloParticlesDep<PType>::SIE(
            PosType redshift     /// redshift of particles
            ,double particle_mass /// particle mass
            ,double total_mass  /// total mass of SIE
@@ -818,7 +818,7 @@ void LensHaloParticles<PType>::makeSIE(
     
     double qq = sqrt(q);
     
-    std::cout << "making SIE LensHaloParticles..." << std::endl;
+    std::cout << "making SIE LensHaloParticlesDep..." << std::endl;
     std::cout << "# nparticles " << Npoints << std::endl;
     std::cout << "# mass " << particle_mass << std::endl;
 
@@ -840,14 +840,14 @@ void LensHaloParticles<PType>::makeSIE(
       p.Mass = particle_mass;
     }
     
-    LensHaloParticles<ParticleTypeSimple> ::calculate_smoothing(Nneighbors,parts.data(),Npoints);
+    LensHaloParticlesDep<ParticleTypeSimple> ::calculate_smoothing(Nneighbors,parts.data(),Npoints);
 
-    return LensHaloParticles<ParticleTypeSimple>(parts,redshift
+    return LensHaloParticlesDep<ParticleTypeSimple>(parts,redshift
                             ,cosmo,Point_2d(0,0),false,0);
   }
 
 template<typename PType>
-LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles<PType> &&h){
+LensHaloParticlesDep<PType> & LensHaloParticlesDep<PType>::operator=(LensHaloParticlesDep<PType> &&h){
   if(this == &h) return *this;
   LensHalo::operator=(std::move(h));
   mcenter = h.mcenter;
@@ -874,9 +874,11 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
 /** \brief A class for constructing LensHalos from particles in a data file.
  
  <p>
- The particle data is stored in this structure so the LensHaloParticles should not be copied and then this object allowed to be destroyed.  The halos will be destroyed when this structure is destroyed.
+ The particle data is stored in this structure so the LensHaloParticlesDep should 
+ not be copied and then this object allowed to be destroyed.  The halos will 
+ be destroyed when this structure is destroyed.
  
- A separate LensHaloParticles is made for each type of particle that is present in the gadget file.
+ A separate LensHaloParticlesDep is made for each type of particle that is present in the gadget file.
  The nearest N neighbour smoothing is done in 3D on construction separately for
  each type of particle.  The smoothing sizes are automatically saved to files and used again
  if the class is constructed again with the same file and smoothing number.
@@ -895,13 +897,14 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
  are the positions.  Next columns are used for the other formats being and
  interpreted as (column 4) masses are in Msun/h, (column 5) the paricle smoothing
  size in Mpc/h and (column 6) an integer for type of particle.  There can be more
- columns in the file than are uesed.  In the case of csv6, when there are more then one
- type of halo each type will be in a differeent LensHaloParticles with differnt smoothing.
+ columns in the file than are used.  In the case of csv6, when there are more 
+ then one type of halo each type will be in a differeent LensHaloParticlesDep with 
+ differnt smoothing.
  
  glmb - This is a binary format internal to GLAMER used to store
  the positions, masses and sizes of the particles.  If
  GLAMER has generated one, it should be all that is
- needed to recreate the LensHaloParticles.
+ needed to recreate the LensHaloParticlesDep.
  
  ascii2 - This is the original ascii GLAMER format.
  Three floats for positions in comoving Mpc (no h factor).
@@ -945,7 +948,7 @@ LensHaloParticles<PType> & LensHaloParticles<PType>::operator=(LensHaloParticles
  halomaker.CreateHalos(cosmo,zl);
 
  for(auto h : halomaker.halos){
- lens.insertMainHalo(h,zl, true);
+   lens.insertMainHalo(h,zl, true);
  }
  
  GridMap gridmap(&lens, 2049,center.x,range);
@@ -966,7 +969,7 @@ class MakeParticleLenses{
 public:
   
   /// vector of LensHalos, one for each type of particle type
-  std::vector<LensHaloParticles<ParticleType<float> > *> halos;
+  std::vector<LensHaloParticlesDep<ParticleType<float> > *> halos;
   
   /// returns number of particles of each type
   std::vector<size_t> getnp(){return nparticles;}
