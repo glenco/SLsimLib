@@ -499,7 +499,70 @@ void LensHaloParticles<DType>::translate_particles(Point_3d<DType> &xo){
   otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
   otree->build(Nbucket);
 };
-/** \brief 
+
+/** \brief LensHaloParticles but where the "particles" have different masses.
+ * 
+ */
+template<typename DType = float >
+class LensHaloParticlesM : public LensHaloParticles<DType>
+{
+public:
+
+  LensHaloParticlesM(
+      std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      ,PosType redshift        /// redshift of origin
+      ,double my_inv_area      /// inverse area for mass compensation
+      ,std::vector<DType> Masses   /// rescale particle masses
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 8       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,1,cosmo,my_Nsmooth
+      ,Nbucket,theta,recenter,verbose)
+    {
+      std::swap(masses,Masses);
+      this->otree->calcMoments(masses.data());
+    };
+
+  LensHaloParticlesM(LensHaloParticlesM &&h)
+        : LensHaloParticles<DType>(std::move(h)),
+          masses(std::move(h.masses)) 
+  {
+  }
+  
+  LensHaloParticlesM & operator=(LensHaloParticlesM &&h) {
+    if (this == &h) return *this;
+    LensHaloParticles<DType>::operator=(std::move(h));
+    masses = std::move(h.masses);
+    return *this;
+  }
+  /// does not zero lens quantities
+  void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false
+        ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+  ){
+
+    *kappa = *phi = 0.0;
+    gamma[0] = gamma[1] = 0.0;
+    alpha[0] = alpha[1] = 0.0; // ?????
+    this->otree->force2D(xcm,masses.data(),this->Nsmooth,this->theta2,this->inv_area
+        ,alpha,kappa,gamma,phi);
+  
+    alpha[0] *= -1;
+    alpha[1] *= -1;
+  };
+ private:
+  std::vector<DType> masses;
+};
+
+
+/** \brief LensHaloParticles only with a hole cut out of it.
  * 
  */
 template<typename DType = float >
@@ -586,6 +649,86 @@ public:
  private:
   Point_2d xc;
   PosType rhole;
+};
+
+/** \brief LensHaloParticlesM only with a hole cut out of it.
+ * 
+ */
+template<typename DType = float >
+class LensHaloParticlesMO : public LensHaloParticles<DType>
+{
+public:
+
+  LensHaloParticlesMO(
+      std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      ,PosType redshift        /// redshift of origin
+      ,double my_inv_area      /// inverse area for mass compensation
+      ,std::vector<DType> Masses   /// rescale particle masses
+      ,Point_2d x_hole         /// center of hole in comoving Mpc
+      ,DType hole_radius       /// radius of hole physical Mpc
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 8       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,1,cosmo,my_Nsmooth
+      ,Nbucket,theta,recenter,verbose)
+    {
+      std::swap(masses,Masses);
+      this->otree->calcMoments(masses.data());
+    };
+
+  LensHaloParticlesMO(LensHaloParticlesMO &&h)
+        : LensHaloParticles<DType>(std::move(h)),
+          xc(std::move(h.xc)),
+          rhole(h.rhole),
+          masses(std::move(h.masses)) 
+  {
+    
+  }
+  
+  LensHaloParticlesMO & operator=(LensHaloParticlesMO &&h) {
+    if (this == &h) return *this;
+    LensHaloParticles<DType>::operator=(std::move(h));
+    xc = std::move(h.xc);
+    rhole = h.rhole;
+    masses = std::move(h.masses);
+    return *this;
+  }
+  /// does not zero lens quantities
+  void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false
+        ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+  ){
+
+    *kappa = *phi = 0.0;
+    gamma[0] = gamma[1] = 0.0;
+    alpha[0] = alpha[1] = 0.0; // ?????
+    this->otree->force2D_hole(xcm,masses.data(),this->Nsmooth,this->theta2,this->inv_area
+        ,rhole,xc.data()
+        ,alpha,kappa,gamma,phi);
+  
+    alpha[0] *= -1;
+    alpha[1] *= -1;
+  };
+
+  void setHole(
+    Point_2d &x_hole,DType hole_radius
+  ){
+    xc[0] = x_hole[0];
+    xc[1] = x_hole[1];
+    rhole = hole_radius;
+  };
+
+ private:
+  Point_2d xc;
+  PosType rhole;
+  std::vector<DType> masses;
 };
 
 #endif
