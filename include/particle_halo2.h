@@ -1,3 +1,33 @@
+/**
+ * @file particle_halo2.h
+ * @brief Defines classes for representing gravitational lensing by collections of simulation particles using tree codes.
+ *
+ * This header provides the LensHaloParticles and LensHaloParticlesO template classes, which model lensing effects from
+ * particle distributions, such as those found in cosmological simulations. The classes support reading particle data from
+ * files (ASCII or Gadget2 formats), adaptive smoothing, tree-based force calculations, and geometric transformations.
+ *
+ * Key Features:
+ * - Construction from simulation files or direct particle vectors.
+ * - Adaptive smoothing based on local particle density.
+ * - Tree-based calculation of lensing quantities (deflection, convergence, shear, potential).
+ * - Support for recentering, rotation, and translation of particle distributions.
+ * - Optional exclusion of a central region ("hole") for specialized lensing scenarios.
+ * - Static factory method for creating halos from simulation snapshots, supporting multiple particle types.
+ *
+ * Classes:
+ * - LensHaloParticles<DType>: Main class for lensing by particle collections.
+ * - LensHaloParticlesO<DType>: Extension of LensHaloParticles with support for a central hole.
+ *
+ * Dependencies:
+ * - geometry.h, quadTree.h, simpleTree.h, particle_types.h, utilities_slsim.h, lens_halos.h, oTreeNB.h, gadget.hh
+ *
+ * Usage:
+ * - Instantiate LensHaloParticles or LensHaloParticlesO with appropriate parameters and data sources.
+ * - Use provided methods to compute lensing quantities, manipulate particle distributions, and query properties.
+ *
+ * @author [RB METCALF]
+ * @date [Date]
+ */
 #ifndef GLAMER_particle_halo2_h
 #define GLAMER_particle_halo2_h
 #include <thread>
@@ -469,12 +499,14 @@ void LensHaloParticles<DType>::translate_particles(Point_3d<DType> &xo){
   otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
   otree->build(Nbucket);
 };
-
+/** \brief 
+ * 
+ */
 template<typename DType = float >
-class LensHaloParticlesC : public LensHaloParticles<DType>
+class LensHaloParticlesO : public LensHaloParticles<DType>
 {
 public:
-  LensHaloParticlesC(
+  LensHaloParticlesO(
     const std::string& simulation_filename /// name of data files
     ,SimFileFormat format    /// format of data file
     ,PosType redshift        /// redshift of origin
@@ -492,6 +524,36 @@ public:
   ,xc(x_hole),rhole(hole_radius)
   {};
 
+  LensHaloParticlesO(
+      std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      ,PosType redshift        /// redshift of origin
+      ,double my_inv_area      /// inverse area for mass compensation
+      ,PosType mass_particle   /// rescale particle masses
+      ,Point_2d x_hole         /// center of hole in comoving Mpc
+      ,DType hole_radius       /// radius of hole physical Mpc
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 8       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth
+      ,Nbucket,theta,recenter,verbose)
+    {};
+
+  LensHaloParticlesO(LensHaloParticlesO &&h)
+        : LensHaloParticles<DType>(std::move(h)),
+          xc(std::move(h.xc)),
+          rhole(h.rhole)
+  {}
+  
+  LensHaloParticlesO & operator=(LensHaloParticlesO &&h) {
+    if (this == &h) return *this;
+    LensHaloParticles<DType>::operator=(std::move(h));
+    xc = std::move(h.xc);
+    rhole = h.rhole;
+    return *this;
+  }
   /// does not zero lens quantities
   void force_halo(double *alpha
         ,KappaType *kappa
