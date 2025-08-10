@@ -104,7 +104,7 @@ class LensHaloParticles : public LensHalo
       setUp(recenter,verbose);
     }
 
-    /// create from a vector of particles
+    /// construct directly from a vector of positions
     LensHaloParticles(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
@@ -317,6 +317,24 @@ protected :
         bool recenter           /// center on center of mass
         ,bool verbose
     );
+
+    // protected constructor for creating an empty one
+    LensHaloParticles(
+      PosType redshift        /// redshift of origin
+      ,double my_inv_area      /// inverse area for mass compensation
+      ,PosType mass_particle   /// rescale particle masses
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 8       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHalo(redshift,cosmo),particle_mass(mass_particle)
+       ,inv_area(my_inv_area),Nsmooth(my_Nsmooth),theta2(theta*theta)
+       ,Nbucket(Nbucket)
+    {
+      setUp(recenter,verbose);
+    }
 };
 
 // construct tree, particles positions must already by stored in comoving Mpc
@@ -728,19 +746,22 @@ public:
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<float>(pp,redshift,my_inv_area,1,cosmo,my_Nsmooth
+    ) : LensHaloParticles<float>(redshift,my_inv_area,1,cosmo,my_Nsmooth
       ,Nbucket,theta,recenter,verbose),rhole(hole_radius_angle*cosmo.angDist(redshift))
     {
       std::swap(halo_vector,halos);
       size_t N = halos.size();
       this->pp.resize(N);
       double Dl = cosmo.angDist(redshift);
+      Point_2d p;
       for(size_t i=0 ; i<N ; ++i){
-        this->pp[i] = halos.getTheta()*Dl;
+        p = halos[i].getTheta();
+        this->pp[i][0] = p[0]*Dl;
+        this->pp[i][1] = p[1]*Dl;
+        this->pp[i][2] = 0;
       }
-      this->setup(recenter,verbose);
-
-      this->otree->calcMoments(halos);
+      this->setUp(recenter,verbose);
+      this->otree->calcMoments(halos.data());
     };
 
   LensHaloH(LensHaloH &&h)
