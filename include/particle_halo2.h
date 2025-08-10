@@ -707,4 +707,74 @@ public:
   std::vector<DType> masses;
 };
 
+/** \brief LensHalo for collecting LensHalos into one.
+ * 
+ * The halos are used when they are within hole_radius_angle of 
+ * the ray and smoothed point masses in a tree outside of that.
+ */
+template<typename HType >
+class LensHaloH : public LensHaloParticles<float>
+{
+public:
+
+  LensHaloH(
+      std::vector<HType> &halo_vector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      ,PosType redshift        /// redshift of origin
+      ,double my_inv_area      /// inverse area for mass compensation
+      ,float hole_radius_angle /// radius where halos are used in radians
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 0      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 4       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHaloParticles<float>(pp,redshift,my_inv_area,1,cosmo,my_Nsmooth
+      ,Nbucket,theta,recenter,verbose),rhole(hole_radius_angle*cosmo.angDist(redshift))
+    {
+      std::swap(halo_vector,halos);
+      size_t N = halos.size();
+      this->pp.resize(N);
+      double Dl = cosmo.angDist(redshift);
+      for(size_t i=0 ; i<N ; ++i){
+        this->pp[i] = halos.getTheta()*Dl;
+      }
+      this->setup(recenter,verbose);
+
+      this->otree->calcMoments(halos);
+    };
+
+  LensHaloH(LensHaloH &&h)
+        : LensHaloParticles<float>(std::move(h)),
+          rhole(h.rhole),
+          halos(std::move(h.halos)) 
+  {
+  }
+  
+  LensHaloH & operator=(LensHaloH &&h) {
+    if (this == &h) return *this;
+    LensHaloParticles<float>::operator=(std::move(h));
+    rhole = h.rhole;
+    halos = std::move(h.halos);
+    return *this;
+  }
+  /// does not zero lens quantities
+  void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false
+        ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+  ){
+
+    this->otree->force2D(xcm,halos.data(),this->Nsmooth,this->theta2,this->inv_area
+        ,rhole
+        ,alpha,kappa,gamma,phi);
+  };
+
+ private:
+  PosType rhole;
+  std::vector<HType> halos;
+};
+
 #endif

@@ -385,6 +385,52 @@ struct Branch
       }*/
     }
   }
+// calculate the moments from halos
+  void calcMoments(LensHalo *halos){
+    moments_set = true;
+    auto it = begin();
+    while(it.walk(true,begin())){
+
+      Branch *branch = *it;
+      if(branch->nparticles == 0) continue;
+      
+      // calculate center of mass
+      branch->xcm[0] = 0.0;
+      branch->xcm[1] = 0.0;
+      branch->xcm[2] = 0.0;
+      branch->mass = 0;
+
+      for(IndexType i=0;i<branch->nparticles;++i){
+        IndexType j = branch->particles[i];
+        PType &x = xxp[j];
+        double m = halos[j].get_mass();
+        branch->xcm[0] += x[0]*m;
+        branch->xcm[1] += x[1]*m;
+        branch->xcm[2] += x[2]*m;
+        branch->mass += m;
+      }
+      branch->xcm[0] /= branch->mass;
+      branch->xcm[1] /= branch->mass;
+      branch->xcm[2] /= branch->mass;
+
+      /** calculate quadropole moment of branch
+      Point_2d dxcm;
+      branch->quad[0]=branch->quad[1]=branch->quad[2]=0;
+      for(IndexType i=0;i<branch->nparticles;++i){
+        IndexType j = branch->particles[i];
+        PType &x = xxp[j];
+        
+        dxcm[0] = x[0] - branch->xcm[0];
+        dxcm[1] = x[1] - branch->xcm[1];
+        double m = halos[j].get_mass();
+
+        double r2 = dxcm[0]*dxcm[0] + dxcm[1]*dxcm[1];
+        branch->quad[0] += (r2-2*dxcm[0]*dxcm[0]) * m;
+        branch->quad[1] += (r2-2*dxcm[1]*dxcm[1]) * m;
+        branch->quad[2] += -2*dxcm[0]*dxcm[1] * m;
+      }*/
+    }
+  }
 
   void force2D(const PosType *ray
       ,PosType particle_mass
@@ -878,6 +924,164 @@ struct Branch
             }
         }
       }
+  }
+  void force2D(
+      const PosType *ray
+      ,LensHalo *halos
+      ,PosType smooth_factor
+      ,PosType theta2   // opening angle in radians
+      ,PosType inv_area // compensating negative mass area 
+      ,PosType rmin     // minimum radius for hole
+      ,PosType *alpha   // not zeroed
+      ,KappaType *kappa // not zeroed
+      ,KappaType *gamma // not zeroed
+      ,KappaType *phi   // not zeroed
+    ){
+
+      assert( moments_set );
+      //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
+      //*kappa=*phi=0.0;
+
+      PosType xcm[2],r2cm,dx[2];
+
+      auto it = begin();
+      bool decend = true;
+      while(it.walk(decend,begin())){
+
+        dx[0] = (*it)->center[0] - ray[0];
+        dx[1] = (*it)->center[1] - ray[1];
+        PosType d = sqrt(dx[0]*dx[0] + dx[1]*dx[1]); // distance to center of branch
+        
+        if(d < rmin + (*it)->boxsize) {
+
+          // branch is inside hole, skip it
+           // possible particle in and outside of hole
+            if((*it)->child == nullptr){ // leaf
+          
+              for(IndexType i=0;i<(*it)->nparticles;++i){
+                IndexType j = (*it)->particles[i];
+                PType &x = xxp[j];
+                xcm[0] = x[0] - ray[0];
+                xcm[1] = x[1] - ray[1];
+                r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
+                if( r2cm < rmin*rmin
+                  ){ // inside region, use halo
+
+                    halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
+                    // ??? check sign of alpha
+
+                  }else{ 
+                    // outside region, use smoothed point mass
+                  
+                    double mass = halos[j].get_mass();
+                    double prefac = mass /r2cm/PI;
+                    double tmp = -( prefac - mass * inv_area);
+             
+                    alpha[0] -= tmp*xcm[0];
+                    alpha[1] -= tmp*xcm[1];
+            
+                    tmp = -2.0*prefac/r2cm;
+            
+                    gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+                    gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+                    *kappa -= mass * inv_area;
+                    *phi += (prefac*log(r2cm)- mass * inv_area)*r2cm*0.5;
+
+                    double scale = smooth_factor*(*it)->root_inv_density;
+                    if(r2cm < 4*scale*scale){
+                      // cubic B-spline profile
+                      b_spline_profile(
+                        xcm
+                        ,sqrt(r2cm)
+                        ,mass
+                        ,scale
+                        ,alpha,kappa,gamma,phi
+                      );
+                    }
+                  }
+              }
+              decend = false;
+            }else{
+              // decend
+              decend = true;
+            }
+
+        }else{ // if(d > rmin + (*it)->boxsize)
+        
+          if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
+
+            if(r2cm*inv_area < 1){
+
+              xcm[0] = (*it)->xcm[0] - ray[0];
+              xcm[1] = (*it)->xcm[1] - ray[1];
+              r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
+              //????? use moments
+              double &mass = (*it)->mass;
+              double prefac = mass/r2cm/PI;
+              double tmp = -( prefac - mass*inv_area);
+            
+              alpha[0] -= tmp*xcm[0];
+              alpha[1] -= tmp*xcm[1];
+            
+              tmp = -2.0*prefac/r2cm;
+            
+              gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+              gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+              *kappa -= mass*inv_area;
+              *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
+            }
+            decend = false;
+          }else{
+        
+            if((*it)->child == nullptr){ // leaf
+          
+              for(IndexType i=0;i<(*it)->nparticles;++i){
+                IndexType j = (*it)->particles[i];
+                PType &x = xxp[j];
+                xcm[0] = x[0] - ray[0];
+                xcm[1] = x[1] - ray[1];
+                r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+                if(r2cm*inv_area < 1){
+                  double mass = halos[j].get_mass();
+                  double prefac = mass /r2cm/PI;
+                  double tmp = -( prefac - mass * inv_area);
+             
+                  alpha[0] -= tmp*xcm[0];
+                  alpha[1] -= tmp*xcm[1];
+            
+                  tmp = -2.0*prefac/r2cm;
+            
+                  gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
+                  gamma[1] += xcm[0]*xcm[1]*tmp;
+            
+                  *kappa -= mass * inv_area;
+                  *phi += (prefac*log(r2cm) - mass * inv_area)*r2cm*0.5;
+
+                  double scale = smooth_factor*(*it)->root_inv_density;
+                  if(r2cm < 4*scale*scale){
+                    // cubic B-spline profile
+                    b_spline_profile(
+                      xcm
+                      ,sqrt(r2cm)
+                      ,mass
+                      ,scale
+                      ,alpha,kappa,gamma,phi
+                    );
+                  }
+               }
+             }
+             decend = false;
+            }else{
+              // decend
+              decend = true;
+            }
+          }
+        }
+    }
   }
   size_t getUsedBranches() { return Nbranches; }
   size_t getTotalBranches() { return total_branches; }
