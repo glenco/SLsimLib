@@ -98,6 +98,7 @@ public:
     MyPosHalo[0] = posHalo[0]*Dist;
     MyPosHalo[1] = posHalo[1]*Dist;
   }
+  Point_2d getX() const { return Point_2d(posHalo[0]*Dist , posHalo[1]*Dist); }
 
   /// returns position of the Halo in physical Mpc on the lens plane
   PosType operator[](int i) const{return posHalo[i]*Dist;}
@@ -111,6 +112,8 @@ public:
   /// get the position of the Halo in radians
   void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
   
+  Point_2d getTheta() const { return Point_2d(posHalo[0] , posHalo[1]); }
+
   /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
   void setDist(COSMOLOGY &co){Dist = co.angDist(zlens);}
 
@@ -141,7 +144,7 @@ public:
   }
   void setRsize(PosType R){Rsize = R;}
   
-  // ste redshift and distance
+  // set redshift and distance
   void setZlensDist(PosType my_zlens,const COSMOLOGY &cos){
     zlens=my_zlens;
     Dist = cos.angDist(zlens);

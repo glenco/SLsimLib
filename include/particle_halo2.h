@@ -135,14 +135,8 @@ class LensHaloParticles : public LensHalo
         ,bool subtract_point=false,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
     ){
 
-      *kappa = *phi = 0.0;
-      gamma[0] = gamma[1] = 0.0;
-      alpha[0] = alpha[1] = 0.0; // ?????
       otree->force2D(xcm,particle_mass,Nsmooth,theta2,inv_area
         ,alpha,kappa,gamma,phi);
-  
-      alpha[0] *= -1;
-      alpha[1] *= -1;
     };
 
     size_t getN() const { return pp.size(); };
@@ -548,14 +542,8 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
-    *kappa = *phi = 0.0;
-    gamma[0] = gamma[1] = 0.0;
-    alpha[0] = alpha[1] = 0.0; // ?????
     this->otree->force2D(xcm,masses.data(),this->Nsmooth,this->theta2,this->inv_area
         ,alpha,kappa,gamma,phi);
-  
-    alpha[0] *= -1;
-    alpha[1] *= -1;
   };
  private:
   std::vector<DType> masses;
@@ -627,15 +615,9 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
-    *kappa = *phi = 0.0;
-    gamma[0] = gamma[1] = 0.0;
-    alpha[0] = alpha[1] = 0.0; // ?????
     this->otree->force2D_hole(xcm,this->particle_mass,this->Nsmooth,this->theta2,this->inv_area
         ,rhole,xc.data()
         ,alpha,kappa,gamma,phi);
-  
-    alpha[0] *= -1;
-    alpha[1] *= -1;
   };
 
   void setHole(
@@ -706,15 +688,9 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
-    *kappa = *phi = 0.0;
-    gamma[0] = gamma[1] = 0.0;
-    alpha[0] = alpha[1] = 0.0; // ?????
     this->otree->force2D_hole(xcm,masses.data(),this->Nsmooth,this->theta2,this->inv_area
         ,rhole,xc.data()
         ,alpha,kappa,gamma,phi);
-  
-    alpha[0] *= -1;
-    alpha[1] *= -1;
   };
 
   void setHole(

@@ -340,7 +340,7 @@ struct Branch
     }
   }
 
-  // calculate the moments assuming the particles are equal mass and symmetric
+  // calculate the moments assuming the particles have different masses
   void calcMoments(DType *masses){
     moments_set = true;
     auto it = begin();
@@ -417,8 +417,8 @@ struct Branch
             double prefac = mass/r2cm/PI;
             double tmp = -( prefac - mass*inv_area);
             
-            alpha[0] += tmp*xcm[0];
-            alpha[1] += tmp*xcm[1];
+            alpha[0] -= tmp*xcm[0];
+            alpha[1] -= tmp*xcm[1];
             
             tmp = -2.0*prefac/r2cm;
             
@@ -443,8 +443,8 @@ struct Branch
                 double prefac = particle_mass /r2cm/PI;
                 double tmp = -( prefac - particle_mass*inv_area);
              
-                alpha[0] += tmp*xcm[0];
-                alpha[1] += tmp*xcm[1];
+                alpha[0] -= tmp*xcm[0];
+                alpha[1] -= tmp*xcm[1];
             
                 tmp = -2.0*prefac/r2cm;
             
@@ -508,8 +508,8 @@ struct Branch
             double prefac = mass/r2cm/PI;
             double tmp = -( prefac - mass*inv_area);
             
-            alpha[0] += tmp*xcm[0];
-            alpha[1] += tmp*xcm[1];
+            alpha[0] -= tmp*xcm[0];
+            alpha[1] -= tmp*xcm[1];
             
             tmp = -2.0*prefac/r2cm;
             
@@ -536,8 +536,8 @@ struct Branch
                 double prefac = mass /r2cm/PI;
                 double tmp = -( prefac - mass * inv_area);
              
-                alpha[0] += tmp*xcm[0];
-                alpha[1] += tmp*xcm[1];
+                alpha[0] -= tmp*xcm[0];
+                alpha[1] -= tmp*xcm[1];
             
                 tmp = -2.0*prefac/r2cm;
             
@@ -615,8 +615,8 @@ struct Branch
               double prefac = mass/r2cm/PI;
               double tmp = -( prefac - mass*inv_area);
             
-              alpha[0] += tmp*xcm[0];
-              alpha[1] += tmp*xcm[1];
+              alpha[0] -= tmp*xcm[0];
+              alpha[1] -= tmp*xcm[1];
             
               tmp = -2.0*prefac/r2cm;
             
@@ -641,8 +641,8 @@ struct Branch
                   double prefac = particle_mass /r2cm/PI;
                   double tmp = -( prefac - particle_mass*inv_area);
              
-                  alpha[0] += tmp*xcm[0];
-                  alpha[1] += tmp*xcm[1];
+                  alpha[0] -= tmp*xcm[0];
+                  alpha[1] -= tmp*xcm[1];
             
                   tmp = -2.0*prefac/r2cm;
             
@@ -690,8 +690,8 @@ struct Branch
                   double prefac = particle_mass /r2cm/PI;
                   double tmp = -( prefac - particle_mass*inv_area);
              
-                  alpha[0] += tmp*xcm[0];
-                  alpha[1] += tmp*xcm[1];
+                  alpha[0] -= tmp*xcm[0];
+                  alpha[1] -= tmp*xcm[1];
             
                   tmp = -2.0*prefac/r2cm;
             
@@ -723,7 +723,8 @@ struct Branch
       }
   }
 
-    void force2D_hole(const PosType *ray
+    void force2D_hole(
+      const PosType *ray
       ,PType *masses
       ,PosType smooth_factor
       ,PosType theta2   // opening angle in radians
@@ -769,8 +770,8 @@ struct Branch
               double prefac = mass/r2cm/PI;
               double tmp = -( prefac - mass*inv_area);
             
-              alpha[0] += tmp*xcm[0];
-              alpha[1] += tmp*xcm[1];
+              alpha[0] -= tmp*xcm[0];
+              alpha[1] -= tmp*xcm[1];
             
               tmp = -2.0*prefac/r2cm;
             
@@ -796,8 +797,8 @@ struct Branch
                   double prefac = mass /r2cm/PI;
                   double tmp = -( prefac - mass * inv_area);
              
-                  alpha[0] += tmp*xcm[0];
-                  alpha[1] += tmp*xcm[1];
+                  alpha[0] -= tmp*xcm[0];
+                  alpha[1] -= tmp*xcm[1];
             
                   tmp = -2.0*prefac/r2cm;
             
@@ -846,8 +847,8 @@ struct Branch
                   double prefac = mass /r2cm/PI;
                   double tmp = -( prefac - mass * inv_area);
              
-                  alpha[0] += tmp*xcm[0];
-                  alpha[1] += tmp*xcm[1];
+                  alpha[0] -= tmp*xcm[0];
+                  alpha[1] -= tmp*xcm[1];
             
                   tmp = -2.0*prefac/r2cm;
             
@@ -958,8 +959,8 @@ private:
     alpha_r = (M-1)/PI/r;
     gt = alpha_r/r - sigma;
     
-    alpha[0] -= Mass*alpha_r*xcm[0]/r;
-    alpha[1] -= Mass*alpha_r*xcm[1]/r;
+    alpha[0] += Mass*alpha_r*xcm[0]/r;
+    alpha[1] += Mass*alpha_r*xcm[1]/r;
     gamma[0] -= gt*Mass*(xcm[0]*xcm[0]-xcm[1]*xcm[1])/r/r;
     gamma[1] -= gt*Mass*2*xcm[0]*xcm[1]/r/r;
     *kappa += Mass*sigma;
