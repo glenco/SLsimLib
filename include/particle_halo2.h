@@ -798,4 +798,107 @@ public:
   std::vector<HType> halos;
 };
 
+/** \brief LensHalo for collecting LensHalos into one with periodic boundary conditions.
+ * 
+ * The halos are used when they are within hole_radius_angle of 
+ * the ray and smoothed point masses in a tree outside of that.  The 
+ * boundaries of the region to have periodic boundary conditions 
+ * is set with the lower_left and upper_right parameters.  This 
+ * region must contain all the halos.
+ */
+template<typename HType >
+class LensHaloHP : public LensHaloParticles<float>
+{
+public:
+
+  LensHaloHP(
+      std::vector<HType> &halo_vector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      ,PosType redshift        /// redshift of origin
+      ,Point_2d lower_left     /// lower-left point of region in radians
+      ,Point_2d upper_right   /// upper-right point of region in radians
+      ,float hole_radius_angle /// radius where halos are used in radians
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 0      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 4       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHaloParticles<float>(redshift
+      ,0,1,cosmo,my_Nsmooth
+      ,Nbucket,theta,recenter,verbose),rhole(hole_radius_angle*cosmo.angDist(redshift))
+      ,length(upper_right-lower_left)
+    {
+      std::swap(halo_vector,halos);
+      size_t N = halos.size();
+      this->pp.resize(N);
+      double Dl = cosmo.angDist(redshift);
+      Point_2d p;
+      for(size_t i=0 ; i<N ; ++i){
+        p = halos[i].getTheta();
+        this->pp[i][0] = p[0]*Dl;
+        this->pp[i][1] = p[1]*Dl;
+        this->pp[i][2] = 0;
+      }
+      length *= Dl;
+      LensHaloParticles<float>::inv_area = 1.0/length[0]/length[1];
+      this->setUp(recenter,verbose);
+      this->otree->calcMoments(halos.data());
+
+      // check that particles are within bounding box
+      Point_2d p1,p2;
+      this->otree->getBoundingBox(p1,p2);
+      if(  lower_left[0] > p1[0] 
+        || lower_left[1] > p1[1] 
+        || upper_right[0] < p2[0] 
+        || upper_right[1] < p2[1] 
+      ){
+        std::cerr << "Error : LensHaloHP bounding box does not contain all the halos" 
+        << std::endl;
+        throw std::runtime_error("Bad bounding box."); 
+      }
+    };
+
+  LensHaloHP(LensHaloHP &&h)
+        : LensHaloParticles<float>(std::move(h)),
+          rhole(h.rhole),
+          halos(std::move(h.halos)),
+          length(h.length)
+  {
+  }
+  
+  LensHaloHP & operator=(LensHaloHP &&h) {
+    if (this == &h) return *this;
+    LensHaloParticles<float>::operator=(std::move(h));
+    rhole = h.rhole;
+    halos = std::move(h.halos);
+    length = h.length;
+    return *this;
+  }
+  /// does not zero lens quantities
+  void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false
+        ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+  ){
+
+    Point_2d xx;
+    for(PosType x : {-length[0],0,length[0]} ){
+      xx[0] = xcm[0] + x;
+      for(PosType y : {-length[1],0,length[1]} ){
+        xx[1] = xcm[1] + y;
+        this->otree->force2D(xx.x,halos.data(),this->Nsmooth,this->theta2,this->inv_area
+          ,rhole,alpha,kappa,gamma,phi);
+      }
+    }
+  };
+
+ private:
+  PosType rhole;
+  std::vector<HType> halos;
+  Point_2d length;
+};
+
 #endif
