@@ -409,6 +409,41 @@ struct Matrix2x2{
     lambda[0] = m + sqrt( abs(m*m - determinent));
     lambda[1] = m - sqrt( abs(m*m - determinent));
   }
+
+  // returns the eigenvectors in vec1 and vec2
+  // vec1 corresponds to lambda[0] and vec2 to lambda[1]
+  void eigen_vec(Point_2d &vec1,Point_2d &vec2,T lambdas[]){
+   
+    eigenv(lambdas);
+
+    if(a[2] != 0.0){
+      vec1[0] = lambdas[0] - a[3];
+      vec1[1] = a[2];
+
+      vec2[0] = lambdas[1] - a[3];
+      vec2[1] = a[2];
+
+      vec1.unitize();
+      vec2.unitize();
+
+    }else if(a[1] != 0.0){
+      vec1[0] = a[1];
+      vec1[1] = lambdas[0] - a[0];
+
+      vec2[0] = a[1];
+      vec2[1] = lambdas[1] - a[0];
+
+      vec1.unitize();
+      vec2.unitize();
+
+    }else{
+      vec1[0] = 1.0;
+      vec1[1] = 0.0;
+
+      vec2[0] = 0.0;
+      vec2[1] = 1.0;
+    }
+  }
 };
 
 

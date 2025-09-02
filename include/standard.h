@@ -99,6 +99,7 @@ enum class LensingVariable {
   ,INVMAG  /// inverse of magnification
   ,PHI     /// lensing potential
   ,SurfBrightness  /// Surface brightness
+  ,EigenV  /// angle of the eigenvector of the magnification matrix with the smallest absolute eigenvalue
 } ;
 #endif
 

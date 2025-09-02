@@ -92,12 +92,13 @@ struct GridMap{
   PixelMap<T> writePixelMap(LensingVariable lensvar);
    /// fits output of lensing quantities at the resolution of the GridMap
   template <typename T>
-  void writeFits(LensingVariable lensvar,std::string filensame);
+  void writeFits(LensingVariable lensvar,std::string filensame,bool flipX = false);
 
   template<typename T>
-  void writePixelMapUniform(PixelMap<T> &map,LensingVariable lensvar);
+  void writePixelMapUniform(PixelMap<T> &map,LensingVariable lensvar,bool flipX = false);
   template <typename T>
-  void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar,std::string filename);
+  void writeFitsUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar
+    ,std::string filename,bool flipX = false);
   template<typename T>
   PixelMap<T> writePixelMapUniform(const PosType center[],size_t Nx,size_t Ny,LensingVariable lensvar);
 
@@ -106,9 +107,10 @@ struct GridMap{
   void writeFitsUniform(
                         LensingVariable lensvar    ///< quantity to be output
                         ,std::string filename     ///< name of output fits file
+                        ,bool xflip = false ///< flip the x axis
                         ){
     PixelMap<T> map = writePixelMap<T>(lensvar);
-    map.printFITS(filename);
+    map.printFITS(filename,xflip);
   }
   
   /// returns a PixelMap with the flux in pixels at a resolution of res times the original resolution
@@ -548,9 +550,10 @@ template<typename T>
 void GridMap::writeFits(
                         LensingVariable lensvar /// which quantity is to be displayed
                         ,std::string filename  /// output files
+                        ,bool xflip ///< flip the x axis
                         ){
                           PixelMap<T> map = writePixelMap<T>(lensvar);
-                          map.printFITS(filename);
+                          map.printFITS(filename,xflip);
 }
 
 template<typename T>
@@ -564,6 +567,7 @@ PixelMap<T> GridMap::writePixelMap(
   
   size_t N = map.size();
   assert(N == Nx*Ny);
+  Point_2d p1,p2;
   
   double tmp2[2];
   switch (lensvar) {
@@ -617,6 +621,17 @@ PixelMap<T> GridMap::writePixelMap(
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].surface_brightness;
       break;
+    case LensingVariable::EigenV:
+      for(size_t i=0 ; i<N ; ++i){
+        i_points[i].A.eigen_vec(p1,p2,tmp2);
+        if(abs(tmp2[0]) > abs(tmp2[1])){
+          map[i] = atan2(p2[1],p2[0]);
+        }else{
+          map[i] = atan2(p1[1],p1[0]);
+        }
+      }
+      break;
+
     default:
       std::cerr << "GridMap::writePixelMapUniform() does not work for the input LensingVariable" << std::endl;
       throw std::runtime_error("GridMap::writePixelMapUniform() does not work for the input LensingVariable");
@@ -629,6 +644,7 @@ template <typename T>
 void GridMap::writePixelMapUniform(
                                    PixelMap<T> &map
                                    ,LensingVariable lensvar  /// which quantity is to be displayed
+                                   ,bool flipX ///< flip the x axis
 ){
   
   if(getNumberOfPoints() ==0 ) return;
@@ -660,6 +676,7 @@ template <typename T>
 void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,LensingVariable val){
   double tmp;
   PosType tmp2[2];
+  Point_2d p1,p2;
   long index;
   
   for(size_t i = 0; i< size; ++i){
@@ -701,6 +718,15 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,L
       case LensingVariable::SurfBrightness:
         tmp = points[i].surface_brightness;
         break;
+      case LensingVariable::EigenV:
+        points[i].A.eigen_vec(p1,p2,tmp2);
+        if(abs(tmp2[0]) > abs(tmp2[1])){
+          tmp = atan2(p2[1],p2[0]);
+        }else{
+          tmp = atan2(p1[1],p1[0]);
+        }
+        break;
+
       default:
         std::cerr << "PixelMap<T>::AddGrid() does not work for the input LensingVariable" << std::endl;
         throw std::runtime_error("PixelMap<T>::AddGrid() does not work for the input LensingVariable");
@@ -720,6 +746,7 @@ void GridMap::writeFitsUniform(
                                ,size_t Ny       /// number of pixels in image in on dimension
                                ,LensingVariable lensvar  /// which quantity is to be displayed
                                ,std::string filename     /// file name for image -- .kappa.fits, .gamma1.fits, etc will be appended
+                               ,bool xflip ///< flip the x axis
 ){
   std::string tag;
   
@@ -757,12 +784,15 @@ void GridMap::writeFitsUniform(
     case LensingVariable::SurfBrightness:
       tag = ".surfbright.fits";
       break;
+    case LensingVariable::EigenV:
+      tag = ".eignangle.fits";
+      break;
  default:
       break;
   }
   
   PixelMap<T> map = writePixelMapUniform<T>(center,Nx,Ny,lensvar);
-  map.printFITS(filename + tag);
+  map.printFITS(filename + tag,xflip);
 }
 
 #endif // defined(__GLAMER__gridmap__)

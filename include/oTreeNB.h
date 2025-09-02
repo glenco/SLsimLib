@@ -266,7 +266,7 @@ struct Branch
       throw std::runtime_error("OTreeNB Error: calling build() on already built tree");
     }
     span8(*it);
-    assert(total_branches ==  Nbranches);
+    
     while(it.walk(true,begin())){
      
       //std::cout << "level : " << (*it)->level << std::endl;

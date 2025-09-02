@@ -665,7 +665,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   std::vector<std::vector<long> > indexes;
   if(count>0){
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,false);
-    
+
     Utilities::find_islands(bitmap,Ngrid_init,indexes,hits_boundary);
   }
   

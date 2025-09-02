@@ -2566,7 +2566,8 @@ private:
         int i=0;
         for(auto &label : labels){
           try{
-            if(label == "ID"){
+            if(label == "ID" || label == "id" 
+              || label == "galaxy_halo_id" ){
               logfile << std::setprecision(17) << lines[j].at(label);
               std::cout << std::setprecision(precision);
             }else if(label == "RA" || label == "DEC" ){
