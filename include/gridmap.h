@@ -567,6 +567,7 @@ PixelMap<T> GridMap::writePixelMap(
   
   size_t N = map.size();
   assert(N == Nx*Ny);
+  Point_2d p1,p2;
   
   double tmp2[2];
   switch (lensvar) {
@@ -620,6 +621,17 @@ PixelMap<T> GridMap::writePixelMap(
       for(size_t i=0 ; i<N ; ++i)
         map[i] = i_points[i].surface_brightness;
       break;
+    case LensingVariable::EigenV:
+      for(size_t i=0 ; i<N ; ++i){
+        i_points[i].A.eigen_vec(p1,p2,tmp2);
+        if(abs(tmp2[0]) > abs(tmp2[1])){
+          map[i] = atan2(p2[1],p2[0]);
+        }else{
+          map[i] = atan2(p1[1],p1[0]);
+        }
+      }
+      break;
+
     default:
       std::cerr << "GridMap::writePixelMapUniform() does not work for the input LensingVariable" << std::endl;
       throw std::runtime_error("GridMap::writePixelMapUniform() does not work for the input LensingVariable");
@@ -664,6 +676,7 @@ template <typename T>
 void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,LensingVariable val){
   double tmp;
   PosType tmp2[2];
+  Point_2d p1,p2;
   long index;
   
   for(size_t i = 0; i< size; ++i){
@@ -705,6 +718,15 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,L
       case LensingVariable::SurfBrightness:
         tmp = points[i].surface_brightness;
         break;
+      case LensingVariable::EigenV:
+        points[i].A.eigen_vec(p1,p2,tmp2);
+        if(abs(tmp2[0]) > abs(tmp2[1])){
+          tmp = atan2(p2[1],p2[0]);
+        }else{
+          tmp = atan2(p1[1],p1[0]);
+        }
+        break;
+
       default:
         std::cerr << "PixelMap<T>::AddGrid() does not work for the input LensingVariable" << std::endl;
         throw std::runtime_error("PixelMap<T>::AddGrid() does not work for the input LensingVariable");
@@ -761,6 +783,9 @@ void GridMap::writeFitsUniform(
       break;
     case LensingVariable::SurfBrightness:
       tag = ".surfbright.fits";
+      break;
+    case LensingVariable::EigenV:
+      tag = ".eignangle.fits";
       break;
  default:
       break;
