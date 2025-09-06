@@ -307,22 +307,25 @@ struct Branch
     while(it.walk(true,begin())){
 
       Branch *branch = *it;
-      if(branch->nparticles == 0) continue;
-      
       // calculate center of mass
       branch->xcm[0] = 0.0;
       branch->xcm[1] = 0.0;
       branch->xcm[2] = 0.0;
-      for(IndexType i=0;i<branch->nparticles;++i){
-        PType &x = xxp[branch->particles[i]];
-        branch->xcm[0] += x[0];
-        branch->xcm[1] += x[1];
-        branch->xcm[2] += x[2];
-      }
-      branch->xcm[0] /= branch->nparticles;
-      branch->xcm[1] /= branch->nparticles;
-      branch->xcm[2] /= branch->nparticles;
-      branch->mass = branch->nparticles;
+      if(branch->nparticles == 0){
+        branch->mass = 0.0;
+      }else{
+
+        for(IndexType i=0;i<branch->nparticles;++i){
+          PType &x = xxp[branch->particles[i]];
+          branch->xcm[0] += x[0];
+          branch->xcm[1] += x[1];
+          branch->xcm[2] += x[2];
+        }
+        branch->xcm[0] /= branch->nparticles;
+        branch->xcm[1] /= branch->nparticles;
+        branch->xcm[2] /= branch->nparticles;
+        branch->mass = branch->nparticles;
+      }  
 
       /** calculate quadropole moment of branch ?? needs to have mass
       Point_2d dxcm;
@@ -386,7 +389,8 @@ struct Branch
     }
   }
 // calculate the moments from halos
-  void calcMoments(LensHalo *halos){
+  template<typename HType>
+  void calcMoments(std::vector<HType> &halos){
     moments_set = true;
     auto it = begin();
     while(it.walk(true,begin())){
@@ -404,6 +408,7 @@ struct Branch
         IndexType j = branch->particles[i];
         PType &x = xxp[j];
         double m = halos[j].get_mass();
+        
         branch->xcm[0] += x[0]*m;
         branch->xcm[1] += x[1]*m;
         branch->xcm[2] += x[2]*m;
@@ -925,9 +930,11 @@ struct Branch
         }
       }
   }
-  void force2D(
+  
+  template<typename HType>
+  void force2D_halo(
       const PosType *ray
-      ,LensHalo *halos
+      ,HType *halos
       ,PosType smooth_factor
       ,PosType theta2   // opening angle in radians
       ,PosType inv_area // compensating negative mass area 
@@ -969,8 +976,6 @@ struct Branch
                   ){ // inside region, use halo
 
                     halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
-                    // ??? check sign of alpha
-
                   }else{ 
                     // outside region, use smoothed point mass
                   
@@ -999,6 +1004,7 @@ struct Branch
                         ,scale
                         ,alpha,kappa,gamma,phi
                       );
+
                     }
                   }
               }
@@ -1025,7 +1031,7 @@ struct Branch
             
               alpha[0] -= tmp*xcm[0];
               alpha[1] -= tmp*xcm[1];
-            
+
               tmp = -2.0*prefac/r2cm;
             
               gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
@@ -1082,6 +1088,7 @@ struct Branch
           }
         }
     }
+    //assert( std::isfinite(alpha[0]) && std::isfinite(alpha[1]) );
   }
   size_t getUsedBranches() { return Nbranches; }
   size_t getTotalBranches() { return total_branches; }

@@ -333,7 +333,6 @@ protected :
        ,inv_area(my_inv_area),Nsmooth(my_Nsmooth),theta2(theta*theta)
        ,Nbucket(Nbucket)
     {
-      setUp(recenter,verbose);
     }
 };
 
@@ -761,7 +760,7 @@ public:
         this->pp[i][2] = 0;
       }
       this->setUp(recenter,verbose);
-      this->otree->calcMoments(halos.data());
+      this->otree->calcMoments(halos);
     };
 
   LensHaloH(LensHaloH &&h)
@@ -788,7 +787,7 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
-    this->otree->force2D(xcm,halos.data(),this->Nsmooth,this->theta2,this->inv_area
+    this->otree->force2D_halo(xcm,halos.data(),this->Nsmooth,this->theta2,this->inv_area
         ,rhole
         ,alpha,kappa,gamma,phi);
   };
