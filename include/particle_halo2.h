@@ -650,8 +650,11 @@ public:
   PosType rhole;
 };
 
-/** \brief LensHaloParticles only with a hole cut out of it.
+/** \brief LensHaloParticles only with pseudo-periodic boundary conditions.
  * 
+ * The boundaries of the region to have pseudo-periodic boundary conditions 
+ * is set with the lower_left and upper_right parameters.  This 
+ * region must contain all the halos and no rays should pass outside of it.
  */
 template<typename DType = float >
 class LensHaloParticlesP : public LensHaloParticles<DType>
@@ -914,13 +917,13 @@ public:
   std::vector<HType> halos;
 };
 
-/** \brief LensHalo for collecting LensHalos into one with periodic boundary conditions.
+/** \brief LensHalo for collecting LensHalos into one with pseudo-periodic boundary conditions.
  * 
  * The halos are used when they are within hole_radius_angle of 
  * the ray and smoothed point masses in a tree outside of that.  The 
- * boundaries of the region to have periodic boundary conditions 
+ * boundaries of the region to have pseudo-periodic boundary conditions 
  * is set with the lower_left and upper_right parameters.  This 
- * region must contain all the halos.
+ * region must contain all the halos and no rays should pass outside of it.
  */
 template<typename HType >
 class LensHaloHP : public LensHaloParticles<float>
