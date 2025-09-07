@@ -650,6 +650,123 @@ public:
   PosType rhole;
 };
 
+/** \brief LensHaloParticles only with a hole cut out of it.
+ * 
+ */
+template<typename DType = float >
+class LensHaloParticlesP : public LensHaloParticles<DType>
+{
+public:
+  LensHaloParticlesP(
+    const std::string& simulation_filename /// name of data files
+    ,SimFileFormat format    /// format of data file
+    ,PosType redshift        /// redshift of origin
+    ,double my_inv_area      /// inverse area for mass compensation
+    ,PosType mass_particle   /// rescale particle masses
+    ,Point_2d lower_left     /// lower-left point of region in radians
+    ,Point_2d upper_right    /// upper-right point of region in radians
+    ,const COSMOLOGY& cosmo  /// cosmology
+    ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+    ,float Nbucket = 8  /// buckets size in tree
+    ,float theta = 0.1      /// opening angle for tree
+    ,bool recenter = false /// re-center on center of mass
+    ,bool verbose = false
+  ) : LensHaloParticles<DType>(simulation_filename,format,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
+  ,length(upper_right-lower_left)
+  {// check that particles are within bounding box
+      Point_3d<float> p1,p2;
+      this->otree->getBoundingBox(p1,p2);
+      double Dl = cosmo.angDist(redshift);
+      length *= Dl;
+      p1 /= Dl;
+      p2 /= Dl;
+      if(  lower_left[0] > p1[0] 
+        || lower_left[1] > p1[1] 
+        || upper_right[0] < p2[0] 
+        || upper_right[1] < p2[1] 
+      ){
+        
+        std::cerr << "Error : LensParticlesP bounding box does not contain all the particles" 
+        << std::endl;
+        std::cerr << "   angular field " << lower_left << " " << upper_right << std::endl;
+        std::cerr << "   bounding box " << p1 << " " << p2 << std::endl;
+        throw std::runtime_error("Bad bounding box."); 
+      }
+  };
+
+  LensHaloParticlesP(
+      std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
+      ,PosType redshift        /// redshift of origin
+      ,double my_inv_area      /// inverse area for mass compensation
+      ,PosType mass_particle   /// rescale particle masses
+      ,Point_2d lower_left     /// lower-left point of region in radians
+      ,Point_2d upper_right   /// upper-right point of region in radians
+      ,const COSMOLOGY& cosmo  /// cosmology
+      ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
+      ,float Nbucket = 8       /// buckets size in tree
+      ,float theta = 0.1       /// opening angle for tree
+      ,bool recenter = false   /// re-center on center of mass
+      ,bool verbose = false
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth
+      ,Nbucket,theta,recenter,verbose),length(upper_right-lower_left)
+    {
+      // check that particles are within bounding box
+      Point_3d<float> p1,p2;
+      this->otree->getBoundingBox(p1,p2);
+      double Dl = cosmo.angDist(redshift);
+      length *= Dl;
+      p1 /= Dl;
+      p2 /= Dl;
+      if(  lower_left[0] > p1[0] 
+        || lower_left[1] > p1[1] 
+        || upper_right[0] < p2[0] 
+        || upper_right[1] < p2[1] 
+      ){
+        
+        std::cerr << "Error : LensParticlesP bounding box does not contain all the particles" 
+        << std::endl;
+        std::cerr << "   angular field " << lower_left << " " << upper_right << std::endl;
+        std::cerr << "   bounding box " << p1 << " " << p2 << std::endl;
+        throw std::runtime_error("Bad bounding box."); 
+      }
+    };
+
+  LensHaloParticlesP(LensHaloParticlesP &&h)
+        : LensHaloParticles<DType>(std::move(h)),
+          length(h.length)
+  {}
+  
+  LensHaloParticlesP & operator=(LensHaloParticlesP &&h) {
+    if (this == &h) return *this;
+    LensHaloParticles<DType>::operator=(std::move(h));
+    length = h.length;
+    return *this;
+  }
+  /// does not zero lens quantities
+  void force_halo(double *alpha
+        ,KappaType *kappa
+        ,KappaType *gamma
+        ,KappaType *phi
+        ,double const *xcm 
+        ,bool subtract_point=false
+        ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
+  ){
+
+    Point_2d xx;
+    for(int i = -1 ; i <= 1 ; ++i ){
+      xx[0] = xcm[0] + i*length[0];
+      for(int j = -1 ; j <= 1 ; ++j ){
+        xx[1] = xcm[1] + j*length[1];
+        this->otree->force2D(xx.x,this->particle_mass,this->Nsmooth,this->theta2,this->inv_area
+        ,alpha,kappa,gamma,phi);
+      }
+    }
+  };
+
+ private:
+  Point_2d length;
+};
+
 /** \brief LensHaloParticlesM only with a hole cut out of it.
  * 
  */

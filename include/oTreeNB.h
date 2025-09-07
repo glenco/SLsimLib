@@ -981,10 +981,10 @@ struct Branch
                   
                     double mass = halos[j].get_mass();
                     double prefac = mass /r2cm/PI;
-                    double tmp = -( prefac - mass * inv_area);
+                    double tmp = ( prefac - mass * inv_area);
              
-                    alpha[0] -= tmp*xcm[0];
-                    alpha[1] -= tmp*xcm[1];
+                    alpha[0] += tmp*xcm[0];
+                    alpha[1] += tmp*xcm[1];
             
                     tmp = -2.0*prefac/r2cm;
             
@@ -1027,10 +1027,10 @@ struct Branch
               //????? use moments
               double &mass = (*it)->mass;
               double prefac = mass/r2cm/PI;
-              double tmp = -( prefac - mass*inv_area);
+              double tmp = ( prefac - mass*inv_area);
             
-              alpha[0] -= tmp*xcm[0];
-              alpha[1] -= tmp*xcm[1];
+              alpha[0] += tmp*xcm[0];
+              alpha[1] += tmp*xcm[1];
 
               tmp = -2.0*prefac/r2cm;
             
@@ -1051,13 +1051,14 @@ struct Branch
                 xcm[0] = x[0] - ray[0];
                 xcm[1] = x[1] - ray[1];
                 r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
                 if(r2cm*inv_area < 1){
                   double mass = halos[j].get_mass();
                   double prefac = mass /r2cm/PI;
-                  double tmp = -( prefac - mass * inv_area);
+                  double tmp = (prefac - mass * inv_area);
              
-                  alpha[0] -= tmp*xcm[0];
-                  alpha[1] -= tmp*xcm[1];
+                  alpha[0] += tmp*xcm[0];
+                  alpha[1] += tmp*xcm[1];
             
                   tmp = -2.0*prefac/r2cm;
             
