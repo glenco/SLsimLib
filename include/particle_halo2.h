@@ -841,18 +841,23 @@ public:
       length *= Dl;
       LensHaloParticles<float>::inv_area = 1.0/length[0]/length[1];
       this->setUp(recenter,verbose);
-      this->otree->calcMoments(halos.data());
+      this->otree->calcMoments(halos);
 
       // check that particles are within bounding box
-      Point_2d p1,p2;
+      Point_3d<float> p1,p2;
       this->otree->getBoundingBox(p1,p2);
+      p1 /= Dl;
+      p2 /= Dl;
       if(  lower_left[0] > p1[0] 
         || lower_left[1] > p1[1] 
         || upper_right[0] < p2[0] 
         || upper_right[1] < p2[1] 
       ){
+        
         std::cerr << "Error : LensHaloHP bounding box does not contain all the halos" 
         << std::endl;
+        std::cerr << "   angular field " << lower_left << " " << upper_right << std::endl;
+        std::cerr << "   bounding box " << p1 << " " << p2 << std::endl;
         throw std::runtime_error("Bad bounding box."); 
       }
     };
@@ -884,11 +889,11 @@ public:
   ){
 
     Point_2d xx;
-    for(PosType x : {-length[0],0,length[0]} ){
-      xx[0] = xcm[0] + x;
-      for(PosType y : {-length[1],0,length[1]} ){
-        xx[1] = xcm[1] + y;
-        this->otree->force2D(xx.x,halos.data(),this->Nsmooth,this->theta2,this->inv_area
+    for(int i = -1 ; i <= 1 ; ++i ){
+      xx[0] = xcm[0] + i*length[0];
+      for(int j = -1 ; j <= 1 ; ++j ){
+        xx[1] = xcm[1] + j*length[1];;
+        this->otree->force2D_halo(xx.x,halos.data(),this->Nsmooth,this->theta2,this->inv_area
           ,rhole,alpha,kappa,gamma,phi);
       }
     }
