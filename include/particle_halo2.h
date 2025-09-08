@@ -860,12 +860,11 @@ public:
       ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
       ,float hole_radius_angle /// radius where halos are used in radians
       ,const COSMOLOGY& cosmo  /// cosmology
-      ,int my_Nsmooth = 0      /// number of neighbours for adaptive smoothing
       ,float Nbucket = 4       /// buckets size in tree
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<float>(redshift,my_inv_area,1,cosmo,my_Nsmooth
+    ) : LensHaloParticles<float>(redshift,my_inv_area,1,cosmo,0 
       ,Nbucket,theta,recenter,verbose),rhole(hole_radius_angle*cosmo.angDist(redshift))
     {
       std::swap(halo_vector,halos);
@@ -907,8 +906,9 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
-    this->otree->force2D_halo(xcm,halos.data(),this->Nsmooth,this->theta2,this->inv_area
-        ,rhole
+    this->otree->force2D_halo(xcm,halos.data()
+    ,this->theta2,this->inv_area
+        ,rhole,xcm
         ,alpha,kappa,gamma,phi);
   };
 
@@ -951,6 +951,7 @@ public:
       size_t N = halos.size();
       this->pp.resize(N);
       double Dl = cosmo.angDist(redshift);
+      
       Point_2d p;
       for(size_t i=0 ; i<N ; ++i){
         p = halos[i].getTheta();
@@ -1008,13 +1009,16 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
-    Point_2d xx;
+    Point_2d xx,zero(0,0);
     for(int i = -1 ; i <= 1 ; ++i ){
       xx[0] = xcm[0] + i*length[0];
       for(int j = -1 ; j <= 1 ; ++j ){
         xx[1] = xcm[1] + j*length[1];;
-        this->otree->force2D_halo(xx.x,halos.data(),this->Nsmooth,this->theta2,this->inv_area
-          ,rhole,alpha,kappa,gamma,phi);
+        //this->otree->force2D_halo(xx.x,halos.data(),this->Nsmooth,this->theta2,this->inv_area
+        //  ,rhole,alpha,kappa,gamma,phi);
+        this->otree->force2D_halo(xx.x,halos.data(),this->theta2,this->inv_area
+           ,rhole,xx.x
+           ,alpha,kappa,gamma,phi);
       }
     }
   };

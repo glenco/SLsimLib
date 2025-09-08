@@ -969,8 +969,11 @@ void LensHaloTNSIE::force_halo(
     return;
   }
 
-  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
-                 ,subtract_point,screening)) return;
+  if(subtract_point){
+    force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening);
+    return;
+  }
 
   if(rcm2 < 1.0e-5) rcm2 = 1e-5;
   if(rcm2 < Rmax*Rmax){
