@@ -309,7 +309,7 @@ protected :
     double particle_mass;  ///< mass
   
     PosType inv_area;
-    std::unique_ptr<OTreeNB<Point_3d<DType> > > otree;
+    std::unique_ptr<OTreeNB<Point_3d<DType>, DType > > otree;
 
     void readPositionFileASCII(const std::string &filename);
     // construct tree, particles positions must already by stored in comoving Mpc
@@ -371,7 +371,7 @@ void LensHaloParticles<DType>::setUp(
         LensHalo::set_flag_elliptical(false); // shouldn't do anything
 
         if(verbose) std::cout << "   Creating particle tree ... " << std::endl;
-        otree.reset( new OTreeNB<Point_3d<DType> >(pp.data(),pp.size()) );
+        otree.reset( new OTreeNB<Point_3d<DType>,DType >(pp.data(),pp.size()) );
         otree->build(Nbucket);
         if(verbose) std::cout << "done." << std::endl;
 };

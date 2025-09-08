@@ -107,7 +107,7 @@ struct Branch
   PosType xcm[3] = {0.0, 0.0, 0.0}; 
   // quadropole moment of branch in particle mass units
   PosType quad[3] = {0.0, 0.0, 0.0};
-  PosType mass = 0;
+  DType mass = 0;
 };
 
   /**
@@ -555,7 +555,7 @@ struct Branch
 
           if(r2cm*inv_area < 1){
             //????? use moments
-            DType &mass = (*it)->mass;
+            DType mass = (*it)->mass;
             double prefac = mass/r2cm/PI;
             double tmp = -( prefac - mass*inv_area);
             
@@ -578,7 +578,7 @@ struct Branch
             for(IndexType i=0;i<(*it)->nparticles;++i){
               IndexType j = (*it)->particles[i];
               PType &x = xxp[j];
-              DType &mass = masses[j];
+              DType mass = masses[j];
 
               xcm[0] = x[0] - ray[0];
               xcm[1] = x[1] - ray[1];
@@ -844,7 +844,7 @@ struct Branch
                 xcm[1] = x[1] - ray[1];
                 r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
                 if(r2cm*inv_area < 1){
-                  double &mass = masses[j];
+                  DType mass = masses[j];
                   double prefac = mass /r2cm/PI;
                   double tmp = -( prefac - mass * inv_area);
              
@@ -894,7 +894,7 @@ struct Branch
 
                 if( dx[0]*dx[0] + dx[1]*dx[1] > rmin*rmin &&
                   r2cm*inv_area < 1){
-                  double &mass = masses[j];
+                  DType mass = masses[j];
                   double prefac = mass /r2cm/PI;
                   double tmp = -( prefac - mass * inv_area);
              
