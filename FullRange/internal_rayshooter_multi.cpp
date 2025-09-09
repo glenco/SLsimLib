@@ -590,7 +590,11 @@ void Lens::compute_rays_parallel(int start
       assert(xx[0] == xx[0] && xx[1] == xx[1]);
       
       ////////////////////////////////////////////////////////
-      
+      alpha[0] = 0.0; alpha[1] = 0.0;
+      gamma[0] = 0.0; gamma[1] = 0.0;
+      kappa = 0.0;
+      phi   = 0.0;
+ 
       lensing_planes[j]->force(alpha,&kappa,gamma,&phi,xx);
       // Computed in physical coordinates, xx is in PhysMpc.
       
