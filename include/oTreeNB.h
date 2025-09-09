@@ -451,6 +451,7 @@ struct Branch
       //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
       //*kappa=*phi=0.0;
 
+      PosType inv_area_pi = inv_area*PI;
       PosType xcm[2],r2cm;
       auto it = begin();
       bool decend = true;
@@ -462,7 +463,7 @@ struct Branch
 
         if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
 
-          if(r2cm*inv_area < 1){
+          if(r2cm*inv_area_pi < 1){
             //????? use moments
             double mass = (*it)->mass * particle_mass;
             double prefac = mass/r2cm/PI;
@@ -490,7 +491,7 @@ struct Branch
               xcm[0] = x[0] - ray[0];
               xcm[1] = x[1] - ray[1];
               r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-              if(r2cm*inv_area < 1){
+              if(r2cm*inv_area_pi < 1){
                 double prefac = particle_mass /r2cm/PI;
                 double tmp = -( prefac - particle_mass*inv_area);
              
@@ -541,7 +542,7 @@ struct Branch
       assert( moments_set );
       //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
       //*kappa=*phi=0.0;
-
+      PosType inv_area_pi = inv_area*PI;
       PosType xcm[2],r2cm;
       auto it = begin();
       bool decend = true;
@@ -553,7 +554,7 @@ struct Branch
 
         if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
 
-          if(r2cm*inv_area < 1){
+          if(r2cm*inv_area_pi < 1){
             //????? use moments
             DType mass = (*it)->mass;
             double prefac = mass/r2cm/PI;
@@ -583,7 +584,7 @@ struct Branch
               xcm[0] = x[0] - ray[0];
               xcm[1] = x[1] - ray[1];
               r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-              if(r2cm*inv_area < 1){
+              if(r2cm*inv_area_pi < 1){
                 double prefac = mass /r2cm/PI;
                 double tmp = -( prefac - mass * inv_area);
              
@@ -636,7 +637,7 @@ struct Branch
 
       //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
       //*kappa=*phi=0.0;
-
+      PosType inv_area_pi = inv_area*PI;
       PosType xcm[2],r2cm,dx[2];
 
       auto it = begin();
@@ -660,7 +661,7 @@ struct Branch
         if(d > rmin + (*it)->boxsize){
           if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
 
-            if(r2cm*inv_area < 1){
+            if(r2cm*inv_area_pi < 1){
               //????? use moments
               double mass = (*it)->nparticles * particle_mass;
               double prefac = mass/r2cm/PI;
@@ -688,7 +689,7 @@ struct Branch
                 xcm[0] = x[0] - ray[0];
                 xcm[1] = x[1] - ray[1];
                 r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-                if(r2cm*inv_area < 1){
+                if(r2cm*inv_area_pi < 1){
                   double prefac = particle_mass /r2cm/PI;
                   double tmp = -( prefac - particle_mass*inv_area);
              
@@ -737,7 +738,7 @@ struct Branch
                 dx[1] = x[1] - xo[1];
 
                 if( dx[0]*dx[0] + dx[1]*dx[1] > rmin*rmin &&
-                  r2cm*inv_area < 1){
+                  r2cm*inv_area_pi < 1){
                   double prefac = particle_mass /r2cm/PI;
                   double tmp = -( prefac - particle_mass*inv_area);
              
@@ -792,6 +793,7 @@ struct Branch
       //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
       //*kappa=*phi=0.0;
 
+      PosType inv_area_pi = inv_area*PI;
       PosType xcm[2],r2cm,dx[2];
 
       auto it = begin();
@@ -815,7 +817,7 @@ struct Branch
         if(d > rmin + (*it)->boxsize){
           if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
 
-            if(r2cm*inv_area < 1){
+            if(r2cm*inv_area_pi < 1){
               // use moments of the branch
               DType mass = (*it)->mass;
               double prefac = mass/r2cm/PI;
@@ -843,7 +845,7 @@ struct Branch
                 xcm[0] = x[0] - ray[0];
                 xcm[1] = x[1] - ray[1];
                 r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-                if(r2cm*inv_area < 1){
+                if(r2cm*inv_area_pi < 1){
                   DType mass = masses[j];
                   double prefac = mass /r2cm/PI;
                   double tmp = -( prefac - mass * inv_area);
@@ -893,7 +895,7 @@ struct Branch
                 dx[1] = x[1] - xo[1];
 
                 if( dx[0]*dx[0] + dx[1]*dx[1] > rmin*rmin &&
-                  r2cm*inv_area < 1){
+                  r2cm*inv_area_pi < 1){
                   DType mass = masses[j];
                   double prefac = mass /r2cm/PI;
                   double tmp = -( prefac - mass * inv_area);
@@ -949,7 +951,7 @@ struct Branch
       assert( moments_set );
       //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
       //*kappa=*phi=0.0;
-
+      PosType inv_area_pi = inv_area*PI;
       PosType xcm[2],r2cm,dx[2];
 
       auto it = begin();
@@ -968,7 +970,7 @@ struct Branch
             xcm[0] = x[0] - ray[0];
             xcm[1] = x[1] - ray[1];
             r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-            if(r2cm*inv_area < 1){
+            if(r2cm*inv_area_pi < 1){
               // subtract off the negative mass sheet
               DType mass = halos[j].get_mass();
               double prefac = mass /r2cm/PI;
@@ -1012,7 +1014,7 @@ struct Branch
             if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
             // outside or partly outside hole
 
-              if(r2cm*inv_area < 1){
+              if(r2cm*inv_area_pi < 1){
               // all the way out, use moments of the branch
                 DType mass = (*it)->mass;
                 double prefac = mass/r2cm/PI;
@@ -1040,7 +1042,7 @@ struct Branch
                   xcm[0] = x[0] - ray[0];
                   xcm[1] = x[1] - ray[1];
                   r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-                  if(r2cm*inv_area < 1){
+                  if(r2cm*inv_area_pi < 1){
                     DType mass = halos[j].get_mass();
                     double prefac = mass /r2cm/PI;
                     double tmp = ( prefac - mass * inv_area);
@@ -1085,7 +1087,7 @@ struct Branch
                 xcm[0] = x[0] - ray[0];
                 xcm[1] = x[1] - ray[1];
                 r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
-                if(r2cm*inv_area < 1){
+                if(r2cm*inv_area_pi < 1){
 
                   dx[0] = x[0] - xo[0];
                   dx[1] = x[1] - xo[1];
