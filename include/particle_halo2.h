@@ -71,7 +71,7 @@ class LensHaloParticles : public LensHalo
       const std::string& simulation_filename /// name of data files
       ,SimFileFormat format   /// format of data file
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area           /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area           /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle  /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5             /// number of neighbours for adaptive smoothing
@@ -108,7 +108,7 @@ class LensHaloParticles : public LensHalo
     LensHaloParticles(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
@@ -321,7 +321,7 @@ protected :
     // protected constructor for creating an empty one
     LensHaloParticles(
       PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
@@ -522,7 +522,7 @@ public:
   LensHaloParticlesM(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,std::vector<DType> Masses   /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
@@ -578,7 +578,7 @@ public:
     const std::string& simulation_filename /// name of data files
     ,SimFileFormat format    /// format of data file
     ,PosType redshift        /// redshift of origin
-    ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+    ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
     ,PosType mass_particle   /// rescale particle masses
     ,Point_2d x_hole         /// center of hole in comoving Mpc
     ,DType hole_radius       /// radius of hole physical Mpc
@@ -595,7 +595,7 @@ public:
   LensHaloParticlesO(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,Point_2d x_hole         /// center of hole in comoving Mpc
       ,DType hole_radius       /// radius of hole physical Mpc
@@ -664,7 +664,7 @@ public:
     const std::string& simulation_filename /// name of data files
     ,SimFileFormat format    /// format of data file
     ,PosType redshift        /// redshift of origin
-    ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+    ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
     ,PosType mass_particle   /// rescale particle masses
     ,Point_2d lower_left     /// lower-left point of region in radians
     ,Point_2d upper_right    /// upper-right point of region in radians
@@ -700,7 +700,7 @@ public:
   LensHaloParticlesP(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,Point_2d lower_left     /// lower-left point of region in radians
       ,Point_2d upper_right   /// upper-right point of region in radians
@@ -781,7 +781,7 @@ public:
   LensHaloParticlesMO(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,std::vector<DType> Masses   /// rescale particle masses
       ,Point_2d x_hole         /// center of hole in comoving Mpc
       ,DType hole_radius       /// radius of hole physical Mpc
@@ -857,7 +857,7 @@ public:
   LensHaloH(
       std::vector<HType> &halo_vector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, Mpc^-2
+      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
       ,float hole_radius_angle /// radius where halos are used in radians
       ,const COSMOLOGY& cosmo  /// cosmology
       ,float Nbucket = 4       /// buckets size in tree

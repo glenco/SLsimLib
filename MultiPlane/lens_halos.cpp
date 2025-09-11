@@ -939,8 +939,12 @@ LensHaloTNSIE::LensHaloTNSIE(
   rscale=1.0;
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
+  if(fratio > 1.0 ){fratio = 1.0/fratio;}
 
-  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+  if(fratio < 0.01){
+    std::cerr << "ERROR: invalid fratio in LensHaloTNSIE : must be > 0.01" << std::endl;
+    throw std::invalid_argument("invalid fratio");
+  }
   
   units = sigma*sigma/lightspeed/lightspeed/Grav;///sqrt(fratio); // mass/distance(physical);
   

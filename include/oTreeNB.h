@@ -56,10 +56,10 @@ struct Branch
     level = -1;
     boxsize = 0.0;
     root_inv_density = 0.0;
-    ++Nbranches;
+    //++Nbranches;
   };
 
-  int Nbranches;  ///< number of branches in tree, used for debugging
+  // static int Nbranches;  ///< number of branches in tree, used for debugging
   //Branch(Branch *parent) : prev(parent)
   //{
   //  child = nullptr;
@@ -71,7 +71,7 @@ struct Branch
 
   ~Branch() {
     //std::cout << " deleting branch " << Nbranches << " "; 
-    --Nbranches; 
+    //--Nbranches; 
     if(children != nullptr) delete[] children;
   };//{std::cout << "Branch destructor called" << std::endl; };
 
@@ -963,7 +963,7 @@ struct Branch
         PosType d = sqrt(dx[0]*dx[0] + dx[1]*dx[1]); // distance to center of branch
         
         if(d < rmin - (*it)->boxsize) {
-          // branch is all inside hole, skip it
+          // branch is all inside hole, use halos
           for(IndexType i=0;i<(*it)->nparticles;++i){
             IndexType j = (*it)->particles[i];
             PType &x = xxp[j];
@@ -1300,7 +1300,7 @@ void OTreeNB<PType,DType>::span8(Branch *current)
   //std::cout << p[0] << " " << p[1] << " " << p[2] << std::endl;
   IndexType *p_end = p + current->nparticles;
   IndexType np = 0;
-  for (int m = 0; m < 7; ++m)
+  for (int m = 0; m < 8; ++m)
   {
     children[m].particles = p;
     IndexType *pp = p;
@@ -1311,11 +1311,11 @@ void OTreeNB<PType,DType>::span8(Branch *current)
     {
       PType &x = xxp[*pp];
       if (x[0] >= children[m].boundary_p1[0] &&
-          x[0] < children[m].boundary_p2[0] &&
+          x[0] <= children[m].boundary_p2[0] &&
           x[1] >= children[m].boundary_p1[1] &&
-          x[1] < children[m].boundary_p2[1] &&
+          x[1] <= children[m].boundary_p2[1] &&
           x[2] >= children[m].boundary_p1[2] &&
-          x[2] < children[m].boundary_p2[2])
+          x[2] <= children[m].boundary_p2[2])
       {
         std::swap(*p, *pp);
         children[m].nparticles++;
@@ -1327,9 +1327,8 @@ void OTreeNB<PType,DType>::span8(Branch *current)
     
     children[m].root_inv_density = children[m].boxsize/pow(children[m].nparticles,1.0/3.); // reset density
   }
-  children[7].particles = p;
-  children[7].nparticles = current->nparticles - np;
-  children[7].root_inv_density = children[7].boxsize/pow(children[7].nparticles,1.0/3.);
+  assert( current->nparticles == np );
+
   // remove empty branches from the brotherhood
   int i=0;
   while(children[i].nparticles==0 && i<8) ++i;
