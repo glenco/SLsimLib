@@ -71,7 +71,7 @@ class LensHaloParticles : public LensHalo
       const std::string& simulation_filename /// name of data files
       ,SimFileFormat format   /// format of data file
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area           /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys           /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle  /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5             /// number of neighbours for adaptive smoothing
@@ -80,7 +80,7 @@ class LensHaloParticles : public LensHalo
       ,bool recenter = false /// re-center on center of mass
       ,bool verbose = false
     ) : LensHalo(redshift,cosmo),particle_mass(mass_particle)
-       ,inv_area(my_inv_area),Nsmooth(my_Nsmooth),theta2(theta*theta)
+       ,inv_area(my_inv_area_phys),Nsmooth(my_Nsmooth),theta2(theta*theta)
        ,Nbucket(Nbucket)
     {
 
@@ -108,7 +108,7 @@ class LensHaloParticles : public LensHalo
     LensHaloParticles(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
@@ -117,7 +117,7 @@ class LensHaloParticles : public LensHalo
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
     ) : LensHalo(redshift,cosmo),particle_mass(mass_particle)
-       ,inv_area(my_inv_area),Nsmooth(my_Nsmooth),theta2(theta*theta)
+       ,inv_area(my_inv_area_phys),Nsmooth(my_Nsmooth),theta2(theta*theta)
        ,Nbucket(Nbucket)
     {
       std::swap(pp, pvector); // take ownership of the data
@@ -299,6 +299,12 @@ class LensHaloParticles : public LensHalo
       ) const {
         otree->getBoundingBox(p1,p2);
       }
+
+    /// swap out the particle positions, leaving the LensHaloParticles empty
+    void swapout(std::vector<Point_3d<DType> > &pvector){
+      std::swap(pp, pvector);
+      otree.reset();
+    }
 protected :
     Point_3d<DType> mcenter;
     //DType *pp;
@@ -321,7 +327,7 @@ protected :
     // protected constructor for creating an empty one
     LensHaloParticles(
       PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
@@ -330,7 +336,7 @@ protected :
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
     ) : LensHalo(redshift,cosmo),particle_mass(mass_particle)
-       ,inv_area(my_inv_area),Nsmooth(my_Nsmooth),theta2(theta*theta)
+       ,inv_area(my_inv_area_phys),Nsmooth(my_Nsmooth),theta2(theta*theta)
        ,Nbucket(Nbucket)
     {
     }
@@ -522,7 +528,7 @@ public:
   LensHaloParticlesM(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,std::vector<DType> Masses   /// rescale particle masses
       ,const COSMOLOGY& cosmo  /// cosmology
       ,int my_Nsmooth = 5      /// number of neighbours for adaptive smoothing
@@ -530,7 +536,7 @@ public:
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,1,cosmo,my_Nsmooth
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area_phys,1,cosmo,my_Nsmooth
       ,Nbucket,theta,recenter,verbose)
     {
       std::swap(masses,Masses);
@@ -562,6 +568,11 @@ public:
     this->otree->force2D(xcm,masses.data(),this->Nsmooth,this->theta2,this->inv_area
         ,alpha,kappa,gamma,phi);
   };
+  /// swap out the masses, leaving the LensHaloParticlesM empty
+  void swapoutMasses(std::vector<DType> &Mvector){
+    std::swap(masses, Mvector);
+    this->otree->calcMoments(masses.data());
+  }
  private:
   std::vector<DType> masses;
 };
@@ -578,7 +589,7 @@ public:
     const std::string& simulation_filename /// name of data files
     ,SimFileFormat format    /// format of data file
     ,PosType redshift        /// redshift of origin
-    ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+    ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
     ,PosType mass_particle   /// rescale particle masses
     ,Point_2d x_hole         /// center of hole in comoving Mpc
     ,DType hole_radius       /// radius of hole physical Mpc
@@ -588,14 +599,14 @@ public:
     ,float theta = 0.1      /// opening angle for tree
     ,bool recenter = false /// re-center on center of mass
     ,bool verbose = false
-  ) : LensHaloParticles<DType>(simulation_filename,format,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
+  ) : LensHaloParticles<DType>(simulation_filename,format,redshift,my_inv_area_phys,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
   ,xc(x_hole),rhole(hole_radius)
   {};
 
   LensHaloParticlesO(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,Point_2d x_hole         /// center of hole in comoving Mpc
       ,DType hole_radius       /// radius of hole physical Mpc
@@ -605,7 +616,7 @@ public:
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area_phys,mass_particle,cosmo,my_Nsmooth
       ,Nbucket,theta,recenter,verbose),xc(x_hole),rhole(hole_radius)
     {
     };
@@ -644,7 +655,7 @@ public:
     xc = x_hole;
     rhole = hole_radius;
   };
-
+  
  private:
   Point_2d xc;
   PosType rhole;
@@ -664,7 +675,7 @@ public:
     const std::string& simulation_filename /// name of data files
     ,SimFileFormat format    /// format of data file
     ,PosType redshift        /// redshift of origin
-    ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+    ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
     ,PosType mass_particle   /// rescale particle masses
     ,Point_2d lower_left     /// lower-left point of region in radians
     ,Point_2d upper_right    /// upper-right point of region in radians
@@ -674,7 +685,7 @@ public:
     ,float theta = 0.1      /// opening angle for tree
     ,bool recenter = false /// re-center on center of mass
     ,bool verbose = false
-  ) : LensHaloParticles<DType>(simulation_filename,format,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
+  ) : LensHaloParticles<DType>(simulation_filename,format,redshift,my_inv_area_phys,mass_particle,cosmo,my_Nsmooth,Nbucket,theta,recenter,verbose)
   ,length(upper_right-lower_left)
   {// check that particles are within bounding box
       Point_3d<float> p1,p2;
@@ -700,7 +711,7 @@ public:
   LensHaloParticlesP(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,PosType mass_particle   /// rescale particle masses
       ,Point_2d lower_left     /// lower-left point of region in radians
       ,Point_2d upper_right   /// upper-right point of region in radians
@@ -710,7 +721,7 @@ public:
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,mass_particle,cosmo,my_Nsmooth
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area_phys,mass_particle,cosmo,my_Nsmooth
       ,Nbucket,theta,recenter,verbose),length(upper_right-lower_left)
     {
       // check that particles are within bounding box
@@ -781,7 +792,7 @@ public:
   LensHaloParticlesMO(
       std::vector<Point_3d<DType> > &pvector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,std::vector<DType> Masses   /// rescale particle masses
       ,Point_2d x_hole         /// center of hole in comoving Mpc
       ,DType hole_radius       /// radius of hole physical Mpc
@@ -791,7 +802,7 @@ public:
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area,1,cosmo,my_Nsmooth
+    ) : LensHaloParticles<DType>(pvector,redshift,my_inv_area_phys,1,cosmo,my_Nsmooth
       ,Nbucket,theta,recenter,verbose),xc(x_hole),rhole(hole_radius)
     {
       std::swap(masses,Masses);
@@ -857,14 +868,14 @@ public:
   LensHaloH(
       std::vector<HType> &halo_vector /// list of particles pdata[][i] should be the position in physical Mpc, the class takes possession of the data and leaves the vector empty
       ,PosType redshift        /// redshift of origin
-      ,double my_inv_area      /// inverse area for mass compensation, physical Mpc^-2
+      ,double my_inv_area_phys      /// inverse area for mass compensation, physical Mpc^-2
       ,float hole_radius_angle /// radius where halos are used in radians
       ,const COSMOLOGY& cosmo  /// cosmology
       ,float Nbucket = 4       /// buckets size in tree
       ,float theta = 0.1       /// opening angle for tree
       ,bool recenter = false   /// re-center on center of mass
       ,bool verbose = false
-    ) : LensHaloParticles<float>(redshift,my_inv_area,1,cosmo,0 
+    ) : LensHaloParticles<float>(redshift,my_inv_area_phys,1,cosmo,0 
       ,Nbucket,theta,recenter,verbose),rhole(hole_radius_angle*cosmo.angDist(redshift))
     {
       std::swap(halo_vector,halos);
@@ -906,12 +917,18 @@ public:
         ,PosType screening = 1     // here so that it overrides the LensHalo::force_halo                               
   ){
 
+    Point_2d xx;
     this->otree->force2D_halo(xcm,halos.data()
     ,this->theta2,this->inv_area
-        ,rhole,xcm
+        ,rhole,xcm // ???
         ,alpha,kappa,gamma,phi);
   };
 
+  /// swap out the halos, leaving the LensHaloH empty
+  void swapoutHalos(std::vector<HType> &hvector){
+    std::swap(halos, hvector);
+    this->otree.reset();
+  }
  private:
   PosType rhole;
   std::vector<HType> halos;

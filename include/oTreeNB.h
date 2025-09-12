@@ -230,6 +230,7 @@ struct Branch
         //top.boundary_p1[j] = min<PType>(top.boundary_p1[j], xp[i][j]);
         //top.boundary_p2[j] = max<PType>(top.boundary_p2[j], xp[i][j]);
       }
+      assert(xp[i][2] == 0.0); // should be 2d ???
     }
 
 
@@ -958,6 +959,8 @@ struct Branch
       bool decend = true;
       while(it.walk(decend,begin())){
 
+        assert( (*it)->nparticles > 0 );
+
         dx[0] = (*it)->center[0] - xo[0];
         dx[1] = (*it)->center[1] - xo[1];
         PosType d = sqrt(dx[0]*dx[0] + dx[1]*dx[1]); // distance to center of branch
@@ -982,9 +985,9 @@ struct Branch
               *kappa -= mass * inv_area;
               *phi += - mass * inv_area*r2cm*0.5;
 
-              /*
-              double prefac = mass/r2cm/PI;
-              double tmp = ( prefac - mass*inv_area);
+              /* ??? point mass 
+              prefac = mass/r2cm/PI;
+              tmp = prefac;
             
               alpha[0] += tmp*xcm[0];
               alpha[1] += tmp*xcm[1];
@@ -994,29 +997,27 @@ struct Branch
               gamma[0] += 0.5*(xcm[0]*xcm[0]-xcm[1]*xcm[1])*tmp;
               gamma[1] += xcm[0]*xcm[1]*tmp;
             
-              *kappa -= mass*inv_area;
-              *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
-              */
+              *phi += prefac*log(r2cm) * r2cm*0.5;
+              /* ??? */
 
               // inside hole
-              // do nothing ????
               halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
             }
           }
             decend = false;
         }else{
-
+          //  box outside or partly outside hole
           xcm[0] = (*it)->xcm[0] - ray[0];
           xcm[1] = (*it)->xcm[1] - ray[1];
           r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
 
           if(d > rmin + (*it)->boxsize){
+            //  box all outside hole
             if( r2cm*theta2 > ((*it)->boxsize)*((*it)->boxsize) ){
-            // outside or partly outside hole
-
+              // use moments
               if(r2cm*inv_area_pi < 1){
               // all the way out, use moments of the branch
-                DType mass = (*it)->mass;
+                double mass = (*it)->mass;
                 double prefac = mass/r2cm/PI;
                 double tmp = ( prefac - mass*inv_area);
             
@@ -1029,11 +1030,11 @@ struct Branch
                 gamma[1] += xcm[0]*xcm[1]*tmp;
             
                 *kappa -= mass*inv_area;
-                *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;              
+                *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;         
               }
               decend = false;
             }else{
-        
+              // box is too large to use moments
               if((*it)->child == nullptr){ // leaf
           
                 for(IndexType i=0;i<(*it)->nparticles;++i){
@@ -1042,6 +1043,7 @@ struct Branch
                   xcm[0] = x[0] - ray[0];
                   xcm[1] = x[1] - ray[1];
                   r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
+
                   if(r2cm*inv_area_pi < 1){
                     DType mass = halos[j].get_mass();
                     double prefac = mass /r2cm/PI;
@@ -1058,22 +1060,12 @@ struct Branch
                     *kappa -= mass * inv_area;
                     *phi += (prefac*log(r2cm) - mass * inv_area)*r2cm*0.5;
 
-                    //double scale = smooth_factor*(*it)->root_inv_density;
-                    //if(r2cm < 4*scale*scale){
-                    //  // cubic B-spline profile
-                    //  b_spline_profile(
-                    //  xcm
-                    //  ,sqrt(r2cm)
-                    //  ,mass
-                    //  ,scale
-                    //  ,alpha,kappa,gamma,phi
-                    //);
-                    //}
                   }
                 }
+                
                 decend = false;
               }else{
-                // decend
+                // decend not a leaf
                 decend = true;
               }
             }
@@ -1081,7 +1073,7 @@ struct Branch
             // branch is split by edge of hole
             if((*it)->child == nullptr){ // leaf
           
-              for(IndexType i=0;i<(*it)->nparticles;++i){
+              for(IndexType i=0 ; i<(*it)->nparticles ; ++i){
                 IndexType j = (*it)->particles[i];
                 PType &x = xxp[j];
                 xcm[0] = x[0] - ray[0];
@@ -1105,6 +1097,8 @@ struct Branch
                     // inside hole
                     halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
                   }else{
+                    //assert( dx[0]*dx[0] + dx[1]*dx[1] < (*begin())->boxsize*(*begin())->boxsize/4);
+                    // outside hole point mass
                     DType mass = halos[j].get_mass();
                     double prefac = mass/r2cm/PI;
                     double tmp = ( prefac - mass*inv_area);
@@ -1120,23 +1114,14 @@ struct Branch
                     *kappa -= mass*inv_area;
                     *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
 
-                    //double scale = smooth_factor*(*it)->root_inv_density;
-                    //if(r2cm < 4*scale*scale){
-                      // cubic B-spline profile
-                    //  b_spline_profile(
-                    //    xcm
-                    //    ,sqrt(r2cm)
-                    //    ,mass
-                    //    ,scale
-                    //    ,alpha,kappa,gamma,phi
-                    //  );
-                    //}
+                     halos[j].force_halo(alpha,kappa,gamma,phi,xcm); // ??? should be taken out
+
                   }
                 }
               }
               decend = false;
             }else{
-              // decend
+              // decend not a leaf
               decend = true;
             }
         }
@@ -1310,6 +1295,7 @@ void OTreeNB<PType,DType>::span8(Branch *current)
     while (pp != p_end)
     {
       PType &x = xxp[*pp];
+      assert(x[2] == 0.0); // 2D tree ???
       if (x[0] >= children[m].boundary_p1[0] &&
           x[0] <= children[m].boundary_p2[0] &&
           x[1] >= children[m].boundary_p1[1] &&
@@ -1318,6 +1304,7 @@ void OTreeNB<PType,DType>::span8(Branch *current)
           x[2] <= children[m].boundary_p2[2])
       {
         std::swap(*p, *pp);
+        assert( children[m].boundary_p1[2] == 0.0 ); // 2D tree ???
         children[m].nparticles++;
         ++p;
       }
