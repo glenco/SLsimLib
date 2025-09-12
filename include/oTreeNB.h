@@ -230,7 +230,6 @@ struct Branch
         //top.boundary_p1[j] = min<PType>(top.boundary_p1[j], xp[i][j]);
         //top.boundary_p2[j] = max<PType>(top.boundary_p2[j], xp[i][j]);
       }
-      assert(xp[i][2] == 0.0); // should be 2d ???
     }
 
 
@@ -985,7 +984,7 @@ struct Branch
               *kappa -= mass * inv_area;
               *phi += - mass * inv_area*r2cm*0.5;
 
-              /* ??? point mass 
+              /* point mass for testing
               prefac = mass/r2cm/PI;
               tmp = prefac;
             
@@ -998,7 +997,7 @@ struct Branch
               gamma[1] += xcm[0]*xcm[1]*tmp;
             
               *phi += prefac*log(r2cm) * r2cm*0.5;
-              /* ??? */
+               */
 
               // inside hole
               halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
@@ -1017,7 +1016,7 @@ struct Branch
               // use moments
               if(r2cm*inv_area_pi < 1){
               // all the way out, use moments of the branch
-                double mass = (*it)->mass;
+                DType mass = (*it)->mass;
                 double prefac = mass/r2cm/PI;
                 double tmp = ( prefac - mass*inv_area);
             
@@ -1113,8 +1112,6 @@ struct Branch
             
                     *kappa -= mass*inv_area;
                     *phi += (prefac*log(r2cm) - mass*inv_area)*r2cm*0.5;
-
-                     halos[j].force_halo(alpha,kappa,gamma,phi,xcm); // ??? should be taken out
 
                   }
                 }
@@ -1295,7 +1292,6 @@ void OTreeNB<PType,DType>::span8(Branch *current)
     while (pp != p_end)
     {
       PType &x = xxp[*pp];
-      assert(x[2] == 0.0); // 2D tree ???
       if (x[0] >= children[m].boundary_p1[0] &&
           x[0] <= children[m].boundary_p2[0] &&
           x[1] >= children[m].boundary_p1[1] &&
@@ -1304,7 +1300,6 @@ void OTreeNB<PType,DType>::span8(Branch *current)
           x[2] <= children[m].boundary_p2[2])
       {
         std::swap(*p, *pp);
-        assert( children[m].boundary_p1[2] == 0.0 ); // 2D tree ???
         children[m].nparticles++;
         ++p;
       }

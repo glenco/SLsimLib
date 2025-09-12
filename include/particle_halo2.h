@@ -920,7 +920,7 @@ public:
     Point_2d xx;
     this->otree->force2D_halo(xcm,halos.data()
     ,this->theta2,this->inv_area
-        ,rhole,xcm // ???
+        ,rhole,xcm 
         ,alpha,kappa,gamma,phi);
   };
 
