@@ -372,7 +372,7 @@ void LensHaloParticles<DType>::setUp(
             mcenter *= 0;
         }
   
-        LensHalo::setTheta(mcenter[0]/Dist,mcenter[1]/Dist);
+        LensHalo::setTheta(0,0);
         LensHalo::mass = particle_mass * pp.size();
         LensHalo::set_flag_elliptical(false); // shouldn't do anything
 
@@ -888,7 +888,9 @@ public:
         this->pp[i][0] = p[0]*Dl;
         this->pp[i][1] = p[1]*Dl;
         this->pp[i][2] = 0;
+        halos[i].setRsize(1.0e3);
       }
+
       this->setUp(recenter,verbose);
       this->otree->calcMoments(halos);
     };
@@ -975,6 +977,7 @@ public:
         this->pp[i][0] = p[0]*Dl;
         this->pp[i][1] = p[1]*Dl;
         this->pp[i][2] = 0;
+        halos[i].setRsize(1.0e3);
       }
       length *= Dl;
       LensHaloParticles<float>::inv_area = 1.0/length[0]/length[1];

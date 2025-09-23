@@ -952,7 +952,7 @@ struct Branch
       //alpha[0]=alpha[1]=gamma[0]=gamma[1]=gamma[2]=0.0;
       //*kappa=*phi=0.0;
       PosType inv_area_pi = inv_area*PI;
-      PosType xcm[2],r2cm,dx[2];
+      PosType xcm[2],r2cm,dx[2], tmp_v[2];
 
       auto it = begin();
       bool decend = true;
@@ -997,13 +997,16 @@ struct Branch
               gamma[1] += xcm[0]*xcm[1]*tmp;
             
               *phi += prefac*log(r2cm) * r2cm*0.5;
-               */
-
+              */
               // inside hole
-              halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
+              tmp_v[0] = 0;
+              tmp_v[1] = 0;
+              halos[j].force_halo(tmp_v,kappa,gamma,phi,xcm);
+              alpha[0] -= tmp_v[0];
+              alpha[1] -= tmp_v[1];
             }
           }
-            decend = false;
+          decend = false;
         }else{
           //  box outside or partly outside hole
           xcm[0] = (*it)->xcm[0] - ray[0];
@@ -1094,7 +1097,12 @@ struct Branch
                     *kappa -= mass * inv_area;
                     *phi += - mass * inv_area*r2cm*0.5;
                     // inside hole
-                    halos[j].force_halo(alpha,kappa,gamma,phi,xcm);
+                    tmp_v[0] = 0;
+                    tmp_v[1] = 0;
+                    halos[j].force_halo(tmp_v,kappa,gamma,phi,xcm);
+                    alpha[0] -= tmp_v[0];
+                    alpha[1] -= tmp_v[1];
+        
                   }else{
                     //assert( dx[0]*dx[0] + dx[1]*dx[1] < (*begin())->boxsize*(*begin())->boxsize/4);
                     // outside hole point mass

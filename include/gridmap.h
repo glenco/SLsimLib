@@ -625,9 +625,9 @@ PixelMap<T> GridMap::writePixelMap(
       for(size_t i=0 ; i<N ; ++i){
         i_points[i].A.eigen_vec(p1,p2,tmp2);
         if(abs(tmp2[0]) > abs(tmp2[1])){
-          map[i] = atan2(p2[1],p2[0]);
+          map[i] = atan(p2[1]/p2[0]);
         }else{
-          map[i] = atan2(p1[1],p1[0]);
+          map[i] = atan(p1[1]/p1[0]);
         }
       }
       break;
@@ -721,9 +721,9 @@ void GridMap::writePixelMapUniform_(Point* points,size_t size,PixelMap<T> *map,L
       case LensingVariable::EigenV:
         points[i].A.eigen_vec(p1,p2,tmp2);
         if(abs(tmp2[0]) > abs(tmp2[1])){
-          tmp = atan2(p2[1],p2[0]);
+          tmp = atan(p2[1]/p2[0]);
         }else{
-          tmp = atan2(p1[1],p1[0]);
+          tmp = atan(p1[1]/p1[0]);
         }
         break;
 
