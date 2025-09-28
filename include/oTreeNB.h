@@ -665,10 +665,10 @@ struct Branch
               //????? use moments
               double mass = (*it)->nparticles * particle_mass;
               double prefac = mass/r2cm/PI;
-              double tmp = -( prefac - mass*inv_area);
+              double tmp = ( prefac - mass*inv_area);
             
-              alpha[0] -= tmp*xcm[0];
-              alpha[1] -= tmp*xcm[1];
+              alpha[0] += tmp*xcm[0];
+              alpha[1] += tmp*xcm[1];
             
               tmp = -2.0*prefac/r2cm;
             
