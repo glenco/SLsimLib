@@ -384,10 +384,16 @@ struct GridMap{
       ,std::vector<bool> &hits_boundary
       ,double invmag
   );
-  
-//  void find_crit_boundary(std::vector<std::vector<Point_2d> > &points
-//                          ,std::vector<bool> &hits_boundary
-//                          ) const;
+  /** @brief Returns the area in square radians within the border of the 
+   * GridMap on both the source and image planes.
+   * 
+   * NOTE : That that this uses points that are on the border of the image plane which 
+   * is a rectangle.  These points on the source plane are not necessarily the boundary 
+   * of all points on the source plane, i.e. some source points can be outside of this 
+   * border.
+   */
+  void border_area(double &source_area,double &image_area) const;
+
   int getNx(){return Ngrid_init;}
   int getNy(){return Ngrid_init2;}
 private:

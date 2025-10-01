@@ -186,6 +186,28 @@ double GridMap::RefreshSurfaceBrightnesses(Source* source){
   return total;
 }
 
+void GridMap::border_area(double &source_area,double &image_area) const{
+    std::vector<Point_2d> pts(2*(Ngrid_init + Ngrid_init2 -2));
+    long j=0;
+    for(int i=0 ; i<Ngrid_init ; ++i){
+      pts[j++] = s_points[i]; // bottom
+    }
+    long offset = Ngrid_init - 1;
+    for(int i=1 ; i<Ngrid_init2 ; ++i){
+      pts[j++] = s_points[ offset + Ngrid_init*i]; // right
+    }
+    offset = Ngrid_init*(Ngrid_init2-1);
+    for(int i=Ngrid_init-2 ; i>0 ; --i){
+      pts[j++] = s_points[i + offset]; // top
+    }
+    for(int i=Ngrid_init2-1 ; i>0 ; --i){
+      pts[j++] = s_points[Ngrid_init*i]; // left
+    }
+
+    Utilities::windings(pts[0],pts,&source_area);
+    image_area=x_range*x_range*axisratio;
+  };
+
 double GridMap::AdaptiveRefreshSurfaceBrightnesses(Lens &lens,Source &source){
   PosType f=1.0e-4;
   
@@ -376,7 +398,7 @@ PosType GridMap::EinsteinArea() const{
     if(i_points[i].invmag() < 0) ++count;
   }
   
-  return count*x_range*x_range/Ngrid_init/Ngrid_init;
+  return count*getResolution()*getResolution();
 }
 // discontinued because it is unstable when there are very demagnified regiona
 ////PosType GridMap::magnification() const{
