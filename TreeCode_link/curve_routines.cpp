@@ -2709,7 +2709,9 @@ bool Utilities::test_find_islands(){
   if(indexes.size() != 2) return false;
   if(indexes[0].size() != 9) return false;
   if(indexes[1].size() != 18+12) return false;
-  
+  if(hits_edge[0] == true) return false;
+  if(hits_edge[1] == false) return false;
+
   return true;
 }
 

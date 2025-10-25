@@ -1060,18 +1060,18 @@ void PixelMap<T>::lens_definition(
   for(auto &v : image_points){
     for(size_t k : v){
       T val = map[k];
-       if(
-          val > map[k-1] &&
-          val > map[k+1] &&
-          val > map[k+Nx] &&
-          val > map[k+Nx-1] &&
-          val > map[k+Nx+1] &&
-          val > map[k-Nx] &&
-          val > map[k-Nx-1] &&
-          val > map[k-Nx+1]
-          ){
-            maxima_indexes.push_back(k);
-          }
+      if(
+        val > map[k-1]    &&
+        val > map[k+1]    &&
+        val > map[k+Nx]   &&
+        val > map[k+Nx-1] &&
+        val > map[k+Nx+1] &&
+        val > map[k-Nx]   &&
+        val > map[k-Nx-1] &&
+        val > map[k-Nx+1]
+        ){
+          maxima_indexes.push_back(k);
+      }
     }
   }
   if(verbose) std::cout << "Number of maxima : " << maxima_indexes.size() << std::endl;
@@ -1144,6 +1144,54 @@ void PixelMap<T>::lens_definition(
   
   lens_TF = Nimages > 1 || ring;
   if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
+}
+
+template <typename T>
+void PixelMap<T>::arc_parameters(T level,Point_2d center)
+{
+  std::vector<std::vector<Point_2d>> contours;
+  std::vector<bool> &hits_edge;
+  find_contour(level, contours , hits_edge);
+
+  std::vector<T> areas(contours.size(),0);
+  std::vector<T> lengths_p(contours.size(), 0), lengths_n(contours.size(), 0);
+  std::vector<T> angle_p(contours.size(), 0), angle_n(contours.size(), 0);
+  T max_area = 0;
+  int imax = -1;
+  for(int i=0 ; i<contours.size() ; ++i){
+    int n = contours[i].size();
+    T first_a,a;
+    for(int j=0 : j < n ; ++j){
+      Point_2d p1 = contours[i][j] - center;
+      Point_2d p2 = contours[i][ (j + 1) % n ] - center;
+      a = 0.5 * p1^p2;
+      if( j == 0 ) first_a = a;
+      if(a > 0){
+        angle_p[i] += asin(2*a/p1.length()/p2.length());
+        lengths_p[i] += (p2 - p1).length();
+      }else{
+        angle_n[i] += asin(2 * a / p1.length() / p2.length());
+        lengths_n[i] += (p2 - p1).length();
+      }
+
+      if( sign(a) !== sign(last_a) && j !=0 ) extreem_points.push_back( p1 );
+      areas[i] += a;
+      last_a = a;
+    }
+    if( sign(first_a) != sign(a) )
+      extreem_points.push_back( contours[i][0] );
+    }
+
+find extreem points, check first point
+what if it is a ring?
+    if( abs(areas[i]) > max_area ){
+      max_area = abs(areas[i]);
+      imax = i;
+    }
+    ????
+  }
+
+
 }
 
 template <typename T>
