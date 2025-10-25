@@ -1247,6 +1247,7 @@ void Lens::_find_images_(std::vector<RAY> &images
   assert(ur[1]-ll[1] > 0);
   double res = resolution/3;
   int n = (int)((ur[0]-ll[0])/res)+1;
+  if(n<9) n=9;
   GridMap gridmap(this,n,center.x, ur[0]-ll[0], ur[1]-ll[1] );
   
   std::vector<Point_2d> image_points;
