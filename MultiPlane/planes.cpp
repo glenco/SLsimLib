@@ -121,7 +121,7 @@ void LensPlaneSingular::force(PosType *alpha
 
 	PosType alpha_tmp[2],x_tmp[2];
 	KappaType kappa_tmp, gamma_tmp[3];
-    KappaType phi_tmp;
+  KappaType phi_tmp;
     
 	alpha[0] = alpha[1] = 0.0;
   x_tmp[0] = x_tmp[1] = 0.0;

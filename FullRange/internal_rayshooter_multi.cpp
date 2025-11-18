@@ -630,10 +630,10 @@ void Lens::compute_rays_parallel(int start
         bb = D_Ds;
       }
       
-        if(!flag_switch_deflection_off){
-          theta[0] = bb * theta[0] + aa * SumPrevAlphas[0];
-          theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
-        }
+      if(!flag_switch_deflection_off){
+        theta[0] = bb * theta[0] + aa * SumPrevAlphas[0];
+        theta[1] = bb * theta[1] + aa * SumPrevAlphas[1];
+      }
    
       // ----------------------------------------------------------------------------------------
             

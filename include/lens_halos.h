@@ -856,6 +856,7 @@ protected:
 		return -0.5*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
+    return 0.0;
     return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,LensHalo::getRsize()/rscale))/gmax + log(LensHalo::getRsize()) ;
     // The constant contribution is made to match with the point mass at x = Rsize/rscale.
 	}

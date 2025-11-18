@@ -15,7 +15,7 @@ struct Beam{
   Point_3d<> x;   // position of the end of beam
   Point_3d<> dx;  // tangent vector of beam at end
   Point_3d<> dxo; // tangent vector of beam at start
-  Matrix2x2<> A;  // beam magnification matrix
+  Matrix2x2<double> A;  // beam magnification matrix
 
   void propogate(double ds){
     x+=dx*ds;

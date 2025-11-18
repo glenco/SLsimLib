@@ -710,7 +710,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   if(count>0){
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,true);
   }
-  
+
   long m=curves.size();
   crit_type.resize(m);
   for(long i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;

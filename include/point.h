@@ -661,6 +661,7 @@ void write_csv(std::string filename,const std::vector<RAY> &v);
 void write_csv(std::string filename,const std::vector<float> &v);
 void write_csv(std::string filename,const std::vector<double> &v);
 void write_csv(std::string filename,const std::vector<int> &v);
+void read_csv(std::string filename,std::vector<Point_2d> &v);
 
 //inline std::string to_string(RAY &r) {
 //  std::string s = "[" + std::to_string(r.x[0]) + "," + r.x[1] + ",[" + r.y[0] + "," + r.y[1]
@@ -1084,6 +1085,36 @@ void write_csv(std::string filename,const std::vector<Point_3d<T> > &v){
   file << "x,y,z" << std::endl;
   for(const Point_3d<T> &p : v) file << p[0] << "," << p[1] << "," << p[2] << std::endl;
 }
+template <typename T>
+void read_csv(std::string filename, std::vector<Point_3d<T>> &v) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    throw std::runtime_error("Could not open file: " + filename);
+  }
+
+  // Skip header line
+  std::string line;
+  std::getline(file, line);
+
+  // Read data lines
+  while (std::getline(file, line)) {
+    std::stringstream ss(line);
+    std::string value;
+    Point_3d<T> p;
+    
+    // Parse x,y,z values
+    for (int i = 0; i < 3; i++) {
+      if (!std::getline(ss, value, ',')) {
+        throw std::runtime_error("Invalid CSV format");
+      }
+      p[i] = std::stod(value);
+    }
+    
+    v.push_back(p);
+  }
+}
+
+
 
 template <typename T>
 void write_csv(std::string filename,const std::vector<T> &x,const std::vector<T> &y){

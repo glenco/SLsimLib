@@ -1632,10 +1632,6 @@ void LensHalo::force_halo_sym(
       alpha[0] += -1.0 * prefac * xcm[0];
       alpha[1] += -1.0 * prefac * xcm[1];
       
-      //std::cout << "rcm2  = " << rcm2 << std::endl;
-      //std::cout << "prefac  = " << prefac << std::endl;
-      //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
-      
       PosType tmp = -2.0*prefac/rcm2;
       
       // kappa is equal to 0 in the point mass case.
@@ -1645,14 +1641,6 @@ void LensHalo::force_halo_sym(
       *phi += 0.5 * log(rcm2) * mass / PI ;
     }
   }
-  
-  /// add stars for microlensing
-//  if(stars_N > 0 && stars_implanted)
-//  {
-//    force_stars(alpha,kappa,gamma,xcm);
-//  }
-  
-  //(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
   return;
 }

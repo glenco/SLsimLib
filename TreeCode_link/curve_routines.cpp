@@ -3669,7 +3669,7 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
       long start = i*chunk_size;
       long end = start + chunk_size;
       if(end > N) end = N;
-    
+      assert(start <= end);
       thr[i] = std::thread(Utilities::_set_bitmap,
                             std::ref(bitmap),
                             std::ref(v),
