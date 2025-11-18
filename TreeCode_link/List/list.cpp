@@ -371,7 +371,33 @@ void write_csv(std::string filename,const std::vector<int> &v){
   file << "x" << std::endl;
   for(const int &p : v) file << p << std::endl;
 }
+void read_csv(std::string filename, std::vector<Point_2d> &v) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    throw std::runtime_error("Could not open file: " + filename);
+  }
 
+  // Skip header line
+  std::string line;
+  std::getline(file, line);
+
+  // Read data lines
+  while (std::getline(file, line)) {
+    std::stringstream ss(line);
+    std::string value;
+    Point_2d p;
+    
+    // Parse x,y,z values
+    for (int i = 0; i < 2; i++) {
+      if (!std::getline(ss, value, ',')) {
+        throw std::runtime_error("Invalid CSV format");
+      }
+      p[i] = std::stod(value);
+    }
+    
+    v.push_back(p);
+  }
+}
 std::ostream &operator<<(std::ostream &os, CritType const &p) {
   if(p == CritType::ND) return os << "not determined";
   if(p == CritType::pseudo) return os << "Pseudo";
