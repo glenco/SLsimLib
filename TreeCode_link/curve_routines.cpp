@@ -2671,7 +2671,6 @@ void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
                   ,long nx  // number of pixels in x direction
                   ,std::vector<std::vector<long> > &indexes
                   ,std::vector<bool> &hits_edge
-                  ,bool add_to_vector
                   ){
   
   size_t n = bitmap.size();
@@ -2683,22 +2682,22 @@ void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
   }
 
   std::vector<std::vector<Point_2d> > boundaries;
-  Utilities::find_boundaries(bitmap, nx, boundaries, hits_edge, add_to_vector);
+  Utilities::find_boundaries(bitmap, nx, boundaries, hits_edge, false);
 
   // fill in island
   indexes.resize(boundaries.size() );
-  for(int i=0 ; i<boundaries.size() ; ++i){
-    indexes[i].clear();
-    for(Point_2d &p : boundaries[i]){
-      long k = (long)(p[0] + 0.51);
-      while(bitmap[k] && k < nx){
-        indexes[i].push_back(k);
-        ++k;
+  for(auto &v : indexes) v.clear();
+  for(long k=0 ; k < n ; ++k){
+    if(bitmap[k]){
+      Point_2d p( (double)(k % nx) , (double)(k / nx) );
+      for(int i=0 ; i<boundaries.size() ; ++i){
+        if(Utilities::inCurve(p,boundaries[i]) ){
+          indexes[i].push_back(k);
+          break;
+        }
       }
     }
   }
-  // deal with holes ??
-
 }
 
 Point_2d Utilities::line_intersection(const Point_2d &v1,const Point_2d &v2,

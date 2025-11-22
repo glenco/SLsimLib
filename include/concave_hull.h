@@ -522,7 +522,6 @@ void find_islands(std::vector<bool> &bitmap  // = true inside
                   ,long nx  // number of pixels in x direction
                   ,std::vector<std::vector<long> > &indexes
                   ,std::vector<bool> &hits_edge
-                  ,bool add_to_vector=false
                   );
 
 /// this returns area within the curve x average kappa iwithin the curve
