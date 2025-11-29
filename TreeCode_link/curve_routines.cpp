@@ -2667,6 +2667,52 @@ Point_2d Utilities::contour_center(std::vector<RAY> &P, unsigned long Npoints){
   return center;
 }
 
+bool Utilities::test_find_islands(){
+  long nx=10;
+  long ny=10;
+  std::vector<bool> bitmap(nx*ny,false);
+  
+  // create two islands
+  for(long j=2;j<5;++j){
+    for(long i=2;i<5;++i){
+      bitmap[i + j*nx] = true;
+    }
+  }
+  for(long j=3;j<9;++j){
+    for(long i=6;i<9;++i){
+      bitmap[i + j*nx] = true;
+    }
+  }
+  for(long j=6;j<9;++j){
+   for(long i=2;i<6;++i){
+     bitmap[i + j*nx] = true;
+   }
+ }
+
+  std::vector<std::vector<long> > indexes;
+  std::vector<bool> hits_edge;
+  Utilities::find_islands(bitmap,nx,indexes,hits_edge);
+
+  std::cout << std::endl;
+  for(long j=0;j<10;++j){
+    for(long i=0;i<10;++i){
+      if(bitmap[i+j*nx]){
+        std::cout << "x ";
+      }else{
+        std::cout << "o ";
+      }
+
+    }
+    std::cout << std::endl;
+  }
+  
+  if(indexes.size() != 2) return false;
+  if(indexes[0].size() != 9) return false;
+  if(indexes[1].size() != 18+12) return false;
+  
+  return true;
+}
+
 void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
                   ,long nx  // number of pixels in x direction
                   ,std::vector<std::vector<long> > &indexes

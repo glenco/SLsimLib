@@ -524,6 +524,8 @@ void find_islands(std::vector<bool> &bitmap  // = true inside
                   ,std::vector<bool> &hits_edge
                   );
 
+bool test_find_islands();
+
 /// this returns area within the curve x average kappa iwithin the curve
 double interior_mass(const std::vector<Point_2d> &alpha
                      ,const std::vector<Point_2d> &x);
@@ -577,7 +579,7 @@ std::vector<T> convex_hull(const std::vector<T> &PP)
   return hull;
 }
 
-/// Returns a vector of points on the convex hull in counter-clockwise order.
+/// convex hull in counter-clockwise order.
 ///
 template<typename T>
 void convex_hull(const std::vector<T> &P,std::vector<size_t> &hull)
