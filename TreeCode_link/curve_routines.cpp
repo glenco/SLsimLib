@@ -2986,7 +2986,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
 
       if (inCurve(cw, v)) return v;
       if (inCurve(cv, w)) return w;
-  }
+    }
 
 
     // case where they do not overlap

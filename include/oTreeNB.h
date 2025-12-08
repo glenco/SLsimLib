@@ -973,6 +973,7 @@ struct Branch
             xcm[1] = x[1] - ray[1];
             r2cm = xcm[0]*xcm[0] + xcm[1]*xcm[1];
             if(r2cm*inv_area_pi < 1){
+              assert( j < halos.size() );
               // subtract off the negative mass sheet
               DType mass = halos[j].get_mass();
               double prefac = mass /r2cm/PI;
