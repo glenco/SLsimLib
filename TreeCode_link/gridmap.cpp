@@ -673,7 +673,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   size_t count = 0;
   double eigenv[2];
   
-  // find tangential critical curves
+
   for(size_t k = 0 ; k < N ; ++k){
     i_points[k].A.eigenv(eigenv);
     if(eigenv[1] < 0){
@@ -683,7 +683,6 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
       bitmap[k] = false;
     }
   }
-  //if(count>0) find_boundaries(bitmap,points,hits_boundary);
   std::vector<std::vector<long> > indexes;
   if(count>0){
     Utilities::find_boundaries<Point_2d>(bitmap,Ngrid_init,curves,hits_boundary,false);
@@ -694,7 +693,6 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   crit_type.resize(curves.size());
   for(CritType &b : crit_type) b = CritType::tangential;
   long ntange = curves.size();  // number of tangential curves
-  
   // find radial critical curves
   count=0;
   for(size_t k = 0 ; k < N ; ++k){
@@ -714,6 +712,27 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   long m=curves.size();
   crit_type.resize(m);
   for(long i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
+  
+  // add points if radial is only one pixel
+  for (long i = ntange; i < m; ++i) {
+    if (crit_type[i] == CritType::radial) {
+      auto &R = curves[i];
+
+      if (R.size() == 4) {
+
+        Point_2d TL = (R[0] + R[3]) * 0.5;  // top-left
+        Point_2d TR = (R[0] + R[1]) * 0.5;  // top-right
+        Point_2d BR = (R[1] + R[2]) * 0.5;  // bottom-right
+        Point_2d BL = (R[2] + R[3]) * 0.5;  // bottom-left
+
+        R.push_back(TL);
+        R.push_back(TR);
+        R.push_back(BR);
+        R.push_back(BL);
+
+      }
+    }
+  }
   
   // reorder them so that radial curves follow the tangential curves they are within
   for(long j=ntange ; j<m ; ++j){
@@ -751,9 +770,7 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
       if(j==curves.size()-1 || crit_type[j+1] == CritType::tangential ){ // has no radial critical curve
         
         std::vector<Point_2d> psudo(indexes[ii_tan].size());
-        
         for(size_t i=0 ; i<indexes[ii_tan].size() ; ++i) psudo[i] = s_points[ indexes[ii_tan][i] ];
-        
         std::vector<size_t> hull_index;
         Utilities::convex_hull(psudo,hull_index);
         
@@ -761,8 +778,6 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
         curves.push_back(v);
         
         for(long i=0 ; i< hull_index.size() ; ++i) curves.back()[i] = i_points[ indexes[ii_tan][ hull_index[i] ]  ];
-        
-        //write_csv("test_pseud.csv", curves.back());
         
         crit_type.push_back(CritType::pseudo);
         hits_boundary.push_back(false);
