@@ -875,9 +875,13 @@ void PixelMap<T>::find_contour(T level
 
 template <typename T>
 void PixelMap<T>::find_islands_holes(T level,
-                            std::vector<std::vector<size_t> > &points
-                            ) const {
-  
+                                     std::vector<std::vector<size_t>> &points, 
+                                     std::vector<std::vector<Point_2d>> &boundaries,
+                                     std::vector<bool> &hits_edge,
+                                     std::vector<std::vector<int> > &holes
+                                    ) const
+{
+
   std::vector<bool> bitmap( map.size() );
   std::vector<size_t> points_in;
   
@@ -894,8 +898,8 @@ void PixelMap<T>::find_islands_holes(T level,
     }
   }
   
-  std::vector<bool> hits_edge;
-  std::vector<std::vector<Point_2d> > boundaries;
+  hits_edge.clear();
+  boundaries.clear();
   Utilities::find_boundaries<Point_2d>(bitmap,Nx,boundaries,hits_edge,false);
   points.resize(boundaries.size());
   
@@ -919,21 +923,29 @@ void PixelMap<T>::find_islands_holes(T level,
       }
     }
   }
-  
-  // remove holes
-//  int i=0,k=points.size();
-//  while( i < k){
-//    m += points[i].size();
-//    if(points[i].size() == 0){
-//      std::swap(points[i],points[k-1]);
-//      --k;
-//    }else{
-//      ++i;
-//    }
-//  }
-//
-//  points.resize(k);
-  
+
+  holes.resize(boundaries.size());
+  for(size_t i=0 ; i<boundaries.size() ; ++i){
+    if(points[i].size() == 0){
+      // this boundary is a hole, find the boundary containing it 
+      for(size_t j=0 ; j<boundaries.size() ; ++j){
+        if(i != j){
+          //if( incurve( boundaries[i][0],boundaries[j]) ){
+          if( Utilities::inCurve( boundaries[i][0] ,boundaries[j]) ){
+            holes[j].append(i);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // rescale boundaries to PixelMap coordinates
+  for(auto &boundary : boundaries){
+    for(Point_2d &p : boundary){
+      p = p * resolution + map_boundary_p1;
+    }
+  }
   assert(m == n && "In PixelMap<T>::find_islands_holes");
 }
 
@@ -1006,24 +1018,24 @@ void PixelMap<T>::lens_definition(
   
   T sn_max = map.max();
   if(sn_max < pixel_threshold) return;
-  
+
   find_islands_holes(pixel_threshold,image_points);
- 
+
   total_sig_noise_source = 0;
   if(verbose) std::cout << "Initial Number of islands : " << image_points.size() << std::endl;
-  std::vector<T> sig_noise(image_points.size(),0);
-  for(size_t i=0 ; i<image_points.size() ; ++i ){
+  std::vector<T> sig_noise(image_points.size(), 0);
+  for (size_t i = 0; i < image_points.size(); ++i){
     for(size_t k : image_points[i] ){
       sig_noise[i] += map[k];
     }
     if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
     if(sig_noise[i] >= min_sn_per_image) total_sig_noise_source += sig_noise[i];
   }
-  
+
   
   // remove holes
 
-  bool ring = false;
+  bool ring =false;
   { // remove holes
     int i=0,k=image_points.size();
     while( i < k){
@@ -1040,7 +1052,7 @@ void PixelMap<T>::lens_definition(
     image_points.resize(k);
     sig_noise.resize(k);
   }
-  
+                 
   {
     // remove low s/n images
     long i=0,k=sig_noise.size();
@@ -1056,21 +1068,21 @@ void PixelMap<T>::lens_definition(
     image_points.resize(k);
     sig_noise.resize(k);
   }
-  
+
   for(auto &v : image_points){
     for(size_t k : v){
       T val = map[k];
-      if(
-        val > map[k-1]    &&
-        val > map[k+1]    &&
-        val > map[k+Nx]   &&
-        val > map[k+Nx-1] &&
-        val > map[k+Nx+1] &&
-        val > map[k-Nx]   &&
-        val > map[k-Nx-1] &&
+      if (
+            val > map[k - 1] &&
+            val > map[k + 1] &&
+            val > map[k + Nx] &&
+            val > map[k + Nx - 1] &&
+            val > map[k + Nx + 1] &&
+            val > map[k - Nx] &&
+            val > map[k - Nx - 1] &&
         val > map[k-Nx+1]
         ){
-          maxima_indexes.push_back(k);
+        maxima_indexes.push_back(k);
       }
     }
   }

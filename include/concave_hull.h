@@ -232,7 +232,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
                      ,std::vector<std::vector<P> > &points
                      ,std::vector<bool> &hits_edge
                      ,bool add_to_vector=false
-                     ,bool outer_only=false    /// finds only the fist boundary which will be the outer one if there are not seporated islands
+                     ,bool outer_only=false    /// finds only the first boundary which will be the outer one if there are not seporated islands
                      ){
   
   size_t n = bitmap.size();
