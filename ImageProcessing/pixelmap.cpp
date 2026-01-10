@@ -872,6 +872,79 @@ void PixelMap<T>::find_contour(T level
     for(Point_2d &p : v) p = p * resolution + xo;
   }
 }
+template <typename T>
+void PixelMap<T>::find_islands_holes(T level,
+                                     std::vector<std::vector<size_t>> &points) const
+{
+
+  std::vector<bool> bitmap(map.size());
+  std::vector<size_t> points_in;
+
+  // excludes boundaries that will be set to false in Utilities::find_boundaries
+  for (size_t i = 1; i < Nx - 1; ++i)
+  {
+    for (size_t j = 1; j < Ny - 1; ++j)
+    {
+      size_t k = i + Nx * j;
+      if (map[k] > level)
+      {
+        bitmap[k] = true;
+        points_in.push_back(k);
+      }
+      else
+      {
+        bitmap[k] = false;
+      }
+    }
+  }
+
+  std::vector<bool> hits_edge;
+  std::vector<std::vector<Point_2d>> boundaries;
+  Utilities::find_boundaries<Point_2d>(bitmap, Nx, boundaries, hits_edge, false);
+  points.resize(boundaries.size());
+
+  if (boundaries.size() == 1)
+  {
+    std::swap(points[0], points_in);
+    return;
+  }
+
+  for (auto &v : points)
+    v.clear();
+
+  size_t n = points_in.size();
+  size_t m = 0;
+  for (size_t k = 0; k < n; ++k)
+  {
+    for (int i = 0; i < boundaries.size(); ++i)
+    {
+      // if( incurve(points_in[k],boundaries[i]) ){
+      if (Utilities::inCurve(Point_2d(points_in[k] % Nx, points_in[k] / Nx), boundaries[i]))
+      {
+
+        points[i].push_back(points_in[k]);
+        ++m;
+        break;
+      }
+    }
+  }
+
+  // remove holes
+  //  int i=0,k=points.size();
+  //  while( i < k){
+  //    m += points[i].size();
+  //    if(points[i].size() == 0){
+  //      std::swap(points[i],points[k-1]);
+  //      --k;
+  //    }else{
+  //      ++i;
+  //    }
+  //  }
+  //
+  //  points.resize(k);
+
+  assert(m == n && "In PixelMap<T>::find_islands_holes");
+}
 
 template <typename T>
 void PixelMap<T>::find_islands_holes(T level,
@@ -925,14 +998,14 @@ void PixelMap<T>::find_islands_holes(T level,
   }
 
   holes.resize(boundaries.size());
-  for(size_t i=0 ; i<boundaries.size() ; ++i){
+  for(int i=0 ; i<boundaries.size() ; ++i){
     if(points[i].size() == 0){
       // this boundary is a hole, find the boundary containing it 
-      for(size_t j=0 ; j<boundaries.size() ; ++j){
+      for(int j=0 ; j<boundaries.size() ; ++j){
         if(i != j){
           //if( incurve( boundaries[i][0],boundaries[j]) ){
           if( Utilities::inCurve( boundaries[i][0] ,boundaries[j]) ){
-            holes[j].append(i);
+            holes[j].push_back(i);
             break;
           }
         }
@@ -1158,53 +1231,53 @@ void PixelMap<T>::lens_definition(
   if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
 }
 
-template <typename T>
-void PixelMap<T>::arc_parameters(T level,Point_2d center)
-{
-  std::vector<std::vector<Point_2d>> contours;
-  std::vector<bool> &hits_edge;
-  find_contour(level, contours , hits_edge);
-
-  std::vector<T> areas(contours.size(),0);
-  std::vector<T> lengths_p(contours.size(), 0), lengths_n(contours.size(), 0);
-  std::vector<T> angle_p(contours.size(), 0), angle_n(contours.size(), 0);
-  T max_area = 0;
-  int imax = -1;
-  for(int i=0 ; i<contours.size() ; ++i){
-    int n = contours[i].size();
-    T first_a,a;
-    for(int j=0 : j < n ; ++j){
-      Point_2d p1 = contours[i][j] - center;
-      Point_2d p2 = contours[i][ (j + 1) % n ] - center;
-      a = 0.5 * p1^p2;
-      if( j == 0 ) first_a = a;
-      if(a > 0){
-        angle_p[i] += asin(2*a/p1.length()/p2.length());
-        lengths_p[i] += (p2 - p1).length();
-      }else{
-        angle_n[i] += asin(2 * a / p1.length() / p2.length());
-        lengths_n[i] += (p2 - p1).length();
-      }
-
-      if( sign(a) !== sign(last_a) && j !=0 ) extreem_points.push_back( p1 );
-      areas[i] += a;
-      last_a = a;
-    }
-    if( sign(first_a) != sign(a) )
-      extreem_points.push_back( contours[i][0] );
-    }
-
-find extreem points, check first point
-what if it is a ring?
-    if( abs(areas[i]) > max_area ){
-      max_area = abs(areas[i]);
-      imax = i;
-    }
-    ????
-  }
-
-
-}
+/* template <typename T> */
+/* void PixelMap<T>::arc_parameters(T level,Point_2d center) */
+/* { */
+/*   std::vector<std::vector<Point_2d>> contours; */
+/*   std::vector<bool> &hits_edge; */
+/*   find_contour(level, contours , hits_edge); */
+/*  */
+/*   std::vector<T> areas(contours.size(),0); */
+/*   std::vector<T> lengths_p(contours.size(), 0), lengths_n(contours.size(), 0); */
+/*   std::vector<T> angle_p(contours.size(), 0), angle_n(contours.size(), 0); */
+/*   T max_area = 0; */
+/*   int imax = -1; */
+/*   for(int i=0 ; i<contours.size() ; ++i){ */
+/*     int n = contours[i].size(); */
+/*     T first_a,a; */
+/*     for(int j=0 : j < n ; ++j){ */
+/*       Point_2d p1 = contours[i][j] - center; */
+/*       Point_2d p2 = contours[i][ (j + 1) % n ] - center; */
+/*       a = 0.5 * p1^p2; */
+/*       if( j == 0 ) first_a = a; */
+/*       if(a > 0){ */
+/*         angle_p[i] += asin(2*a/p1.length()/p2.length()); */
+/*         lengths_p[i] += (p2 - p1).length(); */
+/*       }else{ */
+/*         angle_n[i] += asin(2 * a / p1.length() / p2.length()); */
+/*         lengths_n[i] += (p2 - p1).length(); */
+/*       } */
+/*  */
+/*       if( sign(a) !== sign(last_a) && j !=0 ) extreem_points.push_back( p1 ); */
+/*       areas[i] += a; */
+/*       last_a = a; */
+/*     } */
+/*     if( sign(first_a) != sign(a) ) */
+/*       extreem_points.push_back( contours[i][0] ); */
+/*     } */
+/*  */
+/* find extreem points, check first point */
+/* what if it is a ring? */
+/*     if( abs(areas[i]) > max_area ){ */
+/*       max_area = abs(areas[i]); */
+/*       imax = i; */
+/*     } */
+/*     ???? */
+/*   } */
+/*  */
+/*  */
+/* } */
 
 template <typename T>
 int PixelMap<T>::count_islands(std::vector<size_t> &pixel_index) const{

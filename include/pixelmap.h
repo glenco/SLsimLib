@@ -347,14 +347,24 @@ public:
    Groups with points are connected regions above level.
    Groups without points are regions surrounded by regions above level, i.e. holes.
    If a group has holes within it holes will be a list of the index for them.
+   ie If holes[i].size() == 0 then group i has no holes.
+      if holes[j][0] == k then boundaries[k] is the boundary of a hole within group j
+      and points[k].size()==0.
    */
-  void PixelMap<T>::find_islands_holes(T level,
+  void find_islands_holes(T level,
                                       std::vector<std::vector<size_t>> &points,
                                       std::vector<std::vector<Point_2d>> &boundaries,
                                       std::vector<bool> &hits_edge,
                                       std::vector<std::vector<int> > &holes) const;
   
-    /** This applies a definition of lesning for a resolved source based on that of Sonnenfeld et al. 2023
+  /** find all the points above level divided into seprated groups
+ 
+    Groups with points are connected regions above level.
+    Groups without points are regions surrounded by regions above level, i.e. holes.
+ */
+  void find_islands_holes(T level,std::vector<std::vector<size_t>> &points) const;
+
+  /** This applies a definition of lesning for a resolved source based on that of Sonnenfeld et al. 2023
 
      This is meant to be used on a signal-to-noise map of the lensed source only.
 
