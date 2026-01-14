@@ -853,6 +853,7 @@ bool PixelMap<T>::pixels_are_neighbors(size_t i,size_t j) const{
   if(std::abs(x) > 1) return false;
   return true;
 }
+
 template <typename T>
 void PixelMap<T>::find_contour(T level
                             ,std::vector<std::vector<Point_2d> > &points
@@ -872,77 +873,68 @@ void PixelMap<T>::find_contour(T level
     for(Point_2d &p : v) p = p * resolution + xo;
   }
 }
+
 template <typename T>
 void PixelMap<T>::find_islands_holes(T level,
-                                     std::vector<std::vector<size_t>> &points) const
-{
-
-  std::vector<bool> bitmap(map.size());
+                            std::vector<std::vector<size_t> > &points
+                            ) const {
+  
+  std::vector<bool> bitmap( map.size() );
   std::vector<size_t> points_in;
-
+  
   // excludes boundaries that will be set to false in Utilities::find_boundaries
-  for (size_t i = 1; i < Nx - 1; ++i)
-  {
-    for (size_t j = 1; j < Ny - 1; ++j)
-    {
-      size_t k = i + Nx * j;
-      if (map[k] > level)
-      {
+  for(size_t i = 1 ; i<Nx-1 ; ++i){
+    for(size_t j = 1 ; j<Ny-1 ; ++j){
+      size_t k = i + Nx*j;
+      if (map[k] > level){
         bitmap[k] = true;
         points_in.push_back(k);
-      }
-      else
-      {
+      }else{
         bitmap[k] = false;
       }
     }
   }
-
+  
   std::vector<bool> hits_edge;
-  std::vector<std::vector<Point_2d>> boundaries;
-  Utilities::find_boundaries<Point_2d>(bitmap, Nx, boundaries, hits_edge, false);
+  std::vector<std::vector<Point_2d> > boundaries;
+  Utilities::find_boundaries<Point_2d>(bitmap,Nx,boundaries,hits_edge,false);
   points.resize(boundaries.size());
-
-  if (boundaries.size() == 1)
-  {
-    std::swap(points[0], points_in);
+  
+  if(boundaries.size() == 1){
+    std::swap(points[0],points_in);
     return;
   }
-
-  for (auto &v : points)
-    v.clear();
-
-  size_t n = points_in.size();
-  size_t m = 0;
-  for (size_t k = 0; k < n; ++k)
-  {
-    for (int i = 0; i < boundaries.size(); ++i)
-    {
-      // if( incurve(points_in[k],boundaries[i]) ){
-      if (Utilities::inCurve(Point_2d(points_in[k] % Nx, points_in[k] / Nx), boundaries[i]))
-      {
-
+  
+  for(auto &v : points) v.clear();
+  
+  size_t n=points_in.size();
+  size_t m=0;
+  for(size_t k=0 ; k<n ; ++k){
+    for(int i=0 ; i<boundaries.size() ; ++i){
+      //if( incurve(points_in[k],boundaries[i]) ){
+      if( Utilities::inCurve( Point_2d( points_in[k]%Nx ,points_in[k]/Nx ) ,boundaries[i]) ){
+ 
         points[i].push_back(points_in[k]);
         ++m;
         break;
       }
     }
   }
-
+  
   // remove holes
-  //  int i=0,k=points.size();
-  //  while( i < k){
-  //    m += points[i].size();
-  //    if(points[i].size() == 0){
-  //      std::swap(points[i],points[k-1]);
-  //      --k;
-  //    }else{
-  //      ++i;
-  //    }
-  //  }
-  //
-  //  points.resize(k);
-
+//  int i=0,k=points.size();
+//  while( i < k){
+//    m += points[i].size();
+//    if(points[i].size() == 0){
+//      std::swap(points[i],points[k-1]);
+//      --k;
+//    }else{
+//      ++i;
+//    }
+//  }
+//
+//  points.resize(k);
+  
   assert(m == n && "In PixelMap<T>::find_islands_holes");
 }
 
@@ -978,6 +970,7 @@ void PixelMap<T>::find_islands_holes(T level,
   
   if(boundaries.size() == 1){
     std::swap(points[0],points_in);
+    holes.resize(boundaries.size());
     return;
   }
   
@@ -1091,24 +1084,24 @@ void PixelMap<T>::lens_definition(
   
   T sn_max = map.max();
   if(sn_max < pixel_threshold) return;
-
+  
   find_islands_holes(pixel_threshold,image_points);
-
+ 
   total_sig_noise_source = 0;
   if(verbose) std::cout << "Initial Number of islands : " << image_points.size() << std::endl;
-  std::vector<T> sig_noise(image_points.size(), 0);
-  for (size_t i = 0; i < image_points.size(); ++i){
+  std::vector<T> sig_noise(image_points.size(),0);
+  for(size_t i=0 ; i<image_points.size() ; ++i ){
     for(size_t k : image_points[i] ){
       sig_noise[i] += map[k];
     }
     if(verbose) std::cout << "    signal-to-noise : " << sig_noise[i] << "  " << image_points[i].size() << std::endl;
     if(sig_noise[i] >= min_sn_per_image) total_sig_noise_source += sig_noise[i];
   }
-
+  
   
   // remove holes
 
-  bool ring =false;
+  bool ring = false;
   { // remove holes
     int i=0,k=image_points.size();
     while( i < k){
@@ -1125,7 +1118,7 @@ void PixelMap<T>::lens_definition(
     image_points.resize(k);
     sig_noise.resize(k);
   }
-                 
+  
   {
     // remove low s/n images
     long i=0,k=sig_noise.size();
@@ -1141,21 +1134,21 @@ void PixelMap<T>::lens_definition(
     image_points.resize(k);
     sig_noise.resize(k);
   }
-
+  
   for(auto &v : image_points){
     for(size_t k : v){
       T val = map[k];
-      if (
-            val > map[k - 1] &&
-            val > map[k + 1] &&
-            val > map[k + Nx] &&
-            val > map[k + Nx - 1] &&
-            val > map[k + Nx + 1] &&
-            val > map[k - Nx] &&
-            val > map[k - Nx - 1] &&
+      if(
+        val > map[k-1]    &&
+        val > map[k+1]    &&
+        val > map[k+Nx]   &&
+        val > map[k+Nx-1] &&
+        val > map[k+Nx+1] &&
+        val > map[k-Nx]   &&
+        val > map[k-Nx-1] &&
         val > map[k-Nx+1]
         ){
-        maxima_indexes.push_back(k);
+          maxima_indexes.push_back(k);
       }
     }
   }
@@ -1231,53 +1224,146 @@ void PixelMap<T>::lens_definition(
   if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
 }
 
-/* template <typename T> */
-/* void PixelMap<T>::arc_parameters(T level,Point_2d center) */
-/* { */
-/*   std::vector<std::vector<Point_2d>> contours; */
-/*   std::vector<bool> &hits_edge; */
-/*   find_contour(level, contours , hits_edge); */
-/*  */
-/*   std::vector<T> areas(contours.size(),0); */
-/*   std::vector<T> lengths_p(contours.size(), 0), lengths_n(contours.size(), 0); */
-/*   std::vector<T> angle_p(contours.size(), 0), angle_n(contours.size(), 0); */
-/*   T max_area = 0; */
-/*   int imax = -1; */
-/*   for(int i=0 ; i<contours.size() ; ++i){ */
-/*     int n = contours[i].size(); */
-/*     T first_a,a; */
-/*     for(int j=0 : j < n ; ++j){ */
-/*       Point_2d p1 = contours[i][j] - center; */
-/*       Point_2d p2 = contours[i][ (j + 1) % n ] - center; */
-/*       a = 0.5 * p1^p2; */
-/*       if( j == 0 ) first_a = a; */
-/*       if(a > 0){ */
-/*         angle_p[i] += asin(2*a/p1.length()/p2.length()); */
-/*         lengths_p[i] += (p2 - p1).length(); */
-/*       }else{ */
-/*         angle_n[i] += asin(2 * a / p1.length() / p2.length()); */
-/*         lengths_n[i] += (p2 - p1).length(); */
-/*       } */
-/*  */
-/*       if( sign(a) !== sign(last_a) && j !=0 ) extreem_points.push_back( p1 ); */
-/*       areas[i] += a; */
-/*       last_a = a; */
-/*     } */
-/*     if( sign(first_a) != sign(a) ) */
-/*       extreem_points.push_back( contours[i][0] ); */
-/*     } */
-/*  */
-/* find extreem points, check first point */
-/* what if it is a ring? */
-/*     if( abs(areas[i]) > max_area ){ */
-/*       max_area = abs(areas[i]); */
-/*       imax = i; */
-/*     } */
-/*     ???? */
-/*   } */
-/*  */
-/*  */
-/* } */
+template <typename T>
+void PixelMap<T>::arc_parameters(T level,Point_2d center,bool &ring
+  ,double &angle,double &thinness,double &radius,double &nonrad) const{
+  std::vector<std::vector<size_t>> points;
+  std::vector<std::vector<Point_2d>> boundaries;
+  std::vector<bool> hits_edge;
+  std::vector<std::vector<int>> holes;
+
+  find_islands_holes(level,points,boundaries,hits_edge,holes);
+  
+  if(points.size() == 0){
+    ring = false;
+    angle = 0;
+    thinness = 0;
+    radius = 0;
+    nonrad = 0;
+    return;
+  }
+
+  int Ngroups = points.size();
+  std::vector<double> areas(Ngroups,0);
+  int imax = -1,i=0;
+  double max_area = 0;
+  for (std::vector<Point_2d> &contour : boundaries) {
+    int n=contour.size();
+    for(int j=0 ; j < contour.size() ; ++j){
+      Point_2d p1 = contour[j] - center;
+      Point_2d p2 = contour[ (j + 1) % n ] - center;
+      areas[i] += 0.5 * (p1^p2);
+    }
+    if( fabs(areas[i]) > max_area ){
+      max_area = fabs(areas[i]);
+      imax = i;
+    }
+    ++i;
+  }
+
+  std::vector<Point_2d> &contour = boundaries[imax];
+  std::vector<int> extreem_points;
+  int n = contour.size(),s,st;
+  for (int j = 0; j <= n+1; ++j){
+    Point_2d p1 = contour[j % n] - center;
+    Point_2d p2 = contour[(j + 1) % n] - center;
+    s = sign(p1 ^ p2);
+    if( j == 0 ) st = s;
+    if( s != st){
+      extreem_points.push_back( j % n );
+      st = s;
+    }
+  }
+
+  for(int i : holes[imax]){
+    areas[imax] -= sign(areas[imax]) * fabs(areas[i]); // keeps the sign of the main area
+  }
+
+  double parim = 0;
+  for(int i = 0; i < n; ++i){
+    parim += (contour[i] - contour[(i + 1) % n]).length();
+  }
+
+  std::vector<double> lengths;
+  std::vector<double> angles;
+  int Nextreem = extreem_points.size();
+  if(Nextreem == 0){ 
+    // ring case
+    ring = true;
+    assert( fabs(areas[imax]) > 0 );
+    angles.push_back(2*PI);
+    double maxra = contour[0].length();
+    double minra = contour[0].length();
+    radius =0;
+    for(Point_2d &p : contour){
+      radius += (p - center).length();
+      if(p.length() > maxra) maxra = p.length();
+      if(p.length() < minra) minra = p.length();
+    }
+    radius /= n;
+    nonrad = (maxra - minra) / radius;
+  }else if(Nextreem == 2){
+    ring = false;
+
+    lengths.resize(extreem_points.size(), 0);
+    angles.resize(extreem_points.size(), 0);
+    for(int j=0 ; j<extreem_points.size() ; ++j){
+      int jj = (j + 1) % Nextreem;
+      for (int i = extreem_points[j] ; i != extreem_points[jj] ; i = (i + 1) % n){
+        lengths[j] += ( contour[i] - contour[(i+1)%n] ).length();
+        angles[j] += asin( (contour[i]^contour[(i+1)%n]) 
+           / ( contour[i].length() * contour[(i+1)%n].length() ) );
+      }
+    }
+    assert( fabs((angles[0] + angles[1])/angles[0]) < 1e-3 );
+
+    radius = 0.5 * ( (contour[extreem_points[0]] - center).length() + (contour[extreem_points[1]] - center).length() );
+    nonrad = fabs((contour[extreem_points[0]] - center).length() - (contour[extreem_points[1]] - center).length()) / radius;
+  }else{
+    ring = false;
+
+    angles.resize(Nextreem * (Nextreem+1), 0);
+    int m=0;
+    angle = 0;
+    int ii,jj;
+    for (int i = 0; i < Nextreem; ++i)
+    {
+      for (int j = i + 1; j <= Nextreem; ++j)
+      {
+        double tmp_angle = 0;
+        for (int k = extreem_points[i]; k != extreem_points[j%Nextreem]; k = (k + 1) % n)
+        {
+          tmp_angle += asin((contour[k] ^ contour[(k + 1) % n]) / (contour[k].length() * contour[(k + 1) % n].length()));
+        }
+        if(tmp_angle > angle){
+          angle = tmp_angle;
+          ii = i;
+          jj = j % Nextreem;
+        }
+      }
+    }
+    
+    angles = {angle,-angle};
+    extreem_points = {extreem_points[ii],extreem_points[jj]};
+    Nextreem = 2;
+
+    lengths.resize(extreem_points.size(), 0);
+    for (int j = 0; j < extreem_points.size(); ++j){
+      int jj = (j + 1) % Nextreem;
+      for (int i = extreem_points[j]; i != extreem_points[jj]; i = (i + 1) % n)
+      {
+        lengths[j] += (contour[i] - contour[(i + 1) % n]).length();
+      }
+    }
+
+    radius = 0.5 * ((contour[extreem_points[0]] - center).length() + (contour[extreem_points[1]] - center).length());
+    nonrad = fabs((contour[extreem_points[0]] - center).length() - (contour[extreem_points[1]] - center).length()) / radius;
+    //throw std::runtime_error("More than two extreme points found in arc_parameters");
+  }
+
+  angle = fabs(angles[0]*180/PI);
+  thinness = (parim*parim)/fabs(areas[imax])/4/PI;
+}
 
 template <typename T>
 int PixelMap<T>::count_islands(std::vector<size_t> &pixel_index) const{
