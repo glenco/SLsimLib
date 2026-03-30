@@ -307,8 +307,11 @@ struct Matrix2x2{
     return a[ i + 2*j ];
   }
  
-  
   T & operator[](int i){
+    return a[i];
+  }
+
+  const T & operator[](int i) const{
     return a[i];
   }
  

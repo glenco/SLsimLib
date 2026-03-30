@@ -1140,11 +1140,26 @@ public:
       throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
     };
     
+    const std::vector<T>& operator[](const std::string &label) const{
+      if(datamap.find(label) == datamap.end()){
+        std::cerr << "No label - " << label << " - in " << filename <<std::endl;
+        throw std::invalid_argument("no label");
+      }
+      return data[datamap[label]];
+      for(auto c : all_column_names ) std::cout << c << " ";
+      std::cout << std::endl;
+      throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
+    };
+
     /// returns column by number in order of input column names or the original table in not provided
     std::vector<T>& operator[](int i){
       return data[i];
     };
-    
+
+    const std::vector<T> &operator[](int i) const{
+      return data[i];
+    };
+
     /// sort by one of the columns in ascending order
     void sortby(std::string name){
       std::vector<size_t> index(data[0].size());

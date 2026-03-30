@@ -55,7 +55,7 @@ public:
           ,double resolution
           ,PixelMapUnits u = PixelMapUnits::ndef);
   PixelMap(const double* center, std::size_t Nx, std::size_t Ny
-          ,double resolution
+          ,double resolution /// resolution in radians
           ,PixelMapUnits u = PixelMapUnits::ndef);
   
   PixelMap(std::string fitsfilename   /// file name of fits file to be read
@@ -231,7 +231,7 @@ public:
 
   inline T getValue(std::size_t i) const { return map[i]; }
   inline T & operator[](std::size_t i) { return map[i]; };
-  inline T operator[](std::size_t i) const { return map[i]; };
+  const T &operator[](std::size_t i) const { return map[i]; };
   inline T & operator()(std::size_t i) { return map[i]; };
   inline T operator()(std::size_t i) const { return map[i]; };
   inline T operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
@@ -361,6 +361,7 @@ public:
  
     Groups with points are connected regions above level.
     Groups without points are regions surrounded by regions above level, i.e. holes.
+    Points are in pixel units.
  */
   void find_islands_holes(T level,std::vector<std::vector<size_t>> &points) const;
 

@@ -770,7 +770,7 @@ public:
   /**
    Does interpolation of store map at point x. Only for use with the second constructor.
    */
-  PosType operator ()(PosType *x){
+  PosType operator ()(PosType *x) const{
     if(map_p == NULL){
       std::cout << "Didn't use the right constructor for Interpolator class" << std::endl;
       throw std::runtime_error("Did not use the right constructor.");
