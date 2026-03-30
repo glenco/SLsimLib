@@ -1265,8 +1265,7 @@ void Lens::_find_images_(std::vector<RAY> &images
     min_mag = min(fabs(gridmap.i_points[ tr[i][2] ].invmag()) , min_mag);
   }
   
-  if((gridmap.getResolution() <= stop_resolution
-     && recs.size() == image_points.size() ) || min_mag > 1000
+  if((gridmap.getResolution() <= stop_resolution) || min_mag > 1000
       ){
     RAY ray;
     ray.y = y;
