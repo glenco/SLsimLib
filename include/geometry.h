@@ -338,7 +338,7 @@ public:
   /// components, 0,1,2,3
   T & operator[](int i){return v[i];}
   const T &operator[](int i) const{ return v[i]; }
-  
+
   /// returns the rotation Quaternion for a rotation around the x-axis
   static Quaternion q_x_rotation(T theta){
     return Quaternion(cos(theta/2),sin(theta/2),0,0);

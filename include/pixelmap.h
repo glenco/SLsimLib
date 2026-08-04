@@ -350,6 +350,8 @@ public:
    ie If holes[i].size() == 0 then group i has no holes.
       if holes[j][0] == k then boundaries[k] is the boundary of a hole within group j
       and points[k].size()==0.
+
+   boundary points are in radians.
    */
   void find_islands_holes(T level,
                           std::vector<std::vector<size_t>> &points,
@@ -360,7 +362,7 @@ public:
   /** find all the points above level divided into seprated groups
  
     Groups with points are connected regions above level.
-    Groups without points are regions surrounded by regions above level, i.e. holes.
+    Groups without points are regions surrounded by regions above level, holes, i.e. holes.
     Points are in pixel units.
  */
   void find_islands_holes(T level,std::vector<std::vector<size_t>> &points) const;
@@ -398,14 +400,15 @@ public:
      *  ring : true if the image is a ring
      *  angle : opening angle of the largestarc in degrees
      *  thinness : perimeter^2/ (4 pi area) of the largest arc, 1 for a circle, larger for thinner arcs
-     *  radius : average of the distance of arc extreem points from center
+     *  radius : average of the distance of arc extreem points from center, radians
      *  nonrad : difference in radius of extreem points / radius
+     *  range : distance between the two points on the arc boundaries that are furthest apart, radians
      * 
      * The extreem points are the poits on the contour level that are where the curve changes direction 
      * with respect to the center. The angle is the angle spanned by these points as seen from the center. 
      */
     void arc_parameters(T level, Point_2d center, bool &ring,
-                        double &angle, double &thinness, double &radius, double &nonrad) const;
+                        double &angle, double &thinness, double &radius, double &nonrad,double &range) const;
 
     /// find maxima that are above minlevel
     std::vector<size_t> maxima(T minlevel) const;
