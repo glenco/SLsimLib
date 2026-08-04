@@ -216,7 +216,10 @@ public:
   T& operator[](size_t k){
     return v[ k ];
   }
-  
+  const T &operator[](size_t k) const {
+    return v[k];
+  }
+
   int size(){return n;}
   
   /// convertion from 2d to 1d index
@@ -2239,6 +2242,13 @@ public:
     //std::cout << std::endl;
     //throw std::invalid_argument(label + " was not one of the columns of the galaxy data file :" + filename);
   };
+  const std::vector<T>& operator[](const std::string &label) const{
+    if(datamap.find(label) == datamap.end()){
+      std::cerr << "No label - " << label << " - in " << filename <<std::endl;
+      throw std::invalid_argument("no label");
+    }
+    return data[datamap[label]];
+  };
   
   /// add a column to the data frame.  This does a copy.
   void add_column(const std::string &name,const std::vector<T> &vec){
@@ -2253,6 +2263,9 @@ public:
   
   /// returns column by number
   std::vector<T>& operator[](int i){
+    return data[i];
+  };
+  const std::vector<T>& operator[](int i) const{
     return data[i];
   };
   

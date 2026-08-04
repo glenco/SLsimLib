@@ -177,12 +177,17 @@ struct MOKAmap{
 };
 
 /**
- *  \brief A class that includes the MOKA lens map
+ *  \brief Pixelized mass map lens class
  *
  * The class represents a pixelixed mass map as a lens.  The mass map can come from 
  * the output of a nbody/hydro simulation or from anywhere else.  
  * 
- * An alternative way of using the output of a particle-based simulation is to use a LensHaloParticles. 
+ * An alternative way of using the output of a particle-based simulation is to 
+ * use a LensHaloParticles. 
+ * 
+ * The mass map should be in units of solar masses / massconvertion 
+ * per pixel, not in surface density. 
+ * The resolution needs to be set in radians for the distance to the lens plane. 
  * 
  * Note: To use this class requires setting the ENABLE_FITS compiler flag and linking
  * the cfits library.

@@ -971,6 +971,14 @@ void PixelMap<T>::find_islands_holes(T level,
   if(boundaries.size() == 1){
     std::swap(points[0],points_in);
     holes.resize(boundaries.size());
+    for (auto &boundary : boundaries)
+    {
+      for (Point_2d &p : boundary)
+      {
+        p = p * resolution + map_boundary_p1;
+        assert((p - map_boundary_p1).length_sqr() < 2 * rangeX * rangeX);
+      }
+    }
     return;
   }
   
@@ -1010,6 +1018,7 @@ void PixelMap<T>::find_islands_holes(T level,
   for(auto &boundary : boundaries){
     for(Point_2d &p : boundary){
       p = p * resolution + map_boundary_p1;
+      assert((p-map_boundary_p1).length_sqr() < 2*rangeX*rangeX);
     }
   }
   assert(m == n && "In PixelMap<T>::find_islands_holes");
@@ -1225,14 +1234,24 @@ void PixelMap<T>::lens_definition(
 }
 
 template <typename T>
-void PixelMap<T>::arc_parameters(T level,Point_2d center,bool &ring
-  ,double &angle,double &thinness,double &radius,double &nonrad) const{
+void PixelMap<T>::arc_parameters(T level
+  ,Point_2d center /// center of lens, used to compute angles and radii
+  ,bool &ring /// true if the image is a ring, false if it is an arc
+  ,double &angle /// angle subtended by the arc at the center of the lens in radians in degrees
+  ,double &thinness  /// ratio of the length of the arc to its width, defined as the area divided by the square of the length
+  ,double &radius  /// mean radius of the arc in pixels, defined as the area divided by the length 
+  ,double &nonrad /// non-radiality of the arc
+  ,double &range /// largest distance between centroids of islands in pixels
+  ) const{
+
   std::vector<std::vector<size_t>> points;
   std::vector<std::vector<Point_2d>> boundaries;
   std::vector<bool> hits_edge;
   std::vector<std::vector<int>> holes;
 
   find_islands_holes(level,points,boundaries,hits_edge,holes);
+  // boundaries in world coordinates, radians
+
   
   if(points.size() == 0){
     ring = false;
@@ -1240,19 +1259,33 @@ void PixelMap<T>::arc_parameters(T level,Point_2d center,bool &ring
     thinness = 0;
     radius = 0;
     nonrad = 0;
+    range = 0;
     return;
   }
 
+  // compute centroids of the islands
   int Ngroups = points.size();
+
   std::vector<double> areas(Ngroups,0);
   int imax = -1,i=0;
   double max_area = 0;
+  double max_radius = 0;
+  Point_2d max_point;
   for (std::vector<Point_2d> &contour : boundaries) {
     int n=contour.size();
-    for(int j=0 ; j < contour.size() ; ++j){
+    assert(n>1);
+    for(int j=0 ; j < n ; ++j){
       Point_2d p1 = contour[j] - center;
       Point_2d p2 = contour[ (j + 1) % n ] - center;
       areas[i] += 0.5 * (p1^p2);
+
+      assert(p1.length() < rangeX);
+      assert(p2.length() < rangeX);
+
+      if( p1.length() > max_radius ){
+        max_radius = p1.length();
+        max_point = p1;
+      }
     }
     if( fabs(areas[i]) > max_area ){
       max_area = fabs(areas[i]);
@@ -1261,108 +1294,151 @@ void PixelMap<T>::arc_parameters(T level,Point_2d center,bool &ring
     ++i;
   }
 
+  assert(imax != -1);
+  assert(fabs(max_area) > 0);
+
+  range = 0;
+  for (std::vector<Point_2d> &contour : boundaries){
+    for(Point_2d &p : contour){
+      double r = (p - max_point).length();
+      if(r > range) range = r;
+    }
+  }
+  assert(range < 1.0);
+
   std::vector<Point_2d> &contour = boundaries[imax];
-  std::vector<int> extreem_points;
-  int n = contour.size(),s,st;
-  for (int j = 0; j <= n+1; ++j){
-    Point_2d p1 = contour[j % n] - center;
+  std::vector<int> extreme_points;
+  int n = contour.size(), s, st;
+  for (int j = 0; j <= n; ++j)
+  {
+    Point_2d p1 = contour[j % n] - center;  
     Point_2d p2 = contour[(j + 1) % n] - center;
     s = sign(p1 ^ p2);
-    if( j == 0 ) st = s;
-    if( s != st){
-      extreem_points.push_back( j % n );
+    if (j == 0)
+      st = s;
+    if (s != st)
+    {
+      extreme_points.push_back(j % n);
       st = s;
     }
   }
 
-  for(int i : holes[imax]){
+  for (int i : holes[imax])
+  {
     areas[imax] -= sign(areas[imax]) * fabs(areas[i]); // keeps the sign of the main area
   }
 
-  double parim = 0;
-  for(int i = 0; i < n; ++i){
-    parim += (contour[i] - contour[(i + 1) % n]).length();
+  assert(fabs(areas[imax]) > 0);
+
+  double parimeter = 0;
+  for (int i = 0; i < n; ++i)
+  {
+    parimeter += (contour[i] - contour[(i + 1) % n]).length();
   }
-
-  std::vector<double> lengths;
-  std::vector<double> angles;
-  int Nextreem = extreem_points.size();
-  if(Nextreem == 0){ 
-    // ring case
-    ring = true;
-    assert( fabs(areas[imax]) > 0 );
-    angles.push_back(2*PI);
-    double maxra = contour[0].length();
-    double minra = contour[0].length();
-    radius =0;
-    for(Point_2d &p : contour){
-      radius += (p - center).length();
-      if(p.length() > maxra) maxra = p.length();
-      if(p.length() < minra) minra = p.length();
-    }
-    radius /= n;
-    nonrad = (maxra - minra) / radius;
-  }else if(Nextreem == 2){
-    ring = false;
-
-    lengths.resize(extreem_points.size(), 0);
-    angles.resize(extreem_points.size(), 0);
-    for(int j=0 ; j<extreem_points.size() ; ++j){
-      int jj = (j + 1) % Nextreem;
-      for (int i = extreem_points[j] ; i != extreem_points[jj] ; i = (i + 1) % n){
-        lengths[j] += ( contour[i] - contour[(i+1)%n] ).length();
-        angles[j] += asin( (contour[i]^contour[(i+1)%n]) 
-           / ( contour[i].length() * contour[(i+1)%n].length() ) );
-      }
-    }
-    assert( fabs((angles[0] + angles[1])/angles[0]) < 1e-3 );
-
-    radius = 0.5 * ( (contour[extreem_points[0]] - center).length() + (contour[extreem_points[1]] - center).length() );
-    nonrad = fabs((contour[extreem_points[0]] - center).length() - (contour[extreem_points[1]] - center).length()) / radius;
-  }else{
-    ring = false;
-
-    angles.resize(Nextreem * (Nextreem+1), 0);
-    int m=0;
-    angle = 0;
-    int ii,jj;
-    for (int i = 0; i < Nextreem; ++i)
+  for (int j : holes[imax])
+  {
+    int m = boundaries[j].size();
+    for (int k = 0; k < m; ++k)
     {
-      for (int j = i + 1; j <= Nextreem; ++j)
+      parimeter += (boundaries[j][k] - boundaries[j][(k + 1) % m]).length();
+    }
+  }
+  if (std::isnan(parimeter) || parimeter == 0)
+  {
+    std::cerr << "Warning : parim is NaN or zero" << std::endl;
+    std::cout <<  "  parimeter " << parimeter << std::endl;
+    write_csv("contour.txt",contour);
+    throw std::runtime_error("parimeter is NaN or zero");
+  }
+  std::vector<double> lengths;
+  
+  int Nextreme = extreme_points.size();
+
+  if (Nextreme > 1)
+  {
+    // if there are more than 2 extreme points,
+    // we look for the two that subtend the largest angle at the center of the lens
+    angle = 0;
+    int ii = -1, jj = -1;
+    for (int i = 0; i < Nextreme; ++i)
+    {
+      for (int j = i + 1; j <= Nextreme; ++j)
       {
         double tmp_angle = 0;
-        for (int k = extreem_points[i]; k != extreem_points[j%Nextreem]; k = (k + 1) % n)
+        for (int k = extreme_points[i]; k != extreme_points[j % Nextreme]; k = (k + 1) % n)
         {
-          tmp_angle += asin((contour[k] ^ contour[(k + 1) % n]) / (contour[k].length() * contour[(k + 1) % n].length()));
+           int k1 = (k + 1) % n;
+          if (contour[k].length_sqr() > 0 && contour[k1].length_sqr() > 0)
+            tmp_angle += atan2(contour[k]^contour[k1],contour[k] * contour[k1]);
+          //assert(fabs(tmp_angle) < 2*PI);
         }
-        if(tmp_angle > angle){
+        if (tmp_angle > angle)
+        {
+          //assert(fabs(tmp_angle) < 2*PI);
           angle = tmp_angle;
-          ii = i;
-          jj = j % Nextreem;
+          ii = extreme_points[i];
+          jj = extreme_points[j % Nextreme];
         }
       }
     }
-    
-    angles = {angle,-angle};
-    extreem_points = {extreem_points[ii],extreem_points[jj]};
-    Nextreem = 2;
 
-    lengths.resize(extreem_points.size(), 0);
-    for (int j = 0; j < extreem_points.size(); ++j){
-      int jj = (j + 1) % Nextreem;
-      for (int i = extreem_points[j]; i != extreem_points[jj]; i = (i + 1) % n)
-      {
-        lengths[j] += (contour[i] - contour[(i + 1) % n]).length();
-      }
+    if(angle > 2*PI){
+      Nextreme = 0;
+      extreme_points = {};
+    }else{
+      extreme_points = {ii, jj};
+      Nextreme = 2;
     }
-
-    radius = 0.5 * ((contour[extreem_points[0]] - center).length() + (contour[extreem_points[1]] - center).length());
-    nonrad = fabs((contour[extreem_points[0]] - center).length() - (contour[extreem_points[1]] - center).length()) / radius;
-    //throw std::runtime_error("More than two extreme points found in arc_parameters");
   }
 
-  angle = fabs(angles[0]*180/PI);
-  thinness = (parim*parim)/fabs(areas[imax])/4/PI;
+  if (Nextreme == 0)
+  {
+    // ring case
+    ring = true;
+    assert(fabs(areas[imax]) > 0);
+    
+    double maxra = (contour[0] - center).length();
+    double minra = (contour[0] - center).length();
+    radius = 0;
+    for (const Point_2d &p : contour)
+    {
+      double r = (p - center).length();
+      radius += r;
+      maxra = MAX(maxra, r);
+      minra = MIN(minra, r);
+    }
+    radius /= n;
+    nonrad = (maxra - minra) / radius; /// ??? look at hole
+    angle = 2*PI;
+  }
+  else
+  {
+    ring = false;
+
+    lengths.resize(extreme_points.size(), 0);
+    for (int j = 0; j < extreme_points.size(); ++j)
+    {
+        int jj = (j + 1) % Nextreme;
+        for (int i = extreme_points[j]; i != extreme_points[jj]; i = (i + 1) % n)
+        {
+          lengths[j] += (contour[i] - contour[(i + 1) % n]).length();
+        }
+    }
+
+    radius = 0.5 * ((contour[extreme_points[0]] - center).length() + (contour[extreme_points[1]] - center).length());
+    nonrad = fabs((contour[extreme_points[0]] - center).length() - (contour[extreme_points[1]] - center).length()) / radius;
+  }
+
+  assert(radius < 1);
+  assert(fabs(angle) <= 2 * PI*(1+1.0e-3));
+  angle = fabs(angle * 180 / PI);
+  thinness = (parimeter * parimeter) / fabs(areas[imax]) / 4 / PI;
+  if(std::isinf(thinness) || std::isnan(thinness) || parimeter == 0 ){
+    std::cerr << "Warning : thinness is infinite or NaN, setting it to 0" << std::endl;
+    std::cout << "area " << areas[imax] << "  parimeter " << parimeter << std::endl;
+    throw std::runtime_error("thinness is infinite or NaN");
+  }
+  assert(fabs(areas[imax]) > 0);
 }
 
 template <typename T>

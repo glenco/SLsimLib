@@ -1664,7 +1664,8 @@ struct NFW: public PROFILE
 /***
 \brief  A class for constructing and approximation to any elliptical profile out of a series of elliptical gaussians.
  
- The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
+ The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  
+ Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
  
  The profile is fit Nradii points logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
  Typically Nradii ~ 2 * Ngaussians.
@@ -1742,9 +1743,11 @@ public:
   
   /***
     This is a static function that can be used to find the masses and scales for the gaussians which can
-   then be fed into the scond constructor with a rescaling.  This avoids having to recalculate them when the same profile is used multiple times.
+   then be fed into the second constructor with a rescaling.  This avoids having to recalculate them when 
+   the same profile is used multiple times.
    
-   For example, an NFW can be calculated here with a scale size 1 and an arbitrary mass.  Then it can be used in the constructor with different scale sizes and masses.
+   For example, an NFW can be calculated here with a scale size 1 and an arbitrary mass.  
+   Then it can be used in the constructor with different scale sizes and masses.
    
    <p>
    MultiGauss::sersic profile(1,1);

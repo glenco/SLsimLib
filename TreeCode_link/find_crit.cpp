@@ -1043,8 +1043,9 @@ void ImageFinding::find_crit(
     }
     critcurves[i].critical_center /= Npoints;
  
+    // find area of fritical curve
     Utilities::windings(critcurves[i].critical_center,critcurves[i].critcurve,&(critcurves[i].critical_area));
-   
+
     if(verbose) std::cout << "critical area = " << critcurves[i].critical_area/arcsecTOradians/arcsecTOradians << " arcsec^2" << std::endl;
     lens.rayshooterInternal(critcurves[i].critcurve.size(),critcurves[i].critcurve.data());
     
@@ -1054,6 +1055,16 @@ void ImageFinding::find_crit(
       critcurves[i].caustic_curve_intersecting[j] = critcurves[i].critcurve[j].y;
       critcurves[i].caustic_center += critcurves[i].critcurve[j].y;
     }
+
+    #ifndef NDEBUG
+      for(size_t j=0 ; j < Npoints ; ++j){
+        assert( ("repeated source position in caustic curve", 
+          critcurves[i].critcurve[j].x != critcurves[i].critcurve[(j+1)%Npoints].x) );
+        assert( ("repeated source position in caustic curve", 
+          critcurves[i].critcurve[j].y != critcurves[i].critcurve[(j+1)%Npoints].y) );
+      }
+    #endif
+
     critcurves[i].caustic_center /= Npoints;
     
     if (critcurves[i].type != CritType::pseudo){     
