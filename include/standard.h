@@ -43,7 +43,7 @@
 #define Grav  4.7788e-20  // G/c^2 in Mpc
 #endif
 
-#ifndef arcsecTOradians
+#ifndef arcminTOradians
 #define arcminTOradians  0.0002908882086657216  // convert arcesconds to radians
 #endif
 
