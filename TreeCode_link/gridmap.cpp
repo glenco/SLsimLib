@@ -714,6 +714,25 @@ void GridMap::find_crit(std::vector<std::vector<Point_2d> > &curves
   long m=curves.size();
   crit_type.resize(m);
   for(long i=ntange ; i<m ; ++i) crit_type[i] = CritType::radial;
+
+  //add points if radial is only one pixel
+  for (long i = ntange; i < m; ++i) {
+    if (crit_type[i] == CritType::radial) {
+      auto &R = curves[i];
+
+      if (R.size() == 4) {
+
+        Point_2d TL = (R[0] + R[3]) * 0.5;  // midpoint of edge R[3]-R[0]
+        Point_2d TR = (R[0] + R[1]) * 0.5;  // midpoint of edge R[0]-R[1]
+        Point_2d BR = (R[1] + R[2]) * 0.5;  // midpoint of edge R[1]-R[2]
+        Point_2d BL = (R[2] + R[3]) * 0.5;  // midpoint of edge R[2]-R[3]
+
+        // interleave in correct cyclic (winding) order, matching the walk R[0]->R[1]->R[2]->R[3]->R[0] that find_boundaries produces.
+        R = { R[0], TR, R[1], BR, R[2], BL, R[3], TL };
+
+      }
+    }
+  }
   
   // reorder them so that radial curves follow the tangential curves they are within
   for(long j=ntange ; j<m ; ++j){
