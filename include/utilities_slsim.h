@@ -22,6 +22,10 @@
 #include <set>
 #include <iomanip>
 #include <thread>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
 
 namespace Utilities
 {
@@ -1151,6 +1155,53 @@ private:
   long firstseed;
   
 };
+
+class BetaDistribution {
+public:
+    using result_type = double;
+
+    BetaDistribution(double alpha, double beta)
+        : alpha_(alpha),
+          beta_(beta),
+          gamma_alpha_(alpha, 1.0),
+          gamma_beta_(beta, 1.0)
+    {
+        if (!(alpha > 0.0) || !(beta > 0.0)) {
+            throw std::invalid_argument(
+                "Beta distribution parameters must be positive");
+        }
+    }
+
+    double operator()(){
+        // The loop protects against the extremely unlikely case that both
+        // Gamma samples underflow to zero.
+        for (;;) {
+            const double x = gamma_alpha_(engine);
+            const double y = gamma_beta_(engine);
+            const double sum = x + y;
+
+            if (sum > 0.0 && std::isfinite(sum)) {
+                return x / sum;
+            }
+        }
+    }
+
+    double alpha() const noexcept { return alpha_; }
+    double beta() const noexcept { return beta_; }
+
+    static constexpr double min() noexcept { return 0.0; }
+    static constexpr double max() noexcept { return 1.0; }
+
+private:
+    
+    std::mt19937_64 engine{std::random_device{}()};
+    double alpha_;
+    double beta_;
+    std::gamma_distribution<double> gamma_alpha_;
+    std::gamma_distribution<double> gamma_beta_;
+};
+
+
 
 /// Shuffles a vector into a random order
 template <typename T, typename R>

@@ -1056,14 +1056,7 @@ void ImageFinding::find_crit(
       critcurves[i].caustic_center += critcurves[i].critcurve[j].y;
     }
 
-    #ifndef NDEBUG
-      for(size_t j=0 ; j < Npoints ; ++j){
-        assert( ("repeated source position in caustic curve", 
-          critcurves[i].critcurve[j].x != critcurves[i].critcurve[(j+1)%Npoints].x) );
-        assert( ("repeated source position in caustic curve", 
-          critcurves[i].critcurve[j].y != critcurves[i].critcurve[(j+1)%Npoints].y) );
-      }
-    #endif
+  
 
     critcurves[i].caustic_center /= Npoints;
     

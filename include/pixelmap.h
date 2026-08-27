@@ -110,6 +110,7 @@ public:
   
   // Zero the whole map
   void Clean(){for(auto &a : map) a = 0;}
+  void clear(){Clean();}
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);

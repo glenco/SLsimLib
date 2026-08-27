@@ -74,7 +74,7 @@
 
 #ifndef line_message
 #define line_message
-#define PRINT_LINE() std::cout << "file: " << __FILE__ << " line: " << __LINE__ << std::endl;
+#define PRINT_LINE(msg) std::cout << "[file: " << __FILE__ << " line: " << __LINE__ << "]" << msg << std::endl;
 #endif
 
 #ifndef boo_declare
