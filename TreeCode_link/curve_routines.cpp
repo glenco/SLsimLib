@@ -2973,6 +2973,28 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
       return w;
     }
 
+    { // safeguard: check centroids
+      Point_2d cv, cw;
+
+      for (auto &p : v) { cv[0] += p[0]; cv[1] += p[1]; }
+      cv[0] /= v.size();
+      cv[1] /= v.size();
+
+      for (auto &p : w) { cw[0] += p[0]; cw[1] += p[1]; }
+      cw[0] /= w.size();
+      cw[1] /= w.size();
+      
+     
+      if (inCurve(cw, v)){
+        std::cout << "[ENVELOPE] Safeguard needed" << std::endl;
+        return v;
+      } 
+      if (inCurve(cv, w)) {
+        std::cout << "[ENVELOPE] Safeguard needed" << std::endl;
+        return w;
+      }
+    }
+
     // case where they do not overlap
     return std::vector<Point_2d>(0);
   }
