@@ -3007,12 +3007,39 @@ template <typename T>
 PixelMap<T> PixelMap<T>::cutout(long xmin,long xmax,long ymin,long ymax){
   long nx = xmax-xmin;
   long ny = ymax-ymin;
-  
+
+  assert(nx > 0);
+  assert(ny > 0);
+/*
+  if(xmax > Nx-1) std::cout << "cutout out of x-range " << xmax << " > " << Nx-1 << std::endl;
+  if(ymax > Ny-1) std::cout << "cutout out of y-range " << ymax << " > " << Ny-1 << std::endl;
+
+  PRINT_LINE("In cutout nx " << nx << " ny " << ny);
+  std::cout << "  resolution : " << resolution << std::endl;
+  std::cout << "  center : " << center[0] << " " << center[1] << std::endl;
+  */
   PixelMap<T> copy(center,nx,ny,resolution);
   copy.units = units;
-  
-  for(long i=0  ; i<nx ; ++i){
-    for(long j=0 ; j<ny ; ++j){
+  /*
+  if(xmin < 0 || xmin + nx > Nx){
+    std::cout << xmin << " " << xmin + nx << std::endl;
+    PRINT_LINE("x out of range");
+  }
+  if(ymin < 0 || ymin + ny > Ny){
+    std::cout << ymin << " " << ymin + ny << std::endl;
+    PRINT_LINE("y out of range");
+  }
+  */
+  long imin = MAX(0L,-xmin);
+  long jmin = MAX(0L,-ymin);
+
+  long imax = MIN(nx,Nx-xmin);
+  long jmax = MIN(ny,Ny-ymin);
+
+  //std::cout << "imin=" << imin << " imax=" << imax << std::endl;
+  //std::cout << "jmin=" << jmin << " jmax=" << jmax << std::endl;
+  for(long i=imin  ; i<imax ; ++i){
+    for(long j=jmin ; j<jmax ; ++j){
       copy[i + nx*j] = map[ (xmin+i) + Nx*(ymin+j) ];
     }
   }
