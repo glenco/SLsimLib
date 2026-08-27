@@ -25,6 +25,7 @@
 #include <mutex>
 
 #include <Tree.h>
+#include <algorithm>
 
 
 class CPFITS_BASE{
@@ -998,7 +999,159 @@ public:
       }
       
       return 1;
-    };
+    };    
+    
+    /** \brief Separate overload, same as the binary/unary read() above, but also records which rows were kept.
+
+      accepted_rows - filled with the 1-based file row numbers of the rows that
+       passed a certain criteria.  These can be handed to read_rows() to make a second
+       pass over the same rows with a different, usually larger, set of columns.
+
+     This open the frame with only the handful of columns the cuts
+     depend on, read() with accepted_rows, then open a second frame with the full
+     column list and read_rows(accepted_rows). 
+
+     add=true  - keep existing rows and continue from the current file position
+     add=false - clear contents and start from where it last left off in the file
+     maxsize   - maximum number of rows to consider, default is the rest of the file
+
+     returns the number of rows now held in the frame.
+     */
+    size_t read(
+         std::function<bool(T,T)> &binary_accept
+         ,std::pair<int,int> index_binary                  /// the columns to be compared
+         ,std::vector<std::function<bool(T &)> > &unary_accept
+         ,std::vector<int> index_unary
+         ,std::vector<long> &accepted_rows                 /// out: 1-based row numbers of kept rows
+         ,bool add=false
+         ,long maxsize = -1
+         ){
+      long chunksize = 10000;
+      int ncol = column_index.size();
+      long nrow = cpfits.rows();
+
+      if(ncol == 0) throw std::invalid_argument("no columns selected");
+
+      if(unary_accept.size() != index_unary.size() ) throw std::invalid_argument("index_unary wrong sized ");
+
+      if(index_unary.size() > ncol){
+        throw std::invalid_argument("Too many requirments");
+      }
+
+      if(index_binary.first < 0 || index_binary.first >= ncol
+         || index_binary.second < 0 || index_binary.second >= ncol){
+        throw std::invalid_argument("index_binary out of range");
+      }
+      for(int i : index_unary){
+        if(i < 0 || i >= ncol) throw std::invalid_argument("index_unary out of range");
+      }
+
+      accepted_rows.clear();
+
+      if(add){
+        n0=1;
+      }else{
+        for(int i=0; i<ncol ; ++i){
+          data[i].clear();
+        }
+      }
+
+      if(maxsize > 0) nrow = MIN(maxsize + n0,nrow);
+
+      std::vector<std::vector<T> > tdata(ncol);
+      while(n0 < nrow){
+        long chunk_start = n0;      // file row number of tdata[*][0], captured before n0 advances
+        chunksize = MIN(nrow-n0+1,chunksize);
+
+        if(data[0].capacity() - data[0].size() < chunksize ){
+          for(int i=0; i<ncol ; ++i){
+            data[i].reserve(chunksize + data[i].capacity());
+          }
+        }
+
+        for(int i=0 ; i< ncol ; ++i){
+          cpfits.read_column(column_index[i],n0,chunksize,tdata[i]);
+        }
+        n0 += chunksize;
+
+        for(long j = 0 ; j < chunksize ; ++j){
+
+          bool accpt = binary_accept(tdata[index_binary.first][j],tdata[index_binary.second][j]);
+
+          int k=0;
+          for(int i : index_unary){
+            accpt = accpt && unary_accept[k++]( tdata[i][j] );
+          }
+
+          if( accpt ){
+            for(int i=0; i<ncol ; ++i){
+              data[i].push_back( tdata[i][j] ) ;
+            }
+            accepted_rows.push_back(chunk_start + j);
+          }
+
+        }
+      }
+
+      return data[0].size();
+    }
+
+    /** \brief Read a specific set of rows, identified by their 1-based file row numbers.
+
+     Intended as the second pass of the two-pass pattern described above: the row
+     numbers come from the accepted_rows argument of read(), obtained while a
+     frame was attached to a cheap subset of the columns.  This frame may hold a
+     different, larger column list.
+
+     Consecutive row numbers are grouped into runs so each run costs one CFITSIO
+     call rather than one per row.  row_numbers must therefore be sorted ascending.
+
+     Any rows already held are discarded.
+     */
+    void read_rows(const std::vector<long> &row_numbers){
+      int ncol = column_index.size();
+
+      if(ncol == 0) throw std::invalid_argument("no columns selected");
+
+      for(int i=0;i<ncol;++i) data[i].clear();
+      if(row_numbers.empty()) return;
+
+      if(!std::is_sorted(row_numbers.begin(),row_numbers.end())){
+        throw std::invalid_argument("read_rows: row_numbers must be sorted ascending");
+      }
+      if(row_numbers.front() < 1){
+        throw std::invalid_argument("read_rows: row numbers are 1-based, must be >= 1");
+      }
+      if(row_numbers.back() > cpfits.rows()){
+        throw std::invalid_argument("read_rows: row number beyond end of table");
+      }
+
+      // group into contiguous runs to minimize CFITSIO calls
+      std::vector<std::pair<long,long> > runs;   // (start_row, count)
+      size_t idx = 0;
+      while(idx < row_numbers.size()){
+        long start = row_numbers[idx];
+        size_t j = idx;
+        while(j+1 < row_numbers.size() && row_numbers[j+1] == row_numbers[j]+1) ++j;
+        runs.push_back( std::make_pair(start, row_numbers[j]-start+1) );
+        idx = j+1;
+      }
+
+      for(int i=0 ; i<ncol ; ++i) data[i].reserve(row_numbers.size());
+
+      std::vector<std::vector<T> > tdata(ncol);
+      for(size_t r=0 ; r<runs.size() ; ++r){
+        for(int i=0;i<ncol;++i){
+          cpfits.read_column(column_index[i], runs[r].first, runs[r].second, tdata[i]);
+        }
+        for(int i=0;i<ncol;++i){
+          // read_column only grows its output vector, never shrinks it, so after a
+          // large run tdata[i] can be longer than the current one.  Take only the
+          // elements belonging to this run.
+          data[i].insert(data[i].end(), tdata[i].begin(), tdata[i].begin()+runs[r].second);
+        }
+      }
+    }
     
     size_t read(
              std::function<bool(T,T)> &binary_accept
@@ -1061,7 +1214,7 @@ public:
         }
       }
       
-      return data.size();
+      return data.size(); //should it be data[0].size to get the row size??
     }
 
     /// read the next maxsize rows.  This will errase the rows already read
