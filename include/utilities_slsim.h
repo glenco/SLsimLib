@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
+#include <fstream>
+#include <sstream>
 
 namespace Utilities
 {
@@ -2527,6 +2529,7 @@ private:
   LINE lines;
   VLINE vlines;
   BLINE blines;
+  std::map<std::string,std::string> input_lines;
   std::string filename;
   std::string blanck_val;
 public:
@@ -2547,6 +2550,59 @@ public:
   
   MULTITYPE operator[](std::string label){return lines[label];}
   void setlogfile(std::string name){filename = name;}
+
+  /** Read a parameter file previously written by LOGPARAMS.
+   *
+   * Input values are kept separate from output values so that reading an old
+   * log does not automatically copy all of its entries into the new log.
+   */
+  void input(const std::string &input_filename){
+    std::ifstream input_file(input_filename);
+    if(!input_file){
+      throw std::runtime_error("Unable to open parameter file: " + input_filename);
+    }
+
+    input_lines.clear();
+    std::string line;
+    const std::string whitespace = " \t\r\n";
+    while(std::getline(input_file,line)){
+      const std::string::size_type value_end = line.find_last_not_of(whitespace);
+      if(value_end == std::string::npos) continue;
+
+      const std::string::size_type value_begin = line.find_last_of(whitespace,value_end);
+      if(value_begin == std::string::npos) continue;
+
+      const std::string::size_type label_end = line.find_last_not_of(whitespace,value_begin);
+      if(label_end == std::string::npos) continue;
+
+      const std::string label = line.substr(0,label_end+1);
+      const std::string value = line.substr(value_begin+1,value_end-value_begin);
+      input_lines[label] = value;
+    }
+  }
+
+  /** Set value from an input parameter and add the effective value to the log.
+   * Returns false when label is absent, in which case the value supplied by the
+   * caller is retained and logged as the default.
+   */
+  template<typename T>
+  bool get(const std::string &label,T &value) {
+    const std::map<std::string,std::string>::const_iterator entry = input_lines.find(label);
+    if(entry == input_lines.end()){
+      lines[label] = value;
+      return false;
+    }
+
+    std::istringstream stream(entry->second);
+    T parsed;
+    stream >> parsed;
+    if(stream.fail()){
+      throw std::runtime_error("Invalid value for input parameter '" + label + "'");
+    }
+    value = parsed;
+    lines[label] = value;
+    return true;
+  }
   
   void print(){
     for(auto a : lines){
