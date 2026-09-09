@@ -457,9 +457,8 @@ void TreeSimpleVec<T,D>::_PointsWithin(D *ray,float *rmax,std::list <unsigned lo
     return;
 }
 
-/**
- *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
- *  */
+/** \brief finds the nearest neighbors in whatever dimensions tree is defined in
+ * */
 template <typename T,typename D>
 void TreeSimpleVec<T,D>::NearestNeighbors(
                                      D *ray       /// position
@@ -524,8 +523,7 @@ void TreeSimpleVec<T,D>::NearestNeighbors(
     return;
 }
 
-/**
- *  \brief finds the nearest neighbors in whatever dimensions tree is defined in
+/**  \brief finds the nearest neighbors in whatever dimensions tree is defined in
  *  */
 template <typename T,typename D>
 void TreeSimpleVec<T,D>::NearestNeighbor(

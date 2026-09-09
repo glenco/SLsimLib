@@ -26,7 +26,7 @@ SourceMultiAnaGalaxy::SourceMultiAnaGalaxy(
      ,Utilities::RandomNumbers_NR &ran
 		): Source(0,Point_2d(0,0),0,-1,zero_point),index(0){
 	
-	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,band,zero_point,Reff,Rdisk,PA,inclination,0,my_z,my_theta,ran));
+	galaxies.push_back(SourceOverzierPlus(mag,mag_bulge,band,zero_point,Reff,Rdisk,PA,inclination,0,my_z,my_theta,3.5,4,ran));
 }
 /** Constructor for passing in a pointer to the galaxy model or a list of galaxies instead of constructing it internally.
 *   Useful when there is a list of pre-allocated sources.  The redshifts and sky positions need to be set separately.
@@ -249,8 +249,10 @@ void SourceMultiAnaGalaxy::readDataFileMillenn(std::map<Band,double> zeropoints
     
     SourceOverzierPlus galaxy(SDSS_i,SDSS_i_Bulge
                               ,Band::NoBand,0
-                              ,Ref,Rdisk
-                              ,pa,inclination,HaloID,z_cosm,theta,ran);
+                              ,Ref,3.5,4
+							  ,Rdisk
+                              ,pa,inclination,HaloID
+							  ,z_cosm,theta,ran);
      //std::cout << "filling last galaxy" << std::endl;
 
     galaxy.setMag(SDSS_u,Band::SDSS_U,0);

@@ -939,8 +939,12 @@ LensHaloTNSIE::LensHaloTNSIE(
   rscale=1.0;
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
+  if(fratio > 1.0 ){fratio = 1.0/fratio;}
 
-  if(fratio > 1.0 || fratio < 0.01) throw std::invalid_argument("invalid fratio");
+  if(fratio < 0.01){
+    std::cerr << "ERROR: invalid fratio in LensHaloTNSIE : must be > 0.01" << std::endl;
+    throw std::invalid_argument("invalid fratio");
+  }
   
   units = sigma*sigma/lightspeed/lightspeed/Grav;///sqrt(fratio); // mass/distance(physical);
   
@@ -961,8 +965,19 @@ void LensHaloTNSIE::force_halo(
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
  
-  if(force_point(alpha,kappa,gamma,phi,xcm,rcm2
-                 ,subtract_point,screening)) return;
+  if(rcm2==0.0){
+    alpha[0] = alpha[1] = gamma[0] = gamma[1] = 0.0;
+    *kappa = 1.0e50;
+    *phi = -1.0e50;  // arbitrary large numbers
+
+    return;
+  }
+
+  if(subtract_point){
+    force_point(alpha,kappa,gamma,phi,xcm,rcm2
+                 ,subtract_point,screening);
+    return;
+  }
 
   if(rcm2 < 1.0e-5) rcm2 = 1e-5;
   if(rcm2 < Rmax*Rmax){
@@ -1501,30 +1516,7 @@ std::complex<double> LensHaloGaussian::my_erfc(std::complex<double> z) const{
 
 #endif
 
-/*
- void LensHaloRealNSIE::initFromMass(float my_mass, long *seed){
-	mass = my_mass;
-	rcore = 0.0;
-	sigma = 126*pow(mass/1.0e10,0.25); // From Tully-Fisher and Bell & de Jong 2001
- //std::cout << "Warning: All galaxies are spherical" << std::endl;
-	fratio = (ran2(seed)+1)*0.5;  //TODO: Ben change this!  This is a kluge.
-	pa = 2*pi*ran2(seed);  //TODO: This is a kluge.
-	Rsize = rmaxNSIE(sigma,mass,fratio,rcore);
- 
-	Rmax = MAX(1.0,1.0/fratio)*Rsize;  // redefine
- 
-	assert(Rmax >= Rsize);
- }
- 
- void LensHaloRealNSIE::initFromFile(float my_mass, long *seed, float vmax, float r_halfmass){
-	initFromMass(my_mass,seed);
- }
- 
- void LensHaloRealNSIE::initFromMassFunc(float my_mass, float my_Rmax, float my_rscale, PosType my_slope, long *seed){
-	initFromMass(my_mass,seed);
- }
- */
-
+// this function is usually overridden in derived classes
 void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,KappaType *phi,PosType const *xcm,bool subtract_point,PosType screening)
 {
   PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
@@ -1543,7 +1535,7 @@ void LensHalo::force_halo(PosType *alpha,KappaType *kappa,KappaType *gamma,Kappa
 }
 
 /*
- Used in derived classes to subtract the point mass if necescary and take care of quantities beyond Rmax
+ Used in derived classes to subtract the point mass if necessary and take care of quantities beyond Rmax
  
  Returns true when no further calculation of the quantities should be done.
  
@@ -1587,12 +1579,6 @@ bool LensHalo::force_point(PosType *alpha,KappaType *kappa,KappaType *gamma,Kapp
     
     *phi += 0.5*mass*log(rcm2) / PI;
   }
-//  else{
-//    alpha[0] = alpha[1] = 0.0;
-//    gamma[0] = gamma[1] = gamma[2] = 0.0;
-//    *kappa = 0.0;
-//    *phi = 0.0 ;
-//  }
   
   return true;
 }
@@ -1646,10 +1632,6 @@ void LensHalo::force_halo_sym(
       alpha[0] += -1.0 * prefac * xcm[0];
       alpha[1] += -1.0 * prefac * xcm[1];
       
-      //std::cout << "rcm2  = " << rcm2 << std::endl;
-      //std::cout << "prefac  = " << prefac << std::endl;
-      //std::cout << "xcm  = " << xcm[0] << " " << xcm[1] << std::endl;
-      
       PosType tmp = -2.0*prefac/rcm2;
       
       // kappa is equal to 0 in the point mass case.
@@ -1659,14 +1641,6 @@ void LensHalo::force_halo_sym(
       *phi += 0.5 * log(rcm2) * mass / PI ;
     }
   }
-  
-  /// add stars for microlensing
-//  if(stars_N > 0 && stars_implanted)
-//  {
-//    force_stars(alpha,kappa,gamma,xcm);
-//  }
-  
-  //(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
 
   return;
 }

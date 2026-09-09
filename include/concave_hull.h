@@ -65,8 +65,37 @@ size_t RemoveIntersections(std::vector<T> &curve){
 ///  Will fail if there are overlapping segments on the hull.
 std::vector<Point_2d> TighterHull(const std::vector<Point_2d> &v);
 
-///Finds a concave envelope for an arbitrary closed curve.  This is done by gridding and then finding points that are withing a sertain distance of a segment of the curve.  The outer bounding curve is found and then the cuve is shrunck to the closest point on a segment.  This should be fool proof, but is relatively slow and might clip some points.
+/** Finds a concave envelope for an arbitrary closed curve.  
+This is done by gridding and then finding points that are within a 
+certain distance of a segment of the curve.  The outer bounding curve 
+is found and then the curve is shrunck to the closest point on a segment.  
+This should be fool proof, but is relatively slow and might clip some 
+points.
+*/
 std::vector<Point_2d> TightestHull(const std::vector<Point_2d> &v);
+
+// finds the points that are within a distance R of the curve.
+// Used within TightestHull()
+void _set_bitmap(std::vector<bool> &bitmap,
+  const std::vector<Point_2d> &v,
+  double R,
+  long start,
+  long end,
+  long nx,
+  double resolution,
+  long &count,
+  Point_2d ll);
+
+  void _set_bitmap2(std::vector<bool> &bitmap,
+    const std::vector<Point_2d> &v,
+    const std::vector<Point_2d> &w,
+    double R,
+    long start,
+    long end,
+    long nx,
+    double resolution,
+    long &count,
+    Point_2d ll);
 
 //template <typename T>
 //std::vector<T> TightHull(const std::vector<T> &curve){
@@ -203,7 +232,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
                      ,std::vector<std::vector<P> > &points
                      ,std::vector<bool> &hits_edge
                      ,bool add_to_vector=false
-                     ,bool outer_only=false    /// finds only the fist boundary which will be the outer one if there are not seporated islands
+                     ,bool outer_only=false    /// finds only the first boundary which will be the outer one if there are not seporated islands
                      ){
   
   size_t n = bitmap.size();
@@ -495,12 +524,14 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
 }
 
 /// find the indexes of areas with bitmap[]=true broken up into diconnected islands
+/// worning:  currently does not handle holes
 void find_islands(std::vector<bool> &bitmap  // = true inside
                   ,long nx  // number of pixels in x direction
                   ,std::vector<std::vector<long> > &indexes
                   ,std::vector<bool> &hits_edge
-                  ,bool add_to_vector=false
                   );
+
+bool test_find_islands();
 
 /// this returns area within the curve x average kappa iwithin the curve
 double interior_mass(const std::vector<Point_2d> &alpha
@@ -555,7 +586,7 @@ std::vector<T> convex_hull(const std::vector<T> &PP)
   return hull;
 }
 
-/// Returns a vector of points on the convex hull in counter-clockwise order.
+/// convex hull in counter-clockwise order.
 ///
 template<typename T>
 void convex_hull(const std::vector<T> &P,std::vector<size_t> &hull)

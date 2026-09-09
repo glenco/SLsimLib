@@ -319,12 +319,15 @@ private:
  *  The sources are created as a square array of pixels of dimension Npixels x Npixels and pixel size equal to resolution.
  *
  */
-class SourcePixelled: public Source{
+class SourcePixelled: public SourceColored{
 public:
-	SourcePixelled(PosType my_z, PosType* center, int Npixels, PosType resolution, PosType* arr_val,PosType zero_point);
+	SourcePixelled(PosType my_z, PosType* center
+    , int Npixels, PosType resolution, PosType* arr_val
+    ,PosType zero_point,Band my_band);
   template <typename T>
-	SourcePixelled(const PixelMap<T>& gal_map, PosType z, PosType factor, PosType zero_point);
-	//SourcePixelled(InputParams& params);
+	SourcePixelled(const PixelMap<T>& gal_map
+    , PosType z,PosType factor, PosType zero_point,Band my_band);
+	
   
 	~SourcePixelled();
 	PosType SurfaceBrightness(const PosType *y) const;
@@ -694,16 +697,20 @@ struct SourceFunctor
 /** \brief Creates a SourcePixelled from a PixelMap image.
  *  The idea is to use stamps of observed galaxies as input sources for simuations.
  *  Surface brightness of the source is conserved, taking into account the input pixel size.
- *  Factor allows for rescaling of the flux, in case one wants to simulate a different observation.
+ *  Factor allows for rescaling of the flux.
+ * 
+ * The units of the input image are assumed to be in ergs/s/cm^2/Hz.
  */
 template <typename T>
 SourcePixelled::SourcePixelled(
                                const PixelMap<T>& gal_map  /// Input image and information
                                , PosType my_z                 /// redshift of the source
                                , PosType factor                /// optional rescaling factor for the flux
-                               , PosType zero_point
+                               , PosType my_zero_point
+                               , Band band                   /// band of the source
 )
-:Source(0,Point_2d(0,0),0,-1,zero_point){
+:SourceColored(0,sqrt(gal_map.getRangeX()*gal_map.getRangeX() + gal_map.getRangeY()*gal_map.getRangeY())/2
+  ,Point_2d(0,0),my_z, -1.0e100,my_zero_point,band){
   if(gal_map.getNx() != gal_map.getNy()){
     std::cout << "SourcePixelled::SourcePixelled() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
@@ -723,6 +730,10 @@ SourcePixelled::SourcePixelled(
     values[i] = gal_map(i)*convertion;
   
   calcTotalFlux();
+  float mag = SourceColored::flux_to_mag(flux);
+
+  setMag(mag,band);
+  
   calcCentroid();
   calcEll();
   calcSize();

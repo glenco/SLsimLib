@@ -14,6 +14,7 @@
 #include "quadTree.h"
 #include "particle_types.h"
 #include "image_processing.h"
+#include "fftw3.h"
 
 #include <complex>
 #include <complex.h>
@@ -97,6 +98,7 @@ public:
     MyPosHalo[0] = posHalo[0]*Dist;
     MyPosHalo[1] = posHalo[1]*Dist;
   }
+  Point_2d getX() const { return Point_2d(posHalo[0]*Dist , posHalo[1]*Dist); }
 
   /// returns position of the Halo in physical Mpc on the lens plane
   PosType operator[](int i) const{return posHalo[i]*Dist;}
@@ -110,6 +112,8 @@ public:
   /// get the position of the Halo in radians
   void getTheta(PosType * MyPosHalo) const { MyPosHalo[0] = posHalo[0] ; MyPosHalo[1] = posHalo[1]; }
   
+  Point_2d getTheta() const { return Point_2d(posHalo[0] , posHalo[1]); }
+
   /// Set the angular size distance to the halo.  This should be the distance to the lens plane.
   void setDist(COSMOLOGY &co){Dist = co.angDist(zlens);}
 
@@ -140,7 +144,7 @@ public:
   }
   void setRsize(PosType R){Rsize = R;}
   
-  // ste redshift and distance
+  // set redshift and distance
   void setZlensDist(PosType my_zlens,const COSMOLOGY &cos){
     zlens=my_zlens;
     Dist = cos.angDist(zlens);
@@ -852,6 +856,7 @@ protected:
 		return -0.5*x*x*InterpolateFromTable(g2table,x)/gmax;
 	}
 	inline KappaType phi_h(PosType x) const{
+    return 0.0;
     return 0.25*(InterpolateFromTable(htable,x) - InterpolateFromTable(htable,LensHalo::getRsize()/rscale))/gmax + log(LensHalo::getRsize()) ;
     // The constant contribution is made to match with the point mass at x = Rsize/rscale.
 	}
@@ -1227,7 +1232,7 @@ public:
   LensHaloTEPL(float my_mass  /// total mass in Msun
                 ,PosType my_zlens /// redshift
                 ,PosType r_trunc  /// elliptical truncation radius in Mpc
-                ,PosType gamma    /// power-law index, gamm = -1 is isothermal
+                ,PosType gamma    /// power-law index, gamma = -1 is isothermal
                 ,float my_fratio /// axis ratio
                 ,float my_pa     /// position angle, 0 has long axis along the vertical axis and goes clockwise
                 ,const COSMOLOGY &cosmo  /// cosmology
@@ -1659,7 +1664,8 @@ struct NFW: public PROFILE
 /***
 \brief  A class for constructing and approximation to any elliptical profile out of a series of elliptical gaussians.
  
- The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
+ The profile class must have two functions.  The  profile(r) must returns the surface density and profile.cum(r) must return the mass within the radius.  
+ Thier units are unimportant, but they must be consistant with eachother.  Some implemented cases are MultiGauss::sersic, MultiGauss::powerlaw and MultiGauss::nfw
  
  The profile is fit Nradii points logarithmicly distributed between r_min and r_max using Ngaussians Gaussians in that range.
  Typically Nradii ~ 2 * Ngaussians.
@@ -1737,9 +1743,11 @@ public:
   
   /***
     This is a static function that can be used to find the masses and scales for the gaussians which can
-   then be fed into the scond constructor with a rescaling.  This avoids having to recalculate them when the same profile is used multiple times.
+   then be fed into the second constructor with a rescaling.  This avoids having to recalculate them when 
+   the same profile is used multiple times.
    
-   For example, an NFW can be calculated here with a scale size 1 and an arbitrary mass.  Then it can be used in the constructor with different scale sizes and masses.
+   For example, an NFW can be calculated here with a scale size 1 and an arbitrary mass.  
+   Then it can be used in the constructor with different scale sizes and masses.
    
    <p>
    MultiGauss::sersic profile(1,1);

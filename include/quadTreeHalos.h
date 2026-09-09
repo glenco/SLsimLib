@@ -658,6 +658,7 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
   
   bool allowDescent;
   unsigned long count=0;//,tmp_index;
+  PosType inv_area_pi = inv_area*PI;
   
   treeit.movetop();
   do{
@@ -676,19 +677,20 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
       
       PosType rcm2 = xcm[0]*xcm[0] + xcm[1]*xcm[1];
       
-      double screening = exp(-rcm2*inv_screening_scale2);
-      halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,false,screening);
+      if(rcm2*inv_area_pi < 1){
+        double screening = exp(-rcm2*inv_screening_scale2);
+        halos[tmp_index]->force_halo(alpha,kappa,gamma,phi,xcm,false,screening);
       
-      // background part
-      double mass = halos[tmp_index]->get_mass();
-      double prefac = mass * inv_area ;
+        // background part
+        double mass = halos[tmp_index]->get_mass();
+        double prefac = mass * inv_area ;
       
-      alpha[0] += prefac*xcm[0];
-      alpha[1] += prefac*xcm[1];
+        alpha[0] += prefac*xcm[0];
+        alpha[1] += prefac*xcm[1];
       
-      *phi += - inv_area*rcm2 * mass*0.5;
-      *kappa -=  mass * inv_area;
-      
+        *phi += - inv_area*rcm2 * mass*0.5;
+        *kappa -=  mass * inv_area;
+      }
     }
     
     if( !(treeit.atLeaf()) ){

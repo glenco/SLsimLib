@@ -26,6 +26,7 @@ add_sources(
 	profile.h
 	quadrature.h
 	quadTree.h
+	quadTreeHalos.h
 	sersic_source.h
 	simpleTree.h
     simpleTreeVec.h
@@ -38,12 +39,14 @@ add_sources(
 	#TreeKist.h
 	tree_maintenance.h
     qTreeNB.h
+	oTreeNB.h
 	uniform_lens.h
 	utilities_slsim.h
     geometry.h
     elliptic.h
 	gridmap.h
 	particle_halo.h
+	particle_halo2.h
 	concave_hull.h
     bands_etc.h
 	gaussian.h

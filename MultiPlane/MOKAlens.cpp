@@ -312,12 +312,12 @@ void LensHaloMassMap::initMap()
   }
 }
 
-/**
- * \brief reads in the fits file for the MOKA or mass map and saves it in the structure map
+/*
+ * \brief copy MassMap to internal mass map
  */
 template<typename T>
 void LensHaloMassMap::setMap(
-                                 const PixelMap<T> &inputmap  // mass map
+                                 const PixelMap<T> &inputmap  // mass map, resolution/range in radians
                                  ,double massconvertion    // convertion factor from pixel units to solar masses
                                  ,double z
                                  ){

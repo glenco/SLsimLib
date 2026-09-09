@@ -24,11 +24,6 @@
 class Source;
 #include "fftw3.h"
 
-// forward declaration
-//struct Grid;
-//struct GridMap;
-//class Source;
-
 enum class Telescope {Euclid_VIS,Euclid_Y,Euclid_J,Euclid_H,KiDS_u,KiDS_g,KiDS_r,KiDS_i,HST_ACS_I,CFHT_u,CFHT_g,CFHT_r,CFHT_i,CFHT_z};
 
 enum class UnitType {counts_x_sec, flux} ;
@@ -178,7 +173,6 @@ private:
   
   // derived parameters;
   double sigma_background2;  // background variance x time
-  //double sb_to_e;  // approximate convertion between ergs / cm^2 / s and e-
 
   // adds random cosmic rays to the noise map
   template <typename T>
@@ -236,18 +230,6 @@ public:
                ,bool cosmic=false);
   
  
-//  double mag_to_counts(double m) const{
-//    if(m == 100) return 0;
-//    return pow(10,-0.4*(m + zero_point));
-//  }
-//  double counts_to_mag(double flux) const{
-//    if(flux <=0) return 100;
-//    return -2.5 * log10(flux) - zero_point;
-//  }
-
-  //double zeropoint() const {return zero_point;}
-  //void setZeropoint(double zpoint){zero_point=zpoint;}
- 
   /// returns std of pixels in e-
   float getBackgroundNoise() const {
     double dt = Utilities::vec_sum(t_exp);// 3 * t1 + t2;
@@ -255,10 +237,7 @@ public:
     return sqrt( sigma_background2 / dt );
   }
 private:
-  //double t1;
-  //double t2;
   std::vector<double> t_exp;  // exposure times
-
 };
 
 /** 
@@ -419,8 +398,13 @@ void ObsVIS::AddNoise(PixelMap<T> &pmap
                       ,PixelMap<T> &error_map
                       ,Utilities::RandomNumbers_NR &ran,bool cosmic
                       ){
+  if(pmap.getUnits() != PixelMapUnits::count_per_sec){
+    std::cerr << "ObsVIS::AddNoise() Map must be in counts_per_sec at this stage." << std::endl;
+    throw std::runtime_error("wrong uits");
+  }
+
   if(pmap.getNx() != pmap.getNy()){
-    std::cerr << "Observation::AddNoise() Doesn't work on nonsquare maps" << std::endl;
+    std::cerr << "ObsVIS::AddNoise() Doesn't work on nonsquare maps" << std::endl;
     throw std::runtime_error("nonsquare");
   }
   

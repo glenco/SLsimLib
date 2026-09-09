@@ -2667,11 +2667,58 @@ Point_2d Utilities::contour_center(std::vector<RAY> &P, unsigned long Npoints){
   return center;
 }
 
+bool Utilities::test_find_islands(){
+  long nx=10;
+  long ny=10;
+  std::vector<bool> bitmap(nx*ny,false);
+  
+  // create two islands
+  for(long j=2;j<5;++j){
+    for(long i=2;i<5;++i){
+      bitmap[i + j*nx] = true;
+    }
+  }
+  for(long j=3;j<9;++j){
+    for(long i=6;i<9;++i){
+      bitmap[i + j*nx] = true;
+    }
+  }
+  for(long j=6;j<9;++j){
+   for(long i=2;i<6;++i){
+     bitmap[i + j*nx] = true;
+   }
+ }
+
+  std::vector<std::vector<long> > indexes;
+  std::vector<bool> hits_edge;
+  Utilities::find_islands(bitmap,nx,indexes,hits_edge);
+
+  std::cout << std::endl;
+  for(long j=0;j<10;++j){
+    for(long i=0;i<10;++i){
+      if(bitmap[i+j*nx]){
+        std::cout << "x ";
+      }else{
+        std::cout << "o ";
+      }
+
+    }
+    std::cout << std::endl;
+  }
+  
+  if(indexes.size() != 2) return false;
+  if(indexes[0].size() != 9) return false;
+  if(indexes[1].size() != 18+12) return false;
+  if(hits_edge[0] == true) return false;
+  if(hits_edge[1] == false) return false;
+
+  return true;
+}
+
 void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
                   ,long nx  // number of pixels in x direction
                   ,std::vector<std::vector<long> > &indexes
                   ,std::vector<bool> &hits_edge
-                  ,bool add_to_vector
                   ){
   
   size_t n = bitmap.size();
@@ -2681,246 +2728,22 @@ void Utilities::find_islands(std::vector<bool> &bitmap  // = true inside
     std::cerr << "Wrong sizes in Utilities::find_boundaries." << std::endl;
     throw std::invalid_argument("invalid size");
   }
-  
-  std::vector<bool> not_used(n,true);
-  
-  // pad edge of field with bitmap=false
-  for(size_t i=0 ; i<nx ; ++i) bitmap[i]=false;
-  size_t j = nx*(ny-1);
-  for(size_t i=0 ; i<nx ; ++i) bitmap[i + j]=false;
-  for(size_t i=0 ; i<ny ; ++i) bitmap[i*nx]=false;
-  j = nx-1;
-  for(size_t i=0 ; i<ny ; ++i) bitmap[j + i*nx]=false;
-  
-  std::list< std::set<long> > contours;  // a set ensures that it is in assending order and no element is repeated
-  
-  if(!add_to_vector){
-    hits_edge.resize(0);
-  }
-  
-  bool done = false;
-  long kfirst_in_bound = -1;
-  while(!done){
-    // find first cell in edge
-    size_t k=0,k1,k2,k3;
-    int type;
-    for( k = kfirst_in_bound + 1 ; k < n - nx ; ++k){
-      if(k % nx != nx-1){ // one less cells than points
-        type = 0;
-        if(bitmap[k] ) type +=1;
-        if(bitmap[k+1]) type += 10;
-        if(bitmap[k + nx]) type += 100;
-        if(bitmap[k + nx + 1]) type += 1000;
-        
-        if(type > 0
-           && type != 1111
-           && not_used[k]
-           ) break;
-      }
-    }
-    
-    kfirst_in_bound = k;
-    
-    if(k == n-nx){
-      done=true;
-    }else{ // found an edge
-      
-      contours.resize(contours.size() + 1);
-      std::set<long> &contour = contours.back();
-      hits_edge.push_back(false);
-      
-      
-      int type;
-      int face_in=0;
-      size_t n_edge = 0;
-      
-      // follow edge until we return to the first point
-      while(k != kfirst_in_bound || n_edge==0){
-        
-        if(k%nx == 0 || k%nx == nx-2) hits_edge.back() = true;
-        if(k/nx == 0 || k/nx == ny-2) hits_edge.back() = true;
-        
-        not_used[k] = false;
-        
-        ++n_edge;
-        type = 0;
-        
-        k1 = k+1;
-        k2 = k+nx;
-        k3 = k+nx+1;
-        
-        // find type of cell
-        if(bitmap[k]) type +=1;
-        if(bitmap[k1]) type += 10;
-        if(bitmap[k2]) type += 100;
-        if(bitmap[k3]) type += 1000;
-        
-        if(type == 0 || type == 1111){  // all in or all out
-          throw std::runtime_error("off edge!!");
-        }else if(type == 1 || type == 1110){ // lower left only
-          
-          if(type == 1) contour.insert(k);
-          if(type == 1110){
-            contour.insert(k1);
-            contour.insert(k2);
-            contour.insert(k3);
-          }
-          
-          if(face_in==0){
-            face_in=1;
-            k -= nx;
-          }else{
-            face_in=2;
-            k -= 1;
-          }
-          
-        }else if(type == 10 || type == 1101){ // lower right only
-          
-          if(type == 10) contour.insert(k1);
-          if(type == 1101){
-            contour.insert(k);
-            contour.insert(k2);
-            contour.insert(k3);
-          }
-          
-          if(face_in==2){
-            face_in=1;
-            k -= nx;
-          }else{
-            face_in=0;
-            k += 1;
-          }
-          
-        }else if(type == 100 || type == 1011){ // upper left only
-          
-          if(type == 100) contour.insert(k2);
-          if(type == 1011){
-            contour.insert(k);
-            contour.insert(k1);
-            contour.insert(k3);
-          }
-          
-          if(face_in==0){
-            face_in=3;
-            k += nx;
-          }else{
-            face_in=2;
-            k -= 1;
-          }
-          
-        }else if(type == 1000 || type == 111){ // upper right only
-          
-          if(type == 1000) contour.insert(k3);
-          if(type == 1011){
-            contour.insert(k);
-            contour.insert(k1);
-            contour.insert(k2);
-          }
-          
-          if(face_in==1){
-            face_in=0;
-            k += 1;
-          }else{
-            face_in=3;
-            k += nx;
-          }
-          
-        }else if(type == 11 || type == 1100){ // lower two
-          
-          if(type == 11){
-            contour.insert(k);
-            contour.insert(k1);
-          }
-          if(type == 1100){
-            contour.insert(k2);
-            contour.insert(k3);
-          }
-          
-          if(face_in==0){
-            k += 1;
-          }else{
-            face_in = 2;
-            k -= 1;
-          }
-          
-        }else if(type == 1010 || type == 101){ // right two
-          
-          if(type == 1010){
-            contour.insert(k1);
-            contour.insert(k3);
-          }
-          if(type == 101){
-            contour.insert(k);
-            contour.insert(k2);
-          }
-          
-          if(face_in==1){
-            k -= nx;
-          }else{
-            face_in = 3;
-            k += nx;
-          }
-          
-        }else if(type == 1001){ // lower left upper right
-          
-          contour.insert(k);
-          contour.insert(k3);
-          
-          if(face_in==0){
-            face_in=3;
-            k += nx;
-          }else if(face_in==1){
-            face_in=2;
-            k -= 1;
-          }else if(face_in==2){
-            face_in=1;
-            k -= nx;
-          }else{
-            face_in=0;
-            k += 1;
-          }
-          
-        }else if(type == 110){ // upper left lower right
-          
-          contour.insert(k1);
-          contour.insert(k2);
-          
-          if(face_in==0){
-            face_in=1;
-            k -= nx;
-          }else if(face_in==1){
-            face_in=0;
-            k += 1;
-          }else if(face_in==2){
-            face_in=3;
-            k += nx;
-          }else{
-            face_in=2;
-            k -= 1;
-          }
+
+  std::vector<std::vector<Point_2d> > boundaries;
+  Utilities::find_boundaries(bitmap, nx, boundaries, hits_edge, false);
+
+  // fill in island
+  indexes.resize(boundaries.size() );
+  for(auto &v : indexes) v.clear();
+  for(long k=0 ; k < n ; ++k){
+    if(bitmap[k]){
+      Point_2d p( (double)(k % nx) , (double)(k / nx) );
+      for(int i=0 ; i<boundaries.size() ; ++i){
+        if(Utilities::inCurve(p,boundaries[i]) ){
+          indexes[i].push_back(k);
+          break;
         }
       }
-      
-   
-      // fill in island
-      indexes.emplace_back();
-      std::vector<long> &index = indexes.back();
-      
-      long k=0;
-      for(auto it = contour.begin()
-            ; it != contour.end()
-            ; ++it
-            ){
-        if(k<*it){
-          k=*it;
-          while(bitmap[k]){
-            index.push_back(k);
-            ++k;
-          }
-        }
-      }
-      
-      
     }
   }
 }
@@ -3123,6 +2946,46 @@ std::vector<Point_2d> Utilities::envelope2(const std::vector<Point_2d> &v
   }
 }
 
+void Utilities::_set_bitmap2(std::vector<bool> &bitmap,
+  const std::vector<Point_2d> &v,
+  const std::vector<Point_2d> &w,
+  double R,
+  long start,
+  long end,
+  long nx,
+  double resolution,
+  long &count,
+  Point_2d ll){
+  
+  count=0;
+  Point_2d p = ll;
+  long nv = v.size();
+  long nw = w.size();
+
+  for(long m=start ; m<end ; ++m){
+    bitmap[m] = false;
+    p[0] = ll[0] + (m%nx)*resolution;
+    p[1] = ll[1] + (m/nx)*resolution;
+
+    for(long k=0 ; k < nv ; ++k){                              
+      if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){                              
+        bitmap[m] = true;                              
+        ++count;
+        break;
+      }
+    }
+    if( bitmap[m] == false){
+      for(long k=0 ; k < nw ; ++k){
+        if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
+          bitmap[m] = true;
+          ++count;
+          break;
+        }
+      }
+    }                        
+  }
+}
+
 std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
                                ,const std::vector<Point_2d> &w){
   
@@ -3134,7 +2997,7 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   
   Utilities::Geometry::CYCLIC cycv(nv);
   Utilities::Geometry::CYCLIC cycw(nw);
-  Point_2d inter_p;
+  //Point_2d inter_p;
   
   bool intersecting = false;
   // check if they intersect
@@ -3144,8 +3007,8 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
       if(Utilities::Geometry::intersect(v[i].x,v[ cycv[i+1] ].x
                                         ,w[j].x,w[ cycw[j+1] ].x))
         intersecting = true;
-        inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
-                        ,w[j].x,w[ cycw[j+1] ].x);
+        //inter_p = line_intersection(v[i].x,v[ cycv[i+1] ].x
+        //                ,w[j].x,w[ cycw[j+1] ].x);
     }
   }
   
@@ -3203,29 +3066,64 @@ std::vector<Point_2d> Utilities::envelope(const std::vector<Point_2d> &v
   long count=0;
   Point_2d p = ll;
   std::vector<bool> bitmap(nx*ny,false);
-  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
-    p[0] = ll[0];
-    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
-      long m = i + nx*j;
-      
-      for(long k=0 ; k < nv ; ++k){
-        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
-          bitmap[m] = true;
-          ++count;
-          break;
-        }
-      }
-      if( bitmap[m] == false){
-        for(long k=0 ; k < nw ; ++k){
-          if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
-            bitmap[m] = true;
-            ++count;
-            break;
-          }
-        }
-      }
+
+  {
+    long N = bitmap.size();
+    int nthreads;
+    nthreads = Utilities::GetNThreads();
+    
+    if(nthreads >= N) nthreads = 1;
+    long chunk_size = (N + nthreads - 1) / nthreads; // divide by threads rounded up
+    std::vector<long> counts(nthreads,0);
+    
+    std::thread thr[nthreads];
+    for(int i=0; i<nthreads;i++){
+      long start = i*chunk_size;
+      long end = start + chunk_size;
+      if(end > N) end = N;
+    
+      thr[i] = std::thread(Utilities::_set_bitmap2,
+                            std::ref(bitmap),
+                            std::ref(v),
+                            std::ref(w),
+                            R,
+                            start,
+                            end,
+                            nx,
+                            resolution,
+                            std::ref(counts[i]),
+                            ll);
     }
+    for(int i=0; i<nthreads;i++) thr[i].join();
+    count = 0;
+    for(int i=0; i<nthreads;i++) count += counts[i];
   }
+
+
+
+  // for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+  //   p[0] = ll[0];
+  //   for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+  //     long m = i + nx*j;
+      
+  //     for(long k=0 ; k < nv ; ++k){
+  //       if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+  //         bitmap[m] = true;
+  //         ++count;
+  //         break;
+  //       }
+  //     }
+  //     if( bitmap[m] == false){
+  //       for(long k=0 ; k < nw ; ++k){
+  //         if(R > Utilities::distance_to_segment(p, w[k],w[ (k+1)%nw ] ) ){
+  //           bitmap[m] = true;
+  //           ++count;
+  //           break;
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   
   if(count > 0){
     std::vector<std::vector<Point_2d> > envelopes;
@@ -3515,6 +3413,34 @@ std::vector<Point_2d> Utilities::TighterHull(const std::vector<Point_2d> &vv){
   return env;
 }
 
+void Utilities::_set_bitmap(std::vector<bool> &bitmap,
+                            const std::vector<Point_2d> &v,
+                            double R,
+                            long start,
+                            long end,
+                            long nx,
+                            double resolution,
+                            long &count,
+                            Point_2d ll){
+  count=0;
+  Point_2d p = ll;
+  long nv = v.size();
+  
+  for(long m=start ; m<end ; ++m){
+    bitmap[m] = false;
+    p[0] = ll[0] + (m%nx)*resolution;
+    p[1] = ll[1] + (m/nx)*resolution;
+   
+    for(long k=0 ; k < nv ; ++k){                              
+      if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){                              
+        bitmap[m] = true;                              
+        ++count;                              
+        break;                           
+      }                              
+    }                              
+  }                          
+}
+
 
 std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
   if(v.size() <= 3) return v;
@@ -3548,24 +3474,54 @@ std::vector<Point_2d> Utilities::TightestHull(const std::vector<Point_2d> &v){
   long nx = (ur[0]-ll[0])/resolution;
   long ny = (ur[1]-ll[1])/resolution;
   long nv = v.size();
-  
+
   long count=0;
   Point_2d p = ll;
-  std::vector<bool> bitmap(nx*ny,false);
-  for(long j=0 ; j<ny ; ++j,p[1] += resolution){
-    p[0] = ll[0];
-    for(long i=0 ; i<nx ; ++i,p[0] += resolution){
-      long m = i + nx*j;
-      
-      for(long k=0 ; k < nv ; ++k){
-        if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
-          bitmap[m] = true;
-          ++count;
-          break;
-        }
-      }
+  std::vector<bool> bitmap(nx*ny);
+  {
+    long N = bitmap.size();
+    int nthreads;
+    nthreads = Utilities::GetNThreads();
+    
+    if(nthreads >= N) nthreads = 1;
+    long chunk_size = (N + nthreads - 1) / nthreads; // divide by threads rounded up
+    std::vector<long> counts(nthreads,0);
+    
+    std::thread thr[nthreads];
+    for(int i=0; i<nthreads;i++){
+      long start = i*chunk_size;
+      long end = start + chunk_size;
+      if(end > N) end = N;
+      assert(start <= end);
+      thr[i] = std::thread(Utilities::_set_bitmap,
+                            std::ref(bitmap),
+                            std::ref(v),
+                            R,
+                            start,
+                            end,
+                            nx,
+                            resolution,
+                            std::ref(counts[i]),
+                            ll);
     }
+    for(int i=0; i<nthreads;i++) thr[i].join();
+    count = 0;
+    for(int i=0; i<nthreads;i++) count += counts[i];
   }
+  // for(long j=0 ; j<ny ; ++j,p[1] += resolution){
+  //   p[0] = ll[0];
+  //   for(long i=0 ; i<nx ; ++i,p[0] += resolution){
+  //     long m = i + nx*j;
+      
+  //     for(long k=0 ; k < nv ; ++k){
+  //       if(R > Utilities::distance_to_segment(p, v[k],v[ (k+1)%nv ] ) ){
+  //         bitmap[m] = true;
+  //         ++count;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
   
   if(count > 0){
     std::vector<std::vector<Point_2d> > envelopes;

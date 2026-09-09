@@ -257,16 +257,15 @@ public:
       return galaxies[i];
     return galaxies[index];
   }
+  const SourceShapelets &operator[](std::size_t i) const{
+    if (i < galaxies.size())
+      return galaxies[i];
+    return galaxies[index];
+  }
 
   SourceShapelets& back(){
     return galaxies.back();
   }
-
-	const SourceShapelets& operator[] (std::size_t i) const {
-		if(i < galaxies.size())
-			return galaxies[i];
-		return galaxies[index];
-	}
     
 	SourceShapelets& CurrentGalaxy(){
 		return galaxies[index];

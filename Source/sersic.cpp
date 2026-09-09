@@ -111,7 +111,6 @@ void SourceSersic::ReSet(
     setTheta(my_theta[0], my_theta[1]);
 
   if(q > 1) q = 1.0/q;
-    //throw std::invalid_argument("Error: q must be < 1!");
 }
 
 SourceSersic::~SourceSersic()

@@ -51,14 +51,13 @@ public:
   PixelMap(PixelMap<T>&& other);
   PixelMap(const PixelMap<T>& pmap, const double* center, std::size_t Npixels);
   PixelMap(const PixelMap<T>& pmap,long nx,long ny, std::size_t Npixels);
-  PixelMap(const double* center, std::size_t Npixels, double resolution,PixelMapUnits u = PixelMapUnits::ndef);
-  PixelMap(const double* center
-           , std::size_t Nx, std::size_t Ny
-           , double resolution
-           ,PixelMapUnits u = PixelMapUnits::ndef);
-  //PixelMap(std::string fitsfilename
-  //         ,std::string extension = ""
-  //         );
+  PixelMap(const double* center, std::size_t Npixels
+          ,double resolution
+          ,PixelMapUnits u = PixelMapUnits::ndef);
+  PixelMap(const double* center, std::size_t Nx, std::size_t Ny
+          ,double resolution /// resolution in radians
+          ,PixelMapUnits u = PixelMapUnits::ndef);
+  
   PixelMap(std::string fitsfilename   /// file name of fits file to be read
           ,double my_res=-1         /// resolution (rad) of fits image if not given in fits file, use default or -1 otherwise
           ,PixelMapUnits u = PixelMapUnits::ndef
@@ -111,6 +110,7 @@ public:
   
   // Zero the whole map
   void Clean(){for(auto &a : map) a = 0;}
+  void clear(){Clean();}
 
   void AddImages(ImageInfo *imageinfo,int Nimages,float rescale = 1.);
   void AddImages(std::vector<ImageInfo> &imageinfo,int Nimages,float rescale = 1.);
@@ -232,7 +232,7 @@ public:
 
   inline T getValue(std::size_t i) const { return map[i]; }
   inline T & operator[](std::size_t i) { return map[i]; };
-  inline T operator[](std::size_t i) const { return map[i]; };
+  const T &operator[](std::size_t i) const { return map[i]; };
   inline T & operator()(std::size_t i) { return map[i]; };
   inline T operator()(std::size_t i) const { return map[i]; };
   inline T operator()(std::size_t i,std::size_t j) const { return map[i + Nx*j]; };
@@ -342,29 +342,45 @@ public:
                     ,std::vector<std::vector<Point_2d> > &points
                     ,std::vector<bool> &hits_edge
                     ) const;
+
   /** find all the points above level divided into seprated groups
    
    Groups with points are connected regions above level.
    Groups without points are regions surrounded by regions above level, i.e. holes.
+   If a group has holes within it holes will be a list of the index for them.
+   ie If holes[i].size() == 0 then group i has no holes.
+      if holes[j][0] == k then boundaries[k] is the boundary of a hole within group j
+      and points[k].size()==0.
+
+   boundary points are in radians.
    */
-  
   void find_islands_holes(T level,
-                    std::vector<std::vector<size_t> > &points
-                    ) const;
+                          std::vector<std::vector<size_t>> &points,
+                          std::vector<std::vector<Point_2d>> &boundaries,
+                          std::vector<bool> &hits_edge,
+                          std::vector<std::vector<int> > &holes) const;
   
+  /** find all the points above level divided into seprated groups
+ 
+    Groups with points are connected regions above level.
+    Groups without points are regions surrounded by regions above level, holes, i.e. holes.
+    Points are in pixel units.
+ */
+  void find_islands_holes(T level,std::vector<std::vector<size_t>> &points) const;
+
   /** This applies a definition of lesning for a resolved source based on that of Sonnenfeld et al. 2023
-   
-   This is meant to be used on a signal-to-noise map of the lensed source only.
-   
-   The definition does the following tests:
-   1) define a footprint at surface brightness level `pixel_threshold`
-   2) romove disconected region that have signal-to-noise below `min_sn_per_image `
-   3) if there are multiple images or a hole in the image `lens_TF =true`
-   4) if there is one image with no hole increase the threshold and apply 3) until the it is classified as a
-          lens or it reaches the maximum surface brightness level
-   
-   */
-  void lens_definition(T min_sn_per_image                 /// signal-to-noise required for a seporate image (ex 10)
+
+     This is meant to be used on a signal-to-noise map of the lensed source only.
+
+     The definition does the following tests:
+     1) define a footprint at surface brightness level `pixel_threshold`
+     2) romove disconected region that have signal-to-noise below `min_sn_per_image `
+     3) if there are multiple images or a hole in the image `lens_TF =true`
+     4) if there is one image with no hole increase the threshold and apply 3) until the it is classified as a
+            lens or it reaches the maximum surface brightness level
+
+     */
+    void lens_definition(T min_sn_per_image /// signal-to-noise required for a seporate image (ex 10)
                        ,T pixel_threshold                 /// signal-to-noise threshold that defines the footprint (ex. 2)
                        ,int &Nimages                           /// the number of images
                        ,T &total_sig_noise_source         /// gives the total signal-to-noise of all images
@@ -375,198 +391,248 @@ public:
                        ,size_t &n_pix_in_source                 /// number of pixels in footprint
                        ,bool verbose = false
                        );
- 
-  
-  /// find maxima that are above minlevel
-  std::vector<size_t> maxima(T minlevel) const;
-  
-  /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
-   
-   On return, 'pixel_index' is ordered into groups and the 'heads' list points to the first elemant
-   in each group plus the end of the list so that heads[i] to heads[i+1] is a group for 0 <= i <= ngroups.
-   The number of groups is returned which is also heads.size() - 1
-   */
-  //int count_islands(std::list<size_t> &pixel_index,std::vector<std::list<size_t>::iterator> &heads) const;
-  int count_islands(std::vector<size_t> &pixel_index) const;
 
-  /// get a list of pixels above value
-  size_t threshold(std::list<size_t> &pixel_index,PosType value){
-    for(size_t i=0;i<map.size();++i) if(value < map[i]) pixel_index.push_back(i);
-    return pixel_index.size();
-  }
-  
-  /// reflects the image about the horizontal mid-line
-  void flipY(){
-    for(size_t i=0;i<Nx;++i){
-      for(size_t j=0;j<(Ny-1)/2;++j){
-        std::swap( map[i + Nx*j],map[i + Nx*(Ny-j-1)] );
-      }
+    /** \brief  find arc parameters for a contour at level
+     * inputs:
+     *  level : contour level to use
+     *  center : proposed center of the lens
+     * 
+     * outputs:
+     *  ring : true if the image is a ring
+     *  angle : opening angle of the largestarc in degrees
+     *  thinness : perimeter^2/ (4 pi area) of the largest arc, 1 for a circle, larger for thinner arcs
+     *  radius : average of the distance of arc extreem points from center, radians
+     *  nonrad : difference in radius of extreem points / radius
+     *  range : distance between the two points on the arc boundaries that are furthest apart, radians
+     * 
+     * The extreem points are the poits on the contour level that are where the curve changes direction 
+     * with respect to the center. The angle is the angle spanned by these points as seen from the center. 
+     */
+    void arc_parameters(T level, Point_2d center, bool &ring,
+                        double &angle, double &thinness, double &radius, double &nonrad,double &range) const;
+
+    /// find maxima that are above minlevel
+    std::vector<size_t> maxima(T minlevel) const;
+
+    /** \brief For a list of pixel indexes this will count and separated islands that are not connected.
+
+     On return, 'pixel_index' is ordered into groups and the 'heads' list points to the first elemant
+     in each group plus the end of the list so that heads[i] to heads[i+1] is a group for 0 <= i <= ngroups.
+     The number of groups is returned which is also heads.size() - 1
+     */
+    int count_islands(std::vector<size_t> &pixel_index) const;
+
+    /// get a list of pixels above value
+    size_t threshold(std::list<size_t> &pixel_index, PosType value)
+    {
+      for (size_t i = 0; i < map.size(); ++i)
+        if (value < map[i])
+          pixel_index.push_back(i);
+      return pixel_index.size();
     }
-  }
-  /// reflects the image about the vertical mid-line
-  void flipX(){
-    for(size_t i=0;i<(Nx-1)/2;++i){
-      for(size_t j=0;j<Ny;++j){
-        std::swap( map[i + Nx*j],map[Nx-i-1 + Nx*j] );
-      }
-    }
-  }
-  /// rotate the image by 180deg or equivalently reflect it through the origin
-  void doubleFlip(){
-    flipX();
-    flipY();
-  }
-  
-  /// recenter the map without changing anything else.
-  
-  void recenter(PosType newcenter[2] /// in radians
-                 );
-  void recenter(Point_2d newcenter /// in radians
-                 );
-  
-  /* \brief convolve the image with a kernel.
-   
-   It is assumed that the size of the kernel is much smaller than the image and
-   that the kernal has the same pixel size as the image.
-   **/
-  //void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
- 
-  /** \brief Creates a PixelMap with a lower resolution.
-   *  The value of the pixels are added for the new pixels.
-   *   If n does not go into the orginial number of pixels evenly the right (top) redge is dropped.
-   */
-  PixelMap<T> downsize(int n /// number of pixels each direction added into each new pixel
-                    );
 
-  /** \brief Makes a PixelMap with resolution 1/n of the original with the values linearly interpolated.
-   
-   This normalizes so that the sum of the pixels is approximately constant.
-   */
-  PixelMap interpolate(int n);
-
-  /// add a heaader keyword that will appear in fits output
-   void addheader(std::string label,long value,std::string comment){
-     bool found = false;
-     for(auto  &a : headers_long){
-       if(std::get<0>(a) == label){
-         std::get<1>(a)=value;
-         std::get<2>(a)=comment;
-         found = true;
-         break;
-       }
-     }
-     if(!found) headers_long.push_back(std::make_tuple(label,value,comment));
-   }
-   void addheader(std::string label,size_t value,std::string comment){
-     bool found = false;
-     for(auto  &a : headers_long){
-       if(std::get<0>(a) == label){
-         std::get<1>(a)=value;
-         std::get<2>(a)=comment;
-         found = true;
-         break;
-       }
-     }
-     if(!found) headers_long.push_back(std::make_tuple(label,value,comment));
-   }
-   void addheader(std::string label,float value,std::string comment){
-     bool found = false;
-     for(auto  &a : headers_float){
-       if(std::get<0>(a) == label){
-         std::get<1>(a)=value;
-         std::get<2>(a)=comment;
-         found=true;
-         break;
-       }
-     }
-     if(!found) headers_float.push_back(std::make_tuple(label,value,comment));
-   }
-  void addheader(std::string label,double value,std::string comment){
-    bool found = false;
-    for(auto  &a : headers_float){
-      if(std::get<0>(a) == label){
-        std::get<1>(a)=value;
-        std::get<2>(a)=comment;
-        found=true;
-        break;
-      }
-    }
-    if(!found) headers_float.push_back(std::make_tuple(label,value,comment));
-  }
-  void addheader(std::string label,std::string value,std::string comment){
-    bool found = false;
-    for(auto  &a : headers_string){
-      if(std::get<0>(a) == label){
-        std::get<1>(a)=value;
-        std::get<2>(a)=comment;
-        found=true;
-        break;
-      }
-    }
-    if(!found) headers_string.push_back(std::make_tuple(label,value,comment));
-  }
-
-private:
-  std::vector<std::tuple<std::string,float,std::string> > headers_float;
-  std::vector<std::tuple<std::string,long,std::string> > headers_long;
-  std::vector<std::tuple<std::string,std::string,std::string> > headers_string;
-
-  std::valarray<T> map;
-  long Nx;
-  long Ny;
-  double resolution,rangeX,rangeY,center[2];
-  double RA=0,DEC=0; // optional coordinates of center
-  double map_boundary_p1[2],map_boundary_p2[2];
-  PixelMapUnits units= PixelMapUnits::ndef;
-  
-  void AddGrid_(const PointList &list,LensingVariable val);
-
-  double LeafPixelArea(IndexType i,Branch * branch1);
-  void PointsWithinLeaf(Branch * branch1, std::list <unsigned long> &neighborlist);
-  bool inMapBox(Branch * branch1) const;
-  bool inMapBox(double * branch1) const;
-  
-  /// determines if pixels touch each other from i dimensional index
-  bool pixels_are_neighbors(size_t i,size_t j) const;
-  /** recursive function that finds all the pixels in reservoir beyond and including position 'group' that are attached to pixel current.
-   On exit reserve is ordered so that pixels that are in the same group are in sequence and 'group' points to the element in 'reservoir' that is one past the group elements
-   */
-  void _count_islands_(size_t current,std::list<size_t> &reservoir
-                       ,std::list<size_t>::iterator &group) const;
-  
-  //void addsource_(size_t i1,size_t i2,int oversample,Source source,PosType &total);
-  //void addsource_(size_t i1,size_t i2,int oversample,Po,
-  //                   PosType &total);
-
-  template <typename S>
-    void addsource_(size_t i1,size_t i2,int oversample,
-                    S &source,
-                    PosType &total){
-    PosType tmp_res = resolution*1.0/oversample;
-    PosType tmp = tmp_res*tmp_res;
-    PosType bl = resolution /2 - 0.5*tmp_res;
-    PosType y[2],x[2];
-    
-    total = 0;
-    
-    for(size_t index = i1 ;index <= i2; ++index){
-      find_position(y,index);
-      y[0] -= bl;
-      y[1] -= bl;
-      for(int i = 0 ; i < oversample ; ++i){
-        x[0] = y[0] + i*tmp_res;
-        for(int j=0; j < oversample;++j){
-          x[1] = y[1] + j*tmp_res;
-          map[index] += source.SurfaceBrightness(x)*tmp;
-          total += source.SurfaceBrightness(x)*tmp;
+      /// reflects the image about the horizontal mid-line
+      void flipY()
+      {
+        for (size_t i = 0; i < Nx; ++i)
+        {
+          for (size_t j = 0; j < (Ny - 1) / 2; ++j)
+          {
+            std::swap(map[i + Nx * j], map[i + Nx * (Ny - j - 1)]);
+          }
         }
       }
-    }
-  }
-  
-  // find if pixel k is in the curve which must be in pixel units, meant to be used in conjunction with Utilities::find_boundaries<>
-  bool incurve(long k,std::vector<Point_2d> &curve) const;
-};
+      /// reflects the image about the vertical mid-line
+      void flipX()
+      {
+        for (size_t i = 0; i < (Nx - 1) / 2; ++i)
+        {
+          for (size_t j = 0; j < Ny; ++j)
+          {
+            std::swap(map[i + Nx * j], map[Nx - i - 1 + Nx * j]);
+          }
+        }
+      }
+      /// rotate the image by 180deg or equivalently reflect it through the origin
+      void doubleFlip()
+      {
+        flipX();
+        flipY();
+      }
+
+      /// recenter the map without changing anything else.
+
+      void recenter(PosType newcenter[2] /// in radians
+      );
+      void recenter(Point_2d newcenter /// in radians
+      );
+
+      /* \brief convolve the image with a kernel.
+
+       It is assumed that the size of the kernel is much smaller than the image and
+       that the kernal has the same pixel size as the image.
+       **/
+      // void convolve(PixelMap &kernel,long center_x = 0,long center_y = 0);
+
+      /** \brief Creates a PixelMap with a lower resolution.
+       *  The value of the pixels are added for the new pixels.
+       *   If n does not go into the orginial number of pixels evenly the right (top) redge is dropped.
+       */
+      PixelMap<T> downsize(int n /// number of pixels each direction added into each new pixel
+      );
+
+      /** \brief Makes a PixelMap with resolution 1/n of the original with the values linearly interpolated.
+
+       This normalizes so that the sum of the pixels is approximately constant.
+       */
+      PixelMap interpolate(int n);
+
+      /// add a heaader keyword that will appear in fits output
+      void addheader(std::string label, long value, std::string comment)
+      {
+        bool found = false;
+        for (auto &a : headers_long)
+        {
+          if (std::get<0>(a) == label)
+          {
+            std::get<1>(a) = value;
+            std::get<2>(a) = comment;
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          headers_long.push_back(std::make_tuple(label, value, comment));
+      }
+      void addheader(std::string label, size_t value, std::string comment)
+      {
+        bool found = false;
+        for (auto &a : headers_long)
+        {
+          if (std::get<0>(a) == label)
+          {
+            std::get<1>(a) = value;
+            std::get<2>(a) = comment;
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          headers_long.push_back(std::make_tuple(label, value, comment));
+      }
+      void addheader(std::string label, float value, std::string comment)
+      {
+        bool found = false;
+        for (auto &a : headers_float)
+        {
+          if (std::get<0>(a) == label)
+          {
+            std::get<1>(a) = value;
+            std::get<2>(a) = comment;
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          headers_float.push_back(std::make_tuple(label, value, comment));
+      }
+      void addheader(std::string label, double value, std::string comment)
+      {
+        bool found = false;
+        for (auto &a : headers_float)
+        {
+          if (std::get<0>(a) == label)
+          {
+            std::get<1>(a) = value;
+            std::get<2>(a) = comment;
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          headers_float.push_back(std::make_tuple(label, value, comment));
+      }
+      void addheader(std::string label, std::string value, std::string comment)
+      {
+        bool found = false;
+        for (auto &a : headers_string)
+        {
+          if (std::get<0>(a) == label)
+          {
+            std::get<1>(a) = value;
+            std::get<2>(a) = comment;
+            found = true;
+            break;
+          }
+        }
+        if (!found)
+          headers_string.push_back(std::make_tuple(label, value, comment));
+      }
+
+    private:
+      std::vector<std::tuple<std::string, float, std::string>> headers_float;
+      std::vector<std::tuple<std::string, long, std::string>> headers_long;
+      std::vector<std::tuple<std::string, std::string, std::string>> headers_string;
+
+      std::valarray<T> map;
+      long Nx;
+      long Ny;
+      double resolution, rangeX, rangeY, center[2];
+      double RA = 0, DEC = 0; // optional coordinates of center
+      double map_boundary_p1[2], map_boundary_p2[2];
+      PixelMapUnits units = PixelMapUnits::ndef;
+
+      void AddGrid_(const PointList &list, LensingVariable val);
+
+      double LeafPixelArea(IndexType i, Branch * branch1);
+      void PointsWithinLeaf(Branch * branch1, std::list<unsigned long> & neighborlist);
+      bool inMapBox(Branch * branch1) const;
+      bool inMapBox(double *branch1) const;
+
+      /// determines if pixels touch each other from i dimensional index
+      bool pixels_are_neighbors(size_t i, size_t j) const;
+      /** recursive function that finds all the pixels in reservoir beyond and including position 'group' that are attached to pixel current.
+       On exit reserve is ordered so that pixels that are in the same group are in sequence and 'group' points to the element in 'reservoir' that is one past the group elements
+       */
+      void _count_islands_(size_t current, std::list<size_t> &reservoir, std::list<size_t>::iterator &group) const;
+
+      // void addsource_(size_t i1,size_t i2,int oversample,Source source,PosType &total);
+      // void addsource_(size_t i1,size_t i2,int oversample,Po,
+      //                    PosType &total);
+
+      template <typename S>
+      void addsource_(size_t i1, size_t i2, int oversample,
+                      S &source,
+                      PosType &total)
+      {
+        PosType tmp_res = resolution * 1.0 / oversample;
+        PosType tmp = tmp_res * tmp_res;
+        PosType bl = resolution / 2 - 0.5 * tmp_res;
+        PosType y[2], x[2];
+
+        total = 0;
+
+        for (size_t index = i1; index <= i2; ++index)
+        {
+          find_position(y, index);
+          y[0] -= bl;
+          y[1] -= bl;
+          for (int i = 0; i < oversample; ++i)
+          {
+            x[0] = y[0] + i * tmp_res;
+            for (int j = 0; j < oversample; ++j)
+            {
+              x[1] = y[1] + j * tmp_res;
+              map[index] += source.SurfaceBrightness(x) * tmp;
+              total += source.SurfaceBrightness(x) * tmp;
+            }
+          }
+        }
+      }
+
+      // find if pixel k is in the curve which must be in pixel units, meant to be used in conjunction with Utilities::find_boundaries<>
+      bool incurve(long k, std::vector<Point_2d> &curve) const;
+    };
 
 template<typename T>
 void swap(PixelMap<T>& x, PixelMap<T>& y)

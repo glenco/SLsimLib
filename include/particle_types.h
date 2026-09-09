@@ -46,6 +46,7 @@ enum class SimFileFormat {
 template<typename T = float>
 struct ParticleType{
   T &operator[](int i){return x[i];}
+  const T &operator[](int i) const {return x[i];}
   T *operator*(){return x;}
   T x[3];
   
@@ -61,6 +62,7 @@ struct ParticleType{
 template<typename T = float>
 struct ParticleTypeV{
   T &operator[](int i){return x[i];}
+  const T &operator[](int i) const {return x[i];}
   T *operator*(){return x;}
   T x[3];
 
@@ -77,6 +79,7 @@ struct ParticleTypeV{
 /// Atomic data class for simulation particles of the same size and mass
 struct ParticleTypeSimple{
   float &operator[](int i){return x[i];}
+  const float &operator[](int i) const {return x[i];}
   float *operator*(){return x;}
   float x[3];
   
@@ -90,6 +93,7 @@ struct ParticleTypeSimple{
 /// Atomic data class for simulation particles of the same size and mass
 struct ParticleType2D{
   float &operator[](int i){return x[i];}
+  const float &operator[](int i) const {return x[i];}
   float *operator*(){return x;}
   float x[2];
   
@@ -103,6 +107,7 @@ struct ParticleType2D{
 /// Atomic data class for stars with different masses
 struct StarType{
   double &operator[](int i){return x[i];}
+  const double &operator[](int i) const {return x[i];}
   Point_3d<> operator*(){return x;}
   Point_3d<> x;
   float Mass;

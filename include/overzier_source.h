@@ -154,7 +154,7 @@ protected:
 class SourceOverzierPlus : public SourceOverzier
 {
 public:
-  //SourceOverzierPlus();
+
   SourceOverzierPlus(
                      PosType my_mag          /// total magnitude
                      ,PosType my_mag_bulge   /// magnitude of bulge
@@ -172,6 +172,7 @@ public:
                      ,Utilities::RandomNumbers_NR &ran
                      );
   
+  /// this constructor randomizes some of the parameters
   SourceOverzierPlus(
                      PosType my_mag         /// total magnitude
                      ,PosType my_mag_bulge  /// magnitude of bulge
@@ -184,6 +185,8 @@ public:
                      ,unsigned long my_id
                      ,PosType my_z           /// redshift
                      ,const PosType *theta   /// angular position
+                     ,PosType my_sersic_index_max
+                     ,PosType my_sersic_index_min
                      ,Utilities::RandomNumbers_NR &ran
 );
  
@@ -256,5 +259,8 @@ private:
   PosType cosPA,sinPA,cosi,PA;
   
   SourceOverzier::Params original;  // original parameters
+
+  PosType sersic_index_max;
+  PosType sersic_index_min;
 };
 #endif /* GALAXIES_OVERZIER_H_ */

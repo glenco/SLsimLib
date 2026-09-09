@@ -13,7 +13,7 @@ using Utilities::Geometry::Quaternion;
  */
 
 template <typename T=float>
-class LensHaloDisk:public LensHaloParticles<ParticleType<T> > {
+class LensHaloDisk:public LensHaloParticlesDep<ParticleType<T> > {
   
 public:
   LensHaloDisk(
@@ -30,8 +30,8 @@ public:
                );
   
   LensHaloDisk(LensHaloDisk &&h):
-  LensHaloParticles<ParticleType<T> >(std::move(h)),
-  particles(LensHaloParticles<ParticleType<T> >::trash_collector)
+  LensHaloParticlesDep<ParticleType<T> >(std::move(h)),
+  particles(LensHaloParticlesDep<ParticleType<T> >::trash_collector)
   {
     qrot_invers = h.qrot_invers;  // rotation that brings the disk back to face on
     Rscale = h.Rscale;
@@ -43,9 +43,9 @@ public:
   LensHaloDisk & operator=(LensHaloDisk &&h){
     assert(&h != this);
     
-    LensHaloParticles<ParticleType<T> >::operator=(std::move(h));
+    LensHaloParticlesDep<ParticleType<T> >::operator=(std::move(h));
     
-    particles = LensHaloParticles<ParticleType<T> >::trash_collector;
+    particles = LensHaloParticlesDep<ParticleType<T> >::trash_collector;
     qrot_invers = h.qrot_invers;  // rotation that brings the disk back to face on
     Rscale = h.Rscale;
     Rhight = h.Rhight;
@@ -65,9 +65,9 @@ public:
     rotate_all(R);
     qrot_invers = Quaternion<>::q_x_rotation(-inclination)*Quaternion<>::q_z_rotation(-zpa);
     
-    // reconstruct LensHaloParticles base class
-    delete LensHaloParticles<ParticleType<T> >::qtree;
-    LensHaloParticles<ParticleType<T> >::qtree = new TreeQuadParticles<ParticleType<T> >(particles.data(),particles.size(),-1,-1,0,20);
+    // reconstruct LensHaloParticlesDep base class
+    delete LensHaloParticlesDep<ParticleType<T> >::qtree;
+    LensHaloParticlesDep<ParticleType<T> >::qtree = new TreeQuadParticles<ParticleType<T> >(particles.data(),particles.size(),-1,-1,0,20);
   }
   /// inclination in radians, 0 is face on
   float getInclination(){return inclination;}
@@ -107,8 +107,8 @@ LensHaloDisk<T>::LensHaloDisk(
              ,const COSMOLOGY &cosmo
              ,int Nsmooth
              ):
-LensHaloParticles<ParticleType<T> >(redshift,cosmo),
-particles(LensHaloParticles<ParticleType<T> >::trash_collector),
+LensHaloParticlesDep<ParticleType<T> >(redshift,cosmo),
+particles(LensHaloParticlesDep<ParticleType<T> >::trash_collector),
 qrot_invers(1,0,0,0),Rscale(disk_scale),Rhight(Rperp),zpa(my_PA),
 inclination(my_inclination)
 {
@@ -116,8 +116,8 @@ inclination(my_inclination)
   /// set up base Lenshalo
   size_t N = (size_t)(mass/mass_res + 1);
   particles.resize(N);
-  LensHaloParticles<ParticleType<T> >::pp = particles.data();
-  LensHaloParticles<ParticleType<T> >::Npoints = particles.size();
+  LensHaloParticlesDep<ParticleType<T> >::pp = particles.data();
+  LensHaloParticlesDep<ParticleType<T> >::Npoints = particles.size();
 
   double r,theta=0;
   double dt = PI +  PI*ran()/10.;
@@ -157,21 +157,21 @@ inclination(my_inclination)
   }
   
  
-  LensHaloParticles<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
+  LensHaloParticlesDep<ParticleType<T> >::calculate_smoothing(Nsmooth,particles.data(),particles.size());
   
   // rotate particles to required inclination and position angle
   Quaternion<T> R = Quaternion<T>::q_z_rotation(zpa) * Quaternion<T>::q_y_rotation(inclination);
   rotate_all(R);
   qrot_invers = R.conj();
   
-  LensHaloParticles<ParticleType<T> >::mcenter *= 0.0;
+  LensHaloParticlesDep<ParticleType<T> >::mcenter *= 0.0;
   LensHalo::setMass(mass);
   
-  //LensHaloParticles<ParticleType<T> >::min_size;
-  LensHaloParticles<ParticleType<T> >::multimass=false;
+  //LensHaloParticlesDep<ParticleType<T> >::min_size;
+  LensHaloParticlesDep<ParticleType<T> >::multimass=false;
   
   Point_2d no_rotation;
-  LensHaloParticles<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,-1,false,false);
+  LensHaloParticlesDep<ParticleType<T> >::set_up(redshift,cosmo,no_rotation,-1,false,false);
 
   LensHalo::Rmax = -8 * Rscale * log(1 - (float)(N-1) / N );
   LensHalo::setRsize( LensHalo::Rmax );

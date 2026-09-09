@@ -307,8 +307,11 @@ struct Matrix2x2{
     return a[ i + 2*j ];
   }
  
-  
   T & operator[](int i){
+    return a[i];
+  }
+
+  const T & operator[](int i) const{
     return a[i];
   }
  
@@ -408,6 +411,41 @@ struct Matrix2x2{
     
     lambda[0] = m + sqrt( abs(m*m - determinent));
     lambda[1] = m - sqrt( abs(m*m - determinent));
+  }
+
+  // returns the eigenvectors in vec1 and vec2
+  // vec1 corresponds to lambda[0] and vec2 to lambda[1]
+  void eigen_vec(Point_2d &vec1,Point_2d &vec2,T lambdas[]){
+   
+    eigenv(lambdas);
+
+    if(a[2] != 0.0){
+      vec1[0] = lambdas[0] - a[3];
+      vec1[1] = a[2];
+
+      vec2[0] = lambdas[1] - a[3];
+      vec2[1] = a[2];
+
+      vec1.unitize();
+      vec2.unitize();
+
+    }else if(a[1] != 0.0){
+      vec1[0] = a[1];
+      vec1[1] = lambdas[0] - a[0];
+
+      vec2[0] = a[1];
+      vec2[1] = lambdas[1] - a[0];
+
+      vec1.unitize();
+      vec2.unitize();
+
+    }else{
+      vec1[0] = 1.0;
+      vec1[1] = 0.0;
+
+      vec2[0] = 0.0;
+      vec2[1] = 1.0;
+    }
   }
 };
 
@@ -565,8 +603,7 @@ struct RAY{
     y[1] = p.image->x[1];
 
     dt = p.dt;
-
-        
+   
     A = p.A;
     z = -1;
 
@@ -621,8 +658,13 @@ struct RAY{
 };
 
 std::ostream &operator<<(std::ostream &os, Point_2d const &p);
+
 void write_csv(std::string filename,const std::vector<Point_2d> &v);
 void write_csv(std::string filename,const std::vector<RAY> &v);
+void write_csv(std::string filename,const std::vector<float> &v);
+void write_csv(std::string filename,const std::vector<double> &v);
+void write_csv(std::string filename,const std::vector<int> &v);
+void read_csv(std::string filename,std::vector<Point_2d> &v);
 
 //inline std::string to_string(RAY &r) {
 //  std::string s = "[" + std::to_string(r.x[0]) + "," + r.x[1] + ",[" + r.y[0] + "," + r.y[1]
@@ -1039,12 +1081,43 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, Point_3d<T> const &p) {
   return os << p.x[0] << " " << p.x[1] << " " << p.x[2];
 }
+
 template <typename T>
 void write_csv(std::string filename,const std::vector<Point_3d<T> > &v){
   std::ofstream file(filename);
   file << "x,y,z" << std::endl;
   for(const Point_3d<T> &p : v) file << p[0] << "," << p[1] << "," << p[2] << std::endl;
 }
+template <typename T>
+void read_csv(std::string filename, std::vector<Point_3d<T>> &v) {
+  std::ifstream file(filename);
+  if (!file.is_open()) {
+    throw std::runtime_error("Could not open file: " + filename);
+  }
+
+  // Skip header line
+  std::string line;
+  std::getline(file, line);
+
+  // Read data lines
+  while (std::getline(file, line)) {
+    std::stringstream ss(line);
+    std::string value;
+    Point_3d<T> p;
+    
+    // Parse x,y,z values
+    for (int i = 0; i < 3; i++) {
+      if (!std::getline(ss, value, ',')) {
+        throw std::runtime_error("Invalid CSV format");
+      }
+      p[i] = std::stod(value);
+    }
+    
+    v.push_back(p);
+  }
+}
+
+
 
 template <typename T>
 void write_csv(std::string filename,const std::vector<T> &x,const std::vector<T> &y){

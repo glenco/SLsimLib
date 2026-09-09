@@ -129,23 +129,6 @@ public:
 
 
 	/// inserts a single main lens halo and adds it to the existing ones
-  //void insertMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
-  
-/*  void insertMainHalo(LensHalo *halo, bool addplanes,bool verbose)
-  {
-//    LensHaloNFW * halo = new LensHaloNFW(halo_in);
-    halo->setCosmology(cosmo);
-    main_halos.push_back(halo);
-    
-    flag_switch_main_halo_on = true;
-    
-    if(addplanes) addMainHaloToPlane(halo);
-    else addMainHaloToNearestPlane(halo);
-    
-    combinePlanes(verbose);
-  }
-*/
-  
   template <typename T>
   void insertMainHalo(const T &halo_in, bool addplanes,bool verbose=false)
   {
@@ -261,16 +244,6 @@ public:
     createMainPlanes();
     combinePlanes(verbose);
   }
-
-	/// inserts a sequence of main lens halos and adds them to the existing ones
-	//void insertMainHalos(LensHalo** halos, std::size_t Nhalos,bool addplanes,bool verbose = false);
-
-	/// replaces existing main halos with a single main halo
-  //void replaceMainHalo(LensHalo* halo,PosType zlens, bool addplanes,bool verbose = false);
-
-	/// replaces existing main halos with a sequence of main halos
-	// replaceMainHalos(LensHalo** halos, std::size_t Nhalos,bool verbose = false);
-
 
 //  /* \brief Add substructures to the lens.
 //
@@ -918,7 +891,7 @@ void Lens::compute_points_parallel(int start
                                  ,bool multiZs
                                  ,bool verbose)
 {
-  int end        = start + chunk_size;
+  int end = start + chunk_size;
 
   int i, j;
   
@@ -1018,6 +991,11 @@ void Lens::compute_points_parallel(int start
       
       ////////////////////////////////////////////////////////
       
+      // if(alpha[0] != alpha[0] || alpha[1] != alpha[1]){
+      //   std::cout << "xx[0] = " << xx[0] << " xx[1] = " << xx[1] << std::endl ;
+      //   std::cout << "alpha = " << alpha[0] << " " << alpha[1] << std::endl ;
+      //   throw std::runtime_error("alpha is NaN");
+      // }
       assert(alpha[0] == alpha[0] && alpha[1] == alpha[1]);
       assert(gamma[0] == gamma[0] && gamma[1] == gamma[1]);
       assert(kappa == kappa);

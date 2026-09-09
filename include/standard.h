@@ -43,7 +43,7 @@
 #define Grav  4.7788e-20  // G/c^2 in Mpc
 #endif
 
-#ifndef arcsecTOradians
+#ifndef arcminTOradians
 #define arcminTOradians  0.0002908882086657216  // convert arcesconds to radians
 #endif
 
@@ -74,7 +74,7 @@
 
 #ifndef line_message
 #define line_message
-#define PRINT_LINE() std::cout << "file: " << __FILE__ << " line: " << __LINE__ << std::endl;
+#define PRINT_LINE(msg) std::cout << "[file: " << __FILE__ << " line: " << __LINE__ << "]" << msg << std::endl;
 #endif
 
 #ifndef boo_declare
@@ -99,6 +99,7 @@ enum class LensingVariable {
   ,INVMAG  /// inverse of magnification
   ,PHI     /// lensing potential
   ,SurfBrightness  /// Surface brightness
+  ,EigenV  /// angle of the eigenvector of the magnification matrix with the smallest absolute eigenvalue
 } ;
 #endif
 

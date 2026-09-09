@@ -54,16 +54,17 @@ class Point_Nd{
     for(int i=0;i<dim;++i) x[i]/=value;
     return *this;
   }
-  Point_Nd & operator/(PosType value){
-    for(int i=0;i<dim;++i) x[i]/=value;
-    return *this;
+  Point_Nd & operator/(PosType value) const {
+    Point_Nd tmp(*this);
+    for(int i=0;i<dim;++i) tmp.x[i]/=value;
+    return tmp;
   }
   Point_Nd & operator*=(PosType value){
     for(int i=0;i<dim;++i) x[i]*=value;
     return *this;
   }
   /// scalar product
-  PosType operator*(const Point_Nd &p){
+  PosType operator*(const Point_Nd &p) const{
     PosType sum =0;
     for(int i=0;i<dim;++i) sum += x[i]*p.x[i];
     return 0.0;
@@ -74,11 +75,12 @@ class Point_Nd{
   //}
   
   /// length
-  PosType length(){
+  PosType length() const{
     return sqrt((*this)*(*this));
   }
   
   PosType & operator[](size_t i){return x[i];}
+  const PosType & operator[](size_t i) const {return x[i];}
 private:
   std::vector<PosType> x;
   int dim;

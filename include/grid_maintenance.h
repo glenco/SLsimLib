@@ -17,7 +17,6 @@
 #include "concave_hull.h"
 
 class LensHaloBaseNSIE;
-//class LensHaloMassMap;
 
 /** 
  * \brief Structure to contain both source and image trees.
@@ -242,6 +241,7 @@ std::string to_string(CritType crit);
 // in image_finder_kist.c
 namespace ImageFinding{
   
+  /// \brief Structure to contain information and functions for critical curves and caustics.
   struct CriticalCurve{
     
     CriticalCurve(){
@@ -255,6 +255,7 @@ namespace ImageFinding{
       type = CritType::ND;
       caustic_intersections = -1;
       touches_edge = false;
+      crit_id = -1;
     };
     
     CriticalCurve(const CriticalCurve &p){
@@ -273,6 +274,7 @@ namespace ImageFinding{
       type = p.type;
       caustic_intersections = p.caustic_intersections;
       touches_edge = p.touches_edge;
+      crit_id = p.crit_id;
    }
 
     CriticalCurve & operator=(const CriticalCurve &p){
@@ -293,6 +295,7 @@ namespace ImageFinding{
       type = p.type;
       caustic_intersections = p.caustic_intersections;
       touches_edge = p.touches_edge;
+      crit_id = p.crit_id;
       return *this;
     }
     
@@ -324,6 +327,9 @@ namespace ImageFinding{
     
     /// touches the edge of the gridded region
     bool touches_edge;
+
+    /// id of the critical curve
+    int crit_id;
     
     /// return true if x is inside or on the border of the caustic curve
 
@@ -473,6 +479,44 @@ namespace ImageFinding{
     /// returns an estimate of the area inside and within distance R of the caustic
     double AreaNearCaustic(double R /// distance in radians
                            );
+
+    /// print the critical curves and caustic curves to a csv file
+    static void print(std::string filename,std::vector<ImageFinding::CriticalCurve> &critcurves) {
+
+      std::ofstream os(filename.c_str());
+     
+      os <<"# type : "
+                << (int)(CritType::tangential) << " - tangential  "
+                << (int)(CritType::radial) << " - radial  "
+                << (int)(CritType::pseudo) << " - pseudo" 
+                << std::endl;
+      os <<"# plane : "
+                << 0 << " - caustic  "
+                << 1 << " - critical curve  "
+                << std::endl;
+      
+      os <<"caustic_num,plane,x,y,type" << std::endl;
+      
+      int i=0;
+      Point_2d xo(0,0);
+      for(auto &curve : critcurves){
+                  
+        if(curve.type == CritType::tangential){
+          for(Point_2d &p : curve.caustic_curve_outline){
+            os << i << ",0," << p.x[0] - xo[0] <<"," << p.x[1] - xo[1] <<","<< (int)(curve.type) << std::endl;
+          }
+        }else{
+          for(Point_2d &p : curve.caustic_curve_intersecting){
+            os << i << ",0," << p.x[0] - xo[0] <<","<< p.x[1] - xo[1] <<","<< (int)(curve.type) << std::endl;
+          }
+        }
+        for(RAY &p : curve.critcurve){
+          os << i << ",1," << p.x[0] - xo[0] <<","<< p.x[1] - xo[1] <<","<< (int)(curve.type) << std::endl;
+        }
+        ++i;
+      }
+      os.close();
+    }
       
   private:
     Point_2d p1,p2;
@@ -578,9 +622,6 @@ namespace ImageFinding{
 
 
 std::ostream &operator<<(std::ostream &os, const ImageFinding::CriticalCurve &p);
-
-//void saveImage(LensHaloMassMap *mokahalo, GridHndl grid, bool saveprofile=true);
-
 
 /// Outputs a fits image of a lensing variable of choice
 template <typename T>

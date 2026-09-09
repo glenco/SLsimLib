@@ -1245,9 +1245,11 @@ void Lens::_find_images_(std::vector<RAY> &images
   Point_2d center = (ur+ll)/2;
   assert(ur[0]-ll[0] > 0);
   assert(ur[1]-ll[1] > 0);
-  int n = 9*(int)((ur[0]-ll[0])/resolution);
+  double res = resolution/3;
+  int n = (int)((ur[0]-ll[0])/res)+1;
+  if(n<9) n=9;
   GridMap gridmap(this,n,center.x, ur[0]-ll[0], ur[1]-ll[1] );
-  //GridMap gridmap(this,n,center.x.x,range);
+  
   std::vector<Point_2d> image_points;
   std::vector<GridMap::Triangle> tr;
   
@@ -1263,8 +1265,7 @@ void Lens::_find_images_(std::vector<RAY> &images
     min_mag = min(fabs(gridmap.i_points[ tr[i][2] ].invmag()) , min_mag);
   }
   
-  if((gridmap.getResolution() <= stop_resolution
-     && recs.size() == image_points.size() ) || min_mag > 1000
+  if((gridmap.getResolution() <= stop_resolution) || min_mag > 1000
       ){
     RAY ray;
     ray.y = y;

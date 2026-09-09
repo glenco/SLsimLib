@@ -646,7 +646,7 @@ void PixelMap<T>::AddImages(
 
 ){
   
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -770,7 +770,7 @@ void PixelMap<T>::AddUniformImages(
                       ImageInfo *imageinfo   /// An array of ImageInfo-s.  There is no reason to separate images for this routine
                       ,int Nimages,T value){
   
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
   if(Nimages <= 0) return;
   if(imageinfo->imagekist->Nunits() == 0) return;
   
@@ -853,6 +853,7 @@ bool PixelMap<T>::pixels_are_neighbors(size_t i,size_t j) const{
   if(std::abs(x) > 1) return false;
   return true;
 }
+
 template <typename T>
 void PixelMap<T>::find_contour(T level
                             ,std::vector<std::vector<Point_2d> > &points
@@ -934,6 +935,92 @@ void PixelMap<T>::find_islands_holes(T level,
 //
 //  points.resize(k);
   
+  assert(m == n && "In PixelMap<T>::find_islands_holes");
+}
+
+template <typename T>
+void PixelMap<T>::find_islands_holes(T level,
+                                     std::vector<std::vector<size_t>> &points, 
+                                     std::vector<std::vector<Point_2d>> &boundaries,
+                                     std::vector<bool> &hits_edge,
+                                     std::vector<std::vector<int> > &holes
+                                    ) const
+{
+
+  std::vector<bool> bitmap( map.size() );
+  std::vector<size_t> points_in;
+  
+  // excludes boundaries that will be set to false in Utilities::find_boundaries
+  for(size_t i = 1 ; i<Nx-1 ; ++i){
+    for(size_t j = 1 ; j<Ny-1 ; ++j){
+      size_t k = i + Nx*j;
+      if (map[k] > level){
+        bitmap[k] = true;
+        points_in.push_back(k);
+      }else{
+        bitmap[k] = false;
+      }
+    }
+  }
+  
+  hits_edge.clear();
+  boundaries.clear();
+  Utilities::find_boundaries<Point_2d>(bitmap,Nx,boundaries,hits_edge,false);
+  points.resize(boundaries.size());
+  
+  if(boundaries.size() == 1){
+    std::swap(points[0],points_in);
+    holes.resize(boundaries.size());
+    for (auto &boundary : boundaries)
+    {
+      for (Point_2d &p : boundary)
+      {
+        p = p * resolution + map_boundary_p1;
+        assert((p - map_boundary_p1).length_sqr() < 2 * rangeX * rangeX);
+      }
+    }
+    return;
+  }
+  
+  for(auto &v : points) v.clear();
+  
+  size_t n=points_in.size();
+  size_t m=0;
+  for(size_t k=0 ; k<n ; ++k){
+    for(int i=0 ; i<boundaries.size() ; ++i){
+      //if( incurve(points_in[k],boundaries[i]) ){
+      if( Utilities::inCurve( Point_2d( points_in[k]%Nx ,points_in[k]/Nx ) ,boundaries[i]) ){
+ 
+        points[i].push_back(points_in[k]);
+        ++m;
+        break;
+      }
+    }
+  }
+
+  holes.resize(boundaries.size());
+  for(int i=0 ; i<boundaries.size() ; ++i){
+    if(points[i].size() == 0){
+      // this boundary is a hole, find the boundary containing it 
+      for(int j=0 ; j<boundaries.size() ; ++j){
+        if(i != j){
+          //if( incurve( boundaries[i][0],boundaries[j]) ){
+          if( Utilities::inCurve( boundaries[i][0] ,boundaries[j]) ){
+            holes[j].push_back(i);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // rescale boundaries to PixelMap coordinates
+  for(auto &boundary : boundaries){
+    for(Point_2d &p : boundary){
+      p = p * resolution + map_boundary_p1;
+      assert((p-map_boundary_p1).length_sqr() < 2*rangeX*rangeX);
+    }
+  }
   assert(m == n && "In PixelMap<T>::find_islands_holes");
 }
 
@@ -1060,18 +1147,18 @@ void PixelMap<T>::lens_definition(
   for(auto &v : image_points){
     for(size_t k : v){
       T val = map[k];
-       if(
-          val > map[k-1] &&
-          val > map[k+1] &&
-          val > map[k+Nx] &&
-          val > map[k+Nx-1] &&
-          val > map[k+Nx+1] &&
-          val > map[k-Nx] &&
-          val > map[k-Nx-1] &&
-          val > map[k-Nx+1]
-          ){
-            maxima_indexes.push_back(k);
-          }
+      if(
+        val > map[k-1]    &&
+        val > map[k+1]    &&
+        val > map[k+Nx]   &&
+        val > map[k+Nx-1] &&
+        val > map[k+Nx+1] &&
+        val > map[k-Nx]   &&
+        val > map[k-Nx-1] &&
+        val > map[k-Nx+1]
+        ){
+          maxima_indexes.push_back(k);
+      }
     }
   }
   if(verbose) std::cout << "Number of maxima : " << maxima_indexes.size() << std::endl;
@@ -1144,6 +1231,214 @@ void PixelMap<T>::lens_definition(
   
   lens_TF = Nimages > 1 || ring;
   if(verbose && lens_TF) std::cout << " IS OBSERVABLE LENS" << std::endl;
+}
+
+template <typename T>
+void PixelMap<T>::arc_parameters(T level
+  ,Point_2d center /// center of lens, used to compute angles and radii
+  ,bool &ring /// true if the image is a ring, false if it is an arc
+  ,double &angle /// angle subtended by the arc at the center of the lens in radians in degrees
+  ,double &thinness  /// ratio of the length of the arc to its width, defined as the area divided by the square of the length
+  ,double &radius  /// mean radius of the arc in pixels, defined as the area divided by the length 
+  ,double &nonrad /// non-radiality of the arc
+  ,double &range /// largest distance between centroids of islands in pixels
+  ) const{
+
+  std::vector<std::vector<size_t>> points;
+  std::vector<std::vector<Point_2d>> boundaries;
+  std::vector<bool> hits_edge;
+  std::vector<std::vector<int>> holes;
+
+  find_islands_holes(level,points,boundaries,hits_edge,holes);
+  // boundaries in world coordinates, radians
+
+  
+  if(points.size() == 0){
+    ring = false;
+    angle = 0;
+    thinness = 0;
+    radius = 0;
+    nonrad = 0;
+    range = 0;
+    return;
+  }
+
+  // compute centroids of the islands
+  int Ngroups = points.size();
+
+  std::vector<double> areas(Ngroups,0);
+  int imax = -1,i=0;
+  double max_area = 0;
+  double max_radius = 0;
+  Point_2d max_point;
+  for (std::vector<Point_2d> &contour : boundaries) {
+    int n=contour.size();
+    assert(n>1);
+    for(int j=0 ; j < n ; ++j){
+      Point_2d p1 = contour[j] - center;
+      Point_2d p2 = contour[ (j + 1) % n ] - center;
+      areas[i] += 0.5 * (p1^p2);
+
+      assert(p1.length() < rangeX);
+      assert(p2.length() < rangeX);
+
+      if( p1.length() > max_radius ){
+        max_radius = p1.length();
+        max_point = p1;
+      }
+    }
+    if( fabs(areas[i]) > max_area ){
+      max_area = fabs(areas[i]);
+      imax = i;
+    }
+    ++i;
+  }
+
+  assert(imax != -1);
+  assert(fabs(max_area) > 0);
+
+  range = 0;
+  for (std::vector<Point_2d> &contour : boundaries){
+    for(Point_2d &p : contour){
+      double r = (p - max_point).length();
+      if(r > range) range = r;
+    }
+  }
+  assert(range < 1.0);
+
+  std::vector<Point_2d> &contour = boundaries[imax];
+  std::vector<int> extreme_points;
+  int n = contour.size(), s, st;
+  for (int j = 0; j <= n; ++j)
+  {
+    Point_2d p1 = contour[j % n] - center;  
+    Point_2d p2 = contour[(j + 1) % n] - center;
+    s = sign(p1 ^ p2);
+    if (j == 0)
+      st = s;
+    if (s != st)
+    {
+      extreme_points.push_back(j % n);
+      st = s;
+    }
+  }
+
+  for (int i : holes[imax])
+  {
+    areas[imax] -= sign(areas[imax]) * fabs(areas[i]); // keeps the sign of the main area
+  }
+
+  assert(fabs(areas[imax]) > 0);
+
+  double parimeter = 0;
+  for (int i = 0; i < n; ++i)
+  {
+    parimeter += (contour[i] - contour[(i + 1) % n]).length();
+  }
+  for (int j : holes[imax])
+  {
+    int m = boundaries[j].size();
+    for (int k = 0; k < m; ++k)
+    {
+      parimeter += (boundaries[j][k] - boundaries[j][(k + 1) % m]).length();
+    }
+  }
+  if (std::isnan(parimeter) || parimeter == 0)
+  {
+    std::cerr << "Warning : parim is NaN or zero" << std::endl;
+    std::cout <<  "  parimeter " << parimeter << std::endl;
+    write_csv("contour.txt",contour);
+    throw std::runtime_error("parimeter is NaN or zero");
+  }
+  std::vector<double> lengths;
+  
+  int Nextreme = extreme_points.size();
+
+  if (Nextreme > 1)
+  {
+    // if there are more than 2 extreme points,
+    // we look for the two that subtend the largest angle at the center of the lens
+    angle = 0;
+    int ii = -1, jj = -1;
+    for (int i = 0; i < Nextreme; ++i)
+    {
+      for (int j = i + 1; j <= Nextreme; ++j)
+      {
+        double tmp_angle = 0;
+        for (int k = extreme_points[i]; k != extreme_points[j % Nextreme]; k = (k + 1) % n)
+        {
+           int k1 = (k + 1) % n;
+          if (contour[k].length_sqr() > 0 && contour[k1].length_sqr() > 0)
+            tmp_angle += atan2(contour[k]^contour[k1],contour[k] * contour[k1]);
+          //assert(fabs(tmp_angle) < 2*PI);
+        }
+        if (tmp_angle > angle)
+        {
+          //assert(fabs(tmp_angle) < 2*PI);
+          angle = tmp_angle;
+          ii = extreme_points[i];
+          jj = extreme_points[j % Nextreme];
+        }
+      }
+    }
+
+    if(angle > 2*PI){
+      Nextreme = 0;
+      extreme_points = {};
+    }else{
+      extreme_points = {ii, jj};
+      Nextreme = 2;
+    }
+  }
+
+  if (Nextreme == 0)
+  {
+    // ring case
+    ring = true;
+    assert(fabs(areas[imax]) > 0);
+    
+    double maxra = (contour[0] - center).length();
+    double minra = (contour[0] - center).length();
+    radius = 0;
+    for (const Point_2d &p : contour)
+    {
+      double r = (p - center).length();
+      radius += r;
+      maxra = MAX(maxra, r);
+      minra = MIN(minra, r);
+    }
+    radius /= n;
+    nonrad = (maxra - minra) / radius; /// ??? look at hole
+    angle = 2*PI;
+  }
+  else
+  {
+    ring = false;
+
+    lengths.resize(extreme_points.size(), 0);
+    for (int j = 0; j < extreme_points.size(); ++j)
+    {
+        int jj = (j + 1) % Nextreme;
+        for (int i = extreme_points[j]; i != extreme_points[jj]; i = (i + 1) % n)
+        {
+          lengths[j] += (contour[i] - contour[(i + 1) % n]).length();
+        }
+    }
+
+    radius = 0.5 * ((contour[extreme_points[0]] - center).length() + (contour[extreme_points[1]] - center).length());
+    nonrad = fabs((contour[extreme_points[0]] - center).length() - (contour[extreme_points[1]] - center).length()) / radius;
+  }
+
+  assert(radius < 1);
+  assert(fabs(angle) <= 2 * PI*(1+1.0e-3));
+  angle = fabs(angle * 180 / PI);
+  thinness = (parimeter * parimeter) / fabs(areas[imax]) / 4 / PI;
+  if(std::isinf(thinness) || std::isnan(thinness) || parimeter == 0 ){
+    std::cerr << "Warning : thinness is infinite or NaN, setting it to 0" << std::endl;
+    std::cout << "area " << areas[imax] << "  parimeter " << parimeter << std::endl;
+    throw std::runtime_error("thinness is infinite or NaN");
+  }
+  assert(fabs(areas[imax]) > 0);
 }
 
 template <typename T>
@@ -2432,7 +2727,7 @@ PosType PixelMap<T>::AddSource(Source &source){
 
 template <typename T>
 PosType PixelMap<T>::AddSource(Source &source,int oversample){
-  if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
+  //if(units != PixelMapUnits::surfb) throw std::invalid_argument("wrong units");
 
   Point_2d s_center;
   source.getTheta(s_center);
@@ -2712,12 +3007,39 @@ template <typename T>
 PixelMap<T> PixelMap<T>::cutout(long xmin,long xmax,long ymin,long ymax){
   long nx = xmax-xmin;
   long ny = ymax-ymin;
-  
+
+  assert(nx > 0);
+  assert(ny > 0);
+/*
+  if(xmax > Nx-1) std::cout << "cutout out of x-range " << xmax << " > " << Nx-1 << std::endl;
+  if(ymax > Ny-1) std::cout << "cutout out of y-range " << ymax << " > " << Ny-1 << std::endl;
+
+  PRINT_LINE("In cutout nx " << nx << " ny " << ny);
+  std::cout << "  resolution : " << resolution << std::endl;
+  std::cout << "  center : " << center[0] << " " << center[1] << std::endl;
+  */
   PixelMap<T> copy(center,nx,ny,resolution);
   copy.units = units;
-  
-  for(long i=0  ; i<nx ; ++i){
-    for(long j=0 ; j<ny ; ++j){
+  /*
+  if(xmin < 0 || xmin + nx > Nx){
+    std::cout << xmin << " " << xmin + nx << std::endl;
+    PRINT_LINE("x out of range");
+  }
+  if(ymin < 0 || ymin + ny > Ny){
+    std::cout << ymin << " " << ymin + ny << std::endl;
+    PRINT_LINE("y out of range");
+  }
+  */
+  long imin = MAX(0L,-xmin);
+  long jmin = MAX(0L,-ymin);
+
+  long imax = MIN(nx,Nx-xmin);
+  long jmax = MIN(ny,Ny-ymin);
+
+  //std::cout << "imin=" << imin << " imax=" << imax << std::endl;
+  //std::cout << "jmin=" << jmin << " jmax=" << jmax << std::endl;
+  for(long i=imin  ; i<imax ; ++i){
+    for(long j=jmin ; j<jmax ; ++j){
       copy[i + nx*j] = map[ (xmin+i) + Nx*(ymin+j) ];
     }
   }
