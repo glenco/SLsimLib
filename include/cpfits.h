@@ -949,7 +949,7 @@ public:
              ,bool add=false
              ,long maxsize = -1
              ){
-      long chunksize = 10000;
+      long chunksize = 1000000;
       int ncol = column_index.size();
       long nrow = cpfits.rows();
       int requirements = accept.size();
@@ -1026,7 +1026,7 @@ public:
          ,bool add=false
          ,long maxsize = -1
          ){
-      long chunksize = 10000;
+      long chunksize = 1000000;
       int ncol = column_index.size();
       long nrow = cpfits.rows();
 
@@ -1161,7 +1161,7 @@ public:
              ,bool add=false
              ,long maxsize = -1
              ){
-      long chunksize = 10000;
+      long chunksize = 1000000;
       int ncol = column_index.size();
       long nrow = cpfits.rows();
       
