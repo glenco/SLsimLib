@@ -1384,6 +1384,7 @@ LensHaloGaussian::LensHaloGaussian(
               ,float f
 ):LensHalo(),q(my_fratio),pa(my_pa),I(0,1)
 {
+  constexpr double Q_CIRCULAR_THRESHOLD = 0.999;
 
   I_sqpi = I / sqrt(PI);
   one_sqpi = 1.0 / sqrt(PI);
@@ -1391,11 +1392,22 @@ LensHaloGaussian::LensHaloGaussian(
   LensHalo::setMass(my_mass);
   LensHalo::setZlens(my_zlens,cosmo);
   q = abs(q);
-  if(q > 1){
-    q = 1/q;
+
+  if(q > 1.0){
+    q = 1.0/q;
   }
+
+  if(q >= Q_CIRCULAR_THRESHOLD){
+      q = 1.0;
+  }
+
   Rhight = r_scale*sqrt(q);
-  q_prime = (1-q*q)/q/q;
+
+  if(q == 1.0){
+    q_prime = 0.0;
+  }else{
+    q_prime = (1.0-q*q)/(q*q);
+  }
   
   R = std::complex<double>(cos(pa),sin(pa));
   
