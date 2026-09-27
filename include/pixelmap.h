@@ -96,6 +96,7 @@ public:
   
   // coordinates of lower left corner 
   inline Point_2d getLLBoundary() const{ return Point_2d(map_boundary_p1[0],map_boundary_p1[1]); }
+  inline Point_2d getURBoundary() const{ return Point_2d(map_boundary_p2[0],map_boundary_p2[1]); }
   
   /// returns right accention of center
   double getRA(){return RA;}
