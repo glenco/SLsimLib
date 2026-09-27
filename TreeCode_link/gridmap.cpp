@@ -487,7 +487,6 @@ Point_2d GridMap::magnificationFlux(Source &source) const{
   //return tot_magnified_flux / tot_unmagnified_flux ;
   return Point_2d(tot_magnified_flux * getResolution() * getResolution() / source.getTotalFlux()
                  ,tot_magnified_flux / tot_unmagnified_flux);
->>>>>>> parallel_image_find-treeBackground
 }
 
 double GridMap::magnificationTr() const {
