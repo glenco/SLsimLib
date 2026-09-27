@@ -2556,7 +2556,7 @@ public:
    * Input values are kept separate from output values so that reading an old
    * log does not automatically copy all of its entries into the new log.
    */
-  void input(const std::string &input_filename){
+  void setinput(const std::string &input_filename){
     std::ifstream input_file(input_filename);
     if(!input_file){
       throw std::runtime_error("Unable to open parameter file: " + input_filename);
@@ -2579,6 +2579,17 @@ public:
       const std::string value = line.substr(value_begin+1,value_end-value_begin);
       input_lines[label] = value;
     }
+  }
+
+  /// Copy an input parameter into the output log without converting its type.
+  bool get(const std::string &label) {
+    const std::map<std::string,std::string>::const_iterator entry = input_lines.find(label);
+    if(entry == input_lines.end()) return false;
+
+    // The text log does not retain the original variant type, so preserve the
+    // value exactly as it appeared in the input file.
+    lines[label] = entry->second;
+    return true;
   }
 
   /** Set value from an input parameter and add the effective value to the log.
