@@ -1284,7 +1284,7 @@ void PixelMap<T>::arc_parameters(T level
 
       if( p1.length() > max_radius ){
         max_radius = p1.length();
-        max_point = p1;
+        max_point = contour[j];
       }
     }
     if( fabs(areas[i]) > max_area ){
