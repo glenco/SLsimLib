@@ -412,7 +412,6 @@ void Obs::fftpsf(){
                                       , image_padded.data(), FFTW_ESTIMATE);
 }
 
-
 /** * \brief Creates an observation setup that mimics a known instrument
  *
  */
@@ -722,8 +721,6 @@ Observation::Observation(float zeropoint_mag, float exp_time, int exp_num, float
       
       set_up();
 }
-
-
 
 /// Outputs rms of noise counts due to background and instrument
 /// in the unit decided by the user

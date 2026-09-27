@@ -500,6 +500,7 @@ void find_boundaries(std::vector<bool> &bitmap  // = true inside
     }
     if(outer_only) break;
   }
+
   
   long offset = 0;
   if(!add_to_vector){
@@ -1020,6 +1021,7 @@ double distance_to_segment(const Ptype &P
   
   Ptype D = S2-S1;
   double s = (P-S1)*D / D.length_sqr();
+
   if(isnan(s) || s<=0){
     closest_point = S1;
   }else if(s>=1){

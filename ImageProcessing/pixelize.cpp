@@ -38,7 +38,6 @@ void swap(std::valarray<T>& x, std::valarray<T>& y)
 //#endif
 */
 
-
 std::string to_string(PixelMapUnits unit){
   switch (unit) {
     case PixelMapUnits::ndef:

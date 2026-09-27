@@ -471,20 +471,7 @@ public:
   // get the field_Off value :
   bool getfieldOff() const {return flag_switch_field_off ;}
   
-  /** \brief Add random halos to the light cone according to standard structure formation theory.  A new realization of the light-cone can be made with Lens::resetFieldHalos() after this function is called once.
    
-   The cone is filled up until the redshift of the current zsource that is stored in the Lens class.  The field is a circular on the sky.  There is no clustering of the halos.
-   */
-  void GenerateFieldHalos(double min_mass /// minimum mass of halos
-                          ,MassFuncType mass_function /// type of mass function
-                          ,double field_of_view  /// in square degrees
-                          ,int Nplanes           /// number of lens planes
-                          ,LensHaloType halo_type = LensHaloType::nfw_lens  /// type of halo
-                          ,GalaxyLensHaloType galaxy_type = GalaxyLensHaloType::null_gal  /// type of galaxy, if null_gal no galaxy
-                          ,double buffer = 1.0 /// buffer in Mpc for cone
-                          ,bool verbose = false
-                );
-  
   Lens & operator=(Lens &&lens){
     
     fieldofview = lens.fieldofview;
@@ -851,6 +838,23 @@ private: /* input */
   PosType sim_angular_radius;
   /// inverse of the angular screening scale in the tree force calculation
   PosType inv_ang_screening_scale;
+  
+  /* TO BE DEPRICATED
+   Add random halos to the light cone according to standard structure formation theory.  A new realization of the light-cone can be made with Lens::resetFieldHalos() after this function is called once.
+   
+   The cone is filled up until the redshift of the current zsource that is stored in the Lens class.  The field is a circular on the sky.  There is no clustering of the halos.
+   */
+  void GenerateFieldHalos(double min_mass /// minimum mass of halos
+                          ,MassFuncType mass_function /// type of mass function
+                          ,double field_of_view  /// in square degrees
+                          ,int Nplanes           /// number of lens planes
+                          ,LensHaloType halo_type = LensHaloType::nfw_lens  /// type of halo
+                          ,GalaxyLensHaloType galaxy_type = GalaxyLensHaloType::null_gal  /// type of galaxy, if null_gal no galaxy
+                          ,double buffer = 1.0 /// buffer in Mpc for cone
+                          ,bool verbose = false
+                );
+
+
 };
 
 inline std::size_t Lens::getNMainHalos() const

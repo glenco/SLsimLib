@@ -605,10 +605,8 @@ struct CYCLIC{
  The returned curve will consist of segments of the edges of the original curve that form a closed
  curve that does not cross itself and will enclose all the verticies.
  */
-//std::vector<Point_2d> MagicHull(const std::vector<Point_2d> &points);
 
 std::vector<Point_2d> DeInterset(const std::vector<Point_2d> &points);
-  
 }
 }
 

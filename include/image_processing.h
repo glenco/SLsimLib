@@ -20,7 +20,6 @@
 //#include "utilities_slsim.h"
 //#include "utilities_slsim.h"
 //#include "image_processing.h"
-//#include "source.h"
 
 class Source;
 #include "fftw3.h"

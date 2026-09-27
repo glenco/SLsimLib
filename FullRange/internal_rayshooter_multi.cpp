@@ -483,7 +483,6 @@ void Lens::mass_on_planes(const std::vector<RAY> &rays     /// ray, ray.x needs 
       G *= charge * Dl[j] / (1 + plane_redshifts[j]);
       
       //PosType SigmaCrit = cosmo.SigmaCrit(plane_redshifts[j],source_z);
-      
       // kappa *= charge / SigmaCrit;
       //alphas[i] *= charge;
       SumPrevAlphas[i] -= alphas[i] * charge;
@@ -743,7 +742,7 @@ RAY Lens::find_image_min(
     }else{
 
       dy_tmp = *(pt.image) - yo;
-      dy2_tmp = dy.length_sqr();
+      dy2_tmp = dy_tmp.length_sqr();
             
       if(dy2_tmp > dy2){
         f /= 2;
@@ -814,7 +813,7 @@ RAY Lens::find_image_min(const RAY &in_ray
     }else{
 
       dy_tmp = pt.y - yo;
-      dy2_tmp = dy.length_sqr();
+      dy2_tmp = dy_tmp.length_sqr();
             
       if(dy2_tmp > dy2){
         f /= 2;

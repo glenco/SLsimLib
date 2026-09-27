@@ -1342,6 +1342,7 @@ void apply_permutation(
   apply_permutation(vec.data(),p);
 }
 
+
 /** \brief Calculates power spectrum from a 2d map or the cross-power spectrum between two 2d maps.
  *
  *   Adapted from Carlo Giocoli's pl() routine.
