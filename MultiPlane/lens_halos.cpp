@@ -568,7 +568,7 @@ PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y) const{
   j=(int)(y/maxrm*NTABLE);
   //std::cout << "Interp: " << std::setprecision(7) << y-0.95 << " " << std::setprecision(7) << xtable[j]-0.95 << " " << xtable[j+1] <<std::endl;
   assert(y>=xtable[j] && y<=xtable[j+1]);
-  if (j==0)
+  if (j < NTABLE/100)
 		{
       if (table==ftable) return ffunction(y);
       if (table==gtable) return gfunction(y);
