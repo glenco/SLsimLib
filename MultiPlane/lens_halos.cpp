@@ -1493,8 +1493,21 @@ void LensHaloGaussian::deflection(std::complex<double> &z
     a = norm * I * ( wfzz - wfib * exp_x_e2);
   
     std::complex<double> dx_e2dzz = (q*q*abs(z.real()) - I*abs(z.imag()))*sqrt(q_prime)/ss;
-  
-    g = -norm_g * I * ( 2.0*(I_sqpi - zz*wfzz)
+    
+    // I/sqrt(pi) - zz w(zz) -> 0 for large |zz| while each term -> i/sqrt(pi): direct evaluation cancels catastrophically far from the Gaussian (r >> sigma), leaving a
+    // roughly constant spurious shear. Use the asymptotic series of w there.
+    std::complex<double> T1;
+    if (std::abs(zz) > 15.0) {
+      const std::complex<double> iz2 = 1.0/(zz*zz);
+      std::complex<double> t = iz2, s = 0.0;
+      double c = 0.5;
+      for (int k = 0; k < 8; ++k) { s += c*t; c *= (2*k + 3)/2.0; t *= iz2; }
+      T1 = -I_sqpi * s;
+    } else {
+      T1 = I_sqpi - zz*wfzz;
+    }
+
+    g = -norm_g * I * ( 2.0*T1
                     + ( (1/sqrt(PI) - b*wfib) * (dx_e2dzz - 2.0*zz)/b
                     + wfib*dx_e2dzz ) * exp_x_e2
                     );
