@@ -106,10 +106,20 @@ add_dependencies(SLsimLib CosmoLib NR)
 
 
 ####
+# tests
+####
+
+include(CTest)
+
+if(BUILD_TESTING)
+	add_subdirectory(test)
+endif()
+
+
+####
 # group sources
 ####
 
 foreach(_grp ${GROUPS})
 	source_group(${_grp} FILES ${GROUP_${_grp}})
 endforeach()
-
