@@ -327,7 +327,8 @@ void TreeQuadHalos<LensHaloType>::_BuildQTreeNB(IndexType nparticles,IndexType *
   }
   
   assert( cbranch->nparticles >= cbranch->Nbig_particles );
-  IndexType NpInChildren = cbranch->nparticles;// - cbranch->Nbig_particles;
+  IndexType NpInChildren =
+      cbranch->nparticles - cbranch->Nbig_particles;
   assert(NpInChildren >= 0);
   
   if(NpInChildren == 0){
@@ -734,7 +735,7 @@ void TreeQuadHalos<LensHaloType>::walkTree_iter(
         alpha[1] += tmp*xcm_cell[1];
         
         *kappa -= (*treeit)->mass*inv_area;
-        *phi -= (*treeit)->mass*inv_area*rcm2cell;
+        *phi -= 0.5 * (*treeit)->mass * inv_area * rcm2cell;
         
       }
     }
