@@ -40,6 +40,7 @@ enum class SimFileFormat {
   ,csv6    /// see above
   ,gadget2 /// Gadget 2 output file format
   ,ascii   /// the original ascii GLAMER format.
+  ,hdf5    /// HDF5 snapshots with Gadget-style PartType groups
 };
 
 // Atomic data class for simulation particles with individual sizes and masses

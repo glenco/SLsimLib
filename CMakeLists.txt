@@ -104,6 +104,10 @@ add_library(SLsimLib ${HEADERS} ${SOURCES})
 
 add_dependencies(SLsimLib CosmoLib NR)
 
+if(ENABLE_HDF5)
+	target_link_libraries(SLsimLib ${HDF5_LIBRARIES})
+endif()
+
 
 ####
 # group sources
@@ -112,4 +116,3 @@ add_dependencies(SLsimLib CosmoLib NR)
 foreach(_grp ${GROUPS})
 	source_group(${_grp} FILES ${GROUP_${_grp}})
 endforeach()
-
