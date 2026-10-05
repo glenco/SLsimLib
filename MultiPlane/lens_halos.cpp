@@ -568,7 +568,7 @@ PosType LensHaloNFW::InterpolateFromTable(PosType *table, PosType y) const{
   j=(int)(y/maxrm*NTABLE);
   //std::cout << "Interp: " << std::setprecision(7) << y-0.95 << " " << std::setprecision(7) << xtable[j]-0.95 << " " << xtable[j+1] <<std::endl;
   assert(y>=xtable[j] && y<=xtable[j+1]);
-  if (j==0)
+  if (j < NTABLE/100)
 		{
       if (table==ftable) return ffunction(y);
       if (table==gtable) return gfunction(y);
@@ -1481,7 +1481,7 @@ void LensHaloGaussian::deflection(std::complex<double> &z
     a = norm * I * ( wfzz - wfib * exp_x_e2);
   
     std::complex<double> dx_e2dzz = (q*q*abs(z.real()) - I*abs(z.imag()))*sqrt(q_prime)/ss;
-  
+    
     g = -norm_g * I * ( 2.0*(I_sqpi - zz*wfzz)
                     + ( (1/sqrt(PI) - b*wfib) * (dx_e2dzz - 2.0*zz)/b
                     + wfib*dx_e2dzz ) * exp_x_e2
