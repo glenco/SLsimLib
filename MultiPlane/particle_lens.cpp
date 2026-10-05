@@ -1,6 +1,8 @@
 #include <fstream>
 #include <mutex>
 #include <thread>
+#include <algorithm>
+#include <cctype>
 #include "slsimlib.h"
 #include "particle_types.h"
 #include "particle_halo.h"
@@ -8,16 +10,37 @@
 #include "utilities_slsim.h"
 #include "gadget.hh"
 
-#ifdef ENABLE_HDF5
-#include "H5Cpp.h"
-#endif
-
 // *************************************************************************************
 // ******************** methods for MakeParticleLenses *********************************
 // *************************************************************************************
 // *************************************************************************************
 float ParticleTypeSimple::Size = 0;
 float ParticleTypeSimple::Mass = 0;
+
+namespace {
+bool isHDF5Filename(const std::string &filename){
+  const size_t dot = filename.find_last_of('.');
+  const size_t separator = filename.find_last_of("/\\");
+  if(dot == std::string::npos || (separator != std::string::npos && dot < separator)){
+    return false;
+  }
+  std::string suffix = filename.substr(dot);
+  std::transform(suffix.begin(), suffix.end(), suffix.begin(),
+                 [](unsigned char c){ return static_cast<char>(std::tolower(c)); });
+  return suffix == ".h5" || suffix == ".hdf5";
+}
+}
+
+MakeParticleLenses::MakeParticleLenses(const std::string &filename
+                                       ,int Nsmooth
+                                       ,bool recenter
+                                       ,bool ignore_type_in_smoothing)
+  :MakeParticleLenses(filename
+                      ,isHDF5Filename(filename) ? SimFileFormat::hdf5 : SimFileFormat::gadget2
+                      ,Nsmooth
+                      ,recenter
+                      ,ignore_type_in_smoothing)
+{}
 
 MakeParticleLenses::MakeParticleLenses(
                     const std::string &filename  /// path / root name of gadget-2 snapshot
@@ -28,9 +51,8 @@ MakeParticleLenses::MakeParticleLenses(
                    ,bool ignore_type_in_smoothing
                    ):filename(filename),Nsmooth(Nsmooth)//,compensate(compensate)
 {
-  
-  
-  
+  if(isHDF5Filename(filename)) format = SimFileFormat::hdf5;
+
   if(format == SimFileFormat::glmb ){
     nparticles.resize(6,0);
     if(!readSizesB(filename,data,Nsmooth,nparticles,z_original)){
@@ -62,6 +84,10 @@ MakeParticleLenses::MakeParticleLenses(
           break;
         case SimFileFormat::csv6:
           readCSV(6);
+          break;
+        case SimFileFormat::hdf5:
+          readHDF5();
+          break;
         default:
           std::cerr << "Data file formate is not supported in MakeParticleLens." << std::endl;
           throw std::invalid_argument("missing format");
@@ -390,59 +416,6 @@ bool MakeParticleLenses::readGadget2(bool ignore_type){
   return true;
 };
 
-/*
-#ifdef ENABLE_HDF5
-bool MakeParticleLenses::readHDF5(){
-  
-  H5::H5File file(filename.c_str(), H5F_ACC_RDONLY );
-  
-  std::vector<std::string> sets = {"MASS","TYPE"};
-  
-  for(auto set : sets){
-  
-    H5::DataSet dataset = file.openDataSet(set.c_str());
-    H5T_class_t type_class = dataset.getTypeClass();
-
-    // Get class of datatype and print message if it's an integer.
-      if( type_class == H5T_INTEGER )
-      {
-        cout << "Data set has INTEGER type" << endl;
-        //Get the integer datatype
-        H5::IntType intype = dataset.getIntType();
-        // Get order of datatype and print message if it's a little endian.
-        H5std_string order_string;
-        H5T_order_t order = intype.getOrder( order_string );
-        cout << order_string << endl;
-      
-        // Get size of the data element stored in file and print it.
-        size_t size = intype.getSize();
-        cout << "Data size is " << size << endl;
-      }else if(type_class == H5T_FLOAT ){
-        cout << "Data set has FLOAT type" << endl;
-        //Get the integer datatype
-        H5::FloatType intype = dataset.getFloatType();
-        // Get order of datatype and print message if it's a little endian.
-        H5std_string order_string;
-        H5T_order_t order = intype.getOrder( order_string );
-        cout << order_string << endl;
-      
-        // Get size of the data element stored in file and print it.
-        size_t size = intype.getSize();
-        cout << "Data size is " << size << endl;
-      }
-  
-    // Get dataspace of the dataset.
-   
-    H5::DataSpace dataspace = dataset.getSpace();
-  
-   // Get the number of dimensions in the dataspace.
-    int rank = dataspace.getSimpleExtentNdims();
-  }
-  return true;
-};
-
-#endif
-*/
 // remove particles that are beyond radius (Mpc/h) of center
 void MakeParticleLenses::radialCut(Point_3d<> center,double radius){
   
@@ -525,4 +498,3 @@ void MakeParticleLenses::cylindricalCut(Point_2d center,double radius){
     std::sort(data.begin(),data.end(),[](const ParticleType<float> &a1,const ParticleType<float> &a2){return a1.type < a2.type;});
   }
 }
-

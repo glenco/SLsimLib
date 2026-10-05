@@ -894,6 +894,10 @@ LensHaloParticlesDep<PType> & LensHaloParticlesDep<PType>::operator=(LensHaloPar
  made for each type of particle.  The nearest neighbour
  smoothing scales are calculated within particle type.
  The sph density of gas particles are not used.
+
+ HDF5 - Gadget-style snapshots containing a Header group and PartType0
+ through PartType5 groups.  The file format is detected from a .h5 or
+ .hdf5 suffix.  HDF5 support is optional and requires ENABLE_HDF5.
  
  csv3,csv4,csv5,csv6 - CSV ascii format without header.  The first three columns
  are the positions.  Next columns are used for the other formats being and
@@ -989,6 +993,12 @@ public:
                      //,bool compensate=false  /// if true a negative mass will be included so that  the region wil have zero massl
                      ,bool ignore_type_in_smoothing = false /// used only when format == gadget2, nearest neighbour smoothing is done amongst particles by type if set to false
                      );
+
+  MakeParticleLenses(const std::string &filename
+                     ,int Nsmooth
+                     ,bool recenter
+                     ,bool ignore_type_in_smoothing = false
+                     );
   
   MakeParticleLenses(const std::string &filename  /// path / name of glmb file
                      ,bool recenter /// recenter so that the LensHalos are centered on the center of mass
@@ -1083,9 +1093,7 @@ private:
   // Reads particles from first 4 columns of csv file
   bool readCSV(int columns_used);
 
-#ifdef ENABLE_HDF5
   bool readHDF5();
-#endif
 
 };
 

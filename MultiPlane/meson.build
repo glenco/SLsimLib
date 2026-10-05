@@ -7,4 +7,5 @@ slsimlib_files += files([
 	'planes.cpp',
 	#'profile.cpp',
 	'particle_lens.cpp',
+	'hdf5io.cpp',
 	'multimap.cpp'])
