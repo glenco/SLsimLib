@@ -1,0 +1,68 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Tests: Configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-DCMAKE_BUILD_TYPE=Debug",
+                "-DENABLE_CERF=ON",
+                "-DENABLE_EIGEN=ON",
+                "-DENABLE_GSL=ON",
+                "-DN_THREADS=20",
+                "-DBUILD_TESTING=ON",
+                "..",
+                "-G Ninja"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/../build"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Configures GLAMER and its GoogleTest targets in debug mode with Ninja."
+        },
+        {
+            "label": "Tests: Build",
+            "type": "shell",
+            "command": "ninja",
+            "args": [
+                "-j20"
+            ],
+            "dependsOrder": "sequence",
+            "dependsOn": "Tests: Configure",
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/../build"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "detail": "Builds GLAMER and its GoogleTest executables with Ninja."
+        },
+        {
+            "label": "Tests: Run",
+            "type": "shell",
+            "command": "ctest",
+            "args": [
+                "--output-on-failure"
+            ],
+            "dependsOrder": "sequence",
+            "dependsOn": "Tests: Build",
+            "options": {
+                "cwd": "${workspaceFolder}/../build/SLsimLib"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Runs the GoogleTest suite through CTest."
+        }
+    ]
+}

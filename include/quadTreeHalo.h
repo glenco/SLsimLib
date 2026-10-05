@@ -271,16 +271,16 @@ void TreeQuadHalos<PType>::BuildQTreeNB(PType *xxp,IndexType Nparticles){
   j = lengths[0] > lengths[1] ? 1 : 0;
   p2[j] = p1[j] + lengths[!j];
   
-  /* Initialize tree root */
+  // Initialize tree root
   tree.reset( new QTreeNB<PType>(xxp,index.data(),Nparticles,p1,p2) );
 
-  /* build the tree */
+  // build the tree
   workspace.resize(Nparticles);
   _BuildQTreeNB(Nparticles,index.data());
   workspace.clear();
   workspace.shrink_to_fit();
   
-  /* visit every branch to find center of mass and cutoff scale */
+  // visit every branch to find center of mass and cutoff scale
   tree->moveTop();
 
   return;
